@@ -8,7 +8,7 @@ function App() {
     event.preventDefault();
     try {
       const response = await fetch(
-        "http://localhost/psits-web-react/server-side/Controller/IndexController.php", // Correct URL to the PHP backend
+        "http://psits-web-main.rf.gd/server-side/Controller/IndexController.php?i=", // Correct URL to the PHP backend
         {
           method: "POST",
           headers: {
