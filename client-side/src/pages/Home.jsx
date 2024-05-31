@@ -8,7 +8,7 @@ function Home() {
   return (
     <div
       id="carouselData"
-      className="carousel slide container p-0"
+      className="carousel slide container p-4"
       data-ride="carousel"
     >
       <div className="carousel-inner">

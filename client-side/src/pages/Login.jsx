@@ -6,10 +6,13 @@ function Login() {
     <div className="container">
       <div className="row justify-content-center">
         <div className="col-md-6">
-          <div className="card mt-5">
-            <div className="card-body">
-              <h5 className="card-title text-center mb-4">Login</h5>
-              <form action="Login.php" method="POST">
+          <div className="card mt-5 border-0">
+            <div
+              className="card-body text-white rounded-4 "
+              style={{ backgroundColor: "#074873" }}
+            >
+              <h3 className="card-title text-center mb-4">Login</h3>
+              <form action="Login.php" method="POST" className="px-4">
                 <div className="mb-3">
                   <label for="id_number" className="form-label">
                     ID Number
@@ -34,15 +37,15 @@ function Login() {
                     required
                   />
                 </div>
-                <div className="text-center">
+                <div className="text-center my-4">
                   <button
                     type="submit"
                     name="submit"
-                    className="btn btn-primary"
+                    className="btn btn-outline-light p-2 px-4"
                   >
                     Login
                   </button>
-                  <p>
+                  <p className="my-3">
                     Don't have an account?{" "}
                     <a href="Register.php">Click here!</a>
                   </p>
