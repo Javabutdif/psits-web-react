@@ -1,4 +1,7 @@
+// src/components/Navbar.js
 import React from "react";
+import { Link } from "react-router-dom";
+import logo from "../assets/images/psits-logo.png";
 
 function Navbar() {
   return (
@@ -7,13 +10,14 @@ function Navbar() {
       style={{ backgroundColor: "#074873" }}
     >
       <div className="container-fluid">
-        <a
+        <img src={logo} alt="Logo" style={{ width: "3rem", height: "3rem" }} />
+        <Link
           className="navbar-brand text-white ms-2"
-          href="index.php"
+          to="/"
           style={{ fontFamily: "'Montserrat', sans-serif" }}
         >
           UC Main - PSITS
-        </a>
+        </Link>
         <button
           className="navbar-toggler"
           type="button"
@@ -28,9 +32,9 @@ function Navbar() {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             <li className="nav-item">
-              <a className="nav-link text-white" href="index.php">
+              <Link className="nav-link text-white" to="/">
                 Home
-              </a>
+              </Link>
             </li>
             <li className="nav-item dropdown">
               <a
@@ -45,26 +49,26 @@ function Navbar() {
                 Community
               </a>
               <div className="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a className="dropdown-item" href="#">
+                <Link className="dropdown-item" to="/community">
                   Faculty Members
-                </a>
-                <a className="dropdown-item" href="Officers.php">
+                </Link>
+                <Link className="dropdown-item" to="/officers">
                   Officers
-                </a>
-                <a className="dropdown-item" href="Developers.php">
+                </Link>
+                <Link className="dropdown-item" to="/developers">
                   Developers
-                </a>
+                </Link>
               </div>
             </li>
             <li className="nav-item">
-              <a className="nav-link text-white" href="Login.php">
+              <Link className="nav-link text-white" to="/login">
                 Login
-              </a>
+              </Link>
             </li>
             <li className="nav-item">
-              <a className="nav-link text-white" href="Register.php">
+              <Link className="nav-link text-white" to="/register">
                 Register
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
