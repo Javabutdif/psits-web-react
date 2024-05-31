@@ -1,51 +1,14 @@
 import React, { useState } from "react";
 
+import ListGroup from "./components/ListGroup";
+import Navbar from "./components/Navbar";
+import Login from "./components/Login";
+
 function App() {
-  const [inputValue, setInputValue] = useState("");
-  const [responseData, setResponseData] = useState(null);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      const response = await fetch(
-        "https://psits-web-main.rf.gd/server-side/Controller/IndexController.php", // Correct URL to the PHP backend
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ input: inputValue }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setResponseData(data);
-    } catch (error) {
-      console.error("There was a problem with your fetch operation:", error);
-    }
-  };
-
-  const handleChange = (event) => {
-    setInputValue(event.target.value);
-  };
-
   return (
     <div>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Input:
-          <input type="text" value={inputValue} onChange={handleChange} />
-        </label>
-        <button type="submit">Submit</button>
-      </form>
-      {responseData && (
-        <div>
-          <h2>Response from Backend</h2>
-          <pre>{JSON.stringify(responseData, null, 2)}</pre>
-        </div>
-      )}
+      <Navbar></Navbar>
+      <Login></Login>
     </div>
   );
 }
