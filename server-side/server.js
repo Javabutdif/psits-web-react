@@ -24,28 +24,53 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
-// Define a schema and model
-const Schema = mongoose.Schema;
-const ItemSchema = new Schema({
-  name: String,
-  quantity: Number,
+  const User = mongoose.model(
+    "User",
+    new mongoose.Schema({
+      id_number: String,
+      password: String,
+      first_name: String,
+      middle_name: String,
+      last_name: String,
+      email: String,
+      course: String,
+      year: String,
+    })
+);
+  
+app.get("/api/data", (req, res) => {
+  res.send({ message: "Hello!" });
 });
 
-const Item = mongoose.model("Item", ItemSchema);
+app.post("/api/register", (req, res) => {
+  const {
+    id_number,
+    password,
+    first_name,
+    middle_name,
+    last_name,
+    email,
+    course,
+    year,
+  } = req.body;
 
-// Routes
-app.post("/api/items", (req, res) => {
-  const newItem = new Item(req.body);
-  newItem
+  // Handle the registration logic (e.g., save to database)
+  // For example:
+  const newUser = new User({
+    id_number,
+    password,
+    first_name,
+    middle_name,
+    last_name,
+    email,
+    course,
+    year,
+  });
+
+  newUser
     .save()
-    .then((item) => res.json(item))
-    .catch((err) => res.status(400).json("Error: " + err));
-});
-
-app.get("/api/items", (req, res) => {
-  Item.find()
-    .then((items) => res.json(items))
-    .catch((err) => res.status(400).json("Error: " + err));
+    .then((user) => res.status(201).json(user))
+    .catch((err) => res.status(500).json({ error: err.message }));
 });
 
 app.listen(port, () => {
