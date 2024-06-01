@@ -34,7 +34,7 @@ function Register() {
 
     try {
       const response = await fetch(
-        "https://psits-web-react.onrender.com:5000/api/register",
+        "https://psits-web-react.onrender.com/api/register",
         {
           method: "POST",
           headers: {
