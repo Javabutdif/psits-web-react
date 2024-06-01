@@ -46,8 +46,7 @@ function Login() {
                     Login
                   </button>
                   <p className="my-3">
-                    Don't have an account?{" "}
-                    <a href="Register.php">Click here!</a>
+                    Don't have an account? <a href="/register">Click here!</a>
                   </p>
                 </div>
               </form>

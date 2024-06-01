@@ -3,13 +3,15 @@ import { Route } from "react-router-dom";
 
 function Register() {
   return (
-    <div className="container mt-5">
+    <div className="container mt-5 ">
       <div className="row justify-content-center">
         <div className="col-md-6">
           <div className="card">
-            <div className="card-header text-center">Register</div>
-            <div className="card-body">
-              <div className="mb-3">
+            <div
+              className="card-body text-white rounded-3"
+              style={{ backgroundColor: "#074873 " }}
+            >
+              <div className="my-3 pt-2s">
                 <label for="id_number" className="form-label">
                   ID Number
                 </label>
@@ -47,7 +49,7 @@ function Register() {
               </div>
               <span
                 id="passwordMismatch"
-                style={{ color: "red", display: 'none '}}
+                style={{ color: "red", display: "none " }}
               >
                 Passwords do not match
               </span>
@@ -147,14 +149,8 @@ function Register() {
                 </div>
               </div>
               <div className="row justify-content-between align-items-center">
-                <div className="col-md-6">
-                  <button
-                    type="button"
-                    className="btn btn-primary register-btn"
-                    data-toggle="modal"
-                    data-target="#exampleModal"
-                    disabled
-                  >
+                <div className="col-md-6 ">
+                  <button type="button" className="btn btn-primary me-2">
                     Proceed
                   </button>
                   <a href="Login.php" className="btn btn-danger">
