@@ -38,7 +38,7 @@ const User = mongoose.model(
   })
 );
 
-app.post("https://psits-web-react.onrender.com/api/register", (req, res) => {
+app.post("/api/register", (req, res) => {
   const {
     id_number,
     password,

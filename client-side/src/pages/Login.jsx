@@ -2,15 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 function Login() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/data")
-      .then((response) => response.json())
-      .then((data) => setData(data))
-      .catch((error) => console.error("Error fetching data:", error));
-  }, []);
-
   return (
     <div className="container">
       <div className="row justify-content-center">
