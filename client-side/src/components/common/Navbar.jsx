@@ -5,14 +5,11 @@ import logo from "../../assets/images/psits-logo.png";
 
 function Navbar() {
   return (
-    <nav
-      className="navbar navbar-expand-lg"
-      style={{ backgroundColor: "#074873" }}
-    >
+    <nav className="navbar navbar-expand-lg shadow">
       <div className="container-fluid">
         <img src={logo} alt="Logo" style={{ width: "3rem", height: "3rem" }} />
         <Link
-          className="navbar-brand text-white ms-2"
+          className="navbar-brand  ms-2"
           to="/home"
           style={{ fontFamily: "'Montserrat', sans-serif" }}
         >
@@ -32,13 +29,13 @@ function Navbar() {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             <li className="nav-item">
-              <Link className="nav-link text-white" to="/home">
+              <Link className="nav-link " to="/home">
                 Home
               </Link>
             </li>
             <li className="nav-item dropdown">
               <a
-                className="nav-link dropdown-toggle text-white"
+                className="nav-link dropdown-toggle "
                 href="#"
                 id="navbarDropdown"
                 role="button"
@@ -61,13 +58,8 @@ function Navbar() {
               </div>
             </li>
             <li className="nav-item">
-              <Link className="nav-link text-white" to="/login">
+              <Link className="nav-link " to="/login">
                 Login
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link text-white" to="/register">
-                Register
               </Link>
             </li>
           </ul>
