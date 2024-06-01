@@ -1,9 +1,10 @@
 import React from "react";
+import $ from "jquery";
 import { Link } from "react-router-dom";
 import home from "../assets/images/home.png";
 import psits from "../assets/images/psits.jpg";
 import sus from "../assets/images/sus.jpg";
-
+import { useEffect } from "react";
 function Home() {
   return (
     <div
