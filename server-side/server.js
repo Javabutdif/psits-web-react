@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+import "./model/user.js";
 
 const app = express();
 const port = 5000;
@@ -23,24 +24,6 @@ mongoose
   )
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
-
-  const User = mongoose.model(
-    "User",
-    new mongoose.Schema({
-      id_number: String,
-      password: String,
-      first_name: String,
-      middle_name: String,
-      last_name: String,
-      email: String,
-      course: String,
-      year: String,
-    })
-);
-  
-app.get("/api/data", (req, res) => {
-  res.send({ message: "Hello!" });
-});
 
 app.post("/api/register", (req, res) => {
   const {

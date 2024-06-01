@@ -63,9 +63,6 @@ function Login() {
           </div>
         </div>
       </div>
-
-      <h1>Data from Express:</h1>
-      {data ? <pre>{JSON.stringify(data, null, 2)}</pre> : <p>Loading...</p>}
     </div>
   );
 }

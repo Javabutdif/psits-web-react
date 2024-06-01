@@ -44,7 +44,7 @@ function Register() {
       if (response.ok) {
         const data = await response.json();
         alert("Registration successful:", data);
-        
+        window.location.href = "/login";
       } else {
         console.error("Registration failed");
         // Handle error
