@@ -4,7 +4,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT || 5000;
-const students = require("./models/StudentModel");
+const Student = require("./models/StudentModel");
 const mongodbConnection = require("./mongoDB/MongoDbConnection");
 
 //Middleware
@@ -19,7 +19,39 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
-app.post("/api/register", (req, res) => {});
+app.post("/api/register", async (req, res) => {
+  const {
+    id_number,
+    password,
+    first_name,
+    middle_name,
+    last_name,
+    email,
+    course,
+    year,
+  } = req.body;
+
+  try {
+    const newStudent = new Student({
+      id_number,
+      password,
+      first_name,
+      middle_name,
+      last_name,
+      email,
+      course,
+      year,
+    });
+    await newStudent.save();
+    res.status(201).json({ message: "Registration successful", newStudent });
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400).json({ error: "Id number already exists" });
+    } else {
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+});
 
 app.get("/api/data", (req, res) => {
   // Logic to fetch data from the database or elsewhere

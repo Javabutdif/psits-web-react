@@ -9,7 +9,7 @@ function Login() {
   useEffect(() => {
     // GET request to the Express.js backend
     axios
-      .get("http://localhost:5000/api/data")
+      .get("https://psits-web-react.onrender.com/api/data")
       .then((response) => {
         setMessage(response.data.message);
       })
