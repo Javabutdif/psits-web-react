@@ -48,7 +48,7 @@ function Register() {
         alert("Registration successful:", data);
         window.location.href = "/login";
       } else {
-        console.error("Registration failed");
+        alert("Registration failed");
         // Handle error
       }
     } catch (error) {

@@ -3,21 +3,6 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 function Login() {
-  const [message, setMessage] = useState("");
-  const [postResponse, setPostResponse] = useState("");
-
-  useEffect(() => {
-    // GET request to the Express.js backend
-    axios
-      .get("https://psits-web-react.onrender.com/api/data")
-      .then((response) => {
-        setMessage(response.data.message);
-      })
-      .catch((error) => {
-        console.error("There was an error!", error);
-      });
-  }, []);
-
   return (
     <div className="container">
       <div className="row justify-content-center">
@@ -71,7 +56,6 @@ function Login() {
           </div>
         </div>
       </div>
-      <h1>GET Response: {message}</h1>
     </div>
   );
 }
