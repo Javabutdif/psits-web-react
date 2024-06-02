@@ -4,20 +4,18 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT || 5000;
-const students = require("./models/SchemaModel");
+const students = require("./models/StudentModel");
+const mongodbConnection = require("./mongoDB/MongoDbConnection");
 
 //Middleware
 app.use(bodyParser.json());
 app.use(cors());
 
 mongoose
-  .connect(
-    "mongodb+srv://jamesgenabio31:09083095890a@psits.hxpgzht.mongodb.net/?retryWrites=true&w=majority&appName=psits",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(mongodbConnection(), {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
