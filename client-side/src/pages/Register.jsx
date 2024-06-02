@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import BackendConnection from "../api/BackendApi";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -33,16 +35,13 @@ function Register() {
     setPasswordMismatch(false);
 
     try {
-      const response = await fetch(
-        "https://psits-web-react.onrender.com/api/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`${BackendConnection()}/api/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (response.ok) {
         const data = await response.json();
