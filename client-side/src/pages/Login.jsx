@@ -7,9 +7,9 @@ function Login() {
   const [postResponse, setPostResponse] = useState("");
 
   useEffect(() => {
-    // GET request to the PHP backend
+    // GET request to the Express.js backend
     axios
-      .get("/api/data")
+      .get("http://localhost:5000/api/data")
       .then((response) => {
         setMessage(response.data.message);
       })
@@ -17,24 +17,6 @@ function Login() {
         console.error("There was an error!", error);
       });
   }, []);
-
-  const handlePost = () => {
-    // POST request to the PHP backend
-    axios
-      .post("http://localhost/psits-web-react/server-side/api.php", {
-        data: "Sample data",
-      })
-      .then((response) => {
-        setPostResponse(response.data.received);
-        windows.location.href = "/login";
-      })
-      .catch((error) => {
-        console.error("There was an error!", error);
-      });
-  };
-  const handleInputChange = (event) => {
-    setInput(event.target.value);
-  };
 
   return (
     <div className="container">
@@ -90,8 +72,6 @@ function Login() {
         </div>
       </div>
       <h1>GET Response: {message}</h1>
-      <button onClick={handlePost}>Send POST Request</button>
-      <h1>POST Response: {postResponse}</h1>
     </div>
   );
 }
