@@ -1,41 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from 'axios';
+import axios from "axios";
 
 function Login() {
-  const [message, setMessage] = useState('');
-  const [postResponse, setPostResponse] = useState('');
+  const [message, setMessage] = useState("");
+  const [postResponse, setPostResponse] = useState("");
 
   useEffect(() => {
     // GET request to the PHP backend
-    axios.get('http://localhost/psits-web-react/server-side/api.php')
-      .then(response => {
+    axios
+      .get("/api/data")
+      .then((response) => {
         setMessage(response.data.message);
       })
-      .catch(error => {
-        console.error('There was an error!', error);
+      .catch((error) => {
+        console.error("There was an error!", error);
       });
   }, []);
 
   const handlePost = () => {
     // POST request to the PHP backend
-    axios.post('http://localhost/psits-web-react/server-side/api.php', {
-      data: 'Sample data'
-    })
-    .then(response => {
-      setPostResponse(response.data.received);
-      windows.location.href='/login';
-    })
-    .catch(error => {
-      console.error('There was an error!', error);
-    });
+    axios
+      .post("http://localhost/psits-web-react/server-side/api.php", {
+        data: "Sample data",
+      })
+      .then((response) => {
+        setPostResponse(response.data.received);
+        windows.location.href = "/login";
+      })
+      .catch((error) => {
+        console.error("There was an error!", error);
+      });
   };
   const handleInputChange = (event) => {
     setInput(event.target.value);
   };
 
- 
-  
   return (
     <div className="container">
       <div className="row justify-content-center">
@@ -92,7 +92,6 @@ function Login() {
       <h1>GET Response: {message}</h1>
       <button onClick={handlePost}>Send POST Request</button>
       <h1>POST Response: {postResponse}</h1>
-      
     </div>
   );
 }
