@@ -1,6 +1,7 @@
 // src/components/Navbar.js
 import React from "react";
 import { Link } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import logo from "../../assets/images/psits-logo.png";
 
 function Navbar() {
