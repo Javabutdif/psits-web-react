@@ -6,6 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const Student = require("./models/StudentModel");
 const mongodbConnection = require("./mongoDB/MongoDbConnection");
+const bcrypt = require("bcrypt");
 
 //Middleware
 app.use(bodyParser.json());
@@ -32,15 +33,19 @@ app.post("/api/register", async (req, res) => {
   } = req.body;
 
   try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newStudent = new Student({
       id_number,
-      password,
+      password: hashedPassword,
       first_name,
       middle_name,
       last_name,
       email,
       course,
       year,
+      status: "True",
+      membership: "Pending",
     });
     await newStudent.save();
     res.status(201).json({ message: "Registration successful", newStudent });

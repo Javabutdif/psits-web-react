@@ -35,6 +35,12 @@ const studentSchema = new Schema({
     type: Number,
     require: true,
   },
+  status: {
+    type: String,
+  },
+  membership: {
+    type: String,
+  },
 });
 
 const Student = mongoose.model("students", studentSchema);
