@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 import jims from "../assets/images/jims.jpg";
+import kirby from "../assets/images/kirby.gif";
 
 function Developers() {
   return (
@@ -19,13 +20,10 @@ function Developers() {
             >
               Project Lead / Backend
             </h5>
-            <img className="card-img-top" src={jims} alt="Genabio" />
+            <img className="card-img-top" src={kirby} alt="Genabio" />
             <div className="card-body">
-              <h4 className="card-title">Anton James Genabio</h4>
-              <p>
-                Facebook:{" "}
-                <a href="https://www.facebook.com/jgenabs/">James Genabio</a>
-              </p>
+              <h4 className="card-title">Jims</h4>
+              <p></p>
             </div>
           </div>
         </div>
