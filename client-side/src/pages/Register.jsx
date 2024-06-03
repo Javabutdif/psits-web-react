@@ -46,7 +46,7 @@ function Register() {
       if (response.ok) {
         const data = await response.json();
         alert("Registration successful:", data);
-        window.location.href = "/login";
+        navigate("/login");
       } else {
         alert("Registration failed");
         // Handle error
@@ -226,9 +226,9 @@ function Register() {
                     <button type="submit" className="btn btn-primary me-2">
                       Proceed
                     </button>
-                    <a href="/login" className="btn btn-danger">
+                    <Link to="/login" className="btn btn-danger">
                       Back
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </form>
