@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const Student = require("../models/Student"); // Adjust the path to your Student model
+const Student = require("../models/StudentModel");
 
 const router = express.Router();
 
