@@ -8,6 +8,7 @@ const Student = require("./models/StudentModel");
 const mongodbConnection = require("./mongoDB/MongoDbConnection");
 const bcrypt = require("bcrypt");
 const registerRoutes = require("./routes/register");
+const loginRoutes = require("./routes/login");
 
 //Middleware
 app.use(bodyParser.json());
@@ -25,6 +26,7 @@ mongoose
 
 //Routes
 app.use("/api", registerRoute);
+app.use("/api", loginRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server started, listening at port ${PORT}`);
