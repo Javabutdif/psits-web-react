@@ -25,7 +25,7 @@ mongoose
   .catch((err) => console.log(err));
 
 //Routes
-app.use("/api", registerRoute);
+app.use("/api", registerRoutes);
 app.use("/api", loginRoutes);
 
 app.listen(PORT, () => {
