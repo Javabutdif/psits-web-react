@@ -27,9 +27,9 @@ function Login() {
 
       if (response.ok) {
         const data = await response.json();
-        alert(data);
+        alert(JSON.stringify(data));
       } else {
-        alert(data);
+        alert(JSON.stringify(data));
       }
     } catch (error) {
       console.error("Error:", error);
