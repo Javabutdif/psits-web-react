@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const Student = require("../models/Student"); // Adjust the path to your Student model
+const Student = require("../models/Student");
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.post("/login", async (req, res) => {
     }
 
     const passwordMatch = await bcrypt.compare(password, student.password);
-    if (!isMatch) {
+    if (!passwordMatch) {
       return res.status(400).json({ message: "Invalid ID number or password" });
     }
 
