@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import BackendConnection from "../api/BackendApi";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { showToast } from "../utils/alertHelper";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -18,7 +19,7 @@ function Register() {
   });
 
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-
+  const navigate = useNavigate();
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -47,10 +48,11 @@ function Register() {
 
       if (response.ok) {
         const data = await response.json();
-        alert("Registration successful:", data);
+        showToast("success", "Registration successful");
+
         navigate("/login");
       } else {
-        alert("Registration failed");
+        showToast("error", "Registration Failed");
         // Handle error
       }
     } catch (error) {

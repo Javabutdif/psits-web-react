@@ -10,7 +10,7 @@ router.post("/login", async (req, res) => {
   try {
     const student = await Student.findOne({ id_number });
     if (!student) {
-      res.status(400).json({ error: "Invalid Credentials" });
+      res.status(400).json("Invalid Credentials");
     }
 
     const passwordMatch = await bcrypt.compare(password, student.password);
@@ -21,7 +21,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json("Invalid ID number or password");
     }
 
-    res.json({ message: "Login successful" });
+    res.json("Login successful");
   } catch (error) {
     res.status(500).send(error);
   }
