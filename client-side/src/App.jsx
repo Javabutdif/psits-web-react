@@ -22,7 +22,7 @@ function App() {
         <ConditionalNavbar />
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/home" element={<Home />} />
+      
           <Route path="/" element={<Home />} />
           <Route path="/officers" element={<Officers />} />
           <Route path="/register" element={<Register />} />

@@ -11,7 +11,7 @@ function Navbar() {
         <img src={logo} alt="Logo" style={{ width: "3rem", height: "3rem" }} />
         <Link
           className="navbar-brand  ms-2"
-          to="/home"
+          to="/"
           style={{ fontFamily: "'Montserrat', sans-serif" }}
         >
           UC Main - PSITS
@@ -30,7 +30,7 @@ function Navbar() {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             <li className="nav-item">
-              <Link className="nav-link " to="/home">
+              <Link className="nav-link " to="/">
                 Home
               </Link>
             </li>
