@@ -15,7 +15,7 @@ function Navbar() {
         <img src={logo} alt="Logo" style={{ width: "3rem", height: "3rem" }} />
         <Link
           className="navbar-brand  ms-2"
-          to="/home"
+          to="/adminDashboard"
           style={{ fontFamily: "'Montserrat', sans-serif" }}
         >
           Admin Dashboard
