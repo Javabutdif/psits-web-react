@@ -32,6 +32,7 @@ router.post("/register", async (req, res) => {
       membership: "Pending",
     });
     await newStudent.save();
+
     res.status(201).json({ message: "Registration successful", newStudent });
   } catch (error) {
     if (error.code === 11000) {
