@@ -16,11 +16,9 @@ router.post("/login", async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, student.password);
 
     if (passwordMatch && student.membership === "Pending") {
-      return res
-        .status(400)
-        .json({ error: "Student must pay 50 in the PSITS Office" });
+      return res.status(400).json("Student must pay 50 in the PSITS Office");
     } else if (!passwordMatch) {
-      return res.status(400).json({ error: "Invalid ID number or password" });
+      return res.status(400).json("Invalid ID number or password");
     }
 
     res.json({ message: "Login successful" });
