@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import BackendConnection from "../api/BackendApi";
+import { showToast } from "../utils/alertHelper";
 
 function Login() {
   const [formData, setFormData] = useState({
     id_number: "",
     password: "",
   });
+
+  //Navigate to another route
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -18,6 +21,7 @@ function Login() {
 
     try {
       if (formData.id_number === "123" && formData.password === "123") {
+        showToast("success", "Signed in successfully");
         navigate("/adminDashboard");
       } else {
         const response = await fetch(`${BackendConnection()}/api/login`, {
