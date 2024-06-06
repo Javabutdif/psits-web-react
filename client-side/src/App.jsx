@@ -14,6 +14,9 @@ import Officers from "./pages/Officers";
 import Register from "./pages/Register";
 import Developers from "./pages/Developers";
 import AdminDashboard from "./Admin/AdminDashboard";
+import MembershipRequest from "./Admin/MembershipRequest";
+import MembershipHistory from "./Admin/MembershipHistory";
+import MembershipRenewal from "./Admin/MembershipRenewal";
 
 function App() {
   return (
@@ -22,12 +25,15 @@ function App() {
         <ConditionalNavbar />
         <Routes>
           <Route path="/login" element={<Login />} />
-      
+
           <Route path="/" element={<Home />} />
           <Route path="/officers" element={<Officers />} />
           <Route path="/register" element={<Register />} />
           <Route path="/developers" element={<Developers />} />
           <Route path="/adminDashboard" element={<AdminDashboard />} />
+          <Route path="/membershipRequest" element={<MembershipRequest />} />
+          <Route path="/membershipRenewal" element={<MembershipRenewal />} />
+          <Route path="/membershipHistory" element={<MembershipHistory />} />
         </Routes>
       </div>
     </Router>
@@ -36,7 +42,12 @@ function App() {
 function ConditionalNavbar() {
   const location = useLocation();
 
-  if (location.pathname.startsWith("/adminDashboard")) {
+  if (
+    location.pathname.startsWith("/adminDashboard") ||
+    location.pathname.startsWith("/membershipRequest") ||
+    location.pathname.startsWith("/membershipRenewal") ||
+    location.pathname.startsWith("/membershipHistory")
+  ) {
     return <NavbarAdmin />;
   } else if (
     location.pathname.startsWith("/home") ||

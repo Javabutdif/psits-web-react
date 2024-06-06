@@ -47,13 +47,13 @@ function Navbar() {
                 Membership
               </a>
               <div className="dropdown-menu" aria-labelledby="navbarDropdown">
-                <Link className="dropdown-item" to="/community">
+                <Link className="dropdown-item" to="/membershipRequest">
                   Membership Request
                 </Link>
-                <Link className="dropdown-item" to="/officers">
+                <Link className="dropdown-item" to="/membershipRenewal">
                   Membership Renewal
                 </Link>
-                <Link className="dropdown-item" to="/developers">
+                <Link className="dropdown-item" to="/membershipHistory">
                   History
                 </Link>
               </div>
