@@ -5,31 +5,31 @@ import "../App.css";
 
 function AdminDashboard() {
   return (
-    <div class="container mt-5">
-      <div class="row">
-        <div class="col-md-4 mb-4">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Orders</h5>
-              <p class="card-text">This is some content for orders.</p>
+    <div className="container mt-5">
+      <div className="row">
+        <div className="col-md-4 mb-4">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">Orders</h5>
+              <p className="card-text">This is some content for orders.</p>
             </div>
           </div>
         </div>
-        <div class="col-md-4 mb-4">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Membership Revenue</h5>
-              <p class="card-text">
+        <div className="col-md-4 mb-4">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">Membership Revenue</h5>
+              <p className="card-text">
                 <strong>Php </strong>{" "}
               </p>
             </div>
           </div>
         </div>
-        <div class="col-md-4 mb-4">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Merchandise Revenue</h5>
-              <p class="card-text">
+        <div className="col-md-4 mb-4">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">Merchandise Revenue</h5>
+              <p className="card-text">
                 <strong> Php </strong>{" "}
               </p>
             </div>
