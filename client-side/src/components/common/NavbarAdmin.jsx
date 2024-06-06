@@ -63,7 +63,11 @@ function Navbar() {
               </div>
             </li>
             <li className="nav-item">
-              <Link className="nav-link " to="/" onClick={handleLogoutClick}>
+              <Link
+                className="nav-link "
+                to="/login"
+                onClick={handleLogoutClick}
+              >
                 Logout
               </Link>
             </li>

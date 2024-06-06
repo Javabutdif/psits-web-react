@@ -23,19 +23,20 @@ function Login() {
       if (formData.id_number === "123" && formData.password === "123") {
         showToast("success", "Signed in successfully");
         navigate("/adminDashboard");
-      }
-      const response = await fetch(`${BackendConnection()}/api/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        showToast("success", JSON.stringify(data));
       } else {
-        showToast("error", JSON.stringify(data));
+        const response = await fetch(`${BackendConnection()}/api/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast("success", JSON.stringify(data));
+        } else {
+          showToast("error", JSON.stringify(data));
+        }
       }
     } catch (error) {
       console.error("Error:", error);
