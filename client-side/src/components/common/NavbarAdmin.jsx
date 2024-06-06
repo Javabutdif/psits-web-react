@@ -3,8 +3,12 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import logo from "../../assets/images/psits-logo.png";
+import { showToast } from "../../utils/alertHelper";
 
 function Navbar() {
+  const handleLogoutClick = () => {
+    showToast("success", "Signed out successfully");
+  };
   return (
     <nav className="navbar navbar-expand-lg shadow">
       <div className="container-fluid">
@@ -59,7 +63,7 @@ function Navbar() {
               </div>
             </li>
             <li className="nav-item">
-              <Link className="nav-link " to="/">
+              <Link className="nav-link " to="/" onClick={handleLogoutClick}>
                 Logout
               </Link>
             </li>
