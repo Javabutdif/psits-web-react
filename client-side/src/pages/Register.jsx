@@ -70,6 +70,7 @@ function Register() {
               className="card-body text-white rounded-3"
               style={{ backgroundColor: "#074873 " }}
             >
+              <h3 className="card-title text-center mb-4">Register</h3>
               <form onSubmit={handleSubmit}>
                 <div className="my-3 pt-2">
                   <label htmlFor="id_number" className="form-label">
