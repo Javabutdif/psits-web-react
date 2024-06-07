@@ -45,18 +45,17 @@ function Register() {
         },
         body: JSON.stringify(formData),
       });
-
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
         showToast("success", "Registration successful");
 
         navigate("/login");
       } else {
-        showToast("error", "Registration Failed");
+        showToast("error", JSON.stringify(data));
         // Handle error
       }
     } catch (error) {
-      console.error("Error:", error);
+      showToast("error", JSON.stringify(error));
       // Handle error
     }
   };

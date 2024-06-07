@@ -33,7 +33,7 @@ router.post("/register", async (req, res) => {
     });
     await newStudent.save();
 
-    res.status(201).json("Registration successful", newStudent);
+    res.status(201).json("Registration successful");
   } catch (error) {
     if (error.code === 11000) {
       res.status(400).json("Id number already exists");
