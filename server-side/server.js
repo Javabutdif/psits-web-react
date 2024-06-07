@@ -11,8 +11,8 @@ const registerRoutes = require("./routes/register");
 const loginRoutes = require("./routes/login");
 
 //Middleware
-app.use(bodyParser.json());
 app.use(cors());
+app.use(bodyParser.json());
 
 //Connection to Mongoose
 mongoose
