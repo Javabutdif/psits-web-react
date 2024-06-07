@@ -38,6 +38,7 @@ router.post("/register", async (req, res) => {
     if (error.code === 11000) {
       res.status(400).json("Id number already exists");
     } else {
+      console.error("Error saving new student:", error);
       res.status(500).json("Internal Server Error");
     }
   }
