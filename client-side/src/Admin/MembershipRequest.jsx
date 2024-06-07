@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
@@ -8,7 +8,6 @@ import BackendConnection from "../api/BackendApi";
 function MembershipRequest() {
   const [data, setData] = useState([]);
 
-  // Fetch data from an API or any other source
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -32,12 +31,13 @@ function MembershipRequest() {
   const columns = [
     {
       name: "ID",
-      selector: (row) => row.id,
+      selector: (row) => row.id_number,
       sortable: true,
     },
     {
       name: "Name",
-      selector: (row) => row.name,
+      selector: (row) =>
+        row.first_name + " " + row.middle_name + " " + row.last_name,
       sortable: true,
     },
     {
@@ -53,6 +53,16 @@ function MembershipRequest() {
     {
       name: "Year",
       selector: (row) => row.year,
+      sortable: true,
+    },
+    {
+      name: "Membership",
+      selector: (row) => row.membership,
+      sortable: true,
+    },
+    {
+      name: "Actions",
+      selector: (row) => row.membership,
       sortable: true,
     },
   ];
