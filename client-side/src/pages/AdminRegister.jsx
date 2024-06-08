@@ -1,19 +1,59 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 
 function AdminRegister() {
+  const [formData, setFormData] = useState({
+    id_number: "",
+    password: "",
+    name: "",
+    position: "",
+  });
+
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const navigate = useNavigate();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(`${BackendConnection()}/api/admin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast("success", "Registration successful");
+
+        navigate("/login");
+      } else {
+        showToast("error", JSON.stringify(data));
+      }
+    } catch (error) {
+      showToast("error", JSON.stringify(error));
+    }
+  };
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
           <div className="card">
-            <div className="card-header text-center">Register</div>
+            <div className="card-header text-center">Register Admin</div>
             <div className="card-body">
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label for="id_number" className="form-label">
+                  <label htmlFor="id_number" className="form-label">
                     ID Number
                   </label>
                   <input
@@ -21,6 +61,8 @@ function AdminRegister() {
                     className="form-control"
                     id="id_number"
                     name="id_number"
+                    value={formData.id_number}
+                    onChange={handleChange}
                     required
                   />
                 </div>
@@ -33,19 +75,23 @@ function AdminRegister() {
                     className="form-control"
                     id="password"
                     name="password"
+                    value={formData.password}
+                    onChange={handleChange}
                     required
                   />
                 </div>
 
                 <div className="mb-3">
                   <label for="name" className="form-label">
-                    Name
+                    Full Name
                   </label>
                   <input
                     type="text"
                     className="form-control"
                     id="name"
                     name="name"
+                    value={formData.name}
+                    onChange={handleChange}
                     required
                   />
                 </div>
@@ -57,6 +103,8 @@ function AdminRegister() {
                     className="form-control"
                     id="position"
                     name="position"
+                    value={formData.position}
+                    onChange={handleChange}
                     required
                   >
                     <option value="">Select Position</option>

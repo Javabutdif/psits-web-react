@@ -10,6 +10,8 @@ const bcrypt = require("bcryptjs");
 const registerRoutes = require("./routes/register");
 const loginRoutes = require("./routes/login");
 const studentsRoutes = require("./routes/students");
+const adminRoutes = require("./routes/admin");
+
 //Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -28,6 +30,7 @@ mongoose
 app.use("/api", registerRoutes);
 app.use("/api", loginRoutes);
 app.use("/api", studentsRoutes);
+app.use("/api", adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server started, listening at port ${PORT}`);
