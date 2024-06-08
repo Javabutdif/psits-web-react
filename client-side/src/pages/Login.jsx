@@ -27,14 +27,14 @@ function Login() {
         },
         body: JSON.stringify(formData),
       });
-      const data = await response.json();
-      if (response.ok && JSON.stringify(data) === "Admin") {
+      const data = await response.text();
+      if (response.ok && data === "Admin") {
         showToast("success", "Signed in successfully");
         navigate("/adminDashboard");
-      } else if (response.ok && JSON.stringify(data) === "Student") {
+      } else if (response.ok && data === "Student") {
         showToast("success", "Signed in successfully Student");
       } else {
-        showToast("error", JSON.stringify(data));
+        showToast("error", data);
       }
     } catch (error) {
       console.error("Error:", error);
