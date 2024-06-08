@@ -28,13 +28,15 @@ function Login() {
         body: JSON.stringify(formData),
       });
       const data = await response.text();
-      if (response.ok && data === "Admin") {
+      const trimmedData = data.trim().replace(/^"|"$/g, "");
+
+      if (response.ok && trimmedData === "Admin") {
         showToast("success", "Signed in successfully");
         navigate("/adminDashboard");
-      } else if (response.ok && data === "Student") {
+      } else if (response.ok && trimmedData === "Student") {
         showToast("success", "Signed in successfully Student");
       } else {
-        showToast("error", data);
+        showToast("error", trimmedData);
       }
     } catch (error) {
       console.error("Error:", error);
