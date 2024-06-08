@@ -18,12 +18,14 @@ import MembershipRequest from "./Admin/MembershipRequest";
 import MembershipHistory from "./Admin/MembershipHistory";
 import MembershipRenewal from "./Admin/MembershipRenewal";
 import AdminRegister from "./pages/AdminRegister";
+import PrivateRouteAdmin from "./Authentication/PrivateRouteAdmin";
 
 function App() {
   return (
     <Router>
       <div className="App">
         <ConditionalNavbar />
+
         <Routes>
           <Route path="/login" element={<Login />} />
 
@@ -31,7 +33,7 @@ function App() {
           <Route path="/officers" element={<Officers />} />
           <Route path="/register" element={<Register />} />
           <Route path="/developers" element={<Developers />} />
-          <Route path="/adminDashboard" element={<AdminDashboard />} />
+
           <Route path="/membershipRequest" element={<MembershipRequest />} />
           <Route path="/membershipRenewal" element={<MembershipRenewal />} />
           <Route path="/membershipHistory" element={<MembershipHistory />} />
