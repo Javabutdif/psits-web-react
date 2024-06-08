@@ -20,23 +20,21 @@ function Login() {
     e.preventDefault();
 
     try {
-      if (formData.id_number === "123" && formData.password === "123") {
+      const response = await fetch(`${BackendConnection()}/api/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (response.ok && JSON.stringify(data) === "Admin") {
         showToast("success", "Signed in successfully");
         navigate("/adminDashboard");
+      } else if (response.ok && JSON.stringify(data) === "Student") {
+        showToast("success", "Signed in successfully Student");
       } else {
-        const response = await fetch(`${BackendConnection()}/api/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        });
-        const data = await response.json();
-        if (response.ok) {
-          showToast("success", JSON.stringify(data));
-        } else {
-          showToast("error", JSON.stringify(data));
-        }
+        showToast("error", JSON.stringify(data));
       }
     } catch (error) {
       console.error("Error:", error);

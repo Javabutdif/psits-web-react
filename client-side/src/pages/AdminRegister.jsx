@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
+import { useNavigate } from "react-router-dom";
+import BackendConnection from "../api/BackendApi";
+import { showToast } from "../utils/alertHelper";
 
 function AdminRegister() {
   const [formData, setFormData] = useState({
@@ -67,7 +70,7 @@ function AdminRegister() {
                   />
                 </div>
                 <div className="mb-3">
-                  <label for="password" className="form-label">
+                  <label htmlFor="password" className="form-label">
                     Password
                   </label>
                   <input
@@ -82,7 +85,7 @@ function AdminRegister() {
                 </div>
 
                 <div className="mb-3">
-                  <label for="name" className="form-label">
+                  <label htmlFor="name" className="form-label">
                     Full Name
                   </label>
                   <input
@@ -96,7 +99,7 @@ function AdminRegister() {
                   />
                 </div>
                 <div className="mb-3">
-                  <label for="position" className="form-label">
+                  <label htmlFor="position" className="form-label">
                     Position
                   </label>
                   <select
@@ -136,6 +139,7 @@ function AdminRegister() {
                     <option value="4th Year Representative">
                       4th Year Representative
                     </option>
+                    <option value="Developer">Developer</option>
                   </select>
                 </div>
 

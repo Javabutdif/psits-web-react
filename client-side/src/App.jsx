@@ -17,6 +17,7 @@ import AdminDashboard from "./Admin/AdminDashboard";
 import MembershipRequest from "./Admin/MembershipRequest";
 import MembershipHistory from "./Admin/MembershipHistory";
 import MembershipRenewal from "./Admin/MembershipRenewal";
+import AdminRegister from "./pages/AdminRegister";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/membershipRequest" element={<MembershipRequest />} />
           <Route path="/membershipRenewal" element={<MembershipRenewal />} />
           <Route path="/membershipHistory" element={<MembershipHistory />} />
+          <Route path="/adminRegister" element={<AdminRegister />} />
         </Routes>
       </div>
     </Router>
@@ -52,7 +54,8 @@ function ConditionalNavbar() {
   } else if (
     location.pathname.startsWith("/home") ||
     location.pathname.startsWith("/developers") ||
-    location.pathname.startsWith("/officers")
+    location.pathname.startsWith("/officers") ||
+    location.pathname.startsWith("/adminRegister")
   ) {
     return <Navbar />;
   } else {
