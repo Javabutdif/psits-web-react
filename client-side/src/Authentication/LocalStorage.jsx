@@ -3,6 +3,7 @@
 // Time = 20 Minutes Max
 // Position = Admin / Student
 
+//Set Authentication when successful login
 export const setAuthentication = (value, position) => {
   const currentTime = new Date().getTime();
   const time = 20 * 60 * 1000;
@@ -12,6 +13,7 @@ export const setAuthentication = (value, position) => {
   localStorage.setItem("AuthenticationToken", JSON.stringify(authen));
 };
 
+//Retrive Token sa Private Route, every route e check if valid pa ang token
 export const getAuthentication = (key) => {
   const authen = localStorage.getItem(key);
   if (!authen) return null;
@@ -26,10 +28,12 @@ export const getAuthentication = (key) => {
   return item.role;
 };
 
+//Remove Authentication after logout
 export const removeAuthentication = (key) => {
   localStorage.removeItem(key);
 };
 
+//Attempt Increment
 export const attemptAuthentication = () => {
   let attempt = parseInt(localStorage.getItem("attempt")) || 0;
   if (attempt === 2) {
@@ -39,13 +43,15 @@ export const attemptAuthentication = () => {
   localStorage.setItem("attempt", attempt);
 };
 
+//Retrieve Attempt for conditional
 export const getAttemptAuthentication = () => {
   return parseInt(localStorage.getItem("attempt")) || 0;
 };
-
+//Reset Attempt when successful login
 export const resetAttemptAuthentication = () => {
   localStorage.removeItem("attempt");
 };
+//After 3 attempts, mu set og 1 minute rest para dili stress sa database
 export const timeOutAuthentication = () => {
   const currentTime = new Date().getTime();
   const time = 60 * 1000;
@@ -53,6 +59,7 @@ export const timeOutAuthentication = () => {
 
   localStorage.setItem("timeout", expiryTime);
 };
+//E retrieve ang timeout
 export const getTimeout = () => {
   const now = new Date();
   const time = localStorage.getItem("timeout");
