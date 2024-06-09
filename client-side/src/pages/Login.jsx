@@ -2,7 +2,14 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import BackendConnection from "../api/BackendApi";
 import { showToast } from "../utils/alertHelper";
-import { setAuthentication } from "../Authentication/LocalStorage";
+import {
+  setAuthentication,
+  attemptAuthentication,
+  getAttemptAuthentication,
+  resetAttemptAuthentication,
+  getTimeout,
+  timeOutAuthentication,
+} from "../Authentication/LocalStorage";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -21,24 +28,33 @@ function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${BackendConnection()}/api/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.text();
-      const trimmedData = data.trim().replace(/^"|"$/g, "");
+      if (getAttemptAuthentication() < 3 && getTimeout() === null) {
+        const response = await fetch(`${BackendConnection()}/api/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+        const data = await response.text();
+        const trimmedData = data.trim().replace(/^"|"$/g, "");
 
-      if (response.ok && trimmedData === "Admin") {
-        showToast("success", "Signed in successfully");
-        setAuthentication(formData.id_number, "Admin");
-        navigate("/adminDashboard");
-      } else if (response.ok && trimmedData === "Student") {
-        showToast("success", "Signed in successfully Student");
+        if (response.ok && trimmedData === "Admin") {
+          showToast("success", "Signed in successfully");
+          setAuthentication(formData.id_number, "Admin");
+          resetAttemptAuthentication();
+          navigate("/adminDashboard");
+        } else if (response.ok && trimmedData === "Student") {
+          resetAttemptAuthentication();
+          showToast("success", "Signed in successfully Student");
+        } else {
+          showToast("error", trimmedData);
+          attemptAuthentication();
+        }
       } else {
-        showToast("error", trimmedData);
+        showToast("error", "Retry after 3 attempts, wait 1 minute.");
+        console.log(getTimeout());
+        console.log(getAttemptAuthentication());
       }
     } catch (error) {
       console.error("Error:", error);

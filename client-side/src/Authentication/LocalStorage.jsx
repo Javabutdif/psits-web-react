@@ -8,7 +8,6 @@ export const setAuthentication = (value, position) => {
   const time = 20 * 60 * 1000;
   const expiryTime = currentTime + time;
 
-  // Set the authentication object
   const authen = { value, expiry: expiryTime, role: position };
   localStorage.setItem("AuthenticationToken", JSON.stringify(authen));
 };
@@ -29,4 +28,44 @@ export const getAuthentication = (key) => {
 
 export const removeAuthentication = (key) => {
   localStorage.removeItem(key);
+};
+
+export const attemptAuthentication = () => {
+  let attempt = parseInt(localStorage.getItem("attempt")) || 0;
+  if (attempt === 2) {
+    timeOutAuthentication();
+  }
+  attempt++;
+  localStorage.setItem("attempt", attempt);
+};
+
+export const getAttemptAuthentication = () => {
+  return parseInt(localStorage.getItem("attempt")) || 0;
+};
+
+export const resetAttemptAuthentication = () => {
+  localStorage.removeItem("attempt");
+};
+export const timeOutAuthentication = () => {
+  const currentTime = new Date().getTime();
+  const time = 60 * 1000;
+  const expiryTime = currentTime + time;
+
+  localStorage.setItem("timeout", expiryTime);
+};
+export const getTimeout = () => {
+  const now = new Date();
+  const time = localStorage.getItem("timeout");
+
+  if (!time) {
+    return null;
+  }
+
+  if (now.getTime() > time) {
+    localStorage.removeItem("timeout");
+    localStorage.removeItem("attempt");
+    return null;
+  }
+
+  return time;
 };
