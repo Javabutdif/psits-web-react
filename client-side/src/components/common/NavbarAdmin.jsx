@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import logo from "../../assets/images/psits-logo.png";
 import { showToast } from "../../utils/alertHelper";
+import { removeAuthentication } from "../../Authentication/LocalStorage";
 
 function Navbar() {
   const handleLogoutClick = () => {
+    removeAuthentication("AuthenticationToken");
     showToast("success", "Signed out successfully");
   };
   return (

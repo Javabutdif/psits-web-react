@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import BackendConnection from "../api/BackendApi";
 import { showToast } from "../utils/alertHelper";
+import { setAuthentication } from "../Authentication/LocalStorage";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -32,6 +33,7 @@ function Login() {
 
       if (response.ok && trimmedData === "Admin") {
         showToast("success", "Signed in successfully");
+        setAuthentication(formData.id_number, "Admin");
         navigate("/adminDashboard");
       } else if (response.ok && trimmedData === "Student") {
         showToast("success", "Signed in successfully Student");

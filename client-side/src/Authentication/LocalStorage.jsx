@@ -3,11 +3,14 @@
 // Time = 20 Minutes Max
 // Position = Admin / Student
 
-export const setAuthentication = (key, value, time, position) => {
-  const getTime = Date().getTime();
-  //set the authentication
-  const authen = { value, expiry: getTime + time, role: position };
-  localStorage.setItem(key, JSON.stringify(authen));
+export const setAuthentication = (value, position) => {
+  const currentTime = new Date().getTime();
+  const time = 20 * 60 * 1000;
+  const expiryTime = currentTime + time;
+
+  // Set the authentication object
+  const authen = { value, expiry: expiryTime, role: position };
+  localStorage.setItem("AuthenticationToken", JSON.stringify(authen));
 };
 
 export const getAuthentication = (key) => {
@@ -22,4 +25,8 @@ export const getAuthentication = (key) => {
     return null;
   }
   return item.role;
+};
+
+export const removeAuthentication = (key) => {
+  localStorage.removeItem(key);
 };

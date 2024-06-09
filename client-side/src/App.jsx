@@ -33,10 +33,22 @@ function App() {
           <Route path="/officers" element={<Officers />} />
           <Route path="/register" element={<Register />} />
           <Route path="/developers" element={<Developers />} />
-
-          <Route path="/membershipRequest" element={<MembershipRequest />} />
-          <Route path="/membershipRenewal" element={<MembershipRenewal />} />
-          <Route path="/membershipHistory" element={<MembershipHistory />} />
+          <Route
+            path="/adminDashboard"
+            element={<PrivateRouteAdmin element={AdminDashboard} />}
+          />
+          <Route
+            path="/membershipRequest"
+            element={<PrivateRouteAdmin element={MembershipRequest} />}
+          />
+          <Route
+            path="/membershipRenewal"
+            element={<PrivateRouteAdmin element={MembershipRenewal} />}
+          />
+          <Route
+            path="/membershipHistory"
+            element={<PrivateRouteAdmin element={MembershipHistory} />}
+          />
           <Route path="/adminRegister" element={<AdminRegister />} />
         </Routes>
       </div>
