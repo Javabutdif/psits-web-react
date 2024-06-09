@@ -17,6 +17,9 @@ import AdminDashboard from "./Admin/AdminDashboard";
 import MembershipRequest from "./Admin/MembershipRequest";
 import MembershipHistory from "./Admin/MembershipHistory";
 import MembershipRenewal from "./Admin/MembershipRenewal";
+import Merchandise from "./Admin/Merchandise";
+import MerchandiseHistory from "./Admin/MerchandiseHistory";
+import MerchandiseOrders from "./Admin/MerchandiseOrders";
 import AdminRegister from "./pages/AdminRegister";
 import PrivateRouteAdmin from "./Authentication/PrivateRouteAdmin";
 
@@ -49,6 +52,18 @@ function App() {
             path="/membershipHistory"
             element={<PrivateRouteAdmin element={MembershipHistory} />}
           />
+          <Route
+            path="/merchandise"
+            element={<PrivateRouteAdmin element={Merchandise} />}
+          />
+          <Route
+            path="/merchandiseHistory"
+            element={<PrivateRouteAdmin element={MerchandiseHistory} />}
+          />
+          <Route
+            path="/merchandiseOrders"
+            element={<PrivateRouteAdmin element={MerchandiseOrders} />}
+          />
           <Route path="/adminRegister" element={<AdminRegister />} />
         </Routes>
       </div>
@@ -62,7 +77,10 @@ function ConditionalNavbar() {
     location.pathname.startsWith("/adminDashboard") ||
     location.pathname.startsWith("/membershipRequest") ||
     location.pathname.startsWith("/membershipRenewal") ||
-    location.pathname.startsWith("/membershipHistory")
+    location.pathname.startsWith("/membershipHistory") ||
+    location.pathname.startsWith("/merchandise") ||
+    location.pathname.startsWith("/merchandiseHistory") ||
+    location.pathname.startsWith("/merchandiseOrders")
   ) {
     return <NavbarAdmin />;
   } else if (

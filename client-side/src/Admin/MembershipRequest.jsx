@@ -62,13 +62,23 @@ function MembershipRequest() {
     },
     {
       name: "Actions",
-      selector: (row) => row.membership,
-      sortable: true,
+      cell: (row) => (
+        <button
+          className="btn btn-primary"
+          onClick={() => handleButtonClick(row.id_number)}
+        >
+          Approve
+        </button>
+      ),
     },
   ];
+  const handleButtonClick = (row) => {
+    // Handle button click action here
+    console.log("Button clicked for row:", row);
+  };
   return (
     <div>
-      <h1 className="text-center">Membership Request</h1>
+      <h1 className="text-center mt-5">Membership Request</h1>
       <DataTable
         title="Student List"
         columns={columns}
