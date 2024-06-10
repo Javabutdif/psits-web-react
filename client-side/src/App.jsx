@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import Navbar from "./components/common/Navbar";
 import NavbarAdmin from "./components/common/NavbarAdmin";
+import NavbarStudent from "./components/common/NavbarStudent";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Officers from "./pages/Officers";
@@ -22,6 +23,11 @@ import MerchandiseHistory from "./Admin/MerchandiseHistory";
 import MerchandiseOrders from "./Admin/MerchandiseOrders";
 import AdminRegister from "./pages/AdminRegister";
 import PrivateRouteAdmin from "./Authentication/PrivateRouteAdmin";
+import PrivateRouteStudent from "./Authentication/PrivateRouteStudent";
+import StudentDashboard from "./Students/StudentDashboard";
+import StudentMerchandise from "./Students/StudentMerchandise";
+import StudentHistory from "./Students/StudentHistory";
+import StudentOrders from "./Students/StudentOrders";
 
 function App() {
   return (
@@ -64,6 +70,22 @@ function App() {
             path="/merchandiseOrders"
             element={<PrivateRouteAdmin element={MerchandiseOrders} />}
           />
+          <Route
+            path="/studentDashboard"
+            element={<PrivateRouteStudent element={StudentDashboard} />}
+          />
+          <Route
+            path="/studentMerchandise"
+            element={<PrivateRouteStudent element={StudentMerchandise} />}
+          />
+          <Route
+            path="/studentHistory"
+            element={<PrivateRouteStudent element={StudentHistory} />}
+          />
+          <Route
+            path="/studentOrders"
+            element={<PrivateRouteStudent element={StudentOrders} />}
+          />
           <Route path="/adminRegister" element={<AdminRegister />} />
         </Routes>
       </div>
@@ -84,12 +106,12 @@ function ConditionalNavbar() {
   ) {
     return <NavbarAdmin />;
   } else if (
-    location.pathname.startsWith("/home") ||
-    location.pathname.startsWith("/developers") ||
-    location.pathname.startsWith("/officers") ||
-    location.pathname.startsWith("/adminRegister")
+    location.pathname.startsWith("/studentDashboard") ||
+    location.pathname.startsWith("/studentMerchandise") ||
+    location.pathname.startsWith("/studentHistory") ||
+    location.pathname.startsWith("/studentOrders")
   ) {
-    return <Navbar />;
+    return <NavbarStudent />;
   } else {
     return <Navbar />;
   }

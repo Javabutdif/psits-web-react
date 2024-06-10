@@ -47,6 +47,8 @@ function Login() {
         } else if (response.ok && trimmedData === "Student") {
           resetAttemptAuthentication();
           showToast("success", "Signed in successfully Student");
+          setAuthentication(formData.id_number, "Student");
+          navigate("/studentDashboard");
         } else {
           showToast("error", trimmedData);
           attemptAuthentication();
