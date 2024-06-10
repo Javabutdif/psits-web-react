@@ -32,6 +32,12 @@ function Register() {
   };
 
   const showModal = () => {
+    if (formData.password !== formData.confirmpassword) {
+      setPasswordMismatch(true);
+      return;
+    }
+
+    setPasswordMismatch(false);
     setIsModalVisible(true);
   };
 
@@ -41,12 +47,8 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmpassword) {
-      setPasswordMismatch(true);
-      return;
-    }
 
-    setPasswordMismatch(false);
+    hideModal();
 
     try {
       const response = await fetch(`${BackendConnection()}/api/register`, {
