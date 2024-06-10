@@ -72,7 +72,7 @@ function Login() {
               className="card-body text-white rounded-4"
               style={{ backgroundColor: "#074873" }}
             >
-              <h3 className="card-title text-center mb-4">LOGIN</h3>
+              <h3 className="card-title text-center mb-4">Login</h3>
               <form onSubmit={handleSubmit} className="px-4">
                 <div className="mb-3">
                   <label htmlFor="id_number" className="form-label">
