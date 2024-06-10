@@ -8,6 +8,7 @@ import { showToast } from "../utils/alertHelper";
 function Register() {
   const [formData, setFormData] = useState({
     id_number: "",
+    rifd: "",
     password: "",
     confirmpassword: "",
     first_name: "",

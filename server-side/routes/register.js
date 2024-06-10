@@ -8,6 +8,7 @@ router.post("/register", async (req, res) => {
   const {
     id_number,
     password,
+    rfid,
     first_name,
     middle_name,
     last_name,
@@ -21,6 +22,7 @@ router.post("/register", async (req, res) => {
 
     const newStudent = new Student({
       id_number,
+      rfid: "N/A",
       password: hashedPassword,
       first_name,
       middle_name,

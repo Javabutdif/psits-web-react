@@ -35,6 +35,11 @@ function MembershipRequest() {
       sortable: true,
     },
     {
+      name: "RFID",
+      selector: (row) => row.rfid,
+      sortable: true,
+    },
+    {
       name: "Name",
       selector: (row) =>
         row.first_name + " " + row.middle_name + " " + row.last_name,
