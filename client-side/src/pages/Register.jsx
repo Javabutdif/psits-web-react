@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import BackendConnection from "../api/BackendApi";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { showToast } from "../utils/alertHelper";
+import ConfirmationModal from "../components/common/ConfirmationModal";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ function Register() {
     year: "",
   });
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const navigate = useNavigate();
   const handleChange = (e) => {
@@ -27,6 +29,14 @@ function Register() {
       ...formData,
       [name]: value,
     });
+  };
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const hideModal = () => {
+    setIsModalVisible(false);
   };
 
   const handleSubmit = async (e) => {
@@ -71,7 +81,7 @@ function Register() {
               style={{ backgroundColor: "#074873 " }}
             >
               <h3 className="card-title text-center mb-4">Register</h3>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={(e) => e.preventDefault()}>
                 <div className="my-3 pt-2">
                   <label htmlFor="id_number" className="form-label">
                     ID Number
@@ -228,7 +238,11 @@ function Register() {
                 </div>
                 <div className="row justify-content-between align-items-center">
                   <div className="col-md-6 ">
-                    <button type="submit" className="btn btn-primary me-2">
+                    <button
+                      type="button"
+                      onClick={showModal}
+                      className="btn btn-primary me-2"
+                    >
                       Proceed
                     </button>
                     <Link to="/login" className="btn btn-danger">
@@ -241,6 +255,13 @@ function Register() {
           </div>
         </div>
       </div>
+      {isModalVisible && (
+        <ConfirmationModal
+          formData={formData}
+          onSubmit={handleSubmit}
+          onCancel={hideModal}
+        />
+      )}
     </div>
   );
 }
