@@ -32,7 +32,12 @@ router.post("/login", async (req, res) => {
       const passwordMatch = await bcrypt.compare(password, admin.password);
 
       if (passwordMatch) {
-        return res.json("Admin");
+        return res.json({
+          role: "Admin",
+          id_number: admin.id_number,
+          name: admin.name,
+          position: admin.position,
+        });
       } else if (!passwordMatch) {
         return res.status(400).json("Invalid ID number or password");
       }

@@ -4,12 +4,18 @@
 // Position = Admin / Student
 
 //Set Authentication when successful login
-export const setAuthentication = (value, position) => {
+export const setAuthentication = (name, id_number, role, position) => {
   const currentTime = new Date().getTime();
   const time = 20 * 60 * 1000;
   const expiryTime = currentTime + time;
 
-  const authen = { value, expiry: expiryTime, role: position };
+  const authen = {
+    name: name,
+    id: id_number,
+    position: position,
+    expiry: expiryTime,
+    role: role,
+  };
   localStorage.setItem("AuthenticationToken", JSON.stringify(authen));
 };
 

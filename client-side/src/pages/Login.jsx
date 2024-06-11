@@ -36,21 +36,25 @@ function Login() {
           },
           body: JSON.stringify(formData),
         });
-        const data = await response.text();
-        const trimmedData = data.trim().replace(/^"|"$/g, "");
-
-        if (response.ok && trimmedData === "Admin") {
+        const data = await response.json();
+      
+        if (response.ok && data.role === "Admin") {
           showToast("success", "Signed in successfully");
-          setAuthentication(formData.id_number, "Admin");
+          setAuthentication(
+            data.name,
+            data.id_number,
+            data.role,
+            data.position
+          );
           resetAttemptAuthentication();
           navigate("/adminDashboard");
-        } else if (response.ok && trimmedData === "Student") {
+        } else if (response.ok && data.role === "Student") {
           resetAttemptAuthentication();
           showToast("success", "Signed in successfully Student");
           setAuthentication(formData.id_number, "Student");
           navigate("/studentDashboard");
         } else {
-          showToast("error", trimmedData);
+          showToast("error", data);
           attemptAuthentication();
         }
       } else {
