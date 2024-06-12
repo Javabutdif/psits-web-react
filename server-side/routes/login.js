@@ -24,7 +24,17 @@ router.post("/login", async (req, res) => {
       if (passwordMatch && student.membership === "Pending") {
         return res.status(400).json("Student must pay 50 in the PSITS Office");
       } else if (passwordMatch && student.membership === "Accepted") {
-        return res.json("Student");
+        return res.json({
+          role: "Student",
+          id_number: student.id_number,
+          name:
+            student.first_name +
+            " " +
+            student.middle_name +
+            " " +
+            student.last_name,
+          position: "N/A",
+        });
       } else if (!passwordMatch) {
         return res.status(400).json("Invalid ID number or password");
       }
