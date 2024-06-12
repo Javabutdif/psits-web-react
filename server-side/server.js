@@ -19,8 +19,6 @@ app.use(bodyParser.json());
 //Connection to Mongoose
 mongoose
   .connect(mongodbConnection(), {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     dbName: "psits",
   })
   .then(() => console.log("MongoDB connected"))
