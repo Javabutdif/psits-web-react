@@ -21,6 +21,7 @@ import MembershipRenewal from "./Admin/MembershipRenewal";
 import Merchandise from "./Admin/Merchandise";
 import MerchandiseHistory from "./Admin/MerchandiseHistory";
 import MerchandiseOrders from "./Admin/MerchandiseOrders";
+import ViewStudents from "./Admin/ViewStudents";
 import AdminRegister from "./pages/AdminRegister";
 import PrivateRouteAdmin from "./Authentication/PrivateRouteAdmin";
 import PrivateRouteStudent from "./Authentication/PrivateRouteStudent";
@@ -71,6 +72,10 @@ function App() {
             element={<PrivateRouteAdmin element={MerchandiseOrders} />}
           />
           <Route
+            path="/viewStudents"
+            element={<PrivateRouteAdmin element={ViewStudents} />}
+          />
+          <Route
             path="/studentDashboard"
             element={<PrivateRouteStudent element={StudentDashboard} />}
           />
@@ -102,7 +107,8 @@ function ConditionalNavbar() {
     location.pathname.startsWith("/membershipHistory") ||
     location.pathname.startsWith("/merchandise") ||
     location.pathname.startsWith("/merchandiseHistory") ||
-    location.pathname.startsWith("/merchandiseOrders")
+    location.pathname.startsWith("/merchandiseOrders") ||
+    location.pathname.startsWith("/viewStudents")
   ) {
     return <NavbarAdmin />;
   } else if (
