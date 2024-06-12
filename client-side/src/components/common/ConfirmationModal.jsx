@@ -27,9 +27,6 @@ function ConfirmationModal({ formData, onSubmit, onCancel }) {
               <strong>Last Name:</strong> {formData.last_name}
             </p>
             <p>
-              <strong>Password:</strong> {formData.password}
-            </p>
-            <p>
               <strong>Email:</strong> {formData.email}
             </p>
             <p>
