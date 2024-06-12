@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 import jims from "../assets/images/jims.jpg";
 import kirby from "../assets/images/kirby.gif";
+import hutao from "../assets/images/hutao.gif";
 
 function Developers() {
   return (
@@ -18,12 +19,25 @@ function Developers() {
               className="card-header text-white text-center"
               style={{ backgroundColor: "#074873" }}
             >
-              Project Lead / Backend
+              Project Lead / Fullstack
             </h5>
-            <img className="card-img-top" src={kirby} alt="Genabio" />
+            <img className="card-img-top" src={hutao} alt="Jims" />
             <div className="card-body">
               <h4 className="card-title">Jims</h4>
-              <p></p>
+            </div>
+          </div>
+        </div>
+        <div className="col">
+          <div className="card mb-3">
+            <h5
+              className="card-header text-white text-center "
+              style={{ backgroundColor: "#074873" }}
+            >
+              Fullstack
+            </h5>
+            <img className="card-img-top" src={kirby} alt="Adriane" />
+            <div className="card-body">
+              <h4 className="card-title">Adriane</h4>
             </div>
           </div>
         </div>
