@@ -4,9 +4,9 @@ const Student = require("../models/StudentModel");
 
 const router = express.Router();
 
-router.get("/students", async (req, res) => {
+router.get("/requestStudent", async (req, res) => {
   try {
-    const students = await Student.find({ membership: "Accepted" });
+    const students = await Student.find({ membership: "Pending" });
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);

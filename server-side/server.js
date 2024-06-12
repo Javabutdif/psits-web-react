@@ -9,8 +9,9 @@ const mongodbConnection = require("./mongoDB/MongoDbConnection");
 const bcrypt = require("bcryptjs");
 const registerRoutes = require("./routes/register");
 const loginRoutes = require("./routes/login");
-const studentsRoutes = require("./routes/students");
+const studentsPendingRoutes = require("./routes/requestStudent");
 const adminRoutes = require("./routes/admin");
+const studentApproveRoutes = require("./routes/students");
 
 //Middleware
 app.use(cors());
@@ -27,7 +28,8 @@ mongoose
 //Routes
 app.use("/api", registerRoutes);
 app.use("/api", loginRoutes);
-app.use("/api", studentsRoutes);
+app.use("/api", studentsPendingRoutes);
+app.use("/api", studentApproveRoutes);
 app.use("/api", adminRoutes);
 
 app.listen(PORT, () => {

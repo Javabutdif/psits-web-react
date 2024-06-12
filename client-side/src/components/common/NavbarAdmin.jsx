@@ -41,7 +41,7 @@ function Navbar() {
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link " to="/adminDashboard">
+              <Link className="nav-link " to="/viewStudents">
                 Students
               </Link>
             </li>

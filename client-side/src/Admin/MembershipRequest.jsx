@@ -11,12 +11,15 @@ function MembershipRequest() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BackendConnection()}/api/students`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `${BackendConnection()}/api/requestStudent`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         const result = await response.json();
         setData(result);
       } catch (error) {
