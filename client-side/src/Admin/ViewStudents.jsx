@@ -4,9 +4,12 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 import DataTable from "react-data-table-component";
 import BackendConnection from "../api/BackendApi";
+import { useNavigate } from "react-router-dom";
+import { setStudentData } from "../components/admin/EditStudentData";
 
 function ViewStudents() {
   const [data, setData] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,7 +73,7 @@ function ViewStudents() {
         <div className="d-flex flex-row gap-1">
           <button
             className="btn btn-primary"
-            onClick={() => handleButtonClick(row.id_number)}
+            onClick={() => handleButtonClick(row)}
           >
             Edit
           </button>
@@ -85,8 +88,8 @@ function ViewStudents() {
     },
   ];
   const handleButtonClick = (row) => {
-    // Handle button click action here
-    console.log("Button clicked for row:", row);
+    setStudentData({ student: row });
+    navigate("/editStudent");
   };
   return (
     <div>
