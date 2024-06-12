@@ -124,7 +124,13 @@ function ConditionalNavbar() {
     location.pathname.startsWith("/studentOrders")
   ) {
     return <NavbarStudent />;
-  } else {
+  } else if (
+    location.pathname.startsWith("/login") ||
+    location.pathname.startsWith("/register") ||
+    location.pathname.startsWith("/officers") ||
+    location.pathname.startsWith("/developers") ||
+    location.pathname.startsWith("/")
+  ) {
     return <Navbar />;
   }
 }
