@@ -27,7 +27,6 @@ function MembershipRequest() {
     fetchData();
   }, []);
 
-  // Define columns for the DataTable
   const columns = [
     {
       name: "ID",

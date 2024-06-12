@@ -40,6 +40,11 @@ function Navbar() {
                 Dashboard
               </Link>
             </li>
+            <li className="nav-item">
+              <Link className="nav-link " to="/adminDashboard">
+                Students
+              </Link>
+            </li>
             <li className="nav-item dropdown">
               <a
                 className="nav-link dropdown-toggle "
