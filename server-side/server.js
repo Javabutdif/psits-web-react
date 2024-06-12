@@ -12,6 +12,7 @@ const loginRoutes = require("./routes/login");
 const studentsPendingRoutes = require("./routes/requestStudent");
 const adminRoutes = require("./routes/admin");
 const studentApproveRoutes = require("./routes/students");
+const editStudentRoutes = require("./routes/editedStudent");
 
 //Middleware
 app.use(cors());
@@ -30,6 +31,7 @@ app.use("/api", registerRoutes);
 app.use("/api", loginRoutes);
 app.use("/api", studentsPendingRoutes);
 app.use("/api", studentApproveRoutes);
+app.use("/api", editStudentRoutes);
 app.use("/api", adminRoutes);
 
 app.listen(PORT, () => {
