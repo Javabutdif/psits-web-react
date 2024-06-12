@@ -37,7 +37,7 @@ function Login() {
           body: JSON.stringify(formData),
         });
         const data = await response.json();
-      
+
         if (response.ok && data.role === "Admin") {
           showToast("success", "Signed in successfully");
           setAuthentication(
@@ -51,7 +51,12 @@ function Login() {
         } else if (response.ok && data.role === "Student") {
           resetAttemptAuthentication();
           showToast("success", "Signed in successfully Student");
-          setAuthentication(formData.id_number, "Student");
+          setAuthentication(
+            data.name,
+            data.id_number,
+            data.role,
+            data.position
+          );
           navigate("/studentDashboard");
         } else {
           showToast("error", data);
