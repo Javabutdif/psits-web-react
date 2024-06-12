@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 import DataTable from "react-data-table-component";
 import BackendConnection from "../api/BackendApi";
 import { useNavigate } from "react-router-dom";
 import { setStudentData } from "../components/admin/EditStudentData";
+import ConfirmationModal from "../components/common/ConfirmationModal.jsx";
 
 function ViewStudents() {
   const [data, setData] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -73,24 +73,31 @@ function ViewStudents() {
         <div className="d-flex flex-row gap-1">
           <button
             className="btn btn-primary"
-            onClick={() => handleButtonClick(row)}
+            onClick={() => handleEditButton(row)}
           >
             Edit
           </button>
-          <button
-            className="btn btn-danger"
-            onClick={() => handleButtonClick(row.id_number)}
-          >
+          <button className="btn btn-danger" onClick={() => showModal()}>
             Delete
           </button>
         </div>
       ),
     },
   ];
-  const handleButtonClick = (row) => {
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const hideModal = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleEditButton = (row) => {
     setStudentData({ student: row });
     navigate("/editStudent");
   };
+
   return (
     <div>
       <h1 className="text-center mt-5">Registered Students</h1>
@@ -100,6 +107,7 @@ function ViewStudents() {
         data={data}
         pagination
       />
+      {isModalVisible && <ConfirmationModal />}
     </div>
   );
 }
