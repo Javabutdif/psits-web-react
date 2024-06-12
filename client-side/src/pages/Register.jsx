@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import BackendConnection from "../api/BackendApi";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { showToast } from "../utils/alertHelper";
-import ConfirmationModal from "../components/common/ConfirmationModal";
+import RegistrationConfirmationModal from "../components/common/RegistrationConfirmationModal.jsx";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -258,7 +258,7 @@ function Register() {
         </div>
       </div>
       {isModalVisible && (
-        <ConfirmationModal
+        <RegistrationConfirmationModal
           formData={formData}
           onSubmit={handleSubmit}
           onCancel={hideModal}
