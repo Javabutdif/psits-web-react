@@ -10,6 +10,7 @@ import { ConfirmActionType } from "../enums/commonEnums.js";
 function ViewStudents() {
   const [data, setData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,7 +79,7 @@ function ViewStudents() {
           >
             Edit
           </button>
-          <button className="btn btn-danger" onClick={() => showModal()}>
+          <button className="btn btn-danger" onClick={() => showModal(row)}>
             Delete
           </button>
         </div>
@@ -86,8 +87,9 @@ function ViewStudents() {
     },
   ];
 
-  const showModal = () => {
+  const showModal = (row) => {
     setIsModalVisible(true);
+    setStudentIdToBeDeleted(row.id_number);
   };
 
   const hideModal = () => {
@@ -99,8 +101,32 @@ function ViewStudents() {
     navigate("/editStudent");
   };
 
-  const handleConfirmDeletion = () => {
-    console.log("Test");
+  const handleConfirmDeletion = async () => {
+    try {
+      const id_number = studentIdToBeDeleted;
+      const response = await fetch(
+        `${BackendConnection()}/api/students/${id_number}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Remove the deleted student from the data array
+        const updatedData = data.filter(
+          (student) => student.id_number !== id_number
+        );
+        setData(updatedData);
+        setIsModalVisible(false);
+      } else {
+        console.error("Failed to delete student");
+      }
+    } catch (error) {
+      console.error("Error deleting student:", error);
+    }
   };
 
   return (
