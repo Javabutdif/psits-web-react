@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "../App.css";
 import DataTable from "react-data-table-component";
-import backendConnection from "../api/backendApi";
+import backendConnection from "../api/backendApi.js";
 import { useNavigate } from "react-router-dom";
-import { setStudentData } from "../utils/editStudentData";
+import { setStudentData } from "../utils/editStudentData.js";
 import ConfirmationModal from "../components/common/ConfirmationModal.jsx";
 import { ConfirmActionType } from "../enums/commonEnums.js";
 import { showToast } from "../utils/alertHelper.js";
