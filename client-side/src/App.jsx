@@ -14,7 +14,7 @@ import Login from "./pages/Login";
 import Officers from "./pages/Officers";
 import Register from "./pages/Register";
 import Developers from "./pages/Developers";
-import AdminDashboard from "./admin/AdminDashboard";
+import AdminDashboard from "./admin/AdminDashboard.jsx";
 import MembershipRequest from "./admin/MembershipRequest";
 import MembershipHistory from "./admin/MembershipHistory";
 import MembershipRenewal from "./admin/MembershipRenewal";
