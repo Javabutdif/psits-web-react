@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../App.css";
 import DataTable from "react-data-table-component";
-import BackendConnection from "../api/BackendApi";
+import backendConnection from "../api/backendApi";
 import { useNavigate } from "react-router-dom";
 import { setStudentData } from "../components/admin/EditStudentData";
 import ConfirmationModal from "../components/common/ConfirmationModal.jsx";
@@ -17,7 +17,7 @@ function ViewStudents() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BackendConnection()}/api/students`, {
+        const response = await fetch(`${backendConnection()}/api/students`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -106,7 +106,7 @@ function ViewStudents() {
     try {
       const id_number = studentIdToBeDeleted;
       const response = await fetch(
-        `${BackendConnection()}/api/students/${id_number}`,
+        `${backendConnection()}/api/students/${id_number}`,
         {
           method: "DELETE",
           headers: {

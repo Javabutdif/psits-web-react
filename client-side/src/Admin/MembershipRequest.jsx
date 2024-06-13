@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 import DataTable from "react-data-table-component";
-import BackendConnection from "../api/BackendApi";
+import backendConnection from "../api/backendApi";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
@@ -12,7 +12,7 @@ function MembershipRequest() {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `${BackendConnection()}/api/requestStudent`,
+          `${backendConnection()}/api/requestStudent`,
           {
             method: "GET",
             headers: {
