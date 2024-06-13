@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { setStudentData } from "../components/admin/EditStudentData";
 import ConfirmationModal from "../components/common/ConfirmationModal.jsx";
 import { ConfirmActionType } from "../enums/commonEnums.js";
+import { showToast } from "../utils/alertHelper.jsx";
 
 function ViewStudents() {
   const [data, setData] = useState([]);
@@ -121,8 +122,10 @@ function ViewStudents() {
         );
         setData(updatedData);
         setIsModalVisible(false);
+        showToast("success", "Student Deletion Successful!");
       } else {
         console.error("Failed to delete student");
+        showToast("error", "Student Deletion Failed! Please try again.");
       }
     } catch (error) {
       console.error("Error deleting student:", error);
