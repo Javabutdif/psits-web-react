@@ -14,22 +14,22 @@ import Login from "./pages/Login";
 import Officers from "./pages/Officers";
 import Register from "./pages/Register";
 import Developers from "./pages/Developers";
-import AdminDashboard from "./Admin/AdminDashboard";
-import MembershipRequest from "./Admin/MembershipRequest";
-import MembershipHistory from "./Admin/MembershipHistory";
-import MembershipRenewal from "./Admin/MembershipRenewal";
-import Merchandise from "./Admin/Merchandise";
-import MerchandiseHistory from "./Admin/MerchandiseHistory";
-import MerchandiseOrders from "./Admin/MerchandiseOrders";
-import ViewStudents from "./Admin/ViewStudents";
-import EditStudent from "./Admin/EditStudent";
+import AdminDashboard from "./admin/AdminDashboard.jsx";
+import MembershipRequest from "./admin/MembershipRequest";
+import MembershipHistory from "./admin/MembershipHistory";
+import MembershipRenewal from "./admin/MembershipRenewal";
+import Merchandise from "./admin/Merchandise";
+import MerchandiseHistory from "./admin/MerchandiseHistory";
+import MerchandiseOrders from "./admin/MerchandiseOrders";
+import ViewStudents from "./admin/ViewStudents";
+import EditStudent from "./admin/EditStudent";
 import AdminRegister from "./pages/AdminRegister";
-import PrivateRouteAdmin from "./Authentication/PrivateRouteAdmin";
-import PrivateRouteStudent from "./Authentication/PrivateRouteStudent";
-import StudentDashboard from "./Students/StudentDashboard";
-import StudentMerchandise from "./Students/StudentMerchandise";
-import StudentHistory from "./Students/StudentHistory";
-import StudentOrders from "./Students/StudentOrders";
+import PrivateRouteAdmin from "./authentication/privateRouteAdmin";
+import PrivateRouteStudent from "./authentication/privateRouteStudent";
+import StudentDashboard from "./students/StudentDashboard";
+import StudentMerchandise from "./students/StudentMerchandise";
+import StudentHistory from "./students/StudentHistory";
+import StudentOrders from "./students/StudentOrders";
 
 function App() {
   return (

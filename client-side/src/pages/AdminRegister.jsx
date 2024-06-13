@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 import { useNavigate } from "react-router-dom";
-import BackendConnection from "../api/BackendApi";
+import backendConnection from "../api/backendApi";
 import { showToast } from "../utils/alertHelper";
 
 function AdminRegister() {
@@ -28,7 +28,7 @@ function AdminRegister() {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${BackendConnection()}/api/admin`, {
+      const response = await fetch(`${backendConnection()}/api/admin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

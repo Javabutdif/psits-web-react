@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import BackendConnection from "../api/BackendApi";
+import backendConnection from "../api/backendApi";
 import { showToast } from "../utils/alertHelper";
 import {
   setAuthentication,
@@ -9,7 +9,7 @@ import {
   resetAttemptAuthentication,
   getTimeout,
   timeOutAuthentication,
-} from "../Authentication/LocalStorage";
+} from "../authentication/localStorage";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -29,7 +29,7 @@ function Login() {
 
     try {
       if (getAttemptAuthentication() < 3 && getTimeout() === null) {
-        const response = await fetch(`${BackendConnection()}/api/login`, {
+        const response = await fetch(`${backendConnection()}/api/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
