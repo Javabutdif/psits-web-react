@@ -1,40 +1,38 @@
 import React from "react";
+import {
+  ConfirmActionType,
+  ConfirmActionWords,
+} from "../../enums/commonEnums.js";
+import { capitalizeFirstLetter } from "../../utils/stringUtils.js";
 
-function ConfirmationModal({ formData, onSubmit, onCancel }) {
+function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
+  let confirmTypeWord = ConfirmActionWords[confirmType];
+
+  const confirmButtonColor =
+    confirmType === ConfirmActionType.DELETION ? "btn-danger" : "btn-success";
+
   return (
-    <div className="modal show" style={{ display: "block" }}>
-      <div className="modal-dialog modal-dialog-centered">
+    <div className="modal fade show d-block" tabIndex="-1" role="dialog">
+      <div className="modal-dialog" role="document">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Confirm Your Details</h5>
+            <h5 className="modal-title">Confirm {confirmType}</h5>
             <button
               type="button"
-              className="btn-close"
+              className="close"
+              aria-label="Close"
               onClick={onCancel}
-            ></button>
+              style={{
+                backgroundColor: "transparent",
+                border: "none",
+                marginLeft: "auto",
+              }}
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
           <div className="modal-body">
-            <p>
-              <strong>ID Number:</strong> {formData.id_number}
-            </p>
-            <p>
-              <strong>First Name:</strong> {formData.first_name}
-            </p>
-            <p>
-              <strong>Middle Name:</strong> {formData.middle_name}
-            </p>
-            <p>
-              <strong>Last Name:</strong> {formData.last_name}
-            </p>
-            <p>
-              <strong>Email:</strong> {formData.email}
-            </p>
-            <p>
-              <strong>Course:</strong> {formData.course}
-            </p>
-            <p>
-              <strong>Year:</strong> {formData.year}
-            </p>
+            <p>Are you sure you want to {confirmTypeWord} this student?</p>
           </div>
           <div className="modal-footer">
             <button
@@ -46,10 +44,10 @@ function ConfirmationModal({ formData, onSubmit, onCancel }) {
             </button>
             <button
               type="button"
-              className="btn btn-primary"
-              onClick={onSubmit}
+              className={`btn ${confirmButtonColor}`}
+              onClick={onConfirm}
             >
-              Submit
+              {capitalizeFirstLetter(confirmTypeWord)}
             </button>
           </div>
         </div>
