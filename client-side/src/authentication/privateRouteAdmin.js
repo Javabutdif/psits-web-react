@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { getAuthentication } from "./LocalStorage";
+import { getAuthentication } from "./localStorage";
 
 const isAuthenticated = () => {
   const authToken = getAuthentication("AuthenticationToken");

@@ -9,7 +9,7 @@ import {
   resetAttemptAuthentication,
   getTimeout,
   timeOutAuthentication,
-} from "../Authentication/LocalStorage";
+} from "../authentication/localStorage";
 
 function Login() {
   const [formData, setFormData] = useState({
