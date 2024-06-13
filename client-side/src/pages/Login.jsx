@@ -63,7 +63,10 @@ function Login() {
           attemptAuthentication();
         }
       } else {
-        showToast("error", "Retry after 3 attempts, wait 1 minute.");
+        showToast(
+          "error",
+          "Maximum login attempts reached. Please wait 1 minute before trying again!"
+        );
         console.log(getTimeout());
         console.log(getAttemptAuthentication());
       }

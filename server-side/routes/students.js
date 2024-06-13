@@ -7,7 +7,10 @@ const router = express.Router();
 // GET list of accepted students
 router.get("/students", async (req, res) => {
   try {
-    const students = await Student.find({ membership: "Accepted" });
+    const students = await Student.find({
+      membership: "Accepted",
+      status: "True",
+    });
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -21,7 +24,14 @@ router.delete("/students/:id_number", async (req, res) => {
 
   try {
     // Find and delete the student by id_number
-    const deletedStudent = await Student.findOneAndDelete({ id_number });
+    const deletedStudent = await Student.updateOne(
+      { id_number: id_number },
+      {
+        $set: {
+          status: "False",
+        },
+      }
+    );
 
     if (!deletedStudent) {
       return res.status(404).json({ message: "Student not found" });

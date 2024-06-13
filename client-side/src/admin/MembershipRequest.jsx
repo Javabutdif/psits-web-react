@@ -70,12 +70,20 @@ function MembershipRequest() {
     {
       name: "Actions",
       cell: (row) => (
-        <button
-          className="btn btn-primary"
-          onClick={() => handleButtonClick(row.id_number)}
-        >
-          Approve
-        </button>
+        <div className="d-flex flex-row gap-1 ">
+          <button
+            className="btn btn-primary"
+            onClick={() => handleButtonClick(row.id_number)}
+          >
+            Approve
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={() => handleButtonClick(row.id_number)}
+          >
+            Delete
+          </button>
+        </div>
       ),
     },
   ];
@@ -87,6 +95,7 @@ function MembershipRequest() {
     <div>
       <h1 className="text-center mt-5">Membership Request</h1>
       <DataTable
+        className="table table-responsive"
         title="Student List"
         columns={columns}
         data={data}

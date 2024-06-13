@@ -135,6 +135,7 @@ function ViewStudents() {
   return (
     <div>
       <h1 className="text-center mt-5">Registered Students</h1>
+
       <DataTable
         title="Student List"
         columns={columns}

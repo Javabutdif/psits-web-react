@@ -22,8 +22,20 @@ router.post("/login", async (req, res) => {
       const passwordMatch = await bcrypt.compare(password, student.password);
 
       if (passwordMatch && student.membership === "Pending") {
-        return res.status(400).json("Student must pay 50 in the PSITS Office");
-      } else if (passwordMatch && student.membership === "Accepted") {
+        return res
+          .status(400)
+          .json("You must pay the membership fee of ₱50 at the PSITS Office.");
+      } else if (
+        passwordMatch &&
+        student.membership === "Accepted" &&
+        student.status === "False"
+      ) {
+        return res.status(400).json("Your account has been deleted!");
+      } else if (
+        passwordMatch &&
+        student.membership === "Accepted" &&
+        student.status === "True"
+      ) {
         return res.json({
           role: "Student",
           id_number: student.id_number,
