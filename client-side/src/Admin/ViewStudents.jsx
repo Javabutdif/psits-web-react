@@ -3,10 +3,10 @@ import "../App.css";
 import DataTable from "react-data-table-component";
 import backendConnection from "../api/backendApi";
 import { useNavigate } from "react-router-dom";
-import { setStudentData } from "../components/admin/EditStudentData";
+import { setStudentData } from "../utils/editStudentData";
 import ConfirmationModal from "../components/common/ConfirmationModal.jsx";
 import { ConfirmActionType } from "../enums/commonEnums.js";
-import { showToast } from "../utils/alertHelper.jsx";
+import { showToast } from "../utils/alertHelper.js";
 
 function ViewStudents() {
   const [data, setData] = useState([]);

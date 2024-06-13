@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import backendConnection from "../api/backendApi";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { showToast } from "../utils/alertHelper";
+import { showToast } from "../utils/alertHelper.js";
 import RegistrationConfirmationModal from "../components/common/RegistrationConfirmationModal.jsx";
 
 function Register() {

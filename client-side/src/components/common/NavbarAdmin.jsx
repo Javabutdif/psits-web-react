@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import logo from "../../assets/images/psits-logo.png";
 import { showToast } from "../../utils/alertHelper";
 import { removeAuthentication } from "../../authentication/localStorage";
-import { removeStudentData } from "../admin/EditStudentData";
+import { removeStudentData } from "../../utils/editStudentData";
 
 function Navbar() {
   const handleLogoutClick = () => {

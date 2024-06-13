@@ -4,10 +4,7 @@ import { useNavigate } from "react-router-dom";
 import backendConnection from "../api/backendApi";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { showToast } from "../utils/alertHelper";
-import {
-  getStudentData,
-  removeStudentData,
-} from "../components/admin/EditStudentData";
+import { getStudentData, removeStudentData } from "../utils/editStudentData";
 
 function EditStudent() {
   const student = JSON.parse(getStudentData());
