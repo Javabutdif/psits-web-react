@@ -11,6 +11,7 @@ function Navbar() {
   const handleLogoutClick = () => {
     removeAuthentication("AuthenticationToken");
     showToast("success", "Signed out successfully");
+    handleRemoveStudentData();
   };
   const handleRemoveStudentData = () => {
     removeStudentData();
@@ -134,7 +135,7 @@ function Navbar() {
               <Link
                 className="nav-link "
                 to="/login"
-                onClick={(handleLogoutClick, handleRemoveStudentData)}
+                onClick={handleLogoutClick}
               >
                 Logout
               </Link>
