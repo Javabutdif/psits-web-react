@@ -5,6 +5,7 @@ import BackendConnection from "../api/BackendApi";
 import { useNavigate } from "react-router-dom";
 import { setStudentData } from "../components/admin/EditStudentData";
 import ConfirmationModal from "../components/common/ConfirmationModal.jsx";
+import { ConfirmActionType } from "../enums/commonEnums.js";
 
 function ViewStudents() {
   const [data, setData] = useState([]);
@@ -98,6 +99,10 @@ function ViewStudents() {
     navigate("/editStudent");
   };
 
+  const handleConfirmDeletion = () => {
+    console.log("Test");
+  };
+
   return (
     <div>
       <h1 className="text-center mt-5">Registered Students</h1>
@@ -107,7 +112,13 @@ function ViewStudents() {
         data={data}
         pagination
       />
-      {isModalVisible && <ConfirmationModal />}
+      {isModalVisible && (
+        <ConfirmationModal
+          confirmType={ConfirmActionType.DELETION}
+          onCancel={hideModal}
+          onConfirm={handleConfirmDeletion}
+        />
+      )}
     </div>
   );
 }
