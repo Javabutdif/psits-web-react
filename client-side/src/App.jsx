@@ -26,10 +26,10 @@ import EditStudent from "./Admin/EditStudent";
 import AdminRegister from "./pages/AdminRegister";
 import PrivateRouteAdmin from "./authentication/privateRouteAdmin";
 import PrivateRouteStudent from "./authentication/privateRouteStudent";
-import StudentDashboard from "./Students/StudentDashboard";
-import StudentMerchandise from "./Students/StudentMerchandise";
-import StudentHistory from "./Students/StudentHistory";
-import StudentOrders from "./Students/StudentOrders";
+import StudentDashboard from "./students/StudentDashboard";
+import StudentMerchandise from "./students/StudentMerchandise";
+import StudentHistory from "./students/StudentHistory";
+import StudentOrders from "./students/StudentOrders";
 
 function App() {
   return (
