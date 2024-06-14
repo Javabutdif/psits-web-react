@@ -1,13 +1,22 @@
 import React, { useState } from "react";
+import backendConnection from "../api/backendApi";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
-    // TODO: handle submission
     e.preventDefault();
-
     console.log("Submitted with email:", email);
+
+    axios
+      .post(`${backendConnection()}/api/forgot-password`, { email })
+      .then((res) => {
+        console.log(res.data.status);
+        // navigate("/");
+      });
   };
 
   const handleChange = (e) => {
