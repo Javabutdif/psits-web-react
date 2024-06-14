@@ -121,6 +121,11 @@ function Login() {
                   >
                     Login
                   </button>
+                  <div className="mt-3">
+                    <Link to="/forgotPassword" className="text-light">
+                      Forgot Password?
+                    </Link>
+                  </div>
                   <p className="my-3">
                     Don't have an account?{" "}
                     <Link to="/register">Click Here!</Link>

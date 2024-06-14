@@ -30,6 +30,7 @@ import StudentDashboard from "./students/StudentDashboard";
 import StudentMerchandise from "./students/StudentMerchandise";
 import StudentHistory from "./students/StudentHistory";
 import StudentOrders from "./students/StudentOrders";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 
 function App() {
   return (
@@ -97,6 +98,7 @@ function App() {
             element={<PrivateRouteStudent element={StudentOrders} />}
           />
           <Route path="/adminRegister" element={<AdminRegister />} />
+          <Route path="/forgotPassword" element={<ForgotPassword />} />
         </Routes>
       </div>
     </Router>
