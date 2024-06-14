@@ -122,7 +122,7 @@ function Login() {
                     Login
                   </button>
                   <div className="mt-3">
-                    <Link to="/forgot-password" className="text-light">
+                    <Link to="/forgotPassword" className="text-light">
                       Forgot Password?
                     </Link>
                   </div>
