@@ -70,8 +70,7 @@ function Login() {
           "error",
           "Maximum login attempts reached. Please wait 1 minute before trying again!"
         );
-        console.log(getTimeout());
-        console.log(getAttemptAuthentication());
+        getTimeout(); // Check the timeout
       }
     } catch (error) {
       console.error("Error:", error);
