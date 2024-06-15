@@ -7,15 +7,18 @@ import { setStudentData } from "../utils/editStudentData.js";
 import ConfirmationModal from "../components/common/ConfirmationModal.jsx";
 import { ConfirmActionType } from "../enums/commonEnums.js";
 import { showToast } from "../utils/alertHelper.js";
+import { InfinitySpin } from "react-loader-spinner";
 
 function ViewStudents() {
   const [data, setData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState();
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`${backendConnection()}/api/students`, {
           method: "GET",
@@ -28,6 +31,7 @@ function ViewStudents() {
       } catch (error) {
         console.error("Error fetching data:", error);
       }
+      setIsLoading(false);
     };
 
     fetchData();
@@ -135,13 +139,27 @@ function ViewStudents() {
   return (
     <div>
       <h1 className="text-center mt-5">Registered Students</h1>
+      {isLoading ? (
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "60vh" }}
+        >
+          <InfinitySpin
+            visible={true}
+            width="200"
+            color="#0d6efd"
+            ariaLabel="infinity-spin-loading"
+          />
+        </div>
+      ) : (
+        <DataTable
+          title="Student List"
+          columns={columns}
+          data={data}
+          pagination
+        />
+      )}
 
-      <DataTable
-        title="Student List"
-        columns={columns}
-        data={data}
-        pagination
-      />
       {isModalVisible && (
         <ConfirmationModal
           confirmType={ConfirmActionType.DELETION}
