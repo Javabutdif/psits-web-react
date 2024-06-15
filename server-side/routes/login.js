@@ -2,9 +2,12 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
+const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
+// POST to login
 router.post("/login", async (req, res) => {
   const { id_number, password } = req.body;
 
@@ -67,6 +70,45 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     res.status(500).send(error);
   }
+});
+
+// POST forgot password
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  Student.findOne({ email: email }).then((user) => {
+    if (!user) {
+      return res.send({ status: "user does not exist" });
+    }
+
+    // TODO: IMPORTANT! Create JWT Secret Key in .env and replace "jwt_secret_key"
+    // const token = jwt.sign({ id: user._id }, "jwt_secret_key", {
+    //   expiresIn: "1d",
+    // });
+
+    // TODO: IMPORTANT! Replace gmail with PSITS Dev email ASAP
+    // const transporter = nodemailer.createTransport({
+    //   service: "gmail",
+    //   auth: {
+    //     user: "youremail@gmail.com",
+    //     pass: "yourpassword", //
+    //   },
+    // });
+
+    // const mailOptions = {
+    //   from: "youremail@gmail.com",
+    //   to: "myfriend@yahoo.com",
+    //   subject: "Sending Email using Node.js",
+    //   text: "That was easy!",
+    // };
+
+    // transporter.sendMail(mailOptions, (error, info) => {
+    //   if (error) {
+    //     console.log(error);
+    //   } else {
+    //     console.log("Email sent: " + info.response);
+    //   }
+    // });
+  });
 });
 
 module.exports = router;
