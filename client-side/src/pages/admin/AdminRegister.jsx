@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import "../App.css";
+import "../../App.css";
 import { useNavigate } from "react-router-dom";
-import backendConnection from "../api/backendApi";
-import { showToast } from "../utils/alertHelper";
+import backendConnection from "../../api/backendApi";
+import { showToast } from "../../utils/alertHelper";
 import { InfinitySpin } from "react-loader-spinner";
 
 function AdminRegister() {

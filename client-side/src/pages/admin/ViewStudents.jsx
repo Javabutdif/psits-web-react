@@ -1,32 +1,31 @@
 import React, { useState, useEffect } from "react";
-import "../App.css";
+import "../../App.css";
 import DataTable from "react-data-table-component";
-import backendConnection from "../api/backendApi";
+import backendConnection from "../../api/backendApi.js";
+import { useNavigate } from "react-router-dom";
+import { setStudentData } from "../../utils/editStudentData.js";
+import ConfirmationModal from "../../components/common/ConfirmationModal.jsx";
+import { ConfirmActionType } from "../../enums/commonEnums.js";
+import { showToast } from "../../utils/alertHelper.js";
 import { InfinitySpin } from "react-loader-spinner";
-import axios from "axios";
-import { showToast } from "../utils/alertHelper";
-import ConfirmationModal from "../components/common/ConfirmationModal";
-import { ConfirmActionType } from "../enums/commonEnums";
 
-function MembershipRequest() {
+function ViewStudents() {
   const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
+  const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState();
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `${backendConnection()}/api/requestStudent`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${backendConnection()}/api/students`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         const result = await response.json();
         setData(result);
       } catch (error) {
@@ -78,12 +77,12 @@ function MembershipRequest() {
     {
       name: "Actions",
       cell: (row) => (
-        <div className="d-flex flex-row gap-1 ">
+        <div className="d-flex flex-row gap-1">
           <button
             className="btn btn-primary"
-            onClick={() => handleApproveButton(row.id_number)}
+            onClick={() => handleEditButton(row)}
           >
-            Approve
+            Edit
           </button>
           <button className="btn btn-danger" onClick={() => showModal(row)}>
             Delete
@@ -93,11 +92,6 @@ function MembershipRequest() {
     },
   ];
 
-  const handleApproveButton = (row) => {
-    // Handle button click action here
-    console.log("Button clicked for row:", row);
-  };
-
   const showModal = (row) => {
     setIsModalVisible(true);
     setStudentIdToBeDeleted(row.id_number);
@@ -105,23 +99,27 @@ function MembershipRequest() {
 
   const hideModal = () => {
     setIsModalVisible(false);
-    setStudentIdToBeDeleted("");
+  };
+
+  const handleEditButton = (row) => {
+    setStudentData({ student: row });
+    navigate("/editStudent");
   };
 
   const handleConfirmDeletion = async () => {
-    setIsLoading(true);
     try {
       const id_number = studentIdToBeDeleted;
-      const response = await axios.delete(
-        `${backendConnection()}/api/students/hard_delete/${id_number}`,
+      const response = await fetch(
+        `${backendConnection()}/api/students/${id_number}`,
         {
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
 
-      if (response.status === 200) {
+      if (response.ok) {
         // Remove the deleted student from the data array
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
@@ -135,14 +133,12 @@ function MembershipRequest() {
       }
     } catch (error) {
       console.error("Error deleting student:", error);
-      showToast("error", "Student Deletion Failed! Please try again.");
     }
-    setIsLoading(false);
   };
 
   return (
     <div>
-      <h1 className="text-center mt-5">Membership Request</h1>
+      <h1 className="text-center mt-5">Registered Students</h1>
       {isLoading ? (
         <div
           className="d-flex justify-content-center align-items-center"
@@ -157,13 +153,13 @@ function MembershipRequest() {
         </div>
       ) : (
         <DataTable
-          className="table table-responsive"
           title="Student List"
           columns={columns}
           data={data}
           pagination
         />
       )}
+
       {isModalVisible && (
         <ConfirmationModal
           confirmType={ConfirmActionType.DELETION}
@@ -175,4 +171,4 @@ function MembershipRequest() {
   );
 }
 
-export default MembershipRequest;
+export default ViewStudents;
