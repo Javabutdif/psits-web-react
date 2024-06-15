@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 import DataTable from "react-data-table-component";
 import backendConnection from "../api/backendApi";
+import axios from "axios";
+import { showToast } from "../utils/alertHelper";
+import ConfirmationModal from "../components/common/ConfirmationModal";
+import { ConfirmActionType } from "../enums/commonEnums";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,24 +77,63 @@ function MembershipRequest() {
         <div className="d-flex flex-row gap-1 ">
           <button
             className="btn btn-primary"
-            onClick={() => handleButtonClick(row.id_number)}
+            onClick={() => handleApproveButton(row.id_number)}
           >
             Approve
           </button>
-          <button
-            className="btn btn-danger"
-            onClick={() => handleButtonClick(row.id_number)}
-          >
+          <button className="btn btn-danger" onClick={() => showModal(row)}>
             Delete
           </button>
         </div>
       ),
     },
   ];
-  const handleButtonClick = (row) => {
+
+  const handleApproveButton = (row) => {
     // Handle button click action here
     console.log("Button clicked for row:", row);
   };
+
+  const showModal = (row) => {
+    setIsModalVisible(true);
+    setStudentIdToBeDeleted(row.id_number);
+  };
+
+  const hideModal = () => {
+    setIsModalVisible(false);
+    setStudentIdToBeDeleted("");
+  };
+
+  const handleConfirmDeletion = async () => {
+    try {
+      const id_number = studentIdToBeDeleted;
+      const response = await axios.delete(
+        `${backendConnection()}/api/students/hard_delete/${id_number}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // Remove the deleted student from the data array
+        const updatedData = data.filter(
+          (student) => student.id_number !== id_number
+        );
+        setData(updatedData);
+        setIsModalVisible(false);
+        showToast("success", "Student Deletion Successful!");
+      } else {
+        console.error("Failed to delete student");
+        showToast("error", "Student Deletion Failed! Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      showToast("error", "Student Deletion Failed! Please try again.");
+    }
+  };
+
   return (
     <div>
       <h1 className="text-center mt-5">Membership Request</h1>
@@ -101,6 +144,13 @@ function MembershipRequest() {
         data={data}
         pagination
       />
+      {isModalVisible && (
+        <ConfirmationModal
+          confirmType={ConfirmActionType.DELETION}
+          onCancel={hideModal}
+          onConfirm={handleConfirmDeletion}
+        />
+      )}
     </div>
   );
 }
