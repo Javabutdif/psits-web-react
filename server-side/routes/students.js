@@ -18,7 +18,7 @@ router.get("/students", async (req, res) => {
   }
 });
 
-// DELETE student by id_number
+// SOFT DELETE student by id_number
 router.delete("/students/:id_number", async (req, res) => {
   const id_number = req.params.id_number;
 
@@ -32,6 +32,25 @@ router.delete("/students/:id_number", async (req, res) => {
         },
       }
     );
+
+    if (!deletedStudent) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.status(200).json({ message: "Student deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
+// HARD DELETE student by id_number
+router.delete("/students/hard_delete/:id_number", async (req, res) => {
+  const id_number = req.params.id_number;
+
+  try {
+    // Find and delete the student by id_number
+    const deletedStudent = await Student.findOneAndDelete({ id_number });
 
     if (!deletedStudent) {
       return res.status(404).json({ message: "Student not found" });
