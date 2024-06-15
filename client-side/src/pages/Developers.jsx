@@ -5,6 +5,7 @@ import "../App.css";
 import jims from "../assets/images/jims.jpg";
 import kirby from "../assets/images/kirby.gif";
 import hutao from "../assets/images/hutao.gif";
+import cat from "../assets/images/cat.gif";
 
 function Developers() {
   return (
@@ -38,6 +39,20 @@ function Developers() {
             <img className="card-img-top" src={kirby} alt="Adriane" />
             <div className="card-body">
               <h4 className="card-title">Adriane</h4>
+            </div>
+          </div>
+        </div>
+        <div className="col">
+          <div className="card mb-3">
+            <h5
+              className="card-header text-white text-center "
+              style={{ backgroundColor: "#074873" }}
+            >
+              UI / UX Designer
+            </h5>
+            <img className="card-img-top" src={cat} alt="Marianne" />
+            <div className="card-body">
+              <h4 className="card-title">Marianne</h4>
             </div>
           </div>
         </div>
