@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../App.css";
 import DataTable from "react-data-table-component";
 import backendConnection from "../api/backendApi";
+import { InfinitySpin } from "react-loader-spinner";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(
           `${backendConnection()}/api/requestStudent`,
@@ -25,6 +26,7 @@ function MembershipRequest() {
       } catch (error) {
         console.error("Error fetching data:", error);
       }
+      setIsLoading(false);
     };
 
     fetchData();
@@ -94,13 +96,27 @@ function MembershipRequest() {
   return (
     <div>
       <h1 className="text-center mt-5">Membership Request</h1>
-      <DataTable
-        className="table table-responsive"
-        title="Student List"
-        columns={columns}
-        data={data}
-        pagination
-      />
+      {isLoading ? (
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "60vh" }}
+        >
+          <InfinitySpin
+            visible={true}
+            width="200"
+            color="#0d6efd"
+            ariaLabel="infinity-spin-loading"
+          />
+        </div>
+      ) : (
+        <DataTable
+          className="table table-responsive"
+          title="Student List"
+          columns={columns}
+          data={data}
+          pagination
+        />
+      )}
     </div>
   );
 }
