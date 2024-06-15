@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import backendConnection from "../api/backendApi";
+import backendConnection from "../../api/backendApi";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { showToast } from "../utils/alertHelper";
-import { getStudentData, removeStudentData } from "../utils/editStudentData";
+import { showToast } from "../../utils/alertHelper";
+import { getStudentData, removeStudentData } from "../../utils/editStudentData";
 import { InfinitySpin } from "react-loader-spinner";
 
 function EditStudent() {

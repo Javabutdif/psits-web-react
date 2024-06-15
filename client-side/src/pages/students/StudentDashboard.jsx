@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import "../App.css";
+import "../../App.css";
 
-function AdminDashboard() {
+function StudentDashboard() {
   return (
     <div className="container mt-5">
       <div className="row">
@@ -18,7 +18,7 @@ function AdminDashboard() {
         <div className="col-md-4 mb-4">
           <div className="card">
             <div className="card-body">
-              <h5 className="card-title">Membership Revenue</h5>
+              <h5 className="card-title">Membership Status</h5>
               <p className="card-text">
                 <strong>Php </strong>{" "}
               </p>
@@ -28,7 +28,7 @@ function AdminDashboard() {
         <div className="col-md-4 mb-4">
           <div className="card">
             <div className="card-body">
-              <h5 className="card-title">Merchandise Revenue</h5>
+              <h5 className="card-title">Orders</h5>
               <p className="card-text">
                 <strong> Php </strong>{" "}
               </p>
@@ -39,4 +39,4 @@ function AdminDashboard() {
     </div>
   );
 }
-export default AdminDashboard;
+export default StudentDashboard;
