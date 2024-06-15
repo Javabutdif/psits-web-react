@@ -14,7 +14,7 @@ function AdminRegister() {
     name: "",
     position: "",
   });
-  const [isLoading, setIsLoading] = useState();
+  const [isLoading, setIsLoading] = useState(false);
 
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const navigate = useNavigate();
