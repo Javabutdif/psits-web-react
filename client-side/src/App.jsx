@@ -26,10 +26,10 @@ import EditStudent from "./pages/admin/EditStudent";
 import AdminRegister from "./pages/admin/AdminRegister.jsx";
 import PrivateRouteAdmin from "./authentication/privateRouteAdmin";
 import PrivateRouteStudent from "./authentication/privateRouteStudent";
-import StudentDashboard from "./students/StudentDashboard";
-import StudentMerchandise from "./students/StudentMerchandise";
-import StudentHistory from "./students/StudentHistory";
-import StudentOrders from "./students/StudentOrders";
+import StudentDashboard from "./pages/students/StudentDashboard.jsx";
+import StudentMerchandise from "./pages/students/StudentMerchandise.jsx";
+import StudentHistory from "./pages/students/StudentHistory.jsx";
+import StudentOrders from "./pages/students/StudentOrders.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 
 function App() {
