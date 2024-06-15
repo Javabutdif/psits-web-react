@@ -6,6 +6,14 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { showToast } from "../utils/alertHelper.js";
 import RegistrationConfirmationModal from "../components/common/RegistrationConfirmationModal.jsx";
 import { InfinitySpin } from "react-loader-spinner";
+import {
+  setAuthentication,
+  attemptAuthentication,
+  getAttemptAuthentication,
+  resetAttemptAuthentication,
+  getTimeout,
+  timeOutAuthentication,
+} from "../authentication/localStorage";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -54,21 +62,29 @@ function Register() {
     hideModal();
 
     try {
-      const response = await fetch(`${backendConnection()}/api/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        showToast("success", "Registration successful");
-
-        navigate("/login");
+      if (getAttemptAuthentication() < 3 && getTimeout() === null) {
+        const response = await fetch(`${backendConnection()}/api/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast("success", "Registration successful");
+          resetAttemptAuthentication();
+          navigate("/login");
+        } else {
+          showToast("error", JSON.stringify(data));
+          attemptAuthentication();
+        }
       } else {
-        showToast("error", JSON.stringify(data));
-        // Handle error
+        showToast(
+          "error",
+          "Maximum register attempts reached. Please wait 1 minute before trying again!"
+        );
+        getTimeout(); // Check the timeout
       }
     } catch (error) {
       showToast("error", JSON.stringify(error));
