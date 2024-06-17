@@ -8,7 +8,7 @@ function MerchandiseOrders() {
   return (
     <div className="text-center ">
       <h1 className="text-center mt-5">Orders</h1>
-      <img className="h-25 w-25" src={under} alt="Under" />
+      <img className="h-50 w-50" src={under} alt="Under" />
     </div>
   );
 }
