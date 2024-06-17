@@ -11,6 +11,7 @@ const registerRoutes = require("./routes/register");
 const loginRoutes = require("./routes/login");
 const adminRoutes = require("./routes/admin");
 const studentApproveRoutes = require("./routes/students");
+const merchRoutes = require("./routes/merch");
 
 //Middleware
 app.use(cors());
@@ -29,6 +30,7 @@ app.use("/api", registerRoutes);
 app.use("/api", loginRoutes);
 app.use("/api", studentApproveRoutes);
 app.use("/api", adminRoutes);
+app.use("/api/merch", merchRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server started, listening at port ${PORT}`);
