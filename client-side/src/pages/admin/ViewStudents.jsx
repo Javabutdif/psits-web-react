@@ -77,15 +77,18 @@ function ViewStudents() {
     {
       name: "Actions",
       cell: (row) => (
-        <div className="d-flex flex-row gap-1">
+        <div className="d-flex flex-lg-column gap-1">
           <button
-            className="btn btn-primary"
+            className="btn btn-primary "
             onClick={() => handleEditButton(row)}
           >
             Edit
           </button>
-          <button className="btn btn-danger" onClick={() => showModal(row)}>
+          <button className="btn btn-danger " onClick={() => showModal(row)}>
             Delete
+          </button>
+          <button className="btn btn-success" onClick={() => showModal(row)}>
+            Generate Receipt
           </button>
         </div>
       ),
