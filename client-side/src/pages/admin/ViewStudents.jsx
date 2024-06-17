@@ -110,9 +110,9 @@ function ViewStudents() {
     try {
       const id_number = studentIdToBeDeleted;
       const response = await fetch(
-        `${backendConnection()}/api/students/${id_number}`,
+        `${backendConnection()}/api/students/delete/${id_number}`,
         {
-          method: "DELETE",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
