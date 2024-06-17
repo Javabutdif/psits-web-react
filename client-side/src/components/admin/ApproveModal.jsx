@@ -1,6 +1,23 @@
 import React from "react";
+import axios from "axios";
+import backendConnection from "../../api/backendApi";
 
-function ConfirmationModal({ formData, onSubmit, onCancel }) {
+function ApproveModal({ onCancel }) {
+  const [formData, setFormData] = useState({
+    rfid: "",
+    money: "",
+  });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  //axios.post(`${backendConnection()}/api/register`);
+  //Tudloe niya ko saun pag gamit props hehe
+
   return (
     <div className="modal show" style={{ display: "block" }}>
       <div className="modal-dialog modal-dialog-centered">
@@ -16,7 +33,23 @@ function ConfirmationModal({ formData, onSubmit, onCancel }) {
           <div className="modal-body">
             <p>
               <strong>RFID Number:</strong>
-              <input className=" form-control" type="number" required />
+              <input
+                value={formData.rfid}
+                className=" form-control"
+                type="number"
+                onChange={handleChange}
+                required
+              />
+            </p>
+            <p>
+              <strong>Money:</strong>
+              <input
+                value={formData.money}
+                className=" form-control"
+                type="number"
+                onChange={handleChange}
+                required
+              />
             </p>
           </div>
           <div className="modal-footer">
@@ -27,12 +60,8 @@ function ConfirmationModal({ formData, onSubmit, onCancel }) {
             >
               Cancel
             </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={onSubmit}
-            >
-              Submit
+            <button type="button" className="btn btn-success">
+              Approve
             </button>
           </div>
         </div>
@@ -41,4 +70,4 @@ function ConfirmationModal({ formData, onSubmit, onCancel }) {
   );
 }
 
-export default ConfirmationModal;
+export default ApproveModal;
