@@ -113,7 +113,7 @@ function MembershipRequest() {
     try {
       const id_number = studentIdToBeDeleted;
       const response = await axios.delete(
-        `${backendConnection()}/api/students/hard_delete/${id_number}`,
+        `${backendConnection()}/api/students/delete/${id_number}`,
         {
           headers: {
             "Content-Type": "application/json",

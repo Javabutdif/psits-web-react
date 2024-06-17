@@ -19,7 +19,7 @@ router.get("/students", async (req, res) => {
 });
 
 // SOFT DELETE student by id_number
-router.delete("/students/:id_number", async (req, res) => {
+router.put("/students/delete/:id_number", async (req, res) => {
   const id_number = req.params.id_number;
 
   try {
@@ -45,7 +45,7 @@ router.delete("/students/:id_number", async (req, res) => {
 });
 
 // HARD DELETE student by id_number
-router.delete("/students/hard_delete/:id_number", async (req, res) => {
+router.delete("/students/delete/:id_number", async (req, res) => {
   const id_number = req.params.id_number;
 
   try {
