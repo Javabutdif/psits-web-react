@@ -3,6 +3,7 @@ const Merch = require("../models/MerchModel");
 
 const router = express.Router();
 
+// CREATE a new merch
 router.post("/", async (req, res) => {
   const {
     name,
@@ -39,4 +40,16 @@ router.post("/", async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+// GET list of Merches
+router.get("/", async (req, res) => {
+  try {
+    const merches = await Merch.find();
+    res.status(200).json(merches);
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
 module.exports = router;
