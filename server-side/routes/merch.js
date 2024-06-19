@@ -3,6 +3,8 @@ const Merch = require("../models/MerchModel");
 
 const router = express.Router();
 
+//TODO: Make some methods only exclusive to admin accounts
+
 // CREATE a new merch
 router.post("/", async (req, res) => {
   const {
