@@ -41,6 +41,10 @@ const merchSchema = new Schema(
       type: Date,
       require: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
