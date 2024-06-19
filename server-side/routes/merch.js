@@ -36,7 +36,7 @@ router.post("/", async (req, res) => {
 
     res.status(201).json("Merch Addition Successful");
   } catch (error) {
-    console.error("Error saving new student:", error.message);
+    console.error("Error saving new merch:", error.message);
     res.status(500).send(error.message);
   }
 });
@@ -47,7 +47,7 @@ router.get("/", async (req, res) => {
     const merches = await Merch.find();
     res.status(200).json(merches);
   } catch (error) {
-    console.error("Error fetching students:", error.message);
+    console.error("Error fetching merches:", error.message);
     res.status(500).send(error.message);
   }
 });
@@ -111,7 +111,7 @@ router.put("/:_id", async (req, res) => {
 
     res.status(200).send("Merch updated successfully");
   } catch (error) {
-    console.error("Error updating student:", error.message);
+    console.error("Error updating merches:", error.message);
     res.status(500).send(error.message);
   }
 });
