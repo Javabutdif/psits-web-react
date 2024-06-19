@@ -116,4 +116,30 @@ router.put("/:_id", async (req, res) => {
   }
 });
 
+// DELETE merch by id (soft)
+router.delete("/:_id", async (req, res) => {
+  const id = req.params._id;
+
+  try {
+    const result = await Merch.updateOne(
+      { _id: id },
+      {
+        $set: {
+          isActive: false,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      console.error("Merch not found");
+      return res.status(404).send("Merch not found");
+    }
+
+    res.status(200).send("Merch deleted successfully");
+  } catch (error) {
+    console.error("Error deleting merch:", error.message);
+    res.status(500).send(error.message);
+  }
+});
+
 module.exports = router;
