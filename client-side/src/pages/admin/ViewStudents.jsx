@@ -10,6 +10,7 @@ import { showToast } from "../../utils/alertHelper.js";
 import { InfinitySpin } from "react-loader-spinner";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt.jsx";
+import { getAdminName } from "../../authentication/localStorage";
 
 function ViewStudents() {
   const componentRef = useRef();
@@ -94,7 +95,14 @@ function ViewStudents() {
             trigger={() => <button>Print Receipt</button>}
             content={() => componentRef.current}
           />
-          <Receipt ref={componentRef} />
+          <Receipt
+            ref={componentRef}
+            id_number={row.id_number}
+            course={row.course}
+            year={row.year}
+            name={row.first_name + " " + row.middle_name + " " + row.last_name}
+            admin={getAdminName()}
+          />
         </div>
       ),
     },
