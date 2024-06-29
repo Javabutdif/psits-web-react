@@ -6,7 +6,7 @@
 //Set Authentication when successful login
 export const setAuthentication = (name, id_number, role, position) => {
   const currentTime = new Date().getTime();
-  const time = 20 * 60 * 1000;
+  const time = role === "Student" ? 20 * 60 * 1000 : 60 * 60 * 1000;
   const expiryTime = currentTime + time;
 
   const authen = {
