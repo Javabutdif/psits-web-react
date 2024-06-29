@@ -33,3 +33,12 @@
   font-size: smaller;
   text-align: start;
 }
+@media print {
+  .hidden-on-screen {
+    display: block !important;
+  }
+}
+
+.hidden-on-screen {
+  display: none;
+}

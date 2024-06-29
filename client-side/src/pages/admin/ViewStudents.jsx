@@ -92,7 +92,9 @@ function ViewStudents() {
             Delete
           </button>
           <ReactToPrint
-            trigger={() => <button>Print Receipt</button>}
+            trigger={() => (
+              <button className="btn btn-success">Print Receipt</button>
+            )}
             content={() => componentRef.current}
           />
           <Receipt
