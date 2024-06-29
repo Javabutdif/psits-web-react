@@ -15,9 +15,7 @@ function ApproveModal({ onCancel }) {
     });
   };
 
-  //axios.post(`${backendConnection()}/api/register`);
-  //Tudloe niya ko saun pag gamit props hehe
-
+ 
   return (
     <div className="modal show" style={{ display: "block" }}>
       <div className="modal-dialog modal-dialog-centered">
