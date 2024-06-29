@@ -7,12 +7,29 @@ import axios from "axios";
 import { showToast } from "../../utils/alertHelper";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { ConfirmActionType } from "../../enums/commonEnums";
+import ApproveModal from "../../components/admin/ApproveModal";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(false);
+
+  const handleOpenModal = (row) => {
+    setIsModalOpen(true);
+    setSelectedStudentId(row.id_number);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedStudentId("");
+  };
+
+  const handleFormSubmit = (data) => {
+    console.log("Form submitted successfully:", data);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +98,7 @@ function MembershipRequest() {
         <div className="d-flex flex-row gap-1 ">
           <button
             className="btn btn-primary"
-            onClick={() => handleApproveButton(row.id_number)}
+            onClick={() => handleOpenModal(row)}
           >
             Approve
           </button>
@@ -92,11 +109,6 @@ function MembershipRequest() {
       ),
     },
   ];
-
-  const handleApproveButton = (row) => {
-    // Handle button click action here
-    console.log("Button clicked for row:", row);
-  };
 
   const showModal = (row) => {
     setIsModalVisible(true);
@@ -169,6 +181,13 @@ function MembershipRequest() {
           confirmType={ConfirmActionType.DELETION}
           onCancel={hideModal}
           onConfirm={handleConfirmDeletion}
+        />
+      )}
+      {isModalOpen && (
+        <ApproveModal
+          id_number={selectedStudentId}
+          onCancel={handleCloseModal}
+          onSubmit={handleFormSubmit}
         />
       )}
     </div>

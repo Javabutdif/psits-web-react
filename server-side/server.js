@@ -12,6 +12,7 @@ const loginRoutes = require("./routes/login");
 const adminRoutes = require("./routes/admin");
 const studentApproveRoutes = require("./routes/students");
 
+
 //Middleware
 app.use(cors());
 app.use(bodyParser.json());
