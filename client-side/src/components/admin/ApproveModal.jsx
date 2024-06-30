@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import backendConnection from "../../api/backendApi";
 import { getAdminName } from "../../authentication/localStorage";
+import { showToast } from "../../utils/alertHelper";
+import ReactToPrint from "react-to-print";
+import Receipt from "../../components/common/Receipt.jsx";
 
-function ApproveModal({ id_number, onCancel, onSubmit }) {
+function ApproveModal({ id_number, course, year, name, onCancel, onSubmit }) {
+  const componentRef = useRef();
   const [formData, setFormData] = useState({
     id_number: id_number,
     rfid: "",
-    money: "",
+
     admin: getAdminName(),
   });
 
@@ -37,10 +41,14 @@ function ApproveModal({ id_number, onCancel, onSubmit }) {
       const data = await response.json();
 
       if (response.ok) {
-        console.log("success");
+        showToast("success", "Student Approve");
         onSubmit();
+        onCancel();
       } else {
-        console.log("Error jud");
+        showToast("error", "Internal Server Error!");
+
+        onSubmit();
+        onCancel();
       }
     } catch (error) {
       console.error("Error submitting form", error);
@@ -78,7 +86,6 @@ function ApproveModal({ id_number, onCancel, onSubmit }) {
                 <strong>Money:</strong>
               </label>
               <input
-                value={formData.money}
                 name="money"
                 className="form-control"
                 type="number"
@@ -95,13 +102,26 @@ function ApproveModal({ id_number, onCancel, onSubmit }) {
             >
               Cancel
             </button>
-            <button
-              type="button"
-              className="btn btn-success"
-              onClick={handleSubmit}
-            >
-              Approve
-            </button>
+            <ReactToPrint
+              trigger={() => (
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={handleSubmit}
+                >
+                  Approve
+                </button>
+              )}
+              content={() => componentRef.current}
+            />
+            <Receipt
+              ref={componentRef}
+              id_number={formData.id_number}
+              course={course}
+              year={year}
+              name={name}
+              admin={getAdminName()}
+            />
           </div>
         </div>
       </div>

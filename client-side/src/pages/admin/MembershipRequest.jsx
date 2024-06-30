@@ -16,42 +16,49 @@ function MembershipRequest() {
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(false);
+  const [selectedStudentCourse, setSelectedStudentCourse] = useState(false);
+  const [selectedStudentYear, setSelectedStudentYear] = useState(false);
+  const [selectedStudentName, setSelectedStudentName] = useState(false);
 
   const handleOpenModal = (row) => {
     setIsModalOpen(true);
     setSelectedStudentId(row.id_number);
+    setSelectedStudentCourse(row.course);
+    setSelectedStudentYear(row.year);
+    setSelectedStudentName(
+      row.first_name + " " + row.middle_name + " " + row.last_name
+    );
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedStudentId("");
+    fetchData();
   };
 
   const handleFormSubmit = (data) => {
     console.log("Form submitted successfully:", data);
   };
-
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `${backendConnection()}/api/requestStudent`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+    setIsLoading(false);
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          `${backendConnection()}/api/requestStudent`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-      setIsLoading(false);
-    };
-
     fetchData();
   }, []);
 
@@ -186,6 +193,9 @@ function MembershipRequest() {
       {isModalOpen && (
         <ApproveModal
           id_number={selectedStudentId}
+          course={selectedStudentCourse}
+          year={selectedStudentYear}
+          name={selectedStudentName}
           onCancel={handleCloseModal}
           onSubmit={handleFormSubmit}
         />
