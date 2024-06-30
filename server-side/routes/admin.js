@@ -32,7 +32,7 @@ router.post("/admin", async (req, res) => {
 });
 
 router.post("/approve-membership", async (req, res) => {
-  const { id_number, admin, rfid, money } = req.body;
+  const { id_number, admin, rfid } = req.body;
 
   try {
     const student = await Student.findOne({ id_number });
@@ -59,14 +59,9 @@ router.post("/approve-membership", async (req, res) => {
       admin,
     });
     await history.save();
-    res.status(201).json("Approve student successful");
+    res.status(200).json("Approve student successful");
   } catch (error) {
-    if (error.code === 11000) {
-      res.status(400).json("Server Error!");
-    } else {
-      console.error("Error saving new student:", error);
-      res.status(500).json("Internal Server Error");
-    }
+    res.status(400).json(error);
   }
 });
 
