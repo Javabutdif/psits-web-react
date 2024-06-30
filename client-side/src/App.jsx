@@ -125,7 +125,7 @@ function ConditionalNavbar() {
     location.pathname.startsWith("/studentHistory") ||
     location.pathname.startsWith("/studentOrders")
   ) {
-    return <NavbarStudent />;
+    return ( <NavbarStudent />  );
   } else if (
     location.pathname.startsWith("/login") ||
     location.pathname.startsWith("/register") ||

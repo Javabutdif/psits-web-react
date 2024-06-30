@@ -1,73 +1,88 @@
-// src/components/Navbar.js
-import React from "react";
-import { Link } from "react-router-dom";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import logo from "../../assets/images/psits-logo.png";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import logo from '../../assets/images/psits-logo.png';
+import HamburgerToggle from './HamburgerToggle';
 
-function Navbar() {
+const NavbarLanding = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(prevState => !prevState);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
+  const handleResize = () => {
+    if (window.innerWidth >= 768) {
+      closeMenu();
+    }
+  };
+
+  const handleScroll = () => {
+    setScrollPosition(window.scrollY);
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Framer Motion variants for hover effect
+  const linkVariants = {
+    hover: {
+      scale: 1.1,
+      transition: { duration: 0.3 },
+    },
+  };
+
   return (
-    <nav className="navbar navbar-expand-lg shadow">
-      <div className="container-fluid">
-        <img src={logo} alt="Logo" style={{ width: "3rem", height: "3rem" }} />
-        <Link
-          className="navbar-brand  ms-2"
-          to="/"
-          style={{ fontFamily: "'Montserrat', sans-serif" }}
-        >
-          UC Main - PSITS
+    <header className={`fixed w-full z-50 py-4 text-white font-montserrat ${scrollPosition > 100 ? 'backdrop-blur-md' : 'bg-transparent'}`}>
+      <div className="container px-2 mx-auto flex justify-between items-center">
+        <Link to={'/'} className="relative flex items-center z-40">
+          <img src={logo} alt="psits logo" className="w-16 h-auto mr-2" />
+          <h3 className="text-sm font-bold max-w-[300px]">
+            PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
+          </h3>
         </Link>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav ms-auto">
-            <li className="nav-item">
-              <Link className="nav-link " to="/">
-                Home
-              </Link>
-            </li>
-            <li className="nav-item dropdown">
-              <a
-                className="nav-link dropdown-toggle "
-                href="#"
-                id="navbarDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                Community
-              </a>
-              <div className="dropdown-menu" aria-labelledby="navbarDropdown">
-                <Link className="dropdown-item" to="/community">
-                  Faculty Members
-                </Link>
-                <Link className="dropdown-item" to="/officers">
-                  Officers
-                </Link>
-                <Link className="dropdown-item" to="/developers">
-                  Developers
-                </Link>
-              </div>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link " to="/login">
-                Login
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-  );
-}
 
-export default Navbar;
+        {/* Hamburger Menu Toggle (for mobile) */}
+        <div className="relative z-40 lg:hidden">
+          <HamburgerToggle isOpen={isMenuOpen} toggleMenu={toggleMenu} />
+        </div>
+
+        {/* Navigation Menu (responsive) */}
+        <nav className={`navbar absolute top-0 left-0 lg:py-0 z-30 w-full lg:relative lg:w-auto lg:left-auto lg:top-auto lg:min-h-0 lg:flex lg:space-x-4 ${isMenuOpen ? 'nav-open' : ''}`}>
+          {/* Circular clip-path overlay */}
+          <div className={`backdrop-blur-2xl bg-black nav-mask lg:hidden ${isMenuOpen ? 'nav-mask-open' : ''}`} />
+
+          {/* Navigation links */}
+          <ul className={`flex flex-col text-4xl space-y-9 -mt-5 lg:mt-0 lg:text-lg justify-center min-h-screen items-center lg:min-h-0 lg:space-y-0 lg:items-start lg:flex-row space-y-6 lg:space-x-9 ${isMenuOpen ? 'block' : 'hidden lg:flex'}`}>
+            <motion.li variants={linkVariants} whileHover="hover">
+              <Link to="/explore" onClick={closeMenu}>Explore</Link>
+            </motion.li>
+            <motion.li variants={linkVariants} whileHover="hover">
+              <Link to="/faculty" onClick={closeMenu}>Faculty</Link>
+            </motion.li>
+            <motion.li variants={linkVariants} whileHover="hover">
+              <Link to="/the-team" onClick={closeMenu}>The Team</Link>
+            </motion.li>
+            <motion.li variants={linkVariants} whileHover="hover">
+              <Link to="/login" onClick={closeMenu}>Login</Link>
+            </motion.li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+  );
+};
+
+export default NavbarLanding;
