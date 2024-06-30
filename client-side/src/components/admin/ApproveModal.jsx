@@ -1,12 +1,20 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import backendConnection from "../../api/backendApi";
+import { getAdminName } from "../../authentication/localStorage";
+import { showToast } from "../../utils/alertHelper";
+import ReactToPrint from "react-to-print";
+import Receipt from "../../components/common/Receipt.jsx";
 
-function ApproveModal({ onCancel }) {
+function ApproveModal({ id_number, course, year, name, onCancel, onSubmit }) {
+  const componentRef = useRef();
   const [formData, setFormData] = useState({
+    id_number: id_number,
     rfid: "",
-    money: "",
+
+    admin: getAdminName(),
   });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -15,8 +23,37 @@ function ApproveModal({ onCancel }) {
     });
   };
 
-  //axios.post(`${backendConnection()}/api/register`);
-  //Tudloe niya ko saun pag gamit props hehe
+  const handleSubmit = async () => {
+    try {
+      if (formData.rfid === "") {
+        formData.rfid = "N/A";
+      }
+      const response = await fetch(
+        `${backendConnection()}/api/approve-membership`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast("success", "Student Approve");
+        onSubmit();
+        onCancel();
+      } else {
+        showToast("error", "Internal Server Error!");
+
+        onSubmit();
+        onCancel();
+      }
+    } catch (error) {
+      console.error("Error submitting form", error);
+    }
+  };
 
   return (
     <div className="modal show" style={{ display: "block" }}>
@@ -31,26 +68,31 @@ function ApproveModal({ onCancel }) {
             ></button>
           </div>
           <div className="modal-body">
-            <p>
-              <strong>RFID Number:</strong>
+            <div className="mb-3">
+              <label className="form-label">
+                <strong>RFID Number:</strong>
+              </label>
               <input
                 value={formData.rfid}
-                className=" form-control"
+                name="rfid"
+                className="form-control"
                 type="number"
                 onChange={handleChange}
                 required
               />
-            </p>
-            <p>
-              <strong>Money:</strong>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">
+                <strong>Money:</strong>
+              </label>
               <input
-                value={formData.money}
-                className=" form-control"
+                name="money"
+                className="form-control"
                 type="number"
                 onChange={handleChange}
                 required
               />
-            </p>
+            </div>
           </div>
           <div className="modal-footer">
             <button
@@ -60,9 +102,26 @@ function ApproveModal({ onCancel }) {
             >
               Cancel
             </button>
-            <button type="button" className="btn btn-success">
-              Approve
-            </button>
+            <ReactToPrint
+              trigger={() => (
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={handleSubmit}
+                >
+                  Approve
+                </button>
+              )}
+              content={() => componentRef.current}
+            />
+            <Receipt
+              ref={componentRef}
+              id_number={formData.id_number}
+              course={course}
+              year={year}
+              name={name}
+              admin={getAdminName()}
+            />
           </div>
         </div>
       </div>

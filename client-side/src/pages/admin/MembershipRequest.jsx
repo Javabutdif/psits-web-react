@@ -7,34 +7,58 @@ import axios from "axios";
 import { showToast } from "../../utils/alertHelper";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { ConfirmActionType } from "../../enums/commonEnums";
+import ApproveModal from "../../components/admin/ApproveModal";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(false);
+  const [selectedStudentCourse, setSelectedStudentCourse] = useState(false);
+  const [selectedStudentYear, setSelectedStudentYear] = useState(false);
+  const [selectedStudentName, setSelectedStudentName] = useState(false);
 
+  const handleOpenModal = (row) => {
+    setIsModalOpen(true);
+    setSelectedStudentId(row.id_number);
+    setSelectedStudentCourse(row.course);
+    setSelectedStudentYear(row.year);
+    setSelectedStudentName(
+      row.first_name + " " + row.middle_name + " " + row.last_name
+    );
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedStudentId("");
+    fetchData();
+  };
+
+  const handleFormSubmit = (data) => {
+    console.log("Form submitted successfully:", data);
+  };
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `${backendConnection()}/api/requestStudent`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+    setIsLoading(false);
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          `${backendConnection()}/api/requestStudent`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-      setIsLoading(false);
-    };
-
     fetchData();
   }, []);
 
@@ -81,7 +105,7 @@ function MembershipRequest() {
         <div className="d-flex flex-row gap-1 ">
           <button
             className="btn btn-primary"
-            onClick={() => handleApproveButton(row.id_number)}
+            onClick={() => handleOpenModal(row)}
           >
             Approve
           </button>
@@ -92,11 +116,6 @@ function MembershipRequest() {
       ),
     },
   ];
-
-  const handleApproveButton = (row) => {
-    // Handle button click action here
-    console.log("Button clicked for row:", row);
-  };
 
   const showModal = (row) => {
     setIsModalVisible(true);
@@ -169,6 +188,16 @@ function MembershipRequest() {
           confirmType={ConfirmActionType.DELETION}
           onCancel={hideModal}
           onConfirm={handleConfirmDeletion}
+        />
+      )}
+      {isModalOpen && (
+        <ApproveModal
+          id_number={selectedStudentId}
+          course={selectedStudentCourse}
+          year={selectedStudentYear}
+          name={selectedStudentName}
+          onCancel={handleCloseModal}
+          onSubmit={handleFormSubmit}
         />
       )}
     </div>

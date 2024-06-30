@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../../App.css";
 import DataTable from "react-data-table-component";
 import backendConnection from "../../api/backendApi.js";
@@ -8,8 +8,12 @@ import ConfirmationModal from "../../components/common/ConfirmationModal.jsx";
 import { ConfirmActionType } from "../../enums/commonEnums.js";
 import { showToast } from "../../utils/alertHelper.js";
 import { InfinitySpin } from "react-loader-spinner";
+import ReactToPrint from "react-to-print";
+import Receipt from "../../components/common/Receipt.jsx";
+import { getAdminName } from "../../authentication/localStorage";
 
 function ViewStudents() {
+  const componentRef = useRef();
   const [data, setData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState();
@@ -87,9 +91,20 @@ function ViewStudents() {
           <button className="btn btn-danger " onClick={() => showModal(row)}>
             Delete
           </button>
-          <button className="btn btn-success" onClick={() => showModal(row)}>
-            Generate Receipt
-          </button>
+          <ReactToPrint
+            trigger={() => (
+              <button className="btn btn-success">Print Receipt</button>
+            )}
+            content={() => componentRef.current}
+          />
+          <Receipt
+            ref={componentRef}
+            id_number={row.id_number}
+            course={row.course}
+            year={row.year}
+            name={row.first_name + " " + row.middle_name + " " + row.last_name}
+            admin={getAdminName()}
+          />
         </div>
       ),
     },
