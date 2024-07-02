@@ -25,9 +25,9 @@
     "react-intersection-observer": "^9.10.3",
     "react-loader-spinner": "^6.1.6",
     "react-router-dom": "^6.23.1",
+    "react-to-print": "^2.15.1",
     "sweetalert2": "^11.11.1",
-    "tailwindcss": "^3.4.4",
-    "react-to-print": "^2.15.1"
+    "tailwindcss": "^3.4.4"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
@@ -37,6 +37,7 @@
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
+    "rollup": "^4.18.0",
     "vite": "^5.2.12"
   },
   "proxy": "http://localhost/psits-web-react/server-side"
