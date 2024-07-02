@@ -1,4 +1,3 @@
-// src/App.js
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -10,9 +9,9 @@ import Navbar from "./components/common/Navbar";
 import NavbarAdmin from "./components/common/NavbarAdmin";
 import NavbarStudent from "./components/common/NavbarStudent";
 import Home from "./pages/Home";
-import Login from "./pages/Login";
+import Login from "./pages/authentication/Login.jsx";
 import Officers from "./pages/Officers";
-import Register from "./pages/Register";
+import Register from "./pages/authentication/Register.jsx";
 import Developers from "./pages/Developers";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import MembershipRequest from "./pages/admin/MembershipRequest";
@@ -30,7 +29,10 @@ import StudentDashboard from "./pages/students/StudentDashboard.jsx";
 import StudentMerchandise from "./pages/students/StudentMerchandise.jsx";
 import StudentHistory from "./pages/students/StudentHistory.jsx";
 import StudentOrders from "./pages/students/StudentOrders.jsx";
-import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ForgotPassword from "./pages/authentication/ForgotPassword.jsx";
+import EmailVerification from "./pages/authentication/EmailVerification.jsx";
+import OTPVerifier from "./pages/authentication/OtpVerifier.jsx";
+import ResetPassword from "./pages/authentication/ResetPassword.jsx";
 
 function App() {
   return (
@@ -98,12 +100,16 @@ function App() {
             element={<PrivateRouteStudent element={StudentOrders} />}
           />
           <Route path="/adminRegister" element={<AdminRegister />} />
-          <Route path="/forgotPassword" element={<ForgotPassword />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/email-verification" element={<EmailVerification />}/>
+          <Route path="/otp-verifier" element={<OTPVerifier />}/>
+          <Route path="/reset-password" element={<ResetPassword />}/>
         </Routes>
       </div>
     </Router>
   );
 }
+
 function ConditionalNavbar() {
   const location = useLocation();
 
@@ -125,15 +131,17 @@ function ConditionalNavbar() {
     location.pathname.startsWith("/studentHistory") ||
     location.pathname.startsWith("/studentOrders")
   ) {
-    return ( <NavbarStudent />  );
+    return <NavbarStudent />;
   } else if (
-    location.pathname.startsWith("/login") ||
-    location.pathname.startsWith("/register") ||
     location.pathname.startsWith("/officers") ||
     location.pathname.startsWith("/developers") ||
-    location.pathname.startsWith("/")
+    location.pathname === "/"
   ) {
     return <Navbar />;
+  } else {
+    // Default case, when none of the conditions match
+    return null; // Return null to hide the navbar
   }
 }
+
 export default App;
