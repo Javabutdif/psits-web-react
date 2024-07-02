@@ -19,25 +19,25 @@ const HamburgerToggle = ({ isOpen, toggleMenu }) => {
 
   return (
     <motion.button
-      className={`block lg:hidden hamburger text-white ${isOpen ? 'open' : ''}`}
+      className={`block lg:hidden hamburger text-black ${isOpen ? 'open' : ''}`}
       onClick={toggleMenu}
       aria-label={isOpen ? 'Close menu' : 'Open menu'}
       whileHover={{ scale: 1.1 }}
     >
       <motion.span
-        className='w-6 h-1 bg-white'
+        className={`w-6 h-1  ${isOpen ? 'bg-black' : 'bg-white'}`}
         animate={isOpen ? 'open' : 'closed'}
         variants={topLineVariants}
         transition={{ duration: 0.3 }}
       />
       <motion.span
-        className='w-6 h-1 bg-white'
+        className={`w-6 h-1  ${isOpen ? 'bg-black' : 'bg-white'}`}
         animate={isOpen ? 'open' : 'closed'}
         variants={middleLineVariants}
         transition={{ duration: 0.3 }}
       />
       <motion.span
-        className='w-6 h-1 bg-white'
+        className={`w-6 h-1  ${isOpen ? 'bg-black' : 'bg-white'}`}
         animate={isOpen ? 'open' : 'closed'}
         variants={bottomLineVariants}
         transition={{ duration: 0.3 }}
