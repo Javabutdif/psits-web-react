@@ -50,10 +50,12 @@ const OTPVerifier = ({ email }) => {
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100 p-4 font-montserrat">
+
       <div className='max-w-lg space-y-10 w-full flex text-center flex-col items-center justify-center font-montserrat px-4 sm:px-8 py-10 bg-white shadow-lg rounded-lg'>
         <div className='space-y-3'>
           <h3 className='text-xl sm:text-2xl font-bold'>Verify your OTP code</h3>
           <p className='text-sm sm:text-md  sm:max-w-96'>An 6-digit code has been sent to 
+
             <span className='block'>
               <strong>{email}</strong>
             </span>
@@ -69,7 +71,9 @@ const OTPVerifier = ({ email }) => {
                 value={digit}
                 onChange={(e) => handleChange(index, e.target.value)}
                 ref={(input) => (refs.current[index] = input)} // Assign ref to input
+
                 styles="w-full p-2 text-sm sm:text-md text-black  border border-gray-300 rounded"
+
               />
             ))}
           </div>

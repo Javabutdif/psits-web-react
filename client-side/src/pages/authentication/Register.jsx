@@ -106,6 +106,7 @@ function Register() {
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100 p-4">
+
       <div className="max-w-lg md:max-w-4xl space-y-8 sm:space-y-10 w-full flex flex-col md:flex-row md:items-stretch items-center justify-center font-montserrat bg-white shadow-lg rounded-lg">
         <div className="flex md:flex-col md:justify-center md:items-center md:space-y-5 md:text-center md:border-0 bg-[#074873] text-white space-x-4 p-4 rounded-t rounded-b-2xl items-center">
           <img src={logo} alt="PSITS Logo" className="w-24 h-24" />
@@ -115,6 +116,7 @@ function Register() {
           </div>
         </div>
         <form className="w-full  space-y-4 px-5 lg:px-8 pb-10" onSubmit={handleSubmit}>
+
           <FormInput
             label={"ID Number"}
             type="text"
@@ -124,7 +126,9 @@ function Register() {
             onChange={handleChange}
             styles="w-full p-2 border border-gray-300 rounded"
           />
+
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+
           <FormInput
             label={"First Name"}
             type="text"
@@ -162,7 +166,9 @@ function Register() {
               onChange={handleChange}
               styles="w-full p-2 border border-gray-300 rounded"
             />
+
           <div className="flex  justify-between space-x-4">
+
             <FormSelect
               label="Course"
               name="course"
@@ -180,7 +186,9 @@ function Register() {
               styles="flex-1"
             />
           </div>
+
           <div className="flex flex-col sm:flex-row space-y-4 justify-between sm:space-y-0 sm:space-x-4">
+
             <FormInput
               label="Password"
               type="password"
@@ -205,7 +213,9 @@ function Register() {
               text="Register"
               styles="w-full bg-blue-500 hover:bg-blue-400 text-white p-2 rounded"
             />  
+
           <div className="text-sm sm:text-md flex items-center justify-center">
+
               <p>Already have an account? </p>
               <FormButton 
                 type={'button'}

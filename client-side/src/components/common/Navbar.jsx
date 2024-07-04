@@ -8,8 +8,10 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
 
+
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
+
 
   const handleResize = () => {
     if (window.innerWidth >= 768) {
@@ -18,11 +20,13 @@ const Navbar = () => {
   };
 
   useEffect(() => {
+
     const handleScroll = () => {
       setScrollPosition(window.scrollY);
     };
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
+
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -42,6 +46,17 @@ const Navbar = () => {
     };
   }, [isMenuOpen]);
 
+
+  const menuVariants = {
+    open: {
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+    },
+    closed: {
+      transition: { staggerChildren: 0.05, staggerDirection: -1 },
+
+    },
+  };
+
   const menuVariants = {
     open: {
       transition: { staggerChildren: 0.1, delayChildren: 0.2 },
@@ -52,6 +67,7 @@ const Navbar = () => {
   };
 
   return (
+
     <header className={`fixed w-full z-50 py-2 ${isMenuOpen ? 'text-black' : 'text-white'} font-montserrat ${scrollPosition > 80 ? 'backdrop-blur-md bg-black bg-opacity-25 transition-all duration-500' : 'bg-transparent'}`}>
       <div className="container px-2 mx-auto flex justify-between items-center gap-1">
         <Link to='/' onClick={closeMenu} className="relative flex items-center z-40">
@@ -67,6 +83,7 @@ const Navbar = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className={`hidden sm:block text-sm  font-bold max-w-[300px] `}>
+
             PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
           </motion.h3>
         </Link>
@@ -74,6 +91,7 @@ const Navbar = () => {
         <div className="relative z-40 lg:hidden">
           <HamburgerToggle isOpen={isMenuOpen} toggleMenu={toggleMenu} />
         </div>
+
 
         <nav className={`navbar absolute top-0 left-0 lg:py-0 z-30 w-full lg:relative lg:w-auto lg:left-auto lg:top-auto lg:min-h-0 lg:flex lg:space-x-4 ${isMenuOpen ? 'nav-open' : ''}`}>
           <motion.div
@@ -85,6 +103,7 @@ const Navbar = () => {
             style={{ clipPath: isMenuOpen ? 'circle(0.3% at 100% 0)' : 'circle(0% at 100% 0)' }} 
           />
           <motion.ul
+
             className={`flex flex-col text-lg ${isMenuOpen ? 'font-bold' : 'font-light'} space-y-4 lg:text-base lg:space-y-0 lg:space-x-16 lg:flex-row items-center lg:items-start justify-center min-h-screen lg:min-h-0 ${isMenuOpen ? 'block text-black' : 'hidden lg:flex text-white'}`}
             variants={menuVariants}
             initial="closed"
@@ -106,6 +125,7 @@ const Navbar = () => {
             </motion.li>
           ))}
           </motion.ul>
+
         </nav>
       </div>
     </header>

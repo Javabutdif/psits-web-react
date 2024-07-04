@@ -1,4 +1,6 @@
+
 import React, { useEffect, useState } from "react";
+
 import {
   BrowserRouter as Router,
   Route,
@@ -10,10 +12,12 @@ import NavbarAdmin from "./components/common/NavbarAdmin";
 import NavbarStudent from "./components/common/NavbarStudent";
 import Home from "./pages/Home";
 import Login from "./pages/authentication/Login.jsx";
+
 import Explore from "./pages/Explore.jsx";
 import Faculty from "./pages/Faculty.jsx"
 import Team from "./pages/Team.jsx"
 import Register from "./pages/authentication/Register.jsx";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import MembershipRequest from "./pages/admin/MembershipRequest";
 import MembershipHistory from "./pages/admin/MembershipHistory";
@@ -53,6 +57,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Home />} />
+
           <Route path="/explore"   element={<Explore />} />
           <Route path="/faculty" element={<Faculty />} />
           <Route path="/the-team" element={<Team />} />
@@ -78,6 +83,8 @@ function App() {
           <Route path="/otp-verifier" element={<OTPVerifier />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/register" element={<Register />} /> 
+
+        
         </Routes>
       </div>
     </Router>
@@ -85,6 +92,7 @@ function App() {
 }
 
 function ConditionalNavbar({ setRole, role }) {
+
   const location = useLocation();
 
   useEffect(() => {
@@ -122,6 +130,7 @@ function ConditionalNavbar({ setRole, role }) {
   // Render the appropriate Navbar based on role
   if (role === "admin") {
     return <NavbarAdmin />;
+
   } else if (role === "student") {
     return <NavbarStudent />;
   } else if (role === "landing") {
@@ -130,6 +139,7 @@ function ConditionalNavbar({ setRole, role }) {
     return null; // Return null to hide the navbar if role is not set
   }
 }
+
 
 
 export default App;
