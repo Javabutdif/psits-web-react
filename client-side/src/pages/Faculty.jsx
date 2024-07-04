@@ -7,7 +7,7 @@ import kirby from "../assets/images/kirby.gif";
 import hutao from "../assets/images/hutao.gif";
 import cat from "../assets/images/cat.gif";
 
-function Developers() {
+function Faculty() {
   return (
     <div className="container text-center p-5">
       <h1 className="mb-5" style={{ color: "#074873" }}>
@@ -60,4 +60,4 @@ function Developers() {
     </div>
   );
 }
-export default Developers;
+export default Faculty;

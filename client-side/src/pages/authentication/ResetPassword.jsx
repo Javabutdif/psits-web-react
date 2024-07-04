@@ -35,10 +35,10 @@ const NewPasswordForm = () => {
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100 p-4">
-      <div className="max-w-lg space-y-10 w-full flex flex-col items-center justify-center font-montserrat px-8 lg:px-10 py-10 bg-white shadow-lg rounded-lg">
+      <div className="max-w-lg space-y-10 w-full flex flex-col items-center justify-center font-montserrat px-4 lg:px-10 py-10 bg-white shadow-lg rounded-lg">
         <div className="space-y-4 text-center">
-          <h3>Forgot Password</h3>
-          <p>Enter the email associated with your account and we’ll send an email with instructions to reset your password.</p>
+          <h3 className='text-xl sm:text-2xl font-bold'>Forgot Password</h3>
+          <p className='text-sm sm:text-md  sm:max-w-96'>Enter the email associated with your account and we’ll send an email with instructions to reset your password.</p>
         </div>
         <form onSubmit={handleSubmit} className="w-full space-y-5">
           <FormInput 
@@ -61,8 +61,8 @@ const NewPasswordForm = () => {
           />
           <FormButton 
             type="submit" 
-            text="Set New Password" 
-            styles="w-full bg-blue-500 hover:bg-blue-400 text-white p-2 rounded"
+            text="Reset New Password" 
+            styles="text-sm  sm:text-md w-full bg-blue-500 hover:bg-blue-400 text-white p-2 rounded"
           />
         </form>
       </div>
