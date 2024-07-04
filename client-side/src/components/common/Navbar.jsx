@@ -51,15 +51,6 @@ const Navbar = () => {
     },
   };
 
-  menuVariants = {
-    open: {
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
-    },
-    closed: {
-      transition: { staggerChildren: 0.05, staggerDirection: -1 },
-    },
-  };
-
   return (
     <header
       className={`fixed w-full z-50 py-2 ${
