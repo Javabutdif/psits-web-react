@@ -20,6 +20,10 @@ const HamburgerToggle = ({ isOpen, toggleMenu }) => {
   return (
     <motion.button
       className={`block lg:hidden hamburger text-black ${isOpen ? 'open' : ''}`}
+
+      initial={{ scale: 0}}
+      animate={{ scale: 1}}
+
       onClick={toggleMenu}
       aria-label={isOpen ? 'Close menu' : 'Open menu'}
       whileHover={{ scale: 1.1 }}
