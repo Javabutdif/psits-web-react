@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/images/psits-logo.png";
 import { showToast } from "../../utils/alertHelper";
@@ -26,7 +26,7 @@ function Navbar() {
     removeAuthentication("AuthenticationToken");
     showToast("success", "Signed out successfully");
     handleRemoveStudentData();
-    navigate('/login')
+    navigate("/");
   };
 
   const handleRemoveStudentData = () => {
@@ -38,17 +38,20 @@ function Navbar() {
 
   return (
     <motion.aside
-      initial={{ width: '8rem'}}
-      animate={{ width: menuOpen ? '21rem' : '8rem' }}
+      initial={{ width: "8rem" }}
+      animate={{ width: menuOpen ? "21rem" : "8rem" }}
       transition={{ duration: 0.5 }}
       className="bg-white relative border-black text-black min-h-screen p-4 py-8 flex flex-col items-center justify-between shadow-lg"
     >
       <Link to={"/admin-dashboard"}>
-        <motion.img 
-          initial={{ scale: 0}}
-          animate={{ scale: 1}}
+        <motion.img
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
           transition={{ duration: 0.5 }}
-          src={logo} alt="PSITS Logo" className="w-16" />
+          src={logo}
+          alt="PSITS Logo"
+          className="w-16"
+        />
       </Link>
 
       <AsideToggle onClick={handleToggle} />
@@ -65,13 +68,22 @@ function Navbar() {
               whileTap={{ scale: 0.9 }}
               className="cursor-pointer text-center"
             >
-              <Link to={`/${item.text.toLowerCase()}`} className="flex items-center space-x-5 block">
-                <motion.i 
-                  className={`${item.icon} text-black text-2xl block mb-1`} />
-                <motion.span 
+              <Link
+                to={`/${item.text.toLowerCase()}`}
+                className="flex items-center space-x-5 block"
+              >
+                <motion.i
+                  className={`${item.icon} text-black text-2xl block mb-1`}
+                />
+                <motion.span
                   initial={{ x: 23 }}
                   animate={{ x: menuOpen ? 0 : 23 }}
-                  className={`text-lg text-black ${menuOpen ? 'block' : 'hidden'}`}>{item.text}</motion.span>
+                  className={`text-lg text-black ${
+                    menuOpen ? "block" : "hidden"
+                  }`}
+                >
+                  {item.text}
+                </motion.span>
               </Link>
             </motion.li>
           ))}
@@ -80,18 +92,23 @@ function Navbar() {
 
       <motion.button
         initial={{ opacity: 0, scale: 1 }}
-        animate={{ opacity: 1}}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={handleLogoutClick}
-        className={`text-black flex space-x-3 ${menuOpen ? '-ml-16' : 'ml-0'} self-center pace-x-5`}
+        className={`text-black flex space-x-3 ${
+          menuOpen ? "-ml-16" : "ml-0"
+        } self-center pace-x-5`}
       >
         <i className={`text-2xl fas fa-sign-out-alt`}></i>
-        <motion.span 
+        <motion.span
           initial={{ x: 23 }}
           animate={{ x: menuOpen ? 0 : 23 }}
-          className={`${menuOpen ? 'block' : 'hidden text-lg'}`}>Logout</motion.span>
+          className={`${menuOpen ? "block" : "hidden text-lg"}`}
+        >
+          Logout
+        </motion.span>
       </motion.button>
     </motion.aside>
   );
