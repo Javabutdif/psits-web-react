@@ -202,4 +202,27 @@ router.put("/add-to-cart/:student_id/:merch_id", async (req, res) => {
   }
 });
 
+// GET cart list as Student
+router.get("/cart/:student_id", async (req, res) => {
+  const student_id = req.params.student_id;
+
+  try {
+    const student = await Student.findById(student_id);
+
+    if (!student) {
+      console.error("Not logged in! User not found.");
+      return res
+        .status(404)
+        .json({ message: "Not logged in! User not found." });
+    }
+
+    return res.status(200).json({ cart: student.cart });
+  } catch (error) {
+    console.error("Error viewing cart list!", error.message);
+    return res
+      .status(500)
+      .json({ message: "Error viewing cart list!", error: error.message });
+  }
+});
+
 module.exports = router;
