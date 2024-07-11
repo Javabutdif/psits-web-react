@@ -1,5 +1,5 @@
-// src/App.js
-import React from "react";
+import React, { useEffect, useState } from "react";
+
 import {
   BrowserRouter as Router,
   Route,
@@ -10,10 +10,13 @@ import Navbar from "./components/common/Navbar";
 import NavbarAdmin from "./components/common/NavbarAdmin";
 import NavbarStudent from "./components/common/NavbarStudent";
 import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Officers from "./pages/Officers";
-import Register from "./pages/Register";
-import Developers from "./pages/Developers";
+import Login from "./pages/authentication/Login.jsx";
+
+import Explore from "./pages/Explore.jsx";
+import Faculty from "./pages/Faculty.jsx";
+import Team from "./pages/Team.jsx";
+import Register from "./pages/authentication/Register.jsx";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import MembershipRequest from "./pages/admin/MembershipRequest";
 import MembershipHistory from "./pages/admin/MembershipHistory";
@@ -30,48 +33,80 @@ import StudentDashboard from "./pages/students/StudentDashboard.jsx";
 import StudentMerchandise from "./pages/students/StudentMerchandise.jsx";
 import StudentHistory from "./pages/students/StudentHistory.jsx";
 import StudentOrders from "./pages/students/StudentOrders.jsx";
-import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ForgotPassword from "./pages/authentication/ForgotPassword.jsx";
+import EmailVerification from "./pages/authentication/EmailVerification.jsx";
+import OTPVerifier from "./pages/authentication/OtpVerifier.jsx";
+import ResetPassword from "./pages/authentication/ResetPassword.jsx";
+import UnderConstruction from "./pages/admin/UnderConstruction.jsx";
 
 function App() {
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    console.log(role);
+  });
+
   return (
     <Router>
-      <div className="App">
-        <ConditionalNavbar />
+      <div className={`App flex ${role !== "admin" ? "flex-col" : "flex-row"}`}>
+        {/* Pass setRole directly to ConditionalNavbar */}
+        <ConditionalNavbar setRole={setRole} role={role} />
 
         <Routes>
           <Route path="/login" element={<Login />} />
-
           <Route path="/" element={<Home />} />
-          <Route path="/officers" element={<Officers />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/developers" element={<Developers />} />
+
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/faculty" element={<Faculty />} />
+          <Route path="/the-team" element={<Team />} />
+
           <Route
-            path="/adminDashboard"
+            path="/admin-dashboard"
             element={<PrivateRouteAdmin element={AdminDashboard} />}
           />
           <Route
-            path="/membershipRequest"
+            path="/membership-request"
             element={<PrivateRouteAdmin element={MembershipRequest} />}
           />
           <Route
-            path="/membershipRenewal"
+            path="/membership-renewal"
             element={<PrivateRouteAdmin element={MembershipRenewal} />}
           />
           <Route
-            path="/membershipHistory"
+            path="/membership-history"
             element={<PrivateRouteAdmin element={MembershipHistory} />}
           />
           <Route
             path="/merchandise"
-            element={<PrivateRouteAdmin element={Merchandise} />}
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
           />
           <Route
-            path="/merchandiseHistory"
+            path="/merchandise-history"
             element={<PrivateRouteAdmin element={MerchandiseHistory} />}
           />
           <Route
-            path="/merchandiseOrders"
+            path="/merchandise-orders"
             element={<PrivateRouteAdmin element={MerchandiseOrders} />}
+          />
+          <Route
+            path="/inventory"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/orders"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/analytics"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/resources"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/settings"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
           />
           <Route
             path="/viewStudents"
@@ -81,59 +116,86 @@ function App() {
             path="/editStudent"
             element={<PrivateRouteAdmin element={EditStudent} />}
           />
+
           <Route
-            path="/studentDashboard"
+            path="/student-dashboard"
             element={<PrivateRouteStudent element={StudentDashboard} />}
           />
           <Route
-            path="/studentMerchandise"
+            path="/student-merchandise"
             element={<PrivateRouteStudent element={StudentMerchandise} />}
           />
           <Route
-            path="/studentHistory"
+            path="/student-history"
             element={<PrivateRouteStudent element={StudentHistory} />}
           />
           <Route
-            path="/studentOrders"
+            path="/student-orders"
             element={<PrivateRouteStudent element={StudentOrders} />}
           />
-          <Route path="/adminRegister" element={<AdminRegister />} />
-          <Route path="/forgotPassword" element={<ForgotPassword />} />
+
+          <Route path="/admin-register" element={<AdminRegister />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/email-verification" element={<EmailVerification />} />
+          <Route path="/otp-verifier" element={<OTPVerifier />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </Router>
   );
 }
-function ConditionalNavbar() {
+
+function ConditionalNavbar({ setRole, role }) {
   const location = useLocation();
 
-  if (
-    location.pathname.startsWith("/adminDashboard") ||
-    location.pathname.startsWith("/membershipRequest") ||
-    location.pathname.startsWith("/membershipRenewal") ||
-    location.pathname.startsWith("/membershipHistory") ||
-    location.pathname.startsWith("/merchandise") ||
-    location.pathname.startsWith("/merchandiseHistory") ||
-    location.pathname.startsWith("/merchandiseOrders") ||
-    location.pathname.startsWith("/viewStudents") ||
-    location.pathname.startsWith("/editStudent")
-  ) {
+  useEffect(() => {
+    if (
+      location.pathname.startsWith("/admin-dashboard") ||
+      location.pathname.startsWith("/membership-request") ||
+      location.pathname.startsWith("/membership-renewal") ||
+      location.pathname.startsWith("/membership-ristory") ||
+      location.pathname.startsWith("/merchandise") ||
+      location.pathname.startsWith("/merchandise-history") ||
+      location.pathname.startsWith("/merchandise-orders") ||
+      location.pathname.startsWith("/view-students") ||
+      location.pathname.startsWith("/edit-student") ||
+      location.pathname.startsWith("/inventory") ||
+      location.pathname.startsWith("/orders") ||
+      location.pathname.startsWith("/analytics") ||
+      location.pathname.startsWith("/resources") ||
+      location.pathname.startsWith("/settings")
+    ) {
+      setRole("admin");
+    } else if (
+      location.pathname.startsWith("/student-dashboard") ||
+      location.pathname.startsWith("/student-merchandise") ||
+      location.pathname.startsWith("/student-history") ||
+      location.pathname.startsWith("/student-orders")
+    ) {
+      setRole("student");
+    } else if (
+      location.pathname.startsWith("/the-team") ||
+      location.pathname.startsWith("/faculty") ||
+      location.pathname.startsWith("/explore") ||
+      location.pathname === "/"
+    ) {
+      setRole("landing");
+    } else {
+      setRole(""); // Default case, reset role if none of the conditions match
+    }
+  }, [location.pathname, setRole]);
+
+  // Render the appropriate Navbar based on role
+  if (role === "admin") {
     return <NavbarAdmin />;
-  } else if (
-    location.pathname.startsWith("/studentDashboard") ||
-    location.pathname.startsWith("/studentMerchandise") ||
-    location.pathname.startsWith("/studentHistory") ||
-    location.pathname.startsWith("/studentOrders")
-  ) {
+  } else if (role === "student") {
     return <NavbarStudent />;
-  } else if (
-    location.pathname.startsWith("/login") ||
-    location.pathname.startsWith("/register") ||
-    location.pathname.startsWith("/officers") ||
-    location.pathname.startsWith("/developers") ||
-    location.pathname.startsWith("/")
-  ) {
+  } else if (role === "landing") {
     return <Navbar />;
+  } else {
+    return null; // Return null to hide the navbar if role is not set
   }
 }
+
 export default App;

@@ -13,6 +13,7 @@ const adminRoutes = require("./routes/admin");
 const studentApproveRoutes = require("./routes/students");
 const merchRoutes = require("./routes/merch");
 
+
 //Middleware
 app.use(cors());
 app.use(bodyParser.json());
