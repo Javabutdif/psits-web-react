@@ -88,11 +88,26 @@ function App() {
             path="/merchandise-orders"
             element={<PrivateRouteAdmin element={MerchandiseOrders} />}
           />
-          <Route path="/inventory" element={<UnderConstruction />} />
-          <Route path="/orders" element={<UnderConstruction />} />
-          <Route path="/analytics" element={<UnderConstruction />} />
-          <Route path="/resources" element={<UnderConstruction />} />
-          <Route path="/settings" element={<UnderConstruction />} />
+          <Route
+            path="/inventory"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/orders"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/analytics"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/resources"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/settings"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
           <Route
             path="/viewStudents"
             element={<PrivateRouteAdmin element={ViewStudents} />}

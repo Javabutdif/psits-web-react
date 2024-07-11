@@ -8,7 +8,13 @@ const isAuthenticated = () => {
 };
 
 const PrivateRouteAdmin = ({ element: Component }) => {
-  return isAuthenticated() ? <Component /> : <Navigate to="/" />;
+  return isAuthenticated() ? (
+    <div className="pl-32 h-screen w-screen">
+      <Component />
+    </div>
+  ) : (
+    <Navigate to="/" />
+  );
 };
 
 export default PrivateRouteAdmin;
