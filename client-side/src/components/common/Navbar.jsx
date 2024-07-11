@@ -57,15 +57,6 @@ const Navbar = () => {
     },
   };
 
-  const menuVariants = {
-    open: {
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
-    },
-    closed: {
-      transition: { staggerChildren: 0.05, staggerDirection: -1 },
-    },
-  };
-
   return (
 
     <header className={`fixed w-full z-50 py-2 ${isMenuOpen ? 'text-black' : 'text-white'} font-montserrat ${scrollPosition > 80 ? 'backdrop-blur-md bg-black bg-opacity-25 transition-all duration-500' : 'bg-transparent'}`}>

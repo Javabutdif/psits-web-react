@@ -43,7 +43,7 @@ function Navbar() {
       transition={{ duration: 0.5 }}
       className="bg-white relative border-black text-black min-h-screen p-4 py-8 flex flex-col items-center justify-between shadow-lg"
     >
-      <Link to={"/admin-dashboard"}>
+      <Link to={"/admin/dashboard"}>
         <motion.img 
           initial={{ scale: 0}}
           animate={{ scale: 1}}
@@ -65,7 +65,7 @@ function Navbar() {
               whileTap={{ scale: 0.9 }}
               className="cursor-pointer text-center"
             >
-              <Link to={`/${item.text.toLowerCase()}`} className="flex items-center space-x-5 block">
+              <Link to={`/admin/${item.text.toLowerCase()}`} className="flex items-center space-x-5 block">
                 <motion.i 
                   className={`${item.icon} text-black text-2xl block mb-1`} />
                 <motion.span 
