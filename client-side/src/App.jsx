@@ -148,7 +148,8 @@ function ConditionalNavbar({ setRole, role }) {
       location.pathname.startsWith("/inventory") ||
       location.pathname.startsWith("/orders") ||
       location.pathname.startsWith("/analytics") ||
-      location.pathname.startsWith("/resources")
+      location.pathname.startsWith("/resources") ||
+      location.pathname.startsWith("/settings")
     ) {
       setRole("admin");
     } else if (
