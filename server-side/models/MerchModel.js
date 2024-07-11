@@ -2,26 +2,37 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
+const salesDataSchema = new Schema({
+  unitsSold: {
+    type: Number,
+    default: 0,
+  },
+  totalRevenue: {
+    type: Number,
+    default: 0,
+  },
+});
+
 const merchSchema = new Schema(
   {
     name: {
       type: String,
-      require: true,
+      required: true,
     },
     price: {
       type: Number,
-      require: true,
+      required: true,
     },
     stocks: {
       type: Number,
-      require: true,
+      required: true,
     },
     batch: {
-      type: Schema.Types.Mixed,
+      type: Number,
     },
     description: {
       type: String,
-      require: true,
+      required: true,
     },
     variation: {
       type: Array,
@@ -30,20 +41,33 @@ const merchSchema = new Schema(
       type: Array,
     },
     created_by: {
-      type: Schema.Types.Mixed,
-      require: true,
+      type: String,
+      required: true,
     },
     start_date: {
       type: Date,
-      require: true,
+      required: true,
     },
     end_date: {
       type: Date,
-      require: true,
     },
-    isActive: {
+    is_active: {
       type: Boolean,
       default: true,
+      required: true,
+    },
+    category: {
+      type: String,
+      required: true,
+    },
+    image_url: {
+      type: String,
+      required: true,
+    },
+    sales_data: {
+      type: salesDataSchema,
+      default: () => ({}),
+      required: true,
     },
   },
   { timestamps: true }
