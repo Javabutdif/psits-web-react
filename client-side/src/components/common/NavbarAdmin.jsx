@@ -8,14 +8,14 @@ import { removeStudentData } from "../../utils/editStudentData";
 import AsideToggle from "./AsideToggle";
 
 const navItems = [
-  { text: "Dashboard", icon: "fas fa-tachometer-alt" },
-  { text: "Membership", icon: "fas fa-users" },
-  { text: "Merchandise", icon: "fas fa-boxes" },
-  { text: "Inventory", icon: "fas fa-warehouse" },
-  { text: "Orders", icon: "fas fa-shopping-cart" },
-  { text: "Analytics", icon: "fas fa-chart-line" },
-  { text: "Resources", icon: "fas fa-book-open" },
-  { text: "Settings", icon: "fas fa-cog" },
+  { text: "Dashboard", icon: "fas fa-tachometer-alt", url: "/admin-dashboard" },
+  { text: "Membership", icon: "fas fa-users", url: "/membership-request" },
+  { text: "Merchandise", icon: "fas fa-boxes", url: "/merchandise" },
+  { text: "Inventory", icon: "fas fa-warehouse", url: "/inventory" },
+  { text: "Orders", icon: "fas fa-shopping-cart", url: "/orders" },
+  { text: "Analytics", icon: "fas fa-chart-line", url: "/analytics" },
+  { text: "Resources", icon: "fas fa-book-open", url: "/resources" },
+  { text: "Settings", icon: "fas fa-cog", url: "/settings" },
 ];
 
 function Navbar() {
@@ -68,10 +68,7 @@ function Navbar() {
               whileTap={{ scale: 0.9 }}
               className="cursor-pointer text-center"
             >
-              <Link
-                to={`/${item.text.toLowerCase()}`}
-                className="flex items-center space-x-5 block"
-              >
+              <Link to={`${item.url}`} className="flex items-center space-x-5">
                 <motion.i
                   className={`${item.icon} text-black text-2xl block mb-1`}
                 />

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 
 import {
@@ -14,8 +13,8 @@ import Home from "./pages/Home";
 import Login from "./pages/authentication/Login.jsx";
 
 import Explore from "./pages/Explore.jsx";
-import Faculty from "./pages/Faculty.jsx"
-import Team from "./pages/Team.jsx"
+import Faculty from "./pages/Faculty.jsx";
+import Team from "./pages/Team.jsx";
 import Register from "./pages/authentication/Register.jsx";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -38,53 +37,94 @@ import ForgotPassword from "./pages/authentication/ForgotPassword.jsx";
 import EmailVerification from "./pages/authentication/EmailVerification.jsx";
 import OTPVerifier from "./pages/authentication/OtpVerifier.jsx";
 import ResetPassword from "./pages/authentication/ResetPassword.jsx";
+import UnderConstruction from "./pages/admin/UnderConstruction.jsx";
 
 function App() {
   const [role, setRole] = useState("");
 
-
   useEffect(() => {
-
-    console.log(role)
-  })
+    console.log(role);
+  });
 
   return (
     <Router>
-      <div className={`App flex ${role !== 'admin'  ? 'flex-col' : 'flex-row'}`}>
+      <div className={`App flex ${role !== "admin" ? "flex-col" : "flex-row"}`}>
         {/* Pass setRole directly to ConditionalNavbar */}
-        <ConditionalNavbar setRole={setRole} role={role}/>
+        <ConditionalNavbar setRole={setRole} role={role} />
 
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Home />} />
 
-          <Route path="/explore"   element={<Explore />} />
+          <Route path="/explore" element={<Explore />} />
           <Route path="/faculty" element={<Faculty />} />
           <Route path="/the-team" element={<Team />} />
 
-          <Route path="/admin-dashboard" element={<PrivateRouteAdmin element={AdminDashboard} />} />
-          <Route path="/membership-request" element={<PrivateRouteAdmin element={MembershipRequest} />} />
-          <Route path="/membership-renewal" element={<PrivateRouteAdmin element={MembershipRenewal} />} />
-          <Route path="/membership-history" element={<PrivateRouteAdmin element={MembershipHistory} />} />
-          <Route path="/merchandise" element={<PrivateRouteAdmin element={Merchandise} />} />
-          <Route path="/merchandise-history" element={<PrivateRouteAdmin element={MerchandiseHistory} />} />
-          <Route path="/merchandise-orders" element={<PrivateRouteAdmin element={MerchandiseOrders} />} />
-          <Route path="/viewStudents" element={<PrivateRouteAdmin element={ViewStudents} />} />
-          <Route path="/editStudent" element={<PrivateRouteAdmin element={EditStudent} />} />
+          <Route
+            path="/admin-dashboard"
+            element={<PrivateRouteAdmin element={AdminDashboard} />}
+          />
+          <Route
+            path="/membership-request"
+            element={<PrivateRouteAdmin element={MembershipRequest} />}
+          />
+          <Route
+            path="/membership-renewal"
+            element={<PrivateRouteAdmin element={MembershipRenewal} />}
+          />
+          <Route
+            path="/membership-history"
+            element={<PrivateRouteAdmin element={MembershipHistory} />}
+          />
+          <Route
+            path="/merchandise"
+            element={<PrivateRouteAdmin element={UnderConstruction} />}
+          />
+          <Route
+            path="/merchandise-history"
+            element={<PrivateRouteAdmin element={MerchandiseHistory} />}
+          />
+          <Route
+            path="/merchandise-orders"
+            element={<PrivateRouteAdmin element={MerchandiseOrders} />}
+          />
+          <Route path="/inventory" element={<UnderConstruction />} />
+          <Route path="/orders" element={<UnderConstruction />} />
+          <Route path="/analytics" element={<UnderConstruction />} />
+          <Route path="/resources" element={<UnderConstruction />} />
+          <Route path="/settings" element={<UnderConstruction />} />
+          <Route
+            path="/viewStudents"
+            element={<PrivateRouteAdmin element={ViewStudents} />}
+          />
+          <Route
+            path="/editStudent"
+            element={<PrivateRouteAdmin element={EditStudent} />}
+          />
 
-          <Route path="/student-dashboard" element={<PrivateRouteStudent element={StudentDashboard} />} />
-          <Route path="/student-merchandise" element={<PrivateRouteStudent element={StudentMerchandise} />} />
-          <Route path="/student-history" element={<PrivateRouteStudent element={StudentHistory} />} />
-          <Route path="/student-orders" element={<PrivateRouteStudent element={StudentOrders} />} />
-          
+          <Route
+            path="/student-dashboard"
+            element={<PrivateRouteStudent element={StudentDashboard} />}
+          />
+          <Route
+            path="/student-merchandise"
+            element={<PrivateRouteStudent element={StudentMerchandise} />}
+          />
+          <Route
+            path="/student-history"
+            element={<PrivateRouteStudent element={StudentHistory} />}
+          />
+          <Route
+            path="/student-orders"
+            element={<PrivateRouteStudent element={StudentOrders} />}
+          />
+
           <Route path="/admin-register" element={<AdminRegister />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/email-verification" element={<EmailVerification />} />
           <Route path="/otp-verifier" element={<OTPVerifier />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/register" element={<Register />} /> 
-
-        
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </Router>
@@ -92,7 +132,6 @@ function App() {
 }
 
 function ConditionalNavbar({ setRole, role }) {
-
   const location = useLocation();
 
   useEffect(() => {
@@ -105,7 +144,12 @@ function ConditionalNavbar({ setRole, role }) {
       location.pathname.startsWith("/merchandise-history") ||
       location.pathname.startsWith("/merchandise-orders") ||
       location.pathname.startsWith("/view-students") ||
-      location.pathname.startsWith("/edit-student")
+      location.pathname.startsWith("/edit-student") ||
+      location.pathname.startsWith("/inventory") ||
+      location.pathname.startsWith("/orders") ||
+      location.pathname.startsWith("/analytics") ||
+      location.pathname.startsWith("/resources") ||
+      location.pathname.startsWith("/settings")
     ) {
       setRole("admin");
     } else if (
@@ -130,7 +174,6 @@ function ConditionalNavbar({ setRole, role }) {
   // Render the appropriate Navbar based on role
   if (role === "admin") {
     return <NavbarAdmin />;
-
   } else if (role === "student") {
     return <NavbarStudent />;
   } else if (role === "landing") {
@@ -139,7 +182,5 @@ function ConditionalNavbar({ setRole, role }) {
     return null; // Return null to hide the navbar if role is not set
   }
 }
-
-
 
 export default App;
