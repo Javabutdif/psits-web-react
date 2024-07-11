@@ -225,4 +225,43 @@ router.get("/cart/:student_id", async (req, res) => {
   }
 });
 
+// DELETE merch from cart as Student
+router.delete("/remove-from-cart/:student_id/:merch_id", async (req, res) => {
+  const { student_id, merch_id } = req.params;
+
+  try {
+    // Find the student by ID
+    const student = await Student.findById(student_id);
+    if (!student) {
+      console.error("Not logged in! User not found.");
+      return res
+        .status(404)
+        .json({ message: "Not logged in! User not found." });
+    }
+
+    // Convert merch_id to ObjectId
+    const merchObjectId = new mongoose.Types.ObjectId(merch_id);
+
+    // Find the index of the merch_id in the cart array
+    const index = student.cart.indexOf(merchObjectId);
+    if (index === -1) {
+      console.error("Merch not found in cart.");
+      return res.status(404).json({ message: "Merch not found in cart." });
+    }
+
+    // Remove the merch_id from the cart array
+    student.cart.splice(index, 1);
+    await student.save();
+
+    console.log("Merch removed from cart.");
+    return res.status(200).json({ message: "Merch removed from cart." });
+  } catch (error) {
+    console.error("Error removing merch from cart:", error.message);
+    return res.status(500).json({
+      message: "Error removing merch from cart",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;
