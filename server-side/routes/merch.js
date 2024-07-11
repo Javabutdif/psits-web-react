@@ -1,5 +1,7 @@
 const express = require("express");
 const Merch = require("../models/MerchModel");
+const Student = require("../models/StudentModel");
+const { default: mongoose } = require("mongoose");
 
 const router = express.Router();
 
@@ -160,6 +162,43 @@ router.delete("/:_id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting merch:", error.message);
     res.status(500).send(error.message);
+  }
+});
+
+// ADD merch to cart as Student
+router.put("/add-to-cart/:student_id/:merch_id", async (req, res) => {
+  const { student_id, merch_id } = req.params;
+
+  try {
+    // Find the student by ID
+    const student = await Student.findById(student_id);
+    if (!student) {
+      console.error("Not logged in! User not found.");
+      return res
+        .status(404)
+        .json({ message: "Not logged in! User not found." });
+    }
+
+    // Convert merch_id to ObjectId
+    const merchObjectId = new mongoose.Types.ObjectId(merch_id);
+
+    // Check if the merch_id already exists in the cart
+    if (student.cart.includes(merchObjectId)) {
+      console.log("Merch already in cart");
+      return res.status(400).json({ message: "Merch already in cart!" });
+    }
+
+    // Add to cart
+    student.cart.push(merchObjectId);
+    await student.save();
+
+    console.log("Merch added to cart");
+    return res.status(200).json({ message: "Merch added to cart" });
+  } catch (error) {
+    console.error("Error adding merch to cart:", error.message);
+    return res
+      .status(500)
+      .json({ message: "Error adding merch to cart", error: error.message });
   }
 });
 
