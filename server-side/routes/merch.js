@@ -11,13 +11,16 @@ router.post("/", async (req, res) => {
     name,
     price,
     stocks,
-    batch, //
+    batch, //unrequired
     description,
-    variation, //
-    size, //
+    variation, //unrequired
+    size, //unrequired
     created_by,
     start_date,
-    end_date,
+    end_date, //unrequired
+    category,
+    image_url,
+    sales_data,
   } = req.body;
 
   try {
@@ -25,13 +28,16 @@ router.post("/", async (req, res) => {
       name,
       price,
       stocks,
-      batch, //
+      batch, //unrequired
       description,
-      variation, //
-      size, //
+      variation, //unrequired
+      size, //unrequired
       created_by,
       start_date,
-      end_date,
+      end_date, //unrequired
+      category,
+      image_url,
+      sales_data,
     });
 
     await newMerch.save();
@@ -78,33 +84,46 @@ router.put("/:_id", async (req, res) => {
     name,
     price,
     stocks,
-    batch, //
+    batch, //unrequired
     description,
-    variation, //
-    size, //
+    variation, //unrequired
+    size, //unrequired
     start_date,
-    end_date,
+    end_date, //unrequired
+    category,
+    image_url,
+    sales_data,
   } = req.body;
 
   const id = req.params._id;
 
   try {
-    const result = await Merch.updateOne(
-      { _id: id },
-      {
-        $set: {
-          name: name,
-          price: price,
-          stocks: stocks,
-          batch: batch, //
-          description: description,
-          variation: variation, //
-          size: size, //
-          start_date: start_date,
-          end_date: end_date,
-        },
+    // Create an update object
+    const updateFields = {
+      name: name,
+      price: price,
+      stocks: stocks,
+      batch: batch, //unrequired
+      description: description,
+      variation: variation, //unrequired
+      size: size, //unrequired
+      start_date: start_date,
+      end_date: end_date, //unrequired
+      category: category,
+      image_url: image_url,
+    };
+
+    // Add sales_data fields to the update object
+    // This is added to not update the entire object and generate a new key in mongodb
+    if (sales_data) {
+      for (const key in sales_data) {
+        if (sales_data.hasOwnProperty(key)) {
+          updateFields[`sales_data.${key}`] = sales_data[key];
+        }
       }
-    );
+    }
+
+    const result = await Merch.updateOne({ _id: id }, { $set: updateFields });
 
     if (result.matchedCount === 0) {
       console.error("Merch not found");
@@ -113,7 +132,7 @@ router.put("/:_id", async (req, res) => {
 
     res.status(200).send("Merch updated successfully");
   } catch (error) {
-    console.error("Error updating merches:", error.message);
+    console.error("Error updating merch:", error.message);
     res.status(500).send(error.message);
   }
 });
@@ -127,7 +146,7 @@ router.delete("/:_id", async (req, res) => {
       { _id: id },
       {
         $set: {
-          isActive: false,
+          is_active: false,
         },
       }
     );
