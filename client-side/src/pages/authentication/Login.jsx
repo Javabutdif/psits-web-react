@@ -50,7 +50,7 @@ const Login = () => {
           setAuthentication(data.name, data.id_number, data.role, data.position);
           resetAttemptAuthentication();
 
-          navigate(`/${data.role.toLowerCase()}-dashboard`);
+          navigate(`/${data.role.toLowerCase()}/dashboard`);
 
         } else {
           showToast("error", data);

@@ -4,17 +4,13 @@ import { getAuthentication } from "./localStorage";
 
 const isAuthenticated = () => {
   const authToken = getAuthentication("AuthenticationToken");
-  return authToken !== null && authToken === "Admin";
+  return authToken === "Admin"; // Adjust the check based on your authentication logic
 };
 
 const PrivateRouteAdmin = ({ element: Component }) => {
-  return isAuthenticated() ? (
-    <div className="pl-32 h-screen w-screen">
-      <Component />
-    </div>
-  ) : (
-    <Navigate to="/" />
-  );
+
+  return isAuthenticated() ? <Component /> : <Navigate to="/login" replace />;
+
 };
 
 export default PrivateRouteAdmin;
