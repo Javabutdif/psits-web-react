@@ -8,7 +8,9 @@ const isAuthenticated = () => {
 };
 
 const PrivateRouteAdmin = ({ element: Component }) => {
+
   return isAuthenticated() ? <Component /> : <Navigate to="/login" replace />;
+
 };
 
 export default PrivateRouteAdmin;

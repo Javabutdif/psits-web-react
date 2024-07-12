@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react'
 import  {
   BrowserRouter as Router,
@@ -8,6 +9,7 @@ import  {
 
 import LandingLayout from './components/layout/LandingLayout'
 import AdminLayout from './components/layout/AdminLayout'
+
 
 import Home from './pages/Home'
 import Explore from './pages/Explore'
@@ -23,8 +25,10 @@ import Analytics from './pages/admin/Analytics'
 import Resources from './pages/admin/Resources'
 import Settings from './pages/admin/Settings'
 
+
 import Login from './pages/authentication/Login'
 import Register from './pages/authentication/Register'
+
 
 import PrivateRouteAdmin from './authentication/privateRouteAdmin'
 import NotFound from './components/common/NotFound'
@@ -59,10 +63,15 @@ const App = () => {
 
 
           <Route path="*" element={<NotFound />} />
+
+ 
         </Routes>
       </div>
     </Router>
   )
 }
 
+
 export default App
+
+
