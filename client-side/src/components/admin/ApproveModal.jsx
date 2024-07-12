@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
 import backendConnection from "../../api/backendApi";
-import { getAdminName } from "../../authentication/localStorage";
+import { getAdminName } from "../../authentication/Authentication.js";
 import { showToast } from "../../utils/alertHelper";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt.jsx";

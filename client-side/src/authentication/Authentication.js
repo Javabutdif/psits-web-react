@@ -20,8 +20,8 @@ export const setAuthentication = (name, id_number, role, position) => {
 };
 
 //Retrive Token sa Private Route, every route e check if valid pa ang token
-export const getAuthentication = (key) => {
-  const authen = localStorage.getItem(key);
+export const getAuthentication = () => {
+  const authen = localStorage.getItem("AuthenticationToken");
   if (!authen) return null;
 
   const item = JSON.parse(authen);
