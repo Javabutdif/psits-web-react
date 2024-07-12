@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/images/psits-logo.png";
 import { showToast } from "../../utils/alertHelper";
-import { removeAuthentication } from "../../authentication/localStorage";
+import { removeAuthentication } from "../../authentication/Authentication";
 import { removeStudentData } from "../../utils/editStudentData";
 import AsideToggle from "./AsideToggle";
 
