@@ -34,13 +34,13 @@ export const getAuthentication = () => {
   return item.role;
 };
 
-export const getAdminName = () => {
+export const getAdmin = () => {
   const authen = localStorage.getItem("AuthenticationToken");
   if (!authen) return null;
 
-  const name = JSON.parse(authen);
+  const info = JSON.parse(authen);
 
-  return name.name;
+  return [info.name, info.position];
 };
 
 //Remove Authentication after logout

@@ -9,14 +9,14 @@ const Footer = () => {
     ]
 
   return (
-    <footer className="w-full c py-4 text-black">
-      <div className="container mx-auto px-4 font-montserrat">
+    <footer className="w-full c py-2 text-black">
+      <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between">
           {/* Company Details */}
           <div className="flex flex-col items-center text-center md:items-start md:text-left gap-2">
             <div className='flex flex-col md:flex-row items-center mb-4 md:mb-0'>
-                <img src={logo} alt="psits logo" className="w-16 h-auto mb-2 md:mr-2" />
-                <h3 className="text-sm font-bold md:max-w-[300px]">PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS</h3>
+                <img src={logo} alt="psits logo" className="w-14 h-auto mb-2 md:mr-2" />
+                <h3 className="text-xs font-bold md:max-w-[300px]">PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS</h3>
             </div>
           </div>
           

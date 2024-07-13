@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import logo from "../../assets/images/psits-logo.png";
-import HamburgerToggle from "./HamburgerToggle";
+import logo from "../../../assets/images/psits-logo.png";
+import HamburgerToggle from "../toogles/HamburgerToggle";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,10 +45,10 @@ const Navbar = () => {
 
   const menuVariants = {
     open: {
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+      transition: { staggerChildren: 1, delayChildren: 1.5},
     },
     closed: {
-      transition: { staggerChildren: 0.05, staggerDirection: -1 },
+      transition: { staggerChildren: 0.05, staggerDirection: -0.5 },
 
     },
   };
@@ -57,7 +57,7 @@ const Navbar = () => {
     <header
       className={`fixed w-full z-50 py-2 ${
         isMenuOpen ? "text-black" : "text-white"
-      } font-montserrat ${
+      }  ${
         scrollPosition > 80
           ? "backdrop-blur-md bg-black bg-opacity-25 transition-all duration-500"
           : "bg-transparent"
@@ -75,13 +75,13 @@ const Navbar = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
             alt="psits logo"
-            className="w-16 h-auto mr-2"
+            className="w-14 h-auto mr-2"
           />
           <motion.h3
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className={`hidden sm:block text-sm  font-bold max-w-[300px] `}
+            className={`hidden sm:block text-xs  font-bold max-w-[300px] `}
           >
             PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
           </motion.h3>
@@ -117,9 +117,9 @@ const Navbar = () => {
             }}
           />
           <motion.ul
-            className={`flex flex-col text-lg ${
+            className={`flex flex-col text-4xl sm:text-md ${
               isMenuOpen ? "font-bold" : "font-light"
-            } space-y-4 lg:text-base lg:space-y-0 lg:space-x-16 lg:flex-row items-center lg:items-start justify-center min-h-screen lg:min-h-0 ${
+            } space-y-10 lg:text-base lg:space-y-0 lg:space-x-16 lg:flex-row items-center lg:items-start justify-center min-h-screen lg:min-h-0 ${
               isMenuOpen ? "block text-black" : "hidden lg:flex text-white"
             }`}
             variants={menuVariants}

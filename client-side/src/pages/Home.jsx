@@ -19,8 +19,6 @@ function Home() {
     <DeansMessage />
     <CoreBeliefs />
     <About />
-    <Footer />
-
     </>
     
     
