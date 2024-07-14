@@ -3,6 +3,7 @@ import backendConnection from "./backendApi";
 import axios from "axios";
 import { showToast } from "../utils/alertHelper";
 import { setAuthentication } from "../authentication/Authentication";
+import { jwtDecode } from "jwt-decode";
 
 export const login = async (formData) => {
   try {
@@ -16,11 +17,13 @@ export const login = async (formData) => {
       }
     );
 
-    const data = response.data;
-
+    const { token } = response.data;
+    const data = jwtDecode(token);
+    console.log(data.role);
+    console.log(token);
     if (data.role === "Admin" || data.role === "Student") {
       showToast("success", "Signed in successfully");
-      setAuthentication(data.name, data.id_number, data.role, data.position);
+      setAuthentication(token);
 
       return data.role;
     } else {

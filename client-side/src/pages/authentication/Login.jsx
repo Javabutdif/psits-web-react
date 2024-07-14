@@ -120,7 +120,10 @@ const Login = () => {
           className="w-full max-w-lg flex flex-col items-center justify-center bg-white shadow-lg rounded-lg"
         >
           <img src={logo} alt="Logo" className="" />
-          <form onSubmit={handleLogin} className="flex flex-col space-y-5 w-full p-5">
+          <form
+            onSubmit={handleLogin}
+            className="flex flex-col space-y-5 w-full p-5"
+          >
             <h3 className="text-xl sm:text-2xl font-bold text-center mb-4">
               Welcome Back!
             </h3>
@@ -133,7 +136,7 @@ const Login = () => {
                 value={formData.id_number}
                 onChange={handleChange}
                 styles="w-full p-2 border border-gray-300 rounded"
-                error= {errors.id_number}
+                error={errors.id_number}
               />
               <FormInput
                 label="Password"
@@ -145,7 +148,6 @@ const Login = () => {
                 styles="w-full p-2 border border-gray-300 rounded"
                 error={errors.password}
               />
-             
             </div>
 
             <FormButton

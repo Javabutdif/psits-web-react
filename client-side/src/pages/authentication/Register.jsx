@@ -53,7 +53,7 @@ function Register() {
     }
 
     if (!formData.middle_name) {
-      newErrors.middle_name = "Middle Name is required"
+      newErrors.middle_name = "Middle Name is required";
     }
 
     if (!formData.last_name) {
@@ -74,7 +74,7 @@ function Register() {
 
     if (!formData.year) {
       newErrors.year = "Year is required.";
-    } 
+    }
 
     if (!formData.password) {
       newErrors.password = "Password is required.";
@@ -158,7 +158,11 @@ function Register() {
         className="max-w-lg md:max-w-4xl space-y-8  sm:space-y-0 sm:space-y-10 w-full flex flex-col md:flex-row md:items-stretch items-center justify-center bg-white shadow-lg rounded-lg"
       >
         <div className="flex md:flex-col md:justify-center md:items-center md:space-y-5 md:text-center md:border-0 bg-[#074873] text-white space-x-4 p-4 rounded-t md:rounded-l-lg items-center">
-          <img src={logo} alt="PSITS Logo" className="w-16 h-16 md:w-24 md:h-24" />
+          <img
+            src={logo}
+            alt="PSITS Logo"
+            className="w-16 h-16 md:w-24 md:h-24"
+          />
           <div className="border-white border-l-2 md:border-0 md:pl-0 pl-4">
             <h3 className="text-l sm:text-2xl font-bold uppercase">Register</h3>
             <p className="w-full md:w-48 text-xs sm:text-sm md:text-md">

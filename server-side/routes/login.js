@@ -2,13 +2,18 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
+require("dotenv").config();
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
+const token_key = process.env.JWT_SECRET;
 
 router.post("/login", async (req, res) => {
   const { id_number, password } = req.body;
 
   try {
+    let user;
+    let role;
     //Find admin
     const admin = await Admin.findOne({ id_number });
 
@@ -36,17 +41,8 @@ router.post("/login", async (req, res) => {
         student.membership === "Accepted" &&
         student.status === "True"
       ) {
-        return res.json({
-          role: "Student",
-          id_number: student.id_number,
-          name:
-            student.first_name +
-            " " +
-            student.middle_name +
-            " " +
-            student.last_name,
-          position: "N/A",
-        });
+        user = student;
+        role = "Student";
       } else if (!passwordMatch) {
         return res.status(400).json("Invalid ID number or password");
       }
@@ -54,16 +50,29 @@ router.post("/login", async (req, res) => {
       const passwordMatch = await bcrypt.compare(password, admin.password);
 
       if (passwordMatch) {
-        return res.json({
-          role: "Admin",
-          id_number: admin.id_number,
-          name: admin.name,
-          position: admin.position,
-        });
+        user = admin;
+        role = "Admin";
       } else if (!passwordMatch) {
         return res.status(400).json("Invalid ID number or password");
       }
     }
+
+    const token = jwt.sign(
+      {
+        id_number: user.id_number,
+        name:
+          role === "Admin"
+            ? user.name
+            : `${user.first_name} ${user.middle_name} ${user.last_name}`,
+        role,
+        position: role === "Admin" ? user.position : "N/A",
+      },
+      token_key,
+      { expiresIn: role === "Admin" ? "1h" : "30m" }
+    );
+
+    // Return the token
+    return res.json({ token });
   } catch (error) {
     res.status(500).send(error);
   }
