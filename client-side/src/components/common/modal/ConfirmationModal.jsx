@@ -2,8 +2,8 @@ import React from "react";
 import {
   ConfirmActionType,
   ConfirmActionWords,
-} from "../../enums/commonEnums.js";
-import { capitalizeFirstLetter } from "../../utils/stringUtils.js";
+} from "../../../enums/commonEnums.js";
+import { capitalizeFirstLetter } from "../../../utils/stringUtils.js";
 
 function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
   let confirmTypeWord = ConfirmActionWords[confirmType];

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Route,
   Routes,
-  useLocation,
 } from "react-router-dom";
 
 import LandingLayout from "./components/layout/LandingLayout";
@@ -28,6 +27,11 @@ import Register from "./pages/authentication/Register";
 
 import PrivateRouteAdmin from "./authentication/privateRouteAdmin";
 import NotFound from "./components/common/NotFound";
+import Profile from "./pages/admin/Profile";
+import ForgotPassword from "./pages/authentication/ForgotPassword";
+import EmailVerification from "./pages/authentication/EmailVerification";
+import OTPVerifier from "./pages/authentication/OtpVerifier";
+import ResetPassword from "./pages/authentication/ResetPassword"
 
 const App = () => {
   return (
@@ -76,9 +80,17 @@ const App = () => {
               path="settings"
               element={<PrivateRouteAdmin element={Settings} />}
             />
+            <Route path="profile" element={<PrivateRouteAdmin element={Profile} />}>
+
+            </Route>
+
           </Route>
           {/* <Route path="/" element={<StudentLayout />} > */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login />} /> 
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+           <Route path="/email-verification" element={<EmailVerification />} />
+          <Route path="/otp-verify" element={<OTPVerifier />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/register" element={<Register />} />
 
           <Route path="*" element={<NotFound />} />

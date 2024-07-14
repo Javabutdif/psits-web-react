@@ -6,7 +6,7 @@ import particle from '../../../assets/images/download.png';
 const Banner = () => {
   return (
     <AnimatePresence>
-      <motion.div className='relative bg-[#074873] text-white font-montserrat'>
+      <motion.div className='relative bg-[#074873] text-white'>
         <img src={particle} alt="Background" className='absolute top-1/2 -translate-y-1/2 w-full object-cover h-screen' />
         <div className='relative min-h-[80vh] lg:min-h-[65vh] flex items-center justify-center lg:justify-start text-center lg:text-left container mx-auto px-4 py-24'>
           <div className='z-40 -mb-20 md:-mb-30 lg:-mb-40 xl:-mb-52'>

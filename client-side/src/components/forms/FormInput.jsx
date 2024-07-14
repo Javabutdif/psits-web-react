@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-const FormInput = ({ label, type, id, name, value, onChange, styles }) => {
+const FormInput = ({ label, type, id, name, value, onChange, styles, error }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   const handleFocus = () => {
@@ -16,24 +16,22 @@ const FormInput = ({ label, type, id, name, value, onChange, styles }) => {
 
   return (
     <motion.div
-
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-
-      transition={{ duration: 0.3 }}
-      className="relative"
+      className="relative flex-1"
     >
+      <div className="absolute text-xs text-red-600 -top-5 right-0">
+        {error}
+      </div>
+
       <motion.label
         htmlFor={id}
 
-        className={`text-xs top-2 md:text-sm lg: lg:text-md absolute left-2 md:top-1 transition-transform duration-300 ${
+        className={`text-xs md:text-sm lg: lg:text-md absolute left-2 top-1/3 translate-y-2/4 transition-transform duration-300 ${
           isFocused || value ? 'text-xs -top-[0.01rem] bg-white' : 'text-base'
 
         }`}
         animate={{
           scale: isFocused || value ? 0.9 : 1,
-          y: isFocused || value ? -16 : 0,
+          y: isFocused || value ? -23 : 0,
         }}
         transition={{ duration: 0.2 }}
       >
