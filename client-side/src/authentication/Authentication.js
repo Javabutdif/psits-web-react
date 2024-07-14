@@ -1,41 +1,50 @@
-// Key = AuthenticationToken
-// Value = ID Number of Student / Admin
-// Time = 20 Minutes Max
-// Position = Admin / Student
+import { jwtDecode } from "jwt-decode";
 
 //Set Authentication when successful login
-export const setAuthentication = (name, id_number, role, position) => {
+export const setAuthentication = (token) => {
+  const user = jwtDecode(token);
   const currentTime = new Date().getTime();
-  const time = role === "Student" ? 20 * 60 * 1000 : 60 * 60 * 1000;
+  const time = user.role === "Student" ? 20 * 60 * 1000 : 60 * 60 * 1000;
   const expiryTime = currentTime + time;
 
   const authen = {
-    name: name,
-    id: id_number,
-    position: position,
+    name: user.name,
+    id: user.id_number,
+    position: user.position,
     expiry: expiryTime,
-    role: role,
+    role: user.role,
   };
-  localStorage.setItem("AuthenticationToken", JSON.stringify(authen));
+  localStorage.setItem("Data", JSON.stringify(authen));
+  sessionStorage.setItem("Token", token);
 };
 
 //Retrive Token sa Private Route, every route e check if valid pa ang token
 export const getAuthentication = () => {
-  const authen = localStorage.getItem("AuthenticationToken");
+  const authen = localStorage.getItem("Data");
+  const sessionToken = sessionStorage.getItem("Token");
   if (!authen) return null;
 
   const item = JSON.parse(authen);
   const now = new Date();
 
   if (now.getTime() > item.expiry) {
-    localStorage.removeItem(key);
+    localStorage.removeItem("Data");
+    sessionStorage.removeItem("Token");
     return null;
   }
-  return item.role;
+  if (sessionToken) {
+    if (item.role === "Admin") {
+      return "Administrator";
+    } else {
+      return "Student";
+    }
+  } else {
+    return null;
+  }
 };
 
 export const getAdmin = () => {
-  const authen = localStorage.getItem("AuthenticationToken");
+  const authen = localStorage.getItem("Data");
   if (!authen) return null;
 
   const info = JSON.parse(authen);
@@ -44,8 +53,9 @@ export const getAdmin = () => {
 };
 
 //Remove Authentication after logout
-export const removeAuthentication = (key) => {
-  localStorage.removeItem(key);
+export const removeAuthentication = () => {
+  localStorage.removeItem("Data");
+  sessionStorage.removeItem("Token");
 };
 
 //Attempt Increment

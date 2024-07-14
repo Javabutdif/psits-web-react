@@ -4,7 +4,7 @@ import { getAuthentication } from "./Authentication";
 
 const isAuthenticated = () => {
   const authToken = getAuthentication();
-  return authToken === "Admin"; // Adjust the check based on your authentication logic
+  return authToken === "Administrator"; // Adjust the check based on your authentication logic
 };
 
 const PrivateRouteAdmin = ({ element: Component }) => {
