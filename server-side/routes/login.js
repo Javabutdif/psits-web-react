@@ -18,24 +18,26 @@ router.post("/login", async (req, res) => {
     const admin = await Admin.findOne({ id_number });
 
     if (!admin) {
-      //Not Admin it will query to find the student
       const student = await Student.findOne({ id_number });
       if (!student) {
-        res.status(400).json("Invalid Credentials");
+        return res.status(400).json({ message: "Invalid Credentials" });
       }
 
       const passwordMatch = await bcrypt.compare(password, student.password);
 
       if (passwordMatch && student.membership === "Pending") {
-        return res
-          .status(400)
-          .json("You must pay the membership fee of ₱50 at the PSITS Office.");
+        return res.status(400).json({
+          message:
+            "You must pay the membership fee of ₱50 at the PSITS Office.",
+        });
       } else if (
         passwordMatch &&
         student.membership === "Accepted" &&
         student.status === "False"
       ) {
-        return res.status(400).json("Your account has been deleted!");
+        return res
+          .status(400)
+          .json({ message: "Your account has been deleted!" });
       } else if (
         passwordMatch &&
         student.membership === "Accepted" &&
@@ -44,7 +46,9 @@ router.post("/login", async (req, res) => {
         user = student;
         role = "Student";
       } else if (!passwordMatch) {
-        return res.status(400).json("Invalid ID number or password");
+        return res
+          .status(400)
+          .json({ message: "Invalid ID number or password" });
       }
     } else {
       const passwordMatch = await bcrypt.compare(password, admin.password);
@@ -53,7 +57,9 @@ router.post("/login", async (req, res) => {
         user = admin;
         role = "Admin";
       } else if (!passwordMatch) {
-        return res.status(400).json("Invalid ID number or password");
+        return res
+          .status(400)
+          .json({ message: "Invalid ID number or password" });
       }
     }
 
@@ -71,10 +77,9 @@ router.post("/login", async (req, res) => {
       { expiresIn: role === "Admin" ? "1h" : "30m" }
     );
 
-    // Return the token
-    return res.json({ token });
+    return res.json({ token, message: "Login successful" });
   } catch (error) {
-    res.status(500).send(error);
+    return res.status(500).json({ message: "An error occurred", error });
   }
 });
 

@@ -66,7 +66,6 @@ const Login = () => {
           resetAttemptAuthentication();
           navigate(`/${data.toLowerCase()}/dashboard`);
         } else {
-          showToast("error", "Invalid login credentials.");
           attemptAuthentication();
         }
       } else {
