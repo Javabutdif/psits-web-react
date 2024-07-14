@@ -4,7 +4,6 @@ import axios from "axios";
 import { showToast } from "../utils/alertHelper";
 import { setAuthentication } from "../authentication/Authentication";
 import { jwtDecode } from "jwt-decode";
-
 export const login = async (formData) => {
   try {
     const response = await axios.post(
@@ -17,22 +16,23 @@ export const login = async (formData) => {
       }
     );
 
-    const { token } = response.data;
+    const { token, message } = response.data;
     const data = jwtDecode(token);
-    console.log(data.role);
-    console.log(token);
     if (data.role === "Admin" || data.role === "Student") {
-      showToast("success", "Signed in successfully");
+      showToast("success", message || "Signed in successfully");
       setAuthentication(token);
 
       return data.role;
     } else {
-      return null;
+      showToast("error", message || "An error occurred");
     }
   } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
     console.error("Error:", error);
-    showToast("error", "An error occurred. Please try again.");
-    return null;
   }
 };
 
