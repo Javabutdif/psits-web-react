@@ -24,7 +24,7 @@
 
   
   body {
-    @apply min-h-screen min-w-[320px] font-montserrat  bg-gradient-to-b from-gray-50 to-white
+    @apply min-h-screen min-w-[320px] font-montserrat  bg-secondary
   }
 
  

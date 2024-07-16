@@ -1,18 +1,19 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { getAdmin } from '../../authentication/Authentication'
+import { Link, useLocation } from 'react-router-dom'
+import { getUser } from '../../authentication/Authentication'
 
 const Profile = () => {
-  const [ name, position ] = getAdmin()
+  const location = useLocation().pathname.split('/')[1]
+  const [name, position] = getUser()
   return (
     <div className="flex space-x-3 items-center">
-        <Link to="/admin/profile">
-            <i className="fas fa-user"></i>
-        </Link>
-        <h3 className="text-sm hidden sm:block">
-          {name}
-          <span className="text-xs block">{position}</span>
-        </h3>
+      <Link to={`/${location === 'admin' ? 'admin' : location === 'student' ? 'student' : ''}/profile`}>
+        <i className="fas fa-user"></i>
+      </Link>
+      <h3 className="text-sm hidden sm:block">
+        {name}
+        <span className="text-xs block">{position}</span>
+      </h3>
     </div>
   )
 }

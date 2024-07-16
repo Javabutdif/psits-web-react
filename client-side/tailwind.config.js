@@ -6,12 +6,23 @@ export default {
   ],
   theme: {
     extend: {
+      backgroundColor: {
+        'primary': "#074873",
+        'secondary': '#f2f2f2'
+      },
+      borderColor: {
+        'primary': "#f2f2f2"
+
+      },
+      textColor: {
+        'primary': '#fffcf2',
+      },
       width: {
         'header': 'calc(100% - 5rem)'
       },
       minHeight: {
-        'main': "calc(100vh - 62px)"
-      },     
+        'main': "calc(100vh - 84px)"
+      },
       container: {
         center: true, // Centers the container
         screens: {
@@ -28,4 +39,3 @@ export default {
   },
   plugins: [],
 }
-
