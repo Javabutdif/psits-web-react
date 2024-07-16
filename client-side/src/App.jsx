@@ -20,7 +20,7 @@ import Inventory from "./pages/admin/Inventory";
 import Orders from "./pages/admin/Orders";
 import Analytics from "./pages/admin/Analytics";
 import Resources from "./pages/admin/Resources";
-import Settings from "./pages/admin/Settings";
+import Settings from "./pages/Settings";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -32,6 +32,12 @@ import ForgotPassword from "./pages/authentication/ForgotPassword";
 import EmailVerification from "./pages/authentication/EmailVerification";
 import OTPVerifier from "./pages/authentication/OtpVerifier";
 import ResetPassword from "./pages/authentication/ResetPassword"
+import StudentLayout from "./components/layout/StudentLayout";
+import StudentDashboard from "./pages/students/StudentDashboard";
+import StudentHistory from "./pages/students/StudentHistory";
+import StudentMerchandise from "./pages/students/StudentMerchandise";
+import StudentOrders from "./pages/students/StudentOrders";
+import PrivateRouteStudent from "./authentication/privateRouteStudent";
 
 const App = () => {
   return (
@@ -81,11 +87,23 @@ const App = () => {
               element={<PrivateRouteAdmin element={Settings} />}
             />
             <Route path="profile" element={<PrivateRouteAdmin element={Profile} />}>
-
+      
             </Route>
 
           </Route>
-          {/* <Route path="/" element={<StudentLayout />} > */}
+          <Route path="/student/" element={<PrivateRouteStudent element={StudentLayout} />} >
+            <Route path="dashboard" element={<PrivateRouteStudent element={StudentDashboard} />}>
+              
+            
+            </Route>
+            <Route path="history" element={<PrivateRouteStudent element={StudentHistory} />} />
+            <Route path="shop" element={<PrivateRouteStudent element={StudentHistory} />} />
+            <Route path="resources" element={<PrivateRouteStudent element={StudentMerchandise} />} />
+            <Route path="orders" element={<PrivateRouteStudent element={StudentOrders} />} />
+            <Route path="settings" element={<PrivateRouteStudent element={Settings} />} />
+
+            <Route path="profile" element={<PrivateRouteStudent element={Profile} />}></Route>
+          </Route>
           <Route path="/login" element={<Login />} /> 
           <Route path="/forgot-password" element={<ForgotPassword />} />
            <Route path="/email-verification" element={<EmailVerification />} />

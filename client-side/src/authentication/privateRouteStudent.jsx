@@ -8,7 +8,7 @@ const isAuthenticated = () => {
 };
 
 const PrivateRouteStudent = ({ element: Component }) => {
-  return isAuthenticated() ? <Component /> : <Navigate to="/" />;
+  return isAuthenticated() ? <Component /> : <Navigate to="/" replace/>;
 };
 
 export default PrivateRouteStudent;

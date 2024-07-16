@@ -43,14 +43,27 @@ export const getAuthentication = () => {
   }
 };
 
-export const getAdmin = () => {
+export const getUser = () => {
   const authen = localStorage.getItem("Data");
   if (!authen) return null;
+  const user = JSON.parse(authen);
+  
+  if (user.position === 'N/A') 
+      return [user.name, user.role]
 
+  return [user.name, user.position];
+};
+
+
+export const getStudent = () => {
+  const authen = localStorage.getItem("Data");
+  if (!authen) return null;
+  
   const info = JSON.parse(authen);
 
-  return [info.name, info.position];
-};
+  return [info.name, info.role];
+}
+
 
 //Remove Authentication after logout
 export const removeAuthentication = () => {

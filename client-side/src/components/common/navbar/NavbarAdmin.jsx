@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../../../assets/images/psits-logo.png";
 import { showToast } from "../../../utils/alertHelper";
 import { removeAuthentication } from "../../../authentication/Authentication";
@@ -21,6 +21,7 @@ const navItems = [
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogoutClick = () => {
     removeAuthentication("AuthenticationToken");
@@ -39,11 +40,11 @@ function Navbar() {
   return (
     <>
       <aside
-        className={`z-30 bg-white fixed border-black text-black min-h-screen py-8 flex flex-col items-center justify-between gap-10 shadow-lg ${
+        className={`z-30 bg-primary fixed border-black text-primary min-h-screen py-8 flex flex-col items-center justify-between gap-10 shadow-lg ${
           menuOpen ? "w-64" : "w-20"
-        } transition-width duration-500`}
+        } transition-width duration-300 ease-out`}
       >
-        <Link to={"/admin/dashboard"} onClick={handleCloseToggle}>
+        <Link to={"/admin/dashboard"} className="self-center" onClick={handleCloseToggle}>
           <img
             src={logo}
             alt="PSITS Logo"
@@ -51,50 +52,57 @@ function Navbar() {
           />
         </Link>
 
-        <AsideToggle onClick={handleToggle} />
+        <AsideToggle onClick={handleToggle} menuOpen={menuOpen} />
         
-        <nav className={`flex-1 mt-4 w-full flex flex-col ${menuOpen ? "items-stretch" : "items-center"} gap-10`}>
-          <ul className="space-y-5 sm:space-y-10 my-auto">
-            {navItems.map((item, index) => (
-              <motion.li
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                key={index}
-                onClick={handleCloseToggle}
-                className="relative cursor-pointer text-center transition-opacity duration-200"
-              >
-                <Link
-                  to={`/admin/${item.text.toLowerCase()}`}
-                  className={`${menuOpen ? 'ml-12' : 'ml-0'} flex items-center space-x-5 block`}
+        <nav className="flex-1 self-stretch mt-4 w-full flex flex-col gap-10">
+          <ul className="space-y-6 md:space-y-7 2xl:space-y-10 mb-auto">
+            {navItems.map((item, index) => {
+              const isActive = location.pathname === `/admin/${item.text.toLowerCase()}`;
+              return (
+                <motion.li
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  key={index}
+                  onClick={handleCloseToggle}
+                  className={`relative cursor-pointer text-center transition-opacity duration-200 ${isActive ? 'font-bold' : ''}`}
                 >
-                  <i className={`${item.icon} text-black text-2xl block mb-1`} />
-                  <motion.span
-                    initial={{ opacity: 0, x: 5 }}
-                    animate={{ opacity: menuOpen ? 1 : 0, x: menuOpen ? 0 : 5 }}
-                    transition={{ duration: 0.01 }}
-                    className={` left-16 text-lg text-black ${
-                      menuOpen ? "block" : "hidden"
-                    } transition-all duration-500`}
+                  <Link
+                    to={`/admin/${item.text.toLowerCase()}`}
+                    className={`flex ${!menuOpen ? 'justify-center' : 'ml-14 justify-stretch'} ${isActive ? 'text-black' : 'text-primary'} items-center space-x-5`}
                   >
-                    {item.text}
-                  </motion.span>
-                </Link>
-              </motion.li>
-            ))}
+                    <i className={`${item.icon} text-2xl block mb-1`} />
+                    <motion.span
+                      initial={{ opacity: 0, x: -40 }}
+                      animate={{ opacity: menuOpen ? 1 : 0, x: menuOpen ? 0 : -40 }}
+                      transition={{ duration: 0.2 }}
+                      className={`left-16 text-lg ${menuOpen ? "block" : "hidden"} transition-all duration-500 ${isActive ? 'text-black' : ''}`}
+                    >
+                      {item.text}
+                    </motion.span>
+                    <span className={`absolute -z-10 -top-2 py-5 pl-5 rounded-l-full -left-[0.70rem] ${isActive ? 'bg-secondary' : ''} ${menuOpen ? 'w-[91.9%] -left-[0rem]' : 'w-[89%]'}`} />
+                  </Link>
+                </motion.li>
+              );
+            })}
           </ul>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleLogoutClick}
-            className={`text-black flex space-x-3 ${
-              menuOpen ? "-ml-16" : "ml-0"
+            className={`flex space-x-3 ${
+              menuOpen ? "-ml-[3rem]" : "-ml-1"
             } self-center space-x-5 transition-transform duration-500`}
           >
             <i className="text-2xl fas fa-sign-out-alt"></i>
-            <span
+            <motion.span
+              initial={{ opacity: 1, x: -40 }}
+              animate={{ opacity: menuOpen ? 1 : 0, x: menuOpen ? 0 : -40 }}
+              transition={{ duration: 0.2 }}
               className={`${menuOpen ? "block" : "hidden"} text-lg transition-all duration-500`}
             >
               Logout
-            </span>
-          </button>
+            </motion.span>
+          </motion.button>
         </nav>
       </aside>
 
