@@ -18,18 +18,18 @@ const PostCard = ({ post }) => {
     };
     
     return (
-        <div className="space-y-6 border p-4">
+        <div className="space-y-6 border px-2 py-4 sm:p-4">
             <div className="flex items-center relative">
                 <img src={img} alt={userName} className="w-12 h-12 rounded-full mr-2" />
                 <div>
-                    <h3 className="relative">
+                    <h3 className="relative text-sm sm:text-md">
                         {userName}
-                        <span className="absolute -top-0 -right-16 bg-black text-white p-1 px-2 rounded-full text-sm">{typeOfPost}</span>
+                        <span className="absolute top-1 -right-14 sm:-right-16 bg-black text-white p-1 px-2 rounded-full text-xs sm:text-sm">{typeOfPost}</span>
                     </h3>
                     <p className="text-gray-500 text-xs">{formatTimeAgo(timePosted)}</p>
                 </div>
             </div>
-            <div>
+            <div className="space-y-4">
                 <p>{description}</p>
                 <div>
                     <img src={postImage} alt="" className="w-full" />

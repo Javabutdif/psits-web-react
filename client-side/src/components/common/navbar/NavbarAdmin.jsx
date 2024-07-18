@@ -41,7 +41,7 @@ function Navbar() {
     <>
       <aside
         className={`z-30 bg-primary fixed border-black text-primary min-h-screen py-8 flex flex-col items-center justify-between gap-10 shadow-lg ${
-          menuOpen ? "w-64" : "w-20"
+          menuOpen ? "w-64" : "w-16 sm:w-20"
         } transition-width duration-300 ease-out`}
       >
         <Link to={"/admin/dashboard"} className="self-center" onClick={handleCloseToggle}>

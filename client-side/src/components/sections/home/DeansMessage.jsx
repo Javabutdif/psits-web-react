@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion'
 
 const DeansMessage = () => {
   const messageData = {
     name: 'Mr. Neil Basabe',
     position: "Dean - UC Main CSS",
     image: "https://th.bing.com/th?id=OIP.YjJSBQVO5Cy9RBxwNqfj7AHaJ5&w=216&h=289&c=8&rs=1&qlt=90&o=6&dpr=1.1&pid=3.1&rm=2",
-    message: `As the Dean of our esteemed college, we're thrilled to have you here. I am committed to fostering a supportive and dynamic learning environment where you can thrive. Explore the many opportunities available, from internships to hackathons, to gain valuable real-world experience and develop your skills. We encourage active participation and collaboration – your voice matters! We're here to help you succeed in this ever-evolving field.
+    message: `As the Dean of our esteemed college, we're thrilled to have you here. 
 
       Best wishes for an amazing academic journey!`
   };
 
   const [displayedMessage, setDisplayedMessage] = useState([]);
-  const typingSpeed = 30;
+  const typingSpeed = 250;
 
   useEffect(() => {
     let index = 0;
@@ -31,44 +31,66 @@ const DeansMessage = () => {
   }, []);
 
   return (
-    <div className="mt-24 sm:mt-40 md:mt-52 xl:mt-72 py-24 lg:py-32 xl:py-52 ">
-      <div className="container mx-auto max-w-3xl relative px-8 lg:flex lg:justify-center lg:items-center">
-        <div className="absolute -top-20 left-1/2 transform rounded-full -translate-x-1/2">
+    <motion.div 
+      initial={{ opacity: 0, y: -100 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="container mx-auto max-w-xl relative lg:flex lg:justify-center lg:items-center"
+    >
+      <div className="flex flex-col sm:flex-row w-full lg:w-auto border-y-8 border-secondary pt-14 lg:p-8 px-4 pb-4 lg:px-8 lg:pb-8 lg:pt-28 bg-white rounded-lg shadow-lg">
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 20, damping: 12 }}
+          className="absolute -top-20 border- border-secondary shadow-xl transform rounded-full"
+        >
           <img
             src={messageData.image}
             alt={messageData.name}
-            className="w-32 h-32 lg:w-40 lg:h-40 object-cover rounded-full border-4 border-blue-500 shadow-xl"
+            className="w-32 h-32 lg:w-40 lg:h-40 object-cover rounded-full"
           />
-        </div>
-        <motion.div 
-          className="w-full lg:w-auto border-l-8 md:border-l-0 md:border-t-8 border-blue-500 pt-20 px-4 pb-4 lg:px-8 lg:pb-8 lg:pt-30 bg-white rounded-lg shadow-lg"
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ delay: 0.8, duration: 1 }}
+          className="flex-1"
         >
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-gray-800 text-center">Dean's Welcome Message</h2>
-          <p className="text-gray-700 leading-relaxed mb-6">
-            <span className="font-semibold block mb-2 text-lg">Dear Students,</span>
-            <span className="whitespace-pre-line">
+          <h2 className="text-lg sm:text-3xl lg:text-4xl font-bold mb-4 text-gray-800">Dean's Welcome Message</h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 1 }}
+            className="text-gray-700 leading-relaxed mb-6"
+          >
+            <span className="font-semibold block mb-2 text-md sm:text-lg">Dear Students,</span>
+            <span className="whitespace-pre-line text-sm sm:text-md">
               {displayedMessage.map((char, index) => (
-                <motion.span
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                >
-                  {char}
-                </motion.span>
+                <span key={index}>{char}</span>
               ))}
             </span>
-          </p>
-          <div className="text-center mt-6">
-            <p className="text-gray-800 font-semibold text-xl">{messageData.name}</p>
-            <p className="text-gray-600">{messageData.position}</p>
+          </motion.p>
+          <div className="mt-6">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5, duration: 0.5 }}
+              className="text-gray-800 font-semibold text-lg sm:text-xl"
+            >
+              {messageData.name}
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5, duration: 0.5 }}
+              className="text-gray-600 text-sm sm:text-md"
+            >
+              {messageData.position}
+            </motion.p>
           </div>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -24,7 +24,7 @@
 
   
   body {
-    @apply min-h-screen min-w-[320px] font-montserrat  bg-secondary
+    @apply min-h-screen min-w-[320px] font-montserrat  bg-secondary scroll-smooth
   }
 
  

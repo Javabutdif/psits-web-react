@@ -16,7 +16,7 @@ const Events = ({ events }) => {
 
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="flex-1 md:flex-none space-y-3 sm:space-y-4">
        <h2 className="text-lg font-bold">Upcoming Events</h2>
         {limitedDates.map((date) => (
           <div key={date} className="hidden block">
