@@ -17,7 +17,7 @@ const OperationHours = () => {
       if (isSunday || isHoliday) {
         setStatus("Closed");
       } else {
-        const isOpen = (hours >= 7 && hours <= 11) || (hours >= 13 && hours <= 17);
+        const isOpen = (hours > 7 && hours < 11) || (hours > 13 && hours < 17);
         setStatus(isOpen ? "Open" : "Closed");
       }
     };
@@ -31,13 +31,13 @@ const OperationHours = () => {
   const statusColor = status === "Open" ? "bg-green-500" : "bg-gray-500";
 
   return (
-    <div className="sm:p-6 rounded-lg max-w-lg bg-transparent sm:bg-white space-x-1 sm:space-y-3 text-start ">
+    <div className="flex-1 md:flex-none md:p-6 rounded-lg max-w-lg bg-transparent md:bg-white space-x-1 sm:space-y-3 text-start ">
 
-      <h4 className="text-md sm:text:lg font-semibold flex sm:flex-col items-center justify-between sm:items-stretch">Current Office Status
-          <span className={`block text-xs sm:text-xl ml-2 sm:ml-0 sm:mt-4 py-2 px-4 text-center text-white rounded-lg ${statusColor}`}>{status}</span>
+      <h4 className="text-xs sm:text-lg font-semibold flex items-center justify-between gap-4 ">Current Office Status
+          <span className={`block text-xs ml-2 sm:ml-0 py-1 px-2 text-center text-white rounded-lg ${statusColor}`}>{status}</span>
 
       </h4>
-      <div className="space-y-4 hidden sm:block">
+      <div className="space-y-4 hidden md:block">
         <p className="text-gray-700 flex flex-col">
           <span className="font-semibold">Open</span>
              Monday to Saturday

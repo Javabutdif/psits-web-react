@@ -7,6 +7,7 @@ import HamburgerToggle from "../toogles/HamburgerToggle";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [scrollDirection, setScrollDirection] = useState("none"); // "up", "down", "none"
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
@@ -17,10 +18,19 @@ const Navbar = () => {
     }
   };
 
+  const handleScroll = () => {
+    const currentPosition = window.scrollY;
+
+    if (currentPosition > scrollPosition) {
+      setScrollDirection("down");
+    } else if (currentPosition < scrollPosition) {
+      setScrollDirection("up");
+    }
+
+    setScrollPosition(currentPosition <= 0 ? 0 : currentPosition);
+  };
+
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollPosition(window.scrollY);
-    };
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("resize", handleResize);
 
@@ -28,28 +38,26 @@ const Navbar = () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [scrollPosition]);
 
   useEffect(() => {
     if (isMenuOpen) {
-      document.body.classList.add("no-scroll");
+      document.body.classList.add("overflow-hidden"); // Add no-scroll class to body
     } else {
-      document.body.classList.remove("no-scroll");
+      document.body.classList.remove("overflow-auto"); // Remove no-scroll class from body
     }
 
     return () => {
-      document.body.classList.remove("no-scroll");
+      document.body.classList.remove("overflow-hidden");
     };
   }, [isMenuOpen]);
 
-
   const menuVariants = {
     open: {
-      transition: { staggerChildren: 1, delayChildren: 1.5},
+      transition: { staggerChildren: 1, delayChildren: 1.5 },
     },
     closed: {
       transition: { staggerChildren: 0.05, staggerDirection: -0.5 },
-
     },
   };
 
@@ -58,12 +66,16 @@ const Navbar = () => {
       className={`fixed w-full z-50 py-2 ${
         isMenuOpen ? "text-black" : "text-white"
       }  ${
-        scrollPosition > 80
-          ? "backdrop-blur-md bg-black bg-opacity-25 transition-all duration-500"
+        scrollPosition > 5
+          ? "bg-primary transition-all duration-500"
           : "bg-transparent"
+      } ${
+        scrollDirection === "down" && scrollPosition > 5 ? "-translate-y-full" : ""
+      } ${
+        scrollDirection === "up" || scrollPosition <= 5 ? "translate-y-0" : ""
       }`}
     >
-      <div className="container px-2 mx-auto flex justify-between items-center gap-1">
+      <div className="container px-2  mx-auto flex justify-between items-center gap-1">
         <Link
           to="/"
           onClick={closeMenu}
@@ -81,7 +93,7 @@ const Navbar = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className={`hidden sm:block text-xs  font-bold max-w-[300px] `}
+            className={` sm:block text-xs  font-bold max-w-[300px] `}
           >
             PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
           </motion.h3>

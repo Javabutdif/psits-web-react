@@ -14,11 +14,11 @@ const AdminLayout = () => {
   }, [location]);
 
   return (
-    <div className="flex w-full bg-secondary ">
+    <div className="flex w-full bg-secondary">
       <SideBar /> {/* Example: Admin sidebar */}
-      <main className="flex-1 ml-20   ">
+      <main className="flex-1 ml-16 px-2  sm:px-4 sm:ml-20 ">
         <ProfileHeader label={label}/>
-        <div className="relative min-h-main mt-14 sm:mt-20">
+        <div className="relative min-h-main mt-20 sm:mt-[5rem] py-3   sm:py-5 md:py-10 container mx-auto">
           <Outlet /> {/* This is where nested routes will be rendered */}
         </div>
       </main>
