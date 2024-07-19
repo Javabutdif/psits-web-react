@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import logo from '../../../assets/images/UC_logo 1.png';
+import logo from '../../../assets/images/UC_logo 1.png'
 
 const coreBeliefsData = {
   missions: [
@@ -42,7 +42,7 @@ const CoreBeliefs = () => {
   return (
     <div className="py-8 md:py-16 lg:py-32 relative">
       {/* Background */}
-      <div className="relative h-80 md:h-96">
+      <div className="max-w-[1320px] mx-auto relative h-80 md:h-96">
         <motion.div 
           className="absolute top-0 -left-2 bottom-0 right-0 w-full h-full overflow-hidden -rotate-2 bg-gradient-to-r from-[#074873] to-transparent z-0"
           style={{ opacity, y }}

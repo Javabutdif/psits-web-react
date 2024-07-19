@@ -36,6 +36,7 @@ export default {
           md: '768px',   // Medium screens
           lg: '1024px',  // Large screens
           xl: '1280px',  // Extra large screens
+          '2xl': '1'
         },
       },
       fontFamily: {
