@@ -1,10 +1,13 @@
 import React from 'react'
+import UnderConstruction from '../components/UnderConstruction'
+
 
 const Explore = () => {
   return (
     <div>
-      hello
-    </div>
+
+      <UnderConstruction / >
+    </div> 
   )
 }
 
