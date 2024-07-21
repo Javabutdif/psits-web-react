@@ -1,17 +1,18 @@
 import React, { useState } from "react";
-import { getStudent } from "../../authentication/Authentication";
+import { getInformationData } from "../../authentication/Authentication";
 import "../../App.css";
 import { edit } from "../../api/students";
 
 const Profile = () => {
-  const [id, name, email, course, year] = getStudent();
+  const [id, name, email, course, year, role, position] = getInformationData();
   const [profile, setProfile] = useState({
     id_number: id,
-    fullName: name,
+    name: name,
     bio: "",
     email: email,
     course: course,
     year: year,
+    role: role,
   });
 
   const handleChange = (e) => {
@@ -56,7 +57,7 @@ const Profile = () => {
               <label className="block font-color">ID Number</label>
               <input
                 type="text"
-                name="idNumber"
+                name="id_number"
                 value={profile.id_number}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-lg"
@@ -67,14 +68,17 @@ const Profile = () => {
               <label className="block font-color">Full Name</label>
               <input
                 type="text"
-                name="fullName"
-                value={profile.fullName}
+                name="name"
+                value={profile.name}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-lg"
-                readOnly
+                readOnly={role === "Student"}
               />
             </div>
-            <div className="mb-4">
+            <div
+              className="mb-4"
+              style={{ display: role === "Admin" ? "none" : "block" }}
+            >
               <label className="block font-color">Bio</label>
               <textarea
                 name="bio"
@@ -84,7 +88,24 @@ const Profile = () => {
                 rows="3"
               ></textarea>
             </div>
-            <div className="mb-4">
+            <div
+              className="mb-4"
+              style={{ display: role === "Admin" ? "block" : "none" }}
+            >
+              <label className="block font-color">Position</label>
+              <input
+                type="text"
+                name="position"
+                value={position}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg"
+                readOnly
+              />
+            </div>
+            <div
+              className="mb-4"
+              style={{ display: role === "Admin" ? "none" : "block" }}
+            >
               <label className="block font-color">Email Account</label>
               <input
                 type="email"

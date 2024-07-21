@@ -7,7 +7,7 @@ const Student = require("../models/StudentModel");
 const router = express.Router();
 
 router.post("/admin", async (req, res) => {
-  const { id_number, password, name, position } = req.body;
+  const { id_number, password, name, course, year, position } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -16,6 +16,8 @@ router.post("/admin", async (req, res) => {
       id_number,
       password: hashedPassword,
       name,
+      course,
+      year,
       position,
     });
     await newAdmin.save();

@@ -12,6 +12,8 @@ export const setAuthentication = (token) => {
       ? {
           name: user.name,
           id: user.id_number,
+          course: user.course,
+          year: user.year,
           position: user.position,
           expiry: expiryTime,
           role: user.role,
@@ -56,21 +58,32 @@ export const getAuthentication = () => {
 };
 
 //Edit Student
-export const setRetrieveStudent = (email, course, year) => {
+export const setRetrieveStudent = (data, course, year) => {
   const authen = localStorage.getItem("Data");
   if (!authen) return null;
-  const student = JSON.parse(authen);
+  const users = JSON.parse(authen);
 
-  const edited = {
-    name: student.name,
-    id: student.id_number,
-    course: course,
-    year: year,
-    email: email,
-    position: student.position,
-    expiry: student.expiry,
-    role: student.role,
-  };
+  const edited =
+    users.role === "Student"
+      ? {
+          name: users.name,
+          id: users.id,
+          course: course,
+          year: year,
+          email: data,
+          position: users.position,
+          expiry: users.expiry,
+          role: users.role,
+        }
+      : {
+          name: data,
+          id: users.id,
+          course: course,
+          year: year,
+          position: users.position,
+          expiry: users.expiry,
+          role: users.role,
+        };
   localStorage.setItem("Data", JSON.stringify(edited));
 };
 
@@ -84,13 +97,21 @@ export const getUser = () => {
   return [user.name, user.position];
 };
 
-export const getStudent = () => {
+export const getInformationData = () => {
   const authen = localStorage.getItem("Data");
   if (!authen) return null;
 
   const info = JSON.parse(authen);
 
-  return [info.id, info.name, info.email, info.course, info.year, info.role];
+  return [
+    info.id,
+    info.name,
+    info.email,
+    info.course,
+    info.year,
+    info.role,
+    info.position,
+  ];
 };
 
 //Remove Authentication after logout
