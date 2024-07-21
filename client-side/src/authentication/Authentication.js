@@ -34,25 +34,31 @@ export const setAuthentication = (token) => {
 
 //Retrive Token sa Private Route, every route e check if valid pa ang token
 export const getAuthentication = () => {
-  const authen = localStorage.getItem("Data");
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!authen) return null;
+  try {
+    const authen = localStorage.getItem("Data");
+    const sessionToken = sessionStorage.getItem("Token");
+    const token = jwtDecode(sessionToken);
+    if (!authen) return null;
 
-  const item = JSON.parse(authen);
-  const now = new Date();
+    const item = JSON.parse(authen);
+    const now = new Date();
 
-  if (now.getTime() > item.expiry) {
-    localStorage.removeItem("Data");
-    sessionStorage.removeItem("Token");
-    return null;
-  }
-  if (sessionToken) {
-    if (item.role === "Admin") {
-      return "Administrator";
-    } else {
-      return "Student";
+    if (now.getTime() > item.expiry) {
+      localStorage.removeItem("Data");
+      sessionStorage.removeItem("Token");
+      return null;
     }
-  } else {
+    if (item.id === token.id_number) {
+      if (item.role === "Admin") {
+        return "Administrator";
+      } else {
+        return "Student";
+      }
+    } else {
+      return null;
+    }
+  } catch (Exception) {
+    removeAuthentication();
     return null;
   }
 };
