@@ -15,6 +15,14 @@ const adminSchema = new Schema({
     type: String,
     require: true,
   },
+  course: {
+    type: String,
+    require: true,
+  },
+  year: {
+    type: String,
+    require: true,
+  },
   position: {
     type: String,
     require: true,

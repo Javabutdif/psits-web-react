@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
+const Admin = require("../models/AdminModel");
 
 const router = express.Router();
 
@@ -109,31 +110,54 @@ router.post("/editedStudent", async (req, res) => {
   }
 });
 
-//Edit Student Side
+//Edit Profile Side
 
 router.post("/edit", async (req, res) => {
-  const { id_number, email, course, year } = req.body;
+  const { id_number, name, email, course, year, role } = req.body;
   try {
-    const result = await Student.updateOne(
-      { id_number: id_number },
-      {
-        $set: {
-          email: email,
-          course: course,
-          year: year,
-        },
-      }
-    );
-    const student = await Student.findOne({ id_number });
-    const retrieveData = {
-      email: student.email,
-      course: student.course,
-      year: student.year,
-    };
+    if (role === "Admin") {
+      const result = await Admin.updateOne(
+        { id_number: id_number },
+        {
+          $set: {
+            name: name,
+            course: course,
+            year: year,
+          },
+        }
+      );
+    } else {
+      const result = await Student.updateOne(
+        { id_number: id_number },
+        {
+          $set: {
+            email: email,
+            course: course,
+            year: year,
+          },
+        }
+      );
+    }
+    const user =
+      role === "Student"
+        ? await Student.findOne({ id_number })
+        : await Admin.findOne({ id_number });
+    const retrieveData =
+      role === "Student"
+        ? {
+            data: user.email,
+            course: user.course,
+            year: user.year,
+          }
+        : {
+            data: user.name,
+            course: user.course,
+            year: user.year,
+          };
 
     res
       .status(200)
-      .json({ student: retrieveData, message: "Student updated successfully" });
+      .json({ student: retrieveData, message: role + " updated successfully" });
   } catch (error) {
     console.error("Error fetching students:", error);
     res.status(500).json("Internal Server Error");

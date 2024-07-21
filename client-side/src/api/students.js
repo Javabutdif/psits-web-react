@@ -20,7 +20,7 @@ export const edit = async (formData) => {
     if (response.status === 200) {
       showToast("success", message);
 
-      setRetrieveStudent(student.email, student.course, student.year);
+      setRetrieveStudent(student.data, student.course, student.year);
     } else {
       showToast("error", message);
     }

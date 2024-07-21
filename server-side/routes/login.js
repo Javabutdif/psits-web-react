@@ -73,8 +73,8 @@ router.post("/login", async (req, res) => {
         role,
         position: role === "Admin" ? user.position : "N/A",
         email: role === "Student" ? user.email : "",
-        course: role === "Student" ? user.course : "",
-        year: role === "Student" ? user.year : "",
+        course: user.course,
+        year: user.year,
       },
       token_key,
       { expiresIn: role === "Admin" ? "1h" : "30m" }

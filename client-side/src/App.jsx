@@ -10,6 +10,7 @@ import Faculty from "./pages/Faculty";
 import Team from "./pages/Team";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminRegister from "./pages/admin/AdminRegister";
 import Membership from "./pages/admin/Membership";
 import Merchandise from "./pages/admin/Merchandise";
 import Inventory from "./pages/admin/Inventory";
@@ -54,6 +55,10 @@ const App = () => {
             <Route
               path="dashboard"
               element={<PrivateRouteAdmin element={AdminDashboard} />}
+            />
+            <Route
+              path="register"
+              element={<PrivateRouteAdmin element={AdminRegister} />}
             />
             <Route
               path="membership"
