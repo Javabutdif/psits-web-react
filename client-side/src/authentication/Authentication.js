@@ -7,13 +7,25 @@ export const setAuthentication = (token) => {
   const time = user.role === "Student" ? 20 * 60 * 1000 : 60 * 60 * 1000;
   const expiryTime = currentTime + time;
 
-  const authen = {
-    name: user.name,
-    id: user.id_number,
-    position: user.position,
-    expiry: expiryTime,
-    role: user.role,
-  };
+  const authen =
+    user.role === "Admin"
+      ? {
+          name: user.name,
+          id: user.id_number,
+          position: user.position,
+          expiry: expiryTime,
+          role: user.role,
+        }
+      : {
+          name: user.name,
+          id: user.id_number,
+          course: user.course,
+          year: user.year,
+          email: user.email,
+          position: user.position,
+          expiry: expiryTime,
+          role: user.role,
+        };
   localStorage.setItem("Data", JSON.stringify(authen));
   sessionStorage.setItem("Token", token);
 };
@@ -43,27 +55,43 @@ export const getAuthentication = () => {
   }
 };
 
+//Edit Student
+export const setRetrieveStudent = (email, course, year) => {
+  const authen = localStorage.getItem("Data");
+  if (!authen) return null;
+  const student = JSON.parse(authen);
+
+  const edited = {
+    name: student.name,
+    id: student.id_number,
+    course: course,
+    year: year,
+    email: email,
+    position: student.position,
+    expiry: student.expiry,
+    role: student.role,
+  };
+  localStorage.setItem("Data", JSON.stringify(edited));
+};
+
 export const getUser = () => {
   const authen = localStorage.getItem("Data");
   if (!authen) return null;
   const user = JSON.parse(authen);
-  
-  if (user.position === 'N/A') 
-      return [user.name, user.role]
+
+  if (user.position === "N/A") return [user.name, user.role];
 
   return [user.name, user.position];
 };
 
-
 export const getStudent = () => {
   const authen = localStorage.getItem("Data");
   if (!authen) return null;
-  
+
   const info = JSON.parse(authen);
 
-  return [info.name, info.role];
-}
-
+  return [info.id, info.name, info.email, info.course, info.year, info.role];
+};
 
 //Remove Authentication after logout
 export const removeAuthentication = () => {
