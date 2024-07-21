@@ -14,7 +14,7 @@ router.post("/login", async (req, res) => {
   try {
     let user;
     let role;
-    //Find admin
+
     const admin = await Admin.findOne({ id_number });
 
     if (!admin) {
@@ -72,6 +72,9 @@ router.post("/login", async (req, res) => {
             : `${user.first_name} ${user.middle_name} ${user.last_name}`,
         role,
         position: role === "Admin" ? user.position : "N/A",
+        email: role === "Student" ? user.email : "",
+        course: role === "Student" ? user.course : "",
+        year: role === "Student" ? user.year : "",
       },
       token_key,
       { expiresIn: role === "Admin" ? "1h" : "30m" }

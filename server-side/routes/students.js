@@ -74,7 +74,7 @@ router.get("/requestStudent", async (req, res) => {
   }
 });
 
-//Edit Student
+//Edit Student Admin Side
 router.post("/editedStudent", async (req, res) => {
   const {
     id_number,
@@ -103,6 +103,37 @@ router.post("/editedStudent", async (req, res) => {
     );
 
     res.status(200).json({ message: "Student updated successfully" });
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
+//Edit Student Side
+
+router.post("/edit", async (req, res) => {
+  const { id_number, email, course, year } = req.body;
+  try {
+    const result = await Student.updateOne(
+      { id_number: id_number },
+      {
+        $set: {
+          email: email,
+          course: course,
+          year: year,
+        },
+      }
+    );
+    const student = await Student.findOne({ id_number });
+    const retrieveData = {
+      email: student.email,
+      course: student.course,
+      year: student.year,
+    };
+
+    res
+      .status(200)
+      .json({ student: retrieveData, message: "Student updated successfully" });
   } catch (error) {
     console.error("Error fetching students:", error);
     res.status(500).json("Internal Server Error");
