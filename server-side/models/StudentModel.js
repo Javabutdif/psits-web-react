@@ -45,6 +45,12 @@ const studentSchema = new Schema({
   membership: {
     type: String,
   },
+  cart: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Merch",
+    },
+  ],
 });
 
 const Student = mongoose.model("students", studentSchema);
