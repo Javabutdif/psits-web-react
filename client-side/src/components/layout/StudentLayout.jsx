@@ -16,11 +16,11 @@ const StudentLayout = () => {
   }, [location]);
 
   return (
-    <div className="flex w-full bg-secondary ">
+    <div className="flex w-full bg-secondary min-h-screen">
       <SideBar /> {/* Example: Admin sidebar */}
-      <main className="flex-1 ml-16 px-2  sm:px-4 sm:ml-20 ">
+      <main className="flex-1 ml-16 px-2 sm:px-4 sm:ml-20">
         <ProfileHeader label={label} />
-        <div className="relative min-h-main mt-20 sm:mt-[5rem] py-3   sm:py-5 md:py-10 container mx-auto">
+        <div className="relative min-h-main-md md:min-h-main  mt-[4.3rem] sm:mt-24 py-3 sm:py-5 md:py-10 max-w-[1400px] mx-auto">
           <Outlet /> {/* This is where nested routes will be rendered */}
         </div>
       </main>

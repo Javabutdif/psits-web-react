@@ -9,7 +9,7 @@ const socialLinks = [
 ];
 
 const Footer = () => (
-  <footer className="rounded-t-xl max-w-[1320px] mx-auto bg-primary  text-white py-4">
+  <footer className="rounded-t-xl max-w-[1020px] mx-auto bg-primary  text-white py-4">
     <div className="  px-6 flex flex-col md:flex-row justify-between items-center">
       {/* Company Details */}
       <div className="flex flex-col items-center md:items-start text-center md:text-left">
