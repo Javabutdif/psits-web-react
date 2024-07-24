@@ -52,7 +52,7 @@ router.post("/", async (req, res) => {
 });
 
 // GET list of merches
-router.get("/", async (req, res) => {
+router.get("/retrieve", async (req, res) => {
   try {
     const merches = await Merch.find();
     res.status(200).json(merches);
@@ -62,14 +62,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET merch by id
-router.get("/:_id", async (req, res) => {
-  const id = req.params._id;
+router.get("/:searchQuery", async (req, res) => {
+  const search = req.params.searchQuery;
 
   try {
-    const merch = await Merch.findById(id);
+    const merch = await Merch.find({ name: new RegExp(search, "i") });
 
-    if (!merch) {
+    if (!merch || merch.length === 0) {
       return res.status(404).json({ message: "Merch not found!" });
     }
 
