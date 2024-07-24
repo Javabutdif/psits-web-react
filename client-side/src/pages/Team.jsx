@@ -1,215 +1,96 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Link } from "react-router-dom";
-import "../App.css";
-import santoya from "../assets/images/santoya.jpg";
-import leyros from "../assets/images/leyros.jpg";
-import tuyor from "../assets/images/tuyor.jpg";
-import de from "../assets/images/de.jpg";
-import echavez from "../assets/images/echavez.jpg";
-import gacang from "../assets/images/gacang.jpg";
-import laygan from "../assets/images/laygan.jpg";
-import postrero from "../assets/images/postrero.jpg";
-import rallos from "../assets/images/rallos.jpg";
-import taborada from "../assets/images/taborada.jpg";
-import tadlip from "../assets/images/tadlip.jpg";
-import villanueva from "../assets/images/villanueva.jpg";
-import costillas from "../assets/images/costillas.jpg";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import beans from "../assets/images/beans.gif";
+import kirby from "../assets/images/kirby.gif";
+import hutao from "../assets/images/hutao.gif";
+import cat from "../assets/images/cat.gif";
 
-function Officers() {
+const teamMembers = [
+  { name: "Jims", image: hutao, label: "Lead Developer" },
+  { name: "Beans", image: beans, label: "Front End Developer" },
+  { name: "Driane", image: kirby, label: "FullStack Developer" },
+  { name: "Marianne", image: cat, label: "Web Designer" },
+];
+
+const Team = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const goToNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % teamMembers.length);
+  };
+
+  const goToPrevious = () => {
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + teamMembers.length) % teamMembers.length
+    );
+  };
+
+  const handleDragEnd = (event, info) => {
+    if (info.offset.x > 100) {
+      goToPrevious();
+    } else if (info.offset.x < -100) {
+      goToNext();
+    }
+  };
+
   return (
-    <div className="container text-center p-5">
-      <h1 className="mb-5" style={{ color: "#074873" }}>
-        Officers
-      </h1>
-      <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3">
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              President
-            </h5>
-            <img className="card-img-top" src={santoya} alt="Santoya" />
-            <div className="card-body">
-              <h4 className="card-title">Vince Andrew Santoya</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center "
-              style={{ backgroundColor: "#074873" }}
-            >
-              Vice-President Internal
-            </h5>
-            <img className="card-img-top" src={leyros} alt="Leyros" />
-            <div className="card-body">
-              <h4 className="card-title">Aubrey Leyros</h4>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen p-12 flex flex-col gap-20 items-center justify-center relative overflow-hidden">
+      <h1 className="text-2xl md:text-7xl font-bold">The Team</h1>
+      <div className="relative w-full max-w-4xl h-96 flex items-center justify-center">
+        {teamMembers.map((member, index) => {
+          const isCurrent = index === currentIndex;
+          const isPrevious =
+            index ===
+            (currentIndex - 1 + teamMembers.length) % teamMembers.length;
+          const isNext = index === (currentIndex + 1) % teamMembers.length;
 
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
+          return (
+            <motion.div
+              key={index}
+              className={`absolute bg-white rounded-3xl shadow-lg overflow-hidden ${
+                isCurrent ? "z-10 scale-100" : "z-5 scale-75"
+              }`}
+              initial={{
+                x: isPrevious ? "-120%" : isNext ? "120%" : "0",
+                opacity: isCurrent ? 1 : 0.4,
+                scale: isCurrent ? 1 : 0.75,
+                rotate: isPrevious ? -10 : isNext ? 10 : 0,
+              }}
+              animate={{
+                x: isCurrent
+                  ? "0%"
+                  : isPrevious
+                  ? "-60%"
+                  : isNext
+                  ? "60%"
+                  : "0%",
+                opacity: isCurrent ? 1 : 0.4,
+                scale: isCurrent ? 1 : 0.75,
+                rotate: isCurrent ? 0 : isPrevious ? -10 : isNext ? 10 : 0,
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={handleDragEnd}
+              style={{ width: "320px", height: "420px" }}
             >
-              Vice-President External
-            </h5>
-            <img className="card-img-top" src={tuyor} alt="Tuyor" />
-            <div className="card-body">
-              <h4 className="card-title">Clint Louie Tuyor</h4>
-            </div>
-          </div>
-        </div>
-
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              Auditor
-            </h5>
-            <img className="card-img-top" src={laygan} alt="Laygan" />
-            <div className="card-body">
-              <h4 className="card-title">Daisy Lyn Laygan</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              Secretary
-            </h5>
-            <img className="card-img-top" src={tadlip} alt="Tadlip" />
-            <div className="card-body">
-              <h4 className="card-title">Marlou Tadlip</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              Treasurer
-            </h5>
-            <img className="card-img-top" src={gacang} alt="Gacang" />
-            <div className="card-body">
-              <h4 className="card-title">Jeraiza Gacang</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              Assistant Treasurer
-            </h5>
-            <img className="card-img-top" src={echavez} alt="Echavez" />
-            <div className="card-body">
-              <h4 className="card-title">Stephanie Echavez</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              P.I.O
-            </h5>
-            <img className="card-img-top" src={villanueva} alt="Villanueva" />
-            <div className="card-body">
-              <h4 className="card-title">Princess Villanueva</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              Chief Volunteer
-            </h5>
-            <img className="card-img-top" src={de} alt="Reyes" />
-            <div className="card-body">
-              <h4 className="card-title">Rey Vincent De Los Reyes</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              P.R.O
-            </h5>
-            <img className="card-img-top" src={costillas} alt="Costillas" />
-            <div className="card-body">
-              <h4 className="card-title">John Paul Costillas</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              2nd Year Representative
-            </h5>
-            <img className="card-img-top" src={rallos} alt="Rallos" />
-            <div className="card-body">
-              <h4 className="card-title">Christ Hanzen Rallos</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              3rd Year Representative
-            </h5>
-            <img className="card-img-top" src={postrero} alt="Postrero" />
-            <div className="card-body">
-              <h4 className="card-title">Angela Postrero</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col">
-          <div className="card mb-3">
-            <h5
-              className="card-header text-white text-center"
-              style={{ backgroundColor: "#074873" }}
-            >
-              4th Year Representative
-            </h5>
-            <img className="card-img-top" src={taborada} alt="Taborada" />
-            <div className="card-body">
-              <h4 className="card-title">Shainnah Lhyn Taborada</h4>
-            </div>
-          </div>
-        </div>
+              <img
+                src={member.image}
+                alt={member.name}
+                className="w-full h-3/4 object-cover"
+              />
+              <div className="p-6 text-center">
+                <h3 className="text-3xl font-bold mb-2 text-gray-800">
+                  {member.name}
+                </h3>
+                <p className="text-gray-600 text-base">{member.label}</p>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
-}
+};
 
-export default Officers;
+export default Team;

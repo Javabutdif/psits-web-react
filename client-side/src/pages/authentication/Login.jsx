@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../../utils/alertHelper";
 import { InfinitySpin } from "react-loader-spinner";
@@ -18,6 +19,7 @@ const Login = () => {
     id_number: "",
     password: "",
   });
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -27,10 +29,33 @@ const Login = () => {
       ...prevFormData,
       [name]: value,
     }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: "",
+    }));
+  };
+
+  const validateInputs = () => {
+    const newErrors = {};
+    if (!formData.id_number) {
+      newErrors.id_number = "ID Number is required.";
+    } else if (!/^\d+$/.test(formData.id_number)) {
+      newErrors.id_number = "ID Number must be a valid number.";
+    }
+    if (!formData.password) {
+      newErrors.password = "Password is required.";
+    }
+    return newErrors;
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    const validationErrors = validateInputs();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -41,7 +66,6 @@ const Login = () => {
           resetAttemptAuthentication();
           navigate(`/${data.toLowerCase()}/dashboard`);
         } else {
-          showToast("error", "Invalid login credentials.");
           attemptAuthentication();
         }
       } else {
@@ -89,34 +113,41 @@ const Login = () => {
           />
         </div>
       ) : (
-        <div className="w-full max-w-lg flex flex-col items-center justify-center font-montserrat bg-white shadow-lg rounded-lg">
+        <motion.div
+          initial={{ x: -100 }}
+          animate={{ x: 0 }}
+          className="w-full max-w-lg flex flex-col items-center justify-center bg-white shadow-lg rounded-lg"
+        >
           <img src={logo} alt="Logo" className="" />
           <form
             onSubmit={handleLogin}
-            className="flex flex-col space-y-4 w-full p-4 sm:p-8"
+            className="flex flex-col space-y-5 w-full p-5"
           >
             <h3 className="text-xl sm:text-2xl font-bold text-center mb-4">
               Welcome Back!
             </h3>
-
-            <FormInput
-              label="ID Number"
-              type="text"
-              id="id-number"
-              name="id_number"
-              value={formData.id_number}
-              onChange={handleChange}
-              styles="w-full p-2 border border-gray-300 rounded"
-            />
-            <FormInput
-              label="Password"
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              styles="w-full p-2 border border-gray-300 rounded"
-            />
+            <div className="space-y-6">
+              <FormInput
+                label="ID Number"
+                type="text"
+                id="id-number"
+                name="id_number"
+                value={formData.id_number}
+                onChange={handleChange}
+                styles="w-full p-2 border border-gray-300 rounded"
+                error={errors.id_number}
+              />
+              <FormInput
+                label="Password"
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                styles="w-full p-2 border border-gray-300 rounded"
+                error={errors.password}
+              />
+            </div>
 
             <FormButton
               type="button"
@@ -144,7 +175,7 @@ const Login = () => {
               />
             </div>
           </form>
-        </div>
+        </motion.div>
       )}
     </div>
   );

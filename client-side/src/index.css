@@ -7,6 +7,8 @@
 
 
 
+
+
 .hamburger {
     display: flex;
     flex-direction: column;
@@ -22,8 +24,7 @@
 
   
   body {
-    min-width: 320px;
-    min-height: 100vh;
+    @apply min-h-screen min-w-[320px] font-montserrat  bg-secondary scroll-smooth
   }
 
  

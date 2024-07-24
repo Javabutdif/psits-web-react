@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom';
 import FormInput from '../../components/forms/FormInput';
 import FormButton from '../../components/forms/FormButton';
@@ -15,7 +16,6 @@ const OTPVerifier = ({ email }) => {
 
       setOTP(newOTP);
 
-      // Move focus to next input if available
       if (index < otp.length - 1 && refs.current[index + 1]) {
         refs.current[index + 1].focus();
       }
@@ -25,7 +25,6 @@ const OTPVerifier = ({ email }) => {
 
       setOTP(newOTP);
 
-      // Move focus to previous input if deleting and current input is empty
       if (index > 0 && refs.current[index - 1]) {
         refs.current[index - 1].focus();
       }
@@ -49,9 +48,12 @@ const OTPVerifier = ({ email }) => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100 p-4 font-montserrat">
+    <div className="min-h-screen flex justify-center items-center bg-gray-100 p-4 ">
 
-      <div className='max-w-lg space-y-10 w-full flex text-center flex-col items-center justify-center font-montserrat px-4 sm:px-8 py-10 bg-white shadow-lg rounded-lg'>
+      <motion.div
+          initial={{ x: -100 }}
+          animate={{ x: 0 }}
+          className='max-w-lg space-y-10 w-full flex text-center flex-col items-center justify-center  px-4 sm:px-8 py-10 bg-white shadow-lg rounded-lg'>
         <div className='space-y-3'>
           <h3 className='text-xl sm:text-2xl font-bold'>Verify your OTP code</h3>
           <p className='text-sm sm:text-md  sm:max-w-96'>An 6-digit code has been sent to 
@@ -84,7 +86,7 @@ const OTPVerifier = ({ email }) => {
             styles="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           />
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };

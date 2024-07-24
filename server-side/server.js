@@ -4,14 +4,14 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT || 5000;
-const Student = require("./models/StudentModel");
-const mongodbConnection = require("./mongoDB/MongoDbConnection");
-const bcrypt = require("bcryptjs");
 const registerRoutes = require("./routes/register");
 const loginRoutes = require("./routes/login");
 const adminRoutes = require("./routes/admin");
 const studentApproveRoutes = require("./routes/students");
+
 const merchRoutes = require("./routes/merch");
+
+require("dotenv").config();
 
 
 //Middleware
@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 
 //Connection to Mongoose
 mongoose
-  .connect(mongodbConnection(), {
+  .connect(process.env.MONGODB_URI, {
     dbName: "psits",
   })
   .then(() => console.log("MongoDB connected"))

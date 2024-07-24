@@ -1,45 +1,46 @@
 import React from 'react';
 import logo from '../../assets/images/psits-logo.png';
 
-const Footer = () => {
-  const  socialLinks =[
-       { name: 'Facebook', iconClass: 'fab fa-facebook fa-lg', url: '#' },
-        { name: 'Twitter', iconClass: 'fab fa-twitter fa-lg', url: '#' },
-        { name: 'Instagram', iconClass: 'fab fa-instagram fa-lg', url: '#' }
-    ]
+const socialLinks = [
+  { name: 'Facebook', iconClass: 'fa-brands fa-facebook fa-lg', url: 'https://www.facebook.com/PSITS.UCmain' },
+  { name: 'github', iconClass: 'fa-brands fa-github fa-lg', url: 'https://github.com/PSITS-UC-MAIN/' },
+  { name: 'gmail', iconClass: 'fa-solid fa-envelope fa-lg', url: 'mailto:psits.ccsmain@gmail.com' },
+  // { name: 'Instagram', iconClass: 'fa-brands fa-instagram fa-lg', url: '#' }
+];
 
-  return (
-    <footer className="w-full c py-4 text-black">
-      <div className="container mx-auto px-4 font-montserrat">
-        <div className="flex flex-col md:flex-row justify-between">
-          {/* Company Details */}
-          <div className="flex flex-col items-center text-center md:items-start md:text-left gap-2">
-            <div className='flex flex-col md:flex-row items-center mb-4 md:mb-0'>
-                <img src={logo} alt="psits logo" className="w-16 h-auto mb-2 md:mr-2" />
-                <h3 className="text-sm font-bold md:max-w-[300px]">PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS</h3>
-            </div>
-          </div>
-          
-          {/* Social Media Links */}
-          <div className="flex flex-col items-center text-center justify-center md:items-center">
-            <h5 className="text-sm mb-2">Any Inqueries? Feel free to contact us.</h5>
-            <div className="flex space-x-4 mt-2">
-              {socialLinks.map((link, index) => (
-               <a key={index} href={link.url} className="text-black hover:text-gray-400 transition-colors duration-300">
-                 <i className={link.iconClass}></i>
-               </a>
-              ))}
-            </div>
-          </div>
+const Footer = () => (
+  <footer className="rounded-t-xl max-w-[1320px] mx-auto bg-primary  text-white py-4">
+    <div className="  px-6 flex flex-col md:flex-row justify-between items-center">
+      {/* Company Details */}
+      <div className="flex flex-col items-center md:items-start text-center md:text-left">
+        <div className="flex flex-col md:flex-row items-center gap-2 mb-4 md:mb-0">
+          <img src={logo} alt="psits logo" className="w-12" />
+          <h3 className="text-[0.6rem] mx-w-0 sm:text-xs sm:max-w-xs font-bold">
+            PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
+          </h3>
         </div>
-        
-        {/* Copyright Information */}
-        {/* <div className="mt-8 text-center md:mt-4">
-          <p className='text-xs'>©{new Date().getFullYear()} PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS. All Rights Reserved.</p>
-        </div> */}
       </div>
-    </footer>
-  );
-};
+      {/* Social Media Links */}
+      <div className="flex flex-col items-center  md:items-start text-center md:text-left">
+        <h5 className="text-sm font-medium mb-2">Questions? Contact us!</h5>
+        <div className="flex space-x-6">
+          {socialLinks.map((link, index) => (
+            <a
+              key={index}
+              href={link.url}
+              className="text-white hover:text-gray-300 transition-transform duration-300 transform hover:scale-110"
+              aria-label={link.name}
+            >
+              <i className={link.iconClass}></i>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+    <div className="mt-2 pt-2 text-center text-xs md:text-sm">
+      <p>© {new Date().getFullYear()} PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS. All Rights Reserved.</p>
+    </div>
+  </footer>
+);
 
 export default Footer;

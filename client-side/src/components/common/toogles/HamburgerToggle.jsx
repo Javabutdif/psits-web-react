@@ -19,7 +19,7 @@ const HamburgerToggle = ({ isOpen, toggleMenu }) => {
 
   return (
     <motion.button
-      className={`block lg:hidden hamburger text-black ${isOpen ? 'open' : ''}`}
+      className={`z-50 block lg:hidden hamburger text-black ${isOpen ? 'open' : ''}`}
 
       initial={{ scale: 0}}
       animate={{ scale: 1}}
