@@ -22,8 +22,10 @@ export default {
         "header-sm": "calc(100% - 6.7rem)",
       },
       minHeight: {
-        main: "calc(100vh - 100px)",
-        footer: "calc(100vh -218px)",
+
+        'main': "calc(100vh - 100px)",
+        'main-md': "calc(100vh - 80px)",
+        'footer': "calc(100vh -218px)"
       },
       container: {
         center: true, // Centers the container

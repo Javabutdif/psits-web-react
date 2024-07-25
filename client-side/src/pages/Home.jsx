@@ -4,11 +4,13 @@ import Section from '../components/common/Section';  // Adjust the path as neede
 import Banner from '../components/sections/home/Banner';
 import DeansMessage from '../components/sections/home/DeansMessage';
 import CoreBeliefs from '../components/sections/home/CoreBeliefs';
+import About from '../components/sections/home/About';
 
 function Home() {
   const sectionRef1 = useRef(null);
   const sectionRef2 = useRef(null);
   const sectionRef3 = useRef(null);
+  const sectionRef4 = useRef(null);
   // const sectionRef4 = useRef(null);
 
   const { scrollYProgress } = useScroll();
@@ -16,6 +18,7 @@ function Home() {
   const inView1 = useInView(sectionRef1, { threshold: 0.25, once: false,    });
   const inView2 = useInView(sectionRef2, { threshold: 0.25, once: true, margin: "0px 0px -40% 0px"});
   const inView3 = useInView(sectionRef3, { threshold: 0.25, once: false });
+  const inView4 = useInView(sectionRef4, { threshold: 0.25, once: false });
   // const inView4 = useInView(sectionRef3, { threshold: 0.25, once: false });
   
 
@@ -42,8 +45,8 @@ function Home() {
           ref={sectionRef1}
           inView={inView1}
           transitionVariants={sectionVariants}
-          parentStyle="z-20 bg-no-repeat bg-cover overflow-hidden relative  min-h-[75vh] flex justify-center items-center text-center md:text-start"
-          childrenStyle="relative py-16 container"
+          parentStyle="z-20 bg-no-repeat bg-cover overflow-hidden relative  min-h-[80vh] flex justify-center items-center text-center md:text-start"
+          childrenStyle="relative py-16 mx-w-[1020px]"
         >
           {inView1 && <Banner />}
         </Section>
@@ -59,8 +62,8 @@ function Home() {
         ref={sectionRef2}
         inView={inView2}
         transitionVariants={sectionVariants}
-        parentStyle="py-32 md:py-40"
-        childrenStyle="px-2"
+        parentStyle="py-24 md:py-32"
+        childrenStyle="px-2 "
       >
         {inView2 && <DeansMessage />}
       </Section>
@@ -72,6 +75,16 @@ function Home() {
         childrenStyle=""
       >
         {inView3 && <CoreBeliefs />}
+
+      </Section>
+      <Section
+        ref={sectionRef4}
+        inView={inView4}
+        transitionVariants={sectionVariants}
+        parentStyle=""
+        childrenStyle=""
+      >
+        {inView4 && <About />}
 
       </Section>
     </>

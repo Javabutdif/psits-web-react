@@ -21,16 +21,13 @@ const About = () => {
   ];
 
   return (
-    <div className='container mx-auto text-white px-6 py-12'>
+    <div className='mx-w-[1020px] mx-auto text-white px-6 py-12'>
       <div className='flex flex-col lg:flex-row gap-12'>
         {aboutData.map((data, index) => (
           <motion.div
             key={index}
             className="relative bg-gray-800 rounded-lg shadow-xl overflow-hidden lg:w-1/3 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-4 border-gray-700"
-            initial={{ opacity: 0, x: -100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, y: 20}}
-            transition={{ duration: 0.5, delay: index * 0.5 }} // Stagger effect
+        
           >
             <img src={data.link} alt={data.title} className="w-full h-48 object-cover transition-transform duration-500 transform hover:scale-110" />
             <div className="p-6 text-center">
