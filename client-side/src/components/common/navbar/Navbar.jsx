@@ -11,6 +11,11 @@ const navItems = [
   { name: 'Login', path: '/login', iconClass: 'fas fa-sign-in-alt' }
 ];
 
+const logoVariants = {
+  open: { scale: 1.2, },
+  closed: { scale: 1,  }
+};
+
 const Navbar = () => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -64,14 +69,21 @@ const Navbar = () => {
     <motion.header 
       className={`z-40 w-full fixed  text-primary transition-transform duration-300 ${scrollDirection === "down" && scrollPosition > 5 ? "-translate-y-full" : ""} ${scrollDirection === "up" || scrollPosition <= 5 ? "translate-y-0" : ""}`}
     >
-      <div className="max-w-[1320px] mx-auto px-2 md:px-4 py-1 rounded-b-2xl bg-primary flex justify-between items-center relative">
+      <div className="max-w-[1020px] mx-auto px-2 md:px-4 py-1 rounded-b-2xl bg-primary flex justify-between items-center relative">
         <Link
           to="/" 
           className="z-50 flex items-center gap-2"
           onClick={closeToggleMenu}
         >
-          <img src={logo} alt="header-logo" className="w-12" />
-          <span className="text-[0.6rem] max-w-[13rem] sm:text-xs sm:max-w-xs font-bold">
+          <motion.img 
+            src={logo} 
+            alt="header-logo" 
+            className="w-12"
+            variants={logoVariants}
+            animate={isMenuOpen ? "open" : "closed"}
+            transition={{ duration: 0.4 }}
+          />
+          <span className={`${isMenuOpen ? 'text-black' : 'text-white'} text-[0.6rem] max-w-[13rem] sm:text-xs sm:max-w-xs font-bold`}>
             PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
           </span>
         </Link>
@@ -90,9 +102,9 @@ const Navbar = () => {
 
         <HamburgerToggle isOpen={isMenuOpen} toggleMenu={toggleMenu} />
 
-        <nav className={`absolute lg:static lg:flex z-40 top-1/2 w-full min-h-screen lg:min-h-0 left-0 lg:left-0 lg:-translate-x-0 lg:top-0 lg:-translate-y-0 lg:w-auto h-full lg:h-auto items-center justify-center ${isMenuOpen ? 'flex text-black text-3xl' : 'hidden text-white'}`}>
+        <nav className={`p-10 lg:p-0 absolute lg:static lg:flex z-40 top-1/2 w-full min-h-screen lg:min-h-0 left-0 lg:left-0 lg:-translate-x-0 lg:top-0 lg:-translate-y-0 lg:w-auto h-full lg:h-auto items-start justify-end ${isMenuOpen ? 'flex text-black text-3xl' : 'hidden text-white'}`}>
           <motion.ul
-            className="space-y-6 text-md font-bold space-x-0 lg:space-y-0 md:space-x-2 lg:space-x-6 lg:flex"
+            className=" space-y-6 text-md font-bold space-x-0 lg:space-y-0 md:space-x-2 lg:space-x-6 lg:flex"
           >
             {navItems.map((item, index) => (
               <motion.li

@@ -39,12 +39,12 @@ const DeansMessage = () => {
     <motion.div 
       initial={{ opacity: 0, y: -100 }}
       animate={{ opacity: 1, y: 0 }}
-      className="container mx-auto max-w-4xl relative lg:flex lg:justify-center lg:items-center"
+      className="container mx-auto max-w-[1020px] relative lg:flex lg:justify-center lg:items-center"
     >
       <div className="flex flex-col sm:flex-row w-full lg:w-auto border-y-8 border-secondary pt-14 lg:p-8 px-4 pb-4 lg:px-8 lg:pb-8 lg:pt-28 bg-white rounded-lg shadow-lg">
         <motion.div 
       
-          className="absolute -top-20 left-1/3 -translate-x-3/4 bg-primary border-primary shadow-xl transform rounded-full"
+          className="absolute -top-20 left-1/8 -translate-x-1/8 bg-primary border-primary shadow-xl transform rounded-full"
         >
           <img
             src={messageData.image}
