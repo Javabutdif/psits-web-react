@@ -15,10 +15,10 @@ function MembershipRequest() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState(false);
-  const [selectedStudentCourse, setSelectedStudentCourse] = useState(false);
-  const [selectedStudentYear, setSelectedStudentYear] = useState(false);
-  const [selectedStudentName, setSelectedStudentName] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [selectedStudentCourse, setSelectedStudentCourse] = useState("");
+  const [selectedStudentYear, setSelectedStudentYear] = useState("");
+  const [selectedStudentName, setSelectedStudentName] = useState("");
 
   const handleOpenModal = (row) => {
     setIsModalOpen(true);
@@ -39,6 +39,7 @@ function MembershipRequest() {
   const handleFormSubmit = (data) => {
     console.log("Form submitted successfully:", data);
   };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -58,6 +59,7 @@ function MembershipRequest() {
     }
     setIsLoading(false);
   };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -102,14 +104,17 @@ function MembershipRequest() {
     {
       name: "Actions",
       cell: (row) => (
-        <div className="d-flex flex-row gap-1 ">
+        <div className="flex gap-2">
           <button
-            className="btn btn-primary"
+            className="bg-blue-500 text-white px-4 py-2 rounded"
             onClick={() => handleOpenModal(row)}
           >
             Approve
           </button>
-          <button className="btn btn-danger" onClick={() => showModal(row)}>
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded"
+            onClick={() => showModal(row)}
+          >
             Delete
           </button>
         </div>
@@ -141,7 +146,6 @@ function MembershipRequest() {
       );
 
       if (response.status === 200) {
-        // Remove the deleted student from the data array
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );
@@ -163,10 +167,7 @@ function MembershipRequest() {
     <div>
       <h1 className="text-center mt-5">Membership Request</h1>
       {isLoading ? (
-        <div
-          className="d-flex justify-content-center align-items-center"
-          style={{ height: "60vh" }}
-        >
+        <div className="flex justify-center items-center h-[60vh]">
           <InfinitySpin
             visible={true}
             width="200"
