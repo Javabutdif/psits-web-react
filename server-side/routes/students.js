@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
+const { format } = require("date-fns");
 
 const router = express.Router();
 
@@ -11,6 +12,24 @@ router.get("/students", async (req, res) => {
     const students = await Student.find({
       membership: "Accepted",
       status: "True",
+      $or: [
+        { renew: "Accepted" },
+        { renew: { $exists: false } },
+        { renew: "" },
+      ],
+    });
+    res.status(200).json(students);
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
+router.get("/students/deleted-students", async (req, res) => {
+  try {
+    const students = await Student.find({
+      membership: "Accepted",
+      status: "False",
     });
     res.status(200).json(students);
   } catch (error) {
@@ -20,8 +39,8 @@ router.get("/students", async (req, res) => {
 });
 
 // SOFT DELETE student by id_number
-router.put("/students/delete/:id_number", async (req, res) => {
-  const id_number = req.params.id_number;
+router.put("/students/softdelete", async (req, res) => {
+  const { id_number, name } = req.body;
 
   try {
     // Find and delete the student by id_number
@@ -30,11 +49,37 @@ router.put("/students/delete/:id_number", async (req, res) => {
       {
         $set: {
           status: "False",
+          deletedBy: name,
+          deletedDate: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
         },
       }
     );
 
     if (!deletedStudent) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.status(200).json({ message: "Student deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
+router.put("/students/restore", async (req, res) => {
+  const { id_number } = req.body;
+
+  try {
+    const restore = await Student.updateOne(
+      { id_number: id_number },
+      {
+        $set: {
+          status: "True",
+        },
+      }
+    );
+
+    if (!restore) {
       return res.status(404).json({ message: "Student not found" });
     }
 
@@ -63,17 +108,7 @@ router.delete("/students/delete/:id_number", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-
 //Membership Request Fetch
-router.get("/requestStudent", async (req, res) => {
-  try {
-    const students = await Student.find({ membership: "Pending" });
-    res.status(200).json(students);
-  } catch (error) {
-    console.error("Error fetching students:", error);
-    res.status(500).json("Internal Server Error");
-  }
-});
 
 //Edit Student Admin Side
 router.post("/editedStudent", async (req, res) => {

@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const Admin = require("../models/AdminModel");
 const MembershipHistory = require("../models/MembershipHistory");
 const Student = require("../models/StudentModel");
+const { format } = require("date-fns");
 
 const router = express.Router();
 
@@ -33,22 +34,44 @@ router.post("/admin", async (req, res) => {
   }
 });
 
-router.post("/approve-membership", async (req, res) => {
-  const { id_number, admin, rfid } = req.body;
-
+router.put("/renew-student", async (req, res) => {
   try {
-    const student = await Student.findOne({ id_number });
-    const approveStudent = await Student.updateOne(
-      { id_number: id_number },
+    const renewStudent = await Student.updateMany(
+      {
+        status: "True",
+        membership: "Accepted",
+      },
       {
         $set: {
-          membership: "Accepted",
-          rfid: rfid,
+          renew: "Pending",
+          renewedOn: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
         },
       }
     );
+
+    if (!renewStudent) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "All Student has been renewed successfully" });
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
+router.post("/approve-membership", async (req, res) => {
+  const { reference_code, id_number, type, admin, rfid } = req.body;
+
+  try {
+    const student = await Student.findOne({ id_number });
+
     const history = new MembershipHistory({
       id_number,
+      reference_code,
+      type,
       name:
         student.first_name +
         " " +
@@ -57,13 +80,36 @@ router.post("/approve-membership", async (req, res) => {
         student.last_name,
       year: student.year,
       course: student.course,
-      date: Date.now(),
+      date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
       admin,
     });
-    await history.save();
-    res.status(200).json("Approve student successful");
+    if (await history.save()) {
+      if (type === "Membership") {
+        const approveStudent = await Student.updateOne(
+          { id_number: id_number },
+          {
+            $set: {
+              membership: "Accepted",
+              rfid: rfid,
+            },
+          }
+        );
+      } else if (type === "Renewal") {
+        const renewStudent = await Student.updateOne(
+          { id_number: id_number },
+          {
+            $set: {
+              renew: "Accepted",
+            },
+          }
+        );
+      }
+      res.status(200).json({ message: "Approve student successful" });
+    } else {
+      res.status(400).json({ message: "Approve Unsuccessful" });
+    }
   } catch (error) {
-    res.status(400).json(error);
+    res.status(400).json({ message: error });
   }
 });
 
@@ -76,5 +122,47 @@ router.get("/history", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
+router.get("/renew", async (req, res) => {
+  try {
+    const students = await Student.find({ renew: "Pending" });
+    res.status(200).json(students);
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
 
+router.get("/membershipRequest", async (req, res) => {
+  try {
+    const students = await Student.find({ membership: "Pending" });
+    res.status(200).json(students);
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+router.get("/all-members", async (req, res) => {
+  const count = await Student.countDocuments({
+    membership: "Accepted",
+    status: "True",
+    $or: [{ renew: "Accepted" }, { renew: { $exists: false } }, { renew: "" }],
+  });
+  return res.json({ message: count });
+});
+router.get("/request-members", async (req, res) => {
+  const count = await Student.countDocuments({ membership: "Pending" });
+  return res.json({ message: count });
+});
+router.get("/renewal-members", async (req, res) => {
+  const count = await Student.countDocuments({ renew: "Pending" });
+  return res.json({ message: count });
+});
+router.get("/deleted-members", async (req, res) => {
+  const count = await Student.countDocuments({ status: "False" });
+  return res.json({ message: count });
+});
+router.get("/history-members", async (req, res) => {
+  const count = await MembershipHistory.countDocuments();
+  return res.json({ message: count });
+});
 module.exports = router;

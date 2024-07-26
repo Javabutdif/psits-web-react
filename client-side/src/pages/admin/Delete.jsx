@@ -2,28 +2,26 @@ import React, { useState, useEffect } from "react";
 import "../../App.css";
 import DataTable from "react-data-table-component";
 import MembershipHeader from "../../components/admin/MembershipHeader";
-import { membership, studentDeletion, renewAllStudent } from "../../api/admin";
+import { deletedStudent, studentRestore } from "../../api/admin";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../enums/commonEnums";
 import { showToast } from "../../utils/alertHelper";
 import { InfinitySpin } from "react-loader-spinner";
-import { getUser } from "../../authentication/Authentication";
 
-const Membership = () => {
+const Delete = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isRenewalModalVisible, setIsRenewalModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
+  const [StudentIdToBeRestore, setStudentIdToBeRestore] = useState("");
 
   const fetchData = async () => {
     try {
-      const result = await membership();
+      const result = await deletedStudent();
       setData(result);
       setFilteredData(result);
       setLoading(false);
@@ -87,64 +85,38 @@ const Membership = () => {
       },
       margin: { top: 10 },
     });
-    doc.save("students.pdf");
+    doc.save("deleted_students.pdf");
   };
 
   const showModal = (row) => {
     setIsModalVisible(true);
-    setStudentIdToBeDeleted(row.id_number);
-  };
-  const showConfirm = () => {
-    setIsRenewalModalVisible(true);
+    setStudentIdToBeRestore(row.id_number);
   };
 
   const hideModal = () => {
     setIsModalVisible(false);
-    setIsRenewalModalVisible(false);
-    setStudentIdToBeDeleted("");
+    setStudentIdToBeRestore("");
   };
 
-  const handleRenewal = async () => {
+  const handleRestore = async () => {
     setIsLoading(true);
     try {
-      if (await renewAllStudent()) {
-        setIsRenewalModalVisible(false);
-        showToast(
-          "success",
-          "All student memberships are currently being renewed."
-        );
-        fetchData();
-      } else {
-        console.error("Failed to renew all student");
-        showToast("error", "Student Renewal Failed! Please try again.");
-      }
-    } catch (error) {
-      console.error("Error to renew all student:", error);
-      showToast("error", "Student Renewal Failed! Please try again.");
-    }
-    setIsRenewalModalVisible(false);
-    setIsLoading(false);
-  };
+      const id_number = StudentIdToBeRestore;
 
-  const handleConfirmDeletion = async () => {
-    setIsLoading(true);
-    try {
-      const id_number = studentIdToBeDeleted;
-      const [name, position] = getUser();
-      if ((await studentDeletion(id_number, name)) === 200) {
+      if ((await studentRestore(id_number)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );
         setData(updatedData);
         setIsModalVisible(false);
-        showToast("success", "Student Deletion Successful!");
+        showToast("success", "Student Restoration Successful!");
       } else {
-        console.error("Failed to delete student");
-        showToast("error", "Student Deletion Failed! Please try again.");
+        console.error("Failed to restore student");
+        showToast("error", "Student Restoration Failed! Please try again.");
       }
     } catch (error) {
-      console.error("Error deleting student:", error);
-      showToast("error", "Student Deletion Failed! Please try again.");
+      console.error("Error restore student:", error);
+      showToast("error", "Student Restoration Failed! Please try again.");
     }
     setIsLoading(false);
   };
@@ -185,20 +157,22 @@ const Membership = () => {
       sortable: true,
     },
     {
-      name: "Status",
-      selector: (row) => row.status,
+      name: "Deletion Date",
+      selector: (row) => row.deletedDate,
       sortable: true,
       cell: (row) => (
         <div className="flex">
-          <span
-            className={`${
-              row.status === "True"
-                ? "bg-green-400 text-green-800"
-                : "bg-red-300 text-red-700"
-            } px-8 py-2 rounded-xl`}
-          >
-            {row.status === "True" ? "Active" : "Expired"}
-          </span>
+          <span>{row.deletedDate}</span>
+        </div>
+      ),
+    },
+    {
+      name: "Deleted By",
+      selector: (row) => row.deletedBy,
+      sortable: true,
+      cell: (row) => (
+        <div className="flex">
+          <span>{row.deletedBy}</span>
         </div>
       ),
     },
@@ -207,19 +181,10 @@ const Membership = () => {
       cell: (row) => (
         <div className="flex flex-col gap-2 my-2 container mx-3">
           <button
-            className=" text-white px-4 py-2 rounded"
-            style={{ backgroundColor: "#002E48" }}
-          >
-            Print Icon
-          </button>
-          <button className=" text-white bg-blue-600 px-4 py-2 rounded">
-            Edit
-          </button>
-          <button
-            className=" text-white bg-red-500 px-4 py-2 rounded"
+            className=" text-white bg-blue-500 px-4 py-2 rounded"
             onClick={() => showModal(row)}
           >
-            Delete
+            Restore
           </button>
         </div>
       ),
@@ -243,12 +208,6 @@ const Membership = () => {
           onClick={handleExportPDF}
         >
           Export to PDF
-        </button>
-        <button
-          className="bg-red-500 text-white px-4 py-2 rounded"
-          onClick={showConfirm}
-        >
-          Renew All Students
         </button>
       </div>
       {isLoading ? (
@@ -294,20 +253,13 @@ const Membership = () => {
       )}
       {isModalVisible && (
         <ConfirmationModal
-          confirmType={ConfirmActionType.DELETION}
+          confirmType={ConfirmActionType.RESTORE}
           onCancel={hideModal}
-          onConfirm={handleConfirmDeletion}
-        />
-      )}
-      {isRenewalModalVisible && (
-        <ConfirmationModal
-          confirmType={ConfirmActionType.RENEWAL}
-          onCancel={hideModal}
-          onConfirm={handleRenewal}
+          onConfirm={handleRestore}
         />
       )}
     </div>
   );
 };
 
-export default Membership;
+export default Delete;

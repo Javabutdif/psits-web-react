@@ -48,7 +48,7 @@ export const getAuthentication = () => {
       sessionStorage.removeItem("Token");
       return null;
     }
-    if (item.id === token.id_number) {
+    if (item.id === token.id_number && item.position === token.position) {
       if (item.role === "Admin") {
         return "Administrator";
       } else {

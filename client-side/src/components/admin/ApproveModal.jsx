@@ -1,19 +1,33 @@
-import React, { useState, useRef } from "react";
-import axios from "axios";
-import backendConnection from "../../api/backendApi";
-import { getAdminName } from "../../authentication/Authentication.js";
+import React, { useState, useRef, useEffect } from "react";
+import { getUser } from "../../authentication/Authentication.js";
 import { showToast } from "../../utils/alertHelper";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt.jsx";
+import { approveMembership } from "../../api/admin.js";
 
-function ApproveModal({ id_number, course, year, name, onCancel, onSubmit }) {
+function ApproveModal({
+  reference_code,
+  id_number,
+  course,
+  year,
+  name,
+  type,
+  rfid,
+  onCancel,
+  onSubmit,
+}) {
   const componentRef = useRef();
+  const [adminName, position] = getUser();
   const [formData, setFormData] = useState({
+    reference_code: reference_code,
     id_number: id_number,
-    rfid: "",
-
-    admin: getAdminName(),
+    rfid: rfid !== "" ? rfid : "",
+    type: type,
+    admin: adminName,
   });
+
+  const [shouldPrint, setShouldPrint] = useState(false);
+  const printRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,25 +42,12 @@ function ApproveModal({ id_number, course, year, name, onCancel, onSubmit }) {
       if (formData.rfid === "") {
         formData.rfid = "N/A";
       }
-      const response = await fetch(
-        `${backendConnection()}/api/approve-membership`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-      const data = await response.json();
-
-      if (response.ok) {
-        showToast("success", "Student Approve");
-        onSubmit();
-        onCancel();
+      console.log(formData);
+      if (await approveMembership(formData)) {
+        showToast("success", "Student Approved");
+        setShouldPrint(true);
       } else {
         showToast("error", "Internal Server Error!");
-
         onSubmit();
         onCancel();
       }
@@ -55,75 +56,88 @@ function ApproveModal({ id_number, course, year, name, onCancel, onSubmit }) {
     }
   };
 
+  useEffect(() => {
+    if (shouldPrint && printRef.current) {
+      printRef.current.click();
+    }
+  }, [shouldPrint]);
+
+  const handlePrintComplete = () => {
+    setShouldPrint(false);
+    onSubmit();
+    onCancel();
+  };
+
   return (
-    <div className="modal show" style={{ display: "block" }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Enter Student RFID</h5>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={onCancel}
-            ></button>
+    <div>
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+        <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-auto">
+          <div className="p-4 border-b">
+            <h5 className="text-lg font-semibold">
+              {id_number} | {name}
+            </h5>
           </div>
-          <div className="modal-body">
-            <div className="mb-3">
-              <label className="form-label">
+          <div className="p-4">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 <strong>RFID Number:</strong>
               </label>
               <input
                 value={formData.rfid}
                 name="rfid"
-                className="form-control"
+                className="w-full px-3 py-2 border rounded"
                 type="number"
                 onChange={handleChange}
+                placeholder="Enter RFID Number"
                 required
               />
             </div>
-            <div className="mb-3">
-              <label className="form-label">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 <strong>Money:</strong>
               </label>
               <input
                 name="money"
-                className="form-control"
+                className="w-full px-3 py-2 border rounded"
                 type="number"
                 onChange={handleChange}
                 required
               />
             </div>
           </div>
-          <div className="modal-footer">
+          <div className="p-4 border-t flex justify-end space-x-2">
             <button
               type="button"
-              className="btn btn-secondary"
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
               onClick={onCancel}
             >
               Cancel
             </button>
-            <ReactToPrint
-              trigger={() => (
-                <button
-                  type="button"
-                  className="btn btn-success"
-                  onClick={handleSubmit}
-                >
-                  Approve
-                </button>
-              )}
-              content={() => componentRef.current}
-            />
-            <Receipt
-              ref={componentRef}
-              id_number={formData.id_number}
-              course={course}
-              year={year}
-              name={name}
-              admin={getAdminName()}
-            />
+            <button
+              type="button"
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              onClick={handleSubmit}
+            >
+              Approve
+            </button>
           </div>
         </div>
+      </div>
+      <div style={{ display: "none" }}>
+        <ReactToPrint
+          trigger={() => <button ref={printRef}>Print</button>}
+          content={() => componentRef.current}
+          onAfterPrint={handlePrintComplete}
+        />
+        <Receipt
+          ref={componentRef}
+          reference_code={reference_code}
+          course={course}
+          year={year}
+          name={name}
+          type={type}
+          admin={adminName}
+        />
       </div>
     </div>
   );

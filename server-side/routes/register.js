@@ -15,6 +15,7 @@ router.post("/register", async (req, res) => {
     email,
     course,
     year,
+    applied,
   } = req.body;
 
   try {
@@ -32,16 +33,17 @@ router.post("/register", async (req, res) => {
       year,
       status: "True",
       membership: "Pending",
+      applied,
     });
     await newStudent.save();
 
-    res.status(201).json("Registration successful");
+    res.status(200).json({ message: "Registration successful" });
   } catch (error) {
     if (error.code === 11000) {
-      res.status(400).json("Id number already exists");
+      res.status(400).json({ message: "Id number already exists" });
     } else {
-      console.error("Error saving new student:", error);
-      res.status(500).json("Internal Server Error");
+      console.error({ message: "Error saving new student:", error });
+      res.status(500).json({ message: "Internal Server Error" });
     }
   }
 });
