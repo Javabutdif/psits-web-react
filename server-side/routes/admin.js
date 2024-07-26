@@ -77,4 +77,33 @@ router.get("/history", async (req, res) => {
   }
 });
 
+router.get("/membershipRequest", async (req, res) => {
+  try {
+    const students = await Student.find({ membership: "Pending" });
+    res.status(200).json(students);
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+router.get("/all-members", async (req, res) => {
+  const count = await Student.countDocuments({ membership: "Accepted" });
+  return res.json({ message: count });
+});
+router.get("/request-members", async (req, res) => {
+  const count = await Student.countDocuments({ membership: "Pending" });
+  return res.json({ message: count });
+});
+router.get("/renewal-members", async (req, res) => {
+  const count = await Student.countDocuments({ renewal: "Pending" });
+  return res.json({ message: count });
+});
+router.get("/deleted-members", async (req, res) => {
+  const count = await Student.countDocuments({ status: "False" });
+  return res.json({ message: count });
+});
+router.get("/history-members", async (req, res) => {
+  const count = await MembershipHistory.countDocuments();
+  return res.json({ message: count });
+});
 module.exports = router;

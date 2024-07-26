@@ -45,6 +45,9 @@ const studentSchema = new Schema({
   membership: {
     type: String,
   },
+  applied: {
+    type: String,
+  },
   cart: [
     {
       type: Schema.Types.ObjectId,

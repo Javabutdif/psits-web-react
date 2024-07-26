@@ -152,12 +152,14 @@ function Merchandise() {
         customStyles={{
           headCells: {
             style: {
-              backgroundColor: "#074873", // Header background color
-              color: "#F5F5F5", // Header text color
-              fontWeight: "bold", // Font weight
-              fontSize: "14px", // Font size
-              padding: "1rem", // Padding
-              alignContent: "center",
+              backgroundColor: "#074873",
+              color: "#F5F5F5",
+              fontWeight: "bold",
+              fontSize: "14px",
+              padding: "1rem",
+              textAlign: "center",
+              border: "block",
+              borderColor: "white",
             },
           },
           cells: {

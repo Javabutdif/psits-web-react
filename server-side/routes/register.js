@@ -15,6 +15,7 @@ router.post("/register", async (req, res) => {
     email,
     course,
     year,
+    applied,
   } = req.body;
 
   try {
@@ -32,6 +33,7 @@ router.post("/register", async (req, res) => {
       year,
       status: "True",
       membership: "Pending",
+      applied,
     });
     await newStudent.save();
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../../../assets/images/psits-logo.png";
 import { showToast } from "../../../utils/alertHelper";
@@ -24,7 +24,7 @@ function Navbar() {
   const location = useLocation();
 
   const handleLogoutClick = () => {
-    removeAuthentication("AuthenticationToken");
+    removeAuthentication();
     showToast("success", "Signed out successfully");
     handleRemoveStudentData();
     navigate("/login");
@@ -44,7 +44,11 @@ function Navbar() {
           menuOpen ? "w-64" : "w-16 sm:w-20"
         } transition-width duration-300 ease-out`}
       >
-        <Link to={"/admin/dashboard"} className="self-center" onClick={handleCloseToggle}>
+        <Link
+          to={"/admin/dashboard"}
+          className="self-center"
+          onClick={handleCloseToggle}
+        >
           <img
             src={logo}
             alt="PSITS Logo"
@@ -53,31 +57,51 @@ function Navbar() {
         </Link>
 
         <AsideToggle onClick={handleToggle} menuOpen={menuOpen} />
-        
-        <nav className="flex-1 self-stretch mt-4 w-full flex flex-col gap-10">
+
+        <nav className="flex-1 self-stretch mt-4 w-full flex flex-col gap-5">
           <ul className="space-y-6 md:space-y-5 2xl:space-y-7 mb-auto">
             {navItems.map((item, index) => {
-              const isActive = location.pathname === `/admin/${item.text.toLowerCase()}`;
+              const isActive =
+                location.pathname === `/admin/${item.text.toLowerCase()}`;
               return (
                 <motion.li
                   key={index}
                   onClick={handleCloseToggle}
-                  className={`relative cursor-pointer text-center transition-opacity duration-200 ${isActive ? 'font-bold' : ''}`}
+                  className={`relative cursor-pointer text-center transition-opacity duration-200 ${
+                    isActive ? "font-bold" : ""
+                  }`}
                 >
                   <Link
                     to={`/admin/${item.text.toLowerCase()}`}
-                    className={`flex ${!menuOpen ? 'justify-center' : 'ml-14 justify-stretch'} ${isActive ? 'text-black' : 'text-primary'} items-center space-x-5`}
+                    className={`flex ${
+                      !menuOpen ? "justify-center" : "ml-14 justify-stretch"
+                    } ${
+                      isActive ? "text-black" : "text-primary"
+                    } items-center space-x-5`}
                   >
-                    <i className={`${item.icon} text-xl md:text-2xl block mb-1`} />
+                    <i
+                      className={`${item.icon} text-xl md:text-2xl block mb-1`}
+                    />
                     <motion.span
                       initial={{ opacity: 0, x: -40 }}
-                      animate={{ opacity: menuOpen ? 1 : 0, x: menuOpen ? 0 : -40 }}
+                      animate={{
+                        opacity: menuOpen ? 1 : 0,
+                        x: menuOpen ? 0 : -40,
+                      }}
                       transition={{ duration: 0.2 }}
-                      className={`left-16 text-sm md:text-lg ${menuOpen ? "block" : "hidden"} transition-all duration-500 ${isActive ? 'text-black' : ''}`}
+                      className={`left-16 text-sm md:text-lg ${
+                        menuOpen ? "block" : "hidden"
+                      } transition-all duration-500 ${
+                        isActive ? "text-black" : ""
+                      }`}
                     >
                       {item.text}
                     </motion.span>
-                    <span className={`absolute -z-10 -top-2 py-5 pl-5 rounded-l-full -left-[0.70rem] ${isActive ? 'bg-secondary' : ''} ${menuOpen ? 'w-[91.9%] -left-[0rem]' : 'w-[89%]'}`} />
+                    <span
+                      className={`absolute -z-10 -top-2 py-5 pl-5 rounded-l-full -left-[0.70rem] ${
+                        isActive ? "bg-secondary" : ""
+                      } ${menuOpen ? "w-[91.9%] -left-[0rem]" : "w-[89%]"}`}
+                    />
                   </Link>
                 </motion.li>
               );
@@ -96,7 +120,9 @@ function Navbar() {
               initial={{ opacity: 1, x: -40 }}
               animate={{ opacity: menuOpen ? 1 : 0, x: menuOpen ? 0 : -40 }}
               transition={{ duration: 0.2 }}
-              className={`${menuOpen ? "block" : "hidden"} text-sm md:text-lg transition-all duration-500`}
+              className={`${
+                menuOpen ? "block" : "hidden"
+              } text-sm md:text-lg transition-all duration-500`}
             >
               Logout
             </motion.span>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../../utils/alertHelper.js";
@@ -8,8 +8,21 @@ import FormInput from "../../components/forms/FormInput.jsx";
 import FormButton from "../../components/forms/FormButton.jsx";
 import FormSelect from "../../components/forms/FormSelect.jsx";
 import { register } from "../../api/index.js";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns";
 
 function Register() {
+  const [startDate, setStartDate] = useState(new Date());
+
+  useEffect(() => {
+    const formattedDate = format(startDate, "MMMM d, yyyy h:mm:ss a");
+    setFormData((prevData) => ({
+      ...prevData,
+      applied: formattedDate,
+    }));
+  }, [startDate]);
+
   const [formData, setFormData] = useState({
     id_number: "",
     rfid: "",
@@ -21,6 +34,7 @@ function Register() {
     email: "",
     course: "",
     year: "",
+    applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
   });
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -34,6 +48,7 @@ function Register() {
       ...prevData,
       [name]: value,
     }));
+
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: "",
