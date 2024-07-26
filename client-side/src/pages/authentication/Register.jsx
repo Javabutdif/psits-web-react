@@ -139,8 +139,6 @@ function Register() {
           year: "",
         });
         navigate("/login");
-      } else {
-        showToast("error", "Registration failed.");
       }
     } catch (error) {
       showToast("error", JSON.stringify(error));

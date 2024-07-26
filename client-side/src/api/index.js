@@ -47,11 +47,15 @@ export const register = async (formData) => {
         },
       }
     );
-
-    return true;
+    if (response.status === 200) {
+      return true;
+    } else {
+      showToast("error", response.data.message);
+    }
+    console.log(response.data.message);
   } catch (error) {
-    console.error("Error:", error);
-    showToast("error", "An error occurred. Please try again.");
+    console.error("Error:", error.response.data.message);
+    showToast("error", error.response.data.message);
     return null;
   }
 };

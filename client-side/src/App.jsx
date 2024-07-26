@@ -20,6 +20,8 @@ import Resources from "./pages/admin/Resources";
 import Settings from "./pages/Settings";
 import MembershipRequest from "./pages/admin/MembershipRequest";
 import MembershipHistory from "./pages/admin/MembershipHistory";
+import Delete from "./pages/admin/Delete";
+import Renewal from "./pages/admin/Renewal";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -78,6 +80,14 @@ const App = () => {
             <Route
               path="merchandise"
               element={<PrivateRouteAdmin element={Merchandise} />}
+            />
+            <Route
+              path="delete"
+              element={<PrivateRouteAdmin element={Delete} />}
+            />
+            <Route
+              path="renewal"
+              element={<PrivateRouteAdmin element={Renewal} />}
             />
             <Route
               path="inventory"

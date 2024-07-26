@@ -48,6 +48,18 @@ const studentSchema = new Schema({
   applied: {
     type: String,
   },
+  deletedBy: {
+    type: String,
+  },
+  deletedDate: {
+    type: String,
+  },
+  renew: {
+    type: String,
+  },
+  renewedOn: {
+    type: String,
+  },
   cart: [
     {
       type: Schema.Types.ObjectId,

@@ -1,71 +1,27 @@
 import React, { useState, useEffect } from "react";
 import "../../App.css";
 import DataTable from "react-data-table-component";
-import backendConnection from "../../api/backendApi";
-import { InfinitySpin } from "react-loader-spinner";
-import axios from "axios";
-import { showToast } from "../../utils/alertHelper";
-import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
-import { ConfirmActionType } from "../../enums/commonEnums";
-import ApproveModal from "../../components/admin/ApproveModal";
-import { membershipRequest } from "../../api/admin";
 import MembershipHeader from "../../components/admin/MembershipHeader";
+import { deletedStudent, studentRestore } from "../../api/admin";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { getUser } from "../../authentication/Authentication";
+import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
+import { ConfirmActionType } from "../../enums/commonEnums";
+import { showToast } from "../../utils/alertHelper";
+import { InfinitySpin } from "react-loader-spinner";
 
-function MembershipRenewal() {
+const Delete = () => {
   const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState("");
-  const [selectedStudentCourse, setSelectedStudentCourse] = useState("");
-  const [selectedStudentYear, setSelectedStudentYear] = useState("");
-  const [selectedStudentName, setSelectedStudentName] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isChecked, setIsChecked] = useState(false);
-  const [name, position] = getUser();
-
-  const toggleCheckbox = () => {
-    setIsChecked(!isChecked);
-  };
-
-  const handleOpenModal = (row) => {
-    setIsModalOpen(true);
-    setSelectedStudentId(row.id_number);
-    setSelectedStudentCourse(row.course);
-    setSelectedStudentYear(row.year);
-    const name = row.first_name + " " + row.middle_name + " " + row.last_name;
-    const words = name.split(" ");
-    let fullName = "";
-
-    for (let i = 0; i < words.length - 1; i++) {
-      fullName += words[i].charAt(0) + ".";
-    }
-    fullName += " " + words[words.length - 1];
-
-    setSelectedStudentName(fullName);
-
-    console.log(fullName);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedStudentId("");
-    fetchData();
-  };
-
-  const handleFormSubmit = (data) => {
-    console.log("Form submitted successfully:", data);
-  };
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [StudentIdToBeRestore, setStudentIdToBeRestore] = useState("");
 
   const fetchData = async () => {
     try {
-      const result = await membershipRequest();
+      const result = await deletedStudent();
       setData(result);
       setFilteredData(result);
       setLoading(false);
@@ -90,6 +46,7 @@ function MembershipRenewal() {
       const course = item.course ? item.course.toString() : "";
       const email = item.email ? item.email.toString() : "";
       const type = item.type ? item.type.toString() : "";
+      const rfid = item.rfid ? item.rfid.toString() : "";
 
       return (
         first_name.includes(searchQuery.toLowerCase()) ||
@@ -98,7 +55,8 @@ function MembershipRenewal() {
         id_number.includes(searchQuery.toLowerCase()) ||
         email.includes(searchQuery.toLowerCase()) ||
         type.includes(searchQuery.toLowerCase()) ||
-        course.includes(searchQuery)
+        course.includes(searchQuery) ||
+        rfid.includes(searchQuery)
       );
     });
     setFilteredData(filtered);
@@ -127,7 +85,40 @@ function MembershipRenewal() {
       },
       margin: { top: 10 },
     });
-    doc.save("students.pdf");
+    doc.save("deleted_students.pdf");
+  };
+
+  const showModal = (row) => {
+    setIsModalVisible(true);
+    setStudentIdToBeRestore(row.id_number);
+  };
+
+  const hideModal = () => {
+    setIsModalVisible(false);
+    setStudentIdToBeRestore("");
+  };
+
+  const handleRestore = async () => {
+    setIsLoading(true);
+    try {
+      const id_number = StudentIdToBeRestore;
+
+      if ((await studentRestore(id_number)) === 200) {
+        const updatedData = data.filter(
+          (student) => student.id_number !== id_number
+        );
+        setData(updatedData);
+        setIsModalVisible(false);
+        showToast("success", "Student Restoration Successful!");
+      } else {
+        console.error("Failed to restore student");
+        showToast("error", "Student Restoration Failed! Please try again.");
+      }
+    } catch (error) {
+      console.error("Error restore student:", error);
+      showToast("error", "Student Restoration Failed! Please try again.");
+    }
+    setIsLoading(false);
   };
 
   const columns = [
@@ -145,7 +136,6 @@ function MembershipRenewal() {
         </div>
       ),
     },
-
     {
       name: "Id Number",
       selector: (row) => row.id_number,
@@ -157,112 +147,52 @@ function MembershipRenewal() {
       sortable: true,
     },
     {
-      name: "Year",
-      selector: (row) => row.year,
-      sortable: true,
-    },
-    {
       name: "Email Account",
       selector: (row) => row.email,
       sortable: true,
     },
     {
       name: "Type",
-      selector: (row) => "Student", // Fixed this selector
+      selector: (row) => "Student",
       sortable: true,
     },
     {
-      name: "Applied on",
-      selector: (row) => row.applied,
+      name: "Deletion Date",
+      selector: (row) => row.deletedDate,
       sortable: true,
       cell: (row) => (
-        <div>
-          <p className="text-xs`">{row.applied}</p>
+        <div className="flex">
+          <span>{row.deletedDate}</span>
         </div>
       ),
     },
     {
-      name: "Payment Status",
-      selector: (row) => row.membership,
+      name: "Deleted By",
+      selector: (row) => row.deletedBy,
       sortable: true,
       cell: (row) => (
-        <div>
-          <p className="text-red-600">Unpaid</p>
+        <div className="flex">
+          <span>{row.deletedBy}</span>
         </div>
       ),
     },
-
     {
-      name: "Membership Approval",
+      name: "Actions",
       cell: (row) => (
-        <div>
+        <div className="flex flex-col gap-2 my-2 container mx-3">
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={() => handleOpenModal(row)}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
-            }
+            className=" text-white bg-blue-500 px-4 py-2 rounded"
+            onClick={() => showModal(row)}
           >
-            {position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President"
-              ? "Not Authorized"
-              : "Approve"}
+            Restore
           </button>
         </div>
       ),
     },
   ];
 
-  const showModal = (row) => {
-    setIsModalVisible(true);
-    setStudentIdToBeDeleted(row.id_number);
-  };
-
-  const hideModal = () => {
-    setIsModalVisible(false);
-    setStudentIdToBeDeleted("");
-  };
-
-  const handleConfirmDeletion = async () => {
-    setIsLoading(true);
-    try {
-      const id_number = studentIdToBeDeleted;
-      const response = await axios.delete(
-        `${backendConnection()}/api/students/delete/${id_number}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        const updatedData = data.filter(
-          (student) => student.id_number !== id_number
-        );
-        setData(updatedData);
-        setIsModalVisible(false);
-        showToast("success", "Student Deletion Successful!");
-      } else {
-        console.error("Failed to delete student");
-        showToast("error", "Student Deletion Failed! Please try again.");
-      }
-    } catch (error) {
-      console.error("Error deleting student:", error);
-      showToast("error", "Student Deletion Failed! Please try again.");
-    }
-    setIsLoading(false);
-  };
-
   return (
-    <div>
+    <div className="container container-fluid">
       <MembershipHeader />
       <input
         type="text"
@@ -272,7 +202,7 @@ function MembershipRenewal() {
         className="mb-4 px-4 py-2 border rounded"
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-row gap-4">
         <button
           className="bg-green-500 text-white px-4 py-2 rounded"
           onClick={handleExportPDF}
@@ -323,23 +253,13 @@ function MembershipRenewal() {
       )}
       {isModalVisible && (
         <ConfirmationModal
-          confirmType={ConfirmActionType.DELETION}
+          confirmType={ConfirmActionType.RESTORE}
           onCancel={hideModal}
-          onConfirm={handleConfirmDeletion}
-        />
-      )}
-      {isModalOpen && (
-        <ApproveModal
-          id_number={selectedStudentId}
-          course={selectedStudentCourse}
-          year={selectedStudentYear}
-          name={selectedStudentName}
-          onCancel={handleCloseModal}
-          onSubmit={handleFormSubmit}
+          onConfirm={handleRestore}
         />
       )}
     </div>
   );
-}
+};
 
-export default MembershipRenewal;
+export default Delete;

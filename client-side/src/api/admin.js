@@ -21,6 +21,27 @@ export const membership = async () => {
     console.error("Error:", error);
   }
 };
+export const deletedStudent = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/students/deleted-students`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
 export const membershipRequest = async () => {
   try {
     const response = await axios.get(
@@ -42,6 +63,30 @@ export const membershipRequest = async () => {
     console.error("Error:", error);
   }
 };
+
+export const renewAllStudent = async () => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/renew-student`,
+      {}, // Pass an empty object if no data needs to be sent
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Renew all students error:", error); // Optional: Log the error for debugging
+    return false; // Explicitly return false in case of an error
+  }
+};
 export const approveMembership = async (formData) => {
   try {
     const response = await axios.post(
@@ -54,7 +99,11 @@ export const approveMembership = async (formData) => {
       }
     );
 
-    return response.status === 200 ? true : false;
+    if (response.status === 200) {
+      return true;
+    } else {
+      showToast("error", response.data.message || "An error occurred");
+    }
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
@@ -165,6 +214,24 @@ export const totalHistory = async () => {
     }
   }
 };
+export const renewStudent = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/renew`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
 export const editStudent = async () => {};
 export const inventory = async () => {};
 export const analytics = async () => {};
@@ -207,7 +274,73 @@ export const merchandise = async () => {
     console.error("Error:", error);
   }
 };
+//Hard Delete
+export const requestDeletion = async (id_number) => {
+  try {
+    const response = await axios.delete(
+      `${backendConnection()}/api/students/delete/${id_number}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
+    return response.status;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+//Soft Delete
+export const studentDeletion = async (id_number, name) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/students/softdelete`,
+      { id_number, name },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.status;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+export const studentRestore = async (id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/students/restore`,
+      { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.status;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
 export const merchandiseHistory = async () => {};
 export const merchandiseOrder = async () => {};
 export const orders = async () => {};

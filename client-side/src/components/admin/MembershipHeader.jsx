@@ -49,12 +49,16 @@ function MembershipHeader() {
             Requests ({selectedRequestMembers})
           </button>
         </Link>
-        <button className="px-4 py-2 bg-gray-200 rounded">
-          Renewal ({selectedRenewalMembers})
-        </button>
-        <button className="px-4 py-2 bg-gray-200 rounded">
-          Deleted ({selectedDeletedMembers})
-        </button>
+        <Link to={"/admin/renewal"}>
+          <button className="px-4 py-2 bg-gray-200 rounded">
+            Renewal ({selectedRenewalMembers})
+          </button>
+        </Link>
+        <Link to={"/admin/delete"}>
+          <button className="px-4 py-2 bg-gray-200 rounded">
+            Deleted ({selectedDeletedMembers})
+          </button>
+        </Link>
         <Link to={"/admin/history"}>
           <button className="px-4 py-2 bg-gray-200 rounded">
             History({selectedHistoryMembers})

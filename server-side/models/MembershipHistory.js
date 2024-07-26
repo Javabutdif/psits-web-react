@@ -5,9 +5,13 @@ const Schema = mongoose.Schema;
 const historySchema = new Schema({
   id_number: {
     type: String,
-    unique: true,
+    require: true,
   },
-
+  reference_code: {
+    type: String,
+    unique: true,
+    require: true,
+  },
   name: {
     type: String,
     require: true,
@@ -17,6 +21,10 @@ const historySchema = new Schema({
     require: true,
   },
   course: {
+    type: String,
+    require: true,
+  },
+  type: {
     type: String,
     require: true,
   },

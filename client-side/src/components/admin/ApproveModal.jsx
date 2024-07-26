@@ -5,14 +5,27 @@ import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt.jsx";
 import { approveMembership } from "../../api/admin.js";
 
-function ApproveModal({ id_number, course, year, name, onCancel, onSubmit }) {
+function ApproveModal({
+  reference_code,
+  id_number,
+  course,
+  year,
+  name,
+  type,
+  rfid,
+  onCancel,
+  onSubmit,
+}) {
   const componentRef = useRef();
   const [adminName, position] = getUser();
   const [formData, setFormData] = useState({
+    reference_code: reference_code,
     id_number: id_number,
-    rfid: "",
+    rfid: rfid !== "" ? rfid : "",
+    type: type,
     admin: adminName,
   });
+
   const [shouldPrint, setShouldPrint] = useState(false);
   const printRef = useRef(null);
 
@@ -29,8 +42,8 @@ function ApproveModal({ id_number, course, year, name, onCancel, onSubmit }) {
       if (formData.rfid === "") {
         formData.rfid = "N/A";
       }
-      //await approveMembership(formData)
-      if (true) {
+      console.log(formData);
+      if (await approveMembership(formData)) {
         showToast("success", "Student Approved");
         setShouldPrint(true);
       } else {
@@ -118,10 +131,11 @@ function ApproveModal({ id_number, course, year, name, onCancel, onSubmit }) {
         />
         <Receipt
           ref={componentRef}
-          id_number={formData.id_number}
+          reference_code={reference_code}
           course={course}
           year={year}
           name={name}
+          type={type}
           admin={adminName}
         />
       </div>

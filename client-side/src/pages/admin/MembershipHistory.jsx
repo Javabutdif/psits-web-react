@@ -31,7 +31,11 @@ function MembershipHistory() {
   useEffect(() => {
     const filtered = data.filter((item) => {
       const id_number = item.id_number ? item.id_number.toLowerCase() : "";
+      const reference_code = item.reference_code
+        ? item.reference_code.toLowerCase()
+        : "";
       const name = item.name ? item.name.toLowerCase() : "";
+      const type = item.type ? item.type.toLowerCase() : "";
       const course = item.course ? item.course.toLowerCase() : "";
       const year = item.year ? item.year.toLowerCase() : "";
       const date = item.date ? item.date.toLowerCase() : "";
@@ -43,6 +47,8 @@ function MembershipHistory() {
         course.includes(searchQuery.toLowerCase()) ||
         year.includes(searchQuery.toLowerCase()) ||
         date.includes(searchQuery.toLowerCase()) ||
+        type.includes(searchQuery.toLowerCase()) ||
+        reference_code.includes(searchQuery.toLowerCase()) ||
         admin.includes(searchQuery.toLowerCase())
       );
     });
@@ -52,12 +58,25 @@ function MembershipHistory() {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     autoTable(doc, {
-      head: [["ID", "Name", "Course", "Year", "Date", "Admin"]],
+      head: [
+        [
+          "Reference ID",
+          "ID",
+          "Name",
+          "Course",
+          "Year",
+          "Type",
+          "Date",
+          "Admin",
+        ],
+      ],
       body: filteredData.map((item) => [
+        item.reference_code,
         item.id_number,
         item.name,
         item.course,
         item.year,
+        item.type,
         item.date,
         item.admin,
       ]),
@@ -78,6 +97,11 @@ function MembershipHistory() {
 
   const columns = [
     {
+      name: "Reference Id",
+      selector: (row) => row.reference_code,
+      sortable: true,
+    },
+    {
       name: "ID",
       selector: (row) => row.id_number,
       sortable: true,
@@ -95,6 +119,11 @@ function MembershipHistory() {
     {
       name: "Year",
       selector: (row) => row.year,
+      sortable: true,
+    },
+    {
+      name: "Type",
+      selector: (row) => row.type,
       sortable: true,
     },
     {

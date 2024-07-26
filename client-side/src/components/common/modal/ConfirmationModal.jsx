@@ -9,7 +9,7 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
   let confirmTypeWord = ConfirmActionWords[confirmType];
 
   const confirmButtonColor =
-    confirmType === ConfirmActionType.DELETION
+    confirmType === ConfirmActionType.DELETION || ConfirmActionType.RENEWAL
       ? "bg-red-500 hover:bg-red-600"
       : "bg-green-500 hover:bg-green-600";
 

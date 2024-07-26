@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../../utils/alertHelper";
@@ -12,9 +12,30 @@ import {
   resetAttemptAuthentication,
   getTimeout,
   getAttemptAuthentication,
+  getInformationData,
 } from "../../authentication/Authentication";
 
 const Login = () => {
+  const [remainingTime, setRemainingTime] = useState();
+
+  useEffect(() => {
+    let interval;
+    if (remainingTime !== null) {
+      interval = setInterval(() => {
+        setRemainingTime((prevTime) => {
+          if (prevTime > 1) {
+            return prevTime - 1;
+          } else {
+            clearInterval(interval);
+            return 0;
+          }
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [remainingTime]);
+
   const [formData, setFormData] = useState({
     id_number: "",
     password: "",
@@ -67,11 +88,12 @@ const Login = () => {
           navigate(`/${data.toLowerCase()}/dashboard`);
         } else {
           attemptAuthentication();
+          setRemainingTime(60);
         }
       } else {
         showToast(
           "error",
-          "Maximum login attempts reached. Please wait 1 minute before trying again!"
+          `Maximum login attempts reached. Please wait ${remainingTime} seconds before trying again!`
         );
       }
     } catch (error) {
@@ -100,6 +122,11 @@ const Login = () => {
     whileHover: { scale: 0.98 },
     whileTap: { scale: 1 },
   };
+  if (getInformationData() !== null) {
+    const [id, name, email, course, year, role, position] =
+      getInformationData();
+    navigate(`/${role.toLowerCase()}/dashboard`);
+  }
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100 px-4">
