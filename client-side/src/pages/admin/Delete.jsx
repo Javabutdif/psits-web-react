@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../../App.css";
-import DataTable from "react-data-table-component";
-import MembershipHeader from "../../components/admin/MembershipHeader";
+import TableComponent from "../../components/Custom/TableComponent";
 import { deletedStudent, studentRestore } from "../../api/admin";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -17,7 +16,7 @@ const Delete = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [StudentIdToBeRestore, setStudentIdToBeRestore] = useState("");
+  const [studentIdToBeRestored, setStudentIdToBeRestored] = useState("");
 
   const fetchData = async () => {
     try {
@@ -35,39 +34,41 @@ const Delete = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const filtered = data.filter((item) => {
-      const first_name = item.first_name ? item.first_name.toLowerCase() : "";
-      const middle_name = item.middle_name
-        ? item.middle_name.toLowerCase()
-        : "";
-      const last_name = item.last_name ? item.last_name.toLowerCase() : "";
-      const id_number = item.id_number ? item.id_number.toLowerCase() : "";
-      const course = item.course ? item.course.toString() : "";
-      const email = item.email ? item.email.toString() : "";
-      const type = item.type ? item.type.toString() : "";
-      const rfid = item.rfid ? item.rfid.toString() : "";
+  
+useEffect(() => {
+  const filtered = data.filter((item) => {
+    const first_name = item.first_name ? item.first_name.toLowerCase() : "";
+    const middle_name = item.middle_name
+      ? item.middle_name.toLowerCase()
+      : "";
+    const last_name = item.last_name ? item.last_name.toLowerCase() : "";
+    const id_number = item.id_number ? item.id_number.toLowerCase() : "";
+    const course = item.course ? item.course.toString() : "";
+    const email = item.email ? item.email.toString() : "";
+    const type = item.type ? item.type.toString() : "";
+    const rfid = item.rfid ? item.rfid.toString() : "";
 
-      return (
-        first_name.includes(searchQuery.toLowerCase()) ||
-        middle_name.includes(searchQuery.toLowerCase()) ||
-        last_name.includes(searchQuery.toLowerCase()) ||
-        id_number.includes(searchQuery.toLowerCase()) ||
-        email.includes(searchQuery.toLowerCase()) ||
-        type.includes(searchQuery.toLowerCase()) ||
-        course.includes(searchQuery) ||
-        rfid.includes(searchQuery)
-      );
-    });
-    setFilteredData(filtered);
-  }, [searchQuery, data]);
+    return (
+      first_name.includes(searchQuery.toLowerCase()) ||
+      middle_name.includes(searchQuery.toLowerCase()) ||
+      last_name.includes(searchQuery.toLowerCase()) ||
+      id_number.includes(searchQuery.toLowerCase()) ||
+      email.includes(searchQuery.toLowerCase()) ||
+      type.includes(searchQuery.toLowerCase()) ||
+      course.includes(searchQuery) ||
+      rfid.includes(searchQuery)
+    );
+  });
+  setFilteredData(filtered);
+}, [searchQuery, data]);
+
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
     autoTable(doc, {
       head: [["Name", "Id Number", "Course", "Email Account", "Type"]],
       body: filteredData.map((item) => [
-        item.first_name + " " + item.middle_name + " " + item.last_name,
+        `${item.first_name} ${item.middle_name} ${item.last_name}`,
         item.id_number,
         item.course,
         item.email,
@@ -90,24 +91,22 @@ const Delete = () => {
 
   const showModal = (row) => {
     setIsModalVisible(true);
-    setStudentIdToBeRestore(row.id_number);
+    setStudentIdToBeRestored(row.id_number);
   };
 
   const hideModal = () => {
     setIsModalVisible(false);
-    setStudentIdToBeRestore("");
+    setStudentIdToBeRestored("");
   };
 
   const handleRestore = async () => {
     setIsLoading(true);
     try {
-      const id_number = StudentIdToBeRestore;
-
+      const id_number = studentIdToBeRestored;
       if ((await studentRestore(id_number)) === 200) {
-        const updatedData = data.filter(
-          (student) => student.id_number !== id_number
-        );
+        const updatedData = data.filter((student) => student.id_number !== id_number);
         setData(updatedData);
+        setFilteredData(updatedData); // Update filteredData as well
         setIsModalVisible(false);
         showToast("success", "Student Restoration Successful!");
       } else {
@@ -115,7 +114,7 @@ const Delete = () => {
         showToast("error", "Student Restoration Failed! Please try again.");
       }
     } catch (error) {
-      console.error("Error restore student:", error);
+      console.error("Error restoring student:", error);
       showToast("error", "Student Restoration Failed! Please try again.");
     }
     setIsLoading(false);
@@ -123,143 +122,63 @@ const Delete = () => {
 
   const columns = [
     {
-      name: "Name",
-      selector: (row) =>
-        row.first_name + " " + row.middle_name + " " + row.last_name,
+      key: "name",
+      label: "Name",
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
-          <div>
-            {row.first_name + " " + row.middle_name + " " + row.last_name}
-          </div>
+          <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
           <div>RFID: {row.rfid}</div>
         </div>
       ),
     },
+    { key: "id_number", label: "Id Number", sortable: true,  },
+    { key: "course", label: "Course", sortable: true },
+    { key: "email", label: "Email Account", sortable: true },
+    { key: "type", label: "Type", sortable: true, cell: () => (
+      <div className="text-center">
+        <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">Student</span>
+      </div>
+    ), },
+    { key: "deletedDate", label: "Deletion Date", sortable: true },
+    { key: "deletedBy", label: "Deleted By", sortable: true },
     {
-      name: "Id Number",
-      selector: (row) => row.id_number,
-      sortable: true,
-    },
-    {
-      name: "Course",
-      selector: (row) => row.course,
-      sortable: true,
-    },
-    {
-      name: "Email Account",
-      selector: (row) => row.email,
-      sortable: true,
-    },
-    {
-      name: "Type",
-      selector: (row) => "Student",
-      sortable: true,
-    },
-    {
-      name: "Deletion Date",
-      selector: (row) => row.deletedDate,
-      sortable: true,
+      key: "actions",
       cell: (row) => (
-        <div className="flex">
-          <span>{row.deletedDate}</span>
-        </div>
-      ),
-    },
-    {
-      name: "Deleted By",
-      selector: (row) => row.deletedBy,
-      sortable: true,
-      cell: (row) => (
-        <div className="flex">
-          <span>{row.deletedBy}</span>
-        </div>
-      ),
-    },
-    {
-      name: "Actions",
-      cell: (row) => (
-        <div className="flex flex-col gap-2 my-2 container mx-3">
-          <button
-            className=" text-white bg-blue-500 px-4 py-2 rounded"
-            onClick={() => showModal(row)}
-          >
-            Restore
-          </button>
-        </div>
+        <button
+        onClick={() => showModal(row)}
+        className="text-red-500 hover:text-red-700"
+        aria-label="Restore"
+        >
+          <i className="fas fa-undo"></i>
+        </button>
+        
+      
       ),
     },
   ];
 
   return (
     <div className="container container-fluid">
-      <MembershipHeader />
-      <input
-        type="text"
-        placeholder="Search"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="mb-4 px-4 py-2 border rounded"
-      />
-
-      <div className="mb-4 flex flex-row gap-4">
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded"
-          onClick={handleExportPDF}
-        >
-          Export to PDF
-        </button>
-      </div>
-      {isLoading ? (
-        <div className="flex justify-center items-center h-[60vh]">
-          <InfinitySpin
-            visible={true}
-            width="200"
-            color="#0d6efd"
-            ariaLabel="infinity-spin-loading"
+        <>
+          <TableComponent
+            columns={columns}
+            data={filteredData}
+            handleExportPDF={handleExportPDF}
+            pageType="delete"
           />
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          pagination
-          progressPending={loading}
-          customStyles={{
-            headCells: {
-              style: {
-                backgroundColor: "#074873",
-                color: "#F5F5F5",
-                fontWeight: "bold",
-                fontSize: "14px",
-                padding: "1rem",
-                textAlign: "center",
-                border: "block",
-                borderColor: "white",
-              },
-            },
-            cells: {
-              style: {
-                padding: "8px", // Cell padding
-              },
-            },
-            rows: {
-              style: {
-                borderBottom: "1px solid #ddd", // Row border
-              },
-            },
-          }}
-        />
-      )}
-      {isModalVisible && (
-        <ConfirmationModal
-          confirmType={ConfirmActionType.RESTORE}
-          onCancel={hideModal}
-          onConfirm={handleRestore}
-        />
-      )}
+          {isModalVisible && (
+            <ConfirmationModal
+              confirmType={ConfirmActionType.RESTORE}
+              onCancel={hideModal}
+              onConfirm={handleRestore}
+              isLoading={isLoading}
+            />
+          )}
+        </>
     </div>
   );
 };
 
 export default Delete;
+

@@ -40,6 +40,7 @@ import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
 import PrivateRouteStudent from "./authentication/privateRouteStudent";
+import AllMembers from "./pages/admin/membership/AllMembers";
 
 const App = () => {
   return (
@@ -64,31 +65,36 @@ const App = () => {
               path="register"
               element={<PrivateRouteAdmin element={AdminRegister} />}
             />
-            <Route
-              path="membership"
+           <Route
+              path="membership/"
               element={<PrivateRouteAdmin element={Membership} />}
-            />
-            <Route
-              path="request"
-              element={<PrivateRouteAdmin element={MembershipRequest} />}
-            />
-            <Route
-              path="history"
-              element={<PrivateRouteAdmin element={MembershipHistory} />}
-            />
-
+            >
+              <Route
+                index
+                element={<PrivateRouteAdmin element={AllMembers} />}
+              />
+              <Route
+                path="request"
+                element={<PrivateRouteAdmin element={MembershipRequest} />}
+              />
+              <Route
+                path="history"
+                element={<PrivateRouteAdmin element={MembershipHistory} />}
+              />
+              <Route
+                path="delete"
+                element={<PrivateRouteAdmin element={Delete} />}
+              />
+              <Route
+                path="renewal"
+                element={<PrivateRouteAdmin element={Renewal} />}
+              />
+            </Route>
             <Route
               path="merchandise"
               element={<PrivateRouteAdmin element={Merchandise} />}
             />
-            <Route
-              path="delete"
-              element={<PrivateRouteAdmin element={Delete} />}
-            />
-            <Route
-              path="renewal"
-              element={<PrivateRouteAdmin element={Renewal} />}
-            />
+          
             <Route
               path="inventory"
               element={<PrivateRouteAdmin element={Inventory} />}

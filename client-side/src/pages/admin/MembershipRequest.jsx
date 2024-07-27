@@ -1,34 +1,155 @@
 import React, { useState, useEffect } from "react";
 import "../../App.css";
-import DataTable from "react-data-table-component";
-import backendConnection from "../../api/backendApi";
-import { InfinitySpin } from "react-loader-spinner";
-import axios from "axios";
 import { showToast } from "../../utils/alertHelper";
-import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
-import { ConfirmActionType } from "../../enums/commonEnums";
-import ApproveModal from "../../components/admin/ApproveModal";
 import { membershipRequest, requestDeletion } from "../../api/admin";
 import MembershipHeader from "../../components/admin/MembershipHeader";
+import TableComponent from "../../components/Custom/TableComponent";
+import { getUser } from "../../authentication/Authentication";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { getUser } from "../../authentication/Authentication";
+import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
+
+import { ConfirmActionType } from "../../enums/commonEnums";
+import ApproveModal from "../../components/admin/ApproveModal";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [filteredData, setFilteredData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedStudentCourse, setSelectedStudentCourse] = useState("");
   const [selectedStudentYear, setSelectedStudentYear] = useState("");
   const [selectedStudentName, setSelectedStudentName] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isChecked, setIsChecked] = useState(false);
   const [name, position] = getUser();
+
+  const columns = [
+    {
+      key: "name",
+      label: "Name",
+      selector: (row) => `${row.first_name} ${row.middle_name} ${row.last_name}`,
+      sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
+          <div className="text-gray-500">RFID: {row.rfid}</div>
+        </div>
+      ),
+    },
+    {
+      key: "id_number",
+      label: "Id Number",
+      selector: (row) => row.id_number,
+      sortable: true,
+    },
+    {
+      key: "course",
+      label: "Course",
+      selector: (row) => row.course,
+      sortable: true,
+    },
+    {
+      key: "email",
+      label: "Email Account",
+      selector: (row) => row.email,
+      sortable: true,
+    },
+    {
+        key: "type",
+        label: "Type",
+        selector: () => "Student", // Static value for all rows
+        sortable: true,
+        cell: () => (
+          <div className="text-center">
+            <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">Student</span>
+          </div>
+        ),
+      },
+   {
+      name: "Applied on",
+      label: "Applied on",
+      selector: (row) => row.applied,
+      sortable: true,
+      cell: (row) => (
+        <div>
+          <p className="text-xs">{row.applied}</p>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      selector: (row) => row.status,
+      sortable: true,
+      cell: (row) => (
+            <div className="text-center">
+              <span
+                className={`flex items-center gap-2 ${
+                  row.status === "False" ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                } px-2 py-1 rounded text-xs`}
+              >
+                <i
+                  className={`fa ${
+                    row.status === "False" ? "fa-check-circle" : "fa-times-circle"
+                  } mr-1 ${row.status === "False" ? "text-green-500" : "text-red-500"}`}
+                ></i>
+                {row.status === "False" ? "Paid" : "Unpaid"}
+              </span>
+            </div>
+          ),
+        },
+        {
+          name: "Action",
+          cell: (row) => (
+            <div className="flex justify-evenly gap-3">
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2"
+                onClick={() => handleOpenModal(row)}
+                disabled={
+                  position !== "Treasurer" &&
+                  position !== "Assistant Treasurer" &&
+                  position !== "Auditor" &&
+                  position !== "Developer" &&
+                  position !== "President"
+                }
+              >
+                <i className="fas fa-check"></i>
+                {position !== "Treasurer" &&
+                position !== "Assistant Treasurer" &&
+                position !== "Auditor" &&
+                position !== "Developer" &&
+                position !== "President"
+                  ? "Not Authorized"
+                  : "Approve"}
+              </button>
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded flex items-center gap-2"
+                onClick={() => showModal(row)}
+                disabled={
+                  position !== "Treasurer" &&
+                  position !== "Assistant Treasurer" &&
+                  position !== "Auditor" &&
+                  position !== "Developer" &&
+                  position !== "President"
+                }
+              >
+                <i className="fas fa-trash"></i>
+                {position !== "Treasurer" &&
+                position !== "Assistant Treasurer" &&
+                position !== "Auditor" &&
+                position !== "Developer" &&
+                position !== "President"
+                  ? "Not Authorized"
+                  : "Delete"}
+              </button>
+            </div>
+
+      ),
+    },
+  ];
 
   const handleOpenModal = (row) => {
     setIsModalOpen(true);
@@ -45,18 +166,12 @@ function MembershipRequest() {
     fullName += " " + words[words.length - 1];
 
     setSelectedStudentName(fullName);
-
-    console.log(fullName);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedStudentId("");
     fetchData();
-  };
-
-  const handleFormSubmit = (data) => {
-    console.log("Form submitted successfully:", data);
   };
 
   const fetchData = async () => {
@@ -92,9 +207,9 @@ function MembershipRequest() {
         middle_name.includes(searchQuery.toLowerCase()) ||
         last_name.includes(searchQuery.toLowerCase()) ||
         id_number.includes(searchQuery.toLowerCase()) ||
+        course.includes(searchQuery.toLowerCase()) ||
         email.includes(searchQuery.toLowerCase()) ||
-        type.includes(searchQuery.toLowerCase()) ||
-        course.includes(searchQuery)
+        type.includes(searchQuery.toLowerCase())
       );
     });
     setFilteredData(filtered);
@@ -103,141 +218,28 @@ function MembershipRequest() {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     autoTable(doc, {
-      head: [["Name", "Id Number", "Course", "Email Account", "Type"]],
-      body: filteredData.map((item) => [
-        item.first_name + " " + item.middle_name + " " + item.last_name,
-        item.id_number,
-        item.course,
-        item.email,
-        item.type,
-      ]),
-      startY: 20,
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [22, 160, 133],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-      },
-      margin: { top: 10 },
+      html: "#my-table",
+      styles: { cellWidth: "wrap" },
+      margin: { top: 20 },
     });
-    doc.save("students.pdf");
+    doc.save("table.pdf");
   };
 
-  const columns = [
-    {
-      name: "Name",
-      selector: (row) =>
-        row.first_name + " " + row.middle_name + " " + row.last_name,
-      sortable: true,
-      cell: (row) => (
-        <div className="text-xs">
-          <div>
-            {row.first_name + " " + row.middle_name + " " + row.last_name}
-          </div>
-          <div>RFID: {row.rfid}</div>
-        </div>
-      ),
-    },
-
-    {
-      name: "Id Number",
-      selector: (row) => row.id_number,
-      sortable: true,
-    },
-    {
-      name: "Course",
-      selector: (row) => row.course,
-      sortable: true,
-    },
-    {
-      name: "Year",
-      selector: (row) => row.year,
-      sortable: true,
-    },
-    {
-      name: "Email Account",
-      selector: (row) => row.email,
-      sortable: true,
-    },
-    {
-      name: "Type",
-      selector: (row) => "Student", // Fixed this selector
-      sortable: true,
-    },
-    {
-      name: "Applied on",
-      selector: (row) => row.applied,
-      sortable: true,
-      cell: (row) => (
-        <div>
-          <p className="text-xs`">{row.applied}</p>
-        </div>
-      ),
-    },
-    {
-      name: "Status",
-      selector: (row) => row.membership,
-      sortable: true,
-      cell: (row) => (
-        <div>
-          <p className="text-red-600">Unpaid</p>
-        </div>
-      ),
-    },
-
-    {
-      name: "Action",
-      cell: (row) => (
-        <div className="flex flex-col gap-3">
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={() => handleOpenModal(row)}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
-            }
-          >
-            {position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President"
-              ? "Not Authorized"
-              : "Approve"}
-          </button>
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded"
-            onClick={() => showModal(row)}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
-            }
-          >
-            {position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President"
-              ? "Not Authorized"
-              : "Delete"}
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const handleConfirmDeletion = async () => {
+    try {
+      await requestDeletion(studentIdToBeDeleted);
+      showToast("Student has been deleted successfully.", "success");
+    } catch (error) {
+      console.error("Error deleting student: ", error);
+      showToast("Error deleting student.", "error");
+    }
+    setIsModalVisible(false);
+    fetchData();
+  };
 
   const showModal = (row) => {
-    setIsModalVisible(true);
     setStudentIdToBeDeleted(row.id_number);
+    setIsModalVisible(true);
   };
 
   const hideModal = () => {
@@ -245,90 +247,22 @@ function MembershipRequest() {
     setStudentIdToBeDeleted("");
   };
 
-  const handleConfirmDeletion = async () => {
-    setIsLoading(true);
-    try {
-      const id_number = studentIdToBeDeleted;
-
-      if ((await requestDeletion(id_number)) === 200) {
-        const updatedData = data.filter(
-          (student) => student.id_number !== id_number
-        );
-        setData(updatedData);
-        setIsModalVisible(false);
-        showToast("success", "Student Deletion Successful!");
-      } else {
-        console.error("Failed to delete student");
-        showToast("error", "Student Deletion Failed! Please try again.");
-      }
-    } catch (error) {
-      console.error("Error deleting student:", error);
-      showToast("error", "Student Deletion Failed! Please try again.");
-    }
-    setIsLoading(false);
+  const handleFormSubmit = async () => {
+    // Add logic for form submission if needed
+    handleCloseModal();
   };
 
   return (
-    <div>
-      <MembershipHeader />
-      <input
-        type="text"
-        placeholder="Search"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="mb-4 px-4 py-2 border rounded"
+    <>
+      <TableComponent
+        columns={columns}
+        data={data}
+        pageType={"request"}
+        handleExportPDF={handleExportPDF}
       />
 
-      <div className="mb-4">
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded"
-          onClick={handleExportPDF}
-        >
-          Export to PDF
-        </button>
-      </div>
-      {isLoading ? (
-        <div className="flex justify-center items-center h-[60vh]">
-          <InfinitySpin
-            visible={true}
-            width="200"
-            color="#0d6efd"
-            ariaLabel="infinity-spin-loading"
-          />
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          pagination
-          progressPending={loading}
-          customStyles={{
-            headCells: {
-              style: {
-                backgroundColor: "#074873",
-                color: "#F5F5F5",
-                fontWeight: "bold",
-                fontSize: "14px",
-                padding: "1rem",
-                textAlign: "center",
-                border: "block",
-                borderColor: "white",
-              },
-            },
-            cells: {
-              style: {
-                padding: "8px", // Cell padding
-              },
-            },
-            rows: {
-              style: {
-                borderBottom: "1px solid #ddd", // Row border
-              },
-            },
-          }}
-        />
-      )}
-      {isModalVisible && (
+      
+{isModalVisible && (
         <ConfirmationModal
           confirmType={ConfirmActionType.DELETION}
           onCancel={hideModal}
@@ -349,8 +283,10 @@ function MembershipRequest() {
           onSubmit={handleFormSubmit}
         />
       )}
-    </div>
+    </>
   );
 }
 
 export default MembershipRequest;
+
+
