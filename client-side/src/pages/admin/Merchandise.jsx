@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { Link } from 'react-router-dom';
 import "../../App.css";
-import DataTable from "react-data-table-component";
 import { merchandise } from "../../api/admin";
+import TableComponent from '../../components/Custom/TableComponent'; // Adjust the import path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Link } from "react-router-dom";
 
 function Merchandise() {
   const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -18,7 +16,6 @@ function Merchandise() {
     try {
       const result = await merchandise();
       setData(result);
-      setFilteredData(result);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
@@ -30,44 +27,28 @@ function Merchandise() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const filtered = data.filter((item) => {
-      const name = item.name ? item.name.toLowerCase() : "";
-      const category = item.category ? item.category.toLowerCase() : "";
-      const price = item.price ? item.price.toString() : "";
-      const batch = item.batch ? item.batch.toString() : "";
-
-      return (
-        name.includes(searchQuery.toLowerCase()) ||
-        category.includes(searchQuery.toLowerCase()) ||
-        batch.includes(searchQuery.toLowerCase()) ||
-        price.includes(searchQuery)
-      );
-    });
-    setFilteredData(filtered);
-  }, [searchQuery, data]);
-
-  const handleExportPDF = () => {
+  const handleExportPDF = (filteredData) => {
     const doc = new jsPDF();
     autoTable(doc, {
       head: [
-        ["Product ID", "Product", "Category", "Price", "Product Controls"],
+        ["Product ID", "Product", "Category", "Price", "Batch", "Controls"],
       ],
       body: filteredData.map((item) => [
         item._id,
         item.name,
         item.category,
-        item.batch,
         item.price,
+        item.batch,
         item.control,
       ]),
       startY: 20,
       styles: {
         fontSize: 10,
         cellPadding: 2,
+        textColor: [0, 0, 0],
       },
       headStyles: {
-        fillColor: [22, 160, 133],
+        fillColor: [0, 100, 255],
         textColor: [255, 255, 255],
         fontSize: 12,
       },
@@ -83,62 +64,60 @@ function Merchandise() {
 
   const columns = [
     {
-      name: "Product ID",
-      selector: (row) => row._id,
+      key: "_id",
+      label: "Product ID",
       sortable: true,
-      cell: (row) => <div className="text-xs">{row._id}</div>,
+      cell: (row) => <div className="text-sm text-gray-600">{row._id}</div>,
     },
     {
-      name: "Product",
-      selector: (row) => row.name,
+      key: "name",
+      label: "Product",
       sortable: true,
       cell: (row) => (
-        <div className="flex flex-row gap-2">
-          <img src={row.imageUrl} alt={row.name} width="70" height="70" />
-          <h2>{row.name}</h2>
+        <div className="flex items-center gap-2">
+          <img src={row.imageUrl} alt={row.name} width="50" height="50" className="rounded-md shadow-sm" />
+          <div className="text-sm font-medium text-gray-800">{row.name}</div>
         </div>
       ),
     },
     {
-      name: "Category",
-      selector: (row) => row.category,
+      key: "category",
+      label: "Category",
       sortable: true,
     },
     {
-      name: "Batch",
-      selector: (row) => "Batch " + row.batch,
+      key: "batch",
+      label: "Batch",
+      sortable: true,
+      cell: (row) => `Batch ${row.batch}`,
+    },
+    {
+      key: "price",
+      label: "Price",
       sortable: true,
     },
     {
-      name: "Price",
-      selector: (row) => row.price,
+      key: "control",
+      label: "Product Controls",
       sortable: true,
     },
     {
-      name: "Product Controls",
-      selector: (row) => row.control,
-      sortable: true,
-    },
-    {
-      name: "Actions",
+      key: "actions",
+      label: "Actions",
       cell: (row) => (
-        <div className="flex flex-col gap-2 my-2 container mx-3">
+        <div className="flex gap-2">
           <Link
             to={{
               pathname: "/admin/product/edit",
               state: { product: row },
             }}
           >
-            <button
-              className="text-white px-4 py-2 rounded"
-              style={{ backgroundColor: "#002E48" }}
-            >
+            <button className="bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition duration-150 text-xs">
               Edit
             </button>
           </Link>
           <button
-            className="text-white px-4 py-2 rounded"
-            style={{ backgroundColor: "#4398AC" }}
+            className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-400 transition duration-150 text-xs"
             onClick={() => handleView(row)}
           >
             View
@@ -149,97 +128,60 @@ function Merchandise() {
   ];
 
   return (
-    <div className="">
-      <input
-        type="text"
-        placeholder="Search"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="mb-4 px-4 py-2 border rounded"
-      />
-      <div className="pb-3 flex justify-end ">
-        <Link to="/admin/merchandise/product">
-          <button
-            className="p-2 text-white rounded-xl"
-            style={{ backgroundColor: "#4398AC" }}
-          >
-            Add Product
-          </button>
-        </Link>
-      </div>
-      <div className="mb-4">
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded"
-          onClick={handleExportPDF}
-        >
-          Export to PDF
-        </button>
-      </div>
-      <DataTable
-        columns={columns}
-        data={filteredData}
-        pagination
-        progressPending={loading}
-        customStyles={{
-          headCells: {
-            style: {
-              backgroundColor: "#074873",
-              color: "#F5F5F5",
-              fontWeight: "bold",
-              fontSize: "14px",
-              padding: "1rem",
-              textAlign: "center",
-              border: "block",
-              borderColor: "white",
-            },
-          },
-          cells: {
-            style: {
-              padding: "8px", // Cell padding
-            },
-          },
-          rows: {
-            style: {
-              borderBottom: "1px solid #ddd", // Row border
-            },
-          },
-        }}
-      />
-      {isViewModalOpen && selectedItem && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg w-1/2">
-            <h2 className="text-xl font-bold mb-4">Product Details</h2>
-            <div className="mb-2">
-              <img src={selectedItem.imageUrl} width="120" height="120" />
-            </div>
-            <div className="mb-2">
-              <strong>ID:</strong> {selectedItem._id}
-            </div>
-            <div className="mb-2">
-              <strong>Name:</strong> {selectedItem.name}
-            </div>
-            <div className="mb-2">
-              <strong>Category:</strong> {selectedItem.category}
-            </div>
-            <div className="mb-2">
-              <strong>Batch:</strong> Batch {selectedItem.batch}
-            </div>
-            <div className="mb-2">
-              <strong>Price:</strong> {selectedItem.price}
-            </div>
-            <div className="mb-2">
-              <strong>Controls:</strong> {selectedItem.control}
-            </div>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded mt-4"
-              onClick={() => setIsViewModalOpen(false)}
-            >
-              Close
+    <>
+  
+  
+        <TableComponent
+          data={data}
+          columns={columns}
+          handleExportPDF={handleExportPDF}
+          style={" h-[380px] md:h-[440px] lg:h-[480px] xl:h-[460px] "}
+          otherButton={(
+            <Link to="/admin/merchandise/product">
+            <button className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-400 transition duration-150">
+              Add Product
             </button>
+          </Link>
+          )}
+          pageType="merchandise" // Set the page type accordingly
+        />
+        {isViewModalOpen && selectedItem && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800">Product Details</h2>
+              <div className="flex justify-center mb-4">
+                <img src={selectedItem.imageUrl} alt={selectedItem.name} width="120" height="120" className="rounded-md shadow-sm" />
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <strong className="text-gray-700">ID:</strong> {selectedItem._id}
+                </div>
+                <div>
+                  <strong className="text-gray-700">Name:</strong> {selectedItem.name}
+                </div>
+                <div>
+                  <strong className="text-gray-700">Category:</strong> {selectedItem.category}
+                </div>
+                <div>
+                  <strong className="text-gray-700">Batch:</strong> Batch {selectedItem.batch}
+                </div>
+                <div>
+                  <strong className="text-gray-700">Price:</strong> {selectedItem.price}
+                </div>
+                <div>
+                  <strong className="text-gray-700">Controls:</strong> {selectedItem.control}
+                </div>
+              </div>
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-red-400 transition duration-150"
+                onClick={() => setIsViewModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+    </>    
   );
 }
 

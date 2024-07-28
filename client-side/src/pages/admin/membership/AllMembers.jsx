@@ -48,7 +48,7 @@ const Membership = () => {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const handleExportPDF = () => {
+  const handleExportPDF = (filteredData) => {
     const doc = new jsPDF();
     autoTable(doc, {
       head: [["Name", "Id Number", "Course", "Email Account", "Type"]],
@@ -221,6 +221,7 @@ const Membership = () => {
           columns={columns}
           data={filteredData}
           onDelete={showModal}
+          style={" md:h-[300px] lg:h-[350px] xl:h-[310px] "}
           handleExportPDF={handleExportPDF}
           handleRenewal={handleRenewal}
           pageType={"members"}

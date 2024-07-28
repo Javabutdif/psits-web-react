@@ -257,6 +257,7 @@ function MembershipRequest() {
       <TableComponent
         columns={columns}
         data={data}
+        style={" md:h-[300px] lg:h-[350px] xl:h-[310px] "}
         pageType={"request"}
         handleExportPDF={handleExportPDF}
       />
