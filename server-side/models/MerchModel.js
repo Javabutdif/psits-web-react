@@ -34,11 +34,15 @@ const merchSchema = new Schema(
       type: String,
       required: true,
     },
-    variation: {
+    selectedVariations: {
       type: Array,
     },
-    size: {
+    selectedSizes: {
       type: Array,
+    },
+    control: {
+      type: String,
+      required: true,
     },
     created_by: {
       type: String,
@@ -60,14 +64,12 @@ const merchSchema = new Schema(
       type: String,
       required: true,
     },
-    image_url: {
+    imageUrl: {
       type: String,
-      required: true,
     },
     sales_data: {
       type: salesDataSchema,
       default: () => ({}),
-      required: true,
     },
   },
   { timestamps: true }

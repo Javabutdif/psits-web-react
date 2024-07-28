@@ -2,44 +2,67 @@ const express = require("express");
 const Merch = require("../models/MerchModel");
 const Student = require("../models/StudentModel");
 const { default: mongoose } = require("mongoose");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const { S3Client } = require("@aws-sdk/client-s3");
+const AWS = require("aws-sdk");
+require("dotenv").config();
 
 const router = express.Router();
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
-//TODO: Make some methods only exclusive to admin accounts
+const upload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: process.env.AWS_BUCKET_NAME,
+    metadata: (req, file, cb) => {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: (req, file, cb) => {
+      cb(null, "Merch" + "-" + file.originalname);
+    },
+  }),
+});
 
-// CREATE a new merch
-router.post("/", async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
   const {
     name,
     price,
     stocks,
-    batch, //unrequired
+    batch,
     description,
-    variation, //unrequired
-    size, //unrequired
+    selectedVariations,
+    selectedSizes,
     created_by,
     start_date,
-    end_date, //unrequired
+    end_date,
     category,
-    image_url,
-    sales_data,
+    control,
   } = req.body;
+
+  const imageUrl = req.file.location;
 
   try {
     const newMerch = new Merch({
       name,
       price,
       stocks,
-      batch, //unrequired
+      batch,
       description,
-      variation, //unrequired
-      size, //unrequired
+      selectedVariations,
+      selectedSizes,
       created_by,
       start_date,
-      end_date, //unrequired
+      end_date,
       category,
-      image_url,
-      sales_data,
+      control,
+      imageUrl, // Save the image URL to the database
     });
 
     await newMerch.save();

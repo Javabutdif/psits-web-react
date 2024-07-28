@@ -341,6 +341,35 @@ export const studentRestore = async (id_number) => {
     console.error("Error:", error);
   }
 };
+
+//Create Merchandise
+export const addMerchandise = async (formData) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/merch`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    if (response.status === 201) {
+      showToast("success", "Merchandise Publish!");
+    } else {
+      showToast("error", "Error in publishing the merchandise!");
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+export const updateMerchandise = async () => {};
 export const merchandiseHistory = async () => {};
 export const merchandiseOrder = async () => {};
 export const orders = async () => {};
