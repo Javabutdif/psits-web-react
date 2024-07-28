@@ -138,10 +138,14 @@ function Merchandise() {
           style={" h-[380px] md:h-[440px] lg:h-[480px] xl:h-[460px] "}
           otherButton={(
             <Link to="/admin/merchandise/product">
-            <button className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-400 transition duration-150">
-              Add Product
-            </button>
-          </Link>
+              <button className="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2">
+                {/* Icon always visible */}
+                <i className="fas fa-cart-plus text-sm text-base"></i>
+                {/* Text hidden on small screens */}
+                <span className="hidden md:inline ml-2">Add Product</span>
+              </button>
+            </Link>
+
           )}
           pageType="merchandise" // Set the page type accordingly
         />

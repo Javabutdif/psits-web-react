@@ -68,39 +68,43 @@ const TableComponent = ({ data = [], columns = [], style, pageType, handleExport
 
   return (
     <div className="overflow-x-auto">
-      <div className="bg-white p-4 flex flex-col gap-4 md:flex-row md:gap-6 shadow-sm">
-        {/* Form Input */}
-        <FormInput
-          label="Search"
-          type="text"
-          id="id-number"
-          name="id_number"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          styles="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="Search by ID number"
-        />
+      <div className="bg-white p-4 flex flex-row gap-4 md:gap-6 shadow-sm">
+          {/* Form Input */}
+          <FormInput
+            label="Search"
+            type="text"
+            id="id-number"
+            name="id_number"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            styles="w-full flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Search by ID number"
+          />
 
-        {/* Buttons */}
-        <div className="flex flex-col md:flex-row gap-4 md:gap-6 w-full md:w-auto justify-between md:justify-end">
-          <FormButton
-            type="button"
-            text="Export to PDF"
-            onClick={handleExportPDFClick}
-            icon={<i className="fas fa-file-pdf text-xl"></i>}
-            styles="w-full md:w-auto bg-gray-200 text-gray-700 hover:bg-gray-300 active:bg-gray-400 rounded-sm p-2 transition duration-150 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center gap-2"
-          />
-          <FormButton
-            type="button"
-            text="Renew All Students"
-            onClick={handleRenewal}
-            icon={<i className="fas fa-check text-xl"></i>}
-            styles={`${pageType !== 'members' ? 'hidden' : 'block'} w-full md:w-auto bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700 rounded-sm p-2 transition duration-150 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2`}
-            disabled={pageType !== 'members'} // Disable button based on pageType
-          />
-          {otherButton}
+          {/* Buttons */}
+          <div className="flex flex-row items-center gap-4 md:gap-6 md:justify-end">
+            <FormButton
+              type="button"
+              text="Export to PDF"
+              onClick={handleExportPDFClick}
+              icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>} // Smaller icon size
+              styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+              textClass="hidden md:inline" // Text visible on medium screens and up
+            />
+
+            <FormButton
+              type="button"
+              text="Renew All Students"
+              onClick={handleRenewal}
+              icon={<i className="fas fa-check text-xs md:text-sm"></i>} // Smaller icon size
+              styles={`bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:bg-indigo-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2 ${pageType !== 'members' ? 'hidden' : 'block'}`}
+              disabled={pageType !== 'members'} // Disable button based on pageType
+              textClass={`${pageType !== 'members' ? 'hidden' : 'block'} hidden md:inline`} // Text visible on medium screens and up
+            />
+
+            {otherButton}
+          </div>
         </div>
-      </div>
       <div className={`w-full h-[220px] bg-white ${style}relative overflow-x-auto`}>
         <table className="absolute lg:min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
