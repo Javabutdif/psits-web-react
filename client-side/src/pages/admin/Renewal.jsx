@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "../../App.css";
-import DataTable from "react-data-table-component";
 import backendConnection from "../../api/backendApi";
 import { InfinitySpin } from "react-loader-spinner";
 import axios from "axios";
@@ -8,11 +7,12 @@ import { showToast } from "../../utils/alertHelper";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../enums/commonEnums";
 import ApproveModal from "../../components/admin/ApproveModal";
-import { renewStudent, requestDeletion } from "../../api/admin";
+import { renewStudent } from "../../api/admin";
 import MembershipHeader from "../../components/admin/MembershipHeader";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getUser } from "../../authentication/Authentication";
+import TableComponent from "../../components/Custom/TableComponent";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
@@ -136,72 +136,93 @@ function MembershipRequest() {
 
   const columns = [
     {
-      name: "Name",
-      selector: (row) =>
-        row.first_name + " " + row.middle_name + " " + row.last_name,
+      key: "name",
+      label: "Name",
+      selector: (row) => `${row.first_name} ${row.middle_name} ${row.last_name}`,
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
-          <div>
-            {row.first_name + " " + row.middle_name + " " + row.last_name}
-          </div>
-          <div>RFID: {row.rfid}</div>
+          <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
+          <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
       ),
     },
-
     {
-      name: "Id Number",
+      key: "id_number",
+      label: "Id Number",
       selector: (row) => row.id_number,
       sortable: true,
     },
     {
-      name: "Course",
+      key: "course",
+      label: "Course",
       selector: (row) => row.course,
       sortable: true,
     },
     {
-      name: "Year",
-      selector: (row) => row.year,
-      sortable: true,
-    },
-    {
-      name: "Email Account",
+      key: "email",
+      label: "Email Account",
       selector: (row) => row.email,
       sortable: true,
     },
     {
-      name: "Type",
-      selector: (row) => "Student",
-      sortable: true,
-    },
-    {
+        key: "type",
+        label: "Type",
+        selector: () => "Student", // Static value for all rows
+        sortable: true,
+        cell: () => (
+          <div className="text-center">
+            <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">Student</span>
+          </div>
+        ),
+      },
+   {
       name: "Renewed on",
+      label: "Renewed on",
       selector: (row) => row.renewedOn,
       sortable: true,
       cell: (row) => (
         <div>
-          <p className="text-xs`">{row.renewedOn}</p>
+          <p className="text-xs">{row.renewedOn}</p>
         </div>
       ),
     },
     {
-      name: "Status",
-      selector: (row) => row.membership,
+      key: "status",
+      label: "Status",
+      selector: (row) => row.status,
       sortable: true,
       cell: (row) => (
-        <div>
-          <p className="text-red-600">Unpaid</p>
+        <div className="text-center">
+          <span
+            className={`flex items-center gap-2 ${
+              row.status === "True" ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+            } px-2 py-1 rounded text-xs`}
+          >
+            <i
+              className={`fa ${
+                row.status === "True" ? "fa-check-circle" : "fa-times-circle"
+              } mr-1 ${row.status === "True" ? "text-green-500" : "text-red-500"}`}
+            ></i>
+            {row.status === "True" ? "Paid" : "Unpaid"}
+          </span>
         </div>
       ),
     },
-
     {
       name: "Action",
       cell: (row) => (
         <div className="flex flex-col gap-3">
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className={`relative flex items-center gap-2 px-4 py-2 rounded text-white ${
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-500"
+            }`}
             onClick={() => handleOpenModal(row)}
             disabled={
               position !== "Treasurer" &&
@@ -211,6 +232,17 @@ function MembershipRequest() {
               position !== "President"
             }
           >
+            <i
+              className={`fa ${
+                position !== "Treasurer" &&
+                position !== "Assistant Treasurer" &&
+                position !== "Auditor" &&
+                position !== "Developer" &&
+                position !== "President"
+                  ? "fa-lock"
+                  : "fa-check"
+              }`}
+            ></i>
             {position !== "Treasurer" &&
             position !== "Assistant Treasurer" &&
             position !== "Auditor" &&
@@ -218,73 +250,30 @@ function MembershipRequest() {
             position !== "President"
               ? "Not Authorized"
               : "Approve"}
+            {position !== "Treasurer" &&
+            position !== "Assistant Treasurer" &&
+            position !== "Auditor" &&
+            position !== "Developer" &&
+            position !== "President" && (
+              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs rounded py-1 px-2">
+                You do not have permission to approve.
+              </span>
+            )}
           </button>
         </div>
       ),
-    },
+    }
+    
   ];
 
   return (
     <div>
-      <MembershipHeader />
-      <input
-        type="text"
-        placeholder="Search"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="mb-4 px-4 py-2 border rounded"
+      <TableComponent
+        columns={columns}
+        data={filteredData}
+        pageType={"renewal"}
+        handleExportPDF={handleExportPDF}
       />
-
-      <div className="mb-4">
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded"
-          onClick={handleExportPDF}
-        >
-          Export to PDF
-        </button>
-      </div>
-      {isLoading ? (
-        <div className="flex justify-center items-center h-[60vh]">
-          <InfinitySpin
-            visible={true}
-            width="200"
-            color="#0d6efd"
-            ariaLabel="infinity-spin-loading"
-          />
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          pagination
-          progressPending={loading}
-          customStyles={{
-            headCells: {
-              style: {
-                backgroundColor: "#074873",
-                color: "#F5F5F5",
-                fontWeight: "bold",
-                fontSize: "14px",
-                padding: "1rem",
-                textAlign: "center",
-                border: "block",
-                borderColor: "white",
-              },
-            },
-            cells: {
-              style: {
-                padding: "8px", // Cell padding
-              },
-            },
-            rows: {
-              style: {
-                borderBottom: "1px solid #ddd", // Row border
-              },
-            },
-          }}
-        />
-      )}
-
       {isModalOpen && (
         <ApproveModal
           reference_code={
