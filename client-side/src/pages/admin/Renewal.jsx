@@ -267,7 +267,7 @@ function MembershipRequest() {
   ];
 
   return (
-    <div>
+    <div className="">
       <TableComponent
         columns={columns}
         data={filteredData}

@@ -216,7 +216,7 @@ const Membership = () => {
   ];
 
   return (
-    <div className="container mx-auto">
+    <div className="">
         <TableComponent
           columns={columns}
           data={filteredData}

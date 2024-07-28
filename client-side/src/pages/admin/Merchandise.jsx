@@ -149,7 +149,7 @@ function Merchandise() {
   ];
 
   return (
-    <div className="container container-fluid">
+    <div className="">
       <input
         type="text"
         placeholder="Search"
@@ -158,7 +158,7 @@ function Merchandise() {
         className="mb-4 px-4 py-2 border rounded"
       />
       <div className="pb-3 flex justify-end ">
-        <Link to="/admin/product">
+        <Link to="/admin/merchandise/product">
           <button
             className="p-2 text-white rounded-xl"
             style={{ backgroundColor: "#4398AC" }}

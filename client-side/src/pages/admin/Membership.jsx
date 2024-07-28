@@ -8,7 +8,7 @@ const Membership = () => {
       {/* Container for MembershipTab with responsive width */}
       <div className="w-full flex flex-col">
         <MembershipTab
-          styles="flex max-w-[1440px] flex-wrap gap-4 items-start bg-white shadow-sm rounded-t-sm"
+          styles="flex flex-wrap gap-4 items-start bg-white shadow-sm rounded-t-sm"
         />
       </div>
       <Outlet/>
