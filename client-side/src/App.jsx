@@ -22,6 +22,8 @@ import MembershipRequest from "./pages/admin/MembershipRequest";
 import MembershipHistory from "./pages/admin/MembershipHistory";
 import Delete from "./pages/admin/Delete";
 import Renewal from "./pages/admin/Renewal";
+import Product from "./pages/admin/Product";
+import EditProduct from "./pages/admin/EditProduct";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -76,6 +78,10 @@ const App = () => {
               path="history"
               element={<PrivateRouteAdmin element={MembershipHistory} />}
             />
+            <Route
+              path="product"
+              element={<PrivateRouteAdmin element={Product} />}
+            />
 
             <Route
               path="merchandise"
@@ -88,6 +94,10 @@ const App = () => {
             <Route
               path="renewal"
               element={<PrivateRouteAdmin element={Renewal} />}
+            />
+            <Route
+              path="product/edit"
+              element={<PrivateRouteAdmin element={EditProduct} />}
             />
             <Route
               path="inventory"
