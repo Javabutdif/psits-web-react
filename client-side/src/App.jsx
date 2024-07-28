@@ -41,6 +41,7 @@ import StudentDashboard from "./pages/students/StudentDashboard";
 import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
+import ProductDetail from "./pages/students/ProductDetail";
 import PrivateRouteStudent from "./authentication/privateRouteStudent";
 import AllMembers from "./pages/admin/membership/AllMembers";
 
@@ -71,45 +72,41 @@ const App = () => {
               path="membership/"
               element={<PrivateRouteAdmin element={Membership} />}
             >
-                <Route index element={<PrivateRouteAdmin element={AllMembers} />} />
-                <Route
-                  path="request"
-                  element={<PrivateRouteAdmin element={MembershipRequest} />}
-                />
-                <Route
-                  path="renewal"
-                  element={<PrivateRouteAdmin element={Renewal} />}
-                />
-                <Route
-                  path="delete"
-                  element={<PrivateRouteAdmin element={Delete} />}
-                />
-                <Route
-                  path="history"
-                  element={<PrivateRouteAdmin element={MembershipHistory} />}
-                />
+              <Route
+                index
+                element={<PrivateRouteAdmin element={AllMembers} />}
+              />
+              <Route
+                path="request"
+                element={<PrivateRouteAdmin element={MembershipRequest} />}
+              />
+              <Route
+                path="renewal"
+                element={<PrivateRouteAdmin element={Renewal} />}
+              />
+              <Route
+                path="delete"
+                element={<PrivateRouteAdmin element={Delete} />}
+              />
+              <Route
+                path="history"
+                element={<PrivateRouteAdmin element={MembershipHistory} />}
+              />
             </Route>
-       
+
             <Route
               path="merchandise/"
               element={<PrivateRouteAdmin element={Merchandise} />}
             >
               <Route
-              path="product"
-              element={<PrivateRouteAdmin element={Product} />}
+                path="product"
+                element={<PrivateRouteAdmin element={Product} />}
               >
                 <Route
                   path="edit"
                   element={<PrivateRouteAdmin element={EditProduct} />}
-                /> 
-
-
+                />
               </Route>
-
-
-
-
-
             </Route>
 
             <Route
@@ -155,9 +152,14 @@ const App = () => {
               element={<PrivateRouteStudent element={StudentHistory} />}
             />
             <Route
-              path="resources"
+              path="merchandise"
               element={<PrivateRouteStudent element={StudentMerchandise} />}
             />
+            <Route
+              path="merchandise/:id"
+              element={<PrivateRouteStudent element={ProductDetail} />}
+            />
+
             <Route
               path="orders"
               element={<PrivateRouteStudent element={StudentOrders} />}
