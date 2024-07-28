@@ -45,7 +45,7 @@ const MembershipTab = () => {
 
   useEffect(() => {
     fetchData();
-    const intervalId = setInterval(fetchData, 1000 * 30);
+    const intervalId = setInterval(fetchData, 100);
 
     return () => clearInterval(intervalId);
   }, []);

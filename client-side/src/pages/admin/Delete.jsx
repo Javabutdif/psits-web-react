@@ -165,6 +165,7 @@ useEffect(() => {
             columns={columns}
             data={filteredData}
             handleExportPDF={handleExportPDF}
+            style={" md:h-[300px] lg:h-[350px] xl:h-[310px] "}
             pageType="delete"
           />
           {isModalVisible && (

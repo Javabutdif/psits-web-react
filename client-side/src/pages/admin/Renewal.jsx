@@ -272,6 +272,7 @@ function MembershipRequest() {
         columns={columns}
         data={filteredData}
         pageType={"renewal"}
+        style={" md:h-[300px] lg:h-[350px] xl:h-[310px] "}
         handleExportPDF={handleExportPDF}
       />
       {isModalOpen && (

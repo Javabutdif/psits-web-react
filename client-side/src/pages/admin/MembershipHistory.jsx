@@ -142,6 +142,7 @@ function MembershipHistory() {
       <TableComponent
         columns={columns}
         data={filteredData}
+        style={" md:h-[300px] lg:h-[350px] xl:h-[310px] "}
         handleExportPDF={handleExportPDF}
       />
     </>

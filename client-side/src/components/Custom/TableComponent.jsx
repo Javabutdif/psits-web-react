@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react';
 import FormInput from '../../components/forms/FormInput';
 import FormButton from '../../components/forms/FormButton';
 
-const TableComponent = ({ data = [], columns = [], pageType, handleExportPDF, handleRenewal }) => {
+const TableComponent = ({ data = [], columns = [], style, pageType, handleExportPDF, handleRenewal, otherButton }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(5  ); // Limiting rows per page to 10
+  const [rowsPerPage] = useState(5); // Limiting rows per page to 5
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -61,6 +61,11 @@ const TableComponent = ({ data = [], columns = [], pageType, handleExportPDF, ha
     setCurrentPage(1); // Reset to the first page on search
   };
 
+  // Export PDF handler
+  const handleExportPDFClick = () => {
+    handleExportPDF(filteredDataBySearch);
+  };
+
   return (
     <div className="overflow-x-auto">
       <div className="bg-white p-4 flex flex-col gap-4 md:flex-row md:gap-6 shadow-sm">
@@ -81,7 +86,7 @@ const TableComponent = ({ data = [], columns = [], pageType, handleExportPDF, ha
           <FormButton
             type="button"
             text="Export to PDF"
-            onClick={handleExportPDF}
+            onClick={handleExportPDFClick}
             icon={<i className="fas fa-file-pdf text-xl"></i>}
             styles="w-full md:w-auto bg-gray-200 text-gray-700 hover:bg-gray-300 active:bg-gray-400 rounded-sm p-2 transition duration-150 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center gap-2"
           />
@@ -93,16 +98,17 @@ const TableComponent = ({ data = [], columns = [], pageType, handleExportPDF, ha
             styles={`${pageType !== 'members' ? 'hidden' : 'block'} w-full md:w-auto bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700 rounded-sm p-2 transition duration-150 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2`}
             disabled={pageType !== 'members'} // Disable button based on pageType
           />
+          {otherButton}
         </div>
       </div>
-      <div className="w-full h-[220px] bg-white  md:h-[300px] lg:h-[350px] xl:h-[310px] relative overflow-x-auto">
+      <div className={`w-full h-[220px] bg-white ${style}relative overflow-x-auto`}>
         <table className="absolute lg:min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`px-3 text-center md:text-start md:px-7 py-2 md:py-3 lg:py-4 text-left text-xs  font-medium text-gray-500 uppercase tracking-wider cursor-pointer ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
+                  className={`px-3 text-center md:text-start md:px-7 py-2 md:py-3 lg:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
                   onClick={() => column.sortable && handleSort(column.key)}
                 >
                   {column.label}
@@ -122,7 +128,7 @@ const TableComponent = ({ data = [], columns = [], pageType, handleExportPDF, ha
                   {columns.map((column) => (
                     <td
                       key={`${row.id || rowIndex}-${column.key}`} // Ensure unique keys for each cell
-                      className={`px-2 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 whitespace-nowrap text-xs md:text-sm  font-medium text-gray-900 ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
+                      className={`px-2 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 whitespace-nowrap text-xs md:text-sm font-medium text-gray-900 ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
                     >
                       {column.cell ? column.cell(row) : row[column.key]}
                     </td>
@@ -162,7 +168,6 @@ const TableComponent = ({ data = [], columns = [], pageType, handleExportPDF, ha
           <span className="hidden md:inline">Next</span>
         </button>
       </div>
-
     </div>
   );
 };
