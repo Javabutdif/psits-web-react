@@ -97,7 +97,7 @@ const App = () => {
           </Route>
 
           <Route
-            path="merchandise"
+            path="/admin/merchandise"
             element={<PrivateRouteAdmin element={Merchandise} />}
           />
 
