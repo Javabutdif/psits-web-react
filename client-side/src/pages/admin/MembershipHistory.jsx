@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import DataTable from "react-data-table-component";
-import { InfinitySpin } from "react-loader-spinner";
+import TableComponent from "../../components/Custom/TableComponent";
+import { membershipHistory } from "../../api/admin";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { membershipHistory } from "../../api/admin";
-import MembershipHeader from "../../components/admin/MembershipHeader";
+import { InfinitySpin } from "react-loader-spinner";
 
 function MembershipHistory() {
   const [isLoading, setIsLoading] = useState(false);
@@ -97,112 +96,56 @@ function MembershipHistory() {
 
   const columns = [
     {
-      name: "Reference Id",
-      selector: (row) => row.reference_code,
+      key: "reference_code",
+      label: "Reference ID",
       sortable: true,
     },
     {
-      name: "ID",
-      selector: (row) => row.id_number,
+      key: "id_number",
+      label: "ID",
       sortable: true,
     },
     {
-      name: "Name",
-      selector: (row) => row.name,
+      key: "name",
+      label: "Name",
       sortable: true,
     },
     {
-      name: "Course",
-      selector: (row) => row.course,
+      key: "course",
+      label: "Course",
       sortable: true,
     },
     {
-      name: "Year",
-      selector: (row) => row.year,
+      key: "year",
+      label: "Year",
       sortable: true,
     },
     {
-      name: "Type",
-      selector: (row) => row.type,
+      key: "type",
+      label: "Type",
       sortable: true,
     },
     {
-      name: "Date",
-      selector: (row) => row.date,
+      key: "date",
+      label: "Date",
       sortable: true,
     },
     {
-      name: "Admin",
-      selector: (row) => row.admin,
+      key: "admin",
+      label: "Admin",
       sortable: true,
     },
   ];
 
   return (
-    <div className=" p-4">
-      {isLoading ? (
-        <div className="flex justify-center items-center h-[60vh]">
-          <InfinitySpin
-            visible={true}
-            width="200"
-            color="#0d6efd"
-            ariaLabel="infinity-spin-loading"
-          />
-        </div>
-      ) : (
+    <div className="container">
         <div className="overflow-x-auto">
-          <MembershipHeader />
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="mb-4 px-4 py-2 border rounded"
-          />
-          <div className="mb-4">
-            <button
-              className="bg-green-500 text-white px-4 py-2 rounded"
-              onClick={handleExportPDF}
-            >
-              Export to PDF
-            </button>
-          </div>
-          <DataTable
+          <TableComponent
             columns={columns}
             data={filteredData}
-            pagination
-            customStyles={{
-              table: {
-                style: {
-                  borderRadius: "0.5rem",
-                },
-              },
-              headCells: {
-                style: {
-                  backgroundColor: "#074873",
-                  color: "#F5F5F5",
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                  padding: "1rem",
-                  textAlign: "center",
-                  border: "block",
-                  borderColor: "white",
-                },
-              },
-              cells: {
-                style: {
-                  padding: "8px",
-                },
-              },
-              rows: {
-                style: {
-                  borderBottom: "1px solid #ddd",
-                },
-              },
-            }}
+            handleExportPDF={handleExportPDF}
           />
         </div>
-      )}
     </div>
   );
 }

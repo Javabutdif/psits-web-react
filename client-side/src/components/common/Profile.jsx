@@ -16,11 +16,11 @@ const Profile = () => {
             ? "student"
             : ""
         }/profile`}
-        className="text-xl md:text-2xl"
+        className="text-md md:text-md"
       >
         <i className="fas fa-user"></i>
       </Link>
-      <h3 className="text-sm sm:text-base md:text-lg hidden sm:block">
+      <h3 className="text-sm sm:text-base md:text-sm hidden sm:block">
         {name}
         <span className="text-xs md:text-sm block">{position}</span>
       </h3>

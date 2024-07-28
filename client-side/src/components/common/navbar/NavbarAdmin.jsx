@@ -8,14 +8,14 @@ import { removeStudentData } from "../../../utils/editStudentData";
 import AsideToggle from "../toogles/AsideToggle";
 
 const navItems = [
-  { text: "Dashboard", icon: "fas fa-tachometer-alt" },
-  { text: "Membership", icon: "fas fa-users" },
-  { text: "Merchandise", icon: "fas fa-boxes" },
-  { text: "Inventory", icon: "fas fa-warehouse" },
-  { text: "Orders", icon: "fas fa-shopping-cart" },
-  { text: "Analytics", icon: "fas fa-chart-line" },
-  { text: "Resources", icon: "fas fa-book-open" },
-  { text: "Settings", icon: "fas fa-cog" },
+  { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "/admin/dashboard" },
+  { text: "Membership", icon: "fas fa-users", path: "/admin/membership" },
+  { text: "Merchandise", icon: "fas fa-boxes", path: "/admin/merchandise" },
+  { text: "Inventory", icon: "fas fa-warehouse", path: "/admin/inventory" },
+  { text: "Orders", icon: "fas fa-shopping-cart", path: "/admin/orders" },
+  { text: "Analytics", icon: "fas fa-chart-line", path: "/admin/analytics" },
+  { text: "Resources", icon: "fas fa-book-open", path: "/admin/resources" },
+  { text: "Settings", icon: "fas fa-cog", path: "/admin/settings" },
 ];
 
 function Navbar() {
@@ -61,8 +61,7 @@ function Navbar() {
         <nav className="flex-1 self-stretch mt-4 w-full flex flex-col gap-5">
           <ul className="space-y-6 md:space-y-5 2xl:space-y-7 mb-auto">
             {navItems.map((item, index) => {
-              const isActive =
-                location.pathname === `/admin/${item.text.toLowerCase()}`;
+              const isActive = location.pathname.startsWith(item.path);
               return (
                 <motion.li
                   key={index}
@@ -72,7 +71,7 @@ function Navbar() {
                   }`}
                 >
                   <Link
-                    to={`/admin/${item.text.toLowerCase()}`}
+                    to={item.path}
                     className={`flex ${
                       !menuOpen ? "justify-center" : "ml-14 justify-stretch"
                     } ${
