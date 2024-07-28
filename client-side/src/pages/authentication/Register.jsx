@@ -240,6 +240,7 @@ function Register() {
               value={formData.middle_name}
               onChange={handleChange}
               styles="w-full p-2 border border-gray-300 rounded"
+              errorStyles={""}
               error={errors.middle_name}
             />
             <FormInput

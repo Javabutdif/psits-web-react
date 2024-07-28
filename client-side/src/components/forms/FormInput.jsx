@@ -16,13 +16,15 @@ const FormInput = ({ label, type, id, name, value, onChange, styles, error, pare
 
   return (
     <motion.div className={`${parentStyle} relative flex-1`}>
-      <div className="absolute text-xs text-red-600 -top-5 right-0">
-        {error}
-      </div>
+      {error && (
+        <p className="absolute text-xs text-red-600 -top-5 right-0">
+          {error}
+        </p>
+      )}
 
       <motion.label
         htmlFor={id}
-        className={`absolute left-2 top-2 transition-transform duration-300  ${isFocused || value ? 'bg-white px-1' : ''}`}
+        className={`absolute left-2 top-2 transition-transform duration-300 ${isFocused || value ? 'bg-white px-1' : ''} ${error ? 'text-red-600' : 'text-gray-700'}`}
         animate={{
           scale: isFocused || value ? 0.74 : 1,
           y: isFocused || value ? -20 : 0,
@@ -41,7 +43,9 @@ const FormInput = ({ label, type, id, name, value, onChange, styles, error, pare
         onFocus={handleFocus}
         onBlur={handleBlur}
         disabled={disabled}
-        className={`w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${styles}`}
+        className={`w-full border ${error ? 'border-red-600' : 'border-gray-300'} rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${styles}`}
+        aria-invalid={!!error}
+        aria-describedby={`${id}-error`}
       />
     </motion.div>
   );
