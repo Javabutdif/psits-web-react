@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../../../assets/images/psits-logo.png";
 import { showToast } from "../../../utils/alertHelper";
@@ -8,15 +8,15 @@ import { removeStudentData } from "../../../utils/editStudentData";
 import AsideToggle from "../toogles/AsideToggle";
 
 const navItems = [
-  { text: "Dashboard", icon: "fas fa-tachometer-alt" },
-  { text: "Shop", icon: "fas fa-store" },
-  { text: "Resources", icon: "fas fa-boxes" },
-  { text: "History", icon: "fas fa-history" },
-  { text: "Orders", icon: "fas fa-shopping-cart" },
-  { text: "Settings", icon: "fas fa-cog" }
+  { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "/student/dashboard" },
+  { text: "Membership", icon: "fas fa-users", path: "/student/membership" },
+  { text: "Merchandise", icon: "fas fa-boxes", path: "/student/merchandise" },
+  { text: "Resources", icon: "fas fa-book-open", path: "/student/resources" },
+  { text: "Orders", icon: "fas fa-shopping-cart", path: "/student/orders" },
+  { text: "Settings", icon: "fas fa-cog", path: "/student/settings" }
 ];
 
-function Navbar() {
+function NavbarStudent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,11 +38,11 @@ function Navbar() {
   return (
     <>
       <aside
-        className={`z-30 bg-[#002E48] fixed border-black text-primary min-h-screen py-8 flex flex-col items-center justify-between gap-10 shadow-lg ${
+        className={`z-30 bg-[#002E48] fixed border-black text-primary min-h-screen py-8 flex flex-col items-center gap-2 md:gap:gap-4 lg:gap-6 shadow-lg ${
           menuOpen ? "w-64" : "w-16 sm:w-20"
         } transition-width duration-300 ease-out`}
       >
-        <Link to={"/admin/dashboard"} className="self-center" onClick={handleCloseToggle}>
+        <Link to={"/student/dashboard"} className="self-center" onClick={handleCloseToggle}>
           <img
             src={logo}
             alt="PSITS Logo"
@@ -51,43 +51,56 @@ function Navbar() {
         </Link>
 
         <AsideToggle onClick={handleToggle} menuOpen={menuOpen} />
-        
-        <nav className="flex-1 self-stretch mt-4 w-full flex flex-col gap-10">
-        <ul className="space-y-6 md:space-y-5 2xl:space-y-7 mb-auto">
+
+        <nav className="mt-4 w-full flex flex-col gap-10">
+          <ul className="space-y-6 md:space-y-5 2xl:space-y-7 mb-auto">
             {navItems.map((item, index) => {
-              const isActive = location.pathname === `/student/${item.text.toLowerCase()}`;
+              const isActive = location.pathname === item.path;
               return (
                 <motion.li
                   key={index}
                   onClick={handleCloseToggle}
-                  className={`relative cursor-pointer text-center transition-opacity duration-200 ${isActive ? 'font-bold' : ''}`}
+                  className={`relative cursor-pointer text-center transition-opacity duration-200 ${
+                    isActive ? "font-bold" : ""
+                  }`}
                 >
                   <Link
-                    to={`/student/${item.text.toLowerCase()}`}
-                    className={`flex ${!menuOpen ? 'justify-center' : 'ml-14 justify-stretch'} ${isActive ? 'text-black' : 'text-primary'} items-center space-x-5`}
+                    to={item.path}
+                    className={`flex ${
+                      !menuOpen ? "justify-center" : "ml-14 justify-stretch"
+                    } ${
+                      isActive ? "text-black" : "text-primary"
+                    } items-center space-x-2 sm:space-x-3 md:space-x-5`}
                   >
-                    <i className={`${item.icon} text-xl md:text-2xl block mb-1`} />
+                    <i
+                      className={`${item.icon} text-lg sm:text-xl md:text-2xl block mb-1`}
+                    />
                     <motion.span
-                      initial={{ opacity: 0, x: -40 }}
-                      animate={{ opacity: menuOpen ? 1 : 0, x: menuOpen ? 0 : -40 }}
-                      transition={{ duration: 0.2 }}
-                      className={`left-16 text-sm md:text-lg ${menuOpen ? "block" : "hidden"} transition-all duration-500 ${isActive ? 'text-black' : ''}`}
+                       initial={{ opacity: 0, x: -40 }}
+                       animate={{
+                         opacity: menuOpen ? 1 : 0,
+                         x: menuOpen ? 0 : -40,
+                       }}
+                       transition={{ duration: 0.2 }}
+                       className={`left-16 text-xs sm:text-sm md:text-lg ${
+                         menuOpen ? "block" : "hidden"
+                       } transition-all duration-500 ${
+                         isActive ? "text-black" : ""
+                       }`}
                     >
                       {item.text}
                     </motion.span>
-                    <span className={`absolute -z-10 -top-2 py-5 pl-5 rounded-l-full -left-[0.70rem] ${isActive ? 'bg-secondary' : ''} ${menuOpen ? 'w-[91.9%] -left-[0rem]' : 'w-[89%]'}`} />
+                    <span className={`absolute -z-10 sm:-top-1 py-4 rounded-l-full w-[96.4%] sm:w-[95.2%] md:w-[91.9%] sm:py-4 left-0 ${
+                        isActive ? "bg-secondary" : ""
+                      } `} />
                   </Link>
                 </motion.li>
               );
             })}
           </ul>
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
             onClick={handleLogoutClick}
-            className={`flex space-x-3 ${
-              menuOpen ? "-ml-[3rem]" : "-ml-1"
-            } self-center space-x-5 transition-transform duration-500`}
+            className={`relative cursor-pointer text-center mt-10 transition-opacity duration-200`}
           >
             <i className="text-xl md:text-2xl fas fa-sign-out-alt"></i>
             <motion.span
@@ -112,4 +125,4 @@ function Navbar() {
   );
 }
 
-export default Navbar;
+export default NavbarStudent;

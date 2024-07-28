@@ -138,15 +138,13 @@ function MembershipHistory() {
   ];
 
   return (
-    <div className="container">
-        <div className="overflow-x-auto">
-          <TableComponent
-            columns={columns}
-            data={filteredData}
-            handleExportPDF={handleExportPDF}
-          />
-        </div>
-    </div>
+    <>
+      <TableComponent
+        columns={columns}
+        data={filteredData}
+        handleExportPDF={handleExportPDF}
+      />
+    </>
   );
 }
 

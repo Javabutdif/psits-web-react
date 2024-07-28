@@ -9,7 +9,7 @@ import {
   totalHistory,
 } from "../../api/admin";
 
-const MembershipTab = ({ styles }) => {
+const MembershipTab = () => {
   const [counts, setCounts] = useState({
     allMembers: 0,
     request: 0,
@@ -18,7 +18,7 @@ const MembershipTab = ({ styles }) => {
     history: 0,
   });
 
-  const location = useLocation(); // Get the current location
+  const location = useLocation();
   const currentPath = location.pathname;
 
   const fetchData = async () => {
@@ -44,66 +44,43 @@ const MembershipTab = ({ styles }) => {
   };
 
   useEffect(() => {
-    fetchData(); // Fetch data on component mount
+    fetchData();
+    const intervalId = setInterval(fetchData, 1000 * 30);
 
-    const intervalId = setInterval(fetchData, 100); // Poll for new data every 30 seconds
-
-    return () => clearInterval(intervalId); // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
-  // Determine if a tab is active
   const getTabClassName = (path) => {
     return currentPath === path
-      ? "w-full py-2 text-gray-700 bg-gray-200 rounded-md flex items-center justify-center"
-      : "w-full py-2 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none flex items-center justify-center";
+      ? "w-full py-2 text-gray-700 bg-gray-200 rounded-md flex items-center justify-center text-xs md:text-sm lg:text-base"
+      : "w-full py-2 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none flex items-center justify-center text-xs md:text-sm lg:text-base";
   };
 
+  const tabs = [
+    { path: "/admin/membership", text: `All Members ${counts.allMembers}`, icon: "fas fa-users" },
+    { path: "/admin/membership/request", text: `Request ${counts.request}`, icon: "fas fa-hand-paper" },
+    { path: "/admin/membership/renewal", text: `Renewals ${counts.renewals}`, icon: "fas fa-refresh" },
+    { path: "/admin/membership/delete", text: `Deleted ${counts.deleted}`, icon: "fas fa-trash-alt" },
+    { path: "/admin/membership/history", text: `History ${counts.history}`, icon: "fas fa-history" },
+  ];
+
   return (
-    <div className={`${styles} flex flex-wrap items-center bg-white rounded-t-lg p-2 shadow-sm text-sm`}>
-      <Link to="/admin/membership" className="flex-1 min-w-[120px]">
-        <FormButton
-          type="button"
-          text={`All Members ${counts.allMembers}`}
-          icon={<i className="fas fa-users text-lg mr-2"></i>}  // Added margin-right for spacing
-          styles={getTabClassName("/admin/membership/members")}
-        />
-      </Link>
-      <div className="border-r border-gray-300 h-6 hidden md:block mx-2"></div>
-      <Link to="/admin/membership/request" className="flex-1 min-w-[120px]">
-        <FormButton
-          type="button"
-          text={`Request ${counts.request}`}
-          icon={<i className="fas fa-hand-paper text-lg mr-2"></i>}  // Added margin-right for spacing
-          styles={getTabClassName("/admin/membership/request")}
-        />
-      </Link>
-      <div className="border-r border-gray-300 h-6 hidden md:block mx-2"></div>
-      <Link to="/admin/membership/renewal" className="flex-1 min-w-[120px]">
-        <FormButton
-          type="button"
-          text={`Renewals ${counts.renewals}`}
-          icon={<i className="fas fa-refresh text-lg mr-2"></i>}  // Added margin-right for spacing
-          styles={getTabClassName("/admin/membership/renewal")}
-        />
-      </Link>
-      <div className="border-r border-gray-300 h-6 hidden md:block mx-2"></div>
-      <Link to="/admin/membership/delete" className="flex-1 min-w-[120px]">
-        <FormButton
-          type="button"
-          text={`Deleted ${counts.deleted}`}
-          icon={<i className="fas fa-trash-alt text-lg mr-2"></i>}  // Added margin-right for spacing
-          styles={getTabClassName("/admin/membership/delete")}
-        />
-      </Link>
-      <div className="border-r border-gray-300 h-6 hidden md:block mx-2"></div>
-      <Link to="/admin/membership/history" className="flex-1 min-w-[120px]">
-        <FormButton
-          type="button"
-          text={`History ${counts.history}`}
-          icon={<i className="fas fa-history text-lg mr-2"></i>}  // Added margin-right for spacing
-          styles={getTabClassName("/admin/membership/history")}
-        />
-      </Link>
+    <div className="max-w-[1000px] grid grid-flow-row sm:grid-flow-col gap-1 bg-white rounded-t-lg p-2 shadow-sm text-xs md:text-sm lg:text-base">
+      {tabs.map((tab, index) => (
+        <React.Fragment key={index}>
+          <Link to={tab.path} className="flex-1 min-w-[100px]">
+            <FormButton
+              type="button"
+              text={tab.text}
+              icon={<i className={`${tab.icon} text-lg mr-1`}></i>}
+              styles={getTabClassName(tab.path)}
+            />
+          </Link>
+          {index < tabs.length - 1 && (
+            <div className="border-r border-gray-300 h-6 hidden md:block mx-1"></div>
+          )}
+        </React.Fragment>
+      ))}
     </div>
   );
 };

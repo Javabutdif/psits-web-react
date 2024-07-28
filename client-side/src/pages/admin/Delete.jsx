@@ -159,7 +159,7 @@ useEffect(() => {
   ];
 
   return (
-    <div className="container container-fluid">
+    <div className="">
         <>
           <TableComponent
             columns={columns}

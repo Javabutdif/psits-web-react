@@ -70,65 +70,73 @@ const App = () => {
             <Route
               path="membership/"
               element={<PrivateRouteAdmin element={Membership} />}
-            />
-
+            >
+                <Route index element={<PrivateRouteAdmin element={AllMembers} />} />
+                <Route
+                  path="request"
+                  element={<PrivateRouteAdmin element={MembershipRequest} />}
+                />
+                <Route
+                  path="renewal"
+                  element={<PrivateRouteAdmin element={Renewal} />}
+                />
+                <Route
+                  path="delete"
+                  element={<PrivateRouteAdmin element={Delete} />}
+                />
+                <Route
+                  path="history"
+                  element={<PrivateRouteAdmin element={MembershipHistory} />}
+                />
+            </Route>
+       
             <Route
+              path="merchandise/"
+              element={<PrivateRouteAdmin element={Merchandise} />}
+            >
+              <Route
               path="product"
               element={<PrivateRouteAdmin element={Product} />}
-            />
+              >
+                <Route
+                  path="edit"
+                  element={<PrivateRouteAdmin element={EditProduct} />}
+                /> 
 
-            <Route index element={<PrivateRouteAdmin element={AllMembers} />} />
+
+              </Route>
+
+
+
+
+
+            </Route>
+
             <Route
-              path="request"
-              element={<PrivateRouteAdmin element={MembershipRequest} />}
+              path="inventory"
+              element={<PrivateRouteAdmin element={Inventory} />}
             />
             <Route
-              path="history"
-              element={<PrivateRouteAdmin element={MembershipHistory} />}
+              path="orders"
+              element={<PrivateRouteAdmin element={Orders} />}
             />
             <Route
-              path="delete"
-              element={<PrivateRouteAdmin element={Delete} />}
+              path="analytics"
+              element={<PrivateRouteAdmin element={Analytics} />}
             />
             <Route
-              path="renewal"
-              element={<PrivateRouteAdmin element={Renewal} />}
+              path="resources"
+              element={<PrivateRouteAdmin element={Resources} />}
             />
+            <Route
+              path="settings"
+              element={<PrivateRouteAdmin element={Settings} />}
+            />
+            <Route
+              path="profile"
+              element={<PrivateRouteAdmin element={Profile} />}
+            ></Route>
           </Route>
-
-          <Route
-            path="/admin/merchandise"
-            element={<PrivateRouteAdmin element={Merchandise} />}
-          />
-
-          <Route
-            path="product/edit"
-            element={<PrivateRouteAdmin element={EditProduct} />}
-          />
-          <Route
-            path="inventory"
-            element={<PrivateRouteAdmin element={Inventory} />}
-          />
-          <Route
-            path="orders"
-            element={<PrivateRouteAdmin element={Orders} />}
-          />
-          <Route
-            path="analytics"
-            element={<PrivateRouteAdmin element={Analytics} />}
-          />
-          <Route
-            path="resources"
-            element={<PrivateRouteAdmin element={Resources} />}
-          />
-          <Route
-            path="settings"
-            element={<PrivateRouteAdmin element={Settings} />}
-          />
-          <Route
-            path="profile"
-            element={<PrivateRouteAdmin element={Profile} />}
-          ></Route>
 
           <Route
             path="/student/"
