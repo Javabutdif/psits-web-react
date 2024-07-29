@@ -1,39 +1,38 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-const FormInput = ({ label, type, id, name, value, onChange, styles, error, parentStyle, disabled }) => {
+const FormInput = ({ label, type, id, name, value, onChange, styles, error, parentStyle, labelStyle, inputStyle, disabled }) => {
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
-
+  const handleFocus = () => setIsFocused(true);
   const handleBlur = () => {
-    if (!value) {
-      setIsFocused(false);
-    }
+    if (!value) setIsFocused(false);
   };
 
   return (
-    <motion.div className={`${parentStyle} relative flex-1`}>
+    <motion.div className={`relative flex-1  ${parentStyle}`}>
+      {/* Error message */}
       {error && (
-        <p className="absolute text-xs text-red-600 -top-5 right-0">
+        <p className="absolute  text-xs text-red-600 -bottom-5 left-0">
           {error}
         </p>
       )}
 
+      {/* Label */}
       <motion.label
         htmlFor={id}
-        className={`absolute left-2 top-2 transition-transform duration-300 ${isFocused || value ? 'bg-white px-1' : ''} ${error ? 'text-red-600' : 'text-gray-700'}`}
+        className={`absolute ${labelStyle} top-2 left-2 text-gray-700 transition-transform duration-300 ease-in-out ${isFocused || value ? 'text-black bg-white scale-75 -translate-y-4' : ''} ${error ? 'text-red-600' : ''}`}
         animate={{
-          scale: isFocused || value ? 0.74 : 1,
+          scale: isFocused || value ? 0.75 : 1,
           y: isFocused || value ? -20 : 0,
+          opacity: isFocused || value ? 0.6 : 1,
         }}
         transition={{ duration: 0.3 }}
       >
         {label}
       </motion.label>
 
+      {/* Input field */}
       <input
         type={type}
         id={id}
@@ -43,9 +42,10 @@ const FormInput = ({ label, type, id, name, value, onChange, styles, error, pare
         onFocus={handleFocus}
         onBlur={handleBlur}
         disabled={disabled}
-        className={`w-full border ${error ? 'border-red-600' : 'border-gray-300'} rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${styles}`}
+        className={`${inputStyle} w-full px-3 py-2 border ${error ? 'border-red-600' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${styles}`}
         aria-invalid={!!error}
         aria-describedby={`${id}-error`}
+        autoComplete="off"
       />
     </motion.div>
   );

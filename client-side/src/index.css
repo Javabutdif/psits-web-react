@@ -27,4 +27,19 @@
     @apply min-h-screen min-w-[320px] font-montserrat  bg-secondary scroll-smooth
   }
 
- 
+ /* styles.css */
+::-webkit-scrollbar {
+  @apply w-1 h-1
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-primary
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-xl
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300
+}
