@@ -7,7 +7,6 @@ const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 const token_key = process.env.JWT_SECRET;
-
 router.post("/login", async (req, res) => {
   const { id_number, password } = req.body;
 
@@ -25,27 +24,14 @@ router.post("/login", async (req, res) => {
 
       const passwordMatch = await bcrypt.compare(password, student.password);
 
-      if (passwordMatch && student.membership === "Pending") {
-        return res.status(400).json({
-          message:
-            "You must pay the membership fee of ₱50 at the PSITS Office.",
-        });
-      } else if (
-        passwordMatch &&
-        student.membership === "Accepted" &&
-        student.status === "False"
-      ) {
+      if (passwordMatch && student.status === "False") {
         return res
           .status(400)
           .json({ message: "Your account has been deleted!" });
-      } else if (
-        passwordMatch &&
-        student.membership === "Accepted" &&
-        student.status === "True"
-      ) {
+      } else if (passwordMatch && student.status === "True") {
         user = student;
         role = "Student";
-      } else if (!passwordMatch) {
+      } else {
         return res
           .status(400)
           .json({ message: "Invalid ID number or password" });
@@ -56,36 +42,22 @@ router.post("/login", async (req, res) => {
       if (passwordMatch) {
         user = admin;
         role = "Admin";
-      } else if (!passwordMatch) {
+      } else {
         return res
           .status(400)
           .json({ message: "Invalid ID number or password" });
       }
     }
 
-    const token = jwt.sign(
-      {
-        id_number: user.id_number,
-        name:
-          role === "Admin"
-            ? user.name
-            : `${user.first_name} ${user.middle_name} ${user.last_name}`,
-        role,
-        position: role === "Admin" ? user.position : "N/A",
-        email: role === "Student" ? user.email : "",
-        course: user.course,
-        year: user.year,
-      },
-      token_key,
-      { expiresIn: role === "Admin" ? "1h" : "30m" }
-    );
+    const token = jwt.sign({ user, role }, token_key, {
+      expiresIn: "1h",
+    });
 
     return res.json({ token, message: "Login successful" });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ message: "An error occurred", error });
   }
 });
-
-
 
 module.exports = router;

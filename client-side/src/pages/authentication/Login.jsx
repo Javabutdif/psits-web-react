@@ -12,7 +12,7 @@ import {
   resetAttemptAuthentication,
   getTimeout,
   getAttemptAuthentication,
-  getInformationData,
+  getRoute,
 } from "../../authentication/Authentication";
 
 const Login = () => {
@@ -122,10 +122,9 @@ const Login = () => {
     whileHover: { scale: 0.98 },
     whileTap: { scale: 1 },
   };
-  if (getInformationData() !== null) {
-    const [id, name, email, course, year, role, position] =
-      getInformationData();
-    navigate(`/${role.toLowerCase()}/dashboard`);
+
+  if (getRoute() !== null) {
+    navigate(`/${getRoute().toLowerCase()}/dashboard`);
   }
 
   return (
