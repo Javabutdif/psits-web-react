@@ -25,6 +25,26 @@ router.get("/students", async (req, res) => {
   }
 });
 
+router.put("/students/request", async (req, res) => {
+  try {
+    const { id_number } = req.body;
+
+    await Student.updateOne(
+      { id_number: id_number },
+      {
+        $set: {
+          membership: "Pending",
+        },
+      }
+    );
+    res.status(200).json({ message: "Request submitted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error submitting request", error: error.message });
+  }
+});
+
 router.get("/students/deleted-students", async (req, res) => {
   try {
     const students = await Student.find({

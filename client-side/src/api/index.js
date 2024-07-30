@@ -17,6 +17,7 @@ export const login = async (formData) => {
     );
 
     const { token, message } = response.data;
+
     const data = jwtDecode(token);
     if (data.role === "Admin" || data.role === "Student") {
       showToast("success", message || "Signed in successfully");
