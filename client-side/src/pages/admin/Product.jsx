@@ -136,6 +136,7 @@ function Product({ handleCloseAddProduct }) {
     setPreviewData(formData);
     setShowPreview(true);
   };
+
 const handleConfirm = async () => {
   const data = new FormData();
 
@@ -158,6 +159,7 @@ const handleConfirm = async () => {
     showToast("error", error.message);
   }
 };
+
 
   const handleSizeClick = (size) => {
     setFormData((prevState) => {

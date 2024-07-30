@@ -128,7 +128,6 @@ useEffect(() => {
       cell: (row) => (
         <div className="text-xs">
           <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
-          <div>RFID: {row.rfid}</div>
         </div>
       ),
     },

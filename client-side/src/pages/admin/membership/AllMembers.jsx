@@ -9,6 +9,10 @@ import { showToast } from "../../../utils/alertHelper";
 import { InfinitySpin } from "react-loader-spinner";
 import { getUser } from "../../../authentication/Authentication";
 import TableComponent from "../../../components/Custom/TableComponent";
+import FormButton from "../../../components/forms/FormButton";
+import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
+
+
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -220,11 +224,27 @@ const Membership = () => {
         <TableComponent
           columns={columns}
           data={filteredData}
-          onDelete={showModal}
-          style={" md:h-[300px] lg:h-[350px] xl:h-[310px] "}
-          handleExportPDF={handleExportPDF}
-          handleRenewal={handleRenewal}
-          pageType={"members"}
+          customButtons={(
+            <ButtonsComponent>
+              <FormButton
+                type="button"
+                text="Export to PDF"
+                onClick={handleExportPDF}
+                icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
+                styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+                textClass="hidden md:inline"
+              />
+              <FormButton
+                type="button"
+                text="Renew All Students"
+                onClick={handleRenewal}
+                icon={<i className="fas fa-check text-xs md:text-sm"></i>}
+                styles="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:bg-indigo-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2"
+                textClass="hidden md:inline"
+              />
+              {/* Add any other custom buttons here */}
+            </ButtonsComponent>
+          )}
         />
       {isModalVisible && (
         <ConfirmationModal
