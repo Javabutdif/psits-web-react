@@ -68,7 +68,7 @@ const TableComponent = ({ data = [], columns = [], style, pageType, handleExport
 
   return (
     <div className="overflow-x-auto">
-      <div className="bg-white p-4 flex flex-row gap-4 md:gap-6 shadow-sm">
+      <div className="bg-white px-2  p-4 flex flex-row gap-4 md:gap-6 shadow-sm">
           {/* Form Input */}
           <FormInput
             label="Search"

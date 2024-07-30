@@ -5,11 +5,13 @@ import { merchandise } from "../../api/admin";
 import TableComponent from '../../components/Custom/TableComponent'; // Adjust the import path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import Product from "./Product";
 
 function Merchandise() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isAddProductModal, setIsAddProductModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   const fetchData = async () => {
@@ -61,6 +63,10 @@ function Merchandise() {
     setSelectedItem(item);
     setIsViewModalOpen(true);
   };
+
+  const handleOpenAddProduct = () => setIsAddProductModal(true)
+  const handleCloseAddProduct = () =>  setIsAddProductModal(false)
+  
 
   const columns = [
     {
@@ -129,28 +135,29 @@ function Merchandise() {
 
   return (
     <>
-  
-  
-        <TableComponent
+      <TableComponent
           data={data}
           columns={columns}
           handleExportPDF={handleExportPDF}
           style={" h-[380px] md:h-[440px] lg:h-[480px] xl:h-[460px] "}
           otherButton={(
-            <Link to="/admin/merchandise/product">
-              <button className="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2">
+              <button 
+                onClick={handleOpenAddProduct}
+                className="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2">
                 {/* Icon always visible */}
                 <i className="fas fa-cart-plus text-sm text-base"></i>
                 {/* Text hidden on small screens */}
+
                 <span className="hidden md:inline ml-2">Add Product</span>
               </button>
-            </Link>
-
           )}
-          pageType="merchandise" // Set the page type accordingly
-        />
+      />
+        { isAddProductModal && (
+          <Product handleCloseAddProduct={handleCloseAddProduct}/>
+        )}
+
         {isViewModalOpen && selectedItem && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
               <h2 className="text-2xl font-semibold mb-4 text-gray-800">Product Details</h2>
               <div className="flex justify-center mb-4">
