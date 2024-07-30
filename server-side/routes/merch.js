@@ -9,6 +9,7 @@ const AWS = require("aws-sdk");
 require("dotenv").config();
 
 const router = express.Router();
+
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -25,12 +26,12 @@ const upload = multer({
       cb(null, { fieldName: file.fieldname });
     },
     key: (req, file, cb) => {
-      cb(null, "Merch" + "-" + file.originalname);
+      cb(null, `merchandise/${Date.now()}_${file.originalname}`);
     },
   }),
 });
 
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", upload.array("images", 3), async (req, res) => {
   const {
     name,
     price,
@@ -46,7 +47,8 @@ router.post("/", upload.single("image"), async (req, res) => {
     control,
   } = req.body;
 
-  const imageUrl = req.file.location;
+  // Get the URLs of the uploaded images
+  const imageUrl = req.files.map((file) => file.location);
 
   try {
     const newMerch = new Merch({
@@ -62,7 +64,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       end_date,
       category,
       control,
-      imageUrl, // Save the image URL to the database
+      imageUrl, // Save the array of image URLs to the database
     });
 
     await newMerch.save();
