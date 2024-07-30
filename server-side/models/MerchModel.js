@@ -65,7 +65,7 @@ const merchSchema = new Schema(
       required: true,
     },
     imageUrl: {
-      type: String,
+      type: Array,
     },
     sales_data: {
       type: salesDataSchema,
