@@ -5,7 +5,7 @@ const Posts = ({ posts }) => {
     console.log(posts)
 
   return (
-    <div className="flex flex-col gap-4 max-w-5xl">
+    <div className="flex w-full flex-col gap-4 max-w-5xl">
       
       {Object.values(posts).map((post, index) => (
           <PostCard post={post} key={index}  />

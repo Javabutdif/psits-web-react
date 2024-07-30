@@ -5,12 +5,14 @@ function ProductDetail() {
   const { state } = useLocation();
   const { _id } = useParams();
   const product = state?.product;
+
+  // Ensure product is defined before accessing its properties
   const sizes =
-    product.selectedSizes && product.selectedSizes.length > 0
+    product && product.selectedSizes && product.selectedSizes.length > 0
       ? product.selectedSizes[0].split(",")
       : [];
   const variations =
-    product.selectedVariations && product.selectedVariations.length > 0
+    product && product.selectedVariations && product.selectedVariations.length > 0
       ? product.selectedVariations[0].split(",")
       : [];
 
@@ -20,8 +22,7 @@ function ProductDetail() {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(null);
-  console.log(selectedSize);
-  console.log(quantity);
+
   const increaseQuantity = () => {
     setQuantity((prevQuantity) => prevQuantity + 1);
   };

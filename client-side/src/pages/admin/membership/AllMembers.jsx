@@ -53,7 +53,13 @@ const Membership = () => {
   }, [searchQuery, data]);
 
   const handleExportPDF = (filteredData) => {
+    if (!filteredData || filteredData.length === 0) {
+      alert("No data to export");
+      return;
+    }
+  
     const doc = new jsPDF();
+    
     autoTable(doc, {
       head: [["Name", "Id Number", "Course", "Email Account", "Type"]],
       body: filteredData.map((item) => [
@@ -61,9 +67,9 @@ const Membership = () => {
         item.id_number,
         item.course,
         item.email,
-        item.type, // Ensure the correct type is used
+        item.type,
       ]),
-      startY: 20,
+      startY: 20, // Ensure the table starts after 20 units from the top
       styles: {
         fontSize: 10,
         cellPadding: 2,
@@ -75,9 +81,10 @@ const Membership = () => {
       },
       margin: { top: 10 },
     });
+  
     doc.save("students.pdf");
   };
-
+  
   const showModal = (row) => {
     setIsModalVisible(true);
     setStudentIdToBeDeleted(row.id_number);

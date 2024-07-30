@@ -18,8 +18,8 @@ export default {
         primary: "#fffcf2",
       },
       width: {
-        header: "calc(100% - 5rem)",
-        "header-sm": "calc(100% - 6.7rem)",
+        header: "calc(100% - 7rem)",
+        "header-sm": "calc(100% - 5rem)",
       },
       minHeight: {
 

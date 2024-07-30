@@ -6,6 +6,7 @@ import TableComponent from '../../components/Custom/TableComponent'; // Adjust t
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Product from "./Product";
+import FormButton from "../../components/forms/FormButton";
 
 function Merchandise() {
   const [data, setData] = useState([]);
@@ -111,24 +112,28 @@ function Merchandise() {
       key: "actions",
       label: "Actions",
       cell: (row) => (
-        <div className="flex gap-2">
-          <Link
-            to={{
-              pathname: "/admin/product/edit",
-              state: { product: row },
-            }}
-          >
-            <button className="bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition duration-150 text-xs">
-              Edit
-            </button>
-          </Link>
-          <button
-            className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-400 transition duration-150 text-xs"
-            onClick={() => handleView(row)}
-          >
-            View
-          </button>
-        </div>
+          <div className="flex gap-2">
+            <FormButton 
+              type="button"
+              text="View"
+              onClick={() => handleView(row)} // Ensure the onClick is defined
+              styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+              icon={<i className="fas fa-eye text-sm text-base"></i>} // Use a relevant icon for "View"
+              textClass="ml-2 md:inline"
+              iconClass="text-sm text-base"
+            />
+            
+            <FormButton 
+              type="button"
+              text="Delete"
+              // onClick={() => handleDelete(row)} // Updated handler for delete action
+              styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+              icon={<i className="fas fa-trash text-sm text-base"></i>} // Use a relevant icon for "Delete"
+              textClass="ml-2 md:inline"
+              iconClass="text-sm text-base"
+            />
+          </div>
+
       ),
     },
   ];
@@ -140,16 +145,17 @@ function Merchandise() {
           columns={columns}
           handleExportPDF={handleExportPDF}
           style={" h-[380px] md:h-[440px] lg:h-[480px] xl:h-[460px] "}
-          otherButton={(
-              <button 
-                onClick={handleOpenAddProduct}
-                className="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2">
-                {/* Icon always visible */}
-                <i className="fas fa-cart-plus text-sm text-base"></i>
-                {/* Text hidden on small screens */}
-
-                <span className="hidden md:inline ml-2">Add Product</span>
-              </button>
+          customButtons={(
+            <FormButton 
+              type="button"
+              text="Add Product"
+              onClick={handleOpenAddProduct}
+                styles="bg-indigo-100 text-violet-800 hover:bg-violet-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+              icon={<i className="fas fa-cart-plus text-sm text-base"></i>}
+              textClass="ml-2 md:inline"
+              /* Ensure that textClass is responsive */
+              iconClass="text-sm text-base" // If you need to apply specific styles to the icon
+            />
           )}
       />
         { isAddProductModal && (

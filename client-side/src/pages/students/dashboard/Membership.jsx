@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { getId } from "../../../authentication/Authentication";
 import { requestMembership } from "../../../api/students";
+import getMembership from '../../../assets/images/get-membership.png'
 
 function Membership() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,22 +21,26 @@ function Membership() {
   };
 
   return (
-    <div className="bg-blue-500 p-8 rounded-lg shadow-lg text-center">
-      <h1 className="text-3xl text-white font-bold mb-4">
+    <div className="w-full self-start relative overflow-hidden bg-blue-500 p-4 md:p-8 rounded-lg shadow-lg text-center  ">
+      <img src={getMembership} alt="" className="absolute h-full opacity-35 -z-[0.8]" />
+      <div className="relative z-30">
+        
+      <h1 className="text-xl md:text-3xl text-white font-bold mb-4">
         Join Our Membership Program
       </h1>
-      <p className="text-white text-lg mb-6">
+      <p className="text-white text-sm md:text-lg mb-6">
         Get exclusive benefits and stay updated with our latest offers.
       </p>
       <button
-        className="bg-white text-blue-500 font-semibold px-6 py-2 rounded hover:bg-gray-100 transition"
+        className="bg-white text-sm px-4 text-blue-500 font-semibold md:px-6 py-2 rounded hover:bg-gray-100 transition"
         onClick={toggleModal}
       >
         Get Membership
       </button>
 
+      </div>
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg text-center">
             <h2 className="text-2xl font-bold mb-4">Request Membership</h2>
             <p className="text-lg mb-6">

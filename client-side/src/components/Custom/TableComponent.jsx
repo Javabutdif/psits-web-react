@@ -69,12 +69,12 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto overflow-hidden">
       <div className="bg-white px-2 p-4 flex flex-row gap-4 md:gap-6 shadow-sm">
         {customSearch || <SearchComponent searchQuery={searchQuery} handleSearchChange={handleSearchChange} />}
         {customButtons || <ButtonsComponent />}
       </div>
-      <div className={`w-full h-[220px] bg-white ${style}relative overflow-x-auto`}>
+      <div className={`w-full h-[220px] overflow-hidden bg-white ${style} overflow-scroll relative`}>
         <table className="absolute lg:min-w-full divide-y divide-gray-200">
           <TableHeader columns={columns} sortConfig={sortConfig} handleSort={handleSort} />
           <TableBody columns={columns} currentRows={currentRows} />

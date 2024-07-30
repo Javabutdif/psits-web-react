@@ -8,11 +8,20 @@ import { getMembershipStatus } from "../../authentication/Authentication";
 
 function StudentDashboard() {
   return (
-    <div className="flex justify-between gap-8 flex-col-reverse md:flex-row">
-      <Posts posts={posts} />
-      <div className="md:space-y-4 lg:max-w-sm px-2 sm:px-4 flex sm:items-center md:items-stretch  gap-4 flex-col sm:flex-row md:flex-col">
-        <OperationHours />
+    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 ">
+      {/* Events Section */}
+      <div className="col-start-1 col-span-1 ">
         <Events events={events} />
+      </div>
+
+      {/* Posts Section */}
+      <div className="roww-start-4 col-span-1 md:col-span-2  row-span-2 lg:col-span-2">
+        <Posts posts={posts} />
+      </div>
+
+      {/* Operation Hours and Membership Banner */}
+      <div className="row-start-1  w-full lg:row-auto row-span-4 lg:col-span-1 flex flex-col gap-4">
+        <OperationHours />
         {getMembershipStatus() === "None" && <MembershipBanner />}
       </div>
     </div>

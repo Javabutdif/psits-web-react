@@ -9,7 +9,6 @@ import AsideToggle from "../toogles/AsideToggle";
 
 const navItems = [
   { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "/student/dashboard" },
-  { text: "Membership", icon: "fas fa-users", path: "/student/membership" },
   { text: "Merchandise", icon: "fas fa-boxes", path: "/student/merchandise" },
   { text: "Resources", icon: "fas fa-book-open", path: "/student/resources" },
   { text: "Orders", icon: "fas fa-shopping-cart", path: "/student/orders" },
@@ -38,7 +37,7 @@ function NavbarStudent() {
   return (
     <>
       <aside
-        className={`z-30 bg-[#002E48] fixed border-black text-primary min-h-screen py-8 flex flex-col items-center gap-2 md:gap:gap-4 lg:gap-6 shadow-lg ${
+        className={`z-50 bg-[#002E48] fixed border-black text-primary min-h-screen py-8 flex flex-col items-center gap-2 md:gap:gap-4 lg:gap-6 shadow-lg ${
           menuOpen ? "w-64" : "w-16 sm:w-20"
         } transition-width duration-300 ease-out`}
       >
@@ -100,7 +99,7 @@ function NavbarStudent() {
           </ul>
           <motion.button
             onClick={handleLogoutClick}
-            className={`relative cursor-pointer text-center mt-10 transition-opacity duration-200`}
+            className={`relative cursor-pointer mt-10 transition-opacity duration-200`}
           >
             <i className="text-xl md:text-2xl fas fa-sign-out-alt"></i>
             <motion.span
@@ -117,7 +116,7 @@ function NavbarStudent() {
 
       {menuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-20"
+          className="fixed inset-0 bg-black bg-opacity-40 z-40"
           onClick={handleCloseToggle}
         />
       )}
