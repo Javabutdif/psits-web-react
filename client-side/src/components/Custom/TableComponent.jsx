@@ -1,20 +1,32 @@
 import React, { useState, useMemo } from 'react';
-import FormInput from '../../components/forms/FormInput';
-import FormButton from '../../components/forms/FormButton';
+import SearchComponent from './SearchComponent';
+import ButtonsComponent from './ButtonsComponent';
+import TableHeader from './TableHeader';
+import TableBody from './TableBody';
+import Pagination from './Pagination';
 
-const TableComponent = ({ data = [], columns = [], style, pageType, handleExportPDF, handleRenewal, otherButton }) => {
+const TableComponent = ({ data = [], columns = [], style, customSearch, customButtons }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(5); // Limiting rows per page to 5
+  const [rowsPerPage] = useState(5);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [searchQuery, setSearchQuery] = useState('');
+
+  const getColumnValue = (item, key) => {
+    if (key === 'name') {
+      return `${item.first_name} ${item.middle_name} ${item.last_name} RFID: ${item.rfid}`;
+    }
+    return item[key];
+  };
 
   const sortedData = useMemo(() => {
     if (!sortConfig.key) return data;
     return [...data].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
+      const aValue = getColumnValue(a, sortConfig.key);
+      const bValue = getColumnValue(b, sortConfig.key);
+      if (aValue < bValue) {
         return sortConfig.direction === 'asc' ? -1 : 1;
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
+      if (aValue > bValue) {
         return sortConfig.direction === 'asc' ? 1 : -1;
       }
       return 0;
@@ -25,28 +37,24 @@ const TableComponent = ({ data = [], columns = [], style, pageType, handleExport
     return sortedData.filter((item) => {
       const searchLower = searchQuery.toLowerCase();
       return columns.some((column) => {
-        const value = item[column.key];
+        const value = getColumnValue(item, column.key);
         return value && value.toString().toLowerCase().includes(searchLower);
       });
     });
   }, [sortedData, searchQuery, columns]);
 
-  // Calculate the index range for the current page
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const currentRows = filteredDataBySearch.slice(indexOfFirstRow, indexOfLastRow);
 
-  // Calculate total pages
   const totalPages = Math.ceil(filteredDataBySearch.length / rowsPerPage);
 
-  // Change page handler
   const handlePageChange = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
 
-  // Sort handler
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -55,123 +63,28 @@ const TableComponent = ({ data = [], columns = [], style, pageType, handleExport
     setSortConfig({ key, direction });
   };
 
-  // Search handler
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
-    setCurrentPage(1); // Reset to the first page on search
-  };
-
-  // Export PDF handler
-  const handleExportPDFClick = () => {
-    handleExportPDF(filteredDataBySearch);
+    setCurrentPage(1);
   };
 
   return (
     <div className="overflow-x-auto">
-      <div className="bg-white px-2  p-4 flex flex-row gap-4 md:gap-6 shadow-sm">
-          {/* Form Input */}
-          <FormInput
-            label="Search"
-            type="text"
-            id="id-number"
-            name="id_number"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            styles="w-full flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Search by ID number"
-          />
-
-          {/* Buttons */}
-          <div className="flex flex-row items-center gap-4 md:gap-6 md:justify-end">
-            <FormButton
-              type="button"
-              text="Export to PDF"
-              onClick={handleExportPDFClick}
-              icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>} // Smaller icon size
-              styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-              textClass="hidden md:inline" // Text visible on medium screens and up
-            />
-
-            <FormButton
-              type="button"
-              text="Renew All Students"
-              onClick={handleRenewal}
-              icon={<i className="fas fa-check text-xs md:text-sm"></i>} // Smaller icon size
-              styles={`bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:bg-indigo-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2 ${pageType !== 'members' ? 'hidden' : 'block'}`}
-              disabled={pageType !== 'members'} // Disable button based on pageType
-              textClass={`${pageType !== 'members' ? 'hidden' : 'block'} hidden md:inline`} // Text visible on medium screens and up
-            />
-
-            {otherButton}
-          </div>
-        </div>
+      <div className="bg-white px-2 p-4 flex flex-row gap-4 md:gap-6 shadow-sm">
+        {customSearch || <SearchComponent searchQuery={searchQuery} handleSearchChange={handleSearchChange} />}
+        {customButtons || <ButtonsComponent />}
+      </div>
       <div className={`w-full h-[220px] bg-white ${style}relative overflow-x-auto`}>
         <table className="absolute lg:min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  className={`px-3 text-center md:text-start md:px-7 py-2 md:py-3 lg:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
-                  onClick={() => column.sortable && handleSort(column.key)}
-                >
-                  {column.label}
-                  {column.sortable && sortConfig.key === column.key && (
-                    <span>
-                      {sortConfig.direction === 'asc' ? ' ▲' : ' ▼'}
-                    </span>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200 max-h-[50vh] overflow-y-auto">
-            {currentRows.length > 0 ? (
-              currentRows.map((row, rowIndex) => (
-                <tr key={row.id || rowIndex}> {/* Use a unique identifier like row.id if available */}
-                  {columns.map((column) => (
-                    <td
-                      key={`${row.id || rowIndex}-${column.key}`} // Ensure unique keys for each cell
-                      className={`px-2 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 whitespace-nowrap text-xs md:text-sm font-medium text-gray-900 ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
-                    >
-                      {column.cell ? column.cell(row) : row[column.key]}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className="px-2 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 text-center text-gray-500">
-                  No data available
-                </td>
-              </tr>
-            )}
-          </tbody>
+          <TableHeader columns={columns} sortConfig={sortConfig} handleSort={handleSort} />
+          <TableBody columns={columns} currentRows={currentRows} />
         </table>
       </div>
-
-      {/* Pagination Controls */}
-      <div className="flex flex-row justify-between items-center mt-4 space-y-2 md:space-y-0 md:space-x-4">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <i className="fas fa-chevron-left md:hidden"></i>
-          <span className="hidden md:inline">Previous</span>
-        </button>
-        <div className="text-xs md:text-sm lg:text-base text-gray-600">
-          Page {currentPage} of {totalPages}
-        </div>
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <i className="fas fa-chevron-right md:hidden"></i>
-          <span className="hidden md:inline">Next</span>
-        </button>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        handlePageChange={handlePageChange}
+      />
     </div>
   );
 };

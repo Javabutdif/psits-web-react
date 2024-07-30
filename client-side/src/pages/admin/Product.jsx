@@ -125,9 +125,7 @@ function Product({ handleCloseAddProduct }) {
 
   const handlePreview = (e) => {
     e.preventDefault();
-    if (!validate()) {
-      return; // If there are validation errors, prevent preview
-    }
+
     setPreviewData(formData);
     setShowPreview(true);
   };
@@ -135,7 +133,7 @@ function Product({ handleCloseAddProduct }) {
   const handleConfirm = async () => {
     const data = new FormData();
     if (images) {
-      images.forEach((image) => data.append("images", image));
+      images.forEach((image) => data.append("image", image));
     }
     for (const key in formData) {
       data.append(key, formData[key]);
