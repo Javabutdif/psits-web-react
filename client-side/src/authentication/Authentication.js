@@ -10,12 +10,7 @@ export const setAuthentication = (token) => {
   const authen =
     user.role === "Admin"
       ? {
-          name:
-            user.user.first_name +
-            " " +
-            user.user.middle_name +
-            " " +
-            user.user.last_name,
+          name: user.user.name,
           id: user.user.id_number,
           course: user.user.course,
           year: user.user.year,
