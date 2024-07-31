@@ -57,7 +57,7 @@ const StudentMerchandise = () => {
               {isFilterOptionOpen && <FilterOptions products={products} />}
 
             </div>
-
+{/* 
             <FormButton 
                type="button"
                text="View Cart"
@@ -66,7 +66,7 @@ const StudentMerchandise = () => {
                styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
                textClass="hidden md:inline"
             
-            />
+            /> */}
           </ButtonsComponent>
         }
 
