@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import "../../App.css";
 import { merchandise } from "../../api/admin";
-import TableComponent from '../../components/Custom/TableComponent'; // Adjust the import path as needed
+import TableComponent from "../../components/Custom/TableComponent"; // Adjust the import path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Product from "./Product";
@@ -65,9 +65,8 @@ function Merchandise() {
     setIsViewModalOpen(true);
   };
 
-  const handleOpenAddProduct = () => setIsAddProductModal(true)
-  const handleCloseAddProduct = () =>  setIsAddProductModal(false)
-  
+  const handleOpenAddProduct = () => setIsAddProductModal(true);
+  const handleCloseAddProduct = () => setIsAddProductModal(false);
 
   const columns = [
     {
@@ -82,7 +81,27 @@ function Merchandise() {
       sortable: true,
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <img src={row.imageUrl} alt={row.name} width="50" height="50" className="rounded-md shadow-sm" />
+          <img
+            src={row.imageUrl[0]}
+            alt={row.name}
+            width="50"
+            height="50"
+            className="rounded-md shadow-sm"
+          />
+          <img
+            src={row.imageUrl[1]}
+            alt={row.name}
+            width="50"
+            height="50"
+            className="rounded-md shadow-sm"
+          />
+          <img
+            src={row.imageUrl[2]}
+            alt={row.name}
+            width="50"
+            height="50"
+            className="rounded-md shadow-sm"
+          />
           <div className="text-sm font-medium text-gray-800">{row.name}</div>
         </div>
       ),
@@ -141,6 +160,7 @@ function Merchandise() {
   return (
     <>
       <TableComponent
+
           data={data}
           columns={columns}
           handleExportPDF={handleExportPDF}
@@ -157,48 +177,63 @@ function Merchandise() {
               iconClass="text-sm text-base" // If you need to apply specific styles to the icon
             />
           )}
-      />
-        { isAddProductModal && (
-          <Product handleCloseAddProduct={handleCloseAddProduct}/>
-        )}
 
-        {isViewModalOpen && selectedItem && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-800">Product Details</h2>
-              <div className="flex justify-center mb-4">
-                <img src={selectedItem.imageUrl} alt={selectedItem.name} width="120" height="120" className="rounded-md shadow-sm" />
-              </div>
-              <div className="space-y-2">
-                <div>
-                  <strong className="text-gray-700">ID:</strong> {selectedItem._id}
-                </div>
-                <div>
-                  <strong className="text-gray-700">Name:</strong> {selectedItem.name}
-                </div>
-                <div>
-                  <strong className="text-gray-700">Category:</strong> {selectedItem.category}
-                </div>
-                <div>
-                  <strong className="text-gray-700">Batch:</strong> Batch {selectedItem.batch}
-                </div>
-                <div>
-                  <strong className="text-gray-700">Price:</strong> {selectedItem.price}
-                </div>
-                <div>
-                  <strong className="text-gray-700">Controls:</strong> {selectedItem.control}
-                </div>
-              </div>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-red-400 transition duration-150"
-                onClick={() => setIsViewModalOpen(false)}
-              >
-                Close
-              </button>
+      />
+      {isAddProductModal && (
+        <Product handleCloseAddProduct={handleCloseAddProduct} />
+      )}
+
+      {isViewModalOpen && selectedItem && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+              Product Details
+            </h2>
+            <div className="flex justify-center mb-4">
+              <img
+                src={selectedItem.imageUrl}
+                alt={selectedItem.name}
+                width="120"
+                height="120"
+                className="rounded-md shadow-sm"
+              />
             </div>
+            <div className="space-y-2">
+              <div>
+                <strong className="text-gray-700">ID:</strong>{" "}
+                {selectedItem._id}
+              </div>
+              <div>
+                <strong className="text-gray-700">Name:</strong>{" "}
+                {selectedItem.name}
+              </div>
+              <div>
+                <strong className="text-gray-700">Category:</strong>{" "}
+                {selectedItem.category}
+              </div>
+              <div>
+                <strong className="text-gray-700">Batch:</strong> Batch{" "}
+                {selectedItem.batch}
+              </div>
+              <div>
+                <strong className="text-gray-700">Price:</strong>{" "}
+                {selectedItem.price}
+              </div>
+              <div>
+                <strong className="text-gray-700">Controls:</strong>{" "}
+                {selectedItem.control}
+              </div>
+            </div>
+            <button
+              className="bg-red-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-red-400 transition duration-150"
+              onClick={() => setIsViewModalOpen(false)}
+            >
+              Close
+            </button>
           </div>
-        )}
-    </>    
+        </div>
+      )}
+    </>
   );
 }
 
