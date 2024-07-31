@@ -10,7 +10,6 @@ const router = express.Router();
 router.get("/students", async (req, res) => {
   try {
     const students = await Student.find({
-      membership: "Accepted",
       status: "True",
       $or: [
         { renew: "Accepted" },

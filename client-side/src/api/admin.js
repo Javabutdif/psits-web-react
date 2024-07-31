@@ -252,9 +252,7 @@ export const membershipHistory = async () => {
     }
   }
 };
-export const membershipRenewal = async () => { };
-
-
+export const membershipRenewal = async () => {};
 
 export const merchandise = async () => {
   try {
@@ -268,6 +266,32 @@ export const merchandise = async () => {
     );
 
     return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+export const deleteMerchandise = async (_id) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/merch/delete-soft`,
+      { _id },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      showToast("success", Success);
+    } else {
+      showToast("error", reponse.data.message);
+    }
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
