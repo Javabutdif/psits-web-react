@@ -62,6 +62,7 @@ const ProductDetail = () => {
 
   }
 
+  console.log(product)
   if (!product.name) {
     return <div className="text-center py-10 text-gray-600">Loading...</div>; // Handle the case when product data is not available
   }

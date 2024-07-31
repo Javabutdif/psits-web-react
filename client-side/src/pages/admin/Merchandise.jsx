@@ -9,16 +9,19 @@ import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
 
 function Merchandise() {
-  const [data, setData] = useState([]);
+   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddProductModal, setIsAddProductModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // Add state for search query
 
   const fetchData = async () => {
     try {
       const result = await merchandise();
       setData(result);
+      setFilteredData(result); // Initialize filteredData with fetched data
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
@@ -29,6 +32,28 @@ function Merchandise() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Filter data based on search query
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const id_number = item._id ? item._id.toLowerCase() : "";
+      const name = item.name ? item.name.toLowerCase() : "";
+      const category = item.category ? item.category.toLowerCase() : "";
+      const price = item.price ? item.price : ""
+      const batch = item.batch ? item.batch : "";
+      const control = item.control ? item.control.toLowerCase() : "";
+
+      return (
+        id_number.includes(searchQuery.toLowerCase()) ||
+        name.includes(searchQuery.toLowerCase()) ||
+        category.includes(searchQuery.toLowerCase()) ||
+        price.includes(searchQuery.toLowerCase()) ||
+        batch.includes(searchQuery.toLowerCase()) ||
+        control.includes(searchQuery.toLowerCase())
+      );
+    });
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
 
   const handleExportPDF = (filteredData) => {
     const doc = new jsPDF();
@@ -80,7 +105,7 @@ function Merchandise() {
       label: "Product",
       sortable: true,
       cell: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center md:justify-start gap-2">
           <img
             src={row.imageUrl[0]}
             alt={row.name}
@@ -88,21 +113,6 @@ function Merchandise() {
             height="50"
             className="rounded-md shadow-sm"
           />
-          <img
-            src={row.imageUrl[1]}
-            alt={row.name}
-            width="50"
-            height="50"
-            className="rounded-md shadow-sm"
-          />
-          <img
-            src={row.imageUrl[2]}
-            alt={row.name}
-            width="50"
-            height="50"
-            className="rounded-md shadow-sm"
-          />
-          <div className="text-sm font-medium text-gray-800">{row.name}</div>
         </div>
       ),
     },
@@ -164,7 +174,6 @@ function Merchandise() {
           data={data}
           columns={columns}
           handleExportPDF={handleExportPDF}
-          style={" h-[380px] md:h-[440px] lg:h-[480px] xl:h-[460px] "}
           customButtons={(
             <FormButton 
               type="button"

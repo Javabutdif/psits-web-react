@@ -10,6 +10,7 @@ import ImageInput from "../../components/forms/ImageInput";
 
 function Product({ handleCloseAddProduct }) {
   const [name] = getUser();
+  const today = new Date().toISOString().split('T')[0];
   const variation = [
     "White",
     "Purple",
@@ -52,7 +53,6 @@ function Product({ handleCloseAddProduct }) {
     start_date: "",
     end_date: "",
   });
-
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
@@ -333,8 +333,7 @@ const handleConfirm = async () => {
               multiple={true}
               previews={imagePreviews}
             />
-            <div className="flex flex-col md:flex-row  space-x-0 flex-wrap md:space-x-4 gap-y-4">
-              <FormInput
+            <FormInput
                 label="Product Name"
                 name="name"
                 type="text"
@@ -343,10 +342,11 @@ const handleConfirm = async () => {
                 labelStyle="text-xs"
                 inputStyle="text-xs"
               />
+            <div className="flex flex-col md:flex-row  space-x-0 flex-wrap md:space-x-4 gap-y-4">
               <FormInput
                 label="Price"
                 name="price"
-                type="text"
+                type="number"
                 value={formData.price}
                 onChange={handleChange}
                 labelStyle="text-xs"
@@ -355,22 +355,23 @@ const handleConfirm = async () => {
               <FormInput
                 label="Stocks"
                 name="stocks"
-                type="text"
+                type="number"
                 value={formData.stocks}
                 onChange={handleChange}
                 labelStyle="text-xs"
                 inputStyle="text-xs"
               />
+              <FormInput
+                label="Batch"
+                name="batch"
+                type="number"
+                value={formData.batch}
+                onChange={handleChange}
+                labelStyle="text-xs"
+                inputStyle="text-xs"
+              />
             </div>
-            <FormInput
-              label="Batch"
-              name="batch"
-              type="text"
-              value={formData.batch}
-              onChange={handleChange}
-              labelStyle="text-xs"
-              inputStyle="text-xs"
-            />
+      
             <FormTextArea
               name="description"
               label="Description"
@@ -462,6 +463,7 @@ const handleConfirm = async () => {
                 labelStyle="text-xs"
                 inputStyle="text-xs"
                 error={errors.start_date} // Pass the error message for start_date
+                max={today}
               />
               <FormInput
                 label="End Date"
@@ -472,6 +474,7 @@ const handleConfirm = async () => {
                 labelStyle="text-xs"
                 inputStyle="text-xs"
                 error={errors.end_date} // Pass the error message for end_date
+                max={today}
               />
             </div>
 

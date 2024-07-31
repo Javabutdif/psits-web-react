@@ -15,7 +15,7 @@ function StudentDashboard() {
       </div>
 
       {/* Posts Section */}
-      <div className="roww-start-4 col-span-1 md:col-span-2  row-span-2 lg:col-span-2">
+      <div className=" col-span-1 md:col-span-2  row-span-2 lg:col-span-2">
         <Posts posts={posts} />
       </div>
 

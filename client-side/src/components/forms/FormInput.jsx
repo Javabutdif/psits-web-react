@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-const FormInput = ({ label, type, id, name, value, onChange, styles, error, parentStyle, labelStyle, inputStyle, disabled }) => {
+const FormInput = ({ label, type, id, name, value, onChange, styles, error, parentStyle, labelStyle, inputStyle, disabled, max }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   const handleFocus = () => setIsFocused(true);
@@ -46,6 +46,7 @@ const FormInput = ({ label, type, id, name, value, onChange, styles, error, pare
         aria-invalid={!!error}
         aria-describedby={`${id}-error`}
         autoComplete="off"
+        min={max}
       />
     </motion.div>
   );
