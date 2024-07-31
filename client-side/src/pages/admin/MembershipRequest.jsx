@@ -12,6 +12,9 @@ import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../enums/commonEnums";
 import ApproveModal from "../../components/admin/ApproveModal";
 
+import ButtonsComponent from "../../components/Custom/ButtonsComponent";
+import FormButton from "../../components/forms/FormButton";
+
 function MembershipRequest() {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -257,9 +260,18 @@ function MembershipRequest() {
       <TableComponent
         columns={columns}
         data={data}
-        style={" md:h-[300px] lg:h-[350px] xl:h-[310px] "}
-        pageType={"request"}
-        handleExportPDF={handleExportPDF}
+        customButtons={(
+          <ButtonsComponent>
+          <FormButton
+            type="button"
+            text="Export to PDF"
+            onClick={handleExportPDF}
+            icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
+            styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+            textClass="hidden md:inline"
+          />
+          </ButtonsComponent>
+        )}
       />
 
       

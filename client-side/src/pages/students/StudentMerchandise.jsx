@@ -1,46 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { merchandise } from "../../api/admin";
+import React, { useState, useEffect } from 'react';
+import SearchFilter from './merchandise/SearchFilter';
+import { merchandise } from '../../api/admin';
+import ProductList from './merchandise/ProductList';
+import ButtonsComponent from '../../components/Custom/ButtonsComponent';
+import FormButton from '../../components/forms/FormButton';
+import FilterOptions from './merchandise/FilterOptions';
 
-const ProductCard = ({ product }) => {
-  const navigate = useNavigate();
+const StudentMerchandise = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
+  const [products, setProducts] = useState([]);
 
-  const handleViewDetails = () => {
-    navigate(`/student/merchandise/${product._id}`, {
-      state: { product },
-    });
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
-  return (
-    <div className="max-w-sm rounded overflow-hidden shadow-lg p-4">
-      <div className="h-64 w-full overflow-hidden">
-        <img
-          className="w-full h-full object-cover"
-          src={product.imageUrl}
-          alt={product.title}
-        />
-      </div>
-      <div className="px-6 py-4">
-        <div className="font-bold text-xl mb-2">{product.name}</div>
-        <p className="text-gray-700 text-base">₱{product.price.toFixed(2)}</p>
-      </div>
-      <div className="px-6 pt-4 pb-2">
-        <button
-          className={`${
-            product.isBought ? "bg-red-500" : "bg-blue-500"
-          } text-white font-bold py-2 px-4 rounded-full`}
-          onClick={handleViewDetails}
-          disabled={product.isBought}
-        >
-          {product.isBought ? "Already Bought" : "View Details"}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-function StudentMerchandise() {
-  const [products, setProducts] = useState([]);
+  const toggleFilterOption = () => {
+    setIsFilterOptionOpen(prevState => !prevState);
+  };
+  
 
   const fetchData = async () => {
     try {
@@ -53,36 +31,51 @@ function StudentMerchandise() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, []); // Empty dependency array to fetch data only once when component mounts
+
+  // Filter products based on search query
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="container mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <input
-          type="text"
-          placeholder="Search"
-          className="border rounded py-2 px-4 w-1/3"
+      <SearchFilter 
+        searchQuery={searchQuery}
+        handleSearchChange={handleSearchChange}
+        customButtons= {
+          <ButtonsComponent>
+            <div className="relative">
+              <FormButton
+                type="button"
+                text="Filter"
+                onClick={toggleFilterOption}
+                icon={<i className="fas fa-filter text-sm md:text-base"></i>}
+                styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+                textClass="hidden md:inline"
+              />
+              {isFilterOptionOpen && <FilterOptions products={products} />}
+
+            </div>
+
+            <FormButton 
+               type="button"
+               text="View Cart"
+              //  onClick={handleExportPDF}
+               icon={<i className="fas fa-shopping-cart text-sm md:text-base"></i>}
+               styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+               textClass="hidden md:inline"
+            
+            />
+          </ButtonsComponent>
+        }
+
+
+
+      />
+        <ProductList 
+          products={filteredProducts}
         />
-        <div className="flex space-x-4">
-          <select className="border rounded py-2 px-4">
-            <option>Category</option>
-          </select>
-          <select className="border rounded py-2 px-4">
-            <option>Sort by</option>
-          </select>
-          <select className="border rounded py-2 px-4">
-            <option>Price Range</option>
-          </select>
-        </div>
-        <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded">
-          View Cart
-        </button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {products.map((product) => (
-          <ProductCard key={product._id} product={product} />
-        ))}
-      </div>
     </div>
   );
 }

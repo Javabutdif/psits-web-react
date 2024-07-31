@@ -10,7 +10,6 @@ const SearchComponent = ({ searchQuery, handleSearchChange }) => (
     value={searchQuery}
     onChange={handleSearchChange}
     styles="w-full flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-    aria-label="Search by ID number"
   />
 );
 
