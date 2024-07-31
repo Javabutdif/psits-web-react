@@ -4,7 +4,9 @@ import { useLocation, useParams } from "react-router-dom";
 function ProductDetail() {
   const { state } = useLocation();
   const { _id } = useParams();
-  const product = state?.product;
+  const product = state;
+
+  console.log(state);
 
   // Ensure product is defined before accessing its properties
   const sizes =
@@ -12,7 +14,9 @@ function ProductDetail() {
       ? product.selectedSizes[0].split(",")
       : [];
   const variations =
-    product && product.selectedVariations && product.selectedVariations.length > 0
+    product &&
+    product.selectedVariations &&
+    product.selectedVariations.length > 0
       ? product.selectedVariations[0].split(",")
       : [];
 
@@ -37,7 +41,7 @@ function ProductDetail() {
         <div className="md:w-1/4 w-full">
           <img
             className="w-full h-auto object-cover"
-            src={product.imageUrl}
+            src={product.imageUrl[0]}
             alt={product.title}
           />
         </div>
