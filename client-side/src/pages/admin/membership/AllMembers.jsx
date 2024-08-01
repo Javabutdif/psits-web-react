@@ -15,6 +15,9 @@ import { getUser } from "../../../authentication/Authentication";
 import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
+import EditMember from "./EditMember";
+import axios from "axios";
+import backendConnection from "../../../api/backendApi";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -25,6 +28,8 @@ const Membership = () => {
   const [isRenewalModalVisible, setIsRenewalModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [memberToEdit, setMemberToEdit] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -36,6 +41,39 @@ const Membership = () => {
       console.error("Error fetching data: ", error);
       setLoading(false);
     }
+  };
+
+  const handleEditButtonClick = (row) => {
+    setMemberToEdit(row);
+    setIsEditModalVisible(true);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalVisible(false);
+    setMemberToEdit(null);
+  };
+
+  const handleSaveEditedMember = async (updatedMember) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        `${backendConnection()}/api/editedStudent`,
+        updatedMember
+      );
+      console.log(response.data.message);
+      showToast("success", "Student updated successfully!");
+    } catch (error) {
+      console.error("Error updating student:", error);
+      showToast(
+        "error",
+        error.response?.data?.message ||
+          error.message ||
+          "An unexpected error occurred."
+      );
+    }
+
+    fetchData();
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -235,7 +273,10 @@ const Membership = () => {
       label: "Actions",
       cell: (row) => (
         <div className="flex space-x-2 text-md">
-          <button className="text-blue-500 p-2 rounded hover:bg-blue-100 transition-colors">
+          <button
+            className="text-blue-500 p-2 rounded hover:bg-blue-100 transition-colors"
+            onClick={() => handleEditButtonClick(row)}
+          >
             <i className="fas fa-edit"></i>
           </button>
           <button
@@ -251,31 +292,50 @@ const Membership = () => {
 
   return (
     <div className="">
-      <TableComponent
-        columns={columns}
-        data={filteredData}
-        customButtons={
-          <ButtonsComponent>
-            <FormButton
-              type="button"
-              text="Export to PDF"
-              onClick={handleExportPDF}
-              icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
-              styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-              textClass="hidden md:inline"
-            />
-            <FormButton
-              type="button"
-              text="Renew All Students"
-              onClick={handleRenewal}
-              icon={<i className="fas fa-check text-xs md:text-sm"></i>}
-              styles="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:bg-indigo-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2"
-              textClass="hidden md:inline"
-            />
-            {/* Add any other custom buttons here */}
-          </ButtonsComponent>
-        }
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center h-[40vh] w-full">
+          <InfinitySpin
+            visible={true}
+            width="200"
+            color="#0d6efd"
+            ariaLabel="infinity-spin-loading"
+          />
+        </div>
+      ) : (
+        <TableComponent
+          columns={columns}
+          data={filteredData}
+          customButtons={
+            <ButtonsComponent>
+              <FormButton
+                type="button"
+                text="Export to PDF"
+                onClick={handleExportPDF}
+                icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
+                styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+                textClass="hidden md:inline"
+              />
+              <FormButton
+                type="button"
+                text="Renew All Students"
+                onClick={handleRenewal}
+                icon={<i className="fas fa-check text-xs md:text-sm"></i>}
+                styles="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:bg-indigo-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2"
+                textClass="hidden md:inline"
+              />
+              {/* Add any other custom buttons here */}
+            </ButtonsComponent>
+          }
+        />
+      )}
+      {isEditModalVisible && (
+        <EditMember
+          isVisible={isEditModalVisible}
+          onClose={handleEditModalClose}
+          studentData={memberToEdit}
+          onSave={handleSaveEditedMember}
+        />
+      )}
       {isModalVisible && (
         <ConfirmationModal
           confirmType={ConfirmActionType.DELETION}
