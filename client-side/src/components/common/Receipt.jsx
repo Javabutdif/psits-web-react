@@ -1,6 +1,7 @@
 import React, { forwardRef } from "react";
 import logo from "../../assets/images/psits-logo.png";
 import "../../App.css";
+import { format } from "date-fns";
 const Receipt = forwardRef(
   (
     {
@@ -46,6 +47,27 @@ const Receipt = forwardRef(
       <p className="mb-2">
         <b>Qty: </b> {qty} ------------ ₱{total}
       </p>
+      <div style={{ display: type === "Order" ? "block" : "none" }}>
+        <p
+          className="mb-2"
+          style={{ display: batch !== null ? "block" : "none" }}
+        >
+          <b>Batch: {batch}</b>
+        </p>
+        <p
+          className="mb-2"
+          style={{ display: size !== null ? "block" : "none" }}
+        >
+          <b>Size: </b>
+          {size}
+        </p>
+        <p
+          className="mb-2"
+          style={{ display: variation !== null ? "block" : "none" }}
+        >
+          <b>Variation:</b> {variation}
+        </p>
+      </div>
       <br></br>
       <br></br>
       ---------------------
@@ -61,6 +83,10 @@ const Receipt = forwardRef(
       </p>
       <br></br>
       <h2 className="text-2xl">{reference_code}</h2>
+      <p lassName="mb-2 text-sm">
+        <b>Date:</b>
+        {format(new Date(), "MMMM d, yyyy h:mm:ss a")}
+      </p>
       <p className="mb-2 text-xs">
         <b>Processed By:</b> {admin}
       </p>
