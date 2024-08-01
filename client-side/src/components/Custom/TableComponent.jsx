@@ -7,7 +7,7 @@ import Pagination from './Pagination';
 
 const TableComponent = ({ data = [], columns = [], style, customSearch, customButtons }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(5);
+  const [rowsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -74,7 +74,7 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
         {customSearch || <SearchComponent searchQuery={searchQuery} handleSearchChange={handleSearchChange} />}
         {customButtons || <ButtonsComponent />}
       </div>
-      <div className={`w-full h-[220px] overflow-hidden bg-white ${style} overflow-scroll relative`}>
+      <div className={`w-full h-[35vh] sm:h-[60vh] md:h-[70vh] overflow-hidden bg-white ${style} overflow-scroll relative`}>
         <table className="absolute lg:min-w-full divide-y divide-gray-200">
           <TableHeader columns={columns} sortConfig={sortConfig} handleSort={handleSort} />
           <TableBody columns={columns} currentRows={currentRows} />

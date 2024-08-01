@@ -31,7 +31,7 @@ const OperationHours = () => {
   const statusColor = status === "Open" ? "bg-green-500" : "bg-gray-500";
 
   return (
-    <div className=" w-full  flex-1 md:flex-none md:p-6 rounded-lg max-w-lg bg-transparent md:bg-white space-x-1 sm:space-y-3 text-start ">
+    <div className=" w-full  flex-1 md:flex-none md:p-6 rounded-lg  lg:max-w-lg bg-transparent md:bg-white space-x-1 sm:space-y-3 text-start ">
 
       <h4 className="text-xs sm:text-lg font-semibold flex items-center justify-between gap-4 ">Current Office Status
           <span className={`block text-xs ml-2 sm:ml-0 py-1 px-2 text-center text-white rounded-lg ${statusColor}`}>{status}</span>

@@ -11,16 +11,19 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
 
 function Merchandise() {
-  const [data, setData] = useState([]);
+   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddProductModal, setIsAddProductModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // Add state for search query
 
   const fetchData = async () => {
     try {
       const result = await merchandise();
       setData(result);
+      setFilteredData(result); // Initialize filteredData with fetched data
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
@@ -31,6 +34,28 @@ function Merchandise() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Filter data based on search query
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const id_number = item._id ? item._id.toLowerCase() : "";
+      const name = item.name ? item.name.toLowerCase() : "";
+      const category = item.category ? item.category.toLowerCase() : "";
+      const price = item.price ? item.price : ""
+      const batch = item.batch ? item.batch : "";
+      const control = item.control ? item.control.toLowerCase() : "";
+
+      return (
+        id_number.includes(searchQuery.toLowerCase()) ||
+        name.includes(searchQuery.toLowerCase()) ||
+        category.includes(searchQuery.toLowerCase()) ||
+        price.includes(searchQuery.toLowerCase()) ||
+        batch.includes(searchQuery.toLowerCase()) ||
+        control.includes(searchQuery.toLowerCase())
+      );
+    });
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
 
   const handleExportPDF = (filteredData) => {
     const doc = new jsPDF();
@@ -87,7 +112,7 @@ function Merchandise() {
       label: "Product",
       sortable: true,
       cell: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center md:justify-start gap-2">
           <img
             src={row.imageUrl[0]}
             alt={row.name}
@@ -96,7 +121,6 @@ function Merchandise() {
             className="rounded-md shadow-sm"
           />
 
-          <div className="text-sm font-medium text-gray-800">{row.name}</div>
         </div>
       ),
     },
@@ -172,22 +196,25 @@ function Merchandise() {
   return (
     <>
       <TableComponent
-        data={data}
-        columns={columns}
-        handleExportPDF={handleExportPDF}
-        style={" h-[380px] md:h-[440px] lg:h-[480px] xl:h-[460px] "}
-        customButtons={
-          <FormButton
-            type="button"
-            text="Add Product"
-            onClick={handleOpenAddProduct}
-            styles="bg-indigo-100 text-violet-800 hover:bg-violet-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-cart-plus text-sm text-base"></i>}
-            textClass="ml-2 md:inline"
-            /* Ensure that textClass is responsive */
-            iconClass="text-sm text-base" // If you need to apply specific styles to the icon
-          />
-        }
+
+
+          data={data}
+          columns={columns}
+          handleExportPDF={handleExportPDF}
+          customButtons={(
+            <FormButton 
+              type="button"
+              text="Add Product"
+              onClick={handleOpenAddProduct}
+                styles="bg-indigo-100 text-violet-800 hover:bg-violet-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+              icon={<i className="fas fa-cart-plus text-sm text-base"></i>}
+              textClass="ml-2 md:inline"
+              /* Ensure that textClass is responsive */
+              iconClass="text-sm text-base" // If you need to apply specific styles to the icon
+            />
+          )}
+
+
       />
       {isAddProductModal && (
         <Product handleCloseAddProduct={handleCloseAddProduct} />

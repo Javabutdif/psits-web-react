@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Pagination = ({ currentPage, totalPages, handlePageChange }) => (
-  <div className="flex justify-between items-center py-2 px-4">
+  <div className="flex justify-between items-center py-2 px-2 md:px-4 text-xs md:text-sm">
     <button
       onClick={() => handlePageChange(currentPage - 1)}
       disabled={currentPage === 1}

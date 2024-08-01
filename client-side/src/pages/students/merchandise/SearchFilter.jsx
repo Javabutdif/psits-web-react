@@ -3,8 +3,12 @@ import React from 'react';
 import SearchComponent from '../../../components/Custom/SearchComponent';
 
 const SearchFilter = ({ searchQuery, handleSearchChange, customButtons }) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  }
+
   return (
-    <form className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex gap-2">
       <SearchComponent 
         searchQuery={searchQuery}
         handleSearchChange={handleSearchChange} // Make sure to pass the function as a prop
