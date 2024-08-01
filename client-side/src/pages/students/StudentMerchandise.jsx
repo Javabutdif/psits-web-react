@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import SearchFilter from './merchandise/SearchFilter';
 import { merchandise } from '../../api/admin';
@@ -6,8 +7,9 @@ import ButtonsComponent from '../../components/Custom/ButtonsComponent';
 import FormButton from '../../components/forms/FormButton';
 import FilterOptions from './merchandise/FilterOptions';
 
+
 const StudentMerchandise = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -22,8 +24,9 @@ const StudentMerchandise = () => {
   };
 
   const toggleFilterOption = () => {
-    setIsFilterOptionOpen(prevState => !prevState);
+    setIsFilterOptionOpen((prevState) => !prevState);
   };
+
 
   const handleCategoryChange = (category, checked) => {
     setSelectedCategories(prevState =>
@@ -57,6 +60,7 @@ const StudentMerchandise = () => {
     );
   };
 
+
   const fetchData = async () => {
     try {
       const result = await merchandise();
@@ -69,6 +73,7 @@ const StudentMerchandise = () => {
   useEffect(() => {
     fetchData();
   }, []); // Empty dependency array to fetch data only once when component mounts
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -110,9 +115,11 @@ const StudentMerchandise = () => {
   });
   
 
+
+
   return (
     <div className="container mx-auto">
-      <SearchFilter 
+      <SearchFilter
         searchQuery={searchQuery}
         handleSearchChange={handleSearchChange}
         customButtons={
@@ -126,6 +133,7 @@ const StudentMerchandise = () => {
                 styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
                 textClass="hidden md:inline"
               />
+
               {isFilterOptionOpen && 
                 <div ref={filterOptionsRef}>
                   <FilterOptions 
@@ -141,6 +149,7 @@ const StudentMerchandise = () => {
                 </div>
               }
             </div>
+
           </ButtonsComponent>
         }
       />

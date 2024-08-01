@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useOutletContext } from 'react-router-dom';
-import { membership, studentDeletion, renewAllStudent } from "../../../api/admin";
+import { useOutletContext } from "react-router-dom";
+import {
+  membership,
+  studentDeletion,
+  renewAllStudent,
+} from "../../../api/admin";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
@@ -11,8 +15,6 @@ import { getUser } from "../../../authentication/Authentication";
 import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
-
-
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -43,11 +45,18 @@ const Membership = () => {
   useEffect(() => {
     const filtered = data.filter((item) => {
       const searchLower = searchQuery.toLowerCase();
-      return (
-        [item.first_name, item.middle_name, item.last_name, item.id_number, item.email, item.type, item.course, item.rfid]
-          .map(value => value ? value.toString().toLowerCase() : "")
-          .some(value => value.includes(searchLower))
-      );
+      return [
+        item.first_name,
+        item.middle_name,
+        item.last_name,
+        item.id_number,
+        item.email,
+        item.type,
+        item.course,
+        item.rfid,
+      ]
+        .map((value) => (value ? value.toString().toLowerCase() : ""))
+        .some((value) => value.includes(searchLower));
     });
     setFilteredData(filtered);
   }, [searchQuery, data]);
@@ -57,9 +66,9 @@ const Membership = () => {
       alert("No data to export");
       return;
     }
-  
+
     const doc = new jsPDF();
-    
+
     autoTable(doc, {
       head: [["Name", "Id Number", "Course", "Email Account", "Type"]],
       body: filteredData.map((item) => [
@@ -81,10 +90,10 @@ const Membership = () => {
       },
       margin: { top: 10 },
     });
-  
+
     doc.save("students.pdf");
   };
-  
+
   const showModal = (row) => {
     setIsModalVisible(true);
     setStudentIdToBeDeleted(row.id_number);
@@ -105,7 +114,10 @@ const Membership = () => {
     try {
       if (await renewAllStudent()) {
         setIsRenewalModalVisible(false);
-        showToast("success", "All student memberships are currently being renewed.");
+        showToast(
+          "success",
+          "All student memberships are currently being renewed."
+        );
         fetchData();
       } else {
         console.error("Failed to renew all students");
@@ -125,7 +137,9 @@ const Membership = () => {
       const id_number = studentIdToBeDeleted;
       const [name] = getUser();
       if ((await studentDeletion(id_number, name)) === 200) {
-        const updatedData = data.filter((student) => student.id_number !== id_number);
+        const updatedData = data.filter(
+          (student) => student.id_number !== id_number
+        );
         setData(updatedData);
         setIsModalVisible(false);
         showToast("success", "Student Deletion Successful!");
@@ -144,7 +158,8 @@ const Membership = () => {
     {
       key: "name",
       label: "Name",
-      selector: (row) => `${row.first_name} ${row.middle_name} ${row.last_name}`,
+      selector: (row) =>
+        `${row.first_name} ${row.middle_name} ${row.last_name}`,
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
@@ -172,16 +187,30 @@ const Membership = () => {
       sortable: true,
     },
     {
-        key: "type",
-        label: "Type",
-        selector: () => "Student", // Static value for all rows
-        sortable: true,
-        cell: () => (
-          <div className="text-center">
-            <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">Student</span>
-          </div>
-        ),
-      },
+      key: "membership",
+      label: "Membership",
+      selector: (row) => row.membership,
+      sortable: true,
+      cell: (row) => (
+        <div className="text-center">
+          <span
+            className={`px-2 py-1 rounded text-xs ${
+              row.membership === "None"
+                ? "bg-gray-200 text-gray-800"
+                : row.membership === "Pending"
+                ? "bg-yellow-200 text-yellow-800"
+                : "bg-green-200 text-green-800"
+            }`}
+          >
+            {row.membership === "None"
+              ? "None"
+              : row.membership === "Pending"
+              ? "Pending"
+              : "Active"}
+          </span>
+        </div>
+      ),
+    },
     {
       key: "status",
       label: "Status",
@@ -191,7 +220,9 @@ const Membership = () => {
         <div className="text-center">
           <span
             className={`${
-              row.status === "True" ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+              row.status === "True"
+                ? "bg-green-200 text-green-800"
+                : "bg-red-200 text-red-800"
             } px-2 py-1 rounded text-xs`}
           >
             {row.status === "True" ? "Active" : "Expired"}
@@ -204,23 +235,15 @@ const Membership = () => {
       label: "Actions",
       cell: (row) => (
         <div className="flex space-x-2 text-md">
-        <button
-            className="text-gray-500 p-2 rounded hover:bg-gray-200 transition-colors"
-            onClick={handleExportPDF}
-        >
-            <i className="fas fa-file-pdf"></i>
-        </button>
-        <button
-            className="text-blue-500 p-2 rounded hover:bg-blue-100 transition-colors"
-        >
+          <button className="text-blue-500 p-2 rounded hover:bg-blue-100 transition-colors">
             <i className="fas fa-edit"></i>
-        </button>
-        <button
+          </button>
+          <button
             className="text-red-500 p-2 rounded hover:bg-red-100 transition-colors"
             onClick={() => showModal(row)}
-        >
+          >
             <i className="fas fa-trash-alt"></i>
-        </button>
+          </button>
         </div>
       ),
     },
@@ -228,31 +251,31 @@ const Membership = () => {
 
   return (
     <div className="">
-        <TableComponent
-          columns={columns}
-          data={filteredData}
-          customButtons={(
-            <ButtonsComponent>
-              <FormButton
-                type="button"
-                text="Export to PDF"
-                onClick={handleExportPDF}
-                icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
-                styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-                textClass="hidden md:inline"
-              />
-              <FormButton
-                type="button"
-                text="Renew All Students"
-                onClick={handleRenewal}
-                icon={<i className="fas fa-check text-xs md:text-sm"></i>}
-                styles="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:bg-indigo-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2"
-                textClass="hidden md:inline"
-              />
-              {/* Add any other custom buttons here */}
-            </ButtonsComponent>
-          )}
-        />
+      <TableComponent
+        columns={columns}
+        data={filteredData}
+        customButtons={
+          <ButtonsComponent>
+            <FormButton
+              type="button"
+              text="Export to PDF"
+              onClick={handleExportPDF}
+              icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
+              styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+              textClass="hidden md:inline"
+            />
+            <FormButton
+              type="button"
+              text="Renew All Students"
+              onClick={handleRenewal}
+              icon={<i className="fas fa-check text-xs md:text-sm"></i>}
+              styles="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:bg-indigo-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2"
+              textClass="hidden md:inline"
+            />
+            {/* Add any other custom buttons here */}
+          </ButtonsComponent>
+        }
+      />
       {isModalVisible && (
         <ConfirmationModal
           confirmType={ConfirmActionType.DELETION}

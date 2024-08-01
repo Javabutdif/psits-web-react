@@ -30,6 +30,7 @@ const ButtonGroup = ({ items, selectedItem, onSelect, label }) => (
 
 const ProductDetail = () => {
   const { state } = useLocation();
+
   const product = state || {}; // Default to empty object if state is undefined
   const navigate = useNavigate();
 
@@ -47,6 +48,7 @@ const ProductDetail = () => {
 
   const sizes = selectedSizes.length > 0 ? selectedSizes[0].split(",") : [];
   const variations = selectedVariations.length > 0 ? selectedVariations[0].split(",") : [];
+
 
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
@@ -68,6 +70,7 @@ const ProductDetail = () => {
   }
 
   return (
+
     <div className="p-4 md:p-6 max-w-4xl mx-auto bg-white rounded-md shadow-sm space-y-4">
       <button className="absolute flex items-center gap-2 px-4 py-2 border rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200" onClick={handleBack}>
         <i className="fa fa-arrow-left"></i> {/* Font Awesome arrow-left icon */}
@@ -100,6 +103,7 @@ const ProductDetail = () => {
               />
             ))}
           </div>
+
         </div>
 
         {/* Product Details */}

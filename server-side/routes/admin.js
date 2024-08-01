@@ -143,7 +143,6 @@ router.get("/membershipRequest", async (req, res) => {
 });
 router.get("/all-members", async (req, res) => {
   const count = await Student.countDocuments({
-    membership: "Accepted",
     status: "True",
     $or: [{ renew: "Accepted" }, { renew: { $exists: false } }, { renew: "" }],
   });

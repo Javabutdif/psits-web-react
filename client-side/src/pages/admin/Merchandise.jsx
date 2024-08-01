@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../../App.css";
-import { merchandise } from "../../api/admin";
+import { merchandise, deleteMerchandise } from "../../api/admin";
 import TableComponent from "../../components/Custom/TableComponent"; // Adjust the import path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/swiper-bundle.css";
 
 function Merchandise() {
    const [data, setData] = useState([]);
@@ -93,12 +95,17 @@ function Merchandise() {
   const handleOpenAddProduct = () => setIsAddProductModal(true);
   const handleCloseAddProduct = () => setIsAddProductModal(false);
 
+  const deleteMerchandiseApi = async (id) => {
+    console.log(id);
+    await deleteMerchandise(id);
+  };
+
   const columns = [
     {
       key: "_id",
       label: "Product ID",
       sortable: true,
-      cell: (row) => <div className="text-sm text-gray-600">{row._id}</div>,
+      cell: (row) => <div className="text-xs text-gray-600">{row._id}</div>,
     },
     {
       key: "name",
@@ -113,6 +120,7 @@ function Merchandise() {
             height="50"
             className="rounded-md shadow-sm"
           />
+
         </div>
       ),
     },
@@ -138,31 +146,49 @@ function Merchandise() {
       sortable: true,
     },
     {
+      key: "is_active",
+      label: "Status",
+      sortable: true,
+      cell: (row) => (
+        <div className="text-center">
+          <span
+            className={`px-2 py-1 rounded text-xs ${
+              row.is_active === true
+                ? "bg-green-200 text-green-800"
+                : "bg-red-200 text-red-800"
+            }`}
+          >
+            {row.is_active !== true ? "Expired" : "Active"}
+          </span>
+        </div>
+      ),
+    },
+    {
       key: "actions",
       label: "Actions",
       cell: (row) => (
-          <div className="flex gap-2">
-            <FormButton 
-              type="button"
-              text="View"
-              onClick={() => handleView(row)} // Ensure the onClick is defined
-              styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-              icon={<i className="fas fa-eye text-sm text-base"></i>} // Use a relevant icon for "View"
-              textClass="ml-2 md:inline"
-              iconClass="text-sm text-base"
-            />
-            
-            <FormButton 
-              type="button"
-              text="Delete"
-              // onClick={() => handleDelete(row)} // Updated handler for delete action
-              styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-              icon={<i className="fas fa-trash text-sm text-base"></i>} // Use a relevant icon for "Delete"
-              textClass="ml-2 md:inline"
-              iconClass="text-sm text-base"
-            />
-          </div>
+        <div className="flex gap-2">
+          <FormButton
+            type="button"
+            text="View"
+            onClick={() => handleView(row)} // Ensure the onClick is defined
+            styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+            icon={<i className="fas fa-eye text-sm text-base"></i>} // Use a relevant icon for "View"
+            textClass="ml-2 md:inline"
+            iconClass="text-sm text-base"
+          />
 
+          <FormButton
+            type="button"
+            text="Delete"
+            // onClick={() => handleDelete(row)} // Updated handler for delete action
+            onClick={() => deleteMerchandiseApi(row._id)}
+            styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+            icon={<i className="fas fa-trash text-sm text-base"></i>} // Use a relevant icon for "Delete"
+            textClass="ml-2 md:inline"
+            iconClass="text-sm text-base"
+          />
+        </div>
       ),
     },
   ];
@@ -170,6 +196,7 @@ function Merchandise() {
   return (
     <>
       <TableComponent
+
 
           data={data}
           columns={columns}
@@ -187,6 +214,7 @@ function Merchandise() {
             />
           )}
 
+
       />
       {isAddProductModal && (
         <Product handleCloseAddProduct={handleCloseAddProduct} />
@@ -198,39 +226,54 @@ function Merchandise() {
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">
               Product Details
             </h2>
-            <div className="flex justify-center mb-4">
-              <img
-                src={selectedItem.imageUrl}
-                alt={selectedItem.name}
-                width="120"
-                height="120"
-                className="rounded-md shadow-sm"
-              />
+            <div className="mb-4">
+              <Swiper
+                spaceBetween={10}
+                slidesPerView={1}
+                pagination={{ clickable: true }}
+                navigation
+              >
+                {selectedItem.imageUrl.map((url, index) => (
+                  <SwiperSlide key={index}>
+                    <img
+                      src={url}
+                      alt={`${selectedItem.name} ${index + 1}`}
+                      className="rounded-md shadow-sm object-cover w-full h-64"
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-sm text-gray-700">
               <div>
-                <strong className="text-gray-700">ID:</strong>{" "}
-                {selectedItem._id}
+                <strong>ID:</strong> {selectedItem._id}
               </div>
               <div>
-                <strong className="text-gray-700">Name:</strong>{" "}
-                {selectedItem.name}
+                <strong>Name:</strong> {selectedItem.name}
               </div>
               <div>
-                <strong className="text-gray-700">Category:</strong>{" "}
-                {selectedItem.category}
+                <strong>Category:</strong> {selectedItem.category}
               </div>
               <div>
-                <strong className="text-gray-700">Batch:</strong> Batch{" "}
-                {selectedItem.batch}
+                <strong>Batch:</strong> Batch {selectedItem.batch}
               </div>
               <div>
-                <strong className="text-gray-700">Price:</strong>{" "}
-                {selectedItem.price}
+                <strong>Stocks:</strong> {selectedItem.stocks}
               </div>
               <div>
-                <strong className="text-gray-700">Controls:</strong>{" "}
-                {selectedItem.control}
+                <strong>Price:</strong> {selectedItem.price}
+              </div>
+              <div>
+                <strong>Controls:</strong> {selectedItem.control}
+              </div>
+              <div>
+                <strong>Start Date:</strong> {selectedItem.start_date}
+              </div>
+              <div>
+                <strong>End Date:</strong> {selectedItem.end_date}
+              </div>
+              <div>
+                <strong>Added By:</strong> {selectedItem.created_by}
               </div>
             </div>
             <button

@@ -222,6 +222,10 @@ const handleConfirm = async () => {
   const getTypeOptions = (category) => {
     return typeOptions[category] || [];
   };
+
+
+
+  
   const PreviewModal = ({ data, images, onClose, onConfirm }) => {
     // Show up to 3 images in the preview
     const imagesToShow = images.slice(0, 3);
