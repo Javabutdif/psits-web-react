@@ -7,8 +7,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/swiper-bundle.css";
+
 
 function Merchandise() {
    const [data, setData] = useState([]);
