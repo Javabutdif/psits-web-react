@@ -44,6 +44,7 @@ router.post("/", upload.array("images", 3), async (req, res) => {
     start_date,
     end_date,
     category,
+    type,
     control,
   } = req.body;
 
@@ -63,6 +64,7 @@ router.post("/", upload.array("images", 3), async (req, res) => {
       start_date,
       end_date,
       category,
+      type,
       control,
       imageUrl, // Save the array of image URLs to the database
     });
@@ -117,6 +119,7 @@ router.put("/:_id", async (req, res) => {
     start_date,
     end_date, //unrequired
     category,
+    type,
     image_url,
     sales_data,
   } = req.body;
@@ -136,6 +139,7 @@ router.put("/:_id", async (req, res) => {
       start_date: start_date,
       end_date: end_date, //unrequired
       category: category,
+      type: type,
       image_url: image_url,
     };
 
