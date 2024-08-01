@@ -318,7 +318,7 @@ const Membership = () => {
               <FormButton
                 type="button"
                 text="Renew All Students"
-                onClick={handleRenewal}
+                onClick={showConfirm}
                 icon={<i className="fas fa-check text-xs md:text-sm"></i>}
                 styles="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:bg-indigo-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-2"
                 textClass="hidden md:inline"

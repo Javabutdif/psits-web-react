@@ -232,6 +232,8 @@ export const renewStudent = async () => {
     console.error("Error:", error);
   }
 };
+export const approveOrders = () => {};
+
 export const editStudent = async () => {};
 export const inventory = async () => {};
 export const analytics = async () => {};
@@ -304,8 +306,8 @@ export const deleteMerchandise = async (_id) => {
 //Hard Delete
 export const requestDeletion = async (id_number) => {
   try {
-    const response = await axios.delete(
-      `${backendConnection()}/api/students/delete/${id_number}`,
+    const response = await axios.put(
+      `${backendConnection()}/api/students/cancel/${id_number}`,
       {
         headers: {
           "Content-Type": "application/json",
