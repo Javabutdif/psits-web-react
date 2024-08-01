@@ -33,7 +33,8 @@ function MembershipRequest() {
     {
       key: "name",
       label: "Name",
-      selector: (row) => `${row.first_name} ${row.middle_name} ${row.last_name}`,
+      selector: (row) =>
+        `${row.first_name} ${row.middle_name} ${row.last_name}`,
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
@@ -61,17 +62,19 @@ function MembershipRequest() {
       sortable: true,
     },
     {
-        key: "type",
-        label: "Type",
-        selector: () => "Student", // Static value for all rows
-        sortable: true,
-        cell: () => (
-          <div className="text-center">
-            <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">Student</span>
-          </div>
-        ),
-      },
-   {
+      key: "type",
+      label: "Type",
+      selector: () => "Student", // Static value for all rows
+      sortable: true,
+      cell: () => (
+        <div className="text-center">
+          <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">
+            Student
+          </span>
+        </div>
+      ),
+    },
+    {
       name: "Applied on",
       label: "Applied on",
       selector: (row) => row.applied,
@@ -88,68 +91,71 @@ function MembershipRequest() {
       selector: (row) => row.status,
       sortable: true,
       cell: (row) => (
-            <div className="text-center">
-              <span
-                className={`flex items-center gap-2 ${
-                  row.status === "False" ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
-                } px-2 py-1 rounded text-xs`}
-              >
-                <i
-                  className={`fa ${
-                    row.status === "False" ? "fa-check-circle" : "fa-times-circle"
-                  } mr-1 ${row.status === "False" ? "text-green-500" : "text-red-500"}`}
-                ></i>
-                {row.status === "False" ? "Paid" : "Unpaid"}
-              </span>
-            </div>
-          ),
-        },
-        {
-          name: "Action",
-          cell: (row) => (
-            <div className="flex justify-evenly gap-3">
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2"
-                onClick={() => handleOpenModal(row)}
-                disabled={
-                  position !== "Treasurer" &&
-                  position !== "Assistant Treasurer" &&
-                  position !== "Auditor" &&
-                  position !== "Developer" &&
-                  position !== "President"
-                }
-              >
-                <i className="fas fa-check"></i>
-                {position !== "Treasurer" &&
-                position !== "Assistant Treasurer" &&
-                position !== "Auditor" &&
-                position !== "Developer" &&
-                position !== "President"
-                  ? "Not Authorized"
-                  : "Approve"}
-              </button>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded flex items-center gap-2"
-                onClick={() => showModal(row)}
-                disabled={
-                  position !== "Treasurer" &&
-                  position !== "Assistant Treasurer" &&
-                  position !== "Auditor" &&
-                  position !== "Developer" &&
-                  position !== "President"
-                }
-              >
-                <i className="fas fa-trash"></i>
-                {position !== "Treasurer" &&
-                position !== "Assistant Treasurer" &&
-                position !== "Auditor" &&
-                position !== "Developer" &&
-                position !== "President"
-                  ? "Not Authorized"
-                  : "Delete"}
-              </button>
-            </div>
-
+        <div className="text-center">
+          <span
+            className={`flex items-center gap-2 ${
+              row.status === "False"
+                ? "bg-green-200 text-green-800"
+                : "bg-red-200 text-red-800"
+            } px-2 py-1 rounded text-xs`}
+          >
+            <i
+              className={`fa ${
+                row.status === "False" ? "fa-check-circle" : "fa-times-circle"
+              } mr-1 ${
+                row.status === "False" ? "text-green-500" : "text-red-500"
+              }`}
+            ></i>
+            {row.status === "False" ? "Paid" : "Unpaid"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="flex justify-evenly gap-3">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2"
+            onClick={() => handleOpenModal(row)}
+            disabled={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+            }
+          >
+            <i className="fas fa-check"></i>
+            {position !== "Treasurer" &&
+            position !== "Assistant Treasurer" &&
+            position !== "Auditor" &&
+            position !== "Developer" &&
+            position !== "President"
+              ? "Not Authorized"
+              : "Approve"}
+          </button>
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded flex items-center gap-2"
+            onClick={() => showModal(row)}
+            disabled={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+            }
+          >
+            <i className="fas fa-trash"></i>
+            {position !== "Treasurer" &&
+            position !== "Assistant Treasurer" &&
+            position !== "Auditor" &&
+            position !== "Developer" &&
+            position !== "President"
+              ? "Not Authorized"
+              : "Delete"}
+          </button>
+        </div>
       ),
     },
   ];
@@ -260,22 +266,21 @@ function MembershipRequest() {
       <TableComponent
         columns={columns}
         data={data}
-        customButtons={(
+        customButtons={
           <ButtonsComponent>
-          <FormButton
-            type="button"
-            text="Export to PDF"
-            onClick={handleExportPDF}
-            icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
-            styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-            textClass="hidden md:inline"
-          />
+            <FormButton
+              type="button"
+              text="Export to PDF"
+              onClick={handleExportPDF}
+              icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
+              styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+              textClass="hidden md:inline"
+            />
           </ButtonsComponent>
-        )}
+        }
       />
 
-      
-{isModalVisible && (
+      {isModalVisible && (
         <ConfirmationModal
           confirmType={ConfirmActionType.DELETION}
           onCancel={hideModal}
@@ -294,6 +299,9 @@ function MembershipRequest() {
           type={"Membership"}
           onCancel={handleCloseModal}
           onSubmit={handleFormSubmit}
+          qty={1}
+          itemTotal={50}
+          total={50}
         />
       )}
     </>
@@ -301,5 +309,3 @@ function MembershipRequest() {
 }
 
 export default MembershipRequest;
-
-

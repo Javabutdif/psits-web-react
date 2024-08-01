@@ -16,7 +16,6 @@ import TableComponent from "../../components/Custom/TableComponent";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 
-
 function MembershipRequest() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -141,7 +140,8 @@ function MembershipRequest() {
     {
       key: "name",
       label: "Name",
-      selector: (row) => `${row.first_name} ${row.middle_name} ${row.last_name}`,
+      selector: (row) =>
+        `${row.first_name} ${row.middle_name} ${row.last_name}`,
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
@@ -169,17 +169,19 @@ function MembershipRequest() {
       sortable: true,
     },
     {
-        key: "type",
-        label: "Type",
-        selector: () => "Student", // Static value for all rows
-        sortable: true,
-        cell: () => (
-          <div className="text-center">
-            <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">Student</span>
-          </div>
-        ),
-      },
-   {
+      key: "type",
+      label: "Type",
+      selector: () => "Student", // Static value for all rows
+      sortable: true,
+      cell: () => (
+        <div className="text-center">
+          <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">
+            Student
+          </span>
+        </div>
+      ),
+    },
+    {
       name: "Renewed on",
       label: "Renewed on",
       selector: (row) => row.renewedOn,
@@ -199,13 +201,17 @@ function MembershipRequest() {
         <div className="text-center">
           <span
             className={`flex items-center gap-2 ${
-              row.status === "True" ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+              row.status === "True"
+                ? "bg-green-200 text-green-800"
+                : "bg-red-200 text-red-800"
             } px-2 py-1 rounded text-xs`}
           >
             <i
               className={`fa ${
                 row.status === "True" ? "fa-check-circle" : "fa-times-circle"
-              } mr-1 ${row.status === "True" ? "text-green-500" : "text-red-500"}`}
+              } mr-1 ${
+                row.status === "True" ? "text-green-500" : "text-red-500"
+              }`}
             ></i>
             {row.status === "True" ? "Paid" : "Unpaid"}
           </span>
@@ -254,19 +260,18 @@ function MembershipRequest() {
               ? "Not Authorized"
               : "Approve"}
             {position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President" && (
-              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs rounded py-1 px-2">
-                You do not have permission to approve.
-              </span>
-            )}
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President" && (
+                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs rounded py-1 px-2">
+                  You do not have permission to approve.
+                </span>
+              )}
           </button>
         </div>
       ),
-    }
-    
+    },
   ];
 
   return (
@@ -274,18 +279,18 @@ function MembershipRequest() {
       <TableComponent
         columns={columns}
         data={filteredData}
-        customButtons={(
+        customButtons={
           <ButtonsComponent>
-          <FormButton
-            type="button"
-            text="Export to PDF"
-            onClick={handleExportPDF}
-            icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
-            styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-            textClass="hidden md:inline"
-          />
+            <FormButton
+              type="button"
+              text="Export to PDF"
+              onClick={handleExportPDF}
+              icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
+              styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+              textClass="hidden md:inline"
+            />
           </ButtonsComponent>
-        )}
+        }
       />
       {isModalOpen && (
         <ApproveModal
@@ -293,13 +298,15 @@ function MembershipRequest() {
             Math.floor(Math.random() * (999999999 - 111111111)) + 111111111
           }
           id_number={selectedStudentId}
-          type={"Renewal"}
           course={selectedStudentCourse}
           year={selectedStudentYear}
           name={selectedStudentName}
-          rfid={selectedRfid}
+          type={"Renewal"}
           onCancel={handleCloseModal}
           onSubmit={handleFormSubmit}
+          qty={1}
+          itemTotal={20}
+          total={20}
         />
       )}
     </div>

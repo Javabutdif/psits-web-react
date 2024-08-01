@@ -110,18 +110,25 @@ router.put("/students/restore", async (req, res) => {
 });
 
 // HARD DELETE student by id_number
-router.delete("/students/delete/:id_number", async (req, res) => {
+router.put("/students/cancel/:id_number", async (req, res) => {
   const id_number = req.params.id_number;
 
+ 
   try {
-    // Find and delete the student by id_number
-    const deletedStudent = await Student.findOneAndDelete({ id_number });
+    const cancel = await Student.updateOne(
+      { id_number: id_number },
+      {
+        $set: {
+          membership: "None",
+        },
+      }
+    );
 
-    if (!deletedStudent) {
+    if (!cancel) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    res.status(200).json({ message: "Student deleted successfully" });
+    res.status(200).json({ message: "Student cancel membership successfully" });
   } catch (error) {
     console.error("Error deleting student:", error);
     res.status(500).json("Internal Server Error");

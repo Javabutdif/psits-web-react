@@ -11,7 +11,7 @@ router.post("/login", async (req, res) => {
   const { id_number, password } = req.body;
 
   try {
-    let user;
+    let users;
     let role;
 
     const admin = await Admin.findOne({ id_number });
@@ -29,7 +29,7 @@ router.post("/login", async (req, res) => {
           .status(400)
           .json({ message: "Your account has been deleted!" });
       } else if (passwordMatch && student.status === "True") {
-        user = student;
+        users = student;
         role = "Student";
       } else {
         return res
@@ -40,7 +40,7 @@ router.post("/login", async (req, res) => {
       const passwordMatch = await bcrypt.compare(password, admin.password);
 
       if (passwordMatch) {
-        user = admin;
+        users = admin;
         role = "Admin";
       } else {
         return res
@@ -48,9 +48,25 @@ router.post("/login", async (req, res) => {
           .json({ message: "Invalid ID number or password" });
       }
     }
+    const user = {
+      id_number: users.id_number,
+      rfid: role === "Student" ? users.rfid : "",
+      name: role === "Admin" ? users.name : "",
+      first_name: role === "Student" ? users.first_name : "",
+      middle_name: role === "Student" ? users.middle_name : "",
+      last_name: role === "Student" ? users.last_name : "",
+      email: users.email,
+      course: users.course,
+      year: users.year,
+      status: users.status,
+      membership: users.membership,
+      applied: users.applied,
+      renew: users.renew,
+      position: role === "Admin" ? users.position : "N/A",
+    };
 
     const token = jwt.sign({ user, role }, token_key, {
-      expiresIn: "1h",
+      expiresIn: role === "Admin" ? "1h" : "10m",
     });
 
     return res.json({ token, message: "Login successful" });

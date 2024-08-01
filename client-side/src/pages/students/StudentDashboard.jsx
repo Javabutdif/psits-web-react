@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { posts, events } from "../../@fakedb/data";
 import Posts from "./dashboard/Posts";
 import Events from "./dashboard/Events";

@@ -52,7 +52,10 @@ const Profile = () => {
     <div className="w-full bg-white p-4 md:p-6 lg:p-8">
       <h3 className="text-lg md:text-xl font-bold mb-4">Your Profile</h3>
 
-      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 lg:space-y-8">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 md:space-y-6 lg:space-y-8"
+      >
         <div className="flex flex-col items-center mb-4 md:mb-6 lg:mb-8">
           <div className="mt-2 flex justify-center">
             <img
