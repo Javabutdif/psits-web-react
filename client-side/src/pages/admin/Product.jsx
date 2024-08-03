@@ -10,7 +10,8 @@ import ImageInput from "../../components/forms/ImageInput";
 
 function Product({ handleCloseAddProduct }) {
   const [name] = getUser();
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
+  const [isLoading, setIsLoading] = useState(false);
   const variation = [
     "White",
     "Purple",
@@ -137,36 +138,49 @@ function Product({ handleCloseAddProduct }) {
     setShowPreview(true);
   };
 
-const handleConfirm = async () => {
-  const data = new FormData();
+  const handleConfirm = async () => {
+    setIsLoading(true);
+    const data = new FormData();
 
-  // Append all images to FormData
-  if (images) {
-    images.forEach((image) => data.append("images", image)); // Note the key is 'images' to handle multiple files
-  }
+    // Append all images to FormData
+    if (images) {
+      images.forEach((image) => data.append("images", image));
+    }
 
-  // Append other form data
-  for (const key in formData) {
-    data.append(key, formData[key]);
-  }
+    // Append other form data
+    for (const key in formData) {
+      let value = formData[key];
 
-  try {
-    await addMerchandise(data);
-    console.log(images);
-    handleCloseAddProduct(); // Close the modal after successful submission
-    setShowPreview(false); // Hide preview modal after confirmation
-  } catch (error) {
-    showToast("error", error.message);
-  }
-};
+      // Ensure arrays are converted to strings before appending to FormData
+      if (Array.isArray(value)) {
+        value = value.join(",");
+      }
 
+      data.append(key, value);
+    }
+
+    try {
+      await addMerchandise(data);
+      handleCloseAddProduct();
+      setShowPreview(false);
+      setIsLoading(false);
+    } catch (error) {
+      showToast("error", error.message);
+      setIsLoading(false);
+    }
+  };
 
   const handleSizeClick = (size) => {
     setFormData((prevState) => {
-      const isSelected = prevState.selectedSizes.includes(size);
+      // Ensure selectedSizes is treated as an array
+      const selectedSizesArray = Array.isArray(prevState.selectedSizes)
+        ? prevState.selectedSizes
+        : prevState.selectedSizes.split(",");
+
+      const isSelected = selectedSizesArray.includes(size);
       const newSelectedSizes = isSelected
-        ? prevState.selectedSizes.filter((s) => s !== size)
-        : [...prevState.selectedSizes, size];
+        ? selectedSizesArray.filter((s) => s !== size)
+        : [...selectedSizesArray, size];
 
       return {
         ...prevState,
@@ -177,10 +191,16 @@ const handleConfirm = async () => {
 
   const handleVariationClick = (variation) => {
     setFormData((prevState) => {
-      const isSelected = prevState.selectedVariations.includes(variation);
+      const selectedVariationsArray = Array.isArray(
+        prevState.selectedVariations
+      )
+        ? prevState.selectedVariations
+        : prevState.selectedVariations.split(",");
+
+      const isSelected = selectedVariationsArray.includes(variation);
       const newSelectedVariations = isSelected
-        ? prevState.selectedVariations.filter((v) => v !== variation)
-        : [...prevState.selectedVariations, variation];
+        ? selectedVariationsArray.filter((v) => v !== variation)
+        : [...selectedVariationsArray, variation];
 
       return {
         ...prevState,
@@ -223,9 +243,6 @@ const handleConfirm = async () => {
     return typeOptions[category] || [];
   };
 
-
-
-  
   const PreviewModal = ({ data, images, onClose, onConfirm }) => {
     // Show up to 3 images in the preview
     const imagesToShow = images.slice(0, 3);
@@ -265,7 +282,7 @@ const handleConfirm = async () => {
                 <strong>Product Name:</strong> {data.name}
               </p>
               <p className="text-sm">
-                <strong>Price:</strong> ${data.price}
+                <strong>Price:</strong> ₱{data.price}
               </p>
               <p className="text-sm">
                 <strong>Stocks:</strong> {data.stocks}
@@ -309,6 +326,7 @@ const handleConfirm = async () => {
             </button>
             <button
               onClick={onConfirm}
+              disabled={isLoading}
               className="px-5 py-2 bg-blue-500 text-white rounded-full text-sm transition-colors hover:bg-blue-600"
             >
               Confirm
@@ -338,14 +356,14 @@ const handleConfirm = async () => {
               previews={imagePreviews}
             />
             <FormInput
-                label="Product Name"
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleChange}
-                labelStyle="text-xs"
-                inputStyle="text-xs"
-              />
+              label="Product Name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              labelStyle="text-xs"
+              inputStyle="text-xs"
+            />
             <div className="flex flex-col md:flex-row  space-x-0 flex-wrap md:space-x-4 gap-y-4">
               <FormInput
                 label="Price"
@@ -375,7 +393,7 @@ const handleConfirm = async () => {
                 inputStyle="text-xs"
               />
             </div>
-      
+
             <FormTextArea
               name="description"
               label="Description"
