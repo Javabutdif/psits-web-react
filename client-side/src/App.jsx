@@ -47,6 +47,8 @@ import AllMembers from "./pages/admin/membership/AllMembers";
 
 import PaidOrders from "./pages/admin/orders/PaidOrders";
 import PendingOrders from "./pages/admin/orders/PendingOrders";
+import StudentPaidOrders from "./pages/students/orders/PaidOrders"
+import StudentPendingOrder from "./pages/students/orders/PendingOrders"
 
 
 const App = () => {
@@ -176,12 +178,9 @@ const App = () => {
             <Route
               path="orders"
               element={<PrivateRouteStudent element={StudentOrders} />}
-
             >
-                    <Route index />
-               <Route path="paid" />
-
-
+               <Route index element={<PrivateRouteStudent element={StudentPendingOrder}/>}/>
+               <Route path="paid" element={<PrivateRouteStudent element={StudentPaidOrders} />} />
             </Route>
 
             <Route
