@@ -146,13 +146,15 @@ function MembershipHistory() {
         data={filteredData}
         customButtons={(
           <ButtonsComponent>
-              <FormButton
+               <FormButton
                 type="button"
-                text="Export to PDF"
+                text="PDF Export"
                 onClick={handleExportPDF}
-                icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
-                styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-                textClass="hidden md:inline"
+                icon={<i className="fas fa-file-pdf"></i>}
+                styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                textClass="hidden"
+                whileHover={{ scale: 1.01, opacity: 0.9 }}
+                whileTap={{ scale: 0.95, opacity: 0.8 }}
               />
           </ButtonsComponent>
 

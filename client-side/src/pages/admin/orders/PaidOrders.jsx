@@ -1,10 +1,37 @@
 // pages/PaidOrders.js
-import React from 'react';
-import { useOutletContext } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import TableComponent from '../../../components/Custom/TableComponent';
+import { getAllOrders, cancelOrder } from "../../../api/orders";
+import { getId } from "../../../authentication/Authentication";
 
 const PaidOrders = () => {
-  const { orders } = useOutletContext(); // Access orders data from context
+  
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const ordersData = await getAllOrders(getId());
+        if (ordersData) {
+          setOrders(ordersData);
+        } else {
+          setOrders([]);
+        }
+      } catch (error) {
+        setError("Failed to fetch orders");
+        console.error("Failed to fetch orders", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
 
   const paidOrders = orders.filter(order => order.order_status === 'Paid');
   console.log(paidOrders);

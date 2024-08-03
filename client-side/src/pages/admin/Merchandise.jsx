@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion } from 'framer-motion'
 import { Link } from "react-router-dom";
 import "../../App.css";
 import { merchandise, deleteMerchandise } from "../../api/admin";
@@ -7,16 +8,29 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
+import ButtonsComponent from "../../components/Custom/ButtonsComponent";
+import FilterOptions from "../students/merchandise/FilterOptions";
+FilterOptions
 
 
 function Merchandise() {
    const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddProductModal, setIsAddProductModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState(""); // Add state for search query
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedControls, setSelectedControls] = useState([]);
+  const [selectedSizes, setSelectedSizes] = useState([]);
+  const [selectedVariations, setSelectedVariations] = useState([]);
+  
+  const filterOptionsRef = useRef(null);
+
 
   const fetchData = async () => {
     try {
@@ -56,35 +70,18 @@ function Merchandise() {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const handleExportPDF = (filteredData) => {
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [
-        ["Product ID", "Product", "Category", "Price", "Batch", "Controls"],
-      ],
-      body: filteredData.map((item) => [
-        item._id,
-        item.name,
-        item.category,
-        item.price,
-        item.batch,
-        item.control,
-      ]),
-      startY: 20,
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-        textColor: [0, 0, 0],
-      },
-      headStyles: {
-        fillColor: [0, 100, 255],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-      },
-      margin: { top: 10 },
-    });
-    doc.save("merchandise.pdf");
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterOptionsRef.current && !filterOptionsRef.current.contains(event.target)) {
+        setIsFilterOptionOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleView = (item) => {
     setSelectedItem(item);
@@ -100,6 +97,33 @@ function Merchandise() {
   };
 
   const columns = [
+    {
+      key: "select",
+      label: (
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={() => setSelectAll(!selectAll)}
+          />
+        </motion.div>
+      ),
+      cell: (row) => (
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <input
+            type="checkbox"
+            checked={selectedRows.includes(row.id_number)}
+            onChange={() => handleRowSelection(row.id_number)}
+          />
+        </motion.div>
+      ),
+    },
     {
       key: "_id",
       label: "Product ID",
@@ -164,53 +188,170 @@ function Merchandise() {
     },
     {
       key: "actions",
-      label: "Actions",
+      label: "",
       cell: (row) => (
-        <div className="flex gap-2">
+        <ButtonsComponent>
           <FormButton
-            type="button"
-            text="View"
-            onClick={() => handleView(row)} // Ensure the onClick is defined
-            styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-eye text-sm text-base"></i>} // Use a relevant icon for "View"
-            textClass="ml-2 md:inline"
-            iconClass="text-sm text-base"
-          />
+              type="button"
+              text="View"
+              onClick={() => handleView(row)} // Ensure the onClick is defined
+              styles="flex items-center gap-2 bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md px-3 py-1.5 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+              icon={<i className="fas fa-eye"></i>} // Clean icon for "View"
+              textClass="ml-2"
+              iconClass="text-base"
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+            />
 
-          <FormButton
-            type="button"
-            text="Delete"
-            // onClick={() => handleDelete(row)} // Updated handler for delete action
-            onClick={() => deleteMerchandiseApi(row._id)}
-            styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-trash text-sm text-base"></i>} // Use a relevant icon for "Delete"
-            textClass="ml-2 md:inline"
-            iconClass="text-sm text-base"
-          />
-        </div>
-      ),
+            <FormButton
+              type="button"
+              text="Delete"
+              onClick={() => deleteMerchandiseApi(row._id)} // Updated handler for delete action
+              styles="flex items-center gap-2 bg-red-100 text-red-800 hover:bg-red-200 active:bg-red-300 rounded-md px-3 py-1.5 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
+              icon={<i className="fas fa-trash"></i>} // Clean icon for "Delete"
+              textClass="ml-2"
+              iconClass="text-base"
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+            />
+        </ButtonsComponent>
+      )
     },
   ];
 
+  useEffect(() => {
+    if (selectAll) {
+      setSelectedRows(filteredData.map((item) => item.id_number));
+    } else {
+      setSelectedRows([]);
+    }
+  }, [selectAll, filteredData]);
+
+
+  const handleRowSelection = (id_number) => {
+    setSelectedRows((prevSelectedRows) =>
+      prevSelectedRows.includes(id_number)
+        ? prevSelectedRows.filter((id) => id !== id_number)
+        : [...prevSelectedRows, id_number]
+    );
+  };
+
+  const handleCategoryChange = (category, checked) => {
+    setSelectedCategories(prevState =>
+      checked ? [...prevState, category] : prevState.filter(c => c !== category)
+    );
+  };
+
+  const handleControlChange = (control, checked) => {
+    setSelectedControls(prevState =>
+      checked ? [...prevState, control] : prevState.filter(c => c !== control)
+    );
+  };
+
+  const handleSizeChange = (size, checked) => {
+    setSelectedSizes(prevState =>
+      checked ? [...prevState, size] : prevState.filter(s => s !== size)
+    );
+  };
+
+  const handleVariationChange = (variation, checked) => {
+    setSelectedVariations(prevState =>
+      checked ? [...prevState, variation] : prevState.filter(v => v !== variation)
+    );
+  };
+
+  // Reset all filters
+  const handleReset = () => {
+    setSelectedCategories([]);
+    setSelectedControls([]);
+    setSelectedSizes([]);
+    setSelectedVariations([]);
+    setSearchQuery("");
+  };
+
+ // Filter products based on selected filters
+ const filteredProducts = data.filter(product => {
+  const name = product.name ? product.name.toLowerCase() : '';
+  const price = product.price ? product.price.toFixed(2) : '';
+  const category = product.category ? product.category.toLowerCase() : '';
+  const control = product.control ? product.control.toLowerCase().split(' ')[0] : '';
+  const sizes = Array.isArray(product.selectedSizes) ? product.selectedSizes : [];
+  const variations = Array.isArray(product.selectedVariations) ? product.selectedVariations : [];
+
+  const searchQueryLower = searchQuery.toLowerCase();
+  const matchesSearchQuery = name.includes(searchQueryLower) || price.includes(searchQueryLower);
+
+  const sizesMatch = selectedSizes.length === 0 || selectedSizes.some(size => sizes.includes(size));
+  const variationsMatch = selectedVariations.length === 0 || selectedVariations.some(variation => variations.includes(variation));
+
+  return (
+    matchesSearchQuery &&
+    (selectedCategories.length === 0 || selectedCategories.includes(category)) &&
+    (selectedControls.length === 0 || selectedControls.includes(control)) &&
+    sizesMatch &&
+    variationsMatch
+  );
+});
   return (
     <>
       <TableComponent
 
 
-          data={data}
+          data={filteredProducts}
           columns={columns}
-          handleExportPDF={handleExportPDF}
           customButtons={(
-            <FormButton 
-              type="button"
-              text="Add Product"
-              onClick={handleOpenAddProduct}
-                styles="bg-indigo-100 text-violet-800 hover:bg-violet-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-              icon={<i className="fas fa-cart-plus text-sm text-base"></i>}
-              textClass="ml-2 md:inline"
-              /* Ensure that textClass is responsive */
-              iconClass="text-sm text-base" // If you need to apply specific styles to the icon
-            />
+            <ButtonsComponent>
+              <div>
+                <FormButton
+                    type="button"
+                    text="Filter"
+                    onClick={() => setIsFilterOptionOpen(prev => !prev)}
+                    icon={<i className="fas fa-funnel-dollar"></i>} // Funnel icon
+                    styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
+                    textClass="hidden"
+                    whileHover={{ scale: 1.01, opacity: 0.9 }}
+                    whileTap={{ scale: 0.95, opacity: 0.8 }}
+                  />
+                   {isFilterOptionOpen &&
+                <div ref={filterOptionsRef}>
+                  <FilterOptions
+                    onCategoryChange={handleCategoryChange}
+                    selectedCategories={selectedCategories}
+                    onControlChange={handleControlChange}
+                    selectedControls={selectedControls}
+                    onSizeChange={handleSizeChange}
+                    selectedSizes={selectedSizes}
+                    onVariationChange={handleVariationChange}
+                    selectedVariations={selectedVariations}
+                    onClick={handleReset}
+                  />
+                </div>
+              }
+              </div>
+
+              {selectedRows.length > 0 && (
+                <FormButton
+                  type="button"
+                  text="Delete All"
+                  // onClick={handleDeleteAll} // Ensure this is the correct handler for deletion
+                  icon={<i className="fas fa-trash-alt"></i>} // Updated icon
+                  styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
+                  textClass="hidden"
+                  whileHover={{ scale: 1.01, opacity: 0.9 }}
+                  whileTap={{ scale: 0.95, opacity: 0.8 }}
+                />
+              )}
+              <FormButton 
+                type="button"
+                text="Add Product"
+                onClick={handleOpenAddProduct}
+                  styles="bg-indigo-100 text-violet-800 hover:bg-violet-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+                icon={<i className="fas fa-cart-plus text-sm text-base"></i>}
+                textClass="ml-2 hidden md:inline"
+                /* Ensure that textClass is responsive */
+                iconClass="text-sm text-base" // If you need to apply specific styles to the icon
+              />
+            </ButtonsComponent>
           )}
 
 
@@ -226,7 +367,7 @@ function Merchandise() {
               Product Details
             </h2>
             <div className="mb-4">
-              <Swiper
+              {/* <Swiper
                 spaceBetween={10}
                 slidesPerView={1}
                 pagination={{ clickable: true }}
@@ -241,7 +382,7 @@ function Merchandise() {
                     />
                   </SwiperSlide>
                 ))}
-              </Swiper>
+              </Swiper> */}
             </div>
             <div className="space-y-2 text-sm text-gray-700">
               <div>

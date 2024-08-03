@@ -44,8 +44,8 @@ import StudentOrders from "./pages/students/StudentOrders";
 import ProductDetail from "./pages/students/ProductDetail";
 import PrivateRouteStudent from "./authentication/privateRouteStudent";
 import AllMembers from "./pages/admin/membership/AllMembers";
-import PaidOrders from "./pages/students/orders/PaidOrders";
-import PendingOrders from "./pages/students/orders/PendingOrders";
+import PaidOrders from "./pages/admin/orders/PaidOrders";
+import PendingOrders from "./pages/admin/orders/PendingOrders";
 
 const App = () => {
   return (
@@ -118,7 +118,16 @@ const App = () => {
             <Route
               path="orders"
               element={<PrivateRouteAdmin element={Orders} />}
-            />
+            >
+                 <Route index
+                element={<PrivateRouteAdmin element={PendingOrders}/>}
+                />
+              <Route path="paid"
+                element={<PrivateRouteAdmin element={PaidOrders}/>}
+              />
+
+         
+            </Route>
             <Route
               path="analytics"
               element={<PrivateRouteAdmin element={Analytics} />}
@@ -166,12 +175,10 @@ const App = () => {
               path="orders/"
               element={<PrivateRouteStudent element={StudentOrders} />}
             >
-              <Route index
-                element={<PrivateRouteStudent element={PendingOrders}/>}
-                />
-              <Route path="paid"
-                element={<PrivateRouteStudent element={PaidOrders}/>}
-              />
+                    <Route index />
+               <Route path="paid" />
+
+
             </Route>
             <Route
               path="settings"
