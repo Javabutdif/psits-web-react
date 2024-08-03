@@ -70,7 +70,7 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
 
   return (
     <div className="overflow-x-auto overflow-hidden">
-      <div className="bg-white px-2 p-4 flex flex-row gap-4 md:gap-6 shadow-sm">
+      <div className="bg-white p-3 flex flex-row gap-3 shadow-sm">
         {customSearch || <SearchComponent searchQuery={searchQuery} handleSearchChange={handleSearchChange} />}
         {customButtons || <ButtonsComponent />}
       </div>

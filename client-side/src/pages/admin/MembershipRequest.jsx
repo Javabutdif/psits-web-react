@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../../App.css";
+import { motion } from 'framer-motion'
 import { showToast } from "../../utils/alertHelper";
 import { membershipRequest, requestDeletion } from "../../api/admin";
 import MembershipHeader from "../../components/admin/MembershipHeader";
@@ -28,8 +28,37 @@ function MembershipRequest() {
   const [selectedStudentYear, setSelectedStudentYear] = useState("");
   const [selectedStudentName, setSelectedStudentName] = useState("");
   const [name, position] = getUser();
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   const columns = [
+    {
+      key: "select",
+      label: (
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={() => setSelectAll(!selectAll)}
+          />
+        </motion.div>
+      ),
+      cell: (row) => (
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <input
+            type="checkbox"
+            checked={selectedRows.includes(row.id_number)}
+            onChange={() => handleRowSelection(row.id_number)}
+          />
+        </motion.div>
+      ),
+    },
     {
       key: "name",
       label: "Name",
@@ -114,10 +143,16 @@ function MembershipRequest() {
     {
       name: "Action",
       cell: (row) => (
-        <div className="flex justify-evenly gap-3">
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2"
+        <ButtonsComponent>
+          <FormButton
+            type="button"
+            text="Approve"
             onClick={() => handleOpenModal(row)}
+            icon={<i className="fas fa-check" />} // Updated to a checkmark icon for approval
+            styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+            textClass="text-gray-800"
+            whileHover={{ scale: 1.02, opacity: 0.95 }}
+            whileTap={{ scale: 0.98, opacity: 0.9 }}
             disabled={
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
@@ -125,37 +160,19 @@ function MembershipRequest() {
               position !== "Developer" &&
               position !== "President"
             }
-          >
-            <i className="fas fa-check"></i>
-            {position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President"
-              ? "Not Authorized"
-              : "Approve"}
-          </button>
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded flex items-center gap-2"
+          />
+          <FormButton
+            type="button"
+            text="Delete"
             onClick={() => showModal(row)}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
-            }
-          >
-            <i className="fas fa-trash"></i>
-            {position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President"
-              ? "Not Authorized"
-              : "Delete"}
-          </button>
-        </div>
+            icon={<i className="fas fa-trash" />} // Trash icon for deletion
+            styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+            textClass="text-red-800"
+            whileHover={{ scale: 1.02, opacity: 0.95 }}
+            whileTap={{ scale: 0.98, opacity: 0.9 }}
+          />
+        </ButtonsComponent>
+
       ),
     },
   ];
@@ -261,6 +278,23 @@ function MembershipRequest() {
     handleCloseModal();
   };
 
+  useEffect(() => {
+    if (selectAll) {
+      setSelectedRows(filteredData.map((item) => item.id_number));
+    } else {
+      setSelectedRows([]);
+    }
+  }, [selectAll, filteredData]);
+
+
+  const handleRowSelection = (id_number) => {
+    setSelectedRows((prevSelectedRows) =>
+      prevSelectedRows.includes(id_number)
+        ? prevSelectedRows.filter((id) => id !== id_number)
+        : [...prevSelectedRows, id_number]
+    );
+  };
+
   return (
     <>
       <TableComponent
@@ -268,14 +302,28 @@ function MembershipRequest() {
         data={data}
         customButtons={
           <ButtonsComponent>
-            <FormButton
-              type="button"
-              text="Export to PDF"
-              onClick={handleExportPDF}
-              icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
-              styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-              textClass="hidden md:inline"
-            />
+             {selectedRows.length > 0 && (
+                <FormButton
+                  type="button"
+                  text="Delete All"
+                  // onClick={handleDeleteAll} // Ensure this is the correct handler for deletion
+                  icon={<i className="fas fa-trash-alt"></i>} // Updated icon
+                  styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
+                  textClass="hidden"
+                  whileHover={{ scale: 1.01, opacity: 0.9 }}
+                  whileTap={{ scale: 0.95, opacity: 0.8 }}
+                />
+              )}
+             <FormButton
+                type="button"
+                text="PDF Export"
+                onClick={handleExportPDF}
+                icon={<i className="fas fa-file-pdf"></i>}
+                styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                textClass="hidden"
+                whileHover={{ scale: 1.01, opacity: 0.9 }}
+                whileTap={{ scale: 0.95, opacity: 0.8 }}
+              />
           </ButtonsComponent>
         }
       />

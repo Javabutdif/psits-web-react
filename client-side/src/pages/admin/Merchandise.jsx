@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion } from 'framer-motion'
 import { Link } from "react-router-dom";
 import "../../App.css";
 import { merchandise, deleteMerchandise } from "../../api/admin";
@@ -7,20 +8,39 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
+
 import EditProduct from "./EditProduct";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
 
+import ButtonsComponent from "../../components/Custom/ButtonsComponent";
+import FilterOptions from "../students/merchandise/FilterOptions";
+FilterOptions
+
+
+
 function Merchandise() {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddProductModal, setIsAddProductModal] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState(""); // Add state for search query
+
   const [merchToEdit, setMerchToEdit] = useState(null);
+
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedControls, setSelectedControls] = useState([]);
+  const [selectedSizes, setSelectedSizes] = useState([]);
+  const [selectedVariations, setSelectedVariations] = useState([]);
+  
+  const filterOptionsRef = useRef(null);
+
 
   const fetchData = async () => {
     try {
@@ -60,35 +80,18 @@ function Merchandise() {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const handleExportPDF = (filteredData) => {
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [
-        ["Product ID", "Product", "Category", "Price", "Batch", "Controls"],
-      ],
-      body: filteredData.map((item) => [
-        item._id,
-        item.name,
-        item.category,
-        item.price,
-        item.batch,
-        item.control,
-      ]),
-      startY: 20,
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-        textColor: [0, 0, 0],
-      },
-      headStyles: {
-        fillColor: [0, 100, 255],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-      },
-      margin: { top: 10 },
-    });
-    doc.save("merchandise.pdf");
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterOptionsRef.current && !filterOptionsRef.current.contains(event.target)) {
+        setIsFilterOptionOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleView = (item) => {
     setSelectedItem(item);
@@ -110,6 +113,33 @@ function Merchandise() {
   };
 
   const columns = [
+    {
+      key: "select",
+      label: (
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={() => setSelectAll(!selectAll)}
+          />
+        </motion.div>
+      ),
+      cell: (row) => (
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <input
+            type="checkbox"
+            checked={selectedRows.includes(row.id_number)}
+            onChange={() => handleRowSelection(row.id_number)}
+          />
+        </motion.div>
+      ),
+    },
     {
       key: "_id",
       label: "Product ID",
@@ -173,10 +203,11 @@ function Merchandise() {
     },
     {
       key: "actions",
-      label: "Actions",
+      label: "",
       cell: (row) => (
-        <div className="flex gap-2">
+        <ButtonsComponent>
           <FormButton
+
             type="button"
             text="View"
             onClick={() => handleView(row)} // Ensure the onClick is defined
@@ -208,12 +239,87 @@ function Merchandise() {
           />
         </div>
       ),
+
     },
   ];
 
+  useEffect(() => {
+    if (selectAll) {
+      setSelectedRows(filteredData.map((item) => item.id_number));
+    } else {
+      setSelectedRows([]);
+    }
+  }, [selectAll, filteredData]);
+
+
+  const handleRowSelection = (id_number) => {
+    setSelectedRows((prevSelectedRows) =>
+      prevSelectedRows.includes(id_number)
+        ? prevSelectedRows.filter((id) => id !== id_number)
+        : [...prevSelectedRows, id_number]
+    );
+  };
+
+  const handleCategoryChange = (category, checked) => {
+    setSelectedCategories(prevState =>
+      checked ? [...prevState, category] : prevState.filter(c => c !== category)
+    );
+  };
+
+  const handleControlChange = (control, checked) => {
+    setSelectedControls(prevState =>
+      checked ? [...prevState, control] : prevState.filter(c => c !== control)
+    );
+  };
+
+  const handleSizeChange = (size, checked) => {
+    setSelectedSizes(prevState =>
+      checked ? [...prevState, size] : prevState.filter(s => s !== size)
+    );
+  };
+
+  const handleVariationChange = (variation, checked) => {
+    setSelectedVariations(prevState =>
+      checked ? [...prevState, variation] : prevState.filter(v => v !== variation)
+    );
+  };
+
+  // Reset all filters
+  const handleReset = () => {
+    setSelectedCategories([]);
+    setSelectedControls([]);
+    setSelectedSizes([]);
+    setSelectedVariations([]);
+    setSearchQuery("");
+  };
+
+ // Filter products based on selected filters
+ const filteredProducts = data.filter(product => {
+  const name = product.name ? product.name.toLowerCase() : '';
+  const price = product.price ? product.price.toFixed(2) : '';
+  const category = product.category ? product.category.toLowerCase() : '';
+  const control = product.control ? product.control.toLowerCase().split(' ')[0] : '';
+  const sizes = Array.isArray(product.selectedSizes) ? product.selectedSizes : [];
+  const variations = Array.isArray(product.selectedVariations) ? product.selectedVariations : [];
+
+  const searchQueryLower = searchQuery.toLowerCase();
+  const matchesSearchQuery = name.includes(searchQueryLower) || price.includes(searchQueryLower);
+
+  const sizesMatch = selectedSizes.length === 0 || selectedSizes.some(size => sizes.includes(size));
+  const variationsMatch = selectedVariations.length === 0 || selectedVariations.some(variation => variations.includes(variation));
+
+  return (
+    matchesSearchQuery &&
+    (selectedCategories.length === 0 || selectedCategories.includes(category)) &&
+    (selectedControls.length === 0 || selectedControls.includes(control)) &&
+    sizesMatch &&
+    variationsMatch
+  );
+});
   return (
     <>
       <TableComponent
+
         data={data}
         columns={columns}
         handleExportPDF={handleExportPDF}
@@ -229,6 +335,7 @@ function Merchandise() {
             iconClass="text-sm text-base" // If you need to apply specific styles to the icon
           />
         }
+
       />
       {isEditModalOpen && (
         <EditProduct
@@ -247,7 +354,7 @@ function Merchandise() {
               Product Details
             </h2>
             <div className="mb-4">
-              <Swiper
+              {/* <Swiper
                 spaceBetween={10}
                 slidesPerView={1}
                 pagination={{ clickable: true }}
@@ -262,7 +369,7 @@ function Merchandise() {
                     />
                   </SwiperSlide>
                 ))}
-              </Swiper>
+              </Swiper> */}
             </div>
             <div className="space-y-2 text-sm text-gray-700">
               <div>
