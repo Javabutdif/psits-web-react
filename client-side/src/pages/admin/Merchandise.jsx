@@ -9,6 +9,7 @@ import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
+import EditProduct from "./EditProduct";
 
 function Merchandise() {
   const [data, setData] = useState([]);
@@ -16,8 +17,10 @@ function Merchandise() {
   const [loading, setLoading] = useState(true);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddProductModal, setIsAddProductModal] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState(""); // Add state for search query
+  const [merchToEdit, setMerchToEdit] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -94,6 +97,12 @@ function Merchandise() {
 
   const handleOpenAddProduct = () => setIsAddProductModal(true);
   const handleCloseAddProduct = () => setIsAddProductModal(false);
+
+  const handleOpenEditModal = (row) => {
+    setMerchToEdit(row);
+    setIsEditModalOpen(true);
+  };
+  const handleCloseEditModal = () => setIsEditModalOpen(false);
 
   const deleteMerchandiseApi = async (id) => {
     console.log(id);
@@ -180,7 +189,7 @@ function Merchandise() {
           <FormButton
             type="button"
             text="Edit"
-            onClick={() => {}}
+            onClick={() => handleOpenEditModal(row)}
             styles="bg-green-200 text-green-800 hover:bg-green-200 active:bg-green-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
             icon={<i className="fas fa-edit text-sm"></i>}
             textClass="ml-2 md:inline"
@@ -221,6 +230,12 @@ function Merchandise() {
           />
         }
       />
+      {isEditModalOpen && (
+        <EditProduct
+          handleCloseEditProduct={handleCloseEditModal}
+          merchData={merchToEdit}
+        />
+      )}
       {isAddProductModal && (
         <Product handleCloseAddProduct={handleCloseAddProduct} />
       )}
