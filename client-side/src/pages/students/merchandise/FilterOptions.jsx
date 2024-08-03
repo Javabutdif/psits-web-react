@@ -1,5 +1,12 @@
 import React from 'react';
 
+
+const FilterOptions = ({ 
+  onCategoryChange, selectedCategories, 
+  onControlChange, selectedControls, 
+  onSizeChange, selectedSizes, 
+  onVariationChange, selectedVariations 
+
 // Reusable Button Component
 const FilterButton = ({ value, label, isSelected, onClick }) => {
   return ( 
@@ -53,6 +60,7 @@ const FilterOptions = ({
   onSizeChange, selectedSizes,
   onVariationChange, selectedVariations,
   onClick // Added prop for reset function
+
 }) => {
   const categoryOptions = [
     { value: "uniform", label: "Uniform" },
@@ -73,6 +81,66 @@ const FilterOptions = ({
   ];
 
   const sizes = ["18", "XS", "S", "M", "L", "XL", "2XL", "3XL"];
+
+
+  const handleCheckboxChange = (e) => {
+    const { value, name, checked } = e.target;
+    if (name === 'category') {
+      onCategoryChange(value, checked);
+    } else if (name === 'control') {
+      onControlChange(value, checked);
+    } else if (name === 'size') {
+      onSizeChange(value, checked);
+    } else if (name === 'variation') {
+      onVariationChange(value, checked);
+    }
+  };
+
+  const handleButtonClick = (value, name) => {
+    if (name === 'size') {
+      onSizeChange(value, !selectedSizes.includes(value));
+    } else if (name === 'variation') {
+      onVariationChange(value, !selectedVariations.includes(value));
+    }
+  };
+
+  return (
+    <div className="w-72 bg-white rounded-lg shadow-md p-4 absolute right-4 top-16 z-50 max-h-[calc(100vh-4rem)] overflow-auto">
+      <form className="space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold mb-2 border-b pb-2">Categories</h3>
+          {categoryOptions.map(option => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                id={option.value} 
+                name="category"
+                value={option.value} 
+                checked={selectedCategories.includes(option.value)}
+                onChange={handleCheckboxChange}
+                className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded"
+              />
+              <label htmlFor={option.value} className="text-gray-700 text-sm">{option.label}</label>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <h3 className="text-lg font-semibold mb-2 border-b pb-2">Controls</h3>
+          {controls.map(control => (
+            <div key={control.value} className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                id={control.value} 
+                name="control"
+                value={control.value} 
+                checked={selectedControls.includes(control.value)}
+                onChange={handleCheckboxChange}
+                className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded"
+              />
+              <label htmlFor={control.value} className="text-gray-700 text-sm">{control.label}</label>
+            </div>
+          ))}
 
   const handleFilterChange = (value, type) => {
     switch (type) {
@@ -124,45 +192,40 @@ const FilterOptions = ({
               />
             ))}
           </div>
+
         </div>
 
         <div>
-          <h3 className="text-base font-semibold mb-2 border-b pb-2">Sizes</h3>
+          <h3 className="text-lg font-semibold mb-2 border-b pb-2">Sizes</h3>
           <div className="flex flex-wrap gap-2">
             {sizes.map(size => (
               <FilterButton
                 key={size}
+
                 value={size}
                 label={size}
                 isSelected={selectedSizes.includes(size)}
                 onClick={() => handleFilterChange(size, 'size')}
               />
+
             ))}
           </div>
         </div>
 
         <div>
-          <h3 className="text-base font-semibold mb-2 border-b pb-2">Variations</h3>
+          <h3 className="text-lg font-semibold mb-2 border-b pb-2">Variations</h3>
           <div className="flex flex-wrap gap-2">
             {variations.map(variation => (
               <ColorSwatch
                 key={variation}
+
                 color={variation}
                 isSelected={selectedVariations.includes(variation)}
                 onClick={() => handleFilterChange(variation, 'variation')}
               />
+
             ))}
           </div>
-        </div>
-
-        <div className="absolute -top-6 right-0 text-center mt-4">
-          <button
-            type="button"
-            onClick={onClick}
-            className="py-2 px-4 text-xs rounded-md bg-gray-300 text-gray-700 hover:bg-gray-400 transition duration-150"
-          >
-            Reset
-          </button>
         </div>
       </form>
     </div>
