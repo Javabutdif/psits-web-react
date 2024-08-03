@@ -1,15 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormButton from "../../components/forms/FormButton";
 import {
-  getMembershipStatus,
-  getRenewStatus,
   getId,
   getRfid,
   getInformationData,
 } from "../../authentication/Authentication";
 import { makeOrder } from "../../api/orders";
 import { format } from "date-fns";
+import { getMembershipStatusStudents } from "../../api/students";
 
 // Reusable ButtonGroup component
 const ButtonGroup = ({ items, selectedItem, onSelect, label, disabled }) => (
@@ -69,6 +68,19 @@ const ProductDetail = () => {
   const [id_number, student_name, email, course, year, role, position] =
     getInformationData();
 
+  const [status, setStatus] = useState({ membership: "", renew: "" });
+
+  if (position === "N/A") {
+    useEffect(() => {
+      const fetchStatus = async () => {
+        const membershipStatus = await getMembershipStatusStudents(getId());
+        setStatus(membershipStatus);
+      };
+
+      fetchStatus();
+    }, []);
+  }
+
   const {
     _id = "",
     imageUrl = [],
@@ -105,8 +117,8 @@ const ProductDetail = () => {
   };
 
   const discount =
-    (getMembershipStatus() === "Accepted" && getRenewStatus() === "None") ||
-    (getRenewStatus() === "Accepted" && category !== "uniform")
+    (status.membership === "Accepted" && status.renew === "None") ||
+    (status.renew === "Accepted" && category !== "uniform")
       ? price - price * 0.2
       : price;
 

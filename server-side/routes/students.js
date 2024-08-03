@@ -47,13 +47,32 @@ router.put("/students/request", async (req, res) => {
 router.get("/students/deleted-students", async (req, res) => {
   try {
     const students = await Student.find({
-      membership: "Accepted",
       status: "False",
     });
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);
     res.status(500).json("Internal Server Error");
+  }
+});
+
+router.get("/students/get-membership-status", async (req, res) => {
+  const { id_number } = req.query;
+  try {
+    const student = await Student.findOne({ id_number });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const studentStatus = {
+      membership: student.membership,
+      renew: student.renew,
+    };
+
+    res.status(200).json(studentStatus);
+  } catch (error) {
+    console.error("Error fetching student:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -113,7 +132,6 @@ router.put("/students/restore", async (req, res) => {
 router.put("/students/cancel/:id_number", async (req, res) => {
   const id_number = req.params.id_number;
 
- 
   try {
     const cancel = await Student.updateOne(
       { id_number: id_number },
