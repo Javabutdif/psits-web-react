@@ -1,14 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  getUser,
-  getMembershipStatus,
-  getRenewStatus,
-} from "../../authentication/Authentication";
+import { getUser, getId } from "../../authentication/Authentication";
+import { getMembershipStatusStudents } from "../../api/students";
 
 const Profile = () => {
   const location = useLocation().pathname.split("/")[1];
   const [name, position] = getUser();
+  const [status, setStatus] = useState({ membership: "", renew: "" });
+
+  if (position === "N/A") {
+    useEffect(() => {
+      const fetchStatus = async () => {
+        const membershipStatus = await getMembershipStatusStudents(getId());
+        setStatus(membershipStatus);
+      };
+
+      fetchStatus();
+      console.log(status.membership);
+    }, []);
+  }
 
   return (
     <div className="flex items-center space-x-2">
@@ -30,25 +40,22 @@ const Profile = () => {
           {position === "N/A" ? "Membership: " : ""}
           <span
             className={`inline-block rounded ${
-              (getMembershipStatus() === "Accepted" &&
-                getRenewStatus() === "None") ||
-              getRenewStatus() === "Accepted"
+              (status.membership === "Accepted" && status.renew === "None") ||
+              status.renew === "Accepted"
                 ? "bg-green-500 text-white"
-                : getMembershipStatus() === "Pending"
+                : status.membership === "Pending"
                 ? "bg-yellow-500 text-yellow-100"
-                : getMembershipStatus() === "None" ||
-                  getRenewStatus() === "Pending"
+                : status.membership === "None" || status.renew === "Pending"
                 ? "bg-gray-500 text-white"
                 : ""
             }`}
           >
             {position !== "N/A"
               ? position
-              : (getMembershipStatus() === "Accepted" &&
-                  getRenewStatus() === "None") ||
-                getRenewStatus() === "Accepted"
+              : (status.membership === "Accepted" && status.renew === "None") ||
+                status.renew === "Accepted"
               ? "Active"
-              : getMembershipStatus() === "Pending"
+              : status.membership === "Pending"
               ? "Pending"
               : "None"}
           </span>

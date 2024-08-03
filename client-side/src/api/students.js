@@ -65,3 +65,31 @@ export const edit = async (formData) => {
     console.error("Error:", error);
   }
 };
+
+export const getMembershipStatusStudents = async (id_number) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/students/get-membership-status`,
+      {
+        params: { id_number }, // Use params to pass query parameters
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      console.log(response.data);
+      return response.data;
+    } else {
+      showToast("error", response.data.message);
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
