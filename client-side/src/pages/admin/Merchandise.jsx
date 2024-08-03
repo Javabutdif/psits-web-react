@@ -7,16 +7,20 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
-
+import EditProduct from "./EditProduct";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/swiper-bundle.css";
 
 function Merchandise() {
-   const [data, setData] = useState([]);
+  const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddProductModal, setIsAddProductModal] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState(""); // Add state for search query
+  const [merchToEdit, setMerchToEdit] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -40,7 +44,7 @@ function Merchandise() {
       const id_number = item._id ? item._id.toLowerCase() : "";
       const name = item.name ? item.name.toLowerCase() : "";
       const category = item.category ? item.category.toLowerCase() : "";
-      const price = item.price ? item.price : ""
+      const price = item.price ? item.price : "";
       const batch = item.batch ? item.batch : "";
       const control = item.control ? item.control.toLowerCase() : "";
 
@@ -94,6 +98,12 @@ function Merchandise() {
   const handleOpenAddProduct = () => setIsAddProductModal(true);
   const handleCloseAddProduct = () => setIsAddProductModal(false);
 
+  const handleOpenEditModal = (row) => {
+    setMerchToEdit(row);
+    setIsEditModalOpen(true);
+  };
+  const handleCloseEditModal = () => setIsEditModalOpen(false);
+
   const deleteMerchandiseApi = async (id) => {
     console.log(id);
     await deleteMerchandise(id);
@@ -119,7 +129,6 @@ function Merchandise() {
             height="50"
             className="rounded-md shadow-sm"
           />
-
         </div>
       ),
     },
@@ -172,7 +181,17 @@ function Merchandise() {
             text="View"
             onClick={() => handleView(row)} // Ensure the onClick is defined
             styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-eye text-sm text-base"></i>} // Use a relevant icon for "View"
+            icon={<i className="fas fa-eye text-sm"></i>} // Use a relevant icon for "View"
+            textClass="ml-2 md:inline"
+            iconClass="text-sm text-base"
+          />
+
+          <FormButton
+            type="button"
+            text="Edit"
+            onClick={() => handleOpenEditModal(row)}
+            styles="bg-green-200 text-green-800 hover:bg-green-200 active:bg-green-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
+            icon={<i className="fas fa-edit text-sm"></i>}
             textClass="ml-2 md:inline"
             iconClass="text-sm text-base"
           />
@@ -183,7 +202,7 @@ function Merchandise() {
             // onClick={() => handleDelete(row)} // Updated handler for delete action
             onClick={() => deleteMerchandiseApi(row._id)}
             styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-trash text-sm text-base"></i>} // Use a relevant icon for "Delete"
+            icon={<i className="fas fa-trash text-sm"></i>} // Use a relevant icon for "Delete"
             textClass="ml-2 md:inline"
             iconClass="text-sm text-base"
           />
@@ -195,26 +214,28 @@ function Merchandise() {
   return (
     <>
       <TableComponent
-
-
-          data={data}
-          columns={columns}
-          handleExportPDF={handleExportPDF}
-          customButtons={(
-            <FormButton 
-              type="button"
-              text="Add Product"
-              onClick={handleOpenAddProduct}
-                styles="bg-indigo-100 text-violet-800 hover:bg-violet-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-              icon={<i className="fas fa-cart-plus text-sm text-base"></i>}
-              textClass="ml-2 md:inline"
-              /* Ensure that textClass is responsive */
-              iconClass="text-sm text-base" // If you need to apply specific styles to the icon
-            />
-          )}
-
-
+        data={data}
+        columns={columns}
+        handleExportPDF={handleExportPDF}
+        customButtons={
+          <FormButton
+            type="button"
+            text="Add Product"
+            onClick={handleOpenAddProduct}
+            styles="bg-indigo-100 text-violet-800 hover:bg-violet-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+            icon={<i className="fas fa-cart-plus text-sm"></i>}
+            textClass="ml-2 md:inline"
+            /* Ensure that textClass is responsive */
+            iconClass="text-sm text-base" // If you need to apply specific styles to the icon
+          />
+        }
       />
+      {isEditModalOpen && (
+        <EditProduct
+          handleCloseEditProduct={handleCloseEditModal}
+          merchData={merchToEdit}
+        />
+      )}
       {isAddProductModal && (
         <Product handleCloseAddProduct={handleCloseAddProduct} />
       )}

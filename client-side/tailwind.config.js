@@ -6,17 +6,6 @@ export default {
       backgroundImage: {
         banner: "url(./src/assets/images/download.png)",
       },
-      colors: {
-        brown: {
-          500: '#6D4C41', // Example brown color
-        },
-        magenta: {
-          500: '#D81B60', // Example magenta color
-        },
-        maroon: {
-          500: '#800000', // Example maroon color
-        },
-      },
       backgroundColor: {
         primary: "#074873",
         secondary: "#f2f2f2",

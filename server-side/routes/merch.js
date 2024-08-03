@@ -44,6 +44,7 @@ router.post("/", upload.array("images", 3), async (req, res) => {
     start_date,
     end_date,
     category,
+    type,
     control,
   } = req.body;
 
@@ -57,12 +58,13 @@ router.post("/", upload.array("images", 3), async (req, res) => {
       stocks,
       batch,
       description,
-      selectedVariations,
-      selectedSizes,
+      selectedVariations: selectedVariations.split(","),
+      selectedSizes: selectedSizes.split(","),
       created_by,
       start_date,
       end_date,
       category,
+      type,
       control,
       imageUrl, // Save the array of image URLs to the database
     });
@@ -105,42 +107,58 @@ router.get("/:searchQuery", async (req, res) => {
 });
 
 // UPDATE merch by id
-router.put("/:_id", async (req, res) => {
+router.put("/:_id", upload.array("images", 3), async (req, res) => {
   const {
     name,
     price,
     stocks,
-    batch, //unrequired
+    batch,
     description,
-    variation, //unrequired
-    size, //unrequired
+    selectedVariations,
+    selectedSizes,
     start_date,
-    end_date, //unrequired
+    end_date,
     category,
-    image_url,
+    type,
+    control,
     sales_data,
   } = req.body;
 
   const id = req.params._id;
 
+  let imageUrl = req.files.map((file) => file.location);
+
   try {
+    // Fetch the existing merch data
+    const existingMerch = await Merch.findById(id);
+    if (!existingMerch) {
+      console.error("Merch not found");
+      return res.status(404).send("Merch not found");
+    }
+
+    // If no new images are uploaded, retain the existing imageUrl
+    if (imageUrl.length === 0) {
+      imageUrl = existingMerch.imageUrl;
+    }
+
     // Create an update object
     const updateFields = {
       name: name,
       price: price,
       stocks: stocks,
-      batch: batch, //unrequired
+      batch: batch, // unrequired
       description: description,
-      variation: variation, //unrequired
-      size: size, //unrequired
+      selectedVariations: selectedVariations.split(","),
+      selectedSizes: selectedSizes.split(","),
       start_date: start_date,
-      end_date: end_date, //unrequired
+      end_date: end_date, // unrequired
       category: category,
-      image_url: image_url,
+      type: type,
+      control: control,
+      imageUrl: imageUrl,
     };
 
     // Add sales_data fields to the update object
-    // This is added to not update the entire object and generate a new key in mongodb
     if (sales_data) {
       for (const key in sales_data) {
         if (sales_data.hasOwnProperty(key)) {
