@@ -1,21 +1,25 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const TableHeader = ({ columns, sortConfig, handleSort }) => (
   <thead className="bg-gray-50">
     <tr>
       {columns.map((column, columnIndex) => (
-        <th
+        <motion.th
           key={`header-${column.key || columnIndex}`}
-          className={`px-3 text-center md:text-start md:px-7 py-2 md:py-3 lg:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
+          className={`p-2 md:p-4 text-xs font-medium text-gray-600 uppercase tracking-wider cursor-pointer 
+                      ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
           onClick={() => column.sortable && handleSort(column.key)}
+          whileHover={{ scale: 1.02, color: "#1f2937" }} // Slight scale and color change
+          transition={{ duration: 0.15 }}
         >
           {column.label}
           {column.sortable && sortConfig.key === column.key && (
-            <span>
-              {sortConfig.direction === 'asc' ? ' ▲' : ' ▼'}
+            <span className="text-xs text-gray-400 ml-1">
+              {sortConfig.direction === 'asc' ? '▲' : '▼'}
             </span>
           )}
-        </th>
+        </motion.th>
       ))}
     </tr>
   </thead>

@@ -15,6 +15,7 @@ import { getUser } from "../../authentication/Authentication";
 import TableComponent from "../../components/Custom/TableComponent";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
+import c from '../../components/ToolTip'
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
@@ -221,26 +222,20 @@ function MembershipRequest() {
     {
       name: "Action",
       cell: (row) => (
-        <div className="flex flex-col gap-3">
-          <button
-            className={`relative flex items-center gap-2 px-4 py-2 rounded text-white ${
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500"
-            }`}
-            onClick={() => handleOpenModal(row)}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
-            }
-          >
+        <ButtonsComponent>
+        <FormButton
+          type="button"
+          text={
+            position !== "Treasurer" &&
+            position !== "Assistant Treasurer" &&
+            position !== "Auditor" &&
+            position !== "Developer" &&
+            position !== "President"
+              ? "Not Authorized"
+              : "Approve"
+          }
+          onClick={() => handleOpenModal(row)}
+          icon={
             <i
               className={`fa ${
                 position !== "Treasurer" &&
@@ -252,24 +247,37 @@ function MembershipRequest() {
                   : "fa-check"
               }`}
             ></i>
-            {position !== "Treasurer" &&
+          }
+          styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+            position !== "Treasurer" &&
             position !== "Assistant Treasurer" &&
             position !== "Auditor" &&
             position !== "Developer" &&
             position !== "President"
-              ? "Not Authorized"
-              : "Approve"}
-            {position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President" && (
-                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs rounded py-1 px-2">
-                  You do not have permission to approve.
-                </span>
-              )}
-          </button>
-        </div>
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-blue-500"
+          }`}
+          textClass="text-white"
+          whileHover={{ scale: 1.02, opacity: 0.95 }}
+          whileTap={{ scale: 0.98, opacity: 0.9 }}
+          disabled={
+            position !== "Treasurer" &&
+            position !== "Assistant Treasurer" &&
+            position !== "Auditor" &&
+            position !== "Developer" &&
+            position !== "President"
+          }
+        />
+        {position !== "Treasurer" &&
+          position !== "Assistant Treasurer" &&
+          position !== "Auditor" &&
+          position !== "Developer" &&
+          position !== "President" && (
+            <Tooltip visible={true}>
+              You do not have permission to approve.
+            </Tooltip>
+          )}
+      </ButtonsComponent>
       ),
     },
   ];
@@ -281,14 +289,16 @@ function MembershipRequest() {
         data={filteredData}
         customButtons={
           <ButtonsComponent>
-            <FormButton
-              type="button"
-              text="Export to PDF"
-              onClick={handleExportPDF}
-              icon={<i className="fas fa-file-pdf text-sm md:text-base"></i>}
-              styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-              textClass="hidden md:inline"
-            />
+             <FormButton
+                type="button"
+                text="PDF Export"
+                onClick={handleExportPDF}
+                icon={<i className="fas fa-file-pdf"></i>}
+                styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                textClass="hidden"
+                whileHover={{ scale: 1.01, opacity: 0.9 }}
+                whileTap={{ scale: 0.95, opacity: 0.8 }}
+              />
           </ButtonsComponent>
         }
       />

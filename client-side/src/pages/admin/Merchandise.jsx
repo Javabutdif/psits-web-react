@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import "../../App.css";
 import { merchandise, deleteMerchandise } from "../../api/admin";
@@ -10,23 +11,37 @@ import FormButton from "../../components/forms/FormButton";
 import EditProduct from "./EditProduct";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
+import ButtonsComponent from "../../components/Custom/ButtonsComponent";
+import FilterOptions from "../students/merchandise/FilterOptions";
+import { Dialog } from "@headlessui/react";
+import { AiOutlineClose } from "react-icons/ai";
 
 function Merchandise() {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddProductModal, setIsAddProductModal] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // Add state for search query
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [merchToEdit, setMerchToEdit] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedControls, setSelectedControls] = useState([]);
+  const [selectedSizes, setSelectedSizes] = useState([]);
+  const [selectedVariations, setSelectedVariations] = useState([]);
+
+  const filterOptionsRef = useRef(null);
 
   const fetchData = async () => {
     try {
       const result = await merchandise();
       setData(result);
-      setFilteredData(result); // Initialize filteredData with fetched data
+      setFilteredData(result);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
@@ -38,7 +53,6 @@ function Merchandise() {
     fetchData();
   }, []);
 
-  // Filter data based on search query
   useEffect(() => {
     const filtered = data.filter((item) => {
       const id_number = item._id ? item._id.toLowerCase() : "";
@@ -60,49 +74,48 @@ function Merchandise() {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const handleExportPDF = (filteredData) => {
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [
-        ["Product ID", "Product", "Category", "Price", "Batch", "Controls"],
-      ],
-      body: filteredData.map((item) => [
-        item._id,
-        item.name,
-        item.category,
-        item.price,
-        item.batch,
-        item.control,
-      ]),
-      startY: 20,
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-        textColor: [0, 0, 0],
-      },
-      headStyles: {
-        fillColor: [0, 100, 255],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-      },
-      margin: { top: 10 },
-    });
-    doc.save("merchandise.pdf");
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        filterOptionsRef.current &&
+        !filterOptionsRef.current.contains(event.target)
+      ) {
+        setIsFilterOptionOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleView = (item) => {
     setSelectedItem(item);
     setIsViewModalOpen(true);
   };
 
-  const handleOpenAddProduct = () => setIsAddProductModal(true);
-  const handleCloseAddProduct = () => setIsAddProductModal(false);
+  const handleOpenAddProduct = () => {
+    console.log("Opening Add Product Modal");
+    setIsAddProductModal(true);
+  };
+
+  const handleCloseAddProduct = () => {
+    console.log("Closing Add Product Modal");
+    setIsAddProductModal(false);
+  };
 
   const handleOpenEditModal = (row) => {
+    console.log("Opening Edit Product Modal for", row);
     setMerchToEdit(row);
     setIsEditModalOpen(true);
+    console.log(isEditModalOpen);
   };
-  const handleCloseEditModal = () => setIsEditModalOpen(false);
+
+  const handleCloseEditModal = () => {
+    console.log("Closing Edit Product Modal");
+    setIsEditModalOpen(false);
+  };
 
   const deleteMerchandiseApi = async (id) => {
     console.log(id);
@@ -110,6 +123,27 @@ function Merchandise() {
   };
 
   const columns = [
+    {
+      key: "select",
+      label: (
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={() => setSelectAll(!selectAll)}
+          />
+        </motion.div>
+      ),
+      cell: (row) => (
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <input
+            type="checkbox"
+            checked={selectedRows.includes(row.id_number)}
+            onChange={() => handleRowSelection(row.id_number)}
+          />
+        </motion.div>
+      ),
+    },
     {
       key: "_id",
       label: "Product ID",
@@ -173,15 +207,15 @@ function Merchandise() {
     },
     {
       key: "actions",
-      label: "Actions",
+      label: "",
       cell: (row) => (
-        <div className="flex gap-2">
+        <ButtonsComponent>
           <FormButton
             type="button"
             text="View"
-            onClick={() => handleView(row)} // Ensure the onClick is defined
+            onClick={() => handleView(row)}
             styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-eye text-sm"></i>} // Use a relevant icon for "View"
+            icon={<i className="fas fa-eye text-sm"></i>}
             textClass="ml-2 md:inline"
             iconClass="text-sm text-base"
           />
@@ -199,113 +233,260 @@ function Merchandise() {
           <FormButton
             type="button"
             text="Delete"
-            // onClick={() => handleDelete(row)} // Updated handler for delete action
             onClick={() => deleteMerchandiseApi(row._id)}
             styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-trash text-sm"></i>} // Use a relevant icon for "Delete"
+            icon={<i className="fas fa-trash text-sm"></i>}
             textClass="ml-2 md:inline"
             iconClass="text-sm text-base"
           />
-        </div>
+        </ButtonsComponent>
       ),
     },
   ];
 
+  useEffect(() => {
+    if (selectAll) {
+      setSelectedRows(filteredData.map((item) => item.id_number));
+    } else {
+      setSelectedRows([]);
+    }
+  }, [selectAll, filteredData]);
+
+  const handleRowSelection = (id_number) => {
+    setSelectedRows((prevSelectedRows) =>
+      prevSelectedRows.includes(id_number)
+        ? prevSelectedRows.filter((id) => id !== id_number)
+        : [...prevSelectedRows, id_number]
+    );
+  };
+
+  const handleCategoryChange = (category, checked) => {
+    setSelectedCategories((prevState) =>
+      checked
+        ? [...prevState, category]
+        : prevState.filter((c) => c !== category)
+    );
+  };
+
+  const handleControlChange = (control, checked) => {
+    setSelectedControls((prevState) =>
+      checked ? [...prevState, control] : prevState.filter((c) => c !== control)
+    );
+  };
+
+  const handleSizeChange = (size, checked) => {
+    setSelectedSizes((prevState) =>
+      checked ? [...prevState, size] : prevState.filter((c) => c !== size)
+    );
+  };
+
+  const handleVariationChange = (variation, checked) => {
+    setSelectedVariations((prevState) =>
+      checked
+        ? [...prevState, variation]
+        : prevState.filter((v) => v !== variation)
+    );
+  };
+
+  const applyFilters = () => {
+    const filtered = data.filter((item) => {
+      const categoryMatch =
+        selectedCategories.length === 0 ||
+        selectedCategories.includes(item.category);
+      const controlMatch =
+        selectedControls.length === 0 ||
+        selectedControls.includes(item.control);
+      const sizeMatch =
+        selectedSizes.length === 0 || selectedSizes.includes(item.size);
+      const variationMatch =
+        selectedVariations.length === 0 ||
+        selectedVariations.includes(item.variation);
+
+      return categoryMatch && controlMatch && sizeMatch && variationMatch;
+    });
+
+    setFilteredData(filtered);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    autoTable(doc, {
+      head: [
+        [
+          "Product ID",
+          "Name",
+          "Category",
+          "Batch",
+          "Price",
+          "Control",
+          "Active",
+        ],
+      ],
+      body: filteredData.map((row) => [
+        row._id,
+        row.name,
+        row.category,
+        row.batch,
+        row.price,
+        row.control,
+        row.is_active ? "Active" : "Expired",
+      ]),
+    });
+    doc.save("table.pdf");
+  };
+
   return (
-    <>
-      <TableComponent
-        data={data}
-        columns={columns}
-        handleExportPDF={handleExportPDF}
-        customButtons={
-          <FormButton
-            type="button"
-            text="Add Product"
-            onClick={handleOpenAddProduct}
-            styles="bg-indigo-100 text-violet-800 hover:bg-violet-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-cart-plus text-sm"></i>}
-            textClass="ml-2 md:inline"
-            /* Ensure that textClass is responsive */
-            iconClass="text-sm text-base" // If you need to apply specific styles to the icon
-          />
-        }
-      />
-      {isEditModalOpen && (
-        <EditProduct
-          handleCloseEditProduct={handleCloseEditModal}
-          merchData={merchToEdit}
-        />
-      )}
-      {isAddProductModal && (
-        <Product handleCloseAddProduct={handleCloseAddProduct} />
+    <div className="p-4 relative">
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
+            <motion.h1
+              whileHover={{ scale: 1.05 }}
+              className="text-3xl text-gray-700 text-center md:text-left"
+            >
+              Merchandise
+            </motion.h1>
+            <div className="flex flex-col md:flex-row items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="text-xs md:text-base text-gray-600 flex items-center gap-2 px-4 py-1 border rounded-md shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
+                onClick={exportToPDF}
+              >
+                <i className="fas fa-download"></i>
+                Export to PDF
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="text-xs md:text-base text-gray-600 flex items-center gap-2 px-4 py-1 border rounded-md shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
+                onClick={() => setIsFilterOptionOpen(!isFilterOptionOpen)}
+              >
+                <i className="fas fa-filter"></i>
+                Filters
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="text-xs md:text-base text-gray-600 flex items-center gap-2 px-4 py-1 border rounded-md shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
+                onClick={handleOpenAddProduct}
+              >
+                <i className="fas fa-plus"></i>
+                Add Product
+              </motion.button>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <TableComponent
+              columns={columns}
+              data={filteredData}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+            />
+          </div>
+        </>
       )}
 
-      {isViewModalOpen && selectedItem && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-              Product Details
-            </h2>
-            <div className="mb-4">
-              <Swiper
-                spaceBetween={10}
-                slidesPerView={1}
-                pagination={{ clickable: true }}
-                navigation
+      {/* Filter Options */}
+      {isFilterOptionOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div
+            ref={filterOptionsRef}
+            className="bg-white p-4 rounded shadow-lg"
+          >
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Filter Options</h2>
+              <button
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                onClick={() => setIsFilterOptionOpen(false)}
               >
-                {selectedItem.imageUrl.map((url, index) => (
-                  <SwiperSlide key={index}>
-                    <img
-                      src={url}
-                      alt={`${selectedItem.name} ${index + 1}`}
-                      className="rounded-md shadow-sm object-cover w-full h-64"
-                    />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+                &times;
+              </button>
             </div>
-            <div className="space-y-2 text-sm text-gray-700">
-              <div>
-                <strong>ID:</strong> {selectedItem._id}
-              </div>
-              <div>
-                <strong>Name:</strong> {selectedItem.name}
-              </div>
-              <div>
-                <strong>Category:</strong> {selectedItem.category}
-              </div>
-              <div>
-                <strong>Batch:</strong> Batch {selectedItem.batch}
-              </div>
-              <div>
-                <strong>Stocks:</strong> {selectedItem.stocks}
-              </div>
-              <div>
-                <strong>Price:</strong> {selectedItem.price}
-              </div>
-              <div>
-                <strong>Controls:</strong> {selectedItem.control}
-              </div>
-              <div>
-                <strong>Start Date:</strong> {selectedItem.start_date}
-              </div>
-              <div>
-                <strong>End Date:</strong> {selectedItem.end_date}
-              </div>
-              <div>
-                <strong>Added By:</strong> {selectedItem.created_by}
-              </div>
+            <FilterOptions
+              selectedCategories={selectedCategories}
+              selectedControls={selectedControls}
+              selectedSizes={selectedSizes}
+              selectedVariations={selectedVariations}
+              handleCategoryChange={handleCategoryChange}
+              handleControlChange={handleControlChange}
+              handleSizeChange={handleSizeChange}
+              handleVariationChange={handleVariationChange}
+            />
+            <div className="mt-4 flex justify-end">
+              <FormButton
+                type="button"
+                text="Apply"
+                onClick={() => {
+                  applyFilters();
+                  setIsFilterOptionOpen(false);
+                }}
+                styles="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600"
+              />
             </div>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-red-400 transition duration-150"
-              onClick={() => setIsViewModalOpen(false)}
-            >
-              Close
-            </button>
           </div>
         </div>
       )}
-    </>
+
+      {/* View Product Modal */}
+
+      {isViewModalOpen && (
+        <Dialog
+          open={isViewModalOpen}
+          onClose={() => setIsViewModalOpen(false)}
+        >
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true"></div>
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="bg-white rounded-lg shadow-lg max-w-md mx-auto p-6 sm:max-w-lg lg:max-w-xl relative">
+              <button
+                type="button"
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                onClick={() => setIsViewModalOpen(false)}
+              >
+                <span className="sr-only">Close</span>
+                <AiOutlineClose className="w-6 h-6" aria-hidden="true" />
+              </button>
+
+              {/* Product Image */}
+              <div className="mb-4">
+                <img
+                  src={selectedItem?.imageUrl}
+                  alt={selectedItem?.name}
+                  className="w-1/4 h-1/4 object-cover rounded-md"
+                />
+              </div>
+
+              {/* Product Details */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {selectedItem?.name}
+                </h2>
+                <p className="text-gray-600">Price: ${selectedItem?.price}</p>
+                <p className="text-gray-600">Stocks: {selectedItem?.stocks}</p>
+                <p className="text-gray-600">Batch: {selectedItem?.batch}</p>
+                <p className="text-gray-600">
+                  Description: {selectedItem?.description}
+                </p>
+                <p className="text-gray-600">
+                  Category: {selectedItem?.category}
+                </p>
+              </div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
+      )}
+      {isEditModalOpen && (
+        <EditProduct closeModal={handleCloseEditModal} product={merchToEdit} />
+      )}
+      {/* Add Product Modal */}
+      {isAddProductModal && (
+        <Product handleCloseAddProduct={handleCloseAddProduct} />
+      )}
+    </div>
   );
 }
 

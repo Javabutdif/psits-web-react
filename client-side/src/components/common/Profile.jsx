@@ -11,7 +11,7 @@ const Profile = () => {
   const [name, position] = getUser();
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center space-x-2">
       <Link
         to={`/${
           location === "admin"
@@ -20,16 +20,16 @@ const Profile = () => {
             ? "student"
             : ""
         }/profile`}
-        className="text-md md:text-md"
+        className="text-sm md:text-sm"
       >
-        <i className="fas fa-user"></i>
+        <i className="fas fa-user text-lg"></i>
       </Link>
-      <h3 className="text-sm sm:text-base md:text-sm hidden sm:block">
+      <h3 className="text-xs sm:text-sm hidden sm:block">
         {name}
-        <span className="text-xs md:text-sm block">
+        <span className="text-xs block">
           {position === "N/A" ? "Membership: " : ""}
           <span
-            className={`inline-block py-1 px-2 rounded ${
+            className={`inline-block rounded ${
               (getMembershipStatus() === "Accepted" &&
                 getRenewStatus() === "None") ||
               getRenewStatus() === "Accepted"
