@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 const Tab = ({ tabs, activePath, styles}) => {
   return (
-    <div className={`${styles} py-2 md:p-0 border-b border-gray-300 bg-white shadow-sm`}>
+    <div className={`${styles} pt-2 md:p-0 border-b border-gray-300 bg-white shadow-sm`}>
       {tabs.map(tab => (
         <motion.div
           key={tab.path}
