@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import TableComponent from '../../../components/Custom/TableComponent';
-import FormButton from '../../../components/forms/FormButton';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import TableComponent from "../../../components/Custom/TableComponent";
+import FormButton from "../../../components/forms/FormButton";
 import ApproveModal from "../../../components/admin/ApproveModal";
 import { getAllOrders, cancelOrder } from "../../../api/orders";
 import { getId } from "../../../authentication/Authentication";
-import ButtonsComponent from '../../../components/Custom/ButtonsComponent';
+import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 
 const PendingOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -40,24 +40,24 @@ const PendingOrders = () => {
   }, []);
 
   useEffect(() => {
-    setFilteredData(orders.filter(order => order.order_status === 'Pending'));
+    setFilteredData(orders.filter((order) => order.order_status === "Pending"));
   }, [orders]);
 
   const handleMultipleDelete = async () => {
     try {
-      await Promise.all(selectedOrders.map(orderId => cancelOrder(orderId)));
-      setOrders(orders.filter(order => !selectedOrders.includes(order._id)));
+      await Promise.all(selectedOrders.map((orderId) => cancelOrder(orderId)));
+      setOrders(orders.filter((order) => !selectedOrders.includes(order._id)));
       setSelectedOrders([]);
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Failed to delete selected orders', error);
+      console.error("Failed to delete selected orders", error);
     }
   };
-  
+
   const handleSelectOrder = (orderId) => {
-    setSelectedOrders(prevSelected => {
+    setSelectedOrders((prevSelected) => {
       if (prevSelected.includes(orderId)) {
-        return prevSelected.filter(id => id !== orderId);
+        return prevSelected.filter((id) => id !== orderId);
       } else {
         return [...prevSelected, orderId];
       }
@@ -67,10 +67,10 @@ const PendingOrders = () => {
   const cancelOrderHandler = async (orderId) => {
     try {
       await cancelOrder(orderId);
-      setOrders(orders.filter(order => order._id !== orderId));
+      setOrders(orders.filter((order) => order._id !== orderId));
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Failed to cancel order', error);
+      console.error("Failed to cancel order", error);
     }
   };
 
@@ -97,14 +97,14 @@ const PendingOrders = () => {
   };
 
   const handleRowSelection = (id) => {
-    setSelectedRows(prevSelectedRows =>
+    setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(id)
-        ? prevSelectedRows.filter(rowId => rowId !== id)
+        ? prevSelectedRows.filter((rowId) => rowId !== id)
         : [...prevSelectedRows, id]
     );
-    setSelectedOrders(prevSelectedOrders =>
+    setSelectedOrders((prevSelectedOrders) =>
       prevSelectedOrders.includes(id)
-        ? prevSelectedOrders.filter(orderId => orderId !== id)
+        ? prevSelectedOrders.filter((orderId) => orderId !== id)
         : [...prevSelectedOrders, id]
     );
   };
@@ -113,27 +113,25 @@ const PendingOrders = () => {
     {
       key: "select",
       label: (
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <input
             type="checkbox"
             checked={selectAll}
             onChange={() => {
               const newSelectAllState = !selectAll;
               setSelectAll(newSelectAllState);
-              setSelectedRows(newSelectAllState ? filteredData.map(item => item._id) : []);
-              setSelectedOrders(newSelectAllState ? filteredData.map(item => item._id) : []);
+              setSelectedRows(
+                newSelectAllState ? filteredData.map((item) => item._id) : []
+              );
+              setSelectedOrders(
+                newSelectAllState ? filteredData.map((item) => item._id) : []
+              );
             }}
           />
         </motion.div>
       ),
       cell: (row) => (
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <input
             type="checkbox"
             checked={selectedRows.includes(row._id)}
@@ -151,11 +149,13 @@ const PendingOrders = () => {
     {
       key: "student_name",
       label: "Name",
-      selector: (row) => `${row.first_name} ${row.middle_name} ${row.last_name}`,
+      selector: (row) =>
+        `${row.first_name} ${row.middle_name} ${row.last_name}`,
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
           <div>{row.student_name}</div>
+          <div className="text-gray-500">ID Number: {row.id_number}</div>
           <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
       ),
@@ -206,9 +206,11 @@ const PendingOrders = () => {
       sortable: true,
       cell: (row) => (
         <div>
-          <span className={`p-1 rounded text-white ${
-            row.order_status === "Pending" ? "bg-red-400" : "bg-green-400"
-          }`}>
+          <span
+            className={`p-1 rounded text-white ${
+              row.order_status === "Pending" ? "bg-red-400" : "bg-green-400"
+            }`}
+          >
             {row.order_status}
           </span>
         </div>
@@ -220,33 +222,29 @@ const PendingOrders = () => {
       cell: (row) => (
         <ButtonsComponent>
           <FormButton
-              type="button"
-              text="Approve"
-              onClick={() => handleApproveClick(row)}
-              styles="bg-green-100 text-green-800 hover:bg-green-200 active:bg-green-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
-              icon={<i className="fas fa-check text-sm text-base"></i>} // Changed icon
-              textClass="ml-2 hidden md:inline"
-              iconClass="text-sm text-base"
-            />
+            type="button"
+            text="Approve"
+            onClick={() => handleApproveClick(row)}
+            styles="bg-green-100 text-green-800 hover:bg-green-200 active:bg-green-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
+            icon={<i className="fas fa-check text-sm text-base"></i>} // Changed icon
+            textClass="ml-2 hidden md:inline"
+            iconClass="text-sm text-base"
+          />
 
-            <FormButton
-              type="button"
-              text="Cancel"
-              onClick={() => handleCancelOrder(row._id)}
-              styles="bg-red-100 text-red-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-              icon={<i className="fas fa-times text-sm text-base"></i>} // Changed icon
-              textClass="ml-2 hidden md:inline"
-              iconClass="text-sm text-base"
-            />
-
-
+          <FormButton
+            type="button"
+            text="Cancel"
+            onClick={() => handleCancelOrder(row._id)}
+            styles="bg-red-100 text-red-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+            icon={<i className="fas fa-times text-sm text-base"></i>} // Changed icon
+            textClass="ml-2 hidden md:inline"
+            iconClass="text-sm text-base"
+          />
         </ButtonsComponent>
-        
       ),
     },
   ];
 
-  
   const handleApproveClick = (order) => {
     setSelectedOrder(order);
     setIsApproveModalOpen(true);
@@ -265,14 +263,14 @@ const PendingOrders = () => {
     }
   };
 
-
   return (
     <div>
       <TableComponent
         data={filteredData}
         columns={columns}
-        customButtons={selectedOrders.length > 0 && (
-          <ButtonsComponent>
+        customButtons={
+          selectedOrders.length > 0 && (
+            <ButtonsComponent>
               {selectedRows.length > 0 && (
                 <FormButton
                   type="button"
@@ -288,8 +286,9 @@ const PendingOrders = () => {
                   whileTap={{ scale: 0.95, opacity: 0.8 }}
                 />
               )}
-          </ButtonsComponent>
-        )}
+            </ButtonsComponent>
+          )
+        }
       />
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
@@ -318,12 +317,13 @@ const PendingOrders = () => {
         </div>
       )}
 
-        {/* Approve Modal */}
-        {isApproveModalOpen && selectedOrder && (
+      {/* Approve Modal */}
+      {isApproveModalOpen && selectedOrder && (
         <ApproveModal
           reference_code={
             Math.floor(Math.random() * (999999999 - 111111111)) + 111111111
           }
+          order_id={selectedOrder._id}
           id_number={selectedOrder.id_number}
           rfid={selectedOrder.rfid}
           course={selectedOrder.course}
@@ -341,7 +341,6 @@ const PendingOrders = () => {
           total={selectedOrder.total}
         />
       )}
-
     </div>
   );
 };

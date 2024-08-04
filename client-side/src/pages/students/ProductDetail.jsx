@@ -130,7 +130,7 @@ const ProductDetail = () => {
   const handleBuyNow = () => {
     const id_number = getId();
     const rfid = getRfid();
-
+    const imageUrl1 = imageUrl[0];
     const product_id = _id;
     const product_name = name;
     const sizes = selectedSize;
@@ -144,6 +144,7 @@ const ProductDetail = () => {
     setFormData({
       id_number,
       rfid,
+      imageUrl1,
       course,
       year,
       student_name,

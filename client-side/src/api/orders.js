@@ -54,6 +54,7 @@ export const getOrder = async (id_number) => {
   }
 };
 
+
 export const getAllOrders = async () => {
   try {
     const response = await axios.get(
@@ -95,6 +96,33 @@ export const cancelOrder = async (product_id) => {
       showToast("success", "Cancel Order Successful");
     } else {
       showToast("error", "Unable to cancel your order");
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.error("Error:", error.response.data);
+    } else {
+      console.error("Error:", error.message || error);
+    }
+    return null;
+  }
+};
+
+export const approveOrder = async (formData) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/orders/approve-order`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      return true;
+    } else {
+      return false;
     }
   } catch (error) {
     if (error.response && error.response.data) {

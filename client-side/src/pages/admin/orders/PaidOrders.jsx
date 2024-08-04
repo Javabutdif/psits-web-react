@@ -1,11 +1,10 @@
 // pages/PaidOrders.js
-import React, { useState, useEffect } from 'react';
-import TableComponent from '../../../components/Custom/TableComponent';
+import React, { useState, useEffect } from "react";
+import TableComponent from "../../../components/Custom/TableComponent";
 import { getAllOrders, cancelOrder } from "../../../api/orders";
 import { getId } from "../../../authentication/Authentication";
 
 const PaidOrders = () => {
-  
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,8 +31,7 @@ const PaidOrders = () => {
     fetchOrders();
   }, []);
 
-
-  const paidOrders = orders.filter(order => order.order_status === 'Paid');
+  const paidOrders = orders.filter((order) => order.order_status === "Paid");
   console.log(paidOrders);
 
   const columns = [
@@ -42,6 +40,14 @@ const PaidOrders = () => {
       label: "Order ID",
       sortable: true,
       cell: (row) => <div className="text-xs text-gray-600">{row._id}</div>,
+    },
+    {
+      key: "reference_code",
+      label: "Reference Code",
+      sortable: true,
+      cell: (row) => (
+        <div className="text-xs text-gray-600">{row.reference_code}</div>
+      ),
     },
     {
       key: "product_name",
@@ -74,18 +80,48 @@ const PaidOrders = () => {
       sortable: true,
     },
     {
+      key: "order_date",
+      label: "Placed Order",
+      sortable: true,
+      cell: (row) => (
+        <div className="text-xs text-gray-600">{row.order_date}</div>
+      ),
+    },
+    {
+      key: "transaction_date",
+      label: "Paid Date",
+      sortable: true,
+      cell: (row) => (
+        <div className="text-xs text-gray-600">{row.transaction_date}</div>
+      ),
+    },
+    {
+      key: "total",
+      label: "Total",
+      sortable: true,
+      cell: (row) => <div className="text-xs text-gray-600">₱ {row.total}</div>,
+    },
+    {
       key: "order_status",
       label: "Order Status",
       sortable: true,
       cell: (row) => (
         <div>
-          <span className={`p-1 rounded text-white ${
-            row.order_status === "Paid" ? "bg-red-400" : "bg-green-400"
-          }`}>
+          <span
+            className={`p-1 rounded text-white ${
+              row.order_status === "Paid" ? "bg-green-400" : "bg-red-400"
+            }`}
+          >
             {row.order_status}
           </span>
         </div>
       ),
+    },
+    {
+      key: "admin",
+      label: "Admin",
+      sortable: true,
+      cell: (row) => <div className="text-xs text-gray-600">{row.admin}</div>,
     },
   ];
 

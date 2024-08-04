@@ -3,10 +3,12 @@ import { getUser } from "../../authentication/Authentication.js";
 import { showToast } from "../../utils/alertHelper";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt.jsx";
-import { approveMembership, approveOrders } from "../../api/admin.js";
+import { approveMembership } from "../../api/admin.js";
+import { approveOrder } from "../../api/orders.js";
 
 function ApproveModal({
   reference_code,
+  order_id,
   id_number,
   course,
   year,
@@ -29,6 +31,7 @@ function ApproveModal({
   const [formData, setFormData] = useState({
     reference_code: reference_code,
     id_number: id_number,
+    order_id: type === "Order" ? order_id : "",
     rfid: rfid !== "" ? rfid : "",
     product_name: type === "Order" ? product_name : "",
     batch: type === "Order" ? batch : "",
@@ -71,9 +74,8 @@ function ApproveModal({
             onCancel();
           }
         } else {
-          //await approveOrders(formData)
-          if (true) {
-            showToast("success", "Order Approved");
+          if (await approveOrder(formData)) {
+            showToast("success", "Approve Order Successfully");
             setShouldPrint(true);
           } else {
             showToast("error", "Internal Server Error!");
