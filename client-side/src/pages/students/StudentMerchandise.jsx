@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import SearchFilter from './merchandise/SearchFilter';
 import { merchandise } from '../../api/admin';
@@ -6,27 +5,51 @@ import ProductList from './merchandise/ProductList';
 import ButtonsComponent from '../../components/Custom/ButtonsComponent';
 import FormButton from '../../components/forms/FormButton';
 import FilterOptions from './merchandise/FilterOptions';
-
+import Pagination from '../../components/Custom/Pagination'; // Adjust the import path as needed
 
 const StudentMerchandise = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
   const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedControls, setSelectedControls] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedVariations, setSelectedVariations] = useState([]);
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const filterOptionsRef = useRef(null);
+
+  // Adjust itemsPerPage based on the viewport width
+  const updateItemsPerPage = () => {
+    if (window.innerWidth >= 1280) { // xl
+      setItemsPerPage(10);
+    } else if (window.innerWidth >= 1024) { // lg
+      setItemsPerPage(8);
+    } else if (window.innerWidth >= 768) { // md
+      setItemsPerPage(6);
+    } else if (window.innerWidth >= 640) { // sm
+      setItemsPerPage(4);
+    } else { // xs
+      setItemsPerPage(2);
+    }
+  };
+
+  useEffect(() => {
+    updateItemsPerPage();
+    window.addEventListener('resize', updateItemsPerPage);
+    return () => window.removeEventListener('resize', updateItemsPerPage);
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
   };
 
   const toggleFilterOption = () => {
     setIsFilterOptionOpen((prevState) => !prevState);
   };
-
 
   const handleCategoryChange = (category, checked) => {
     setSelectedCategories(prevState =>
@@ -34,6 +57,7 @@ const StudentMerchandise = () => {
         ? [...prevState, category]
         : prevState.filter(c => c !== category)
     );
+    setCurrentPage(1); // Reset to first page on filter change
   };
 
   const handleControlChange = (control, checked) => {
@@ -42,6 +66,7 @@ const StudentMerchandise = () => {
         ? [...prevState, control]
         : prevState.filter(c => c !== control)
     );
+    setCurrentPage(1); // Reset to first page on filter change
   };
 
   const handleSizeChange = (size, checked) => {
@@ -50,6 +75,7 @@ const StudentMerchandise = () => {
         ? [...prevState, size]
         : prevState.filter(s => s !== size)
     );
+    setCurrentPage(1); // Reset to first page on filter change
   };
 
   const handleVariationChange = (variation, checked) => {
@@ -58,22 +84,24 @@ const StudentMerchandise = () => {
         ? [...prevState, variation]
         : prevState.filter(v => v !== variation)
     );
+    setCurrentPage(1); // Reset to first page on filter change
   };
 
-
   const fetchData = async () => {
+    setIsLoading(true);
     try {
       const result = await merchandise();
-      setProducts(result); // Assuming result is an array of products
+      setProducts(result);
     } catch (error) {
       console.error("Error fetching data: ", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, []); // Empty dependency array to fetch data only once when component mounts
-
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -88,7 +116,6 @@ const StudentMerchandise = () => {
     };
   }, []);
 
-  // Filter products based on search query, selected categories, controls, sizes, and variations
   const filteredProducts = products.filter(product => {
     const name = product.name ? product.name.toLowerCase() : '';
     const price = product.price ? product.price.toFixed(2) : '';
@@ -102,8 +129,6 @@ const StudentMerchandise = () => {
   
     const sizesMatch = selectedSizes.length === 0 || selectedSizes.find(size => sizes.includes(size));
     const variationsMatch = selectedVariations.length === 0 || selectedVariations.some(variation => variations.includes(variation));
-    
-    console.log(sizesMatch)
 
     return (
       matchesSearchQuery &&
@@ -113,12 +138,23 @@ const StudentMerchandise = () => {
       variationsMatch
     );
   });
-  
 
+  // Calculate pagination
+  const indexOfLastProduct = currentPage * itemsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
+  // Pagination Controls
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
 
   return (
-    <div className="container mx-auto">
+    <main className="py-5">
       <SearchFilter
         searchQuery={searchQuery}
         handleSearchChange={handleSearchChange}
@@ -149,12 +185,16 @@ const StudentMerchandise = () => {
                 </div>
               }
             </div>
-
           </ButtonsComponent>
         }
       />
-      <ProductList products={filteredProducts} />
-    </div>
+      <ProductList products={currentProducts} isLoading={isLoading} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        handlePageChange={handlePageChange}
+      />
+    </main>
   );
 };
 

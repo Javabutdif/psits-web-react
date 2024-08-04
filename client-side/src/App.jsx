@@ -54,7 +54,6 @@ import StudentPendingOrder from "./pages/students/orders/PendingOrders"
 const App = () => {
   return (
     <Router>
-      <div>
         <Routes>
           <Route path="/" element={<LandingLayout />}>
             <Route index element={<Home />} />
@@ -184,6 +183,9 @@ const App = () => {
             </Route>
 
             <Route
+              path="resources"
+            />
+            <Route
               path="settings"
               element={<PrivateRouteStudent element={Settings} />}
             />
@@ -202,7 +204,6 @@ const App = () => {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </div>
     </Router>
   );
 };

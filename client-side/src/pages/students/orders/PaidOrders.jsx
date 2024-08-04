@@ -131,35 +131,8 @@ const PaidOrders = () => {
 
   return (
     <div>
-      <div className="space-y-4 py-4">
-        <SearchFilter
-          searchQuery={searchQuery}
-          handleSearchChange={handleSearchChange}
-        />
-        {selectedOrders.length > 0 && (
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-1">
-              <input
-                type="checkbox"
-                checked={isAllChecked}
-                onChange={handleCheckAllChange}
-                className="w-4 h-4"
-              />
-              <label className="text-sm">Select All</label>
-            </div>
-            <FormButton
-              type="button"
-              text="Cancel All Orders"
-              icon={<i className="fas fa-trash-alt text-sm"></i>}
-              styles="space-x-1 bg-red-500 text-white rounded py-1 px-2 text-sm transition duration-150 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-              textClass="text-sm hidden md:inline-block"
-              whileHover={{ scale: 1.01, opacity: 0.9 }}
-              whileTap={{ scale: 0.95, opacity: 0.8 }}
-              onClick={handleMultipleCancel}
-            />
-          </div>
-        )}
-
+      { currentOrders.length > 0 ? (
+        <div className="space-y-4 py-4">
         <OrderList
           orders={currentOrders}
           onCancel={handleCancelClick}
@@ -172,6 +145,12 @@ const PaidOrders = () => {
           handlePageChange={handlePageChange}
         />
       </div>
+      ) : (
+        <div>No Product.</div>
+
+      )}
+
+      
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">

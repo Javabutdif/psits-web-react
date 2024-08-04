@@ -22,7 +22,7 @@ const TableBody = ({ columns, currentRows, loading }) => {
   );
 
   return (
-    <tbody className="bg-white divide-y divide-gray-200 max-h-[50vh] overflow-y-auto">
+    <tbody className="bg-white divide-y divide-gray-200 overflow-y-auto">
       {loading ? (
         // Render skeleton loaders when data is loading
         Array.from({ length: 5 }).map((_, index) => (

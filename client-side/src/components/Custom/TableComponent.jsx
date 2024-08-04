@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import SearchComponent from './SearchComponent';
 import ButtonsComponent from './ButtonsComponent';
 import TableHeader from './TableHeader';
@@ -7,7 +7,7 @@ import Pagination from './Pagination';
 
 const TableComponent = ({ data = [], columns = [], style, customSearch, customButtons }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -43,17 +43,33 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
     });
   }, [sortedData, searchQuery, columns]);
 
-  const indexOfLastRow = currentPage * rowsPerPage;
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const indexOfLastRow = currentPage * itemsPerPage;
+  const indexOfFirstRow = indexOfLastRow - itemsPerPage;
   const currentRows = filteredDataBySearch.slice(indexOfFirstRow, indexOfLastRow);
 
-  const totalPages = Math.ceil(filteredDataBySearch.length / rowsPerPage);
+  const totalPages = Math.ceil(filteredDataBySearch.length / itemsPerPage);
 
   const handlePageChange = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
+
+  const updateItemsPerPage = () => {
+    if (window.innerWidth >= 1280) { // xl
+      setItemsPerPage(10);
+    } else if (window.innerWidth >= 1024) { // lg
+      setItemsPerPage(8);
+    } else { // xs
+      setItemsPerPage(5);
+    }
+  };
+
+  useEffect(() => {
+    updateItemsPerPage();
+    window.addEventListener('resize', updateItemsPerPage);
+    return () => window.removeEventListener('resize', updateItemsPerPage);
+  }, []);
 
   const handleSort = (key) => {
     let direction = 'asc';

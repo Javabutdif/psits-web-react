@@ -3,6 +3,15 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      colors: {
+        'custom-active': '#005f73', // Softer blue for active state
+        'custom-active-text': '#e9d8a6', // Light beige for text in active state
+        'custom-text': '#d8e2dc', // Light grayish blue for text
+        'custom-hover': '#0a9396', // Slightly lighter blue for hover state
+        'custom-logout': '#008C9E', // Softer teal for logout button background
+        'custom-logout-hover': '#007a8d', // Darker teal for logout button on hover
+        'custom-logout-text': '#ffffff', // White text for logout button
+      },
       backgroundImage: {
         banner: "url(./src/assets/images/download.png)",
       },
@@ -18,8 +27,9 @@ export default {
         primary: "#fffcf2",
       },
       width: {
-        header: "calc(100% - 7rem)",
-        "header-sm": "calc(100% - 5rem)",
+        header: "calc(100% - 6rem)",
+        "header-md": "calc(100% - 6rem)",
+        "header-lg": "calc(100% - 7.4rem)",
       },
       minHeight: {
 
