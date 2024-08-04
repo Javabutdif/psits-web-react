@@ -1,8 +1,8 @@
-import React from 'react'
-import { Outlet, useLocation } from 'react-router-dom';
-import Tab from '../../components/Tab';
+import React from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import Tab from "../../components/Tab";
 
-const StudentOrders = () => {
+function StudentOrders() {
   const location = useLocation();
   const currentPath = location.pathname;
   // Update the icons here
@@ -12,10 +12,10 @@ const StudentOrders = () => {
   ];
   return (
     <div>
-      <Tab tabs={tabs} activePath={currentPath} styles={"grid grid-cols-2"}/>
+      <Tab tabs={tabs} activePath={currentPath} styles={"grid grid-cols-2"} />
       <Outlet />
     </div>
-  )
+  );
 }
 
-export default StudentOrders
+export default StudentOrders;
