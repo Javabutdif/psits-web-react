@@ -6,6 +6,7 @@ const Orders = require("../models/OrdersModel");
 const Merch = require("../models/MerchModel");
 const { ObjectId } = require("mongodb");
 require("dotenv").config();
+const { format } = require("date-fns");
 
 const router = express.Router();
 router.get("/", async (req, res) => {
@@ -44,6 +45,7 @@ router.post("/student-order", async (req, res) => {
   const {
     id_number,
     rfid,
+    imageUrl1,
     course,
     year,
     student_name,
@@ -65,6 +67,7 @@ router.post("/student-order", async (req, res) => {
     const newOrder = new Orders({
       id_number,
       rfid,
+      imageUrl1,
       course,
       year,
       student_name,
@@ -140,6 +143,33 @@ router.put("/cancel/:product_id", async (req, res) => {
   } catch (error) {
     console.error("Error canceling order:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.put("/approve-order", async (req, res) => {
+  const { reference_code, order_id, admin } = req.body;
+
+  try {
+    const orderId = new ObjectId(order_id);
+    const successfulOrder = await Orders.updateOne(
+      { _id: orderId },
+      {
+        $set: {
+          reference_code: reference_code,
+          order_status: "Paid",
+          admin: admin,
+          transaction_date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+        },
+      }
+    );
+
+    if (!successfulOrder) {
+      return res.status(404).json({ message: "Order didnt process" });
+    }
+
+    res.status(200).json({ message: "Approve Order Successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error });
   }
 });
 

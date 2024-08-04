@@ -11,6 +11,9 @@ const orderSchema = new Schema({
     type: String,
     required: true,
   },
+  imageUrl1: {
+    type: String,
+  },
   course: {
     type: String,
   },
@@ -48,7 +51,16 @@ const orderSchema = new Schema({
   order_date: {
     type: String,
   },
+  transaction_date: {
+    type: String,
+  },
   order_status: {
+    type: String,
+  },
+  admin: {
+    type: String,
+  },
+  reference_code: {
     type: String,
   },
   limited: {
