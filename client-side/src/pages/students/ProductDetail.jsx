@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import FormButton from "../../components/forms/FormButton";
+import { makeOrder } from "../../api/orders";
+
 import {
   getId,
   getRfid,
   getInformationData,
 } from "../../authentication/Authentication";
-import { makeOrder } from "../../api/orders";
+import { getOrder } from "../../api/orders";
+import ImagePreview from "../../components/Image/ImagePreview";
 import { format } from "date-fns";
-import { getMembershipStatusStudents } from "../../api/students";
 
-// Reusable ButtonGroup component
+import ImageGallery from "../../components/Image/ImageGallery";
+
 const ButtonGroup = ({ items, selectedItem, onSelect, label, disabled }) => (
   <div className="mb-2 flex-1">
     <span className="block text-xs md:text-base font-medium text-gray-700">
@@ -39,7 +43,6 @@ const ButtonGroup = ({ items, selectedItem, onSelect, label, disabled }) => (
   </div>
 );
 
-// Modal Component
 const Modal = ({ show, onClose, children }) => {
   if (!show) {
     return null;
@@ -61,25 +64,28 @@ const Modal = ({ show, onClose, children }) => {
   );
 };
 
+
 const ProductDetail = () => {
-  const { state } = useLocation();
-  const product = state || {}; // Default to empty object if state is undefined
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const product = state || {};
+
+  const [orderId, setOrderId] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [showModal, setShowModal] = useState(false);
   const [id_number, student_name, email, course, year, role, position] =
-    getInformationData();
+  getInformationData();
+  
 
-  const [status, setStatus] = useState({ membership: "", renew: "" });
+  const [preview, setPreview] = useState(product.imageUrl?.[0] || "");
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [limited, setLimited] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [formError, setFormError] = useState("");
 
-  if (position === "N/A") {
-    useEffect(() => {
-      const fetchStatus = async () => {
-        const membershipStatus = await getMembershipStatusStudents(getId());
-        setStatus(membershipStatus);
-      };
-
-      fetchStatus();
-    }, []);
-  }
+  console.log(product);
 
   const {
     _id = "",
@@ -95,36 +101,76 @@ const ProductDetail = () => {
     batch = "",
   } = product;
 
+  const discount =
+  (status.membership === "Accepted" && status.renew === "None") ||
+  (status.renew === "Accepted" && category !== "uniform")
+    ? price - price * 0.2
+    : price;
+    const [formData, setFormData] = useState({});
+    const calculateTotal = () => {
+      return discount * quantity;
+    };
+  
+
+  
   const sizes = selectedSizes.length > 0 ? selectedSizes[0].split(",") : [];
   const variations =
     selectedVariations.length > 0 ? selectedVariations[0].split(",") : [];
 
-  const [selectedSize, setSelectedSize] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [preview, setPreview] = useState(imageUrl[0] || "");
-  const [showModal, setShowModal] = useState(false);
+  useEffect(() => {
+    const fetchOrderData = async () => {
+      try {
+        const orders = await getOrder(getId());
+        const order = orders.find((order) => order.product_id === _id);
+        if (order) {
+          setOrderId(order.product_id);
+          setLimited(order.limited);
+        }
+      } catch (error) {
+        setError("Unable to fetch order details. Please try again later.");
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const increaseQuantity = () =>
-    setQuantity((prevQuantity) =>
-      prevQuantity < stocks ? prevQuantity + 1 : prevQuantity
+    fetchOrderData();
+  }, [_id]);
+
+
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-500 text-sm">Loading...</p>
+      </div>
     );
-  const decreaseQuantity = () =>
-    setQuantity((prevQuantity) => (prevQuantity > 1 ? prevQuantity - 1 : 1));
+  }
 
-  const handleBack = () => {
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen text-red-500 text-sm">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  const handleBackButton = () => {
     navigate("/student/merchandise");
   };
 
-  const discount =
-    (status.membership === "Accepted" && status.renew === "None") ||
-    (status.renew === "Accepted" && category !== "uniform")
-      ? price - price * 0.2
-      : price;
+  const increaseQuantity = () => {
+    if (!limited) {
+      setQuantity((prevQuantity) =>
+        prevQuantity < stocks ? prevQuantity + 1 : prevQuantity
+      );
+    }
+  };
 
-  const [formData, setFormData] = useState({});
-  const calculateTotal = () => {
-    return discount * quantity;
+  const decreaseQuantity = () => {
+    if (!limited) {
+      setQuantity((prevQuantity) => (prevQuantity > 1 ? prevQuantity - 1 : 1));
+    }
   };
 
   const handleBuyNow = () => {
@@ -164,6 +210,7 @@ const ProductDetail = () => {
     setShowModal(true);
   };
 
+
   const handleCloseModal = () => {
     setShowModal(false);
   };
@@ -174,79 +221,31 @@ const ProductDetail = () => {
     navigate("/student/merchandise");
   };
 
-  if (!product.name) {
-    return <div className="text-center py-10 text-gray-600">Loading...</div>; // Handle the case when product data is not available
-  }
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto bg-white rounded-md shadow-sm space-y-4">
-      <button
-        className="absolute flex items-center gap-2 px-4 py-2 border rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
-        onClick={handleBack}
-      >
-        <i className="fa fa-arrow-left"></i>{" "}
-        {/* Font Awesome arrow-left icon */}
-      </button>
+    <motion.div
+      className="product-detail p-6 mx-auto bg-white rounded-lg shadow-sm max-w-5xl"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <FormButton 
+        styles={"flex mb-4 items-center gap-2 px-4 py-2 border rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"}
+        icon={ <i className="fa fa-arrow-left"></i>}
+        onClick={handleBackButton} className="mb-4" />
+
       <div className="flex flex-col md:flex-row gap-4">
-        {/* Image and gallery */}
-        <div className="flex flex-col md:flex-row md:w-1/2 gap-4">
-          {/* Preview Image */}
-          <div className="flex-1 flex justify-center items-center border rounded-lg overflow-hidden">
-            {preview ? (
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <p className="text-gray-500">No image selected</p>
-            )}
-          </div>
-
-          {/* Image Gallery */}
-          <div className="flex flex-row md:flex-col gap-2 mt-2">
-            {imageUrl.map((img, index) => (
-              <img
-                src={img}
-                key={index}
-                alt={`${img}-${index}`}
-                className="cursor-pointer w-14 h-14 sm:w-20 md:h-20 object-cover rounded-lg border transition-transform duration-200 hover:scale-105"
-                onClick={() => setPreview(img)}
-              />
-            ))}
-          </div>
+        <div className="flex-1 flex flex-col lg:flex-row gap-2">
+          <ImagePreview preview={preview} alt={`Preview of ${name}`} className="w-full" />
+          <ImageGallery imageUrl={imageUrl} setPreview={setPreview} className="w-full" />
         </div>
+        <div className="flex-1">
+          <h3 className="text-2xl font-bold mb-2">{name}</h3>
+          <p className="text-gray-700 text-sm mb-3">{description}</p>
+          <p className="text-lg font-semibold text-gray-900 mb-3">${price.toFixed(2)}</p>
+          <p className="text-sm text-gray-500 mb-4">Batch: {batch}</p>
 
-        {/* Product Details */}
-        <div className="flex-1 flex flex-col p-2">
-          <h3 className="text-xl md:text-2xl font-bold mb-2 text-gray-800">
-            {name}
-          </h3>
-          <p className="text-gray-600 mb-4 text-sm md:text-base">
-            {description}
-          </p>
-          <p className="text-md md:text-lg font-semibold text-gray-700 mb-2">
-            ₱{" "}
-            {price === discount ? (
-              discount.toFixed(2)
-            ) : (
-              <>
-                <span className="line-through text-red-500 mr-2">
-                  {price.toFixed(2)}
-                </span>
-                <span>{discount.toFixed(2)}</span>
-              </>
-            )}
-          </p>
-
-          <p className="text-sm md:text-md mb-2 text-gray-500">
-            In stock: {stocks}
-          </p>
-          <p className="text-sm md:text-md mb-2 text-gray-500">
-            Batch: {batch}
-          </p>
-
-          {(name.includes("Uniform") || name.includes("Tshit")) && (
+          {(name.includes("Uniform") || name.includes("Tshirt")) && (
             <div className="flex flex-wrap gap-4 mb-4">
               <ButtonGroup
                 items={sizes}
@@ -271,7 +270,7 @@ const ProductDetail = () => {
             <button
               className="border rounded-full px-4 py-2 mr-2 bg-gray-100 text-gray-700"
               onClick={decreaseQuantity}
-              disabled={control === "limited-purchase"}
+              disabled={limited || control.includes("limited")}
             >
               -
             </button>
@@ -279,39 +278,33 @@ const ProductDetail = () => {
             <button
               className="border rounded-full px-4 py-2 ml-2 bg-gray-100 text-gray-700"
               onClick={increaseQuantity}
-              disabled={control === "limited-purchase"}
+              disabled={limited || control.toLowerCase().includes("limited")}
             >
               +
             </button>
-            {control === "limited-purchase" && (
+            { control.toLowerCase().includes("limited") && (
               <div className="ml-4 text-red-500 text-sm font-medium">
                 Limited Purchase
               </div>
             )}
           </div>
 
-          <FormButton
-            type="button"
-            text="Buy Now"
-            icon={<i className="fa fa-credit-card"></i>}
-            styles="mt-auto bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 rounded-md px-4 py-4 text-sm transition duration-150 flex items-center gap-2"
-            textClass="inline"
-            onClick={handleBuyNow}
-          />
-        </div>
-      </div>
+          {formError && (
+            <div className="mb-4 text-red-500 text-sm font-medium">{formError}</div>
+          )}
 
-      {/* Product Specification */}
-      <div className="border-t border-gray-200 pt-4">
-        <h4 className="text-lg font-semibold mb-2 text-gray-800">
-          Product Specification
-        </h4>
-        <p className="text-gray-700 mb-1">
-          <strong>Category:</strong> {category}
-        </p>
-        <p>
-          <strong>Description</strong> {description}
-        </p>
+          <button
+            className={`w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
+              limited ? "bg-red-500 text-white" : "bg-blue-500 text-white"
+            } ${stocks <= 0 ? "opacity-60 cursor-not-allowed" : "hover:bg-opacity-80"}`}
+            aria-label={limited ? "Limited stock" : "Buy now"}
+            title={limited ? "Limited stock available" : "Click to purchase"}
+            onClick={handleBuyNow}
+            disabled={stocks <= 0}
+          >
+            {stocks <= 0 ? "Out of STOCK" : (limited && orderId === _id ? "Purchased" : "Buy now")}
+          </button>
+        </div>
       </div>
 
       <Modal show={showModal} onClose={handleCloseModal}>
@@ -347,7 +340,7 @@ const ProductDetail = () => {
           </div>
         </div>
       </Modal>
-    </div>
+    </motion.div>
   );
 };
 

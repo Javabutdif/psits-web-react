@@ -114,7 +114,7 @@ export const getUser = () => {
         token.user.middle_name +
         " " +
         token.user.last_name,
-      token.user.position,
+      token.user.course + "-" + token.user.year,
     ];
 
   return [token.user.name, token.user.position, token.user.id];

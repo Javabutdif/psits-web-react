@@ -1,31 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { getOrder } from "../../../api/orders";
-import { getId } from "../../../authentication/Authentication";
+import { motion } from "framer-motion";
 
 const DEFAULT_IMAGE_URL = "/default-image.jpg";
 
-const ProductCard = ({ product }) => {
+const ProductCard = React.memo(({ product }) => {
   const navigate = useNavigate();
-  const [orderId, setOrderId] = useState("");
-  const [limited, setLimited] = useState("");
-
-  useEffect(() => {
-    const fetchAndSetOrderId = async () => {
-      try {
-        const orders = await getOrder(getId());
-        const order = orders.find((order) => order.product_id === product._id);
-        if (order) {
-          setOrderId(order.product_id);
-          setLimited(order.limited); // Ensure `order.limited` matches your actual API response
-        }
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      }
-    };
-
-    fetchAndSetOrderId();
-  }, [product._id]);
 
   const handleViewDetails = () => {
     if (product) {
@@ -35,46 +15,55 @@ const ProductCard = ({ product }) => {
     }
   };
 
+
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
-      <img
-        src={
-          product.imageUrl.length > 0 ? product.imageUrl[0] : DEFAULT_IMAGE_URL
-        }
-        alt={product.name}
-        className="w-full h-48 object-cover"
-      />
+    <motion.div
+      className="group bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300"
+      whileHover={{ scale: 1.03, boxShadow: "0px 6px 20px rgba(0,0,0,0.15)" }}
+      transition={{ duration: 0.3 }}
+      aria-label={`Product card for ${product.name}`}
+    >
+      <div className="relative w-full h-32">
+        <motion.img
+          src={product.imageUrl?.length > 0 ? product.imageUrl[0] : DEFAULT_IMAGE_URL}
+          alt={product.name ? `${product.name} image` : "Default Product Image"}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        />
+      </div>
       <div className="p-4">
-        <h2 className="text-lg font-semibold text-gray-800 truncate">
+        <h2 className="text-sm font-bold text-gray-800 truncate mb-1">
           {product.name}
         </h2>
-        <p className="text-sm">Stocks: {product.stocks}</p>
-        <p className="text-gray-600 mt-2 text-sm">{product.description}</p>
-        <div className="flex items-center justify-between mt-4">
-          <span className="text-lg font-bold text-gray-900">
+        <p className="text-xs text-gray-600 mb-1">
+          Stocks: <span className="font-medium text-gray-900">{product.stocks}</span>
+        </p>
+        <p className="text-xs text-gray-500 mb-3 truncate">
+          {product.description}
+        </p>
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-semibold text-gray-900">
             ₱{product.price.toFixed(2)}
           </span>
-          <button
+          <motion.button
             onClick={handleViewDetails}
-            className={`px-4 py-2 ${
-              orderId === product._id && limited ? "bg-red-500" : "bg-blue-500"
-            } text-white rounded-lg ${
-              orderId === product._id && limited
-                ? "hover:bg-red-600"
-                : "hover:bg-blue-600"
-            } transition duration-300 text-sm`}
-            disabled={orderId === product._id || product.stocks === 0}
+            className="bg-blue-500 text-white text-xs font-medium py-1 px-3 rounded-full hover:bg-blue-600 transition-colors duration-200"
+            aria-label={`View details for ${product.name}`}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
           >
-            {orderId === product._id && limited === "True"
-              ? "Already Bought"
-              : product.stocks === 0
-              ? "Out of Stock"
-              : "View Details"}
-          </button>
+            View
+          </motion.button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-};
+});
+
+// Set display name for easier debugging
+ProductCard.displayName = "ProductCard";
 
 export default ProductCard;

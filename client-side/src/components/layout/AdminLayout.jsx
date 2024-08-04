@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import SideBar from "../common/navbar/NavbarAdmin";
+import AsideBar from "../common/navbar/AsideBar";
 import ProfileHeader from "../ProfileHeader";
 
 const AdminLayout = () => {
@@ -15,15 +15,24 @@ const AdminLayout = () => {
     );
   }, [location]);
 
+  const navItems = [
+    { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
+    { text: "Membership", icon: "fas fa-users", path: "membership" },
+    { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
+    { text: "Inventory", icon: "fas fa-warehouse", path: "inventory" },
+    { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
+    { text: "Analytics", icon: "fas fa-chart-line", path: "analytics" },
+    { text: "Resources", icon: "fas fa-book-open", path: "resources" },
+    { text: "Settings", icon: "fas fa-cog", path: "settings" },
+  ];
+  
   return (
     <div className="flex w-full bg-secondary min-h-screen">
-      <SideBar /> {/* Example: Admin sidebar */}
-      <main className="flex-1 ml-16 px-2 sm:px-4 sm:ml-20">
-        <ProfileHeader label={label} />
-        <div className="relative min-h-main-md md:min-h-main  mt-[4.3rem] sm:mt-16 py-3 sm:py-5 md:py-10  mx-auto">
-          <Outlet /> {/* This is where nested routes will be rendered */}
-        </div>
-      </main>
+      <AsideBar navItems={navItems} />
+      <div className="flex-1 ml-[4.4rem] min-h-screen  md:px-4: px-3 md:px-4: lg:px-6">
+        <ProfileHeader label={label} /> 
+        <Outlet />
+      </div>
     </div>
   );
 };

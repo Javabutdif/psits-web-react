@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { posts, events } from "../../@fakedb/data";
 import Posts from "./dashboard/Posts";
 import Events from "./dashboard/Events";
@@ -7,24 +7,26 @@ import MembershipBanner from "./dashboard/Membership";
 import { getMembershipStatus } from "../../authentication/Authentication";
 
 function StudentDashboard() {
+  const membershipStatus = getMembershipStatus();
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 ">
+    <main className="grid grid-cols-1 lg:grid-rows-[300px_250px_300px] gap-4 py-5 lg:grid-cols-3 xl:grid-cols-5">
       {/* Events Section */}
-      <div className="col-start-1 col-span-1 ">
+      <div className="md:col-span-1 lg:col-span-1 lg:row-start-3 xl:row-start-1 xl:col-start-5 ">
         <Events events={events} />
       </div>
 
       {/* Posts Section */}
-      <div className=" col-span-1 md:col-span-2  row-span-2 lg:col-span-2">
+      <div className="md:col-span-1 lg:col-span-2 xl:col-span-3">
         <Posts posts={posts} />
       </div>
 
       {/* Operation Hours and Membership Banner */}
-      <div className="row-start-1  w-full lg:row-auto row-span-4 lg:col-span-1 flex flex-col gap-4">
+      <div className="row-start-1 md:col-span-1 lg:col-span-1 xl:col-span-1 flex flex-col gap-5">
         <OperationHours />
-        {getMembershipStatus() === "None" && <MembershipBanner />}
+        {membershipStatus === "None" && <MembershipBanner />}
       </div>
-    </div>
+    </main>
   );
 }
 

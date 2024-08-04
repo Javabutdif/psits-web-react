@@ -13,7 +13,7 @@ const Orders = () => {
   ];
 
   return (
-    <div>
+    <div className="mt-16 md:mt-20 lg:mt-[5.5rem]">
       <Tab tabs={tabs} styles={"grid grid-cols-2"} activePath={currentPath}  />
       <Outlet />
     </div>

@@ -60,7 +60,7 @@ const Membership = () => {
   ];
 
   return (
-    <div className="flex flex-col bg-gray-100 overflow-hidden">
+    <div className="flex flex-col bg-gray-100 overflow-hidden mt-16 sm:mt-20 md:mt-[5.5rem] lg:mt-26">
       <div className="w-full flex flex-col">
         <Tab tabs={tabs} styles={"grid md:grid-cols-3 lg:grid-cols-5"} activePath={currentPath} />
       </div>
