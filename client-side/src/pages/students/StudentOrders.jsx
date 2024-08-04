@@ -5,6 +5,7 @@ import Tab from "../../components/Tab";
 function StudentOrders() {
   const location = useLocation();
   const currentPath = location.pathname;
+
   // Update the icons here
   const tabs = [
     { path: "/student/orders", text: `Pending`, icon: "fas fa-clock" }, // Changed to a clock icon
