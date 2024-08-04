@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { getOrder, cancelOrder } from '../../../api/orders';
-import { getId } from '../../../authentication/Authentication';
-import OrderList from './OrderList';
-import Pagination from '../../../components/Custom/Pagination';
-import SearchFilter from '../merchandise/SearchFilter';
-import FormButton from '../../../components/forms/FormButton';
-import FilterOptions from '../merchandise/FilterOptions';
+import React, { useState, useEffect } from "react";
+import { getOrder, cancelOrder } from "../../../api/orders";
+import { getId } from "../../../authentication/Authentication";
+import OrderList from "./OrderList";
+import Pagination from "../../../components/Custom/Pagination";
+import FormButton from "../../../components/forms/FormButton";
 
 const PendingOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -19,14 +17,10 @@ const PendingOrders = () => {
   const [isAllChecked, setIsAllChecked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-
   // Filter pending orders
-  const pendingOrders = orders.filter(order => order.order_status === 'Pending');
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
+  const pendingOrders = orders.filter(
+    (order) => order.order_status === "Pending"
+  );
 
   // Fetch orders from the API
   const fetchOrders = async () => {
@@ -36,8 +30,8 @@ const PendingOrders = () => {
       const ordersData = await getOrder(getId());
       setOrders(ordersData || []);
     } catch (error) {
-      setError('Failed to fetch orders');
-      console.error('Failed to fetch orders', error);
+      setError("Failed to fetch orders");
+      console.error("Failed to fetch orders", error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +84,7 @@ const PendingOrders = () => {
     if (isAllChecked) {
       setSelectedOrders([]);
     } else {
-      const allOrderIds = currentOrders.map(order => order._id);
+      const allOrderIds = currentOrders.map((order) => order._id);
       setSelectedOrders(allOrderIds);
     }
     setIsAllChecked(!isAllChecked);
@@ -98,13 +92,16 @@ const PendingOrders = () => {
 
   // Get selected items
   const getSelectedItems = () => {
-    return orders.filter(order => selectedOrders.includes(order._id));
+    return orders.filter((order) => selectedOrders.includes(order._id));
   };
 
   // Pagination logic
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = pendingOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const currentOrders = pendingOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
 
   const totalPages = Math.ceil(pendingOrders.length / ordersPerPage);
 
@@ -123,61 +120,69 @@ const PendingOrders = () => {
       setOrders(orders.filter((order) => !selectedOrders.includes(order._id)));
       setSelectedOrders([]);
     } catch (error) {
-      console.error('Failed to cancel all selected orders', error);
+      console.error("Failed to cancel all selected orders", error);
     }
   };
 
   useEffect(() => {
     // If all orders on the current page are selected, check the "Check All" checkbox
-    const allOrderIds = currentOrders.map(order => order._id);
-    const allChecked = allOrderIds.every(id => selectedOrders.includes(id));
+    const allOrderIds = currentOrders.map((order) => order._id);
+    const allChecked = allOrderIds.every((id) => selectedOrders.includes(id));
     setIsAllChecked(allChecked);
   }, [selectedOrders, currentOrders]);
 
   return (
     <div>
-        <div className="space-y-4 py-4">
-          {/* <SearchFilter 
-             searchQuery={searchQuery}
-             handleSearchChange={handleSearchChange}
-          /> */}
-          {selectedOrders.length > 0 && (
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  checked={isAllChecked}
-                  onChange={handleCheckAllChange}
-                  className="w-4 h-4"
-                />
-                <label className="text-sm">Select All</label>
-              </div>
-              <FormButton
-                type="button"
-                text="Cancel All Orders"
-                icon={<i className="fas fa-trash-alt text-sm"></i>}
-                styles="space-x-1 bg-red-500 text-white rounded py-1 px-2 text-sm transition duration-150 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                textClass="text-sm hidden md:inline-block"
-                whileHover={{ scale: 1.01, opacity: 0.9 }}
-                whileTap={{ scale: 0.95, opacity: 0.8 }}
-                onClick={handleMultipleCancel}
+      <div className="space-y-4 py-4">
+        {/* Uncomment and configure SearchFilter if needed */}
+        {/* <SearchFilter 
+           searchQuery={searchQuery}
+           handleSearchChange={handleSearchChange}
+        /> */}
+        {selectedOrders.length > 0 && (
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                checked={isAllChecked}
+                onChange={handleCheckAllChange}
+                className="w-4 h-4"
               />
+              <label className="text-sm">Select All</label>
             </div>
-          )}
+            <FormButton
+              type="button"
+              text="Cancel All Orders"
+              icon={<i className="fas fa-trash-alt text-sm"></i>}
+              styles="space-x-1 bg-red-500 text-white rounded py-1 px-2 text-sm transition duration-150 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+              textClass="text-sm hidden md:inline-block"
+              whileHover={{ scale: 1.01, opacity: 0.9 }}
+              whileTap={{ scale: 0.95, opacity: 0.8 }}
+              onClick={handleMultipleCancel}
+            />
+          </div>
+        )}
 
-         
-          <OrderList 
-            orders={currentOrders} 
-            onCancel={handleCancelClick} 
-            onCheckboxChange={handleCheckboxChange} 
-            selectedOrders={selectedOrders} 
-          />
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            handlePageChange={handlePageChange}
-          />
-        </div>
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : (
+          <>
+            <OrderList
+              orders={currentOrders}
+              onCancel={handleCancelClick}
+              onCheckboxChange={handleCheckboxChange}
+              selectedOrders={selectedOrders}
+            />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              handlePageChange={handlePageChange}
+            />
+          </>
+        )}
+      </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">

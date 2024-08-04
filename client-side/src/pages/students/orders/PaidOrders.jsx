@@ -7,7 +7,7 @@ import SearchFilter from "../merchandise/SearchFilter";
 import FormButton from "../../../components/forms/FormButton";
 import FilterOptions from "../merchandise/FilterOptions";
 
-const PendingOrders = () => {
+const PaidOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,9 +41,7 @@ const PendingOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
-
-  // Handle individual order cancellation
+  }, []); // Fetch data on component mount
 
   // Handle individual cancel button click
   const handleCancelClick = (order_id) => {
@@ -52,9 +50,16 @@ const PendingOrders = () => {
   };
 
   // Confirm cancellation of the selected order
-  const handleModalConfirm = () => {
+  const handleModalConfirm = async () => {
     if (selectedOrderId) {
-      cancelOrderHandler(selectedOrderId);
+      try {
+        await cancelOrder(selectedOrderId);
+        await fetchOrders(); // Refetch orders after cancellation
+        setIsModalOpen(false);
+        setSelectedOrderId(null);
+      } catch (error) {
+        console.error("Failed to cancel the order", error);
+      }
     }
   };
 
@@ -110,7 +115,7 @@ const PendingOrders = () => {
       for (const order_id of selectedOrders) {
         await cancelOrder(order_id);
       }
-      setOrders(orders.filter((order) => !selectedOrders.includes(order._id)));
+      await fetchOrders(); // Refetch orders after cancellation
       setSelectedOrders([]);
     } catch (error) {
       console.error("Failed to cancel all selected orders", error);
@@ -127,10 +132,10 @@ const PendingOrders = () => {
   return (
     <div>
       <div className="space-y-4 py-4">
-        {/* <SearchFilter 
-             searchQuery={searchQuery}
-             handleSearchChange={handleSearchChange}
-          /> */}
+        <SearchFilter
+          searchQuery={searchQuery}
+          handleSearchChange={handleSearchChange}
+        />
         {selectedOrders.length > 0 && (
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-1">
@@ -194,4 +199,4 @@ const PendingOrders = () => {
   );
 };
 
-export default PendingOrders;
+export default PaidOrders;
