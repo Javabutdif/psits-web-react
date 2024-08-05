@@ -25,7 +25,7 @@ const ButtonGroup = ({ items, selectedItem, onSelect, label, disabled }) => (
         items.map((item) => (
           <button
             key={item}
-            className={`text-sm md:text-md border rounded-full px-3 py-1 md:px-4 md:py-2 focus:outline-none ${
+            className={`text-xs sm:text-sm   md:text-md border rounded-full px-3 py-1 md:px-4 md:py-2 focus:outline-none ${
               selectedItem === item
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 text-gray-700"
@@ -224,7 +224,7 @@ const ProductDetail = () => {
 
   return (
     <motion.div
-      className="product-detail p-6 mx-auto bg-white rounded-lg shadow-sm max-w-5xl"
+      className="product-detail p-3 sm:p-6 mx-auto bg-white rounded-lg shadow-sm max-w-5xl"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -235,15 +235,15 @@ const ProductDetail = () => {
         onClick={handleBackButton} className="mb-4" />
 
       <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 flex flex-col lg:flex-row gap-2">
+        <div className="flex-1 flex flex-col md:flex-row gap-5">
           <ImagePreview preview={preview} alt={`Preview of ${name}`} className="w-full" />
           <ImageGallery imageUrl={imageUrl} setPreview={setPreview} className="w-full" />
         </div>
         <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-2">{name}</h3>
-          <p className="text-gray-700 text-sm mb-3">{description}</p>
-          <p className="text-lg font-semibold text-gray-900 mb-3">${price.toFixed(2)}</p>
-          <p className="text-sm text-gray-500 mb-4">Batch: {batch}</p>
+          <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">{name}</h3>
+          <p className="text-gray-700 text-xs sm:text-sm mb-1 sm:mb-3">{description}</p>
+          <p className="text-md sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">${price.toFixed(2)}</p>
+          <p className="text-sm text-gray-500 mb-3 sm:mb-4">Batch: {batch}</p>
 
           {(name.includes("Uniform") || name.includes("Tshirt")) && (
             <div className="flex flex-wrap gap-4 mb-4">
@@ -263,12 +263,12 @@ const ProductDetail = () => {
             </div>
           )}
 
-          <div className="mb-4 flex items-center">
-            <span className="mr-2 text-sm font-medium text-gray-700">
+          <div className="mb-10 sm:mb-6 relative flexitems-center">
+            <span className="mr-2 text-xs sm:text-sm font-medium text-gray-700">
               Quantity:
             </span>
             <button
-              className="border rounded-full px-4 py-2 mr-2 bg-gray-100 text-gray-700"
+              className="border text-xs sm:text-sm rounded-full px-4 py-2 mr-2 bg-gray-100 text-gray-700"
               onClick={decreaseQuantity}
               disabled={limited || control.includes("limited")}
             >
@@ -276,14 +276,14 @@ const ProductDetail = () => {
             </button>
             <span className="text-lg font-semibold">{quantity}</span>
             <button
-              className="border rounded-full px-4 py-2 ml-2 bg-gray-100 text-gray-700"
+              className="border text-xs sm:text-sm rounded-full px-4 py-2 ml-2 bg-gray-100 text-gray-700"
               onClick={increaseQuantity}
               disabled={limited || control.toLowerCase().includes("limited")}
             >
               +
             </button>
             { control.toLowerCase().includes("limited") && (
-              <div className="ml-4 text-red-500 text-sm font-medium">
+              <div className="absolute -bottom-5 sm:bottom-2 sm:left-48  text-red-500 text-xs sm:text-sm font-medium">
                 Limited Purchase
               </div>
             )}
@@ -294,13 +294,13 @@ const ProductDetail = () => {
           )}
 
           <button
-            className={`w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
+            className={`w-full text-sm sm:text-md px-2 py-2 font-medium rounded-lg transition-colors duration-300 ${
               limited ? "bg-red-500 text-white" : "bg-blue-500 text-white"
             } ${stocks <= 0 ? "opacity-60 cursor-not-allowed" : "hover:bg-opacity-80"}`}
             aria-label={limited ? "Limited stock" : "Buy now"}
             title={limited ? "Limited stock available" : "Click to purchase"}
             onClick={handleBuyNow}
-            disabled={stocks <= 0}
+            disabled={stocks <= 0 || orderId === _id}
           >
             {stocks <= 0 ? "Out of STOCK" : (limited && orderId === _id ? "Purchased" : "Buy now")}
           </button>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import { motion } from 'framer-motion';
-import deanImage from '../../../assets/images/dean.png'
+import { motion, useAnimation } from "framer-motion";
+import deanImage from '../../../assets/images/dean.png';
 
 const DeansMessage = () => {
   const messageData = useRef({
@@ -16,82 +16,59 @@ const DeansMessage = () => {
     I commend you for choosing a field that is constantly changing and expanding. I wish you all the best in you academic and professional endeavors.`
   }).current;
 
-  const [displayedMessage, setDisplayedMessage] = useState("");
-  const typingSpeed = 10;
-  const messageIndex = useRef(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
+  const controls = useAnimation();
 
   useEffect(() => {
-    const typeMessage = () => {
-      if (messageIndex.current < messageData.message.length) {
-        setDisplayedMessage((prev) => prev + messageData.message.charAt(messageIndex.current));
-        messageIndex.current++;
+    const animateText = async () => {
+      await controls.start({
+        opacity: 1,
+        transition: { duration: 0.5 }
+      });
+
+      for (let i = 0; i <= messageData.message.length; i++) {
+        setDisplayedText(messageData.message.slice(0, i));
+        await new Promise(resolve => setTimeout(resolve, 70)); // Adjust typing speed here
       }
+      
+      // Stop blinking cursor after typing is complete
+      setShowCursor(false);
     };
 
-    const typingInterval = setInterval(typeMessage, typingSpeed);
+    animateText();
 
-    return () => {
-      clearInterval(typingInterval);
-    };
-  }, [messageData.message, typingSpeed]);
+    // Blink cursor
+    const cursorInterval = setInterval(() => {
+      setShowCursor(prev => !prev);
+    }, 500); // Blink every 500ms
+
+    return () => clearInterval(cursorInterval);
+  }, [controls, messageData.message]);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: -100 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="container mx-auto max-w-[1020px] relative lg:flex lg:justify-center lg:items-center"
-    >
-      <div className="flex flex-col sm:flex-row w-full lg:w-auto border-y-8 border-secondary pt-14 lg:p-8 px-4 pb-4 lg:px-8 lg:pb-8 lg:pt-28 bg-white rounded-lg shadow-lg">
-        <motion.div 
-      
-          className="absolute -top-20 left-1/8 -translate-x-1/8 bg-primary border-primary shadow-xl transform rounded-full"
-        >
-          <img
-            src={messageData.image}
-            alt={messageData.name}
-            className="w-32 h-32 lg:w-40 lg:h-40 object-contain rounded-full"
-          />
-        </motion.div>
-
+    <div className="container px-4 lg:px-0 py-20">
+      <div className="max-w-4xl mx-auto bg-white p-4">
+        <div className="flex items-center mb-6">
+            <img src={messageData.image} alt={messageData.name} className="w-20 h-20 object-cover rounded-full object-top  mr-4" />
+            <div>
+            <h2 className="text-xl font-bold">{messageData.name}</h2>
+            <p className="text-sm text-gray-600">{messageData.position}</p>
+            </div>
+        </div>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 1 }}
-          className="flex-1"
+            initial={{ opacity: 0 }}
+            animate={controls}
+            className=""
         >
-          <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold mb-4 text-gray-800">Dean's Welcome Message</h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 1 }}
-            className="text-gray-700 leading-relaxed mb-6"
-          >
-            <span className="font-semibold block mb-2 text-sm sm:text-md">Dear Students,</span>
-            <span className="whitespace-pre-line text-xs sm:text-sm">
-              {displayedMessage}
-            </span>
-          </motion.p>
-          <div className="mt-6">
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.5, duration: 0.5 }}
-              className="text-gray-800 font-semibold text-md sm:text-lg"
-            >
-              {messageData.name}
-            </motion.p>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.5, duration: 0.5 }}
-              className="text-gray-600 text-xs sm:text-sm"
-            >
-              {messageData.position}
-            </motion.p>
-          </div>
+            <p className="text-gray-800 text-xs md:text-sm whitespace-pre-line">
+            <span className="font-bold text-md block mb-4">Dear Students,</span>
+            {displayedText}
+            {showCursor && <span className="animate-blink">|</span>}
+            </p>
         </motion.div>
+        </div>
       </div>
-    </motion.div>
   );
 };
 

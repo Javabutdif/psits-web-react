@@ -8,10 +8,10 @@ const TableBody = ({ columns, currentRows, loading }) => {
       {columns.map((column, columnIndex) => (
         <td
           key={`skeleton-${columnIndex}`}
-          className={`px-2 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 whitespace-nowrap ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
+          className={`px-2 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 whitespace-nowrap truncate ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''} ${column.width || 'w-auto'}`}
         >
           <motion.div
-            className="bg-gray-200 rounded-md h-4 md:h-5"
+            className="bg-black rounded-md h-4 md:h-5"
             initial={{ opacity: 0.6, scale: 1 }}
             animate={{ opacity: [0.6, 0.8, 0.6], scale: [1, 1.02, 1] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'ease-in-out' }}
@@ -22,7 +22,7 @@ const TableBody = ({ columns, currentRows, loading }) => {
   );
 
   return (
-    <tbody className="bg-white divide-y divide-gray-200 overflow-y-auto">
+    <tbody className="bg-white divide-y divide-gray-200 mb-2 overflow-y-auto">
       {loading ? (
         // Render skeleton loaders when data is loading
         Array.from({ length: 5 }).map((_, index) => (
@@ -44,7 +44,7 @@ const TableBody = ({ columns, currentRows, loading }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className={`px-2 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 whitespace-nowrap text-xs md:text-sm font-medium text-gray-900 ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
+                className={`px-2 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 whitespace-nowrap truncate text-xs md:text-sm font-medium text-gray-900 ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''} ${column.width || 'w-auto'}`}
               >
                 {column.cell ? column.cell(row) : row[column.key] || ''}
               </motion.td>
