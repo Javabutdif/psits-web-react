@@ -57,50 +57,50 @@ function Register() {
 
   const validateInputs = () => {
     const newErrors = {};
-  
+
     // Validate ID Number
     if (!formData.id_number) {
       newErrors.id_number = "ID Number is required.";
     } else if (!/^\d+$/.test(formData.id_number)) {
       newErrors.id_number = "Invalid ID Number.";
     }
-  
+
     // Validate Names
     if (!formData.first_name) {
       newErrors.first_name = "First Name is required.";
-    } else if (!/^[A-Za-z]+$/.test(formData.first_name)) {
+    } else if (!/^[A-Za-z]+(\s[A-Za-z]+){0,2}$/.test(formData.first_name)) {
       newErrors.first_name = "Invalid First Name.";
     }
-  
-    if (!formData.middle_name) {
-      newErrors.middle_name = "Middle Name is required.";
-    } else if (!/^[A-Za-z]+$/.test(formData.middle_name)) {
+
+    if (!/^[A-Za-z]+$/.test(formData.middle_name)) {
       newErrors.middle_name = "Invalid Middle Name.";
     }
-  
+
     if (!formData.last_name) {
       newErrors.last_name = "Last Name is required.";
     } else if (!/^[A-Za-z]+$/.test(formData.last_name)) {
       newErrors.last_name = "Invalid Last Name.";
     }
-  
+
     // Validate Email
     if (!formData.email) {
       newErrors.email = "Email is required.";
-    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
+    } else if (
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
+    ) {
       newErrors.email = "Invalid Email.";
     }
-  
+
     // Validate Course
     if (!formData.course) {
       newErrors.course = "Course is required.";
     }
-  
+
     // Validate Year
     if (!formData.year) {
       newErrors.year = "Year is required.";
     }
-  
+
     // Validate Password
     if (!formData.password) {
       newErrors.password = "Password is required.";
@@ -110,21 +110,17 @@ function Register() {
       newErrors.password = "Include a lowercase letter.";
     } else if (!/[A-Z]/.test(formData.password)) {
       newErrors.password = "Include an uppercase letter.";
-    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
-      newErrors.password = "Include a symbol.";
     }
-  
+
     // Validate Confirm Password
     if (!formData.confirm_password) {
       newErrors.confirm_password = "Confirm Password is required.";
     } else if (formData.password !== formData.confirm_password) {
       newErrors.confirm_password = "Passwords do not match.";
     }
-  
+
     return newErrors;
   };
-  
-  
 
   const showModal = (e) => {
     e.preventDefault();
@@ -321,7 +317,6 @@ function Register() {
               text={"Sign in"}
               onClick={handleNavigate("/Login")}
               styles="text-xs m-2"
-              
             />
           </div>
         </form>
