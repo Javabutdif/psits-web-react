@@ -11,6 +11,7 @@ import { register } from "../../api/index.js";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
+import { InfinitySpin } from "react-loader-spinner";
 
 function Register() {
   const [startDate, setStartDate] = useState(new Date());
@@ -63,6 +64,8 @@ function Register() {
       newErrors.id_number = "ID Number is required.";
     } else if (!/^\d+$/.test(formData.id_number)) {
       newErrors.id_number = "Invalid ID Number.";
+    } else if (formData.id_number.length !== 8) {
+      newErrors.id_number = "ID Number must only contains 8 digits";
     }
 
     // Validate Names
@@ -139,11 +142,11 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
+    setIsModalVisible(false);
     try {
       if (await register(formData)) {
         showToast("success", "Registration successful");
-        setIsModalVisible(false);
+
         setFormData({
           id_number: "",
           rfid: "",
@@ -183,144 +186,158 @@ function Register() {
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100 p-4">
-      <motion.div
-        initial={{ x: -100 }}
-        animate={{ x: 0 }}
-        className="max-w-lg md:max-w-4xl space-y-8  sm:space-y-0 sm:space-y-10 w-full flex flex-col md:flex-row md:items-stretch items-center justify-center bg-white shadow-lg rounded-lg"
-      >
-        <div className="flex md:flex-col md:justify-center md:items-center md:space-y-5 md:text-center md:border-0 bg-[#074873] text-white space-x-4 p-4 rounded-t md:rounded-l-lg items-center">
-          <img
-            src={logo}
-            alt="PSITS Logo"
-            className="w-16 h-16 md:w-24 md:h-24"
+      {isLoading ? (
+        <div className="flex justify-center items-center w-full h-full">
+          <InfinitySpin
+            visible={true}
+            width={200}
+            color="#0d6efd"
+            ariaLabel="infinity-spin-loading"
           />
-          <div className="border-white border-l-2 md:border-0 md:pl-0 pl-4">
-            <h3 className="text-l sm:text-2xl font-bold uppercase">Register</h3>
-            <p className="w-full md:w-48 text-xs sm:text-sm md:text-md">
-              Become a PSITS Member! Start your tech journey and build lasting
-              connections.
-            </p>
-          </div>
         </div>
-        <form
-          className="w-full space-y-6 px-4 lg:px-6 pb-10"
-          onSubmit={showModal}
+      ) : (
+        <motion.div
+          initial={{ x: -100 }}
+          animate={{ x: 0 }}
+          className="max-w-lg md:max-w-4xl space-y-8 sm:space-y-0 sm:space-y-10 w-full flex flex-col md:flex-row md:items-stretch items-center justify-center bg-white shadow-lg rounded-lg"
         >
-          <FormInput
-            label={"ID Number"}
-            type="text"
-            id="id_number"
-            name="id_number"
-            value={formData.id_number}
-            onChange={handleChange}
-            error={errors.id_number}
-            styles="w-full p-2 border border-gray-300 rounded"
-          />
-
-          <div className="flex flex-col sm:flex-row space-y-6 sm:space-y-0 sm:space-x-4">
+          <div className="flex md:flex-col md:justify-center md:items-center md:space-y-5 md:text-center md:border-0 bg-[#074873] text-white space-x-4 p-4 rounded-t md:rounded-l-lg items-center">
+            <img
+              src={logo}
+              alt="PSITS Logo"
+              className="w-16 h-16 md:w-24 md:h-24"
+            />
+            <div className="border-white border-l-2 md:border-0 md:pl-0 pl-4">
+              <h3 className="text-l sm:text-2xl font-bold uppercase">
+                Register
+              </h3>
+              <p className="w-full md:w-48 text-xs sm:text-sm md:text-md">
+                Become a PSITS Member! Start your tech journey and build lasting
+                connections.
+              </p>
+            </div>
+          </div>
+          <form
+            className="w-full space-y-6 px-4 lg:px-6 pb-10"
+            onSubmit={showModal}
+          >
+            {/* Form inputs */}
             <FormInput
-              label={"First Name"}
+              label={"ID Number"}
               type="text"
-              id="first_name"
-              name="first_name"
-              value={formData.first_name}
+              id="id_number"
+              name="id_number"
+              value={formData.id_number}
               onChange={handleChange}
-              error={errors.first_name}
+              error={errors.id_number}
               styles="w-full p-2 border border-gray-300 rounded"
             />
+
+            <div className="flex flex-col sm:flex-row space-y-6 sm:space-y-0 sm:space-x-4">
+              <FormInput
+                label={"First Name"}
+                type="text"
+                id="first_name"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleChange}
+                error={errors.first_name}
+                styles="w-full p-2 border border-gray-300 rounded"
+              />
+              <FormInput
+                label={"Middle Name"}
+                type="text"
+                id="middle_name"
+                name="middle_name"
+                value={formData.middle_name}
+                onChange={handleChange}
+                styles="w-full p-2 border border-gray-300 rounded"
+                errorStyles={""}
+                error={errors.middle_name}
+              />
+              <FormInput
+                label={"Last Name"}
+                type="text"
+                id="last_name"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleChange}
+                error={errors.last_name}
+                styles="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
             <FormInput
-              label={"Middle Name"}
+              label={"Email Address"}
               type="text"
-              id="middle_name"
-              name="middle_name"
-              value={formData.middle_name}
+              id="email"
+              name="email"
+              value={formData.email}
               onChange={handleChange}
-              styles="w-full p-2 border border-gray-300 rounded"
-              errorStyles={""}
-              error={errors.middle_name}
-            />
-            <FormInput
-              label={"Last Name"}
-              type="text"
-              id="last_name"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              error={errors.last_name}
+              error={errors.email}
               styles="w-full p-2 border border-gray-300 rounded"
             />
-          </div>
-          <FormInput
-            label={"Email Address"}
-            type="text"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            styles="w-full p-2 border border-gray-300 rounded"
-          />
 
-          <div className="flex justify-between space-x-4">
-            <FormSelect
-              label="Course"
-              name="course"
-              value={formData.course}
-              onChange={handleChange}
-              options={courseOptions}
-              error={errors.course}
-              styles="flex-1"
-            />
-            <FormSelect
-              label="Year"
-              name="year"
-              value={formData.year}
-              onChange={handleChange}
-              options={yearOptions}
-              error={errors.year}
-              styles="flex-1"
-            />
-          </div>
+            <div className="flex justify-between space-x-4">
+              <FormSelect
+                label="Course"
+                name="course"
+                value={formData.course}
+                onChange={handleChange}
+                options={courseOptions}
+                error={errors.course}
+                styles="flex-1"
+              />
+              <FormSelect
+                label="Year"
+                name="year"
+                value={formData.year}
+                onChange={handleChange}
+                options={yearOptions}
+                error={errors.year}
+                styles="flex-1"
+              />
+            </div>
 
-          <div className="flex flex-col space-x-0 space-y-5 sm:space-x-5 sm:space-y-0 sm:flex-row">
-            <FormInput
-              label="Password"
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              styles="flex-1 p-2 border border-gray-300 rounded"
-            />
-            <FormInput
-              label="Confirm Password"
-              type="password"
-              id="confirm_password"
-              name="confirm_password"
-              value={formData.confirm_password}
-              onChange={handleChange}
-              error={errors.confirm_password}
-              styles="flex-1 p-2 border border-gray-300 rounded"
-            />
-          </div>
-          <FormButton
-            type="submit"
-            text="Register"
-            styles="w-full bg-blue-500 hover:bg-blue-400 text-white p-2 rounded"
-          />
-
-          <div className="text-sm sm:text-md flex items-center justify-center">
-            <p>Already have an account? </p>
+            <div className="flex flex-col space-x-0 space-y-5 sm:space-x-5 sm:space-y-0 sm:flex-row">
+              <FormInput
+                label="Password"
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+                styles="flex-1 p-2 border border-gray-300 rounded"
+              />
+              <FormInput
+                label="Confirm Password"
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                value={formData.confirm_password}
+                onChange={handleChange}
+                error={errors.confirm_password}
+                styles="flex-1 p-2 border border-gray-300 rounded"
+              />
+            </div>
             <FormButton
-              type={"button"}
-              text={"Sign in"}
-              onClick={handleNavigate("/Login")}
-              styles="text-xs m-2"
+              type="submit"
+              text="Register"
+              styles="w-full bg-blue-500 hover:bg-blue-400 text-white p-2 rounded"
             />
-          </div>
-        </form>
-      </motion.div>
+
+            <div className="text-sm sm:text-md flex items-center justify-center">
+              <p>Already have an account? </p>
+              <FormButton
+                type={"button"}
+                text={"Sign in"}
+                onClick={handleNavigate("/Login")}
+                styles="text-xs m-2"
+              />
+            </div>
+          </form>
+        </motion.div>
+      )}
 
       {isModalVisible && (
         <RegistrationConfirmationModal

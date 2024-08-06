@@ -133,7 +133,8 @@ const ProductDetail = () => {
 
   const discount =
     (status.membership === "Accepted" && status.renew === "None") ||
-    (status.renew === "Accepted" && category !== "uniform")
+    (status.renew === "Accepted" && category !== "uniform") ||
+    status.membership === "Accepted"
       ? price - price * 0.05
       : price;
 
