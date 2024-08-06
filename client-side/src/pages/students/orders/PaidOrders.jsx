@@ -3,9 +3,6 @@ import { getOrder, cancelOrder } from "../../../api/orders";
 import { getId } from "../../../authentication/Authentication";
 import OrderList from "./OrderList";
 import Pagination from "../../../components/Custom/Pagination";
-import SearchFilter from "../merchandise/SearchFilter";
-import FormButton from "../../../components/forms/FormButton";
-import FilterOptions from "../merchandise/FilterOptions";
 
 const PaidOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -20,10 +17,6 @@ const PaidOrders = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const pendingOrders = orders.filter((order) => order.order_status === "Paid");
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
 
   // Fetch orders from the API
   const fetchOrders = async () => {
@@ -77,22 +70,6 @@ const PaidOrders = () => {
     );
   };
 
-  // Handle "Check All" checkbox change
-  const handleCheckAllChange = () => {
-    if (isAllChecked) {
-      setSelectedOrders([]);
-    } else {
-      const allOrderIds = currentOrders.map((order) => order._id);
-      setSelectedOrders(allOrderIds);
-    }
-    setIsAllChecked(!isAllChecked);
-  };
-
-  // Get selected items
-  const getSelectedItems = () => {
-    return orders.filter((order) => selectedOrders.includes(order._id));
-  };
-
   // Pagination logic
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
@@ -109,48 +86,25 @@ const PaidOrders = () => {
     }
   };
 
-  // Handle multiple order cancellations
-  const handleMultipleCancel = async () => {
-    try {
-      for (const order_id of selectedOrders) {
-        await cancelOrder(order_id);
-      }
-      await fetchOrders(); // Refetch orders after cancellation
-      setSelectedOrders([]);
-    } catch (error) {
-      console.error("Failed to cancel all selected orders", error);
-    }
-  };
-
-  useEffect(() => {
-    // If all orders on the current page are selected, check the "Check All" checkbox
-    const allOrderIds = currentOrders.map((order) => order._id);
-    const allChecked = allOrderIds.every((id) => selectedOrders.includes(id));
-    setIsAllChecked(allChecked);
-  }, [selectedOrders, currentOrders]);
-
   return (
     <div>
-      { currentOrders.length > 0 ? (
+      {currentOrders.length > 0 ? (
         <div className="space-y-4 py-4">
-        <OrderList
-          orders={currentOrders}
-          onCancel={handleCancelClick}
-          onCheckboxChange={handleCheckboxChange}
-          selectedOrders={selectedOrders}
-        />
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          handlePageChange={handlePageChange}
-        />
-      </div>
+          <OrderList
+            orders={currentOrders}
+            onCancel={handleCancelClick}
+            onCheckboxChange={handleCheckboxChange}
+            selectedOrders={selectedOrders}
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            handlePageChange={handlePageChange}
+          />
+        </div>
       ) : (
         <div>No Product.</div>
-
       )}
-
-      
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">

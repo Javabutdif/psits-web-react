@@ -276,6 +276,29 @@ export const merchandise = async () => {
     console.error("Error:", error);
   }
 };
+
+export const merchandiseAdmin = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/merch/retrieve-admin`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
 export const deleteMerchandise = async (_id) => {
   try {
     const response = await axios.put(
@@ -289,9 +312,9 @@ export const deleteMerchandise = async (_id) => {
     );
 
     if (response.status === 200) {
-      showToast("success", Success);
+      return true;
     } else {
-      showToast("error", reponse.data.message);
+      return false;
     }
   } catch (error) {
     if (error.response && error.response.data) {

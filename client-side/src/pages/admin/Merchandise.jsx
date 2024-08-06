@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import "../../App.css";
-import { merchandise, deleteMerchandise } from "../../api/admin";
+import { merchandiseAdmin, deleteMerchandise } from "../../api/admin";
 import TableComponent from "../../components/Custom/TableComponent"; // Adjust the import path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -14,6 +14,7 @@ import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FilterOptions from "../students/merchandise/FilterOptions";
 import { Dialog } from "@headlessui/react";
 import { AiOutlineClose } from "react-icons/ai";
+import { showToast } from "../../utils/alertHelper";
 
 function Merchandise() {
   const [data, setData] = useState([]);
@@ -25,6 +26,8 @@ function Merchandise() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [merchToDelete, setMerchToDelete] = useState("");
 
   const [merchToEdit, setMerchToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -38,7 +41,7 @@ function Merchandise() {
 
   const fetchData = async () => {
     try {
-      const result = await merchandise();
+      const result = await merchandiseAdmin();
       setData(result);
       setFilteredData(result);
       setLoading(false);
@@ -105,20 +108,25 @@ function Merchandise() {
   };
 
   const handleOpenEditModal = (row) => {
-    console.log("Opening Edit Product Modal for", row);
     setMerchToEdit(row);
     setIsEditModalOpen(true);
-    console.log(isEditModalOpen);
   };
 
   const handleCloseEditModal = () => {
-    console.log("Closing Edit Product Modal");
     setIsEditModalOpen(false);
   };
 
-  const deleteMerchandiseApi = async (id) => {
-    console.log(id);
-    await deleteMerchandise(id);
+  const deleteMerchandiseApi = async () => {
+    if (await deleteMerchandise(merchToDelete)) {
+      showToast("success", "Merchandise Deleted");
+      setDeleteModalOpen(false);
+      fetchData();
+    }
+  };
+
+  const handleDeleteProductModal = (id) => {
+    setMerchToDelete(id);
+    setDeleteModalOpen(true);
   };
 
   const columns = [
@@ -180,6 +188,7 @@ function Merchandise() {
       key: "price",
       label: "Price",
       sortable: true,
+      cell: (row) => `₱ ${row.price}`,
     },
     {
       key: "control",
@@ -199,7 +208,7 @@ function Merchandise() {
                 : "bg-red-200 text-red-800"
             }`}
           >
-            {row.is_active !== true ? "Expired" : "Active"}
+            {row.is_active !== true ? "Deleted" : "Active"}
           </span>
         </div>
       ),
@@ -232,7 +241,7 @@ function Merchandise() {
           <FormButton
             type="button"
             text="Delete"
-            onClick={() => deleteMerchandiseApi(row._id)}
+            onClick={() => handleDeleteProductModal(row._id)}
             styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
             icon={<i className="fas fa-trash text-sm"></i>}
             textClass="ml-2 md:inline"
@@ -463,7 +472,7 @@ function Merchandise() {
                 <h2 className="text-2xl font-semibold text-gray-800">
                   {selectedItem?.name}
                 </h2>
-                <p className="text-gray-600">Price: ${selectedItem?.price}</p>
+                <p className="text-gray-600">Price: ₱{selectedItem?.price}</p>
                 <p className="text-gray-600">Stocks: {selectedItem?.stocks}</p>
                 <p className="text-gray-600">Batch: {selectedItem?.batch}</p>
                 <p className="text-gray-600">
@@ -493,6 +502,28 @@ function Merchandise() {
       {/* Add Product Modal */}
       {isAddProductModal && (
         <Product handleCloseAddProduct={handleCloseAddProduct} />
+      )}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Confirm Delete</h2>
+            <p>Are you sure you want to delete this product?</p>
+            <div className="mt-6 flex justify-end">
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                onClick={() => setDeleteModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded"
+                onClick={deleteMerchandiseApi}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

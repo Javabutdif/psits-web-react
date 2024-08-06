@@ -47,7 +47,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
       )}
       <div className="flex-shrink-0">
         <img
-          src={order.imageUrl1 || "placeholder-image-url"} // Provide a default image if none is available
+          src={order.imageUrl1 || "placeholder-image-url"}
           alt="Product"
           className="w-24 h-24 object-cover rounded-lg border border-gray-200"
         />
@@ -57,9 +57,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
           <h2 className="text-xl font-semibold text-gray-800">
             {order.product_name}
           </h2>
-          <span className="text-sm text-gray-500">
-            {order.order_date}
-          </span>
+          <span className="text-sm text-gray-500">{order.order_date}</span>
         </div>
         <div className="flex flex-col space-y-2 text-sm text-gray-700">
           <div className="flex justify-between">
@@ -91,10 +89,13 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
               <span className="text-gray-800">Status:</span>{" "}
               {order.order_status}
             </p>
-            <p>
-              <span className="font-semibold text-gray-900">Ref:</span>{" "}
-              {order.product_id}
-            </p>
+            {order.order_status !== "Pending" && (
+              <p>
+                <span className="font-semibold text-gray-900">Ref:</span>{" "}
+                {order.product_id}
+              </p>
+            )}
+
             {order.order_status === "Pending" && (
               <motion.button
                 onClick={handleCancel}
