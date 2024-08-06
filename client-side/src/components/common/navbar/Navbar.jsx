@@ -4,12 +4,14 @@ import logo from "../../../assets/images/psits-logo.png";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
-  { name: 'Community', iconClass: 'fas fa-users' },
+  { name: 'Community',  path: '/community', iconClass: 'fas fa-users' },
   { name: 'Login', path: '/login', iconClass: 'fas fa-sign-in-alt', isLogin: true }
 ];
 
 const Navbar = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const handleResize = () => {
@@ -23,6 +25,18 @@ const Navbar = () => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.pageYOffset;
+      setIsVisible(prevScrollPos > currentScrollPos || currentScrollPos < 10);
+      setPrevScrollPos(currentScrollPos);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollPos]);
 
   // New function to toggle body scroll
   const toggleBodyScroll = (disable) => {
@@ -60,7 +74,7 @@ const Navbar = () => {
           >
             <Link
               to={item.path}
-              className={`text-3xl md:text-sm flex items-center space-x-2 ${isNavOpen ? 'text-gray-400 hover:text-gray-600' :'text-white hover:text-gray-50'} transition-colors duration-300`}
+              className={`text-3xl md:text-sm flex items-center space-x-2 ${isNavOpen && 'text-gray-700 hover:text-gray-600'} transition-colors duration-300`}
             >
               <motion.i
                 initial={{ opacity: 0.6 }}
@@ -86,8 +100,8 @@ const Navbar = () => {
   };
 
   return (
-    <header className="z-50 absolute left-1/2 -translate-x-1/2 container p-4 py-3 md:py-5 flex items-center justify-between">
-      <Link to="/" className="space-x-2 flex text-white items-center">
+    <header className={`z-50 fixed left-1/2 -translate-x-1/2 container p-4 py-3 md:py-5 flex items-center justify-between transition-transform duration-300 ${!isVisible && 'transform -translate-y-full'}`}>
+      <Link to="/" className="space-x-2 flex text-gray-700 items-center">
         <img src={logo} alt="PSITS Logo" className='w-11 h-11' />
         <h1 className="hidden sm:inline-block sm:text-xs font-bold sm:w-[15.5rem]">
           PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
@@ -97,7 +111,7 @@ const Navbar = () => {
         className="z-50 block md:hidden text-white"
         onClick={toggleNav}
       >
-        <i className={`fas ${isNavOpen ? 'fa-times text-black' : 'fa-bars'} text-lg`}></i>
+        <i className={`text-gray-700  fas ${isNavOpen ? 'fa-times' : ' fa-bars'} text-lg`}></i>
       </button>
       <AnimatePresence>
         {isNavOpen && (
@@ -106,7 +120,7 @@ const Navbar = () => {
             animate={{ opacity: 1, height: '100vh' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white flex justify-end items-start px-5 py-14 absolute w-full h-screen top-0 right-0 md:hidden"
+            className="bg-gray-50 flex justify-end items-start px-5 py-14 absolute w-full h-screen top-0 right-0 md:hidden"
           >
             <NavItems isMobile={true} />
           </motion.div>

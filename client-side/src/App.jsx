@@ -49,6 +49,7 @@ import PaidOrders from "./pages/admin/orders/PaidOrders";
 import PendingOrders from "./pages/admin/orders/PendingOrders";
 import StudentPaidOrders from "./pages/students/orders/PaidOrders"
 import StudentPendingOrder from "./pages/students/orders/PendingOrders"
+import Community from "./pages/Community";
 
 
 const App = () => {
@@ -58,7 +59,7 @@ const App = () => {
           <Route path="/" element={<LandingLayout />}>
             <Route index element={<Home />} />
             <Route path="/explore" element={<Explore />} />
-            <Route path="/faculty" element={<Faculty />} />
+            <Route path="/community" element={<Community />} />
             <Route path="/the-team" element={<Team />} />
           </Route>
           <Route

@@ -8,7 +8,7 @@ const LandingLayout = () => {
   return (
     <>
         <Navbar />
-          <main className="">
+          <main className="overflow-hidden">
             <Outlet />
           </main>
         <Footer />        
