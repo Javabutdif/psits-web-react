@@ -24,7 +24,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
 
   return (
     <motion.div
-      className={`order-card bg-white shadow-md rounded-xl p-5 mb-5 border border-gray-200 flex flex-row items-start space-x-5 transition-transform ${
+      className={`order-card bg-white shadow-md rounded-xl p-5 mb-5 border border-gray-200 flex flex-col md:flex-row items-start md:items-center space-y-5 md:space-y-0 md:space-x-5 transition-transform ${
         pathname !== "/student/orders/paid" ? "cursor-pointer" : ""
       }`}
       whileHover={pathname !== "/student/orders/paid" ? { scale: 1.03 } : {}}
@@ -34,7 +34,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
     >
       {pathname !== "/student/orders/paid" && (
         <div
-          className="flex items-center mr-4"
+          className="flex items-center mb-4 md:mb-0"
           onClick={(e) => e.stopPropagation()}
         >
           <input
