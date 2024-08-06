@@ -9,7 +9,6 @@ import autoTable from "jspdf-autotable";
 import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
 import EditProduct from "./EditProduct";
-import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FilterOptions from "../students/merchandise/FilterOptions";
@@ -101,7 +100,7 @@ function Merchandise() {
   };
 
   const handleCloseAddProduct = () => {
-    console.log("Closing Add Product Modal");
+    fetchData();
     setIsAddProductModal(false);
   };
 
@@ -343,13 +342,11 @@ function Merchandise() {
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
+          <div className="pt-20 flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
             <motion.h1
               whileHover={{ scale: 1.05 }}
               className="text-3xl text-gray-700 text-center md:text-left"
-            >
-              Merchandise
-            </motion.h1>
+            ></motion.h1>
             <div className="flex flex-col md:flex-row items-center gap-2">
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -438,10 +435,11 @@ function Merchandise() {
         <Dialog
           open={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
+          className="fixed inset-0 z-50 overflow-y-auto"
         >
           <div className="fixed inset-0 bg-black/30" aria-hidden="true"></div>
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel className="bg-white rounded-lg shadow-lg max-w-md mx-auto p-6 sm:max-w-lg lg:max-w-xl relative">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <Dialog.Panel className="bg-white rounded-lg shadow-lg max-w-full w-full sm:max-w-md md:max-w-lg lg:max-w-xl p-6 relative mx-auto">
               <button
                 type="button"
                 className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -456,7 +454,7 @@ function Merchandise() {
                 <img
                   src={selectedItem?.imageUrl}
                   alt={selectedItem?.name}
-                  className="w-1/4 h-1/4 object-cover rounded-md"
+                  className="w-full h-64 object-cover rounded-md"
                 />
               </div>
 
@@ -474,13 +472,23 @@ function Merchandise() {
                 <p className="text-gray-600">
                   Category: {selectedItem?.category}
                 </p>
+                <p className="text-gray-600">
+                  Start Date: {selectedItem?.start_date}
+                </p>
+                <p className="text-gray-600">
+                  End Date: {selectedItem?.end_date}
+                </p>
               </div>
             </Dialog.Panel>
           </div>
         </Dialog>
       )}
+
       {isEditModalOpen && (
-        <EditProduct closeModal={handleCloseEditModal} product={merchToEdit} />
+        <EditProduct
+          handleCloseEditProduct={handleCloseEditModal}
+          merchData={merchToEdit}
+        />
       )}
       {/* Add Product Modal */}
       {isAddProductModal && (

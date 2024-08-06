@@ -15,7 +15,7 @@ import { getUser } from "../../authentication/Authentication";
 import TableComponent from "../../components/Custom/TableComponent";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
-import c from '../../components/ToolTip'
+import c from "../../components/ToolTip";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
@@ -223,61 +223,57 @@ function MembershipRequest() {
       name: "Action",
       cell: (row) => (
         <ButtonsComponent>
-        <FormButton
-          type="button"
-          text={
-            position !== "Treasurer" &&
+          <FormButton
+            type="button"
+            text={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+                ? "Not Authorized"
+                : "Approve"
+            }
+            onClick={() => handleOpenModal(row)}
+            icon={
+              <i
+                className={`fa ${
+                  position !== "Treasurer" &&
+                  position !== "Assistant Treasurer" &&
+                  position !== "Auditor" &&
+                  position !== "Developer" &&
+                  position !== "President"
+                    ? "fa-lock"
+                    : "fa-check"
+                }`}
+              ></i>
+            }
+            styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-500"
+            }`}
+            textClass="text-white"
+            whileHover={{ scale: 1.02, opacity: 0.95 }}
+            whileTap={{ scale: 0.98, opacity: 0.9 }}
+            disabled={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+            }
+          />
+          {position !== "Treasurer" &&
             position !== "Assistant Treasurer" &&
             position !== "Auditor" &&
             position !== "Developer" &&
-            position !== "President"
-              ? "Not Authorized"
-              : "Approve"
-          }
-          onClick={() => handleOpenModal(row)}
-          icon={
-            <i
-              className={`fa ${
-                position !== "Treasurer" &&
-                position !== "Assistant Treasurer" &&
-                position !== "Auditor" &&
-                position !== "Developer" &&
-                position !== "President"
-                  ? "fa-lock"
-                  : "fa-check"
-              }`}
-            ></i>
-          }
-          styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-            position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President"
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-blue-500"
-          }`}
-          textClass="text-white"
-          whileHover={{ scale: 1.02, opacity: 0.95 }}
-          whileTap={{ scale: 0.98, opacity: 0.9 }}
-          disabled={
-            position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President"
-          }
-        />
-        {position !== "Treasurer" &&
-          position !== "Assistant Treasurer" &&
-          position !== "Auditor" &&
-          position !== "Developer" &&
-          position !== "President" && (
-            <Tooltip visible={true}>
-              You do not have permission to approve.
-            </Tooltip>
-          )}
-      </ButtonsComponent>
+            position !== "President" && <c visible={true}></c>}
+        </ButtonsComponent>
       ),
     },
   ];
@@ -289,16 +285,16 @@ function MembershipRequest() {
         data={filteredData}
         customButtons={
           <ButtonsComponent>
-             <FormButton
-                type="button"
-                text="PDF Export"
-                onClick={handleExportPDF}
-                icon={<i className="fas fa-file-pdf"></i>}
-                styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                textClass="hidden"
-                whileHover={{ scale: 1.01, opacity: 0.9 }}
-                whileTap={{ scale: 0.95, opacity: 0.8 }}
-              />
+            <FormButton
+              type="button"
+              text="PDF Export"
+              onClick={handleExportPDF}
+              icon={<i className="fas fa-file-pdf"></i>}
+              styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              textClass="hidden"
+              whileHover={{ scale: 1.01, opacity: 0.9 }}
+              whileTap={{ scale: 0.95, opacity: 0.8 }}
+            />
           </ButtonsComponent>
         }
       />

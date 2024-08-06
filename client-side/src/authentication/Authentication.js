@@ -119,6 +119,14 @@ export const getUser = () => {
 
   return [token.user.name, token.user.position, token.user.id];
 };
+
+export const getPosition = () => {
+  const sessionToken = sessionStorage.getItem("Token");
+  if (!sessionToken) return null;
+  const token = jwtDecode(sessionToken);
+
+  return token.user.position;
+};
 export const getId = () => {
   const sessionToken = sessionStorage.getItem("Token");
   if (!sessionToken) return null;

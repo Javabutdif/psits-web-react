@@ -379,7 +379,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
           >
             <i className="fas fa-times"></i>
           </button>
-          <h2 className="text-xl font-semibold mb-4">Add Product</h2>
+          <h2 className="text-xl font-semibold mb-4">Edit Product</h2>
           <form onSubmit={handlePreview} className="space-y-4">
             <ImageInput
               label={"Product Image"}
