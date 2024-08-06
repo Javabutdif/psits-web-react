@@ -16,7 +16,7 @@ function RegistrationConfirmationModal({ formData, onSubmit, onCancel }) {
             &times;
           </button>
         </div>
-        
+
         {/* Body */}
         <div className="p-4 space-y-2">
           {[
@@ -26,14 +26,14 @@ function RegistrationConfirmationModal({ formData, onSubmit, onCancel }) {
             { label: "Last Name", value: formData.last_name },
             { label: "Email", value: formData.email },
             { label: "Course", value: formData.course },
-            { label: "Year", value: formData.year }
+            { label: "Year", value: formData.year },
           ].map((item, index) => (
             <p key={index} className="text-sm text-gray-700">
               <strong>{item.label}:</strong> {item.value}
             </p>
           ))}
         </div>
-        
+
         {/* Footer */}
         <div className="flex justify-end p-4 border-t border-gray-300">
           <button
@@ -47,6 +47,7 @@ function RegistrationConfirmationModal({ formData, onSubmit, onCancel }) {
             type="button"
             className="ml-2 px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
             onClick={onSubmit}
+           
           >
             Submit
           </button>
