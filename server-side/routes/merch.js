@@ -81,7 +81,9 @@ router.post("/", upload.array("images", 3), async (req, res) => {
 // GET list of merches
 router.get("/retrieve", async (req, res) => {
   try {
-    const merches = await Merch.find();
+    const merches = await Merch.find({
+      is_active: true,
+    });
     res.status(200).json(merches);
   } catch (error) {
     console.error("Error fetching merches:", error.message);

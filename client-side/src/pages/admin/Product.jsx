@@ -7,6 +7,8 @@ import FormSelect from "../../components/forms/FormSelect";
 import FormButton from "../../components/forms/FormButton";
 import FormTextArea from "../../components/forms/FormTextArea";
 import ImageInput from "../../components/forms/ImageInput";
+import { format } from "date-fns";
+import { InfinitySpin } from "react-loader-spinner";
 
 function Product({ handleCloseAddProduct }) {
   const [name] = getUser();
@@ -30,7 +32,10 @@ function Product({ handleCloseAddProduct }) {
     "Maroon",
   ];
   const size = ["18", "XS", "S", "M", "L", "XL", "2XL", "3XL"];
-
+  const [date, setDate] = useState({
+    start_date: "",
+    end_date: "",
+  });
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -66,10 +71,8 @@ function Product({ handleCloseAddProduct }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
+    setDate({ ...date, [name]: value });
   };
 
   const handleImageChange = (e) => {
@@ -87,44 +90,46 @@ function Product({ handleCloseAddProduct }) {
     let errors = {};
 
     // Validate Product Name
-    if (!formData.name.trim()) {
+
+    if (formData.name.length === 0) {
       errors.name = "Product Name is required.";
+      showToast("error", "Product Name is required.");
     }
 
     // Validate Price
-    if (
-      !formData.price ||
-      isNaN(formData.price) ||
-      parseFloat(formData.price) <= 0
-    ) {
+    if (!formData.price) {
+      errors.price = "Price is required.";
+      showToast("error", "Price is required.");
+    } else if (isNaN(formData.price) || parseFloat(formData.price) <= 0) {
       errors.price = "Price must be a positive number.";
-    } else if (parseFloat(formData.price).toFixed(2) !== formData.price) {
-      errors.price =
-        "Price should be in a valid format with up to two decimal places.";
+      showToast("error", "Price must be a positive number.");
     }
 
     // Validate Stocks
-    if (
-      !formData.stocks ||
-      isNaN(formData.stocks) ||
-      parseInt(formData.stocks) < 0
-    ) {
+    if (formData.stocks.length === 0) {
+      errors.stocks = "Stocks must be filled.";
+      showToast("error", "Stocks must be filled.");
+    } else if (isNaN(formData.stocks) || parseInt(formData.stocks) <= 0) {
       errors.stocks = "Stocks must be a non-negative integer.";
+      showToast("error", "Stocks must be a non-negative or zero integer.");
     }
 
     // Validate Start Date
     if (!formData.start_date) {
       errors.start_date = "Start date is required.";
+      showToast("error", "Start date is required.");
     }
 
     // Validate End Date
     if (!formData.end_date) {
       errors.end_date = "End date is required.";
+      showToast("error", "End date is required.");
     } else if (
       formData.start_date &&
       new Date(formData.end_date) < new Date(formData.start_date)
     ) {
       errors.end_date = "End date must be after the start date.";
+      showToast("error", "End date must be after the start date.");
     }
 
     setErrors(errors);
@@ -134,8 +139,26 @@ function Product({ handleCloseAddProduct }) {
   const handlePreview = (e) => {
     e.preventDefault();
 
-    setPreviewData(formData);
-    setShowPreview(true);
+    if (validate()) {
+      const startDate = new Date(date.start_date);
+      const endDate = new Date(date.end_date);
+
+      const formattedStartDate = format(startDate, "MMMM d, yyyy h:mm:ss a");
+      const formattedEndDate = format(endDate, "MMMM d, yyyy h:mm:ss a");
+
+      const updatedFormData = {
+        ...formData,
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+      };
+
+   
+      setPreviewData(updatedFormData);
+
+      setShowPreview(true);
+
+  
+    }
   };
 
   const handleConfirm = async () => {
@@ -160,10 +183,12 @@ function Product({ handleCloseAddProduct }) {
     }
 
     try {
-      await addMerchandise(data);
-      handleCloseAddProduct();
-      setShowPreview(false);
-      setIsLoading(false);
+      if (await addMerchandise(data)) {
+        showToast("success", "Merchandise Publish");
+        handleCloseAddProduct();
+        setShowPreview(false);
+        setIsLoading(false);
+      }
     } catch (error) {
       showToast("error", error.message);
       setIsLoading(false);
@@ -214,6 +239,7 @@ function Product({ handleCloseAddProduct }) {
     { value: "intramurals", label: "Intramurals" },
     { value: "ict-congress", label: "ICT Congress" },
     { value: "merchandise", label: "Merchandise" },
+    { value: "acquintance", label: "Acquintance" },
   ];
 
   const typeOptions = {
@@ -225,12 +251,19 @@ function Product({ handleCloseAddProduct }) {
     intramurals: [
       { value: "Tshirt", label: "T-shirt" },
       { value: "Ticket", label: "Ticket" },
-      { value: "Water Bottle", label: "Water Bottle" },
+      { value: "Others", label: "Others" },
     ],
     "ict-congress": [{ value: "Ticket w/ Bundle", label: "Ticket w/ Bundle" }],
     merchandise: [
       { value: "Tshirt", label: "Tshirt" },
       { value: "Item", label: "Item" },
+    ],
+    acquintance: [
+      { value: "Ticket", label: "Ticket" },
+      {
+        value: "Others",
+        label: "Others",
+      },
     ],
   };
 
@@ -480,7 +513,7 @@ function Product({ handleCloseAddProduct }) {
                 label="Start Date"
                 name="start_date"
                 type="date"
-                value={formData.start_date}
+                value={date.start_date}
                 onChange={handleChange}
                 labelStyle="text-xs"
                 inputStyle="text-xs"
@@ -491,7 +524,7 @@ function Product({ handleCloseAddProduct }) {
                 label="End Date"
                 name="end_date"
                 type="date"
-                value={formData.end_date}
+                value={date.end_date}
                 onChange={handleChange}
                 labelStyle="text-xs"
                 inputStyle="text-xs"
@@ -507,14 +540,16 @@ function Product({ handleCloseAddProduct }) {
               styles={"w-full bg-blue-400 p-2 rounded"}
             />
           </form>
-          {showPreview && (
-            <PreviewModal
-              data={previewData}
-              images={images}
-              onClose={() => setShowPreview(false)}
-              onConfirm={handleConfirm}
-            />
-          )}
+          <div>
+            {showPreview && (
+              <PreviewModal
+                data={previewData}
+                images={images}
+                onClose={() => setShowPreview(false)}
+                onConfirm={handleConfirm}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
