@@ -4,8 +4,11 @@ import { motion } from "framer-motion";
 const ImagePreview = ({ preview }) => {
   return (
     <motion.div
-      className="flex-1 flex justify-center items-center border rounded-xl overflow-hidden bg-gray-100 shadow-lg w-full h-64 sm:h-80 md:h-96"
+      className="flex-1 flex justify-center items-center border rounded-xl overflow-hidden bg-gray-100 shadow-md w-full aspect-[4/3] md:aspect-[4/2]"
       layout
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300 }}
     >
       {preview ? (
         <motion.img

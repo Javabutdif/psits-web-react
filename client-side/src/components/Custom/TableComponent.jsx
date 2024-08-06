@@ -7,7 +7,7 @@ import Pagination from './Pagination';
 
 const TableComponent = ({ data = [], columns = [], style, customSearch, customButtons }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -34,13 +34,13 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
   }, [data, sortConfig]);
 
   const filteredDataBySearch = useMemo(() => {
-    return sortedData.filter((item) => {
-      const searchLower = searchQuery.toLowerCase();
-      return columns.some((column) => {
+    const searchLower = searchQuery.toLowerCase();
+    return sortedData.filter((item) =>
+      columns.some((column) => {
         const value = getColumnValue(item, column.key);
         return value && value.toString().toLowerCase().includes(searchLower);
-      });
-    });
+      })
+    );
   }, [sortedData, searchQuery, columns]);
 
   const indexOfLastRow = currentPage * itemsPerPage;
@@ -55,21 +55,6 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
     }
   };
 
-  const updateItemsPerPage = () => {
-    if (window.innerWidth >= 1280) { // xl
-      setItemsPerPage(10);
-    } else if (window.innerWidth >= 1024) { // lg
-      setItemsPerPage(8);
-    } else { // xs
-      setItemsPerPage(5);
-    }
-  };
-
-  useEffect(() => {
-    updateItemsPerPage();
-    window.addEventListener('resize', updateItemsPerPage);
-    return () => window.removeEventListener('resize', updateItemsPerPage);
-  }, []);
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -86,12 +71,12 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
 
   return (
     <div className="overflow-x-auto overflow-hidden">
-      <div className="bg-white p-3 flex flex-row gap-3 shadow-sm">
+      <div className="bg-white mt-2 rounded-sm p-3 flex flex-row gap-3 shadow-sm">
         {customSearch || <SearchComponent searchQuery={searchQuery} handleSearchChange={handleSearchChange} />}
         {customButtons || <ButtonsComponent />}
       </div>
       <div className={`w-full h-[35vh] sm:h-[60vh] md:h-[70vh] overflow-hidden bg-white ${style} overflow-scroll relative`}>
-        <table className="absolute lg:min-w-full divide-y divide-gray-200">
+        <table aria-label="Data Table" role="table" className="absolute lg:min-w-full divide-y divide-gray-200">
           <TableHeader columns={columns} sortConfig={sortConfig} handleSort={handleSort} />
           <TableBody columns={columns} currentRows={currentRows} />
         </table>

@@ -1,144 +1,122 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import logo from '../../../assets/images/psits-logo.png';
-import HamburgerToggle from '../toogles/HamburgerToggle';
+import logo from "../../../assets/images/psits-logo.png";
+import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
-  { name: 'Explore', path: '/explore', iconClass: 'fas fa-compass' },
-  { name: 'Faculty', path: '/faculty', iconClass: 'fas fa-chalkboard-teacher' },
-  { name: 'The Team', path: '/the-team', iconClass: 'fas fa-users' },
-  { name: 'Login', path: '/login', iconClass: 'fas fa-sign-in-alt' }
+  { name: 'Community', iconClass: 'fas fa-users' },
+  { name: 'Login', path: '/login', iconClass: 'fas fa-sign-in-alt', isLogin: true }
 ];
 
-const logoVariants = {
-  open: { scale: 1.2, },
-  closed: { scale: 1,  }
-};
-
 const Navbar = () => {
-  const [isMenuOpen, setMenuOpen] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [scrollDirection, setScrollDirection] = useState("none");
-  const [isMobile, setMobile] = useState(true);
-
-  const toggleMenu = () => setMenuOpen(prev => !prev);
-  const closeToggleMenu = () => setMenuOpen(false);
-
-  const handleResize = () => {
-    if (window.innerWidth >= 768) {
-      setMobile(true);
-      closeToggleMenu();
-    } else {
-      setMobile(false);
-    }
-  };
-
-  const handleScroll = () => {
-    const currentPosition = window.scrollY;
-    if (currentPosition > scrollPosition) {
-      // Scrolling down
-      setScrollDirection("down");
-    } else {
-      // Scrolling up
-      setScrollDirection("up");
-    }
-    if (currentPosition === 0) {
-      // Reset navbar to top position
-      setNavbarVisible(true);
-    }
-    setScrollPosition(Math.max(currentPosition, 0));
-  };
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? 'hidden' : 'unset';
-  }, [isMenuOpen]);
-
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleResize);
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsNavOpen(false);
+      }
     };
-  }, [scrollPosition]);
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // New function to toggle body scroll
+  const toggleBodyScroll = (disable) => {
+    if (disable) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  };
+
+  // Modified function to toggle nav and body scroll
+  const toggleNav = () => {
+    setIsNavOpen(!isNavOpen);
+    toggleBodyScroll(!isNavOpen);
+  };
+
+  // Ensure body scroll is re-enabled when component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const NavItems = ({ isMobile }) => {
+    const [hoveredIndex, setHoveredIndex] = useState(null);
+
+    return (
+      <ul className={`flex-1 pt-4 md:pt-0 flex ${isMobile ? 'flex-col items-end space-y-4' : 'flex-row items-center space-x-8'}`}>
+        {navItems.map((item, key) => (
+          <li
+            key={key}
+            className={`relative ${item.isLogin ? 'md:ml-auto' : ''}`}
+            onMouseEnter={() => setHoveredIndex(key)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
+            <Link
+              to={item.path}
+              className={`text-3xl md:text-sm flex items-center space-x-2 ${isNavOpen ? 'text-gray-400 hover:text-gray-600' :'text-white hover:text-gray-50'} transition-colors duration-300`}
+            >
+              <motion.i
+                initial={{ opacity: 0.6 }}
+                animate={{ opacity: hoveredIndex === key ? 1 : 0.6 }}
+                transition={{ type: 'spring', stiffness: 1000, damping: 30 }}
+                className={`${item.iconClass} text-3xl md:text-lg`}
+              />
+              <span className="text-3xl md:text-sm font-medium">{item.name}</span>
+            </Link>
+            {hoveredIndex === key && (
+              <motion.div
+                className={`absolute left-0 w-full h-1 ${isNavOpen ? 'bg-black' :'bg-gray-50'} rounded-t-md`}
+                layoutId="underline"
+                initial={{ width: 0 }}
+                animate={{ width: '100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              />
+            )}
+          </li>
+        ))}
+      </ul>
+    );
+  };
 
   return (
-    <motion.header 
-      className={`z-40 w-full fixed  text-primary transition-transform duration-300 ${scrollDirection === "down" && scrollPosition > 5 ? "-translate-y-full" : ""} ${scrollDirection === "up" || scrollPosition <= 5 ? "translate-y-0" : ""}`}
-    >
-      <div className="max-w-[1020px] mx-auto px-2 md:px-4 py-1 rounded-b-2xl bg-primary flex justify-between items-center relative">
-        <Link
-          to="/" 
-          className="z-50 flex items-center gap-2"
-          onClick={closeToggleMenu}
-        >
-          <motion.img 
-            src={logo} 
-            alt="header-logo" 
-            className="w-12"
-            variants={logoVariants}
-            animate={isMenuOpen ? "open" : "closed"}
-            transition={{ duration: 0.4 }}
-          />
-          <span className={`${isMenuOpen ? 'text-black' : 'text-white'} text-[0.6rem] max-w-[13rem] sm:text-xs sm:max-w-xs font-bold`}>
-            PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
-          </span>
-        </Link>
-
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ clipPath: 'circle(0% at 100% 0)' }}
-              animate={{ clipPath: 'circle(141.3% at 100% 0)' }}
-              exit={{ clipPath: 'circle(0% at 100% 0)' }}
-              transition={{ duration: 0.4, ease: 'easeInOut' }}
-              className="z-30 absolute top-0 left-0 bg-white w-full min-h-screen"
-            />
-          )}
-        </AnimatePresence>
-
-        <HamburgerToggle isOpen={isMenuOpen} toggleMenu={toggleMenu} />
-
-        <nav className={`p-10 lg:p-0 absolute lg:static lg:flex z-40 top-1/2 w-full min-h-screen lg:min-h-0 left-0 lg:left-0 lg:-translate-x-0 lg:top-0 lg:-translate-y-0 lg:w-auto h-full lg:h-auto items-start justify-end ${isMenuOpen ? 'flex text-black text-3xl' : 'hidden text-white'}`}>
-          <motion.ul
-            className=" space-y-6 text-md font-bold space-x-0 lg:space-y-0 md:space-x-2 lg:space-x-6 lg:flex"
+    <header className="z-50 absolute left-1/2 -translate-x-1/2 container p-4 py-3 md:py-5 flex items-center justify-between">
+      <Link to="/" className="space-x-2 flex text-white items-center">
+        <img src={logo} alt="PSITS Logo" className='w-11 h-11' />
+        <h1 className="hidden sm:inline-block sm:text-xs font-bold sm:w-[15.5rem]">
+          PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
+        </h1>
+      </Link>
+      <button
+        className="z-50 block md:hidden text-white"
+        onClick={toggleNav}
+      >
+        <i className={`fas ${isNavOpen ? 'fa-times text-black' : 'fa-bars'} text-lg`}></i>
+      </button>
+      <AnimatePresence>
+        {isNavOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: '100vh' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white flex justify-end items-start px-5 py-14 absolute w-full h-screen top-0 right-0 md:hidden"
           >
-            {navItems.map((item, index) => (
-              <motion.li
-                key={index}
-                initial={isMobile ? { opacity: 0, y: 20 } : {}}
-                animate={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }} // Ensure default state for non-mobile
-                exit={isMobile ? { opacity: 0, y: 20 } : {}}
-                transition={{ duration: 0.3, delay: isMobile ? index * 0.1 : 0 }} // Apply delay only for mobile
-                whileHover={{ scale: 1.1 }} // Add scale on hover
-                onMouseEnter={() => setHoveredItem(index)}
-                onMouseLeave={() => setHoveredItem(null)}
-                className="md:text-left relative"
-              >
-                <Link 
-                  to={item.path}
-                  onClick={closeToggleMenu}
-                  className="flex justify-between text-4xl lg:text-lg items-center gap-2"
-                  aria-label={item.name}
-                >
-                  <motion.i
-                    className={item.iconClass}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: hoveredItem === index ? 1 : 0, x: hoveredItem === index ? 0 : 10 }}
-                    transition={{ opacity: { duration: 0.3 }, x: { duration: 0.3 } }}
-                  />
-                  <span className="">{item.name}</span>
-                </Link>
-              </motion.li>
-            ))}
-          </motion.ul>
-        </nav>
-      </div>
-    </motion.header>
+            <NavItems isMobile={true} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <nav className="hidden md:flex">
+        <NavItems isMobile={false} />
+      </nav>
+    </header>
   );
-};
+}
 
 export default Navbar;
