@@ -76,7 +76,7 @@ const ProductDetail = () => {
   const [showModal, setShowModal] = useState(false);
   const [id_number, student_name, email, course, year, role, position] =
     getInformationData();
-
+  const [formData, setFormData] = useState({});
   const [preview, setPreview] = useState(product.imageUrl?.[0] || "");
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
@@ -98,6 +98,7 @@ const ProductDetail = () => {
     control = "",
     category = "",
     batch = "",
+    type = "",
   } = product;
 
   if (position === "N/A") {
@@ -109,30 +110,48 @@ const ProductDetail = () => {
       fetchStatus();
     });
   }
+  const [errors, setErrors] = useState({
+    selectedSize: "",
+    selectedColor: "",
+  });
+
+  const validate = () => {
+    let errors = {};
+
+    if (selectedSizes[0] !== "" && selectedSize === null) {
+      errors.name = "Select size!.";
+      showToast("error", "You need to select a size");
+    }
+    if (selectedVariations[0] !== "" && selectedColor === null) {
+      errors.name = "Select color!.";
+      showToast("error", "You need to select a color");
+    }
+
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const discount =
     (status.membership === "Accepted" && status.renew === "None") ||
     (status.renew === "Accepted" && category !== "uniform")
       ? price - price * 0.05
       : price;
-  const [formData, setFormData] = useState({});
+
   const calculateTotal = () => {
     return discount * quantity;
   };
-
-  const sizes = selectedSizes.length > 0 ? selectedSizes[0].split(",") : [];
-  const variations =
-    selectedVariations.length > 0 ? selectedVariations[0].split(",") : [];
 
   useEffect(() => {
     const fetchOrderData = async () => {
       try {
         const orders = await getOrder(getId());
-        const order = orders.find((order) => order.product_id === _id);
+        if (orders) {
+          const order = orders.find((order) => order.product_id === _id);
 
-        if (order) {
-          setOrderId(order.product_id);
-          setLimited(order.control);
+          if (order) {
+            setOrderId(order.product_id);
+            setLimited(order.limited);
+          }
         }
       } catch (error) {
         setError("Unable to fetch order details. Please try again later.");
@@ -180,40 +199,42 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = () => {
-    const id_number = getId();
-    const rfid = getRfid();
-    const imageUrl1 = imageUrl[0];
-    const product_id = _id;
-    const product_name = name;
-    const sizes = selectedSize;
-    const variation =
-      category === "uniform" ? selectedVariations : selectedColor;
-    const total = calculateTotal();
-    const order_date = format(new Date(), "MMMM d, yyyy h:mm:ss a");
-    const order_status = "Pending";
-    const limited = product.control === "limited-purchase" ? true : false;
+    if (validate()) {
+      const id_number = getId();
+      const rfid = getRfid();
+      const imageUrl1 = imageUrl[0];
+      const product_id = _id;
+      const product_name = name;
+      const sizes = selectedSize;
+      const variation =
+        category === "uniform" ? selectedVariations : selectedColor;
+      const total = calculateTotal();
+      const order_date = format(new Date(), "MMMM d, yyyy h:mm:ss a");
+      const order_status = "Pending";
+      const limited = product.control === "limited-purchase" ? true : false;
 
-    setFormData({
-      id_number,
-      rfid,
-      imageUrl1,
-      course,
-      year,
-      student_name,
-      product_id,
-      product_name,
-      category,
-      sizes,
-      variation,
-      batch,
-      quantity,
-      total,
-      order_date,
-      order_status,
-      limited,
-    });
+      setFormData({
+        id_number,
+        rfid,
+        imageUrl1,
+        course,
+        year,
+        student_name,
+        product_id,
+        product_name,
+        category,
+        sizes,
+        variation,
+        batch,
+        quantity,
+        total,
+        order_date,
+        order_status,
+        limited,
+      });
 
-    setShowModal(true);
+      setShowModal(true);
+    }
   };
 
   const handleCloseModal = () => {
@@ -243,7 +264,6 @@ const ProductDetail = () => {
       />
 
       <div className="flex flex-col md:flex-row gap-4">
-
         <div className="flex-1 flex flex-col lg:flex-row gap-2">
           <ImagePreview
             preview={preview}
@@ -273,20 +293,28 @@ const ProductDetail = () => {
             )}
           </p>
           <p className="text-sm text-gray-500 mb-4">
-            {batch === "" ? "Batch: " : ""} {batch}
+            {batch !== "" ? "Batch: " : ""} {batch}
+          </p>
+          <p className="text-sm text-gray-500 mb-4">
+            {category !== "" ? "Category: " : ""} {category}
+          </p>
+          <p className="text-sm text-gray-500 mb-4">
+            {type !== "" ? "Type: " : ""} {type}
+          </p>
+          <p className="text-sm text-gray-500 mb-4">
+            {description !== "" ? "Description: " : ""} {description}
           </p>
 
-
-          {(name.includes("Uniform") || name.includes("Tshirt")) && (
+          {type.includes("Tshirt") && (
             <div className="flex flex-wrap gap-4 mb-4">
               <ButtonGroup
-                items={sizes}
+                items={selectedSizes}
                 selectedItem={selectedSize}
                 onSelect={setSelectedSize}
                 label="Sizes"
               />
               <ButtonGroup
-                items={variations}
+                items={selectedVariations}
                 selectedItem={selectedColor}
                 onSelect={setSelectedColor}
                 label="Color"
@@ -315,9 +343,8 @@ const ProductDetail = () => {
               +
             </button>
 
-            { control.toLowerCase().includes("limited") && (
+            {control.toLowerCase().includes("limited") && (
               <div className="absolute -bottom-5 sm:bottom-2 sm:left-48  text-red-500 text-xs sm:text-sm font-medium">
-
                 Limited Purchase
               </div>
             )}
@@ -330,9 +357,8 @@ const ProductDetail = () => {
           )}
 
           <button
-
             className={`w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
-              limited || stocks <= 0
+              stocks <= 0 || limited
                 ? "bg-red-500 text-white"
                 : "bg-blue-500 text-white"
             } ${
@@ -340,51 +366,90 @@ const ProductDetail = () => {
                 ? "opacity-60 cursor-not-allowed"
                 : "hover:bg-opacity-80"
             }`}
-            aria-label={limited ? "Limited stock" : "Buy now"}
-            title={limited ? "Limited stock available" : "Click to purchase"}
+            aria-label={
+              product.control === "limited-purchase"
+                ? "Limited stock"
+                : "Buy now"
+            }
+            title={
+              product.control === "limited-purchase"
+                ? "Limited stock available"
+                : "Click to purchase"
+            }
             onClick={handleBuyNow}
-            disabled={stocks <= 0 || (limited && orderId === _id)}
-
+            disabled={
+              stocks <= 0 ||
+              (product.control === "limited-purchase" && orderId === _id)
+            }
           >
             {stocks <= 0
               ? "Out of STOCK"
-              : limited && orderId === _id
+              : product.control === "limited-purchase" && orderId === _id
               ? "Purchased"
               : "Buy now"}
           </button>
         </div>
       </div>
-
       <Modal show={showModal} onClose={handleCloseModal}>
-        <div className="text-center">
-          <h2 className="text-lg font-semibold mb-4">Confirm Purchase</h2>
-          <p>Product: {name}</p>
-          <p>Sizes: {selectedSize}</p>
-          <p>
-            {category === "uniform"
-              ? "Color: " + selectedVariations
-              : selectedVariations === null
-              ? "Color: " + selectedColor
-              : ""}
-          </p>
-          <p>Batch: {batch}</p>
-          <p>Price: ₱ {discount}</p>
-          <p>Quantity: {quantity}</p>
-          <p>Total: {calculateTotal()}</p>
-          <p>Are you sure you want to purchase this item?</p>
-          <div className="mt-4 flex justify-center gap-4">
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-              onClick={handleCloseModal}
-            >
-              Cancel
-            </button>
-            <button
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-              onClick={handleOrder}
-            >
-              Confirm
-            </button>
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">
+              Confirm Purchase
+            </h2>
+            <div className="mb-4 text-left">
+              <p className="mb-2">
+                <span className="font-semibold">Product:</span> {name}
+              </p>
+              <p className="mb-2">
+                <span className="font-semibold">
+                  {selectedSize !== null ? "Sizes: " : ""}
+                </span>{" "}
+                {selectedSize}
+              </p>
+              <p className="mb-2">
+                {category === "uniform" && (
+                  <>
+                    <span className="font-semibold">Color:</span>{" "}
+                    {selectedVariations}
+                  </>
+                )}
+                {category !== "uniform" && selectedVariations === null && (
+                  <>
+                    <span className="font-semibold">Color:</span>{" "}
+                    {selectedColor}
+                  </>
+                )}
+              </p>
+              <p className="mb-2">
+                <span className="font-semibold">Batch:</span> {batch}
+              </p>
+              <p className="mb-2">
+                <span className="font-semibold">Price:</span> ₱ {discount}
+              </p>
+              <p className="mb-2">
+                <span className="font-semibold">Quantity:</span> {quantity}
+              </p>
+              <p className="mb-4">
+                <span className="font-semibold">Total:</span> {calculateTotal()}
+              </p>
+              <p className="text-gray-700">
+                Are you sure you want to purchase this item?
+              </p>
+            </div>
+            <div className="mt-6 flex justify-center gap-4">
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-all duration-300 ease-in-out"
+                onClick={handleCloseModal}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all duration-300 ease-in-out"
+                onClick={handleOrder}
+              >
+                Confirm
+              </button>
+            </div>
           </div>
         </div>
       </Modal>

@@ -186,7 +186,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
 
     try {
       const response = await axios.put(
-        `${backendConnection()}/api/merch/${merchData._id}`,
+        `${backendConnection()}/api/merch/update/${merchData._id}`,
         formDataToSend,
         {
           headers: {
@@ -537,7 +537,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
               type="button"
               text="Preview"
               onClick={handlePreview}
-              styles={"w-full bg-blue-400 p-2 rounded"}
+              styles={"w-full bg-blue-400 text-white p-2 rounded"}
             />
           </form>
           {showPreview && (

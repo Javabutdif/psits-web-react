@@ -20,6 +20,7 @@ const Receipt = forwardRef(
       qty,
       itemTotal,
       total,
+      reprint,
     },
     ref
   ) => (
@@ -68,6 +69,12 @@ const Receipt = forwardRef(
           )}
         </>
       )}
+      {reprint === true && (
+        <p className="mb-2 text-sm">
+          <b>Type: </b>
+          Reprint Receipt
+        </p>
+      )}
       <hr className="my-2" />
       <p className="font-bold">
         <b>Total: </b> ₱{total}
@@ -84,6 +91,7 @@ const Receipt = forwardRef(
         <b>Date: </b>
         {format(new Date(), "MMMM d, yyyy h:mm:ss a")}
       </p>
+
       <p className="mb-2 text-xs">
         <b>Processed By: </b> {admin}
       </p>
