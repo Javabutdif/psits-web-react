@@ -5,6 +5,7 @@ import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt.jsx";
 import { approveMembership } from "../../api/admin.js";
 import { approveOrder } from "../../api/orders.js";
+import { format } from "date-fns";
 
 function ApproveModal({
   reference_code,
@@ -40,6 +41,7 @@ function ApproveModal({
     type: type,
     admin: adminName,
     cash: "",
+    date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
     total: total,
   });
 

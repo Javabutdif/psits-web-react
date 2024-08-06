@@ -124,9 +124,9 @@ export const allMembers = async () => {
     return response.data.message;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      console.log("error", error.response.data.message || "An error occurred");
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
     }
   }
 };
@@ -145,9 +145,9 @@ export const totalRequest = async () => {
     return response.data.message;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      console.log("error", error.response.data.message || "An error occurred");
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
     }
   }
 };
@@ -166,9 +166,9 @@ export const totalRenewal = async () => {
     return response.data.message;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      console.log("error", error.response.data.message || "An error occurred");
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
     }
   }
 };
@@ -187,9 +187,9 @@ export const totalDeleted = async () => {
     return response.data.message;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      console.log("error", error.response.data.message || "An error occurred");
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
     }
   }
 };
@@ -208,9 +208,9 @@ export const totalHistory = async () => {
     return response.data.message;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      console.log("error", error.response.data.message || "An error occurred");
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
     }
   }
 };
@@ -225,11 +225,10 @@ export const renewStudent = async () => {
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      console.log("error", error.response.data.message || "An error occurred");
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
     }
-    console.error("Error:", error);
   }
 };
 export const approveOrders = () => {};
@@ -248,9 +247,9 @@ export const membershipHistory = async () => {
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      console.log("error", error.response.data.message || "An error occurred");
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
     }
   }
 };
@@ -385,9 +384,9 @@ export const addMerchandise = async (formData) => {
       }
     );
     if (response.status === 201) {
-      showToast("success", "Merchandise Publish!");
+      return true;
     } else {
-      showToast("error", "Error in publishing the merchandise!");
+      return false;
     }
   } catch (error) {
     if (error.response && error.response.data) {

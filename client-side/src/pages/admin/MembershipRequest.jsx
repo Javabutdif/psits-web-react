@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
 import { showToast } from "../../utils/alertHelper";
 import { membershipRequest, requestDeletion } from "../../api/admin";
 import MembershipHeader from "../../components/admin/MembershipHeader";
 import TableComponent from "../../components/Custom/TableComponent";
-import { getUser } from "../../authentication/Authentication";
+import { getPosition } from "../../authentication/Authentication";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
@@ -27,7 +27,7 @@ function MembershipRequest() {
   const [selectedStudentCourse, setSelectedStudentCourse] = useState("");
   const [selectedStudentYear, setSelectedStudentYear] = useState("");
   const [selectedStudentName, setSelectedStudentName] = useState("");
-  const [name, position] = getUser();
+  const position = getPosition();
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
@@ -35,10 +35,7 @@ function MembershipRequest() {
     {
       key: "select",
       label: (
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <input
             type="checkbox"
             checked={selectAll}
@@ -47,10 +44,7 @@ function MembershipRequest() {
         </motion.div>
       ),
       cell: (row) => (
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <input
             type="checkbox"
             checked={selectedRows.includes(row.id_number)}
@@ -146,11 +140,49 @@ function MembershipRequest() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text="Approve"
-            onClick={() => handleOpenModal(row)}
-            icon={<i className="fas fa-check" />} // Updated to a checkmark icon for approval
-            styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            textClass="text-gray-800"
+            text={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+                ? "Not Authorized"
+                : "Approve"
+            }
+            onClick={() => {
+              if (
+                position === "Treasurer" ||
+                position === "Assistant Treasurer" ||
+                position === "Auditor" ||
+                position === "Developer" ||
+                position === "President"
+              ) {
+                handleOpenModal(row);
+              }
+            }}
+            icon={
+              <i
+                className={`fa ${
+                  position !== "Treasurer" &&
+                  position !== "Assistant Treasurer" &&
+                  position !== "Auditor" &&
+                  position !== "Developer" &&
+                  position !== "President"
+                    ? "fa-lock"
+                    : "fa-check"
+                }`}
+              ></i>
+            }
+            styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-500"
+            }`}
+            textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
             disabled={
@@ -163,16 +195,60 @@ function MembershipRequest() {
           />
           <FormButton
             type="button"
-            text="Delete"
-            onClick={() => showModal(row)}
-            icon={<i className="fas fa-trash" />} // Trash icon for deletion
-            styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-            textClass="text-red-800"
+            text={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+                ? "Not Authorized"
+                : "Delete"
+            }
+            onClick={() => {
+              if (
+                position === "Treasurer" ||
+                position === "Assistant Treasurer" ||
+                position === "Auditor" ||
+                position === "Developer" ||
+                position === "President"
+              ) {
+                showModal(row);
+              }
+            }}
+            icon={
+              <i
+                className={`fa ${
+                  position !== "Treasurer" &&
+                  position !== "Assistant Treasurer" &&
+                  position !== "Auditor" &&
+                  position !== "Developer" &&
+                  position !== "President"
+                    ? "fa-lock"
+                    : "fa-trash"
+                }`}
+              ></i>
+            }
+            styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-red-500"
+            }`}
+            textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
+            disabled={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer" &&
+              position !== "President"
+            }
           />
         </ButtonsComponent>
-
       ),
     },
   ];
@@ -286,7 +362,6 @@ function MembershipRequest() {
     }
   }, [selectAll, filteredData]);
 
-
   const handleRowSelection = (id_number) => {
     setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(id_number)
@@ -302,28 +377,28 @@ function MembershipRequest() {
         data={data}
         customButtons={
           <ButtonsComponent>
-             {selectedRows.length > 0 && (
-                <FormButton
-                  type="button"
-                  text="Delete All"
-                  // onClick={handleDeleteAll} // Ensure this is the correct handler for deletion
-                  icon={<i className="fas fa-trash-alt"></i>} // Updated icon
-                  styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
-                  textClass="hidden"
-                  whileHover={{ scale: 1.01, opacity: 0.9 }}
-                  whileTap={{ scale: 0.95, opacity: 0.8 }}
-                />
-              )}
-             <FormButton
+            {selectedRows.length > 0 && (
+              <FormButton
                 type="button"
-                text="PDF Export"
-                onClick={handleExportPDF}
-                icon={<i className="fas fa-file-pdf"></i>}
-                styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                text="Delete All"
+                // onClick={handleDeleteAll} // Ensure this is the correct handler for deletion
+                icon={<i className="fas fa-trash-alt"></i>} // Updated icon
+                styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
                 textClass="hidden"
                 whileHover={{ scale: 1.01, opacity: 0.9 }}
                 whileTap={{ scale: 0.95, opacity: 0.8 }}
               />
+            )}
+            <FormButton
+              type="button"
+              text="PDF Export"
+              onClick={handleExportPDF}
+              icon={<i className="fas fa-file-pdf"></i>}
+              styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              textClass="hidden"
+              whileHover={{ scale: 1.01, opacity: 0.9 }}
+              whileTap={{ scale: 0.95, opacity: 0.8 }}
+            />
           </ButtonsComponent>
         }
       />

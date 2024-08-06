@@ -63,7 +63,7 @@ router.put("/renew-student", async (req, res) => {
 });
 
 router.post("/approve-membership", async (req, res) => {
-  const { reference_code, id_number, type, admin, rfid } = req.body;
+  const { reference_code, id_number, type, admin, rfid, date } = req.body;
 
   try {
     const student = await Student.findOne({ id_number });
@@ -80,7 +80,7 @@ router.post("/approve-membership", async (req, res) => {
         student.last_name,
       year: student.year,
       course: student.course,
-      date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+      date,
       admin,
     });
     if (await history.save()) {
@@ -115,7 +115,7 @@ router.post("/approve-membership", async (req, res) => {
 
 router.get("/history", async (req, res) => {
   try {
-    const students = await MembershipHistory.find();
+    const students = await MembershipHistory.find().sort({ date: -1 });
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);

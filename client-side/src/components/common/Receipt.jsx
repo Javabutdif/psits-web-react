@@ -2,6 +2,7 @@ import React, { forwardRef } from "react";
 import logo from "../../assets/images/psits-logo.png";
 import "../../App.css";
 import { format } from "date-fns";
+
 const Receipt = forwardRef(
   (
     {
@@ -22,14 +23,16 @@ const Receipt = forwardRef(
     },
     ref
   ) => (
-    <div ref={ref} className=" hidden-on-screen container mx-3">
-      <div className="flex flex-row mt-4 ">
-        <img className="h-20 w-20 mb-4 " src={logo} alt="Logo" />
+    <div ref={ref} className="container mx-3">
+      <div className="flex flex-row mt-4 items-center">
+        <img className="h-20 w-15 mb-4" src={logo} alt="Logo" />
         <div className="flex flex-col ms-3 text-center">
-          <h1 className="text-2xl">Official</h1>
-          <h1 className="text-2xl">Receipt</h1>
+          <h1 className="text-2xl">Official </h1>
+          <h1 className="text-2xl">Receipt </h1>
         </div>
       </div>
+      <h5 className="text-sm font-bold pb-5">University of Cebu Main</h5>
+
       <p className="mb-2">
         <b>Name: </b>
         {name}
@@ -37,58 +40,52 @@ const Receipt = forwardRef(
       <p className="mb-2">
         <b>Course & Year: </b> {course} - {year}
       </p>
-      <br></br>
-      ---------------------
+      <hr className="my-2" />
       <p className="mb-2">
         <b>Item: </b>{" "}
         {type === "Membership" || type === "Renewal" ? type : product_name} ₱
         {itemTotal}
       </p>
       <p className="mb-2">
-        <b>Qty: </b> {qty} ------------ ₱{total}
+        <b>Qty: </b> {qty} <span className="float-right">₱{total}</span>
       </p>
-      <div style={{ display: type === "Order" ? "block" : "none" }}>
-        <p
-          className="mb-2"
-          style={{ display: batch !== null ? "block" : "none" }}
-        >
-          <b>Batch: {batch}</b>
-        </p>
-        <p
-          className="mb-2"
-          style={{ display: size !== null ? "block" : "none" }}
-        >
-          <b>Size: </b>
-          {size}
-        </p>
-        <p
-          className="mb-2"
-          style={{ display: variation !== null ? "block" : "none" }}
-        >
-          <b>Variation:</b> {variation}
-        </p>
-      </div>
-      <br></br>
-      <br></br>
-      ---------------------
+      {type === "Order" && (
+        <>
+          {batch && (
+            <p className="mb-2">
+              <b>Batch: </b> {batch}
+            </p>
+          )}
+          {size && (
+            <p className="mb-2">
+              <b>Size: </b> {size}
+            </p>
+          )}
+          {variation && (
+            <p className="mb-2">
+              <b>Variation: </b> {variation}
+            </p>
+          )}
+        </>
+      )}
+      <hr className="my-2" />
       <p className="font-bold">
-        <b>Total:</b> {total}
+        <b>Total: </b> ₱{total}
       </p>
-      <></>
       <p className="font-bold">
         <b>Cash: </b> ₱{cash}
       </p>
       <p className="font-bold">
         <b>Change: </b> ₱{cash - total}
       </p>
-      <br></br>
+      <br />
       <h2 className="text-2xl">{reference_code}</h2>
-      <p lassName="mb-2 text-sm">
-        <b>Date:</b>
+      <p className="mb-2 text-sm">
+        <b>Date: </b>
         {format(new Date(), "MMMM d, yyyy h:mm:ss a")}
       </p>
       <p className="mb-2 text-xs">
-        <b>Processed By:</b> {admin}
+        <b>Processed By: </b> {admin}
       </p>
     </div>
   )

@@ -20,6 +20,7 @@ const PendingOrders = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [selectedStudentName, setSelectedStudentName] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -248,6 +249,17 @@ const PendingOrders = () => {
   const handleApproveClick = (order) => {
     setSelectedOrder(order);
     setIsApproveModalOpen(true);
+
+    const name = order.student_name;
+    const words = name.split(" ");
+    let fullName = "";
+
+    for (let i = 0; i < words.length - 1; i++) {
+      fullName += words[i].charAt(0) + ".";
+    }
+    fullName += " " + words[words.length - 1];
+
+    setSelectedStudentName(fullName);
   };
 
   const handleApproveModalConfirm = async () => {
@@ -328,7 +340,7 @@ const PendingOrders = () => {
           rfid={selectedOrder.rfid}
           course={selectedOrder.course}
           year={selectedOrder.year}
-          name={selectedOrder.student_name}
+          name={selectedStudentName}
           product_name={selectedOrder.product_name}
           batch={selectedOrder.batch}
           size={selectedOrder.sizes}
