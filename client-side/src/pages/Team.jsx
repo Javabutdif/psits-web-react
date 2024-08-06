@@ -35,15 +35,7 @@ const Team = () => {
 
   return (
     <div className="min-h-screen py-14 flex flex-col items-center justify-center relative overflow-hidden">
-      <h1 className="-mb-10 md:-mb-0 opacity-1 text-6xl md:text-9xl font-bold text-center tracking-tight"
-          style={{
-            background: "linear-gradient(45deg, #074873, #eaeaea)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            filter: "drop-shadow(4px 4px 8px rgba(0,0,0,0.3))"
-          }}>
-        The Team
-      </h1>
+    
       <div className="relative z-10 w-full max-w-4xl h-96 flex items-center justify-center">
         {teamMembers.map((member, index) => {
           const isCurrent = index === currentIndex;

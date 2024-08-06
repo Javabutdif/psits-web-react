@@ -1,132 +1,129 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import ucLogo from '../../../assets/images/UC_logo 1.png';
-import ccsLogo from '../../../assets/images/ccs.png';
-
-const parentVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.2, delayChildren: 0.1 },
-  },
-};
-
-const childVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-};
-
-const SectionTitle = ({ children }) => (
-  <motion.h3 
-    className="text-2xl font-bold text-center mb-8 text-gray-800"
-    variants={childVariants}
-  >
-    {children}
-  </motion.h3>
-);
-
-const Card = ({ title, content, isPrimary = false }) => (
-  <motion.div 
-    className={`p-6 rounded-lg shadow-lg ${isPrimary ? 'bg-primary text-white' : 'bg-white'}`}
-    variants={childVariants}
-    whileHover={{ scale: 1.05 }}
-    transition={{ type: "spring", stiffness: 300 }}
-  >
-    <h4 className="text-lg font-semibold mb-3">{title}</h4>
-    <p className="text-sm">{content}</p>
-  </motion.div>
-);
+import { motion, useInView } from 'framer-motion';
 
 const CoreBeliefs = () => {
+  const SectionTitle = ({ title }) => (
+    <motion.h2
+      className="text-4xl font-semibold text-center mb-10 text-gray-900"
+      initial={{ opacity: 0, y: -20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      {title}
+    </motion.h2>
+  );
+
+  const Card = ({ title, content, primary }) => (
+    <motion.div
+      className={`p-6 border rounded-lg shadow-sm transition-transform transform hover:scale-105 ${primary ? 'bg-white border-gray-300' : 'bg-gray-50 border-gray-200'}`}
+      whileHover={{ scale: 1.05 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.6 }}
+    >
+      <h3 className="text-xl md:text-2xl font-medium mb-4 text-gray-800">{title}</h3>
+      <p className="text-base text-gray-700">{content}</p>
+    </motion.div>
+  );
+
   return (
-    <div className="container mx-auto px-4 py-12">
-      <motion.section 
-        className="mb-16"
-        initial="hidden"
-        animate="visible"
-        variants={parentVariants}
-      >
-        <SectionTitle>University of Cebu</SectionTitle>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="container py-12 px-4 mx-auto">
+      <section className="mb-16 text-center">
+        <SectionTitle title="University of Cebu" />
+        <motion.div
+          className="flex flex-col md:flex-row gap-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={{
+            visible: { opacity: 1, transition: { staggerChildren: 0.3 } },
+            hidden: { opacity: 0 }
+          }}
+        >
           <Card
             title="Mission"
             content="The University offers affordable and quality education responsive to the demands of local and international communities."
-            isPrimary
+            primary
           />
           <Card
             title="Vision"
             content="Democratize quality education. Be the visionary and industry leader. Give hope and transform lives."
           />
-        </div>
-      </motion.section>
+        </motion.div>
+      </section>
 
-      <motion.section 
-        className="mb-16"
-        initial="hidden"
-        animate="visible"
-        variants={parentVariants}
-      >
-        <SectionTitle>College of Computer Studies</SectionTitle>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <section className="mb-16 text-center">
+        <SectionTitle title="College of Computer Studies" />
+        <motion.div
+          className="flex flex-col md:flex-row gap-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={{
+            visible: { opacity: 1, transition: { staggerChildren: 0.3 } },
+            hidden: { opacity: 0 }
+          }}
+        >
           <Card
             title="Mission"
             content="We envision being the hub of quality, globally-competitive, and socially-responsive information technology education."
+            primary
           />
           <Card
             title="Vision"
             content="We commit to continuously: Offer relevant programs, engage in accreditation, and facilitate in building an IT-enabled nation."
-            isPrimary
           />
-        </div>
-      </motion.section>
+        </motion.div>
+      </section>
 
-      <motion.section 
-        className="mb-16"
-        initial="hidden"
-        animate="visible"
-        variants={parentVariants}
-      >
-        <SectionTitle>Goals</SectionTitle>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[
-            "Promotes scholarly endeavors for moral, social, cultural, and environmental interests.",
-            "Meets industry demands in technical, personal, and interpersonal skills.",
-            "Conducts intellectual, technological, and significant research in computing.",
-            "Optimizes the use of appropriate and advanced resources and services."
-          ].map((goal, index) => (
-            <Card
-              key={index}
-              content={goal}
-              isPrimary={index % 2 === 0}
-            />
-          ))}
-        </div>
-      </motion.section>
+      <section className="mb-16 text-center">
+        <SectionTitle title="Goals" />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={{
+            visible: { opacity: 1, transition: { staggerChildren: 0.3 } },
+            hidden: { opacity: 0 }
+          }}
+        >
+          <Card
+            title="Goals"
+            content="Promotes scholarly endeavors for moral, social, cultural, and environmental interests. Meets industry demands in technical, personal, and interpersonal skills. Conducts intellectual, technological, and significant research in computing. Optimizes the use of appropriate and advanced resources and services."
+            primary
+          />
+        </motion.div>
+      </section>
 
-      <motion.section 
-        initial="hidden"
-        animate="visible"
-        variants={parentVariants}
-      >
-        <SectionTitle>Core Values</SectionTitle>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="mb-16 text-center">
+        <SectionTitle title="Core Values" />
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={{
+            visible: { opacity: 1, transition: { staggerChildren: 0.3 } },
+            hidden: { opacity: 0 }
+          }}
+        >
           <Card
             title="Initiative (Inceptum)"
             content="Wit, Practicality, Ingenuity"
+            primary
           />
           <Card
             title="Innovation (Innovatio)"
             content="Technology, Creativity, Novelty"
-            isPrimary
           />
           <Card
             title="Service (Muneris)"
             content="Industry, Loyalty, Courtesy"
           />
-        </div>
-      </motion.section>
+        </motion.div>
+      </section>
     </div>
   );
-};
+}
 
 export default CoreBeliefs;
