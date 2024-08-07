@@ -229,8 +229,7 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
                 ? "Not Authorized"
                 : "Approve"
             }
@@ -241,8 +240,7 @@ function MembershipRequest() {
                   position !== "Treasurer" &&
                   position !== "Assistant Treasurer" &&
                   position !== "Auditor" &&
-                  position !== "Developer" &&
-                  position !== "President"
+                  position !== "Developer"
                     ? "fa-lock"
                     : "fa-check"
                 }`}
@@ -252,8 +250,7 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-blue-500"
             }`}
@@ -264,15 +261,13 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
             }
           />
           {position !== "Treasurer" &&
             position !== "Assistant Treasurer" &&
             position !== "Auditor" &&
-            position !== "Developer" &&
-            position !== "President" && <c visible={true}></c>}
+            position !== "Developer" && <c visible={true}></c>}
         </ButtonsComponent>
       ),
     },

@@ -26,7 +26,9 @@ function Membership() {
 
   return (
     <div className="bg-blue-500 p-3 sm:p-4 rounded-lg shadow-md text-center text-white">
-      <h1 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Join Our Membership Program</h1>
+      <h1 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
+        Join Our Membership Program
+      </h1>
       <p className="text-xs sm:text-sm mb-3 sm:mb-4">
         Get exclusive benefits and stay updated with our latest offers.
       </p>
@@ -40,16 +42,20 @@ function Membership() {
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-2 sm:p-4">
           <div className="bg-white p-3 sm:p-4 rounded-lg shadow-md text-center w-full max-w-xs sm:max-w-sm mx-auto">
-            <h2 className="text-md sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-800">Request Membership</h2>
+            <h2 className="text-md sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-800">
+              Request Membership
+            </h2>
             <p className="text-xs sm:text-sm mb-2 sm:mb-3 text-gray-600">
               Are you sure you want to request membership? Please note that you
               need to pay PHP 50 in the PSITS Office to activate your membership
               until the end of the semester.
             </p>
             <div className="bg-gray-100 p-2 rounded-lg mb-3 sm:mb-4 border border-gray-300">
-              <h3 className="text-sm sm:text-md font-semibold mb-1 sm:mb-2 text-gray-700">Membership Benefits:</h3>
+              <h3 className="text-sm sm:text-md font-semibold mb-1 sm:mb-2 text-gray-700">
+                Membership Benefits:
+              </h3>
               <ul className="list-disc list-inside text-left text-gray-600 text-xs sm:text-sm">
-                <li className="mb-1">20% discount on all merchandise</li>
+                <li className="mb-1">5% discount on all merchandise</li>
                 <li>Clearance offers at the end of the semester</li>
               </ul>
             </div>
@@ -73,7 +79,9 @@ function Membership() {
       {isRequested && (
         <div className="fixed inset-0 flex items-center justify-center bg-green-500 bg-opacity-75 z-50 p-2 sm:p-4">
           <div className="bg-white p-3 sm:p-4 rounded-lg shadow-md text-center w-full max-w-xs sm:max-w-sm mx-auto">
-            <h2 className="text-md sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-800">Membership Requested</h2>
+            <h2 className="text-md sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-800">
+              Membership Requested
+            </h2>
             <p className="text-xs sm:text-sm mb-2 sm:mb-3 text-gray-600">
               Your membership request has been successfully submitted!
             </p>
