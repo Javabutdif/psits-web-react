@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
 import { useOutletContext } from "react-router-dom";
 import {
   membership,
@@ -19,6 +19,7 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import EditMember from "./EditMember";
 import axios from "axios";
 import backendConnection from "../../../api/backendApi";
+import { getPosition } from "../../../authentication/Authentication";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -33,7 +34,8 @@ const Membership = () => {
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  
+  const position = getPosition();
+
   const fetchData = async () => {
     try {
       const result = await membership();
@@ -203,7 +205,6 @@ const Membership = () => {
     }
   }, [selectAll, filteredData]);
 
-
   const handleRowSelection = (id_number) => {
     setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(id_number)
@@ -216,10 +217,7 @@ const Membership = () => {
     {
       key: "select",
       label: (
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <input
             type="checkbox"
             checked={selectAll}
@@ -228,10 +226,7 @@ const Membership = () => {
         </motion.div>
       ),
       cell: (row) => (
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <input
             type="checkbox"
             checked={selectedRows.includes(row.id_number)}
@@ -301,54 +296,51 @@ const Membership = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
-        <FormButton
-          type="button"
-          text="Edit"
-          onClick={() => handleEditButtonClick(row)}
-          icon={<i className="fas fa-edit" />} // Simple icon
-          styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-          textClass="text-gray-800" // Elegant text color
-          whileHover={{ scale: 1.02, opacity: 0.95 }}
-          whileTap={{ scale: 0.98, opacity: 0.9 }}
-        />
-        <FormButton
-          type="button"
-          text="Delete"
-          onClick={() => showModal(row)}
-          icon={<i className="fas fa-trash" />} // Simple icon
-          styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-          textClass="text-red-800" // Elegant text color
-          whileHover={{ scale: 1.02, opacity: 0.95 }}
-          whileTap={{ scale: 0.98, opacity: 0.9 }}
-        />
-      </ButtonsComponent>
-      
+          <FormButton
+            type="button"
+            text="Edit"
+            onClick={() => handleEditButtonClick(row)}
+            icon={<i className="fas fa-edit" />} // Simple icon
+            styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+            textClass="text-gray-800" // Elegant text color
+            whileHover={{ scale: 1.02, opacity: 0.95 }}
+            whileTap={{ scale: 0.98, opacity: 0.9 }}
+          />
+          <FormButton
+            type="button"
+            text="Delete"
+            onClick={() => showModal(row)}
+            icon={<i className="fas fa-trash" />} // Simple icon
+            styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+            textClass="text-red-800" // Elegant text color
+            whileHover={{ scale: 1.02, opacity: 0.95 }}
+            whileTap={{ scale: 0.98, opacity: 0.9 }}
+          />
+        </ButtonsComponent>
       ),
     },
   ];
 
-
   return (
     <div className="">
-
-        <TableComponent
-          columns={columns}
-          data={filteredData}
-          customButtons={
-            <ButtonsComponent>
-              {selectedRows.length > 0 && (
-                <FormButton
-                  type="button"
-                  text="Delete All"
-                  // onClick={handleDeleteAll} // Ensure this is the correct handler for deletion
-                  icon={<i className="fas fa-trash-alt"></i>} // Updated icon
-                  styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
-                  textClass="hidden"
-                  whileHover={{ scale: 1.01, opacity: 0.9 }}
-                  whileTap={{ scale: 0.95, opacity: 0.8 }}
-                />
-              )}
+      <TableComponent
+        columns={columns}
+        data={filteredData}
+        customButtons={
+          <ButtonsComponent>
+            {selectedRows.length > 0 && (
               <FormButton
+                type="button"
+                text="Delete All"
+                // onClick={handleDeleteAll} // Ensure this is the correct handler for deletion
+                icon={<i className="fas fa-trash-alt"></i>} // Updated icon
+                styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
+                textClass="hidden"
+                whileHover={{ scale: 1.01, opacity: 0.9 }}
+                whileTap={{ scale: 0.95, opacity: 0.8 }}
+              />
+            )}
+            <FormButton
               type="button"
               text="Export to PDF"
               onClick={handleExportPDF}
@@ -358,20 +350,41 @@ const Membership = () => {
               whileHover={{ scale: 1.01, opacity: 0.9 }}
               whileTap={{ scale: 0.95, opacity: 0.8 }}
             />
+
             <FormButton
               type="button"
-              text="Renew All"
-              onClick={showConfirm}
-              icon={<i className="fas fa-sync-alt"></i>} // Simple icon
-              styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
-              textClass="hidden"
-              whileHover={{ scale: 1.01, opacity: 0.9 }}
-              whileTap={{ scale: 0.95, opacity: 0.8 }}
+              text={
+                position !== "President" && position !== "Developer"
+                  ? "Not Authorized"
+                  : "Renew All"
+              }
+              onClick={() => {
+                if (position !== "President" || position !== "Developer") {
+                  showConfirm;
+                }
+              }}
+              icon={
+                <i
+                  className={`fa ${
+                    position !== "President" && position !== "Developer"
+                      ? "fa-lock"
+                      : "fa-sync-alt"
+                  }`}
+                ></i>
+              }
+              styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+                position !== "President" && position !== "Developer"
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-red-500"
+              }`}
+              textClass="text-white"
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+              disabled={position !== "President" && position !== "Developer"}
             />
           </ButtonsComponent>
-
-          }
-        />
+        }
+      />
       {isEditModalVisible && (
         <EditMember
           isVisible={isEditModalVisible}
