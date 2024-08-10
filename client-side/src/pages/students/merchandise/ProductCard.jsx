@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { MdAddShoppingCart } from "react-icons/md";
 
 const DEFAULT_IMAGE_URL = "/default-image.jpg";
 
@@ -15,7 +16,6 @@ const ProductCard = React.memo(({ product }) => {
     }
   };
 
-
   return (
     <motion.div
       className="group bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300"
@@ -25,7 +25,11 @@ const ProductCard = React.memo(({ product }) => {
     >
       <div className="relative w-full h-32">
         <motion.img
-          src={product.imageUrl?.length > 0 ? product.imageUrl[0] : DEFAULT_IMAGE_URL}
+          src={
+            product.imageUrl?.length > 0
+              ? product.imageUrl[0]
+              : DEFAULT_IMAGE_URL
+          }
           alt={product.name ? `${product.name} image` : "Default Product Image"}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
@@ -39,7 +43,8 @@ const ProductCard = React.memo(({ product }) => {
           {product.name}
         </h2>
         <p className="text-xs text-gray-600 mb-1">
-          Stocks: <span className="font-medium text-gray-900">{product.stocks}</span>
+          Stocks:{" "}
+          <span className="font-medium text-gray-900">{product.stocks}</span>
         </p>
         <p className="text-xs text-gray-500 mb-3 truncate">
           {product.description}
@@ -48,15 +53,26 @@ const ProductCard = React.memo(({ product }) => {
           <span className="text-sm font-semibold text-gray-900">
             ₱{product.price.toFixed(2)}
           </span>
-          <motion.button
-            onClick={handleViewDetails}
-            className="bg-blue-500 text-white text-xs font-medium py-1 px-3 rounded-full hover:bg-blue-600 transition-colors duration-200"
-            aria-label={`View details for ${product.name}`}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-          >
-            View
-          </motion.button>
+          <div className="flex">
+            <motion.button
+              onClick={() => {}}
+              className="bg-[#4398AC] text-white text-xs font-medium py-1 px-3 rounded-md hover:bg-[#4cacc2] transition-colors duration-200 mr-1"
+              aria-label={`Add ${product.name} to cart`}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MdAddShoppingCart size={15} />
+            </motion.button>
+            <motion.button
+              onClick={handleViewDetails}
+              className="bg-[#002E48] text-white text-xs font-medium py-1 px-3 rounded-md hover:bg-[#013e61] transition-colors duration-200"
+              aria-label={`View details for ${product.name}`}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              View
+            </motion.button>
+          </div>
         </div>
       </div>
     </motion.div>
