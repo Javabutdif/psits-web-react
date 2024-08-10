@@ -233,7 +233,16 @@ function MembershipRequest() {
                 ? "Not Authorized"
                 : "Approve"
             }
-            onClick={() => handleOpenModal(row)}
+            onClick={() => {
+              if (
+                position === "Treasurer" &&
+                position === "Assistant Treasurer" &&
+                position === "Auditor" &&
+                position === "Developer"
+              ) {
+                handleOpenModal(row);
+              }
+            }}
             icon={
               <i
                 className={`fa ${

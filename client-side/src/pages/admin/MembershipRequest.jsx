@@ -144,18 +144,16 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
                 ? "Not Authorized"
                 : "Approve"
             }
             onClick={() => {
               if (
-                position === "Treasurer" ||
-                position === "Assistant Treasurer" ||
-                position === "Auditor" ||
-                position === "Developer" ||
-                position === "President"
+                position === "Treasurer" &&
+                position === "Assistant Treasurer" &&
+                position === "Auditor" &&
+                position === "Developer"
               ) {
                 handleOpenModal(row);
               }
@@ -166,8 +164,7 @@ function MembershipRequest() {
                   position !== "Treasurer" &&
                   position !== "Assistant Treasurer" &&
                   position !== "Auditor" &&
-                  position !== "Developer" &&
-                  position !== "President"
+                  position !== "Developer"
                     ? "fa-lock"
                     : "fa-check"
                 }`}
@@ -177,8 +174,7 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-blue-500"
             }`}
@@ -189,8 +185,7 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
             }
           />
           <FormButton
@@ -199,18 +194,16 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
                 ? "Not Authorized"
                 : "Delete"
             }
             onClick={() => {
               if (
-                position === "Treasurer" ||
-                position === "Assistant Treasurer" ||
-                position === "Auditor" ||
-                position === "Developer" ||
-                position === "President"
+                position === "Treasurer" &&
+                position === "Assistant Treasurer" &&
+                position === "Auditor" &&
+                position === "Developer"
               ) {
                 showModal(row);
               }
@@ -221,8 +214,7 @@ function MembershipRequest() {
                   position !== "Treasurer" &&
                   position !== "Assistant Treasurer" &&
                   position !== "Auditor" &&
-                  position !== "Developer" &&
-                  position !== "President"
+                  position !== "Developer"
                     ? "fa-lock"
                     : "fa-trash"
                 }`}
@@ -232,8 +224,7 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-red-500"
             }`}
@@ -244,8 +235,7 @@ function MembershipRequest() {
               position !== "Treasurer" &&
               position !== "Assistant Treasurer" &&
               position !== "Auditor" &&
-              position !== "Developer" &&
-              position !== "President"
+              position !== "Developer"
             }
           />
         </ButtonsComponent>

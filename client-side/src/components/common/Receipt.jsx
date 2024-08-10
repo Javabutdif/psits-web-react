@@ -72,24 +72,18 @@ const Receipt = forwardRef(
       {reprint === true && (
         <p className="mb-2 text-sm">
           <b>Type: </b>
-          Reprint Receipt
+          Copy
         </p>
       )}
       <hr className="my-2" />
-      <p className="font-bold">
-        <b>Total: </b> ₱{total}
-      </p>
-      <p className="font-bold">
-        <b>Cash: </b> ₱{cash}
-      </p>
-      <p className="font-bold">
-        <b>Change: </b> ₱{cash - total}
-      </p>
+      <p className="font-bold">Total: ₱{total}</p>
+      <p className="font-bold">Cash: ₱{cash}</p>
+      <p className="font-bold">Change: ₱{cash - total}</p>
       <br />
       <h2 className="text-2xl">{reference_code}</h2>
-      <p className="mb-2 text-sm">
+      <p className="mb-2 text-s">
         <b>Date: </b>
-        {format(new Date(), "MMMM d, yyyy h:mm:ss a")}
+        {format(new Date(), "MMMM d, yyyy")}
       </p>
 
       <p className="mb-2 text-xs">
