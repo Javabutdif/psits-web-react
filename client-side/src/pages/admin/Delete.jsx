@@ -11,7 +11,6 @@ import { InfinitySpin } from "react-loader-spinner";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 
-
 const Delete = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -37,34 +36,32 @@ const Delete = () => {
     fetchData();
   }, []);
 
-  
-useEffect(() => {
-  const filtered = data.filter((item) => {
-    const first_name = item.first_name ? item.first_name.toLowerCase() : "";
-    const middle_name = item.middle_name
-      ? item.middle_name.toLowerCase()
-      : "";
-    const last_name = item.last_name ? item.last_name.toLowerCase() : "";
-    const id_number = item.id_number ? item.id_number.toLowerCase() : "";
-    const course = item.course ? item.course.toString() : "";
-    const email = item.email ? item.email.toString() : "";
-    const type = item.type ? item.type.toString() : "";
-    const rfid = item.rfid ? item.rfid.toString() : "";
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const first_name = item.first_name ? item.first_name.toLowerCase() : "";
+      const middle_name = item.middle_name
+        ? item.middle_name.toLowerCase()
+        : "";
+      const last_name = item.last_name ? item.last_name.toLowerCase() : "";
+      const id_number = item.id_number ? item.id_number.toLowerCase() : "";
+      const course = item.course ? item.course.toString() : "";
+      const email = item.email ? item.email.toString() : "";
+      const type = item.type ? item.type.toString() : "";
+      const rfid = item.rfid ? item.rfid.toString() : "";
 
-    return (
-      first_name.includes(searchQuery.toLowerCase()) ||
-      middle_name.includes(searchQuery.toLowerCase()) ||
-      last_name.includes(searchQuery.toLowerCase()) ||
-      id_number.includes(searchQuery.toLowerCase()) ||
-      email.includes(searchQuery.toLowerCase()) ||
-      type.includes(searchQuery.toLowerCase()) ||
-      course.includes(searchQuery) ||
-      rfid.includes(searchQuery)
-    );
-  });
-  setFilteredData(filtered);
-}, [searchQuery, data]);
-
+      return (
+        first_name.includes(searchQuery.toLowerCase()) ||
+        middle_name.includes(searchQuery.toLowerCase()) ||
+        last_name.includes(searchQuery.toLowerCase()) ||
+        id_number.includes(searchQuery.toLowerCase()) ||
+        email.includes(searchQuery.toLowerCase()) ||
+        type.includes(searchQuery.toLowerCase()) ||
+        course.includes(searchQuery) ||
+        rfid.includes(searchQuery)
+      );
+    });
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -107,7 +104,9 @@ useEffect(() => {
     try {
       const id_number = studentIdToBeRestored;
       if ((await studentRestore(id_number)) === 200) {
-        const updatedData = data.filter((student) => student.id_number !== id_number);
+        const updatedData = data.filter(
+          (student) => student.id_number !== id_number
+        );
         setData(updatedData);
         setFilteredData(updatedData); // Update filteredData as well
         setIsModalVisible(false);
@@ -134,65 +133,67 @@ useEffect(() => {
         </div>
       ),
     },
-    { key: "id_number", label: "Id Number", sortable: true,  },
-    { key: "course", label: "Course", sortable: true },
+    { key: "id_number", label: "Id Number", sortable: true },
+    {
+      key: "course",
+      label: "Course & Year",
+      sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div>{`${row.course} - ${row.year}`}</div>
+        </div>
+      ),
+    },
     { key: "email", label: "Email Account", sortable: true },
-    { key: "type", label: "Type", sortable: true, cell: () => (
-      <div className="text-center">
-        <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">Student</span>
-      </div>
-    ), },
+
     { key: "deletedDate", label: "Deletion Date", sortable: true },
     { key: "deletedBy", label: "Deleted By", sortable: true },
     {
       key: "actions",
       cell: (row) => (
         <button
-        onClick={() => showModal(row)}
-        className="text-red-500 hover:text-red-700"
-        aria-label="Restore"
+          onClick={() => showModal(row)}
+          className="text-red-500 hover:text-red-700"
+          aria-label="Restore"
         >
           <i className="fas fa-undo"></i>
         </button>
-        
-      
       ),
     },
   ];
 
   return (
     <div className="">
-        <>
-          <TableComponent
-            columns={columns}
-            data={filteredData}
-            customButtons={(
-              <ButtonsComponent>
-                <FormButton
-                  type="button"
-                  text="PDF Export"
-                  onClick={handleExportPDF}
-                  icon={<i className="fas fa-file-pdf"></i>}
-                  styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                  textClass="hidden"
-                  whileHover={{ scale: 1.01, opacity: 0.9 }}
-                  whileTap={{ scale: 0.95, opacity: 0.8 }}
-                />
-              </ButtonsComponent>
-            )}
+      <>
+        <TableComponent
+          columns={columns}
+          data={filteredData}
+          customButtons={
+            <ButtonsComponent>
+              <FormButton
+                type="button"
+                text="PDF Export"
+                onClick={handleExportPDF}
+                icon={<i className="fas fa-file-pdf"></i>}
+                styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                textClass="hidden"
+                whileHover={{ scale: 1.01, opacity: 0.9 }}
+                whileTap={{ scale: 0.95, opacity: 0.8 }}
+              />
+            </ButtonsComponent>
+          }
+        />
+        {isModalVisible && (
+          <ConfirmationModal
+            confirmType={ConfirmActionType.RESTORE}
+            onCancel={hideModal}
+            onConfirm={handleRestore}
+            isLoading={isLoading}
           />
-          {isModalVisible && (
-            <ConfirmationModal
-              confirmType={ConfirmActionType.RESTORE}
-              onCancel={hideModal}
-              onConfirm={handleRestore}
-              isLoading={isLoading}
-            />
-          )}
-        </>
+        )}
+      </>
     </div>
   );
 };
 
 export default Delete;
-

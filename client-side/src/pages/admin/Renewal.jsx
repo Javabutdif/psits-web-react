@@ -235,9 +235,9 @@ function MembershipRequest() {
             }
             onClick={() => {
               if (
-                position === "Treasurer" &&
-                position === "Assistant Treasurer" &&
-                position === "Auditor" &&
+                position === "Treasurer" ||
+                position === "Assistant Treasurer" ||
+                position === "Auditor" ||
                 position === "Developer"
               ) {
                 handleOpenModal(row);
@@ -284,24 +284,7 @@ function MembershipRequest() {
 
   return (
     <div className="">
-      <TableComponent
-        columns={columns}
-        data={filteredData}
-        customButtons={
-          <ButtonsComponent>
-            <FormButton
-              type="button"
-              text="PDF Export"
-              onClick={handleExportPDF}
-              icon={<i className="fas fa-file-pdf"></i>}
-              styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-              textClass="hidden"
-              whileHover={{ scale: 1.01, opacity: 0.9 }}
-              whileTap={{ scale: 0.95, opacity: 0.8 }}
-            />
-          </ButtonsComponent>
-        }
-      />
+      <TableComponent columns={columns} data={filteredData} />
       {isModalOpen && (
         <ApproveModal
           reference_code={
@@ -315,8 +298,8 @@ function MembershipRequest() {
           onCancel={handleCloseModal}
           onSubmit={handleFormSubmit}
           qty={1}
-          itemTotal={20}
-          total={20}
+          itemTotal={50}
+          total={50}
         />
       )}
     </div>
