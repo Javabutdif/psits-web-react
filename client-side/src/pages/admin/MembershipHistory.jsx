@@ -8,6 +8,8 @@ import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt";
+import { getPosition } from "../../authentication/Authentication";
+import { CSVLink } from "react-csv";
 
 function MembershipHistory() {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +20,27 @@ function MembershipHistory() {
   const [selectedStudent, setSelectedStudentName] = useState("");
   const componentRef = useRef();
   const printRef = useRef();
+  const position = getPosition();
+
+  const headers = [
+    { label: "Reference ID", key: "reference_code" },
+    { label: "ID", key: "id_number" },
+    { label: "Name", key: "name" },
+    { label: "Course", key: "course" },
+    { label: "Type", key: "type" },
+    { label: "Date", key: "date" },
+    { label: "Admin", key: "admin" },
+  ];
+
+  const csvData = filteredData.map((item) => ({
+    reference_code: item.reference_code,
+    id_number: item.id_number,
+    name: item.name,
+    course: `${item.course}-${item.year}`,
+    type: item.type,
+    date: item.date,
+    admin: item.admin,
+  }));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,46 +108,6 @@ function MembershipHistory() {
     setPrintData("");
   };
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [
-        [
-          "Reference ID",
-          "ID",
-          "Name",
-          "Course",
-          "Year",
-          "Type",
-          "Date",
-          "Admin",
-        ],
-      ],
-      body: filteredData.map((item) => [
-        item.reference_code,
-        item.id_number,
-        item.name,
-        item.course,
-        item.year,
-        item.type,
-        item.date,
-        item.admin,
-      ]),
-      startY: 20,
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [22, 160, 133],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-      },
-      margin: { top: 10 },
-    });
-    doc.save("membership_history.pdf");
-  };
-
   const columns = [
     {
       key: "reference_code",
@@ -140,6 +123,7 @@ function MembershipHistory() {
         <div className="text-xs">
           <div>{`${row.name} `}</div>
           <div className="text-gray-500">ID: {row.id_number}</div>
+          <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
       ),
     },
@@ -147,12 +131,13 @@ function MembershipHistory() {
       key: "course",
       label: "Course",
       sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div>{`${row.course} - ${row.year} `}</div>
+        </div>
+      ),
     },
-    {
-      key: "year",
-      label: "Year",
-      sortable: true,
-    },
+
     {
       key: "type",
       label: "Type",
@@ -176,13 +161,53 @@ function MembershipHistory() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text="Print"
-            onClick={() => handlePrintData(row)}
-            icon={<i className="fas fa-print" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            textClass="text-gray-800"
+            text={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer"
+                ? "Not Authorized"
+                : "Print"
+            }
+            onClick={() => {
+              if (
+                position === "Treasurer" ||
+                position === "Assistant Treasurer" ||
+                position === "Auditor" ||
+                position === "Developer"
+              ) {
+                handlePrintData(row);
+              }
+            }}
+            icon={
+              <i
+                className={`fa ${
+                  position !== "Treasurer" &&
+                  position !== "Assistant Treasurer" &&
+                  position !== "Auditor" &&
+                  position !== "Developer"
+                    ? "fa-lock"
+                    : "fa-print"
+                }`}
+              ></i>
+            }
+            styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-500"
+            }`}
+            textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
+            disabled={
+              position !== "Treasurer" &&
+              position !== "Assistant Treasurer" &&
+              position !== "Auditor" &&
+              position !== "Developer"
+            }
           />
           <div style={{ display: "none" }}>
             <ReactToPrint
@@ -202,7 +227,7 @@ function MembershipHistory() {
               batch={rowData.batch}
               size={rowData.size}
               variation={rowData.variation}
-              total={rowData.type === "Membership" ? "50" : "20"}
+              total={rowData.type === "Membership" ? "50" : "50"}
               cash={rowData.cash}
               year={rowData.year}
               name={selectedStudent}
@@ -224,16 +249,13 @@ function MembershipHistory() {
         data={filteredData}
         customButtons={
           <ButtonsComponent>
-            <FormButton
-              type="button"
-              text="PDF Export"
-              onClick={handleExportPDF}
-              icon={<i className="fas fa-file-pdf"></i>}
-              styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-              textClass="hidden"
-              whileHover={{ scale: 1.01, opacity: 0.9 }}
-              whileTap={{ scale: 0.95, opacity: 0.8 }}
-            />
+            <CSVLink
+              data={csvData}
+              headers={headers}
+              filename={"membership_history.csv"}
+            >
+              Export to CSV
+            </CSVLink>
           </ButtonsComponent>
         }
       />

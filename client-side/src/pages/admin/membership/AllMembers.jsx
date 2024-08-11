@@ -259,6 +259,13 @@ const Membership = () => {
       label: "Course",
       selector: (row) => row.course,
       sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div className="text-gray-500">
+            {row.course} - {row.year}
+          </div>
+        </div>
+      ),
     },
     {
       key: "email",

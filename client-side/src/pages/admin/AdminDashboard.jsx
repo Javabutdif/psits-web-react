@@ -10,6 +10,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const handleSubmit = (data) => {
+    console.log("Form Data:", data);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {

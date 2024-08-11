@@ -7,6 +7,9 @@ const historySchema = new Schema({
     type: String,
     require: true,
   },
+  rfid: {
+    type: String,
+  },
   reference_code: {
     type: String,
     unique: true,

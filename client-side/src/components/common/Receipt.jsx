@@ -44,12 +44,15 @@ const Receipt = forwardRef(
       <hr className="my-2" />
       <p className="mb-2">
         <b>Item: </b>{" "}
-        {type === "Membership" || type === "Renewal" ? type : product_name} ₱
-        {itemTotal}
+        {type === "Membership" || type === "Renewal" ? type : product_name}
       </p>
       <p className="mb-2">
         <b>Qty: </b> {qty} <span className="float-right">₱{total}</span>
       </p>
+      <p className="mb-2">
+        <b>Sub-total: </b> {itemTotal === undefined ? "" : "₱" + `${itemTotal}`}
+      </p>
+      <hr className="my-2" />
       {type === "Order" && (
         <>
           {batch && (
