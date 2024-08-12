@@ -147,16 +147,12 @@ function MembershipRequest() {
       cell: (row) => (
         <div className="text-xs">
           <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
+          <div className="text-gray-500">ID: {row.id_number}</div>
           <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
       ),
     },
-    {
-      key: "id_number",
-      label: "Id Number",
-      selector: (row) => row.id_number,
-      sortable: true,
-    },
+
     {
       key: "course",
       label: "Course",
