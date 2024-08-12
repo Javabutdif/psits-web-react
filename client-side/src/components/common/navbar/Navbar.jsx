@@ -4,6 +4,7 @@ import logo from "../../../assets/images/psits-logo.png";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
+  { name: 'Event', iconClass: 'fas fa-calendar' },
   { name: 'Community',  path: '/community', iconClass: 'fas fa-users' },
   { name: 'Login', path: '/login', iconClass: 'fas fa-sign-in-alt', isLogin: true }
 ];
@@ -43,7 +44,7 @@ const Navbar = () => {
     if (disable) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = ''
     }
   };
 
@@ -69,6 +70,10 @@ const Navbar = () => {
           <li
             key={key}
             className={`relative ${item.isLogin ? 'md:ml-auto' : ''}`}
+            onClick={() => {
+              setIsNavOpen(false)
+              toggleBodyScroll(false)
+            }}
             onMouseEnter={() => setHoveredIndex(key)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
@@ -80,9 +85,9 @@ const Navbar = () => {
                 initial={{ opacity: 0.6 }}
                 animate={{ opacity: hoveredIndex === key ? 1 : 0.6 }}
                 transition={{ type: 'spring', stiffness: 1000, damping: 30 }}
-                className={`${item.iconClass} text-3xl md:text-lg`}
+                className={`${item.iconClass} text-xl md:text-lg`}
               />
-              <span className="text-3xl md:text-sm font-medium">{item.name}</span>
+              <span className="text-xl md:text-sm font-medium">{item.name}</span>
             </Link>
             {hoveredIndex === key && (
               <motion.div

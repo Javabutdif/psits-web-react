@@ -1,33 +1,49 @@
 import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import Banner from '../components/sections/home/Banner';
 import DeansMessage from '../components/sections/home/DeansMessage';
-import CoreBeliefs from '../components/sections/home/CoreBeliefs';
+import About from '../components/sections/home/About';
+import CoreValues from '../components/sections/home/CoreValues';
+import Goals from '../components/sections/home/Goals';
+import MissionVision from '../components/sections/home/MissionVision';
+
+
+// const ucMissionVision = [
+//   {
+//     type: 'Mission',
+//     text: 'The University offers affordable and quality education responsive to the demands of local and international communities.'
+//   },
+//   {
+//     type: 'Vision',
+//     text: 'Democratize quality education. Be the visionary and industry leader. Give hope and transform lives.'
+//   }
+// ];
+
+// const ccsMissionVision = [
+//   {
+//     type: 'Mission',
+//     text: 'We envision being the hub of quality, globally-competitive and socially-responsive information technology education.'
+//   },
+//   {
+//     type: 'Vision',
+//     text: 'We commit to continuously:\nOffer relevant programs that mold well-rounded computing professionals;\nEngage in accreditation and quality standards;\nand Facilitate in building an IT-enabled nation.'
+//   }
+// ];
+
+
 
 const Home = () => {
-  const { scrollY } = useScroll();
-
-  // Animation transforms
-  const bannerY = useTransform(scrollY, [0, 600], [0, 600]); // Moves the banner down with scroll
-  const bannerOpacity = useTransform(scrollY, [0, 300], [1, 0]); // Optional: fades out the banner
-
   return (
-    <main className="relative">
-      <motion.div
-        className="z-10" // Sticky at top with a white background
-        style={{ y: bannerY, opacity: bannerOpacity }}
-        transition={{ duration: 0.5 }}
-      >
-        <Banner />
-      </motion.div>
-      <div className="bg-secondary">
-        <section >
-          <DeansMessage />
-        </section>
-          <CoreBeliefs />
-
-      </div>
-    </main>
+    <>
+      <Banner />
+      <DeansMessage />
+      {/* <section>
+        <MissionVision vision={ucMissionVision[0]}m/>
+        <MissionVision />
+      </section> */}
+      <Goals />
+      <CoreValues />
+      <About />
+    </>
   );
 };
 
