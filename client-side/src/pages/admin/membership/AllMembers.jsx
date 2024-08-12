@@ -358,37 +358,37 @@ const Membership = () => {
               whileTap={{ scale: 0.95, opacity: 0.8 }}
             />
 
-            <FormButton
-              type="button"
-              text={
-                position !== "President" && position !== "Developer"
-                  ? "Not Authorized"
-                  : "Renew All"
-              }
-              onClick={() => {
-                if (position !== "President" || position !== "Developer") {
-                  showConfirm;
-                }
-              }}
-              icon={
-                <i
-                  className={`fa ${
-                    position !== "President" && position !== "Developer"
-                      ? "fa-lock"
-                      : "fa-sync-alt"
-                  }`}
-                ></i>
-              }
-              styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-                position !== "President" && position !== "Developer"
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-red-500"
-              }`}
-              textClass="text-white"
-              whileHover={{ scale: 1.02, opacity: 0.95 }}
-              whileTap={{ scale: 0.98, opacity: 0.9 }}
-              disabled={position !== "President" && position !== "Developer"}
-            />
+<FormButton
+  type="button"
+  text={
+    position !== "President" && position !== "Developer"
+      ? "Not Authorized"
+      : "Renew All"
+  }
+  onClick={() => {
+    if (position === "President" || position === "Developer") {
+      showConfirm(); // Invoke the function
+    }
+  }}
+  icon={
+    <i
+      className={`fa ${
+        position !== "President" && position !== "Developer"
+          ? "fa-lock"
+          : "fa-sync-alt"
+      }`}
+    ></i>
+  }
+  styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+    position !== "President" && position !== "Developer"
+      ? "bg-gray-500 cursor-not-allowed"
+      : "bg-red-500"
+  }`}
+  textClass="text-white"
+  whileHover={{ scale: 1.02, opacity: 0.95 }}
+  whileTap={{ scale: 0.98, opacity: 0.9 }}
+  disabled={position !== "President" && position !== "Developer"} // Use && instead of ||
+/>
           </ButtonsComponent>
         }
       />
