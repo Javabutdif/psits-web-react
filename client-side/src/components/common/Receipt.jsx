@@ -49,7 +49,7 @@ const Receipt = forwardRef(
         </div>
       </div>
     <h6 className="text-sm font-bold ps-1">University of Cebu Main Campus</h6>
-     <p className="text-sm pb-7 ps-1">Sanciangko Street Cebu City, 6000</p>
+     <p className="text-xs pb-7 ps-4">Sanciangko Street Cebu City, 6000</p>
    
  
       
