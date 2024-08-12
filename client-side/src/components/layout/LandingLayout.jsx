@@ -8,6 +8,7 @@ const LandingLayout = () => {
   return (
     <>
         <Navbar />
+        {/* bg-gradient-to-b from-primary via-secondary via-tertiary via-accent to-muted */}
           <main className="overflow-hidden">
             <Outlet />
           </main>

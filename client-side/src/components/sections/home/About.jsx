@@ -1,41 +1,48 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import announcementImage from '../../../assets/images/about/announcement.png';
+import collaborationImage from '../../../assets/images/about/collaboration.png';
+import socialImage from '../../../assets/images/about/social.png';
 
 const About = () => {
   const aboutData = [
     {
       title: "Announcements",
       description: "Don't miss out! Stay updated on PSITS-hosted workshops, hackathons, and more events. Follow us for more details!",
-      link: "https://www.hscompanies.com/wp-content/uploads/2017/12/Anouncements-image.png"
+      link: announcementImage
     },
     {
       title: "Collaborations",
       description: "Unleash your potential! Aspiring Full-Stack Developers, collaborate with us on cutting-edge projects on GitHub.",
-      link: "https://th.bing.com/th/id/OIP.KZemM9TGpfMSxEB4Yj4kvQAAAA?rs=1&pid=ImgDetMain"
+      link: collaborationImage
     },
     {
       title: "Social Connections",
       description: "Build friendships, find mentors, and grow your network - Connect with like-minded peers and future colleagues at PSITS!",
-      link: "https://th.bing.com/th/id/OIP.LfnlUi5iW9GdgQ30_ZjvuQHaEK?rs=1&pid=ImgDetMain"
+      link: socialImage
     }
   ];
 
   return (
-    <div className='mx-w-[1020px] mx-auto text-white px-6 py-12'>
-      <div className='flex flex-col lg:flex-row gap-12'>
+    <div className='container mx-auto px-4 lg:px-6 py-12 md:py-16 lg:py-20'>
+      <div className='flex flex-col md:flex-row gap-4 md:gap-6 lg:gap-8'>
         {aboutData.map((data, index) => (
-          <motion.div
+          <div
             key={index}
-            className="relative bg-gray-800 rounded-lg shadow-xl overflow-hidden lg:w-1/3 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-4 border-gray-700"
-        
+            className="flex flex-col items-center md:w-1/2 lg:w-1/3 p-4 lg:p-6"
           >
-            <img src={data.link} alt={data.title} className="w-full h-48 object-cover transition-transform duration-500 transform hover:scale-110" />
-            <div className="p-6 text-center">
-              <h4 className="text-2xl font-bold text-white mb-2">{data.title}</h4>
-              <p className="text-gray-300">{data.description}</p>
-              <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity duration-500 hover:bg-opacity-20"></div>
+            <div className="w-full h-32 md:h-40 lg:h-48 mb-4">
+              <img 
+                src={data.link} 
+                alt={data.title} 
+                className="w-full h-full object-contain"
+              />
             </div>
-          </motion.div>
+          
+            <div className="text-center">
+              <h3 className="font-extrabold text-lg md:text-xl mb-2 md:mb-3">{data.title}</h3>
+              <p className="text-sm md:text-base text-gray-700">{data.description}</p>
+            </div>
+          </div>
         ))}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { motion, useAnimation, useScroll, useTransform } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
 import deanImage from '../../../assets/images/dean.png';
 
 const DeansMessage = () => {
@@ -7,22 +7,15 @@ const DeansMessage = () => {
     name: 'Mr. Neil Basabe',
     position: "Dean - UC Main CSS",
     image: deanImage,
-    message: `As the Dean of our esteemed college, I would like to extend a warm welcome to all of you. I am committed to supporting and guiding you throughout your academic journey. I want to create an inclusive and vibrant learning environment where you can grow and develop.
-
-    I encourage you to take advantage of many opportunities available to you, both in and out of classroom. Participating in co-curricular and extracurricular activities, such as research, internship, hackathons, and ICT congresses, can provide you with practical, hands-on experiences that will enhance your problem-solving skills, foster creativity, and give you opportunities to collaborate with others. Extra curricular activities offer opportunities to apply your knowledge and skills in real-world settings beyond the classroom. By actively participating in these activities, you can develop not only technical expertise but also critical thinking communication and teamwork skills.
-
-    I also encourage you to share your thoughts and ideas, collaborate with your peers, or simply come by to the college and say hello. Your feedback is important to us, and we are always working to improve our programs to meet your need.
-
-    I commend you for choosing a field that is constantly changing and expanding. I wish you all the best in you academic and professional endeavors.`
+    message: `As the Dean of our  esteemed college, we're thrilled to have you here. I am committed to fostering a supportive and dynamic learning environment where you can thrive. Explore the many opportunities available, from internships to hackathons, to gain valuable real-world experience and develop your skills. We encourage active participation and collaboration – your voice matters! We're here to help you succeed in this ever-evolving field.
+  
+  
+    Best wishes for an amazing academic journey!`
   }).current;
 
   const [displayedText, setDisplayedText] = useState("");
   const [showCursor, setShowCursor] = useState(true);
   const controls = useAnimation();
-
-  const { scrollY } = useScroll();
-  const yTransform = useTransform(scrollY, [0, 300], ['30%', '-30%']);
-  const rotateTransform = useTransform(scrollY, [0, 300], [0, 10]);
 
   useEffect(() => {
     const animateText = async () => {
@@ -33,7 +26,7 @@ const DeansMessage = () => {
 
       for (let i = 0; i <= messageData.message.length; i++) {
         setDisplayedText(messageData.message.slice(0, i));
-        await new Promise(resolve => setTimeout(resolve, 70));
+        await new Promise(resolve => setTimeout(resolve, 30));
       }
       setShowCursor(false);
     };
@@ -46,13 +39,12 @@ const DeansMessage = () => {
   }, [controls, messageData.message]);
 
   return (
-    <div className="container px-4 lg:px-0 py-10 md:py-32">
+    <div className="container px-4 lg:px-0 py-20 md:py-32">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeInOut" }}
-        whileHover={{ scale: 1.05, rotate: rotateTransform }}
-        style={{ y: yTransform }}
+        whileHover={{ scale: 1.05 }}
         className="relative max-w-4xl mx-auto bg-white p-4 md:p-6 shadow-lg"
       >
         <motion.div
