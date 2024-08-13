@@ -156,7 +156,7 @@ const PendingOrders = () => {
       cell: (row) => (
         <div className="text-xs">
           <div>{row.student_name}</div>
-          <div className="text-gray-500">ID Number: {row.rfid}</div>
+          <div className="text-gray-500">ID Number: {row.id_number}</div>
           <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
       ),

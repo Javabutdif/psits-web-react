@@ -4,6 +4,11 @@ export default {
   theme: {
     extend: {
       colors: {
+        // 'primary': '#001621',   // Very dark blue/black
+        // 'secondary': '#002E48', // Dark blue
+        // 'tertiary': '#074873',  // Medium blue
+        // 'accent': '#4398AC',    // Light blue/teal
+        // 'muted': '#A4CDD7',     // Pale blue/gray
         'custom-active': '#005f73', // Softer blue for active state
         'custom-active-text': '#e9d8a6', // Light beige for text in active state
         'custom-text': '#d8e2dc', // Light grayish blue for text
@@ -44,7 +49,8 @@ export default {
         },
       },
       fontFamily: {
-        montserrat: ["Montserrat", "sans-serif"],
+        primary: ["Montserrat", "sans-serif"],
+        secondary: ["League Spartan", "sans-serif"],
       },
     },
   },

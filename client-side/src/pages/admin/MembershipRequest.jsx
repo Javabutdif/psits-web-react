@@ -57,26 +57,30 @@ function MembershipRequest() {
       key: "name",
       label: "Name",
       selector: (row) =>
-        `${row.first_name} ${row.middle_name} ${row.last_name}`,
+        `${row.first_name} ${row.middle_name} ${row.last_name} ${row.rfid} ${row.id_number}`,
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
           <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
+          <div className="text-gray-500">ID: {row.id_number}</div>
           <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
       ),
     },
-    {
-      key: "id_number",
-      label: "Id Number",
-      selector: (row) => row.id_number,
-      sortable: true,
-    },
+
     {
       key: "course",
-      label: "Course",
-      selector: (row) => row.course,
+      label: "Course & Year",
+      selector: (row) => `${row.course} ${row.year}`,
       sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div className="text-gray-500">
+            {" "}
+            {row.course} - {row.year}
+          </div>
+        </div>
+      ),
     },
     {
       key: "email",
@@ -84,19 +88,7 @@ function MembershipRequest() {
       selector: (row) => row.email,
       sortable: true,
     },
-    {
-      key: "type",
-      label: "Type",
-      selector: () => "Student", // Static value for all rows
-      sortable: true,
-      cell: () => (
-        <div className="text-center">
-          <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">
-            Student
-          </span>
-        </div>
-      ),
-    },
+
     {
       name: "Applied on",
       label: "Applied on",
@@ -150,9 +142,9 @@ function MembershipRequest() {
             }
             onClick={() => {
               if (
-                position === "Treasurer" &&
-                position === "Assistant Treasurer" &&
-                position === "Auditor" &&
+                position === "Treasurer" ||
+                position === "Assistant Treasurer" ||
+                position === "Auditor" ||
                 position === "Developer"
               ) {
                 handleOpenModal(row);
@@ -200,9 +192,9 @@ function MembershipRequest() {
             }
             onClick={() => {
               if (
-                position === "Treasurer" &&
-                position === "Assistant Treasurer" &&
-                position === "Auditor" &&
+                position === "Treasurer" ||
+                position === "Assistant Treasurer" ||
+                position === "Auditor" ||
                 position === "Developer"
               ) {
                 showModal(row);
@@ -284,26 +276,29 @@ function MembershipRequest() {
 
   useEffect(() => {
     const filtered = data.filter((item) => {
-      const first_name = item.first_name ? item.first_name.toLowerCase() : "";
-      const middle_name = item.middle_name
-        ? item.middle_name.toLowerCase()
-        : "";
-      const last_name = item.last_name ? item.last_name.toLowerCase() : "";
-      const id_number = item.id_number ? item.id_number.toLowerCase() : "";
-      const course = item.course ? item.course.toString() : "";
-      const email = item.email ? item.email.toString() : "";
-      const type = item.type ? item.type.toString() : "";
+      const first_name = item.first_name?.toLowerCase() || "";
+      const middle_name = item.middle_name?.toLowerCase() || "";
+      const last_name = item.last_name?.toLowerCase() || "";
+      const id_number = item.id_number?.toLowerCase() || "";
+      const course = item.course?.toLowerCase() || "";
+      const email = item.email?.toLowerCase() || "";
+      const type = item.type?.toLowerCase() || "";
+      const rfid = item.rfid?.toLowerCase() || "";
+
+      const query = searchQuery.toLowerCase();
 
       return (
-        first_name.includes(searchQuery.toLowerCase()) ||
-        middle_name.includes(searchQuery.toLowerCase()) ||
-        last_name.includes(searchQuery.toLowerCase()) ||
-        id_number.includes(searchQuery.toLowerCase()) ||
-        course.includes(searchQuery.toLowerCase()) ||
-        email.includes(searchQuery.toLowerCase()) ||
-        type.includes(searchQuery.toLowerCase())
+        first_name.includes(query) ||
+        middle_name.includes(query) ||
+        last_name.includes(query) ||
+        id_number.includes(query) ||
+        course.includes(query) ||
+        email.includes(query) ||
+        type.includes(query) ||
+        rfid.includes(query)
       );
     });
+
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
@@ -379,16 +374,6 @@ function MembershipRequest() {
                 whileTap={{ scale: 0.95, opacity: 0.8 }}
               />
             )}
-            <FormButton
-              type="button"
-              text="PDF Export"
-              onClick={handleExportPDF}
-              icon={<i className="fas fa-file-pdf"></i>}
-              styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-              textClass="hidden"
-              whileHover={{ scale: 1.01, opacity: 0.9 }}
-              whileTap={{ scale: 0.95, opacity: 0.8 }}
-            />
           </ButtonsComponent>
         }
       />

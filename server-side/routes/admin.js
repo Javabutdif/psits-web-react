@@ -70,6 +70,7 @@ router.post("/approve-membership", async (req, res) => {
 
     const history = new MembershipHistory({
       id_number,
+      rfid,
       reference_code,
       type,
       name:
