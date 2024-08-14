@@ -21,7 +21,7 @@ const Goals = () => {
   ];
 
   return (
-    <section className="container mx-auto px-6 py-12 md:py-24">
+    <section className="container bg-secondary mx-auto px-6 py-12 md:py-24">
       <div className="">
         <h2 className="text-2xl font-bold mb-3 text-gray-800">Goals</h2>
         <p className="text-sm mb-8 text-gray-700 mb-12">We aim to cultivate a teaching-learning environment that:</p>

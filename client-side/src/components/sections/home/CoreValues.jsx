@@ -7,7 +7,7 @@ const coreValues = [
         svgProps: {
             width: "111",
             height: "111",
-            stroke: "white",
+            stroke: "black",
             paths: [
                 { 
                     d: "M67.4706 63.0206C64.38 66.4695 60.6182 69.3058 56.3855 71.3516V83.132C56.3855 84.1734 55.9639 85.1724 55.2133 85.9082C54.4626 86.6449 53.4445 87.0588 52.383 87.0588H28.3675C27.306 87.0588 26.2879 86.6449 25.5373 85.9082C24.7866 85.1724 24.3649 84.1734 24.3649 83.132V71.3516C18.6048 68.5477 13.7147 64.2824 10.2022 58.9983C6.68976 53.7143 4.68299 47.6042 4.39028 41.3024C4.09758 35.0005 5.52958 28.7367 8.53762 23.1611C11.5457 17.5856 16.0201 12.9016 21.4964 9.59542C26.9728 6.2892 33.2514 4.48134 39.6804 4.3595C45.0439 4.25784 50.349 5.33278 55.2133 7.48975", 
@@ -36,7 +36,7 @@ const coreValues = [
         svgProps: {
             width: "100",
             height: "100",
-            stroke: "white",
+            stroke: "black",
             paths: [
                 { 
                     d: "M29 48C29 44.6863 31.6863 42 35 42H65C68.3137 42 71 44.6863 71 48V52C71 55.3137 68.3137 58 65 58H35C31.6863 58 29 55.3137 29 52V48Z", 
@@ -65,7 +65,7 @@ const coreValues = [
         svgProps: {
             width: "100",
             height: "100",
-            stroke: "white",
+            stroke: "black",
             paths: [
                 { 
                     d: "M25 40C25 34.4772 29.4772 30 35 30H65C70.5228 30 75 34.4772 75 40V60C75 65.5228 70.5228 70 65 70H35C29.4772 70 25 65.5228 25 60V40Z", 
@@ -100,7 +100,7 @@ const SvgIcon = ({ width, height, stroke, paths }) => (
 
 const CoreValues = () => {
     return (
-        <section className='container mx-auto px-6 py-12 md:py-24'>
+        <section className='container mx-auto bg-secondary px-6 py-12 md:py-24'>
             <div className='text-center mb-12'>
                 <h2 className="text-3xl font-extrabold mb-2 text-gray-800">Core Values</h2>
                 <p className="text-sm text-gray-600">These are the core values that CCS believes in:</p>
