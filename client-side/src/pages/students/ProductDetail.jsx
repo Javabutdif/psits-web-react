@@ -251,7 +251,7 @@ const ProductDetail = () => {
 
   return (
     <motion.div
-      className="product-detail p-3 sm:p-6 mx-auto bg-white rounded-lg shadow-sm max-w-5xl"
+      className="mt-4 product-detail p-3 sm:p-6 mx-auto bg-white rounded-lg shadow-sm max-w-5xl"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -279,32 +279,31 @@ const ProductDetail = () => {
           />
         </div>
         <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-2">{name}</h3>
-          <p className="text-gray-700 text-sm mb-3">{description}</p>
-          <p className="text-lg font-semibold text-gray-900 mb-3">
-            ₱{" "}
+          <h3 className="text-lg md:text-2xl font-bold mb-2">{name}</h3>
+          <p className="text-xs text-gray-700 md:text-sm mb-3">{description}</p>
+          <p className="text-md md:text-lg font-semibold text-gray-900 mb-3">
             {price === discount ? (
-              discount.toFixed(2)
+              <>
+                ₱{discount.toFixed(2)}
+              </>
             ) : (
               <>
                 <span className="line-through text-red-500 mr-2">
-                  {price.toFixed(2)}
+                  ₱{price.toFixed(2)}
                 </span>
-                <span>{discount.toFixed(2)}</span>
+                <span>₱{discount.toFixed(2)}</span>
               </>
             )}
           </p>
-          <p className="text-sm text-gray-500 mb-4">
+
+          <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
             {batch !== "" ? "Batch: " : ""} {batch}
           </p>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
             {category !== "" ? "Category: " : ""} {category}
           </p>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
             {type !== "" ? "Type: " : ""} {type}
-          </p>
-          <p className="text-sm text-gray-500 mb-4">
-            {description !== "" ? "Description: " : ""} {description}
           </p>
 
           {type.includes("Tshirt") && (
@@ -360,7 +359,7 @@ const ProductDetail = () => {
           <div className="flex gap-2">
             <button
               onClick={() => {}}
-              className={`flex w-6/12 gap-2 px-4 py-3 font-medium 
+              className={`flex gap-2 px-4 py-3 font-medium 
             text-white rounded-lg bg-[#4398AC] hover:bg-opacity-80 
               transition-colors duration-300 ${
                 stocks <= 0 && "cursor-not-allowed"
@@ -371,10 +370,10 @@ const ProductDetail = () => {
               }
             >
               <MdAddShoppingCart color="white" size={20} />
-              <p>Add To Cart</p>
+              <p className="hidden md:inline-block">Add To Cart</p>
             </button>
             <button
-              className={`w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
+              className={`text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
                 stocks <= 0 || limited
                   ? "bg-red-500 text-white"
                   : "bg-[#002E48] text-white"

@@ -1,36 +1,37 @@
 import React from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import bannerImage from '../../../assets/images/banner.png'
+
 
 const Banner = () => {
-  const socialMediaLinks = [
-    { name: 'Facebook', url: 'https://facebook.com', iconClass: 'fab fa-facebook-f', colorClass: 'text-blue-600', hoverClass: 'hover:text-blue-800' },
-    { name: 'Gmail', url: 'mailto:example@gmail.com', iconClass: 'fas fa-envelope', colorClass: 'text-red-600', hoverClass: 'hover:text-red-800' },
-    { name: 'GitHub', url: 'https://github.com', iconClass: 'fab fa-github', colorClass: 'text-gray-900', hoverClass: 'hover:text-gray-700' },
-  ];
 
-  const SocialLinks = () => (
-    <div className="flex space-x-4 md:space-x-6">
-      {socialMediaLinks.map(({ name, url, iconClass, colorClass, hoverClass }) => (
-        <a key={name} href={url} target="_blank" rel="noopener noreferrer">
-          <i className={`${iconClass} ${colorClass} text-xl ${hoverClass} transition-colors duration-300`}></i>
-        </a>
-      ))}
-    </div>
-  );
 
   return (
-    <section className="relative h-screen py-20 md:py-24 flex items-center justify-center">
-      <div className="m-auto max-w-4xl text-start md:text-center px-4 space-y-6 md:space-y-8">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold">
+    <motion.section
+      className="relative -z-10 bg-[#4398AC] py-24 md:py-28 flex items-center justify-center "
+    >
+      {/* <img src={bannerImage} className="absolute w-full h-full object-cover" alt="" /> */}
+
+      <motion.div
+        className="absolute inset-0 flex items-center justify-center"
+      >
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url("/path-to-your-image.jpg")' }} />
+      </motion.div>
+      <motion.div
+        className="relative z-10 max-w-5xl text-start md:text-center px-4 space-y-6 md:space-y-8"
+      >
+        <h1 className="text-5xl lg:text-6xl xl:text-8xl font-extrabold text-white">
           Empowering the Next Generation of IT Professionals
         </h1>
-        <p className="text-sm md:text-lg lg:text-xl xl:text-2xl">
+        <p className="text-sm md:text-lg lg:text-xl xl:text-2xl text-white">
           Develop skills, network, and be part of the PSITS community. Take action and become the IT professional you dream to be.
         </p>
-      </div>
-      <div className="absolute bottom-6 right-6">
-        <SocialLinks />
-      </div>
-    </section>
+      </motion.div>
+      <svg className="absolute -bottom-0 translate-y-fulls" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 18">
+        <path d="M375.303 0c0 0-93.054 17.7075-187.13 17.7075C94.0966 17.7075 0 0 0 0Z" fill="#4398AC "></path>
+      </svg>
+
+    </motion.section>
   );
 };
 

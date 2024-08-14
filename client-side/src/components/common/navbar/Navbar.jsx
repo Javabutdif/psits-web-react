@@ -105,10 +105,10 @@ const Navbar = () => {
   };
 
   return (
-    <header className={`z-50 fixed left-1/2 -translate-x-1/2 container p-4 py-3 md:py-5 flex items-center justify-between transition-transform duration-300 ${!isVisible && 'transform -translate-y-full'}`}>
+    <header className={`z-50 pb-0 px-0 fixed left-1/2 -translate-x-1/2 container p-4 py-3 md:py-5 flex items-center justify-between transition-transform duration-300 ${!isVisible && 'transform -translate-y-full'}`}>
       <Link to="/" className="space-x-2 flex text-gray-700 items-center">
         <img src={logo} alt="PSITS Logo" className='w-11 h-11' />
-        <h1 className="hidden sm:inline-block sm:text-xs font-bold sm:w-[15.5rem]">
+        <h1 className="inline-block text-xs font-bold w-[15.5rem]">
           PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
         </h1>
       </Link>
