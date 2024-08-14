@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import FormButton from "../../components/forms/FormButton";
 import { makeOrder } from "../../api/orders";
 import { getMembershipStatusStudents } from "../../api/students";
+import { MdAddShoppingCart } from "react-icons/md";
 
 import {
   getId,
@@ -356,39 +357,55 @@ const ProductDetail = () => {
               {formError}
             </div>
           )}
-
-          <button
-            className={`w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
-              stocks <= 0 || limited
-                ? "bg-red-500 text-white"
-                : "bg-blue-500 text-white"
-            } ${
-              stocks <= 0
-                ? "opacity-60 cursor-not-allowed"
-                : "hover:bg-opacity-80"
-            }`}
-            aria-label={
-              product.control === "limited-purchase"
-                ? "Limited stock"
-                : "Buy now"
-            }
-            title={
-              product.control === "limited-purchase"
-                ? "Limited stock available"
-                : "Click to purchase"
-            }
-            onClick={handleBuyNow}
-            disabled={
-              stocks <= 0 ||
-              (product.control === "limited-purchase" && orderId === _id)
-            }
-          >
-            {stocks <= 0
-              ? "Out of STOCK"
-              : product.control === "limited-purchase" && orderId === _id
-              ? "Purchased"
-              : "Buy now"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {}}
+              className={`flex w-6/12 gap-2 px-4 py-3 font-medium 
+            text-white rounded-lg bg-[#4398AC] hover:bg-opacity-80 
+              transition-colors duration-300 ${
+                stocks <= 0 && "cursor-not-allowed"
+              }`}
+              disabled={
+                stocks <= 0 ||
+                (product.control === "limited-purchase" && orderId === _id)
+              }
+            >
+              <MdAddShoppingCart color="white" size={20} />
+              <p>Add To Cart</p>
+            </button>
+            <button
+              className={`w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
+                stocks <= 0 || limited
+                  ? "bg-red-500 text-white"
+                  : "bg-[#002E48] text-white"
+              } ${
+                stocks <= 0
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:bg-opacity-80"
+              }`}
+              aria-label={
+                product.control === "limited-purchase"
+                  ? "Limited stock"
+                  : "Buy Now"
+              }
+              title={
+                product.control === "limited-purchase"
+                  ? "Limited stock available"
+                  : "Click to purchase"
+              }
+              onClick={handleBuyNow}
+              disabled={
+                stocks <= 0 ||
+                (product.control === "limited-purchase" && orderId === _id)
+              }
+            >
+              {stocks <= 0
+                ? "Out of STOCK"
+                : product.control === "limited-purchase" && orderId === _id
+                ? "Purchased"
+                : "Buy Now"}
+            </button>
+          </div>
         </div>
       </div>
       <Modal show={showModal} onClose={handleCloseModal}>
