@@ -12,6 +12,7 @@ import {
   getInformationData,
 } from "../../authentication/Authentication";
 import { getOrder } from "../../api/orders";
+import { addToCartApi } from "../../api/students";
 import ImagePreview from "../../components/Image/ImagePreview";
 import { format } from "date-fns";
 import { showToast } from "../../utils/alertHelper";
@@ -200,35 +201,30 @@ const ProductDetail = () => {
       setQuantity((prevQuantity) => (prevQuantity > 1 ? prevQuantity - 1 : 1));
     }
   };
+
   const handleCart = () => {
     setCartIndicator(true);
     if (validate()) {
       const id_number = getId();
-      const imageUrl1 = imageUrl[0];
       const product_id = _id;
       const product_name = name;
       const sizes = selectedSize;
       const variation =
         category === "uniform" ? selectedVariations : selectedColor;
-      const total = calculateTotal();
-      const order_date = format(new Date(), "MMMM d, yyyy h:mm:ss a");
-      const order_status = "Pending";
-      const limited = product.control === "limited-purchase" ? true : false;
+      const sub_total = price * quantity;
+      const imageUrl1 = imageUrl[0];
 
       setFormData({
         id_number,
-        imageUrl1,
         product_id,
         product_name,
-        category,
+        price,
         sizes,
         variation,
         batch,
         quantity,
-        total,
-        order_date,
-        order_status,
-        limited,
+        sub_total,
+        imageUrl1,
       });
 
       setShowModal(true);
@@ -284,7 +280,11 @@ const ProductDetail = () => {
     handleCloseModal();
     navigate("/student/merchandise");
   };
-  const addToCart = async () => {};
+  const addToCart = async () => {
+    await addToCartApi(formData);
+    handleCloseModal();
+    navigate("/student/merchandise");
+  };
 
   return (
     <motion.div

@@ -7,6 +7,7 @@ import FormButton from "../../components/forms/FormButton";
 import FilterOptions from "./merchandise/FilterOptions";
 import Pagination from "../../components/Custom/Pagination"; // Adjust the import path as needed
 import { MdShoppingCart } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 const StudentMerchandise = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,7 +22,7 @@ const StudentMerchandise = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filterOptionsRef = useRef(null);
-
+  const navigate = useNavigate();
   // Adjust itemsPerPage based on the viewport width
   const updateItemsPerPage = () => {
     if (window.innerWidth >= 1280) {
@@ -173,6 +174,10 @@ const StudentMerchandise = () => {
     }
   };
 
+  const myCart = () => {
+    navigate("../cart");
+  };
+
   return (
     <main className="py-5">
       <SearchFilter
@@ -193,7 +198,7 @@ const StudentMerchandise = () => {
               <FormButton
                 type="button"
                 text="My Cart"
-                onClick={() => {}}
+                onClick={myCart}
                 icon={<MdShoppingCart size={18} color="white" />}
                 styles="bg-[#002E48] text-gray-800 hover:bg-opacity-80 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
                 textClass="text-white hidden md:inline"

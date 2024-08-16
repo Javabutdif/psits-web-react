@@ -1,61 +1,41 @@
 const mongoose = require("mongoose");
-
 const Schema = mongoose.Schema;
+const CartItem = require("./CartModel"); // Import the CartItem schema
 
 const orderSchema = new Schema({
   id_number: {
     type: String,
+    ref: "Student", // Reference the Student schema using id_number
     required: true,
-  },
-  rfid: {
-    type: String,
-    required: true,
-  },
-  imageUrl1: {
-    type: String,
-  },
-  course: {
-    type: String,
-  },
-  year: {
-    type: String,
   },
   student_name: {
     type: String,
+    required: true,
   },
-  product_id: {
+  course: {
     type: String,
+    required: true,
   },
-  product_name: {
-    type: String,
-  },
-  category: {
-    type: String,
-  },
-  sizes: {
-    type: String,
-  },
-  variation: {
-    type: Array,
-  },
-  batch: {
+  year: {
     type: Number,
+    required: true,
   },
-  quantity: {
-    type: Number,
-  },
+  items: [CartItem.schema], // Embed Cart Item Schema to store details of each ordered item
   total: {
     type: Number,
+    required: true,
   },
-
   order_date: {
-    type: String,
+    type: Date,
+    required: true,
+    default: Date.now, // Automatically set the order date to the current date
   },
   transaction_date: {
-    type: String,
+    type: Date,
   },
   order_status: {
     type: String,
+    required: true,
   },
   admin: {
     type: String,
@@ -64,10 +44,9 @@ const orderSchema = new Schema({
     type: String,
   },
   limited: {
-    type: String,
+    type: Boolean,
   },
 });
 
-const Orders = mongoose.model("orders", orderSchema);
-
+const Orders = mongoose.model("Orders", orderSchema);
 module.exports = Orders;

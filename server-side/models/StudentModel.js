@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const CartItem = require("./CartModel"); // Import the CartItem schema
 
-// Define the Student Schema
 const studentSchema = new Schema({
   id_number: {
     type: String,
@@ -61,9 +60,8 @@ const studentSchema = new Schema({
   renewedOn: {
     type: String,
   },
-  cart: [CartItem.schema], // Embed the CartItem schema directly into the Student schema
+  cart: [CartItem.schema], // Embed the CartItem schema
 });
 
 const Student = mongoose.model("Student", studentSchema);
-
 module.exports = Student;

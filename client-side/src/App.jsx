@@ -44,6 +44,7 @@ import StudentOrders from "./pages/students/StudentOrders";
 import ProductDetail from "./pages/students/ProductDetail";
 import PrivateRouteStudent from "./authentication/privateRouteStudent";
 import AllMembers from "./pages/admin/membership/AllMembers";
+import StudentCart from "./pages/students/StudentCart";
 
 import PaidOrders from "./pages/admin/orders/PaidOrders";
 import PendingOrders from "./pages/admin/orders/PendingOrders";
@@ -148,6 +149,10 @@ const App = () => {
           element={<PrivateRouteStudent element={StudentLayout} />}
         >
           <Route
+            path="cart"
+            element={<PrivateRouteStudent element={StudentCart} />}
+          />
+          <Route
             path="dashboard"
             element={<PrivateRouteStudent element={StudentDashboard} />}
           ></Route>
@@ -163,6 +168,7 @@ const App = () => {
             path="merchandise"
             element={<PrivateRouteStudent element={StudentMerchandise} />}
           />
+
           <Route
             path="merchandise/:id"
             element={<PrivateRouteStudent element={ProductDetail} />}

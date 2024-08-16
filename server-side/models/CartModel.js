@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const Schema = mongoose.Schema;
 
 const cartItemSchema = new Schema({
@@ -8,7 +7,10 @@ const cartItemSchema = new Schema({
     ref: "Merch",
     required: true,
   },
-  name: {
+  imageUrl1: {
+    type: String,
+  },
+  product_name: {
     type: String,
     required: true,
   },
@@ -24,19 +26,18 @@ const cartItemSchema = new Schema({
   sub_total: {
     type: Number,
     required: true,
-    default: function () {
-      return this.price * this.quantity;
-    },
   },
-  selectedVariations: {
+  variation: {
     type: Array,
   },
-  selectedSizes: {
+  sizes: {
     type: Array,
+  },
+  batch: {
+    type: String,
   },
 });
 
-// Rename the model to reflect it's an item, not the entire cart
+// Export as CartItem
 const CartItem = mongoose.model("CartItem", cartItemSchema);
-
 module.exports = CartItem;
