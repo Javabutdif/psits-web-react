@@ -85,6 +85,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formError, setFormError] = useState("");
+  const [cartIndicator, setCartIndicator] = useState(false);
   const [status, setStatus] = useState({ membership: "", renew: "" });
 
   const {
@@ -199,8 +200,43 @@ const ProductDetail = () => {
       setQuantity((prevQuantity) => (prevQuantity > 1 ? prevQuantity - 1 : 1));
     }
   };
+  const handleCart = () => {
+    setCartIndicator(true);
+    if (validate()) {
+      const id_number = getId();
+      const imageUrl1 = imageUrl[0];
+      const product_id = _id;
+      const product_name = name;
+      const sizes = selectedSize;
+      const variation =
+        category === "uniform" ? selectedVariations : selectedColor;
+      const total = calculateTotal();
+      const order_date = format(new Date(), "MMMM d, yyyy h:mm:ss a");
+      const order_status = "Pending";
+      const limited = product.control === "limited-purchase" ? true : false;
+
+      setFormData({
+        id_number,
+        imageUrl1,
+        product_id,
+        product_name,
+        category,
+        sizes,
+        variation,
+        batch,
+        quantity,
+        total,
+        order_date,
+        order_status,
+        limited,
+      });
+
+      setShowModal(true);
+    }
+  };
 
   const handleBuyNow = () => {
+    setCartIndicator(false);
     if (validate()) {
       const id_number = getId();
       const rfid = getRfid();
@@ -248,6 +284,7 @@ const ProductDetail = () => {
     handleCloseModal();
     navigate("/student/merchandise");
   };
+  const addToCart = async () => {};
 
   return (
     <motion.div
@@ -283,9 +320,7 @@ const ProductDetail = () => {
           <p className="text-xs text-gray-700 md:text-sm mb-3">{description}</p>
           <p className="text-md md:text-lg font-semibold text-gray-900 mb-3">
             {price === discount ? (
-              <>
-                ₱{discount.toFixed(2)}
-              </>
+              <>₱{discount.toFixed(2)}</>
             ) : (
               <>
                 <span className="line-through text-red-500 mr-2">
@@ -358,7 +393,7 @@ const ProductDetail = () => {
           )}
           <div className="flex gap-2">
             <button
-              onClick={() => {}}
+              onClick={handleCart}
               className={`flex gap-2 px-4 py-3 font-medium 
             text-white rounded-lg bg-[#4398AC] hover:bg-opacity-80 
               transition-colors duration-300 ${
@@ -411,7 +446,7 @@ const ProductDetail = () => {
         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4 text-gray-800">
-              Confirm Purchase
+              {!cartIndicator ? "Confirm Purchase" : "Cart"}
             </h2>
             <div className="mb-4 text-left">
               <p className="mb-2">
@@ -450,7 +485,9 @@ const ProductDetail = () => {
                 <span className="font-semibold">Total:</span> {calculateTotal()}
               </p>
               <p className="text-gray-700">
-                Are you sure you want to purchase this item?
+                {!cartIndicator
+                  ? " Are you sure you want to purchase this item?"
+                  : "Add to Cart?"}
               </p>
             </div>
             <div className="mt-6 flex justify-center gap-4">
@@ -462,7 +499,7 @@ const ProductDetail = () => {
               </button>
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all duration-300 ease-in-out"
-                onClick={handleOrder}
+                onClick={cartIndicator ? addToCart : handleOrder}
               >
                 Confirm
               </button>

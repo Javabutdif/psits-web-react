@@ -55,15 +55,6 @@ const ProductCard = React.memo(({ product }) => {
           </span>
           <div className="flex">
             <motion.button
-              onClick={() => {}}
-              className="bg-[#4398AC] text-white text-xs font-medium py-1 px-3 rounded-md hover:bg-[#4cacc2] transition-colors duration-200 mr-1"
-              aria-label={`Add ${product.name} to cart`}
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <MdAddShoppingCart size={15} />
-            </motion.button>
-            <motion.button
               onClick={handleViewDetails}
               className="bg-[#002E48] text-white text-xs font-medium py-1 px-3 rounded-md hover:bg-[#013e61] transition-colors duration-200"
               aria-label={`View details for ${product.name}`}
