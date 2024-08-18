@@ -23,7 +23,7 @@ const About = () => {
   ];
 
   return (
-    <div className='container mx-auto px-4 lg:px-6 py-12 md:py-16 lg:py-20'>
+    <div className='container mx-auto px-4 lg:px-6 py-24'>
       <div className='flex flex-col md:flex-row gap-4 md:gap-6 lg:gap-8'>
         {aboutData.map((data, index) => (
           <div

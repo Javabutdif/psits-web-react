@@ -24,7 +24,7 @@ const StudentLayout = () => {
   ];
 
   return (
-    <div className="flex w-full bg-secondary min-h-screen">
+    <div className="flex w-fullgit pull min-h-screen">
       <AsideBar navItems={navItems} />
       <div className="flex-1 ml-[4.4rem] md:px-4: py-[2.8rem] sm:py-[3.8rem] md:py-[4.3rem] px-3 md:px-4: lg:px-6">
         <ProfileHeader label={label} /> 

@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import logo from "../../../assets/images/psits-logo.png";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
-  { name: 'Event', iconClass: 'fas fa-calendar' },
-  { name: 'Community',  path: '/community', iconClass: 'fas fa-users' },
+  { name: 'Event', path: '/event', iconClass: 'fas fa-calendar' },
+  { name: 'Community', path: '/community', iconClass: 'fas fa-users' },
   { name: 'Login', path: '/login', iconClass: 'fas fa-sign-in-alt', isLogin: true }
 ];
 
 const Navbar = () => {
+  const location = useLocation();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
+  const [showBackdrop, setShowBackdrop] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -30,7 +32,10 @@ const Navbar = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.pageYOffset;
+      const windowHeight = window.innerHeight;
+
       setIsVisible(prevScrollPos > currentScrollPos || currentScrollPos < 10);
+      setShowBackdrop(currentScrollPos > windowHeight * 0.1);
       setPrevScrollPos(currentScrollPos);
     };
 
@@ -39,22 +44,15 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [prevScrollPos]);
 
-  // New function to toggle body scroll
   const toggleBodyScroll = (disable) => {
-    if (disable) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = disable ? 'hidden' : '';
   };
 
-  // Modified function to toggle nav and body scroll
   const toggleNav = () => {
-    setIsNavOpen(!isNavOpen);
+    setIsNavOpen(prev => !prev);
     toggleBodyScroll(!isNavOpen);
   };
 
-  // Ensure body scroll is re-enabled when component unmounts
   useEffect(() => {
     return () => {
       document.body.style.overflow = '';
@@ -71,15 +69,16 @@ const Navbar = () => {
             key={key}
             className={`relative ${item.isLogin ? 'md:ml-auto' : ''}`}
             onClick={() => {
-              setIsNavOpen(false)
-              toggleBodyScroll(false)
+              setIsNavOpen(false);
+              toggleBodyScroll(false);
             }}
             onMouseEnter={() => setHoveredIndex(key)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
             <Link
               to={item.path}
-              className={`text-3xl md:text-sm flex items-center space-x-2 ${isNavOpen && 'text-gray-700 hover:text-gray-600'} transition-colors duration-300`}
+              className={`text-3xl md:text-sm flex items-center space-x-2 ${showBackdrop ? 'text-black' : 'text-white'} ${location.pathname === item.path ? 'text-gray-700' : ''} ${isNavOpen ? 'text-gray-700 hover:text-gray-600' : ''} transition-colors duration-300`}
+              aria-current={item.isLogin ? 'page' : undefined}
             >
               <motion.i
                 initial={{ opacity: 0.6 }}
@@ -91,11 +90,11 @@ const Navbar = () => {
             </Link>
             {hoveredIndex === key && (
               <motion.div
-                className={`absolute left-0 w-full h-1 ${isNavOpen ? 'bg-black' :'bg-gray-50'} rounded-t-md`}
+                className={`absolute left-0 -bottom-2 w-full h-1 bg-dark rounded-t-md`}
                 layoutId="underline"
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                transition={{ type: 'spring', stiffness: 1000, damping: 30 }}
               />
             )}
           </li>
@@ -105,18 +104,22 @@ const Navbar = () => {
   };
 
   return (
-    <header className={`z-50 pb-0 px-0 fixed left-1/2 -translate-x-1/2 container p-4 py-3 md:py-5 flex items-center justify-between transition-transform duration-300 ${!isVisible && 'transform -translate-y-full'}`}>
-      <Link to="/" className="space-x-2 flex text-gray-700 items-center">
+    <header className={`z-50 pb-0 px-4 fixed left-1/2 -translate-x-1/2 container p-4 py-3 md:py-5 flex items-center justify-between transition-transform duration-300 ${!isVisible && 'transform -translate-y-full'}`}>
+      {showBackdrop && (
+        <div className="-z-10 fixed top-0 left-0 w-full h-16 md:h-20 backdrop-blur-xl transition-opacity duration-300" />
+      )}
+      <Link to="/" className={`space-x-2 flex ${showBackdrop ? 'text-black' : 'text-neutral-light'} items-center`}>
         <img src={logo} alt="PSITS Logo" className='w-11 h-11' />
-        <h1 className="inline-block text-xs font-bold w-[15.5rem]">
+        <h1 className="hidden md:inline-block text-xs font-bold w-[15.5rem]">
           PHILIPPINE SOCIETY OF INFORMATION TECHNOLOGY STUDENTS
         </h1>
       </Link>
       <button
         className="z-50 block md:hidden text-white"
         onClick={toggleNav}
+        aria-label={isNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
       >
-        <i className={`text-gray-700  fas ${isNavOpen ? 'fa-times' : ' fa-bars'} text-lg`}></i>
+        <i className={`${showBackdrop ? 'text-gray-700' : 'text-neutral-light'} fas ${isNavOpen ? 'fa-times' : 'fa-bars'} text-lg`}></i>
       </button>
       <AnimatePresence>
         {isNavOpen && (

@@ -27,7 +27,7 @@ const AdminLayout = () => {
   ];
   
   return (
-    <div className="flex w-full bg-secondary min-h-screen">
+    <div className="flex w-full min-h-screen">
       <AsideBar navItems={navItems} />
       <div className="flex-1 ml-[4.4rem] min-h-screen  md:px-4: px-3 md:px-4: lg:px-6">
         <ProfileHeader label={label} /> 
