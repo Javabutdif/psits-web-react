@@ -14,6 +14,9 @@ const cartItemSchema = new Schema({
     type: String,
     required: true,
   },
+  limited: {
+    type: Boolean,
+  },
   price: {
     type: Number,
     required: true,

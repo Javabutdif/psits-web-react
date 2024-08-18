@@ -5,8 +5,14 @@ const CartItem = require("./CartModel"); // Import the CartItem schema
 const orderSchema = new Schema({
   id_number: {
     type: String,
-    ref: "Student", // Reference the Student schema using id_number
+    ref: "Student",
     required: true,
+  },
+  rfid: {
+    type: String,
+  },
+  membership_discount: {
+    type: Boolean,
   },
   student_name: {
     type: String,
@@ -20,18 +26,17 @@ const orderSchema = new Schema({
     type: Number,
     required: true,
   },
-  items: [CartItem.schema], // Embed Cart Item Schema to store details of each ordered item
+  items: [CartItem.schema],
   total: {
     type: Number,
     required: true,
   },
   order_date: {
-    type: Date,
+    type: String,
     required: true,
-    default: Date.now, // Automatically set the order date to the current date
   },
   transaction_date: {
-    type: Date,
+    type: String,
   },
   order_status: {
     type: String,
@@ -42,9 +47,6 @@ const orderSchema = new Schema({
   },
   reference_code: {
     type: String,
-  },
-  limited: {
-    type: Boolean,
   },
 });
 

@@ -17,6 +17,9 @@ export const makeOrder = async (formData) => {
 
     if (response.status === 200) {
       showToast("success", response.data.message);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } else {
       showToast("error", response.data.message);
     }
@@ -53,7 +56,6 @@ export const getOrder = async (id_number) => {
     console.error("Error:", error);
   }
 };
-
 
 export const getAllOrders = async () => {
   try {
