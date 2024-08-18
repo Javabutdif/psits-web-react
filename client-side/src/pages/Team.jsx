@@ -35,7 +35,6 @@ const Team = () => {
 
   return (
     <div className="min-h-screen py-14 flex flex-col items-center justify-center relative overflow-hidden">
-    
       <div className="relative z-10 w-full max-w-4xl h-96 flex items-center justify-center">
         {teamMembers.map((member, index) => {
           const isCurrent = index === currentIndex;
@@ -43,7 +42,6 @@ const Team = () => {
             index ===
             (currentIndex - 1 + teamMembers.length) % teamMembers.length;
           const isNext = index === (currentIndex + 1) % teamMembers.length;
-          const isFuture = !isCurrent && !isPrevious && !isNext;
 
           return (
             <motion.div
@@ -52,23 +50,15 @@ const Team = () => {
               className={`w-[220px] h-[320px] md:w-[320px] md:h-[420px] absolute bg-white rounded-3xl shadow-lg overflow-hidden ${
                 isCurrent ? "z-10 scale-100" : "z-5 scale-75"
               }`}
-              initial={{  
+              initial={{
                 x: isPrevious ? "-120%" : isNext ? "120%" : "0",
-                opacity: isFuture ? 0 : isCurrent ? 1 : 0.4,
-                scale: isCurrent ? 1 : 0.65,
-                rotate: isPrevious ? -10 : isNext ? 10 : 0,
+                opacity: isCurrent ? 1 : 0.6,
+                scale: isCurrent ? 1 : 0.75,
               }}
               animate={{
-                x: isCurrent
-                  ? "0%"
-                  : isPrevious
-                  ? "-60%"
-                  : isNext
-                  ? "60%"
-                  : "0%",
-                opacity: isFuture ? 0 : isCurrent ? 1 : 0.6,
+                x: isCurrent ? "0%" : isPrevious ? "-100%" : isNext ? "100%" : "0%",
+                opacity: isCurrent ? 1 : 0.4,
                 scale: isCurrent ? 1 : 0.75,
-                rotate: isCurrent ? 0 : isPrevious ? -10 : isNext ? 10 : 0,
               }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               drag="x"

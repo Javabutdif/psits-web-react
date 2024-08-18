@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 const coreValues = [
     {
@@ -99,15 +100,41 @@ const SvgIcon = ({ width, height, stroke, paths }) => (
 );
 
 const CoreValues = () => {
+    const { scrollYProgress } = useScroll();
+    const y = useTransform(scrollYProgress, [0, 1], [0, 50]);
+
     return (
-        <section className='container mx-auto bg-secondary px-6 py-12 md:py-24'>
-            <div className='text-center mb-12'>
-                <h2 className="text-3xl font-extrabold mb-2 text-gray-800">Core Values</h2>
-                <p className="text-sm text-gray-600">These are the core values that CCS believes in:</p>
+        <section className='container mx-auto px-6 py-12 md:py-24'>
+            <div className='text-center mb-6'>
+                <motion.h2
+                    className="text-3xl font-extrabold mb-2 text-gray-800"
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                >
+                    Core Values
+                </motion.h2>
+                <motion.p
+                    className="text-sm text-gray-600"
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                    These are the core values that CCS believes in:
+                </motion.p>
             </div>
-            <div className='flex-1 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 grid-rows-[150px_150px_150px] gap-8'>
+            <motion.div
+                className='flex-1 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 grid-rows-[150px_150px_150px] gap-8'
+                style={{ y }}
+            >
                 {coreValues.map((value, index) => (
-                    <div key={index} className={`${index === 0 ? 'row-span-1 md:col-start-2 lg:col-start-1 md:col-span-2' : index === 1 ? 'row-start-2 md:col-start-1 md:col-span-2 lg:col-start-3  ' : index === 2 ? 'row-start-3 md:row-start-2 lg:row-start-3 lg:col-start-5 md:col-span-2  md:col-start-3' : ''} flex flex-col items-center justify-center`}>
+                    <motion.div
+                        key={index}
+                        className={`${index === 0 ? 'row-span-1 md:col-start-2 lg:col-start-1 md:col-span-2' : index === 1 ? 'row-start-2 md:col-start-1 md:col-span-2 lg:col-start-3  ' : index === 2 ? 'row-start-3 md:row-start-2 lg:row-start-3 lg:col-start-5 md:col-span-2  md:col-start-3' : ''} flex flex-col items-center justify-center`}
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: index * 0.2 }}
+                    >
                         <SvgIcon {...value.svgProps} />
                         <h3 className="text-xl font-extra-bold mt-4 text-gray-800">{value.title}</h3>
                         <ul className="mt-2 space-x-4 text-gray-700">
@@ -115,9 +142,9 @@ const CoreValues = () => {
                                 <li key={idx} className="inline-block text-sm">{attribute}</li>
                             ))}
                         </ul>
-                    </div>
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </section>
     );
 };
