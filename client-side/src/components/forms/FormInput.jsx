@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const FormInput = ({
   label,
@@ -17,22 +18,25 @@ const FormInput = ({
   max,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => {
     if (!value) setIsFocused(false);
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prevState) => !prevState);
+  };
+
   return (
-    <motion.div className={`relative flex-1  ${parentStyle}`}>
-      {/* Error message */}
+    <motion.div className={`relative flex-1 ${parentStyle}`}>
       {error && (
-        <p className="absolute  text-xs text-red-600 -bottom-5 left-0">
+        <p className="absolute text-xs text-red-600 -bottom-5 left-0">
           {error}
         </p>
       )}
 
-      {/* Label */}
       <motion.label
         htmlFor={id}
         className={`absolute ${labelStyle} top-2 left-2 text-gray-700 transition-transform duration-300 ease-in-out ${
@@ -50,9 +54,8 @@ const FormInput = ({
         {label}
       </motion.label>
 
-      {/* Input field */}
       <input
-        type={type}
+        type={showPassword && type === "password" ? "text" : type}
         id={id}
         name={name}
         value={value}
@@ -67,8 +70,16 @@ const FormInput = ({
         aria-describedby={`${id}-error`}
         autoComplete="off"
         min={max}
-     
       />
+
+      {type === "password" && (
+        <div
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer"
+          onClick={togglePasswordVisibility}
+        >
+          {showPassword ? <FaEyeSlash /> : <FaEye />}
+        </div>
+      )}
     </motion.div>
   );
 };
