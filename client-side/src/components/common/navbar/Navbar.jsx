@@ -128,7 +128,7 @@ const Navbar = () => {
             animate={{ opacity: 1, height: '100vh' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-gray-50 flex justify-end items-start px-5 py-14 absolute w-full h-screen top-0 right-0 md:hidden"
+            className="bg-gradient-to-b from-primary via-secondary to-secondary flex justify-end items-start px-5 py-14 absolute w-full h-screen top-0 right-0 md:hidden"
           >
             <NavItems isMobile={true} />
           </motion.div>
