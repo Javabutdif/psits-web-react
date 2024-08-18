@@ -48,7 +48,7 @@ const DeansMessage = () => {
       const timeout = setTimeout(() => {
         setIsVisible(false);
         setAnimationComplete(true);
-      }, 1000);
+      }, 700);
       return () => clearTimeout(timeout);
     }
   }, [isInView]);
