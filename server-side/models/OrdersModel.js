@@ -1,61 +1,46 @@
 const mongoose = require("mongoose");
-
 const Schema = mongoose.Schema;
+const CartItem = require("./CartModel"); // Import the CartItem schema
 
 const orderSchema = new Schema({
   id_number: {
     type: String,
+    ref: "Student",
     required: true,
   },
   rfid: {
     type: String,
-    required: true,
   },
-  imageUrl1: {
-    type: String,
-  },
-  course: {
-    type: String,
-  },
-  year: {
-    type: String,
+  membership_discount: {
+    type: Boolean,
   },
   student_name: {
     type: String,
+    required: true,
   },
-  product_id: {
+  course: {
     type: String,
+    required: true,
   },
-  product_name: {
-    type: String,
-  },
-  category: {
-    type: String,
-  },
-  sizes: {
-    type: String,
-  },
-  variation: {
-    type: Array,
-  },
-  batch: {
+  year: {
     type: Number,
+    required: true,
   },
-  quantity: {
-    type: Number,
-  },
+  items: [CartItem.schema],
   total: {
     type: Number,
+    required: true,
   },
-
   order_date: {
     type: String,
+    required: true,
   },
   transaction_date: {
     type: String,
   },
   order_status: {
     type: String,
+    required: true,
   },
   admin: {
     type: String,
@@ -63,11 +48,7 @@ const orderSchema = new Schema({
   reference_code: {
     type: String,
   },
-  limited: {
-    type: String,
-  },
 });
 
-const Orders = mongoose.model("orders", orderSchema);
-
+const Orders = mongoose.model("Orders", orderSchema);
 module.exports = Orders;

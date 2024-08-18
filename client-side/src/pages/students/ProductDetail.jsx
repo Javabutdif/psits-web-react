@@ -12,6 +12,7 @@ import {
   getInformationData,
 } from "../../authentication/Authentication";
 import { getOrder } from "../../api/orders";
+import { addToCartApi, viewCart } from "../../api/students";
 import ImagePreview from "../../components/Image/ImagePreview";
 import { format } from "date-fns";
 import { showToast } from "../../utils/alertHelper";
@@ -85,7 +86,9 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formError, setFormError] = useState("");
+  const [cartIndicator, setCartIndicator] = useState(false);
   const [status, setStatus] = useState({ membership: "", renew: "" });
+  const [cartLimited, setCartLimited] = useState(false);
 
   const {
     _id = "",
@@ -115,6 +118,12 @@ const ProductDetail = () => {
     selectedSize: "",
     selectedColor: "",
   });
+  const statusVerify = () => {
+    return (
+      (status.membership === "Accepted" && status.renew === "None") ||
+      status.renew === "Accepted"
+    );
+  };
 
   const validate = () => {
     let errors = {};
@@ -143,16 +152,40 @@ const ProductDetail = () => {
     return discount * quantity;
   };
 
+  const calculateDiscount = () => {
+    return price * quantity;
+  };
+
   useEffect(() => {
     const fetchOrderData = async () => {
       try {
         const orders = await getOrder(getId());
+        const carts = await viewCart(getId());
         if (orders) {
-          const order = orders.find((order) => order.product_id === _id);
+          const order = orders.find((order) =>
+            order.items.some(
+              (item) =>
+                item.product_id === _id && control === "limited-purchase"
+            )
+          );
 
           if (order) {
-            setOrderId(order.product_id);
-            setLimited(order.limited);
+            const item = order.items.find(
+              (item) =>
+                item.product_id === _id && control === "limited-purchase"
+            );
+            if (item) {
+              setOrderId(item.product_id);
+              setLimited(true);
+            }
+          }
+        }
+        if (carts) {
+          const cart = carts.find(
+            (cart) => cart.product_id === _id && control === "limited-purchase"
+          );
+          if (cart) {
+            setCartLimited(true);
           }
         }
       } catch (error) {
@@ -200,39 +233,73 @@ const ProductDetail = () => {
     }
   };
 
-  const handleBuyNow = () => {
+  const handleCart = () => {
+    setCartIndicator(true);
     if (validate()) {
       const id_number = getId();
-      const rfid = getRfid();
-      const imageUrl1 = imageUrl[0];
       const product_id = _id;
       const product_name = name;
       const sizes = selectedSize;
       const variation =
         category === "uniform" ? selectedVariations : selectedColor;
+      const sub_total = price * quantity;
+      const imageUrl1 = imageUrl[0];
+      const limited = product.control === "limited-purchase" ? true : false;
+
+      setFormData({
+        id_number,
+        product_id,
+        product_name,
+        price,
+        sizes,
+        variation,
+        batch,
+        quantity,
+        sub_total,
+        imageUrl1,
+        limited,
+      });
+
+      setShowModal(true);
+    }
+  };
+
+  const handleBuyNow = () => {
+    setCartIndicator(false);
+    if (validate()) {
+      const id_number = getId();
+      const rfid = getRfid();
+      const imageUrl1 = imageUrl[0];
       const total = calculateTotal();
       const order_date = format(new Date(), "MMMM d, yyyy h:mm:ss a");
       const order_status = "Pending";
-      const limited = product.control === "limited-purchase" ? true : false;
+      const membership_discount = statusVerify() ? true : false;
+
+      const items = {
+        product_id: _id,
+        imageUrl1: imageUrl[0],
+        product_name: name,
+        limited: product.control === "limited-purchase" ? true : false,
+        price: price,
+        quantity: quantity,
+        sub_total: calculateTotal(),
+        variation: category === "uniform" ? selectedVariations : selectedColor,
+        sizes: selectedSize,
+        batch: batch,
+      };
 
       setFormData({
         id_number,
         rfid,
         imageUrl1,
         course,
+        membership_discount,
         year,
         student_name,
-        product_id,
-        product_name,
-        category,
-        sizes,
-        variation,
-        batch,
-        quantity,
+        items,
         total,
         order_date,
         order_status,
-        limited,
       });
 
       setShowModal(true);
@@ -245,6 +312,12 @@ const ProductDetail = () => {
 
   const handleOrder = async () => {
     await makeOrder(formData);
+
+    handleCloseModal();
+    navigate("/student/merchandise");
+  };
+  const addToCart = async () => {
+    await addToCartApi(formData);
     handleCloseModal();
     navigate("/student/merchandise");
   };
@@ -282,18 +355,7 @@ const ProductDetail = () => {
           <h3 className="text-lg md:text-2xl font-bold mb-2">{name}</h3>
           <p className="text-xs text-gray-700 md:text-sm mb-3">{description}</p>
           <p className="text-md md:text-lg font-semibold text-gray-900 mb-3">
-            {price === discount ? (
-              <>
-                ₱{discount.toFixed(2)}
-              </>
-            ) : (
-              <>
-                <span className="line-through text-red-500 mr-2">
-                  ₱{price.toFixed(2)}
-                </span>
-                <span>₱{discount.toFixed(2)}</span>
-              </>
-            )}
+            ₱ {price.toFixed(2)}
           </p>
 
           <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
@@ -358,15 +420,16 @@ const ProductDetail = () => {
           )}
           <div className="flex gap-2">
             <button
-              onClick={() => {}}
+              onClick={handleCart}
               className={`flex gap-2 px-4 py-3 font-medium 
             text-white rounded-lg bg-[#4398AC] hover:bg-opacity-80 
               transition-colors duration-300 ${
-                stocks <= 0 && "cursor-not-allowed"
-              }`}
+                stocks <= 0 || (cartLimited && "cursor-not-allowed")
+              } `}
               disabled={
                 stocks <= 0 ||
-                (product.control === "limited-purchase" && orderId === _id)
+                (product.control === "limited-purchase" && orderId === _id) ||
+                cartLimited
               }
             >
               <MdAddShoppingCart color="white" size={20} />
@@ -374,33 +437,26 @@ const ProductDetail = () => {
             </button>
             <button
               className={`text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
-                stocks <= 0 || limited
+                stocks <= 0 || limited || cartLimited
                   ? "bg-red-500 text-white"
                   : "bg-[#002E48] text-white"
               } ${
-                stocks <= 0
+                stocks <= 0 || cartLimited
                   ? "opacity-60 cursor-not-allowed"
                   : "hover:bg-opacity-80"
               }`}
-              aria-label={
-                product.control === "limited-purchase"
-                  ? "Limited stock"
-                  : "Buy Now"
-              }
-              title={
-                product.control === "limited-purchase"
-                  ? "Limited stock available"
-                  : "Click to purchase"
-              }
+              aria-label={limited ? "Limited stock" : "Buy Now"}
+              title={limited ? "Limited stock available" : "Click to purchase"}
               onClick={handleBuyNow}
               disabled={
-                stocks <= 0 ||
-                (product.control === "limited-purchase" && orderId === _id)
+                stocks <= 0 || (limited && orderId === _id) || cartLimited
               }
             >
               {stocks <= 0
                 ? "Out of STOCK"
-                : product.control === "limited-purchase" && orderId === _id
+                : cartLimited
+                ? "Already added to Cart"
+                : limited && orderId === _id
                 ? "Purchased"
                 : "Buy Now"}
             </button>
@@ -411,11 +467,11 @@ const ProductDetail = () => {
         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4 text-gray-800">
-              Confirm Purchase
+              {!cartIndicator ? "Confirm Purchase" : "Cart"}
             </h2>
             <div className="mb-4 text-left">
               <p className="mb-2">
-                <span className="font-semibold">Product:</span> {name}
+                <span className="font-semibold">Name:</span> {name}
               </p>
               <p className="mb-2">
                 <span className="font-semibold">
@@ -430,7 +486,13 @@ const ProductDetail = () => {
                     {selectedVariations}
                   </>
                 )}
-                {category !== "uniform" && selectedVariations === null && (
+                {type !== "Item" && selectedVariations === null && (
+                  <>
+                    <span className="font-semibold">Color:</span>{" "}
+                    {selectedColor}
+                  </>
+                )}
+                {type !== "Item" && (
                   <>
                     <span className="font-semibold">Color:</span>{" "}
                     {selectedColor}
@@ -440,17 +502,27 @@ const ProductDetail = () => {
               <p className="mb-2">
                 <span className="font-semibold">Batch:</span> {batch}
               </p>
+
               <p className="mb-2">
-                <span className="font-semibold">Price:</span> ₱ {discount}
+                <span className="font-semibold">Price:</span> ₱ {price}
               </p>
               <p className="mb-2">
                 <span className="font-semibold">Quantity:</span> {quantity}
               </p>
+              <p className="mb-2">
+                <span className="font-semibold">Membership Discount:</span>
+                {status.membership === "Accepted" || status.renew === "Accepted"
+                  ? " ₱" + calculateDiscount() * 0.05
+                  : "Not Eligible"}
+              </p>
               <p className="mb-4">
-                <span className="font-semibold">Total:</span> {calculateTotal()}
+                <span className="font-semibold">Total: </span> ₱{" "}
+                {calculateTotal()}
               </p>
               <p className="text-gray-700">
-                Are you sure you want to purchase this item?
+                {!cartIndicator
+                  ? " Are you sure you want to purchase this item?"
+                  : "Add to Cart?"}
               </p>
             </div>
             <div className="mt-6 flex justify-center gap-4">
@@ -462,7 +534,7 @@ const ProductDetail = () => {
               </button>
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all duration-300 ease-in-out"
-                onClick={handleOrder}
+                onClick={cartIndicator ? addToCart : handleOrder}
               >
                 Confirm
               </button>

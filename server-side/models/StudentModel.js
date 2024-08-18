@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-
 const Schema = mongoose.Schema;
+const CartItem = require("./CartModel"); // Import the CartItem schema
 
 const studentSchema = new Schema({
   id_number: {
@@ -9,35 +9,35 @@ const studentSchema = new Schema({
   },
   rfid: {
     type: String,
-    require: true,
+    required: true,
   },
   password: {
     type: String,
-    require: true,
+    required: true,
   },
   first_name: {
     type: String,
-    require: true,
+    required: true,
   },
   middle_name: {
     type: String,
-    require: true,
+    required: true,
   },
   last_name: {
     type: String,
-    require: true,
+    required: true,
   },
   email: {
     type: String,
-    require: true,
+    required: true,
   },
   course: {
     type: String,
-    require: true,
+    required: true,
   },
   year: {
     type: Number,
-    require: true,
+    required: true,
   },
   status: {
     type: String,
@@ -60,14 +60,8 @@ const studentSchema = new Schema({
   renewedOn: {
     type: String,
   },
-  cart: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Merch",
-    },
-  ],
+  cart: [CartItem.schema], // Embed the CartItem schema
 });
 
-const Student = mongoose.model("students", studentSchema);
-
+const Student = mongoose.model("Student", studentSchema);
 module.exports = Student;
