@@ -28,7 +28,6 @@ const Modal = ({ isOpen, onClose, onConfirm }) => {
     </div>
   );
 };
-
 const CartItem = ({ product, onQuantityChange, onSelect }) => {
   const [isModalOpen, setModalOpen] = useState(false);
 
@@ -48,9 +47,10 @@ const CartItem = ({ product, onQuantityChange, onSelect }) => {
   const handleCancelDelete = () => {
     setModalOpen(false);
   };
+
   return (
-    <div className="flex items-center justify-between space-x-4 py-2">
-      <div className="flex items-center space-x-2">
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-4 py-2 border-b border-gray-200">
+      <div className="flex items-center space-x-2 w-full md:w-auto">
         <input
           type="checkbox"
           className="form-checkbox h-5 w-5 text-blue-600"
@@ -59,17 +59,19 @@ const CartItem = ({ product, onQuantityChange, onSelect }) => {
         <img
           src={product.imageUrl1}
           alt={product.product_name}
-          className="w-12 h-12"
+          className="w-20 h-20 md:w-16 md:h-16 object-cover"
         />
-        <div>
+        <div className="flex flex-col">
           <h3 className="text-sm font-medium">{product.product_name}</h3>
           <p className="text-xs text-gray-500">{product._id}</p>
         </div>
       </div>
-      <div className="text-center">
+
+      <div className="text-center w-full md:w-auto">
         <p className="text-sm font-medium">{`₱${product.price}`}</p>
       </div>
-      <div className="text-sm text-gray-700">
+
+      <div className="text-sm text-gray-700 w-full md:w-auto">
         {product.sizes && product.sizes.length > 0 ? (
           <div>Size: {product.sizes.join(", ")}</div>
         ) : (
@@ -81,15 +83,16 @@ const CartItem = ({ product, onQuantityChange, onSelect }) => {
           <div>No color available</div>
         )}
       </div>
-      <div className="flex flex-col items-center space-y-2">
+
+      <div className="flex flex-col items-center space-y-2 w-full md:w-auto">
         {product.limited && (
-          <p className="text-red-600 text-sm">
+          <p className="text-red-600 text-sm text-center">
             This product is limited and cannot be modified.
           </p>
         )}
         <div className="flex items-center space-x-2">
           <button
-            className="px-2 py-1 text-sm border rounded"
+            className="px-3 py-1 text-sm border rounded-md hover:bg-gray-200"
             onClick={() => onQuantityChange(product._id, product.quantity - 1)}
             disabled={product.limited}
           >
@@ -99,10 +102,10 @@ const CartItem = ({ product, onQuantityChange, onSelect }) => {
             type="text"
             value={product.quantity}
             readOnly
-            className="w-8 text-center border rounded"
+            className="w-16 text-center border rounded-md"
           />
           <button
-            className="px-2 py-1 text-sm border rounded"
+            className="px-3 py-1 text-sm border rounded-md hover:bg-gray-200"
             onClick={() => onQuantityChange(product._id, product.quantity + 1)}
             disabled={product.limited}
           >
@@ -113,10 +116,11 @@ const CartItem = ({ product, onQuantityChange, onSelect }) => {
 
       <button
         onClick={handleDeleteClick}
-        className="text-red-500 hover:text-red-700"
+        className="text-red-500 hover:text-red-700 w-full md:w-auto text-center"
       >
         🗑️
       </button>
+
       <Modal
         isOpen={isModalOpen}
         onClose={handleCancelDelete}
@@ -127,8 +131,10 @@ const CartItem = ({ product, onQuantityChange, onSelect }) => {
 };
 
 const OrderSummary = ({ subtotal, discount, total, onCheckout }) => (
-  <div className="p-4 bg-white shadow-md rounded-lg">
-    <h2 className="text-lg font-semibold">Order Summary</h2>
+  <div className="p-4 bg-white shadow-md rounded-lg max-w-lg mx-auto sm:max-w-md">
+    <h2 className="text-lg font-semibold text-center sm:text-left">
+      Order Summary
+    </h2>
     <div className="mt-4 space-y-2">
       <div className="flex justify-between text-sm">
         <p>SUB TOTAL</p>
@@ -168,6 +174,7 @@ const OrderSummary = ({ subtotal, discount, total, onCheckout }) => (
     </div>
   </div>
 );
+
 const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
   return isVisible ? (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
@@ -227,6 +234,7 @@ const StudentCart = () => {
     getInformationData();
   const [formData, setFormData] = useState({});
   const [status, setStatus] = useState({ membership: "", renew: "" });
+  const [orderSummaryIndicator, setOrderSummaryIndicator] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -273,6 +281,7 @@ const StudentCart = () => {
       ...prev,
       [productId]: isSelected,
     }));
+    setOrderSummaryIndicator(isSelected);
   };
 
   const combineSelectedItems = () => {
@@ -355,12 +364,15 @@ const StudentCart = () => {
           )}
         </div>
       </div>
-      <OrderSummary
-        subtotal={subtotal}
-        discount={discount}
-        total={total}
-        onCheckout={handleCheckout}
-      />
+      {orderSummaryIndicator && (
+        <OrderSummary
+          subtotal={subtotal}
+          discount={discount}
+          total={total}
+          onCheckout={handleCheckout}
+        />
+      )}
+
       <OrderModal
         isVisible={showModal}
         onClose={() => setShowModal(false)}
