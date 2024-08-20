@@ -3,20 +3,24 @@ import logo from "../../assets/images/psits-logo.png";
 import "../../App.css";
 import { format } from "date-fns";
 
-export const splitName = ({ admin }) => {
-  if (!admin || typeof admin !== "string") {
+export const formatString = (str, abbreviate = true) => {
+  if (!str || typeof str !== "string") {
     return "Unknown";
   }
 
-  const words = admin.split(" ");
-  let fullName = "";
+  const words = str.split(" ");
+  let formattedString = "";
 
-  for (let i = 0; i < words.length - 1; i++) {
-    fullName += words[i].charAt(0) + ".";
+  if (abbreviate) {
+    for (let i = 0; i < words.length - 1; i++) {
+      formattedString += words[i].charAt(0) + ".";
+    }
+    formattedString += " " + words[words.length - 1];
+  } else {
+    formattedString = str;
   }
-  fullName += " " + words[words.length - 1];
 
-  return fullName;
+  return formattedString;
 };
 
 const Receipt = forwardRef(
@@ -37,6 +41,7 @@ const Receipt = forwardRef(
       itemTotal,
       total,
       reprint,
+      items, // Added items prop
     },
     ref
   ) => (
@@ -48,73 +53,104 @@ const Receipt = forwardRef(
           <h1 className="text-2xl">Receipt</h1>
         </div>
       </div>
-    <h6 className="text-sm font-bold ps-1">University of Cebu Main Campus</h6>
-     <p className="text-xs pb-7 ps-4">Sanciangko Street Cebu City, 6000</p>
-   
- 
-      
-    <div className="text-base">
-    <p className="mb-2 ">
-        <b>Name: </b>
-        {name}
-      </p>
-      <p className="mb-2 ">
-        <b>Course & Year: </b> {course} - {year}
-      </p>
-      <hr className="my-2 " />
-      <p className="mb-2 ">
-        <b>Item: </b>
-        {type === "Membership" || type === "Renewal" ? type : product_name}
-      </p>
-      <p className="mb-2">
-        <b>Qty: </b> {qty} <span className="float-right">₱{total}</span>
-      </p>
-      <p className="mb-2">
-        <b>Sub-total: </b> {itemTotal === undefined ? "" : "₱" + `${itemTotal}`}
-      </p>
-      <hr className="my-2" />
-      {type === "Order" && (
-        <>
-          {batch && (
-            <p className="mb-2">
-              <b>Batch: </b> {batch}
-            </p>
-          )}
-          {size && (
-            <p className="mb-2">
-              <b>Size: </b> {size}
-            </p>
-          )}
-          {variation && (
-            <p className="mb-2">
-              <b>Variation: </b> {variation}
-            </p>
-          )}
-        </>
-      )}
-      {reprint === true && (
-        <p className="mb-2 text-sm">
-          <b>Type: </b>
-          Copy
-        </p>
-      )}
-      <hr className="my-2" />
-      <p ><b>Total:</b> ₱{total}</p>
-      <p ><b>Cash:</b> ₱{cash}</p>
-      <p ><b>Change:</b> ₱{cash - total}</p>
-      <br />
-      <h2 className="text-2xl">{reference_code}</h2>
-      <p className="mb-2 text-lg">
-        <b>Date: </b>
-        {format(new Date(), "MMMM d, yyyy")}
-      </p>
+      <h6 className="text-sm font-bold ps-1">University of Cebu Main Campus</h6>
+      <p className="text-xs pb-7 ps-4">Sanciangko Street Cebu City, 6000</p>
 
-      <p className="mb-2 text-lg">
-        <b>Managed by: </b>
-        {splitName({ admin })}
-      </p>
-    </div>
-     
+      <div className="text-base">
+        <p className="mb-2">
+          <b>Name: </b>
+          {name}
+        </p>
+        <p className="mb-2">
+          <b>Course & Year: </b> {course} - {year}
+        </p>
+        <hr className="my-2" />
+        {type === "Membership" ||
+          (type === "Renewal" && (
+            <div>
+              <p className="mb-2">
+                <b>Item: </b>
+                {type === "Membership" || type === "Renewal"
+                  ? type
+                  : product_name}
+              </p>
+              <p className="mb-2">
+                <b>Qty: </b> {qty} <span className="float-right">₱{total}</span>
+              </p>
+              <p className="mb-2">
+                <b>Sub-total: </b>{" "}
+                {itemTotal === undefined ? "" : "₱" + `${itemTotal}`}
+              </p>
+            </div>
+          ))}
+
+        <hr className="my-2" />
+        {type === "Order" && (
+          <>
+            {batch && (
+              <p className="mb-2">
+                <b>Batch: </b> {batch}
+              </p>
+            )}
+            {size && (
+              <p className="mb-2">
+                <b>Size: </b> {size}
+              </p>
+            )}
+            {variation && (
+              <p className="mb-2">
+                <b>Variation: </b> {variation}
+              </p>
+            )}
+            {items && items.length > 0 && (
+              <div>
+                <h3 className="text-lg font-bold mb-2">Items:</h3>
+                <ul className="list-disc list-inside mb-4 text-sm">
+                  {items.map((item, index) => (
+                    <li key={index} className="mb-1">
+                      <b>{formatString(item.product_name)}</b>: {item.quantity}{" "}
+                      x ₱{item.price} = ₱{item.sub_total}
+                      <div className="text-sm flex flex-col">
+                        <span>
+                          {item.variation ? "Color: " + item.variation : ""}
+                        </span>
+                        <span>{item.sizes ? "Size: " + item.sizes : ""}</span>
+                        <span>{item.batch ? "Batch: " + item.batch : ""}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+        {reprint === true && (
+          <p className="mb-2 text-sm">
+            <b>Type: </b>
+            Copy
+          </p>
+        )}
+        <hr className="my-2" />
+        <p>
+          <b>Total:</b> ₱{total}
+        </p>
+        <p>
+          <b>Cash:</b> ₱{cash}
+        </p>
+        <p>
+          <b>Change:</b> ₱{cash - total}
+        </p>
+        <br />
+        <h2 className="text-2xl">{reference_code}</h2>
+        <p className="mb-2 text-lg">
+          <b>Date: </b>
+          {format(new Date(), "MMMM d, yyyy")}
+        </p>
+        <p className="mb-2 text-lg">
+          <b>Managed by: </b>
+          {formatString(admin)}
+        </p>
+      </div>
     </div>
   )
 );

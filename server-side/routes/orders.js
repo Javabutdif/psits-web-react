@@ -59,7 +59,7 @@ router.post("/student-order", async (req, res) => {
   const itemsArray = Array.isArray(items) ? items : [items];
 
   try {
-    // Create and save new order
+
     const newOrder = new Orders({
       id_number,
       rfid,
@@ -76,28 +76,28 @@ router.post("/student-order", async (req, res) => {
 
     await newOrder.save();
 
-    // Find the student
+ 
     const findCart = await Student.findOne({ id_number });
 
     if (!findCart) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // Iterate over the items to process each one
+    
     for (let item of itemsArray) {
       const productId = new ObjectId(item.product_id);
 
-      // Find the merchandise
+   
       const findMerch = await Merch.findOne({ _id: productId });
 
       if (!findMerch) {
         console.warn(`Merchandise with ID ${productId} not found`);
-        continue; // Skip to the next item
+        continue; 
       }
 
       const newStocks = findMerch.stocks - item.quantity;
 
-      // Update the merchandise stock
+   
       const merchStocks = await Merch.updateOne(
         { _id: productId },
         { $set: { stocks: newStocks } }
@@ -107,16 +107,15 @@ router.post("/student-order", async (req, res) => {
         console.error(
           `Could not deduct the stocks for product ID ${productId}`
         );
-        // Proceed to process the remaining items
+
       }
 
-      // Remove the cart item from the student document
       await Student.updateOne(
         { id_number },
         { $pull: { cart: { product_id: productId } } }
       );
 
-      // Delete the cart item from the CartItem collection
+    
       await Cart.findByIdAndDelete(item._id);
     }
 
