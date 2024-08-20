@@ -25,6 +25,7 @@ function ApproveModal({
   qty,
   itemTotal,
   total,
+  items,
 }) {
   const componentRef = useRef();
   let [cash, setCash] = useState("");
@@ -189,6 +190,8 @@ function ApproveModal({
           admin={adminName}
           qty={qty}
           itemTotal={itemTotal}
+          items={items}
+         
         />
       </div>
     </div>
@@ -196,3 +199,5 @@ function ApproveModal({
 }
 
 export default ApproveModal;
+
+ 
