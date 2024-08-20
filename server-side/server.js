@@ -11,6 +11,7 @@ const studentApproveRoutes = require("./routes/students");
 const merchRoutes = require("./routes/merch");
 const orderRoutes = require("./routes/orders");
 const facebookRoutes = require("./routes/facebook");
+const cartRoutes = require("./routes/cart");
 
 require("dotenv").config();
 
@@ -33,6 +34,7 @@ app.use("/api", adminRoutes);
 app.use("/api/merch", merchRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/facebook", facebookRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server started, listening at port ${PORT}`);

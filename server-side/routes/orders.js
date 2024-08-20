@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
+const Cart = require("../models/CartModel");
 const Orders = require("../models/OrdersModel");
 const Merch = require("../models/MerchModel");
 const { ObjectId } = require("mongodb");
@@ -46,21 +47,16 @@ router.post("/student-order", async (req, res) => {
     id_number,
     rfid,
     imageUrl1,
+    membership_discount,
     course,
     year,
     student_name,
-    product_id,
-    product_name,
-    category,
-    sizes,
-    variation,
-    batch,
-    quantity,
+    items,
     total,
     order_date,
     order_status,
-    limited,
   } = req.body;
+  const itemsArray = Array.isArray(items) ? items : [items];
 
   try {
     // Create and save new order
@@ -68,50 +64,70 @@ router.post("/student-order", async (req, res) => {
       id_number,
       rfid,
       imageUrl1,
+      membership_discount,
       course,
       year,
       student_name,
-      product_id,
-      product_name,
-      category,
-      sizes,
-      variation,
-      batch,
-      quantity,
+      items: itemsArray,
       total,
       order_date,
       order_status,
-      limited,
     });
 
     await newOrder.save();
-    const productId = new ObjectId(product_id);
 
-    const findMerch = await Merch.findOne({ _id: productId });
+    // Find the student
+    const findCart = await Student.findOne({ id_number });
 
-    if (!findMerch) {
-      return res.status(404).json({ message: "Merchandise not found" });
+    if (!findCart) {
+      return res.status(404).json({ message: "Student not found" });
     }
 
-    const newStocks = findMerch.stocks - quantity;
+    // Iterate over the items to process each one
+    for (let item of itemsArray) {
+      const productId = new ObjectId(item.product_id);
 
-    const merchStocks = await Merch.updateOne(
-      { _id: productId },
-      { $set: { stocks: newStocks } }
-    );
+      // Find the merchandise
+      const findMerch = await Merch.findOne({ _id: productId });
 
-    if (merchStocks.modifiedCount === 0) {
-      return res.status(500).json({ message: "Could not deduct the stocks" });
+      if (!findMerch) {
+        console.warn(`Merchandise with ID ${productId} not found`);
+        continue; // Skip to the next item
+      }
+
+      const newStocks = findMerch.stocks - item.quantity;
+
+      // Update the merchandise stock
+      const merchStocks = await Merch.updateOne(
+        { _id: productId },
+        { $set: { stocks: newStocks } }
+      );
+
+      if (merchStocks.modifiedCount === 0) {
+        console.error(
+          `Could not deduct the stocks for product ID ${productId}`
+        );
+        // Proceed to process the remaining items
+      }
+
+      // Remove the cart item from the student document
+      await Student.updateOne(
+        { id_number },
+        { $pull: { cart: { product_id: productId } } }
+      );
+
+      // Delete the cart item from the CartItem collection
+      await Cart.findByIdAndDelete(item._id);
     }
 
     res.status(200).json({ message: "Order Placed Successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error); // Log error for debugging
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
 //Cancel Order
-
 router.put("/cancel/:product_id", async (req, res) => {
   const { product_id } = req.params;
 
@@ -127,16 +143,22 @@ router.put("/cancel/:product_id", async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    const merchId = new ObjectId(order.product_id);
-    const merch = await Merch.findOne({ _id: merchId });
 
-    if (!merch) {
-      return res.status(404).json({ message: "Merchandise not found" });
+    // Iterate through each item in the order
+    for (const item of order.items) {
+      const merchId = new ObjectId(item.product_id);
+      const merch = await Merch.findOne({ _id: merchId });
+
+      if (!merch) {
+        return res.status(404).json({ message: "Merchandise not found" });
+      }
+
+      const newStocks = merch.stocks + item.quantity;
+
+      await Merch.updateOne({ _id: merchId }, { $set: { stocks: newStocks } });
     }
 
-    const newStocks = merch.stocks + order.quantity;
-
-    await Merch.updateOne({ _id: merchId }, { $set: { stocks: newStocks } });
+    // Delete the order after updating stock
     await Orders.findByIdAndDelete(productId);
 
     res.status(200).json({ message: "Order canceled successfully" });

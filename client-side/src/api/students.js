@@ -58,9 +58,9 @@ export const edit = async (formData) => {
     }
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      console.log(error.response.data.message);
     } else {
-      showToast("error", "An error occurred");
+      console.log(error.response.data.message);
     }
     console.error("Error:", error);
   }
@@ -79,8 +79,34 @@ export const getMembershipStatusStudents = async (id_number) => {
     );
 
     if (response.status === 200) {
-      console.log(response.data);
       return response.data;
+    } else {
+      console.log(response.data.message);
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log(error.response.data.message);
+    } else {
+      console.log(error.response.data.message);
+    }
+    console.error("Error:", error);
+  }
+};
+
+export const addToCartApi = async (formData) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/cart/add-cart`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      showToast("success", response.data.message);
     } else {
       showToast("error", response.data.message);
     }
@@ -89,6 +115,61 @@ export const getMembershipStatusStudents = async (id_number) => {
       showToast("error", error.response.data.message || "An error occurred");
     } else {
       showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
+export const viewCart = async (id_number) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/cart/view-cart`,
+      {
+        params: { id_number },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.error("Error:", error);
+    } else {
+      console.error("Error:", error);
+    }
+    console.error("Error:", error);
+  }
+};
+
+export const deleteItem = async (data) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/cart/delete-item-cart`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+      window.location.reload();
+    } else {
+      showToast("error", response.data.message);
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.error("Error:", error);
+    } else {
+      console.error("Error:", error);
     }
     console.error("Error:", error);
   }

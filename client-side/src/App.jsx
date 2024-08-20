@@ -44,12 +44,14 @@ import StudentOrders from "./pages/students/StudentOrders";
 import ProductDetail from "./pages/students/ProductDetail";
 import PrivateRouteStudent from "./authentication/privateRouteStudent";
 import AllMembers from "./pages/admin/membership/AllMembers";
+import StudentCart from "./pages/students/StudentCart";
 
 import PaidOrders from "./pages/admin/orders/PaidOrders";
 import PendingOrders from "./pages/admin/orders/PendingOrders";
 import StudentPaidOrders from "./pages/students/orders/PaidOrders";
 import StudentPendingOrder from "./pages/students/orders/PendingOrders";
 import Community from "./pages/Community";
+import Events from "./pages/Events";
 
 const App = () => {
   return (
@@ -58,8 +60,8 @@ const App = () => {
         <Route path="/" element={<LandingLayout />}>
           <Route index element={<Home />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/event" element={<Events />} />
           <Route path="/community" element={<Community />} />
-          <Route path="/the-team" element={<Team />} />
         </Route>
         <Route
           path="/admin/"
@@ -148,6 +150,10 @@ const App = () => {
           element={<PrivateRouteStudent element={StudentLayout} />}
         >
           <Route
+            path="cart"
+            element={<PrivateRouteStudent element={StudentCart} />}
+          />
+          <Route
             path="dashboard"
             element={<PrivateRouteStudent element={StudentDashboard} />}
           ></Route>
@@ -163,6 +169,7 @@ const App = () => {
             path="merchandise"
             element={<PrivateRouteStudent element={StudentMerchandise} />}
           />
+
           <Route
             path="merchandise/:id"
             element={<PrivateRouteStudent element={ProductDetail} />}

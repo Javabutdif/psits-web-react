@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
 const Goals = () => {
   const goals = [
@@ -20,19 +21,34 @@ const Goals = () => {
     }
   ];
 
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.5]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const springConfig = { damping: 10, stiffness: 100 };
+
   return (
-    <section className="container bg-secondary mx-auto px-6 py-12 md:py-24">
-      <div className="">
+    <section className="container mx-auto px-6 py-12 md:py-24">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
         <h2 className="text-2xl font-bold mb-3 text-gray-800">Goals</h2>
-        <p className="text-sm mb-8 text-gray-700 mb-12">We aim to cultivate a teaching-learning environment that:</p>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 grid-rows-2 gap-8">
+        <p className="text-sm mb-4 text-gray-700">We aim to cultivate a teaching-learning environment that:</p>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {goals.map((goal, index) => (
-            <li key={goal.id} className={`${index === 0 ? '' : index === 1 ? 'lg:row-start-2 lg:col-start-2' : index === 2 ? 'lg:row-start-1 lg:col-start-3' : index === 3 ? 'lg:row-start-2 lg:col-start-4' : ''} flex items-center text-sm text-gray-700 p-6 bg-white rounded-lg shadow-lg`}>
+            <motion.li
+              key={goal.id}
+              className={`${index % 2 == 0 ? 'bg-primary' : 'bg-accent' } text-neutral-light flex items-center text-sm text-gray-700 p-6 rounded-lg shadow-lg ${index === 1 ? 'lg:row-start-2 lg:col-start-2' : index === 2 ? 'lg:row-start-1 lg:col-start-3' : index === 3 ? 'lg:row-start-2 lg:col-start-4' : ''}`}
+              style={{ opacity, y: useSpring(y, springConfig) }}
+              whileHover={{ scale: 1.05, boxShadow: '0px 8px 16px rgba(0,0,0,0.3)' }}
+              transition={{ duration: 0.3 }}
+            >
               {goal.description}
-            </li>
+            </motion.li>
           ))}
         </ul>
-      </div>
+      </motion.div>
     </section>
   );
 }
