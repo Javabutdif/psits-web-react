@@ -18,7 +18,7 @@ function StudentDashboard() {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${backendConnection}/api/facebook`);
+        const response = await fetch(`${backendConnection()}/api/facebook`);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
