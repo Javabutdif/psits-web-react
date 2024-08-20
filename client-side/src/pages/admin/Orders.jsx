@@ -32,7 +32,6 @@ const Orders = () => {
   const handleApproveClick = (order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
-    console.log(selectedOrder.items);
   };
 
   const handleModalClose = () => {
@@ -42,7 +41,7 @@ const Orders = () => {
 
   const handleApproveConfirm = () => {
     // Implement the approval logic here
-    console.log("Order Approved:", selectedOrder);
+
     handleModalClose();
   };
 
@@ -54,7 +53,7 @@ const Orders = () => {
     <div className="p-4 pt-20">
       {/* Tabs */}
       <div className="flex justify-around bg-gray-100 p-2 rounded">
-        {["Pending", "Completed", "Cancelled"].map((tab) => (
+        {["Pending", "Paid", "Cancelled"].map((tab) => (
           <button
             key={tab}
             onClick={() => setSelectedTab(tab)}
@@ -108,14 +107,17 @@ const Orders = () => {
                         {order.order_status}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <button
-                        onClick={() => handleApproveClick(order)}
-                        className="p-1 rounded hover:bg-green-600 text-white bg-green-500"
-                      >
-                        Approve
-                      </button>
-                    </td>
+                    {order.order_status !== "Paid" && (
+                      <td className="p-4">
+                        <button
+                          onClick={() => handleApproveClick(order)}
+                          className="p-1 rounded hover:bg-green-600 text-white bg-green-500"
+                        >
+                          Approve
+                        </button>
+                      </td>
+                    )}
+
                     <td className="p-4">
                       <button
                         onClick={() => toggleDropdown(order._id)}
@@ -202,6 +204,7 @@ const Orders = () => {
           reference_code={
             Math.floor(Math.random() * (999999999 - 111111111)) + 111111111
           }
+          order_id={selectedOrder._id}
           id_number={selectedOrder.id_number}
           course={selectedOrder.course}
           year={selectedOrder.year}
