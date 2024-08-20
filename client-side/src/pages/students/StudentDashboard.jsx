@@ -6,6 +6,7 @@ import OperationHours from "./dashboard/OperationHours";
 import MembershipBanner from "./dashboard/Membership";
 import { getMembershipStatus } from "../../authentication/Authentication";
 import { InfinitySpin } from "react-loader-spinner";
+import backendConnection from "../../api/backendApi";
 
 function StudentDashboard() {
   const [posts, setPosts] = useState([]);
@@ -17,14 +18,15 @@ function StudentDashboard() {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:5000/api/facebook");
+        const response = await fetch(`${backendConnection}/api/facebook`);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
         setPosts(data);
       } catch (error) {
-        setError(error.message);
+        console.error(error.message);
+        setError("There is an error with fetching posts data.");
       } finally {
         setLoading(false);
       }
