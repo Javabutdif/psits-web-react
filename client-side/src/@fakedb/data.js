@@ -1,39 +1,3 @@
-export const posts = {
-  post1: {
-    img: "https://randomuser.me/api/portraits/men/1.jpg",
-    userName: "Christ Rallos",
-    typeOfPost: "event",
-    timePosted: "2024-07-16T10:00:00Z",
-    description: "Had an amazing day at Extravaganza!",
-    postImage:
-      "https://psitsimagestorage.s3.ap-southeast-2.amazonaws.com/merchandise/1722934085166_1000075850.jpg",
-  },
-  post2: {
-    img: "https://randomuser.me/api/portraits/women/2.jpg",
-    userName: "JaneSmith",
-    typeOfPost: "event",
-    timePosted: "2024-07-15T14:30:00Z",
-    description: "Check out this beautiful sunset!",
-    postImage: "https://via.placeholder.com/600x400.png?text=Beautiful+Sunset",
-  },
-  post3: {
-    img: "https://randomuser.me/api/portraits/women/3.jpg",
-    userName: "AliceJohnson",
-    typeOfPost: "event",
-    timePosted: "2024-07-14T08:15:00Z",
-    description: "Feeling great today!",
-    postImage: null,
-  },
-  post4: {
-    img: "https://randomuser.me/api/portraits/women/3.jpg",
-    userName: "AliceJohnson",
-    typeOfPost: "event",
-    timePosted: "2024-07-14T08:15:00Z",
-    description: "Feeling great today!",
-    postImage: null,
-  },
-};
-
 export const events = [
   {
     date: "2024-07-20",
