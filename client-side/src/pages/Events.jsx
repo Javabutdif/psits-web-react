@@ -73,7 +73,7 @@ const Carousel = () => {
         </motion.div>
         
         <motion.div
-          className="w-1/2"
+          className="w-96"
           key={currentIndex}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -124,7 +124,7 @@ const Events = () => {
     <>
       <Banner />
       <section className="px-4 min-h-screen container py-14 flex flex-col md:py-24">
-        <div className="z-20 -mt-24 relative bg-gradient-to-br from-secondary to-primary text-neutral-light p-4 md:p-6 shadow-md w-full">
+        <div className="z-20 -mt-24 relative bg-gradient-to-br from-secondary to-primary  text-neutral-light p-4 md:p-6 shadow-md w-full">
           {/* Small squares with custom colors and opacity */}
           <div className="absolute w-16 h-16 md:w-20 md:h-20 bg-primary bg-opacity-30" style={{ top: '5%', right: '5%' }}></div>
           <div className="absolute w-20 h-20 md:w-24 md:h-24 bg-secondary bg-opacity-30" style={{ top: '30%', left: '50%', transform: 'translateX(-50%)' }}></div>

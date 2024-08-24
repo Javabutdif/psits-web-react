@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MdAddShoppingCart } from "react-icons/md";
 
 const DEFAULT_IMAGE_URL = "/default-image.jpg";
 
@@ -18,20 +17,15 @@ const ProductCard = React.memo(({ product }) => {
 
   return (
     <motion.div
-      className="group bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300"
-      whileHover={{ scale: 1.03, boxShadow: "0px 6px 20px rgba(0,0,0,0.15)" }}
-      transition={{ duration: 0.3 }}
-      aria-label={`Product card for ${product.name}`}
+      className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300"
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.2 }}
     >
-      <div className="relative w-full h-32">
+      <div className="relative w-full h-48"> {/* Fixed height for all images */}
         <motion.img
-          src={
-            product.imageUrl?.length > 0
-              ? product.imageUrl[0]
-              : DEFAULT_IMAGE_URL
-          }
-          alt={product.name ? `${product.name} image` : "Default Product Image"}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          src={product.imageUrl?.[0] || DEFAULT_IMAGE_URL}
+          alt={product.name || "Product"}
+          className="w-full h-full object-cover"
           loading="lazy"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -39,38 +33,30 @@ const ProductCard = React.memo(({ product }) => {
         />
       </div>
       <div className="p-4">
-        <h2 className="text-sm font-bold text-gray-800 truncate mb-1">
+        <h2 className="text-sm font-semibold text-gray-800 truncate mb-2">
           {product.name}
         </h2>
-        <p className="text-xs text-gray-600 mb-1">
-          Stocks:{" "}
-          <span className="font-medium text-gray-900">{product.stocks}</span>
-        </p>
-        <p className="text-xs text-gray-500 mb-3 truncate">
-          {product.description}
-        </p>
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-semibold text-gray-900">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm font-medium text-gray-900">
             ₱{product.price.toFixed(2)}
           </span>
-          <div className="flex">
-            <motion.button
-              onClick={handleViewDetails}
-              className="bg-[#002E48] text-white text-xs font-medium py-1 px-3 rounded-md hover:bg-[#013e61] transition-colors duration-200"
-              aria-label={`View details for ${product.name}`}
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              View
-            </motion.button>
-          </div>
+          <span className="text-xs text-gray-500">
+            Stock: {product.stocks}
+          </span>
         </div>
+        <motion.button
+          onClick={handleViewDetails}
+          className="w-full bg-[#002E48] text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-[#013e61] transition-colors duration-200"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          View
+        </motion.button>
       </div>
     </motion.div>
   );
 });
 
-// Set display name for easier debugging
 ProductCard.displayName = "ProductCard";
 
 export default ProductCard;

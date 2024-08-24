@@ -1,55 +1,7 @@
-import React from "react";
+import React, { useEffect, useRef } from 'react';
+import { FaTimes } from 'react-icons/fa';
+import { motion } from 'framer-motion';
 
-// Reusable Button Component
-const FilterButton = ({ value, label, isSelected, onClick }) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`py-1 px-3 rounded-md border text-xs ${
-        isSelected ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"
-      } transition duration-150`}
-    >
-      {label}
-    </button>
-  );
-};
-
-// Reusable Color Swatch Component
-const ColorSwatch = ({ color, isSelected, onClick }) => {
-  const colorClasses = {
-    White: "bg-white border-gray-300",
-    Purple: "bg-purple-500",
-    Black: "bg-black",
-    Red: "bg-red-500",
-    Yellow: "bg-yellow-500",
-    Orange: "bg-orange-500",
-    Blue: "bg-blue-500",
-    Green: "bg-green-500",
-    Pink: "bg-pink-500",
-    Gray: "bg-gray-500",
-    Brown: "bg-brown-500",
-    Cyan: "bg-cyan-500",
-    Magenta: "bg-magenta-500",
-    Teal: "bg-teal-500",
-    Maroon: "bg-maroon-500",
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-6 h-6 rounded-full border ${colorClasses[color]} ${
-        isSelected ? "ring-2 ring-blue-400" : ""
-      } transition duration-150`}
-      aria-label={color} // Accessibility
-    >
-      {/* No text, just the color */}
-    </button>
-  );
-};
-
-// Main FilterOptions Component
 const FilterOptions = ({
   onCategoryChange,
   selectedCategories,
@@ -57,130 +9,184 @@ const FilterOptions = ({
   selectedControls,
   onSizeChange,
   selectedSizes,
-  onVariationChange,
-  selectedVariations,
-  onClick, // Added prop for reset function
+  onColorChange,
+  selectedColors,
+  onStartDateChange,
+  startDate,
+  onEndDateChange,
+  endDate,
+  onPriceChange,
+  minPrice,
+  maxPrice,
+  onClose
 }) => {
+  const controlOptions = ['limited', 'bulk'];
+  const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+  const colorOptions = [
+    'red', 'blue', 'green', 'yellow', 'black', 'white',
+    'purple', 'orange', 'pink', 'gray'
+  ];
   const categoryOptions = [
-    { value: "uniform", label: "Uniform" },
-    { value: "intramurals", label: "Intramurals" },
-    { value: "ict-congress", label: "ICT Congress" },
-    { value: "merchandise", label: "Merchandise" },
+    { value: 'uniform', label: 'Uniform' },
+    { value: 'intramurals', label: 'Intramurals' },
+    { value: 'ict-congress', label: 'ICT Congress' },
+    { value: 'merchandise', label: 'Merchandise' }
   ];
 
-  const controls = [
-    { value: "limited", label: "Limited" },
-    { value: "bulk", label: "Bulk" },
-  ];
+  const modalRef = useRef();
 
-  const variations = [
-    "White",
-    "Purple",
-    "Black",
-    "Red",
-    "Yellow",
-    "Orange",
-    "Blue",
-    "Green",
-    "Pink",
-    "Gray",
-    "Brown",
-    "Cyan",
-    "Magenta",
-    "Teal",
-    "Maroon",
-  ];
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
-  const sizes = ["18", "XS", "S", "M", "L", "XL", "2XL", "3XL"];
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
 
-  const handleFilterChange = (value, type) => {
-    switch (type) {
-      case "category":
-        onCategoryChange(value, !selectedCategories.includes(value));
-        break;
-      case "control":
-        onControlChange(value, !selectedControls.includes(value));
-        break;
-      case "size":
-        onSizeChange(value, !selectedSizes.includes(value));
-        break;
-      case "variation":
-        onVariationChange(value, !selectedVariations.includes(value));
-        break;
-      default:
-        break;
-    }
-  };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onClose]);
+
+  const FilterSection = ({ title, options, selectedOptions, onChange, isColor = false }) => (
+    <div className="mb-4">
+      <h3 className="text-base font-semibold mb-2">{title}</h3>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const value = typeof option === 'object' ? option.value : option;
+          const label = typeof option === 'object' ? option.label : option;
+          return (
+            <button
+              key={value}
+              onClick={() => onChange(value)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors duration-200 ${
+                selectedOptions.includes(value)
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              } ${isColor ? 'w-6 h-6 p-0' : ''}`}
+              style={isColor ? { backgroundColor: value } : {}}
+            >
+              {isColor ? '' : label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const DateSection = ({ title, date, onDateChange }) => (
+    <div className="mb-4">
+      <h3 className="text-base font-semibold mb-2">{title}</h3>
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => onDateChange(e.target.value)}
+        className="px-3 py-2 border rounded-md w-full text-sm focus:outline-none focus:border-primary"
+      />
+    </div>
+  );
+
+  const PriceSection = ({ minPrice, maxPrice, onPriceChange }) => (
+    <div className="mb-4">
+      <h3 className="text-base font-semibold mb-2">Price Range</h3>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          value={minPrice}
+          onChange={(e) => onPriceChange(e.target.value, 'min')}
+          placeholder="Min"
+          className="px-3 py-2 border rounded-md w-full text-sm focus:outline-none focus:border-primary"
+        />
+        <span className="text-gray-500">-</span>
+        <input
+          type="number"
+          value={maxPrice}
+          onChange={(e) => onPriceChange(e.target.value, 'max')}
+          placeholder="Max"
+          className="px-3 py-2 border rounded-md w-full text-sm focus:outline-none focus:border-primary"
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="w-72 bg-white rounded-lg shadow-md p-4 absolute right-4 top-16 z-50 max-h-[calc(100vh-4rem)] overflow-auto">
-      <form className="space-y-4 relative">
-        <div>
-          <h3 className="text-base font-semibold mb-2 border-b pb-2">
-            Categories
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {categoryOptions.map((option) => (
-              <FilterButton
-                key={option.value}
-                value={option.value}
-                label={option.label}
-                isSelected={selectedCategories.includes(option.value)}
-                onClick={() => handleFilterChange(option.value, "category")}
-              />
-            ))}
-          </div>
+    <motion.div 
+      className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-end"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div 
+        className="bg-white w-full max-w-md h-full overflow-y-auto p-6 shadow-lg"
+        ref={modalRef}
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold">Filter Options</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <FaTimes size={20} />
+          </button>
         </div>
 
-        <div>
-          <h3 className="text-base font-semibold mb-2 border-b pb-2">
-            Controls
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {controls.map((control) => (
-              <FilterButton
-                key={control.value}
-                value={control.value}
-                label={control.label}
-                isSelected={selectedControls.includes(control.value)}
-                onClick={() => handleFilterChange(control.value, "control")}
-              />
-            ))}
-          </div>
-        </div>
+        <FilterSection
+          title="Categories"
+          options={categoryOptions}
+          selectedOptions={selectedCategories}
+          onChange={onCategoryChange}
+        />
 
-        <div>
-          <h3 className="text-lg font-semibold mb-2 border-b pb-2">Sizes</h3>
-          <div className="flex flex-wrap gap-2">
-            {sizes.map((size) => (
-              <FilterButton
-                key={size}
-                value={size}
-                label={size}
-                isSelected={selectedSizes.includes(size)}
-                onClick={() => handleFilterChange(size, "size")}
-              />
-            ))}
-          </div>
-        </div>
+        <FilterSection
+          title="Controls"
+          options={controlOptions}
+          selectedOptions={selectedControls}
+          onChange={onControlChange}
+        />
 
-        <div>
-          <h3 className="text-lg font-semibold mb-2 border-b pb-2">
-            Variations
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {variations.map((variation) => (
-              <ColorSwatch
-                key={variation}
-                color={variation}
-                isSelected={selectedVariations.includes(variation)}
-                onClick={() => handleFilterChange(variation, "variation")}
-              />
-            ))}
-          </div>
-        </div>
-      </form>
-    </div>
+        <FilterSection
+          title="Sizes"
+          options={sizeOptions}
+          selectedOptions={selectedSizes}
+          onChange={onSizeChange}
+        />
+
+        <FilterSection
+          title="Colors"
+          options={colorOptions}
+          selectedOptions={selectedColors}
+          onChange={onColorChange}
+          isColor
+        />
+
+        <DateSection
+          title="Start Date"
+          date={startDate}
+          onDateChange={onStartDateChange}
+        />
+
+        <DateSection
+          title="End Date"
+          date={endDate}
+          onDateChange={onEndDateChange}
+        />
+
+        <PriceSection
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onPriceChange={onPriceChange}
+        />
+      </motion.div>
+    </motion.div>
   );
 };
 
