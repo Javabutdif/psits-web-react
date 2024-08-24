@@ -7,7 +7,7 @@ import FormButton from "../../components/forms/FormButton";
 import { FaFilter, FaShoppingCart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import FilterOptions from "./merchandise/FilterOptions";
-import { motion, AnimatePresence} from 'framer-motion'
+import { motion, AnimatePresence } from "framer-motion";
 
 const StudentMerchandise = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,7 +71,7 @@ const StudentMerchandise = () => {
     setIsFilterOptionOpen((prevState) => !prevState);
   };
 
-  useEffect(() => {
+ 
     const fetchData = async () => {
       try {
         setIsLoading(true);
@@ -93,13 +93,9 @@ const StudentMerchandise = () => {
         setIsLoading(false);
       }
     };
-
-    fetchData();
-  }, []); 
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+ useEffect(() => {
+   fetchData();
+ }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -233,5 +229,3 @@ const StudentMerchandise = () => {
 };
 
 export default StudentMerchandise;
-
-
