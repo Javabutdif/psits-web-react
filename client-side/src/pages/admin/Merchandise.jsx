@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import "../../App.css";
-import { merchandiseAdmin, deleteMerchandise } from "../../api/admin";
+import { merchandiseAdmin, deleteMerchandise , publishMerchandise } from "../../api/admin";
 import TableComponent from "../../components/Custom/TableComponent"; // Adjust the import path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -15,6 +15,7 @@ import FilterOptions from "../students/merchandise/FilterOptions";
 import { Dialog } from "@headlessui/react";
 import { AiOutlineClose } from "react-icons/ai";
 import { showToast } from "../../utils/alertHelper";
+import { isBefore, isAfter, isWithinInterval } from "date-fns";
 
 function Merchandise() {
   const [data, setData] = useState([]);
@@ -28,6 +29,9 @@ function Merchandise() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [merchToDelete, setMerchToDelete] = useState("");
+
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [merchToPublish, setMerchToPublish] = useState("");
 
   const [merchToEdit, setMerchToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -123,10 +127,35 @@ function Merchandise() {
       fetchData();
     }
   };
+  const publishMerchandiseApi = async () => {
+    if (await publishMerchandise(merchToPublish)) {
+      showToast("success", "Merchandise Publish!");
+      setPublishModalOpen(false);
+      fetchData();
+    }
+  };
 
   const handleDeleteProductModal = (id) => {
     setMerchToDelete(id);
     setDeleteModalOpen(true);
+  };
+   const handlePublishProductModal = (id) => {
+     setMerchToPublish(id);
+     setPublishModalOpen(true);
+   };
+
+  const getStatus = (row) => {
+    const currentDate = new Date();
+    const startDate = new Date(row.start_date);
+    const endDate = new Date(row.end_date);
+
+    if (isBefore(currentDate, startDate)) {
+      return row.is_active ? "Publishing" : "Pending";
+    } else if (isAfter(currentDate, endDate)) {
+      return row.is_active ? "Expired" : "Expired"; // Handle cases where `is_active` is false but expired
+    } else {
+      return row.is_active ? "Publishing" : "Deleted";
+    }
   };
 
   const columns = [
@@ -151,12 +180,7 @@ function Merchandise() {
         </motion.div>
       ),
     },
-    {
-      key: "_id",
-      label: "Product ID",
-      sortable: true,
-      cell: (row) => <div className="text-xs text-gray-600">{row._id}</div>,
-    },
+
     {
       key: "name",
       label: "Product",
@@ -203,12 +227,14 @@ function Merchandise() {
         <div className="text-center">
           <span
             className={`px-2 py-1 rounded text-xs ${
-              row.is_active === true
+              getStatus(row) === "Publishing"
                 ? "bg-green-200 text-green-800"
+                : getStatus(row) === "Expired"
+                ? "bg-yellow-200 text-yellow-800"
                 : "bg-red-200 text-red-800"
             }`}
           >
-            {row.is_active !== true ? "Deleted" : "Active"}
+            {getStatus(row)}
           </span>
         </div>
       ),
@@ -222,7 +248,7 @@ function Merchandise() {
             type="button"
             text="View"
             onClick={() => handleView(row)}
-            styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+            styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
             icon={<i className="fas fa-eye text-sm"></i>}
             textClass="ml-2 md:inline"
             iconClass="text-sm text-base"
@@ -238,15 +264,28 @@ function Merchandise() {
             iconClass="text-sm text-base"
           />
 
-          <FormButton
-            type="button"
-            text="Delete"
-            onClick={() => handleDeleteProductModal(row._id)}
-            styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-            icon={<i className="fas fa-trash text-sm"></i>}
-            textClass="ml-2 md:inline"
-            iconClass="text-sm text-base"
-          />
+          {row.is_active && (
+            <FormButton
+              type="button"
+              text="Delete"
+              onClick={() => handleDeleteProductModal(row._id)}
+              styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+              icon={<i className="fas fa-trash text-sm"></i>}
+              textClass="ml-2 md:inline"
+              iconClass="text-sm text-base"
+            />
+          )}
+          {!row.is_active && (
+            <FormButton
+              type="button"
+              text="Publish"
+              onClick={() => handlePublishProductModal(row._id)}
+              styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
+              icon={<i className="fas fa-pen text-sm"></i>}
+              textClass="ml-2 md:inline"
+              iconClass="text-sm text-base"
+            />
+          )}
         </ButtonsComponent>
       ),
     },
@@ -316,33 +355,6 @@ function Merchandise() {
     setFilteredData(filtered);
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [
-        [
-          "Product ID",
-          "Name",
-          "Category",
-          "Batch",
-          "Price",
-          "Control",
-          "Active",
-        ],
-      ],
-      body: filteredData.map((row) => [
-        row._id,
-        row.name,
-        row.category,
-        row.batch,
-        row.price,
-        row.control,
-        row.is_active ? "Active" : "Expired",
-      ]),
-    });
-    doc.save("table.pdf");
-  };
-
   return (
     <div className="p-4 relative">
       {loading ? (
@@ -357,15 +369,6 @@ function Merchandise() {
               className="text-3xl text-gray-700 text-center md:text-left"
             ></motion.h1>
             <div className="flex flex-col md:flex-row items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="text-xs md:text-base text-gray-600 flex items-center gap-2 px-4 py-1 border rounded-md shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
-                onClick={exportToPDF}
-              >
-                <i className="fas fa-download"></i>
-                Export to PDF
-              </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -525,8 +528,31 @@ function Merchandise() {
           </div>
         </div>
       )}
+      {publishModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Confirm Publish</h2>
+            <p>Are you sure you want to publish again this product?</p>
+            <div className="mt-6 flex justify-end">
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                onClick={() => setPublishModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={publishMerchandiseApi}
+              >
+                Publish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 export default Merchandise;

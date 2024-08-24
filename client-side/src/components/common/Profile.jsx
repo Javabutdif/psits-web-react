@@ -7,7 +7,7 @@ const Profile = () => {
   const [name, course, position] = getUser();
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex space-x-4  rounded-lg">
       <Link
         to={`/${
           location === "admin"
@@ -16,18 +16,19 @@ const Profile = () => {
             ? "student"
             : ""
         }/profile`}
-        className="text-sm md:text-sm"
+        className="flex items-center text-gray-700  hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200"
+        aria-label="Profile"
       >
-        <i className="fas fa-user text-lg"></i>
+        <i className="fas fa-user text-xl sm:text-2xl" aria-hidden="true"></i>
       </Link>
-      <h3 className="text-xs sm:text-sm hidden sm:block">
-        {name}
-        <span className="text-xs block">
-          <span className="inline-block rounded">
-            {position ? position : course}
-          </span>
+      <div className="hidden sm:block">
+        <h3 className="text-sm font-semibold text-gray-800">
+          {name}
+        </h3>
+        <span className="text-xs text-gray-600  block">
+          {position ? position : course}
         </span>
-      </h3>
+      </div>
     </div>
   );
 };

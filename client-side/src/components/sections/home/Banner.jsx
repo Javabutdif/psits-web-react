@@ -44,7 +44,7 @@ const Banner = () => {
 
   return (
     <motion.section
-      className="relative -z-10 bg-gradient-to-t from-primary to-secondary py-24 md:py-28 flex items-center justify-center"
+      className="relative -z-10 bg-gradient-to-b from-primary to-secondary py-24 md:py-28 flex items-center justify-center"
     >
       <motion.div
         style={{ y: contentY }}
@@ -67,7 +67,7 @@ const Banner = () => {
         </motion.p>
       </motion.div>
       <svg className="absolute -bottom-0 translate-y-fulls" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 18">
-        <path d="M375.303 0c0 0-93.054 17.7075-187.13 17.7075C94.0966 17.7075 0 0 0 0Z" fill="#4398AC"></path>
+        <path d="M375.303 0c0 0-93.054 17.7075-187.13 17.7075C94.0966 17.7075 0 0 0 0Z" fill="#A4CDD7"></path>
       </svg>
     </motion.section>
   );

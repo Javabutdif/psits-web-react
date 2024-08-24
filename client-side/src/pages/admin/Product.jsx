@@ -32,10 +32,7 @@ function Product({ handleCloseAddProduct }) {
     "Maroon",
   ];
   const size = ["18", "XS", "S", "M", "L", "XL", "2XL", "3XL"];
-  const [date, setDate] = useState({
-    start_date: "",
-    end_date: "",
-  });
+
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -72,7 +69,6 @@ function Product({ handleCloseAddProduct }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    setDate({ ...date, [name]: value });
   };
 
   const handleImageChange = (e) => {
@@ -139,26 +135,9 @@ function Product({ handleCloseAddProduct }) {
   const handlePreview = (e) => {
     e.preventDefault();
 
-    if (validate()) {
-      const startDate = new Date(date.start_date);
-      const endDate = new Date(date.end_date);
+    setPreviewData(formData);
 
-      const formattedStartDate = format(startDate, "MMMM d, yyyy h:mm:ss a");
-      const formattedEndDate = format(endDate, "MMMM d, yyyy h:mm:ss a");
-
-      const updatedFormData = {
-        ...formData,
-        start_date: formattedStartDate,
-        end_date: formattedEndDate,
-      };
-
-   
-      setPreviewData(updatedFormData);
-
-      setShowPreview(true);
-
-  
-    }
+    setShowPreview(true);
   };
 
   const handleConfirm = async () => {
@@ -513,7 +492,7 @@ function Product({ handleCloseAddProduct }) {
                 label="Start Date"
                 name="start_date"
                 type="date"
-                value={date.start_date}
+                value={formData.start_date}
                 onChange={handleChange}
                 labelStyle="text-xs"
                 inputStyle="text-xs"
@@ -524,7 +503,7 @@ function Product({ handleCloseAddProduct }) {
                 label="End Date"
                 name="end_date"
                 type="date"
-                value={date.end_date}
+                value={formData.end_date}
                 onChange={handleChange}
                 labelStyle="text-xs"
                 inputStyle="text-xs"

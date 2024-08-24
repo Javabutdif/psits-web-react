@@ -6,16 +6,17 @@ const CarouselCard = ({ member, isCurrent, isNext, isPrevious, onDragEnd }) => (
     key={member.name}
     whileHover={{ scale: isCurrent ? 1.2 : 0.8 }}
     className={`w-[220px] h-[320px] md:w-[320px] md:h-[420px] absolute bg-white rounded-3xl shadow-lg overflow-hidden ${
-      isCurrent ? "z-10 scale-100" : "z-5 scale-75"
-    }`}
-    initial={{
+      isCurrent ? "z-10 scale-100" : isPrevious || isNext ? "z-20 " : "z-5 scale-75" 
+    } `}
+    initial={{  
+      
       x: isPrevious ? "-120%" : isNext ? "120%" : "0%",
-      opacity: isCurrent ? 1 : 0.6,
+      opacity: isCurrent ? 1 : 0.4, // Reduced opacity for non-current cards
       scale: isCurrent ? 1 : 0.75,
     }}
     animate={{
       x: isCurrent ? "0%" : isPrevious ? "-100%" : isNext ? "100%" : "0%",
-      opacity: isCurrent ? 1 : 0.4,
+      opacity: isCurrent ? 1 : 0.4, // Reduced opacity for non-current cards
       scale: isCurrent ? 1 : 0.75,
     }}
     transition={{ type: "spring", stiffness: 300, damping: 25 }}
