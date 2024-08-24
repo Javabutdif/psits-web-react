@@ -325,6 +325,33 @@ export const deleteMerchandise = async (_id) => {
     console.error("Error:", error);
   }
 };
+
+export const publishMerchandise = async (_id) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/merch/publish`,
+      { _id },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
 //Hard Delete
 export const requestDeletion = async (id_number) => {
   try {

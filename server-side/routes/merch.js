@@ -197,6 +197,28 @@ router.put("/delete-soft", async (req, res) => {
     res.status(500).send("Error deleting merch");
   }
 });
+//publish merch
+router.put("/publish", async (req, res) => {
+  const { _id } = req.body;
+
+  try {
+    const product_id = new ObjectId(_id);
+
+    const result = await Merch.updateOne(
+      { _id: product_id },
+      { $set: { is_active: true } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Merch not found" });
+    }
+
+    res.status(200).json({ message: "Merch deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting merch:", error.message);
+    res.status(500).send("Error deleting merch");
+  }
+});
 // ADD merch to cart as Student
 router.put("/add-to-cart/:student_id/:merch_id", async (req, res) => {
   const { student_id, merch_id } = req.params;

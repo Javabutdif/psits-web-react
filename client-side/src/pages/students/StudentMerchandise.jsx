@@ -67,6 +67,8 @@ const StudentMerchandise = () => {
     );
   };
 
+
+
   const toggleFilterOption = () => {
     setIsFilterOptionOpen((prevState) => !prevState);
   };
@@ -76,11 +78,41 @@ const StudentMerchandise = () => {
       try {
         setIsLoading(true);
         const result = await merchandise();
-        setProducts(result);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      } finally {
-        setIsLoading(false);
+      
+
+
+    const currentDate = new Date();
+
+    const filteredProducts = result.filter((item) => {
+      const startDate = new Date(item.start_date);
+      const endDate = new Date(item.end_date);
+
+    
+      return currentDate >= startDate && currentDate <= endDate;
+    });
+
+ 
+    setProducts(filteredProducts);
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchData();
+}, []);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        filterOptionsRef.current &&
+        !filterOptionsRef.current.contains(event.target)
+      ) {
+        setIsFilterOptionOpen(false);
+
       }
     };
 

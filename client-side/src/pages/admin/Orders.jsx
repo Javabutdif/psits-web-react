@@ -1,11 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getAllOrders } from "../../api/orders";
 import ApproveModal from "../../components/admin/ApproveModal";
+import ButtonsComponent from "../../components/Custom/ButtonsComponent";
+import FormButton from "../../components/forms/FormButton";
+import ReactToPrint from "react-to-print";
+import Receipt from "../../components/common/Receipt";
+import { getPosition } from "../../authentication/Authentication";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [selectedTab, setSelectedTab] = useState("Pending");
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [rowData, setPrintData] = useState("");
+  const [selectedStudent, setSelectedStudentName] = useState("");
+  const componentRef = useRef();
+  const printRef = useRef();
+  const position = getPosition();
+
+  const handlePrintData = (row) => {
+    setPrintData(row);
+    const name = row.student_name;
+    const words = name.split(" ");
+    let fullName = "";
+
+    for (let i = 0; i < words.length - 1; i++) {
+      fullName += words[i].charAt(0) + ".";
+    }
+    fullName += " " + words[words.length - 1];
+
+    setSelectedStudentName(fullName);
+  };
+  useEffect(() => {
+    if (rowData) {
+      printRef.current.click();
+    }
+  }, [rowData]);
+
+  const handlePrintComplete = () => {
+    setPrintData("");
+  };
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,9 +110,12 @@ const Orders = () => {
               <th className="p-4">Membership</th>
               <th className="p-4">Total Price</th>
               <th className="p-4">Order Date</th>
+              {selectedTab === "Paid" && (
+                <th className="p-4">Transaction Date</th>
+              )}
+
               <th className="p-4">Status</th>
-              <th className="p-4">Actions</th>
-              <th className="p-4">Items</th>
+              {selectedTab !== "Paid" && <th className="p-4">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -102,6 +138,10 @@ const Orders = () => {
                     </td>
                     <td className="p-4">₱{order.total}</td>
                     <td className="p-4">{order.order_date}</td>
+                    {order.order_status === "Paid" && (
+                      <td className="p-4">{order.transaction_date}</td>
+                    )}
+
                     <td className="p-4">
                       <span
                         className={`px-3 py-1 rounded-full ${
@@ -136,6 +176,95 @@ const Orders = () => {
                           : "Show Items"}
                       </button>
                     </td>
+                    {order.order_status === "Paid" && (
+                      <td className="p-4">
+                        <ButtonsComponent>
+                          <FormButton
+                            type="button"
+                            text={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "Not Authorized"
+                                : "Print"
+                            }
+                            onClick={() => {
+                              if (
+                                position === "Treasurer" ||
+                                position === "Assistant Treasurer" ||
+                                position === "Auditor" ||
+                                position === "Developer"
+                              ) {
+                                handlePrintData(order);
+                              }
+                            }}
+                            icon={
+                              <i
+                                className={`fa ${
+                                  position !== "Treasurer" &&
+                                  position !== "Assistant Treasurer" &&
+                                  position !== "Auditor" &&
+                                  position !== "Developer"
+                                    ? "fa-lock"
+                                    : "fa-print"
+                                }`}
+                              ></i>
+                            }
+                            styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "bg-gray-500 cursor-not-allowed"
+                                : "bg-blue-500"
+                            }`}
+                            textClass="text-white"
+                            whileHover={{ scale: 1.02, opacity: 0.95 }}
+                            whileTap={{ scale: 0.98, opacity: 0.9 }}
+                            disabled={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                            }
+                          />
+                          <div style={{ display: "none" }}>
+                            <ReactToPrint
+                              trigger={() => (
+                                <button
+                                  ref={printRef}
+                                  style={{ display: "none" }}
+                                >
+                                  Print
+                                </button>
+                              )}
+                              content={() => componentRef.current}
+                              onAfterPrint={handlePrintComplete}
+                            />
+                            <Receipt
+                              ref={componentRef}
+                              reference_code={rowData.reference_code}
+                              course={rowData.course}
+                              product_name={rowData.product_name}
+                              batch={rowData.batch}
+                              size={rowData.size}
+                              variation={rowData.variation}
+                              total={rowData.total}
+                              cash={rowData.cash}
+                              year={rowData.year}
+                              name={selectedStudent}
+                              type={"Order"}
+                              admin={rowData.admin}
+                              reprint={true}
+                              qty={rowData.qty}
+                              itemTotal={rowData.itemTotal}
+                              items={rowData.items}
+                            />
+                          </div>
+                        </ButtonsComponent>
+                      </td>
+                    )}
                   </tr>
                   {openDropdown === order._id && (
                     <tr>
