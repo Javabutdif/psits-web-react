@@ -26,7 +26,7 @@ const StudentMerchandise = () => {
   const buttonVariants = {
     initial: { scale: 1 },
     hover: { scale: 1.05, transition: { duration: 0.3 } },
-    tap: { scale: 0.95, transition: { duration: 0.2 } }
+    tap: { scale: 0.95, transition: { duration: 0.2 } },
   };
 
   const navigate = useNavigate();
@@ -67,8 +67,6 @@ const StudentMerchandise = () => {
     );
   };
 
-
-
   const toggleFilterOption = () => {
     setIsFilterOptionOpen((prevState) => !prevState);
   };
@@ -78,32 +76,30 @@ const StudentMerchandise = () => {
       try {
         setIsLoading(true);
         const result = await merchandise();
-      
 
+        const currentDate = new Date();
 
-    const currentDate = new Date();
+        const filteredProducts = result.filter((item) => {
+          const startDate = new Date(item.start_date);
+          const endDate = new Date(item.end_date);
 
-    const filteredProducts = result.filter((item) => {
-      const startDate = new Date(item.start_date);
-      const endDate = new Date(item.end_date);
+          return currentDate >= startDate && currentDate <= endDate;
+        });
 
-    
-      return currentDate >= startDate && currentDate <= endDate;
-    });
+        setProducts(filteredProducts);
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
- 
-    setProducts(filteredProducts);
-  } catch (error) {
-    console.error("Error fetching data: ", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+    fetchData();
+  }, []); 
 
-useEffect(() => {
-  fetchData();
-}, []);
-
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -112,7 +108,6 @@ useEffect(() => {
         !filterOptionsRef.current.contains(event.target)
       ) {
         setIsFilterOptionOpen(false);
-
       }
     };
 
@@ -122,13 +117,13 @@ useEffect(() => {
   const handleStartDateChange = (date) => {
     setStartDate(date);
   };
-  
+
   const handleEndDateChange = (date) => {
     setEndDate(date);
   };
-  
+
   const handlePriceChange = (value, type) => {
-    if (type === 'min') {
+    if (type === "min") {
       setMinPrice(value);
     } else {
       setMaxPrice(value);
@@ -139,22 +134,31 @@ useEffect(() => {
     const name = product.name ? product.name.toLowerCase() : "";
     const category = product.category ? product.category.toLowerCase() : "";
     const control = product.control ? product.control.toLowerCase() : "";
-    const sizes = Array.isArray(product.selectedSizes) ? product.selectedSizes : [];
+    const sizes = Array.isArray(product.selectedSizes)
+      ? product.selectedSizes
+      : [];
     const colors = Array.isArray(product.colors) ? product.colors : [];
     const productStartDate = new Date(product.start_date);
     const productEndDate = new Date(product.end_date);
-  
+
     const matchesSearchQuery = name.includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(category);
-    const matchesControl = selectedControls.length === 0 || selectedControls.includes(control);
-    const matchesSize = selectedSizes.length === 0 || selectedSizes.some((size) => sizes.includes(size));
-    const matchesColor = selectedColors.length === 0 || selectedColors.some((color) => colors.includes(color));
-    
-    const matchesStartDate = !startDate || productStartDate >= new Date(startDate);
+    const matchesCategory =
+      selectedCategories.length === 0 || selectedCategories.includes(category);
+    const matchesControl =
+      selectedControls.length === 0 || selectedControls.includes(control);
+    const matchesSize =
+      selectedSizes.length === 0 ||
+      selectedSizes.some((size) => sizes.includes(size));
+    const matchesColor =
+      selectedColors.length === 0 ||
+      selectedColors.some((color) => colors.includes(color));
+
+    const matchesStartDate =
+      !startDate || productStartDate >= new Date(startDate);
     const matchesEndDate = !endDate || productEndDate <= new Date(endDate);
     const matchesMinPrice = !minPrice || product.price >= Number(minPrice);
     const matchesMaxPrice = !maxPrice || product.price <= Number(maxPrice);
-  
+
     return (
       matchesSearchQuery &&
       matchesCategory &&
@@ -167,7 +171,7 @@ useEffect(() => {
       matchesMaxPrice
     );
   });
-  const handleCart = () => navigate('../cart');
+  const handleCart = () => navigate("../cart");
 
   return (
     <div className="max-w-[1600px] mx-auto py-5">
@@ -190,23 +194,23 @@ useEffect(() => {
               <AnimatePresence>
                 {isFilterOptionOpen && (
                   <FilterOptions
-                  onCategoryChange={handleCategoryChange}
-                  selectedCategories={selectedCategories}
-                  onControlChange={handleControlChange}
-                  selectedControls={selectedControls}
-                  onSizeChange={handleSizeChange}
-                  selectedSizes={selectedSizes}
-                  onColorChange={handleColorChange}
-                  selectedColors={selectedColors}
-                  onStartDateChange={handleStartDateChange}
-                  startDate={startDate}
-                  onEndDateChange={handleEndDateChange}
-                  endDate={endDate}
-                  onPriceChange={handlePriceChange}
-                  minPrice={minPrice}
-                  maxPrice={maxPrice}
-                  onClose={toggleFilterOption}
-                />
+                    onCategoryChange={handleCategoryChange}
+                    selectedCategories={selectedCategories}
+                    onControlChange={handleControlChange}
+                    selectedControls={selectedControls}
+                    onSizeChange={handleSizeChange}
+                    selectedSizes={selectedSizes}
+                    onColorChange={handleColorChange}
+                    selectedColors={selectedColors}
+                    onStartDateChange={handleStartDateChange}
+                    startDate={startDate}
+                    onEndDateChange={handleEndDateChange}
+                    endDate={endDate}
+                    onPriceChange={handlePriceChange}
+                    minPrice={minPrice}
+                    maxPrice={maxPrice}
+                    onClose={toggleFilterOption}
+                  />
                 )}
               </AnimatePresence>
             </div>
