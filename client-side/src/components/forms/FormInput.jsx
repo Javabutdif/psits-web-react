@@ -9,12 +9,11 @@ const FormInput = ({
   name,
   value,
   onChange,
-  styles,
   error,
-  parentStyle,
-  labelStyle,
-  inputStyle,
-  disabled,
+  parentStyle = "",
+  labelStyle = "",
+  inputStyle = "",
+  disabled = false,
   max,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -30,26 +29,14 @@ const FormInput = ({
   };
 
   return (
-    <motion.div className={`relative flex-1 ${parentStyle}`}>
-      {error && (
-        <p className="absolute text-xs text-red-600 -bottom-5 left-0">
-          {error}
-        </p>
-      )}
-
+    <div className={`relative w-full ${parentStyle}`}>
       <motion.label
         htmlFor={id}
-        className={`absolute ${labelStyle} top-2 left-2 text-gray-700 transition-transform duration-300 ease-in-out ${
+        className={`absolute ${labelStyle} left-4 text-gray-500 transition-all duration-300 pointer-events-none ${
           isFocused || value
-            ? "text-black bg-white scale-75 -translate-y-4"
-            : ""
+            ? "-translate-y-6 sm:text-sm text-xs text-blue-600 font-medium"
+            : "top-1/2 transform -translate-y-1/2 text-base sm:text-lg"
         } ${error ? "text-red-600" : ""}`}
-        animate={{
-          scale: isFocused || value ? 0.75 : 1,
-          y: isFocused || value ? -20 : 0,
-          opacity: isFocused || value ? 0.6 : 1,
-        }}
-        transition={{ duration: 0.3 }}
       >
         {label}
       </motion.label>
@@ -63,24 +50,35 @@ const FormInput = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         disabled={disabled}
-        className={`${inputStyle} w-full px-3 py-2 border ${
-          error ? "border-red-600" : "border-gray-300"
-        } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${styles}`}
+        className={`w-full px-4 py-3 border ${
+          error ? "border-red-500" : "border-gray-300"
+        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-300 shadow-sm ${inputStyle} text-sm sm:text-base`}
         aria-invalid={!!error}
         aria-describedby={`${id}-error`}
-        autoComplete="off"
         min={max}
       />
 
       {type === "password" && (
         <div
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer"
+          className="absolute inset-y-0 right-4 flex items-center text-gray-600 cursor-pointer"
           onClick={togglePasswordVisibility}
         >
-          {showPassword ? <FaEyeSlash /> : <FaEye />}
+          {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
         </div>
       )}
-    </motion.div>
+
+      {error && (
+        <motion.p
+          id={`${id}-error`}
+          className="text-xs sm:text-sm text-red-500 mt-2"
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {error}
+        </motion.p>
+      )}
+    </div>
   );
 };
 

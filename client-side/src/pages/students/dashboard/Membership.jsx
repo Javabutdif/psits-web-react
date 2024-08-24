@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { getId } from "../../../authentication/Authentication";
 import { requestMembership } from "../../../api/students";
 
-function Membership() {
+function Membership({ styles }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRequested, setIsRequested] = useState(false);
   const id = getId();
@@ -24,20 +25,28 @@ function Membership() {
     window.location.reload();
   };
 
+  const buttonVariants = {
+    hover: { scale: 1.05, transition: { duration: 0.2 } },
+    tap: { scale: 0.95 }
+  };
+
   return (
-    <div className="bg-blue-500 p-3 sm:p-4 rounded-lg shadow-md text-center text-white">
+    <div className={`${styles} bg-[#074873] p-3 sm:p-4 rounded-lg shadow-md text-center text-neutral-light`}>
       <h1 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
         Join Our Membership Program
       </h1>
       <p className="text-xs sm:text-sm mb-3 sm:mb-4">
         Get exclusive benefits and stay updated with our latest offers.
       </p>
-      <button
-        className="bg-white text-blue-500 font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded hover:bg-gray-100 transition"
+      <motion.button
+        className="bg-neutral-light text-dark font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded transition"
         onClick={toggleModal}
+        variants={buttonVariants}
+        whileHover="hover"
+        whileTap="tap"
       >
         Get Membership
-      </button>
+      </motion.button>
 
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-2 sm:p-4">
@@ -60,18 +69,24 @@ function Membership() {
               </ul>
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-2">
-              <button
-                className="bg-blue-600 text-white font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded-lg shadow hover:bg-blue-700 transition ease-in-out"
+              <motion.button
+                className="bg-blue-600 text-white font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded-lg shadow transition ease-in-out"
                 onClick={request}
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
               >
                 Yes
-              </button>
-              <button
-                className="bg-gray-600 text-white font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded-lg shadow hover:bg-gray-700 transition ease-in-out"
+              </motion.button>
+              <motion.button
+                className="bg-gray-600 text-white font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded-lg shadow transition ease-in-out"
                 onClick={toggleModal}
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
               >
                 No
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -85,12 +100,15 @@ function Membership() {
             <p className="text-xs sm:text-sm mb-2 sm:mb-3 text-gray-600">
               Your membership request has been successfully submitted!
             </p>
-            <button
-              className="bg-blue-600 text-white font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded-lg shadow hover:bg-blue-700 transition ease-in-out"
+            <motion.button
+              className="bg-blue-600 text-white font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded-lg shadow transition ease-in-out"
               onClick={handleClose}
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
               Close
-            </button>
+            </motion.button>
           </div>
         </div>
       )}

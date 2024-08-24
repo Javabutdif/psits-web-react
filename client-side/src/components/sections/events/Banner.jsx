@@ -41,7 +41,7 @@ const Banner = () => {
 
   return (
     <motion.section
-      className="relative bg-gradient-to-b from-primary py-24 md:py-32 via-50% to-[#f2f2f2] overflow-hidden  flex items-center justify-center"
+      className="relative bg-gradient-to-b from-primary from-50% py-24 md:py-32 via-50% to-[#f2f2f2] overflow-hidden  flex items-center justify-center"
     >
       <motion.div
         style={{ y: contentY }}

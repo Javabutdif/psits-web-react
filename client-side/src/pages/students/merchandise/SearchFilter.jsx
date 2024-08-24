@@ -8,7 +8,7 @@ const SearchFilter = ({ searchQuery, handleSearchChange, customButtons }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col md:flex-row items-center gap-2">
       <SearchComponent 
         searchQuery={searchQuery}
         handleSearchChange={handleSearchChange} // Make sure to pass the function as a prop

@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import logo from '../../../assets/images/login.png'
 
-
-const OperationHours = () => {
+const OperationHours = ({ styles }) => {
   const [status, setStatus] = useState("");
 
   useEffect(() => {
     const getHours = () => {
-      const date = new Date();  
+      const date = new Date();
       const day = date.getDay();
-      const hours = date.getHours();
+      const hours = date.getHours(21);
       
       const isSunday = day === 0;
       const isHoliday = false; // Add your holiday logic here
@@ -17,7 +15,7 @@ const OperationHours = () => {
       if (isSunday || isHoliday) {
         setStatus("Closed");
       } else {
-        const isOpen = (hours > 7 && hours < 11) || (hours > 13 && hours < 17);
+        const isOpen = (hours >= 7 && hours < 11) || (hours >= 13 && hours < 17);
         setStatus(isOpen ? "Open" : "Closed");
       }
     };
@@ -28,34 +26,37 @@ const OperationHours = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const statusColor = status === "Open" ? "bg-green-500" : "bg-gray-500";
+  // Updated status color for 'Closed'
+  const statusColor = status === "Open" ? "bg-green-500" : "bg-neutral-medium";
 
   return (
-    <div className=" w-full  flex-1 md:flex-none md:p-6 rounded-lg  lg:max-w-lg bg-transparent md:bg-white space-x-1 sm:space-y-3 text-start ">
-
-      <h4 className="text-xs sm:text-lg font-semibold flex items-center justify-between gap-4 ">Current Office Status
-          <span className={`block text-xs ml-2 sm:ml-0 py-1 px-2 text-center text-white rounded-lg ${statusColor}`}>{status}</span>
-
-      </h4>
-      <div className="space-y-4 hidden lg:block">
-        <p className="text-gray-700 flex flex-col">
-          <span className="font-semibold">Open</span>
-             Monday to Saturday
-          <span className="font-normal">7-11 am, 1-5 pm</span>
-
+    <div className={`${styles} w-full md:w-auto md:p-4 bg-white rounded-lg shadow-sm space-y-4`}>
+      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-medium">
+        <h4 className="text-sm sm:text-base font-semibold text-dark">Current Office Status</h4>
+        <span
+          className={`text-xs sm:text-sm py-1 px-2 text-white rounded-full ${statusColor}`}
+          aria-label={`Office is currently ${status}`}
+        >
+          {status}
+        </span>
+      </div>
+      {/* Desktop View */}
+      <div className="hidden md:block p-4 md:py-0 space-y-2">
+        <p className="text-xs sm:text-sm text-dark">
+          <span className="font-semibold">Open:</span> Monday to Saturday
+          <br />
+          <span className="font-normal">7 AM - 11 AM, 1 PM - 5 PM</span>
         </p>
-        <p className="text-gray-700">
+        <p className="text-xs sm:text-sm text-dark">
+          <span className="font-semibold">Closed:</span> Sunday & Holidays
         </p>
-        <p className="text-gray-700 flex flex-col">
-          <span className="font-semibold">Closed</span> Sunday & Holidays
+        <p className="text-xs sm:text-sm text-dark flex items-center space-x-2">
+          <i className="fas fa-map-marker-alt text-base" aria-hidden="true" />
+          <span>PSITS Office, Room 101, Student Union Building</span>
         </p>
-      <p className="flex flex-col">
-        <i className="fas fa-location mb-2" />
-        PSITS Office, Room 101, Student Union Building
-      </p>
       </div>
     </div>
   );
-}
+};
 
 export default OperationHours;

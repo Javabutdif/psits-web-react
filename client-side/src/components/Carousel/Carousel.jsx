@@ -6,7 +6,7 @@ const Carousel = ({ members }) => {
   const { currentIndex, handleDragEnd } = useCarousel(members.length);
 
   return (
-    <div className="min-h-screen py-14 flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="w-full min-h-screen py-14 flex flex-col items-center justify-center relative overflow-hidden">
       <div className="relative z-10 w-full max-w-4xl h-96 flex items-center justify-center">
         {members.map((member, index) => {
           const isCurrent = index === currentIndex;

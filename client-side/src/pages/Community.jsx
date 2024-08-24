@@ -46,7 +46,7 @@ const Community = () => {
 
   return (
     <>
-        <section>
+        <section className="bg-gradient-to-b from-primary to-[#f2f2f2]">
             <Carousel members={officersAndReps}/>
         </section>
     

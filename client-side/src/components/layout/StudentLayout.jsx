@@ -24,14 +24,14 @@ const StudentLayout = () => {
   ];
 
   return (
-    <div className="flex w-fullgit pull min-h-screen">
-      <AsideBar navItems={navItems} />
-      <div className="flex-1 ml-[4.4rem] md:px-4: py-[2.8rem] sm:py-[3.8rem] md:py-[4.3rem] px-3 md:px-4: lg:px-6">
-        <ProfileHeader label={label} /> 
+    <div className="min-h-screen relative">
+      <AsideBar navItems={navItems}/>
+      <ProfileHeader label={label} /> 
+      <main className="ml-[4rem] md:ml-[5rem] 2xl:ml-[15rem] min-h-screen px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
         <Outlet />
-      </div>
+      </main>
     </div>
-  );
-};
+  )
+} 
 
-export default StudentLayout;
+export default StudentLayout
