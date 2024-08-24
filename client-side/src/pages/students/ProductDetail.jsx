@@ -437,7 +437,7 @@ const ProductDetail = () => {
                 <p className="hidden md:inline-block">Add To Cart</p>
               </button>
             )}
-            ;
+            
             <button
               className={`text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
                 stocks <= 0 || limited || cartLimited
