@@ -64,25 +64,23 @@ const Receipt = forwardRef(
         <p className="mb-2">
           <b>Course & Year: </b> {course} - {year}
         </p>
-        <hr className="my-2" />
-        {type === "Membership" ||
-          (type === "Renewal" && (
-            <div>
-              <p className="mb-2">
-                <b>Item: </b>
-                {type === "Membership" || type === "Renewal"
-                  ? type
-                  : product_name}
-              </p>
-              <p className="mb-2">
-                <b>Qty: </b> {qty} <span className="float-right">₱{total}</span>
-              </p>
-              <p className="mb-2">
-                <b>Sub-total: </b>{" "}
-                {itemTotal === undefined ? "" : "₱" + `${itemTotal}`}
-              </p>
-            </div>
-          ))}
+
+        {type !== "Order" && (
+          <div>
+            <hr className="my-2" />
+            <p className="mb-2">
+              <b>Item: </b>
+              {type}
+            </p>
+            <p className="mb-2">
+              <b>Qty: </b> {qty} <span className="float-right">₱{total}</span>
+            </p>
+            <p className="mb-2">
+              <b>Sub-total: </b>{" "}
+              {itemTotal === undefined ? "" : "₱" + `${total}`}
+            </p>
+          </div>
+        )}
 
         <hr className="my-2" />
         {type === "Order" && (
@@ -130,16 +128,22 @@ const Receipt = forwardRef(
             Copy
           </p>
         )}
-        <hr className="my-2" />
-        <p>
-          <b>Total:</b> ₱{total}
-        </p>
-        <p>
-          <b>Cash:</b> ₱{cash}
-        </p>
-        <p>
-          <b>Change:</b> ₱{cash - total}
-        </p>
+        {!reprint && (
+          <div>
+            {" "}
+            <hr className="my-2" />
+            <p>
+              <b>Total:</b> ₱{total}
+            </p>
+            <p>
+              <b>Cash:</b> ₱{cash}
+            </p>
+            <p>
+              <b>Change:</b> ₱{cash - total}
+            </p>
+          </div>
+        )}
+
         <br />
         <h2 className="text-2xl">{reference_code}</h2>
         <p className="mb-2 text-lg">

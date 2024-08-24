@@ -63,32 +63,6 @@ const Delete = () => {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [["Name", "Id Number", "Course", "Email Account", "Type"]],
-      body: filteredData.map((item) => [
-        `${item.first_name} ${item.middle_name} ${item.last_name}`,
-        item.id_number,
-        item.course,
-        item.email,
-        item.type,
-      ]),
-      startY: 20,
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [22, 160, 133],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-      },
-      margin: { top: 10 },
-    });
-    doc.save("deleted_students.pdf");
-  };
-
   const showModal = (row) => {
     setIsModalVisible(true);
     setStudentIdToBeRestored(row.id_number);
@@ -129,14 +103,13 @@ const Delete = () => {
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
-         <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
+          <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
           <div className="text-gray-500">ID: {row.id_number}</div>
           <div className="text-gray-500">RFID: {row.rfid}</div>
-
         </div>
       ),
     },
-   
+
     {
       key: "course",
       label: "Course & Year",
@@ -168,24 +141,7 @@ const Delete = () => {
   return (
     <div className="">
       <>
-        <TableComponent
-          columns={columns}
-          data={filteredData}
-          customButtons={
-            <ButtonsComponent>
-              <FormButton
-                type="button"
-                text="PDF Export"
-                onClick={handleExportPDF}
-                icon={<i className="fas fa-file-pdf"></i>}
-                styles="space-x-2 bg-gray-200 text-gray-800 rounded-md py-1 px-3 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                textClass="hidden"
-                whileHover={{ scale: 1.01, opacity: 0.9 }}
-                whileTap={{ scale: 0.95, opacity: 0.8 }}
-              />
-            </ButtonsComponent>
-          }
-        />
+        <TableComponent columns={columns} data={filteredData} />
         {isModalVisible && (
           <ConfirmationModal
             confirmType={ConfirmActionType.RESTORE}

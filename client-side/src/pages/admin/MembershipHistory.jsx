@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import TableComponent from "../../components/Custom/TableComponent";
 import { membershipHistory } from "../../api/admin";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { InfinitySpin } from "react-loader-spinner";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 import ReactToPrint from "react-to-print";
@@ -15,9 +12,10 @@ function MembershipHistory() {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+
   const [rowData, setPrintData] = useState("");
   const [selectedStudent, setSelectedStudentName] = useState("");
+
   const componentRef = useRef();
   const printRef = useRef();
   const position = getPosition();
@@ -31,16 +29,6 @@ function MembershipHistory() {
     { label: "Date", key: "date" },
     { label: "Admin", key: "admin" },
   ];
-
-  const csvData = filteredData.map((item) => ({
-    reference_code: item.reference_code,
-    id_number: item.id_number,
-    name: item.name,
-    course: `${item.course}-${item.year}`,
-    type: item.type,
-    date: item.date,
-    admin: item.admin,
-  }));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,33 +46,6 @@ function MembershipHistory() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const filtered = data.filter((item) => {
-      const id_number = item.id_number ? item.id_number.toLowerCase() : "";
-      const reference_code = item.reference_code
-        ? item.reference_code.toLowerCase()
-        : "";
-      const name = item.name ? item.name.toLowerCase() : "";
-      const type = item.type ? item.type.toLowerCase() : "";
-      const course = item.course ? item.course.toLowerCase() : "";
-      const year = item.year ? item.year.toLowerCase() : "";
-      const date = item.date ? item.date.toLowerCase() : "";
-      const admin = item.admin ? item.admin.toLowerCase() : "";
-
-      return (
-        id_number.includes(searchQuery.toLowerCase()) ||
-        name.includes(searchQuery.toLowerCase()) ||
-        course.includes(searchQuery.toLowerCase()) ||
-        year.includes(searchQuery.toLowerCase()) ||
-        date.includes(searchQuery.toLowerCase()) ||
-        type.includes(searchQuery.toLowerCase()) ||
-        reference_code.includes(searchQuery.toLowerCase()) ||
-        admin.includes(searchQuery.toLowerCase())
-      );
-    });
-    setFilteredData(filtered);
-  }, [searchQuery, data]);
-
   const handlePrintData = (row) => {
     setPrintData(row);
     const name = row.name;
@@ -98,6 +59,7 @@ function MembershipHistory() {
 
     setSelectedStudentName(fullName);
   };
+
   useEffect(() => {
     if (rowData) {
       printRef.current.click();
@@ -114,14 +76,14 @@ function MembershipHistory() {
       label: "Reference ID",
       sortable: true,
     },
-
     {
       key: "name",
       label: "Name",
       sortable: true,
+
       cell: (row) => (
         <div className="text-xs">
-          <div>{`${row.name} `}</div>
+          <div>{row.name} </div>
           <div className="text-gray-500">ID: {row.id_number}</div>
           <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
@@ -131,13 +93,13 @@ function MembershipHistory() {
       key: "course",
       label: "Course",
       sortable: true,
+
       cell: (row) => (
         <div className="text-xs">
-          <div>{`${row.course} - ${row.year} `}</div>
+          <div>{`${row.course} - ${row.year}`}</div>
         </div>
       ),
     },
-
     {
       key: "type",
       label: "Type",
@@ -156,7 +118,7 @@ function MembershipHistory() {
     {
       key: "Print",
       label: "Print",
-      sortable: true,
+      sortable: false,
       cell: (row) => (
         <ButtonsComponent>
           <FormButton
@@ -227,38 +189,55 @@ function MembershipHistory() {
               batch={rowData.batch}
               size={rowData.size}
               variation={rowData.variation}
-              total={rowData.type === "Membership" ? "50" : "50"}
+              total={50}
               cash={rowData.cash}
               year={rowData.year}
               name={selectedStudent}
               type={rowData.type}
               admin={rowData.admin}
               reprint={true}
-              qty={rowData.qty}
-              itemTotal={rowData.itemTotal}
+              qty={1}
+              itemTotal={50}
             />
           </div>
         </ButtonsComponent>
       ),
     },
   ];
+
   return (
     <>
-      <TableComponent
-        columns={columns}
-        data={filteredData}
-        customButtons={
-          <ButtonsComponent>
-            <CSVLink
-              data={csvData}
-              headers={headers}
-              filename={"membership_history.csv"}
-            >
-              Export to CSV
-            </CSVLink>
-          </ButtonsComponent>
-        }
-      />
+      <TableComponent columns={columns} data={filteredData} />
+
+      <div style={{ display: "none" }}>
+        <ReactToPrint
+          trigger={() => (
+            <button ref={printRef} style={{ display: "none" }}>
+              Print
+            </button>
+          )}
+          content={() => componentRef.current}
+          onAfterPrint={handlePrintComplete}
+        />
+        <Receipt
+          ref={componentRef}
+          reference_code={rowData.reference_code}
+          course={rowData.course}
+          product_name={rowData.product_name}
+          batch={rowData.batch}
+          size={rowData.size}
+          variation={rowData.variation}
+          total={50}
+          cash={rowData.cash}
+          year={rowData.year}
+          name={selectedStudent}
+          type={rowData.type}
+          admin={rowData.admin}
+          reprint={true}
+          qty={1}
+          itemTotal={50}
+        />
+      </div>
     </>
   );
 }

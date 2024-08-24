@@ -104,39 +104,6 @@ const Membership = () => {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const handleExportPDF = (filteredData) => {
-    if (!filteredData || filteredData.length === 0) {
-      alert("No data to export");
-      return;
-    }
-
-    const doc = new jsPDF();
-
-    autoTable(doc, {
-      head: [["Name", "Id Number", "Course", "Email Account", "Type"]],
-      body: filteredData.map((item) => [
-        `${item.first_name} ${item.middle_name} ${item.last_name}`,
-        item.id_number,
-        item.course,
-        item.email,
-        item.type,
-      ]),
-      startY: 20, // Ensure the table starts after 20 units from the top
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [22, 160, 133],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-      },
-      margin: { top: 10 },
-    });
-
-    doc.save("students.pdf");
-  };
-
   const showModal = (row) => {
     setIsModalVisible(true);
     setStudentIdToBeDeleted(row.id_number);
@@ -347,48 +314,38 @@ const Membership = () => {
                 whileTap={{ scale: 0.95, opacity: 0.8 }}
               />
             )}
+
             <FormButton
               type="button"
-              text="Export to PDF"
-              onClick={handleExportPDF}
-              icon={<i className="fas fa-download"></i>} // Simple icon
-              styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
-              textClass="hidden"
-              whileHover={{ scale: 1.01, opacity: 0.9 }}
-              whileTap={{ scale: 0.95, opacity: 0.8 }}
+              text={
+                position !== "President" && position !== "Developer"
+                  ? "Not Authorized"
+                  : "Renew All"
+              }
+              onClick={() => {
+                if (position === "President" || position === "Developer") {
+                  showConfirm(); // Invoke the function
+                }
+              }}
+              icon={
+                <i
+                  className={`fa ${
+                    position !== "President" && position !== "Developer"
+                      ? "fa-lock"
+                      : "fa-sync-alt"
+                  }`}
+                ></i>
+              }
+              styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+                position !== "President" && position !== "Developer"
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-red-500"
+              }`}
+              textClass="text-white"
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+              disabled={position !== "President" && position !== "Developer"} // Use && instead of ||
             />
-
-<FormButton
-  type="button"
-  text={
-    position !== "President" && position !== "Developer"
-      ? "Not Authorized"
-      : "Renew All"
-  }
-  onClick={() => {
-    if (position === "President" || position === "Developer") {
-      showConfirm(); // Invoke the function
-    }
-  }}
-  icon={
-    <i
-      className={`fa ${
-        position !== "President" && position !== "Developer"
-          ? "fa-lock"
-          : "fa-sync-alt"
-      }`}
-    ></i>
-  }
-  styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-    position !== "President" && position !== "Developer"
-      ? "bg-gray-500 cursor-not-allowed"
-      : "bg-red-500"
-  }`}
-  textClass="text-white"
-  whileHover={{ scale: 1.02, opacity: 0.95 }}
-  whileTap={{ scale: 0.98, opacity: 0.9 }}
-  disabled={position !== "President" && position !== "Developer"} // Use && instead of ||
-/>
           </ButtonsComponent>
         }
       />

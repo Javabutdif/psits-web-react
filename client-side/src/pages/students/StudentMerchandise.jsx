@@ -89,22 +89,35 @@ const StudentMerchandise = () => {
     );
     setCurrentPage(1); // Reset to first page on filter change
   };
+const fetchData = async () => {
+  setIsLoading(true);
+  try {
+    const result = await merchandise();
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const result = await merchandise();
-      setProducts(result);
-    } catch (error) {
-      console.error("Error fetching data: ", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+    const currentDate = new Date();
+
+    const filteredProducts = result.filter((item) => {
+      const startDate = new Date(item.start_date);
+      const endDate = new Date(item.end_date);
+
+    
+      return currentDate >= startDate && currentDate <= endDate;
+    });
+
+ 
+    setProducts(filteredProducts);
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchData();
+}, []);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
