@@ -4,7 +4,6 @@ const Student = require("../models/StudentModel");
 const { ObjectId } = require("mongodb");
 
 const router = express.Router();
-
 router.post("/add-cart", async (req, res) => {
   const {
     id_number,
@@ -21,30 +20,64 @@ router.post("/add-cart", async (req, res) => {
   } = req.body;
 
   try {
-    const newCart = new Cart({
-      product_id,
-      product_name,
-      price,
-      quantity,
-      limited,
-      sub_total,
-      variation,
-      sizes,
-      batch,
-      imageUrl1,
-    });
-    await newCart.save();
-
     const student = await Student.findOne({ id_number });
 
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+    const productExists = student.cart.find(
+      (item) => item.product_id.toString() === product_id
+    );
+
+    if (productExists) {
+      const existingCart = await Cart.findOne({ _id: productExists._id });
+
+      if (existingCart) {
+        await Cart.updateOne(
+          { _id: productExists._id },
+          {
+            $set: {
+              quantity: existingCart.quantity + quantity,
+            },
+          }
+        );
+
+        const itemIndex = student.cart.findIndex(
+          (item) => item.product_id.toString() === product_id
+        );
+        console.log(itemIndex);
+        if (itemIndex > -1) {
+          student.cart[itemIndex].quantity = existingCart.quantity + quantity;
+          await student.save();
+          console.log("Cart updated successfully");
+          res
+            .status(200)
+            .json({ message: "Added Item into the cart successfully" });
+        }
+      }
+    } else {
+      const newCart = new Cart({
+        product_id,
+        product_name,
+        price,
+        quantity,
+        limited,
+        sub_total,
+        variation,
+        sizes,
+        batch,
+        imageUrl1,
+      });
+      await newCart.save();
+
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      student.cart.push(newCart);
+      await student.save();
+
+      res
+        .status(200)
+        .json({ message: "Added Item into the cart successfully" });
     }
-
-    student.cart.push(newCart);
-    await student.save();
-
-    res.status(200).json({ message: "Added Item into the cart successful" });
   } catch (error) {
     if (error.code === 11000) {
       res.status(400).json({ message: "Cannot add item in cart" });

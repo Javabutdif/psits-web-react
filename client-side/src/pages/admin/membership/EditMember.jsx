@@ -68,8 +68,6 @@ const EditMember = ({ isVisible, onClose, studentData, onSave }) => {
                   value={formData.id_number || ""}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md p-2 border-gray-300 shadow-sm hover:cursor-not-allowed"
-                  readOnly
-                  disabled
                 />
               </div>
 

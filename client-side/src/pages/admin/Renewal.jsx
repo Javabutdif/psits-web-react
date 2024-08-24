@@ -192,25 +192,25 @@ function MembershipRequest() {
     {
       key: "status",
       label: "Status",
-      selector: (row) => row.status,
+      selector: (row) => row.renew,
       sortable: true,
       cell: (row) => (
         <div className="text-center">
           <span
             className={`flex items-center gap-2 ${
-              row.status === "True"
+              row.renew === "Accepted"
                 ? "bg-green-200 text-green-800"
                 : "bg-red-200 text-red-800"
             } px-2 py-1 rounded text-xs`}
           >
             <i
               className={`fa ${
-                row.status === "True" ? "fa-check-circle" : "fa-times-circle"
+                row.renew === "Accepted" ? "fa-check-circle" : "fa-times-circle"
               } mr-1 ${
-                row.status === "True" ? "text-green-500" : "text-red-500"
+                row.renew === "Accepted" ? "text-green-500" : "text-red-500"
               }`}
             ></i>
-            {row.status === "True" ? "Paid" : "Unpaid"}
+            {row.renew === "Accepted" ? "Paid" : "Unpaid"}
           </span>
         </div>
       ),

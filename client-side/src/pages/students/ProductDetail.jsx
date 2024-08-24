@@ -419,22 +419,25 @@ const ProductDetail = () => {
             </div>
           )}
           <div className="flex gap-2">
-            <button
-              onClick={handleCart}
-              className={`flex gap-2 px-4 py-3 font-medium 
+            {!cartLimited && orderId !== _id && (
+              <button
+                onClick={handleCart}
+                className={`flex gap-2 px-4 py-3 font-medium 
             text-white rounded-lg bg-[#4398AC] hover:bg-opacity-80 
               transition-colors duration-300 ${
                 stocks <= 0 || (cartLimited && "cursor-not-allowed")
               } `}
-              disabled={
-                stocks <= 0 ||
-                (product.control === "limited-purchase" && orderId === _id) ||
-                cartLimited
-              }
-            >
-              <MdAddShoppingCart color="white" size={20} />
-              <p className="hidden md:inline-block">Add To Cart</p>
-            </button>
+                disabled={
+                  stocks <= 0 ||
+                  (product.control === "limited-purchase" && orderId === _id) ||
+                  cartLimited
+                }
+              >
+                <MdAddShoppingCart color="white" size={20} />
+                <p className="hidden md:inline-block">Add To Cart</p>
+              </button>
+            )}
+            ;
             <button
               className={`text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
                 stocks <= 0 || limited || cartLimited
