@@ -31,8 +31,6 @@ router.get("/", async (req, res) => {
       comments_count: post.comments?.summary.total_count || 0,
     }));
 
-    console.log("5 Recent Posts with Reactions and Comments: ", recentFeedData);
-
     // Fetch attachment data for each post
     const attachmentsPromises = recentFeedData.map(async (post) => {
       try {

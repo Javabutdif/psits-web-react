@@ -88,7 +88,15 @@ const Orders = () => {
                 <React.Fragment key={order._id}>
                   <tr className="border-t">
                     <td className="p-4 text-xs">{order._id}</td>
-                    <td className="p-4">{order.student_name}</td>
+                    <td className="p-4">
+                      <span className="text-sm "> {order.student_name}</span>
+                      <div>
+                        <span className="text-xs">ID: {order.id_number}</span>
+                      </div>
+                      <div>
+                        <span className="text-xs">RFID: {order.rfid}</span>
+                      </div>
+                    </td>
                     <td className="p-4">
                       {order.membership_discount ? "Discounted" : "No Discount"}
                     </td>
