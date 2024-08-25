@@ -59,7 +59,6 @@ router.post("/student-order", async (req, res) => {
   const itemsArray = Array.isArray(items) ? items : [items];
 
   try {
-
     const newOrder = new Orders({
       id_number,
       rfid,
@@ -76,28 +75,24 @@ router.post("/student-order", async (req, res) => {
 
     await newOrder.save();
 
- 
     const findCart = await Student.findOne({ id_number });
 
     if (!findCart) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    
     for (let item of itemsArray) {
       const productId = new ObjectId(item.product_id);
 
-   
       const findMerch = await Merch.findOne({ _id: productId });
 
       if (!findMerch) {
         console.warn(`Merchandise with ID ${productId} not found`);
-        continue; 
+        continue;
       }
 
       const newStocks = findMerch.stocks - item.quantity;
 
-   
       const merchStocks = await Merch.updateOne(
         { _id: productId },
         { $set: { stocks: newStocks } }
@@ -107,7 +102,6 @@ router.post("/student-order", async (req, res) => {
         console.error(
           `Could not deduct the stocks for product ID ${productId}`
         );
-
       }
 
       await Student.updateOne(
@@ -115,7 +109,6 @@ router.post("/student-order", async (req, res) => {
         { $pull: { cart: { product_id: productId } } }
       );
 
-    
       await Cart.findByIdAndDelete(item._id);
     }
 
@@ -172,25 +165,49 @@ router.put("/approve-order", async (req, res) => {
 
   try {
     const orderId = new ObjectId(order_id);
-    const successfulOrder = await Orders.updateOne(
-      { _id: orderId },
-      {
-        $set: {
-          reference_code: reference_code,
-          order_status: "Paid",
-          admin: admin,
-          transaction_date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
-        },
-      }
-    );
+    const successfulOrder = await Orders.findByIdAndUpdate(orderId, {
+      $set: {
+        reference_code: reference_code,
+        order_status: "Paid",
+        admin: admin,
+        transaction_date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+      },
+    });
 
     if (!successfulOrder) {
-      return res.status(404).json({ message: "Order didnt process" });
+      return res.status(404).json({ message: "Order didn't process" });
+    }
+
+    // Fetch each item in the order and update the corresponding merchandise
+    const { items } = successfulOrder;
+
+    if (items && items.length > 0) {
+      await Promise.all(
+        items.map(async (item) => {
+          await Merch.findByIdAndUpdate(item.product_id, {
+            $push: {
+              order_details: {
+                product_name: item.product_name,
+                id_number: successfulOrder.id_number,
+                student_name: successfulOrder.student_name,
+                rfid: successfulOrder.rfid,
+                batch: item.batch,
+                size: item.sizes,
+                variation: item.variation,
+                quantity: item.quantity,
+                total: item.sub_total,
+                order_date: successfulOrder.order_date,
+                transaction_date: successfulOrder.transaction_date,
+              },
+            },
+          });
+        })
+      );
     }
 
     res.status(200).json({ message: "Approve Order Successfully" });
   } catch (error) {
-    res.status(500).json({ message: error });
+    res.status(500).json({ message: error.message });
   }
 });
 

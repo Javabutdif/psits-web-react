@@ -41,7 +41,8 @@ const Receipt = forwardRef(
       itemTotal,
       total,
       reprint,
-      items, // Added items prop
+      items,
+      membership,
     },
     ref
   ) => (
@@ -82,6 +83,8 @@ const Receipt = forwardRef(
           </div>
         )}
 
+        <hr className="my-2" />
+        <span>Membership: {membership}</span>
         <hr className="my-2" />
         {type === "Order" && (
           <>

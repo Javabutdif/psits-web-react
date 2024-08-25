@@ -105,7 +105,9 @@ const Orders = () => {
         <table className="min-w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="p-4">Order ID</th>
+              <th className="p-4">
+                {selectedTab === "Pending" ? "Order ID" : "Reference Code"}
+              </th>
               <th className="p-4">Student Name</th>
               <th className="p-4">Membership</th>
               <th className="p-4">Total Price</th>
@@ -123,7 +125,7 @@ const Orders = () => {
               filteredOrders.map((order) => (
                 <React.Fragment key={order._id}>
                   <tr className="border-t">
-                    <td className="p-4 text-xs">{order._id}</td>
+                    <td className="p-4 text-xs">{selectedTab === "Pending" ? order._id : order.reference_code}</td>
                     <td className="p-4">
                       <span className="text-sm "> {order.student_name}</span>
                       <div>
@@ -256,6 +258,11 @@ const Orders = () => {
                               name={selectedStudent}
                               type={"Order"}
                               admin={rowData.admin}
+                              membership={
+                                rowData.membership_discount
+                                  ? "Discounted"
+                                  : "No Discount"
+                              }
                               reprint={true}
                               qty={rowData.qty}
                               itemTotal={rowData.itemTotal}
@@ -347,6 +354,9 @@ const Orders = () => {
           year={selectedOrder.year}
           name={selectedOrder.student_name}
           type={"Order"}
+          membership={
+            selectedOrder.membership_discount ? "Discounted" : "No Discount"
+          }
           onCancel={handleModalClose}
           onSubmit={handleApproveConfirm}
           items={selectedOrder.items}
