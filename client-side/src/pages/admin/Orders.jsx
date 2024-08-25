@@ -256,6 +256,11 @@ const Orders = () => {
                               name={selectedStudent}
                               type={"Order"}
                               admin={rowData.admin}
+                              membership={
+                                rowData.membership_discount
+                                  ? "Discounted"
+                                  : "No Discount"
+                              }
                               reprint={true}
                               qty={rowData.qty}
                               itemTotal={rowData.itemTotal}
@@ -347,6 +352,9 @@ const Orders = () => {
           year={selectedOrder.year}
           name={selectedOrder.student_name}
           type={"Order"}
+          membership={
+            selectedOrder.membership_discount ? "Discounted" : "No Discount"
+          }
           onCancel={handleModalClose}
           onSubmit={handleApproveConfirm}
           items={selectedOrder.items}

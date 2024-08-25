@@ -15,7 +15,7 @@ import Membership from "./pages/admin/Membership";
 import Merchandise from "./pages/admin/Merchandise";
 import Inventory from "./pages/admin/Inventory";
 import Orders from "./pages/admin/Orders";
-import Analytics from "./pages/admin/Analytics";
+import Reports from "./pages/admin/Reports";
 import Resources from "./pages/admin/Resources";
 import Settings from "./pages/Settings";
 import MembershipRequest from "./pages/admin/MembershipRequest";
@@ -128,8 +128,8 @@ const App = () => {
             />
           </Route>
           <Route
-            path="analytics"
-            element={<PrivateRouteAdmin element={Analytics} />}
+            path="reports"
+            element={<PrivateRouteAdmin element={Reports} />}
           />
           <Route
             path="resources"

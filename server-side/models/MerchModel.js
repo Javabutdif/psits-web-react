@@ -2,6 +2,47 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
+const orderDetailSchema = new Schema({
+  product_name: {
+    type: String,
+  },
+  id_number: {
+    type: String,
+    required: true,
+  },
+  student_name: {
+    type: String,
+    required: true,
+  },
+  rfid: {
+    type: String,
+  },
+  batch: {
+    type: Number,
+  },
+  size: {
+    type: String,
+  },
+  variation: {
+    type: String,
+  },
+  quantity: {
+    type: Number,
+   
+  },
+  total: {
+    type: Number,
+    required: true,
+  },
+  order_date: {
+    type: String,
+    required: true,
+  },
+  transaction_date: {
+    type: String,
+  },
+});
+
 const salesDataSchema = new Schema({
   unitsSold: {
     type: Number,
@@ -75,6 +116,7 @@ const merchSchema = new Schema(
       type: salesDataSchema,
       default: () => ({}),
     },
+    order_details: [orderDetailSchema],
   },
   { timestamps: true }
 );

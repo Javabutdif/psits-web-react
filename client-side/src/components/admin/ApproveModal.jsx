@@ -26,6 +26,7 @@ function ApproveModal({
   itemTotal,
   total,
   items,
+  membership,
 }) {
   const componentRef = useRef();
   let [cash, setCash] = useState("");
@@ -178,6 +179,7 @@ function ApproveModal({
         <Receipt
           ref={componentRef}
           reference_code={reference_code}
+          membership={membership}
           course={course}
           product_name={formData.product_name}
           batch={formData.batch}
