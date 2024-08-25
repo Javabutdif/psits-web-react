@@ -3,7 +3,7 @@ import DataTable from "react-data-table-component";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { CSVLink } from "react-csv";
-import { membershipHistory, merchandiseAdmin } from "../../api/admin"; 
+import { membershipHistory, merchandiseAdmin } from "../../api/admin";
 
 const Reports = () => {
   const [membershipData, setMembershipData] = useState([]);
@@ -12,9 +12,8 @@ const Reports = () => {
   const [filteredMerchandiseData, setFilteredMerchandiseData] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [productNames, setProductNames] = useState([]);
+  const [productNames, setProductNames] = useState([""]);
 
-  
   const [filterID, setFilterID] = useState("");
   const [filterName, setFilterName] = useState("");
   const [filterRFID, setFilterRFID] = useState("");
@@ -65,11 +64,18 @@ const Reports = () => {
 
   const fetchMerchandiseData = async () => {
     try {
-      const data = await merchandiseAdmin();
-      const allOrderDetails = data.flatMap((order) => order.order_details);
-      setMerchandiseData(allOrderDetails);
-      setFilteredMerchandiseData(allOrderDetails);
-      setProductNames(data);
+     const data = await merchandiseAdmin();
+     const allOrderDetails = data
+       ? data.flatMap((order) => order.order_details || [])
+       : [];
+     const filteredOrderDetails = allOrderDetails.filter(
+       (detail) => detail !== undefined
+     );
+
+     setMerchandiseData(filteredOrderDetails);
+     setFilteredMerchandiseData(filteredOrderDetails);
+     setProductNames(data);
+     console.log(filteredOrderDetails);
     } catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
@@ -239,7 +245,7 @@ const Reports = () => {
               Filter
             </button>
             <CSVLink
-              data={filteredMembershipData || []} // Provide an empty array as fallback
+              data={filteredMembershipData.length ? filteredMembershipData : []}
               filename="membership-data.csv"
             >
               <button className="bg-green-500 text-white px-4 py-2 rounded">
@@ -262,8 +268,11 @@ const Reports = () => {
             >
               Filter
             </button>
+
             <CSVLink
-              data={filteredMerchandiseData || []} // Provide an empty array as fallback
+              data={
+                filteredMerchandiseData.length ? filteredMerchandiseData : []
+              }
               filename="merchandise-data.csv"
             >
               <button className="bg-green-500 text-white px-4 py-2 rounded">
