@@ -188,7 +188,7 @@ function MembershipRequest() {
               position !== "Auditor" &&
               position !== "Developer"
                 ? "Not Authorized"
-                : "Delete"
+                : "Cancel"
             }
             onClick={() => {
               if (
@@ -380,7 +380,7 @@ function MembershipRequest() {
 
       {isModalVisible && (
         <ConfirmationModal
-          confirmType={ConfirmActionType.DELETION}
+          confirmType={ConfirmActionType.CANCEL}
           onCancel={hideModal}
           onConfirm={handleConfirmDeletion}
         />

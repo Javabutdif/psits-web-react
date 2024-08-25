@@ -28,7 +28,11 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
           </button>
         </div>
         <div className="p-4">
-          <p>Are you sure you want to {confirmTypeWord} this student?</p>
+          <p>
+            Are you sure you want to {confirmTypeWord}
+            {confirmTypeWord === "cancel" ? " the membership request of " : " "}
+            this student?
+          </p>
         </div>
         <div className="p-4 border-t flex justify-end space-x-2">
           <button
@@ -43,7 +47,7 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
             className={`px-4 py-2 text-white rounded ${confirmButtonColor}`}
             onClick={onConfirm}
           >
-            {capitalizeFirstLetter(confirmTypeWord)}
+            {confirmTypeWord !== 'cancel' ? capitalizeFirstLetter(confirmTypeWord) : "Yes"}
           </button>
         </div>
       </div>
