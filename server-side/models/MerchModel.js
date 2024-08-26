@@ -21,14 +21,13 @@ const orderDetailSchema = new Schema({
     type: Number,
   },
   size: {
-    type: String,
+    type: Array,
   },
   variation: {
-    type: String,
+    type: Array,
   },
   quantity: {
     type: Number,
-   
   },
   total: {
     type: Number,

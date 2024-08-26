@@ -11,16 +11,42 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [selectedTab, setSelectedTab] = useState("Pending");
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [rowData, setPrintData] = useState("");
+  const [rowData, setPrintData] = useState(null);
   const [selectedStudent, setSelectedStudentName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [shouldPrint, setShouldPrint] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const componentRef = useRef();
   const printRef = useRef();
   const position = getPosition();
+
+  // Fetch and filter orders logic
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const data = await getAllOrders();
+      setOrders(data);
+      setFilteredOrders(data);
+    };
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    // Filter orders based on searchTerm and selectedTab
+    const filtered = orders.filter(
+      (order) =>
+        order.order_status === selectedTab &&
+        (order.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.id_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.rfid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.reference_code.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    setFilteredOrders(filtered);
+  }, [orders, selectedTab, searchTerm]);
 
   const handlePrintData = (row) => {
     setPrintData(row);
@@ -35,59 +61,20 @@ const Orders = () => {
     fullName += " " + words[words.length - 1];
 
     setSelectedStudentName(fullName);
+    console.log(shouldPrint);
+    console.log(rowData);
   };
+  useEffect(() => {
+    if (rowData) {
+      printRef.current.click();
+    }
+  }, [rowData]);
 
   const handlePrintComplete = () => {
-    setPrintData("");
+    console.log("Print Completed");
+    setPrintData(null);
     setShouldPrint(false);
   };
-
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const fetchedOrders = await getAllOrders();
-      setOrders(fetchedOrders);
-    };
-
-    fetchOrders();
-  }, []);
-
-  useEffect(() => {
-    if (selectedOrder) {
-      console.log(selectedOrder.items);
-    }
-  }, [selectedOrder]);
-
-  useEffect(() => {
-    const filterOrders = () => {
-      const result = orders.filter(
-        (order) =>
-          order.order_status === selectedTab &&
-          (order.student_name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-            order.id_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.rfid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.reference_code.includes(searchTerm) ||
-            order._id.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredOrders(result);
-    };
-
-    filterOrders();
-  }, [orders, selectedTab, searchTerm]);
-
-  // Pagination logic
-  const indexOfLastOrder = currentPage * itemsPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = filteredOrders.slice(
-    indexOfFirstOrder,
-    indexOfLastOrder
-  );
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
 
   const handleApproveClick = (order) => {
     setSelectedOrder(order);
@@ -98,23 +85,22 @@ const Orders = () => {
     setIsModalOpen(false);
     setSelectedOrder(null);
   };
-useEffect(() => {
-    if (rowData) {
-      printRef.current.click();
-    }
-  }, [rowData]);
+
   const handleApproveConfirm = () => {
-    // Implement the approval logic here
+    // Handle approve confirmation logic
     handleModalClose();
   };
 
-  const toggleDropdown = (orderId) => {
-    setOpenDropdown(openDropdown === orderId ? null : orderId);
+  const toggleDropdown = (id) => {
+    setOpenDropdown(openDropdown === id ? null : id);
   };
 
-  console.log(rowData);
-
-  console.log(printRef.current);
+  // Pagination logic
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const currentOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="p-4 pt-20">
@@ -161,11 +147,12 @@ useEffect(() => {
                 <th className="p-4">Transaction Date</th>
               )}
               <th className="p-4">Status</th>
+              {selectedTab === "Paid" && <th className="p-4">Managed By</th>}
               {selectedTab !== "Paid" && <th className="p-4">Actions</th>}
             </tr>
           </thead>
           <tbody>
-            {currentOrders.length >= 0 ? (
+            {currentOrders.length > 0 ? (
               currentOrders.map((order) => (
                 <React.Fragment
                   key={
@@ -179,7 +166,7 @@ useEffect(() => {
                         : order.reference_code}
                     </td>
                     <td className="p-4">
-                      <span className="text-sm "> {order.student_name}</span>
+                      <span className="text-sm">{order.student_name}</span>
                       <div>
                         <span className="text-xs">ID: {order.id_number}</span>
                       </div>
@@ -207,26 +194,6 @@ useEffect(() => {
                       >
                         {order.order_status}
                       </span>
-                    </td>
-                    {order.order_status !== "Paid" && (
-                      <td className="p-4">
-                        <button
-                          onClick={() => handleApproveClick(order)}
-                          className="p-1 rounded hover:bg-green-600 text-white bg-green-500"
-                        >
-                          Approve
-                        </button>
-                      </td>
-                    )}
-                    <td className="p-4">
-                      <button
-                        onClick={() => toggleDropdown(order._id)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        {openDropdown === order._id
-                          ? "Hide Items"
-                          : "Show Items"}
-                      </button>
                     </td>
                     {order.order_status === "Paid" && (
                       <td className="p-4">
@@ -281,50 +248,32 @@ useEffect(() => {
                               position !== "Developer"
                             }
                           />
-                          <div style={{ display: "none" }}>
-                            {shouldPrint && (
-                              <ReactToPrint
-                                trigger={() => (
-                                  <button
-                                    ref={printRef}
-                                    style={{ display: "none" }}
-                                  >
-                                    Print
-                                  </button>
-                                )}
-                                content={() => componentRef.current}
-                                onAfterPrint={handlePrintComplete}
-                              />
-                            )}
-
-                            <Receipt
-                              ref={componentRef}
-                              reference_code={rowData.reference_code}
-                              course={rowData.course}
-                              product_name={rowData.product_name}
-                              batch={rowData.batch}
-                              size={rowData.size}
-                              variation={rowData.variation}
-                              total={rowData.total}
-                              cash={rowData.cash}
-                              year={rowData.year}
-                              name={selectedStudent}
-                              type={"Order"}
-                              admin={rowData.admin}
-                              membership={
-                                rowData.membership_discount
-                                  ? "Discounted"
-                                  : "No Discount"
-                              }
-                              reprint={true}
-                              qty={rowData.qty}
-                              itemTotal={rowData.itemTotal}
-                              items={rowData.items}
-                            />
-                          </div>
                         </ButtonsComponent>
                       </td>
                     )}
+                    {order.order_status !== "Paid" && (
+                      <td className="p-4">
+                        <button
+                          onClick={() => handleApproveClick(order)}
+                          className="p-1 rounded hover:bg-green-600 text-white bg-green-500"
+                        >
+                          Approve
+                        </button>
+                      </td>
+                    )}
+                    {order.order_status === "Paid" && (
+                      <td className="p-4">{order.admin}</td>
+                    )}
+                    <td className="p-4">
+                      <button
+                        onClick={() => toggleDropdown(order._id)}
+                        className="text-blue-500 hover:underline"
+                      >
+                        {openDropdown === order._id
+                          ? "Hide Items"
+                          : "Show Items"}
+                      </button>
+                    </td>
                   </tr>
                   {openDropdown === order._id && (
                     <tr>
@@ -388,38 +337,38 @@ useEffect(() => {
               ))
             ) : (
               <tr>
-                <td colSpan="10" className="p-4 text-center">
+                <td colSpan="8" className="p-4 text-center text-gray-500">
                   No orders found
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-      </div>
 
-      {/* Pagination Controls */}
-      <div className="mt-4 flex justify-between items-center">
-        <button
-          onClick={() => setCurrentPage(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
-        >
-          Previous
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
-        >
-          Next
-        </button>
+        {/* Pagination Controls */}
+        <div className="mt-4 flex justify-between items-center">
+          <button
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {/* Approve Modal */}
-      {isModalOpen && (
+      {isModalOpen && selectedOrder && (
         <ApproveModal
           reference_code={
             Math.floor(Math.random() * (999999999 - 111111111)) + 111111111
@@ -439,6 +388,46 @@ useEffect(() => {
           total={selectedOrder.total}
         />
       )}
+
+      {/* Conditional Rendering of Receipt */}
+      <div style={{ display: "none" }}>
+        {shouldPrint && rowData && (
+          <ReactToPrint
+            trigger={() => (
+              <button ref={printRef} style={{ display: "none" }}>
+                Print
+              </button>
+            )}
+            content={() => componentRef.current}
+            onAfterPrint={handlePrintComplete}
+          />
+        )}
+
+        {shouldPrint && rowData && (
+          <Receipt
+            ref={componentRef}
+            reference_code={rowData.reference_code}
+            course={rowData.course}
+            product_name={rowData.product_name}
+            batch={rowData.batch}
+            size={rowData.size}
+            variation={rowData.variation}
+            total={rowData.total}
+            cash={rowData.cash}
+            year={rowData.year}
+            name={selectedStudent}
+            type={"Order"}
+            admin={rowData.admin}
+            membership={
+              rowData.membership_discount ? "Discounted" : "No Discount"
+            }
+            reprint={true}
+            qty={rowData.qty}
+            itemTotal={rowData.itemTotal}
+            items={rowData.items}
+          />
+        )}
+      </div>
     </div>
   );
 };
