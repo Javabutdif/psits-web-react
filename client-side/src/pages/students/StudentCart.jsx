@@ -126,8 +126,10 @@ const OrderSummary = ({ subTotal, discount, statusVerify, totalPrice }) => {
 
 
 const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => {
-  const { imageUrl1, product_id, product_name, price, quantity, selected } = product;
+  const { imageUrl1, product_id, product_name, price, quantity, selected, limited} = product;
   const [isModalOpen, setModalOpen] = useState(false);
+
+  console.log(product)
   
   const handleDeleteClick = () => {
     setModalOpen(true);
@@ -184,6 +186,7 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
         <button
           className="bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg p-2 transition duration-150 ease-in-out text-xs sm:text-sm"
           onClick={() => onQuantityChange(product_id, quantity + 1)}
+          disabled={limited} // Corrected attribute
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v14m7-7H5" />
@@ -192,9 +195,11 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
         <button
           className="ml-0 sm:ml-4 text-red-600 hover:text-red-800 font-medium transition duration-150 ease-in-out text-xs sm:text-sm"
           onClick={handleDeleteClick}
+          disabled={limited} // Corrected attribute
         >
           Remove
         </button>
+
       </div>
       <Modal
         isOpen={isModalOpen}

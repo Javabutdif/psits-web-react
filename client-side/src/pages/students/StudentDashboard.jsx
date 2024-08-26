@@ -40,6 +40,7 @@ const StudentDashboard = () => {
   if (error) {
     return <div>Error: {error}</div>;
   }
+  console.log(membershipStatus)
 
   return (
     <div className="max-w-[1600px] mx-auto grid grid-cols-1 gap-4 py-5 md:grid-cols-2 lg:grid-cols-7 ">
@@ -51,7 +52,7 @@ const StudentDashboard = () => {
         </>
       ) : (
         <>
-          <OperationHours styles={`self-start md:col-start-1 md:${membershipStatus !== 'None' ? 'col-end-3' : 'col-end-2'} lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3`}/>
+          <OperationHours styles={`self-start md:col-start-1 md:${membershipStatus === 'Accepted' && 'text-sm'} lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3`}/>
           {membershipStatus === "None" && (
             <MembershipBanner styles="lg:row-start-3 lg:col-start-6 lg:col-end-8" />
           )}
