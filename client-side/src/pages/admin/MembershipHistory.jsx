@@ -12,6 +12,7 @@ function MembershipHistory() {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [shouldPrint, setShouldPrint] = useState(false);
 
   const [rowData, setPrintData] = useState("");
   const [selectedStudent, setSelectedStudentName] = useState("");
@@ -48,6 +49,7 @@ function MembershipHistory() {
 
   const handlePrintData = (row) => {
     setPrintData(row);
+    setShouldPrint(true);
     const name = row.name;
     const words = name.split(" ");
     let fullName = "";
@@ -171,35 +173,6 @@ function MembershipHistory() {
               position !== "Developer"
             }
           />
-          <div style={{ display: "none" }}>
-            <ReactToPrint
-              trigger={() => (
-                <button ref={printRef} style={{ display: "none" }}>
-                  Print
-                </button>
-              )}
-              content={() => componentRef.current}
-              onAfterPrint={handlePrintComplete}
-            />
-            <Receipt
-              ref={componentRef}
-              reference_code={rowData.reference_code}
-              course={rowData.course}
-              product_name={rowData.product_name}
-              batch={rowData.batch}
-              size={rowData.size}
-              variation={rowData.variation}
-              total={50}
-              cash={rowData.cash}
-              year={rowData.year}
-              name={selectedStudent}
-              type={rowData.type}
-              admin={rowData.admin}
-              reprint={true}
-              qty={1}
-              itemTotal={50}
-            />
-          </div>
         </ButtonsComponent>
       ),
     },
@@ -210,33 +183,37 @@ function MembershipHistory() {
       <TableComponent columns={columns} data={filteredData} />
 
       <div style={{ display: "none" }}>
-        <ReactToPrint
-          trigger={() => (
-            <button ref={printRef} style={{ display: "none" }}>
-              Print
-            </button>
-          )}
-          content={() => componentRef.current}
-          onAfterPrint={handlePrintComplete}
-        />
-        <Receipt
-          ref={componentRef}
-          reference_code={rowData.reference_code}
-          course={rowData.course}
-          product_name={rowData.product_name}
-          batch={rowData.batch}
-          size={rowData.size}
-          variation={rowData.variation}
-          total={50}
-          cash={rowData.cash}
-          year={rowData.year}
-          name={selectedStudent}
-          type={rowData.type}
-          admin={rowData.admin}
-          reprint={true}
-          qty={1}
-          itemTotal={50}
-        />
+        {shouldPrint && rowData && (
+          <ReactToPrint
+            trigger={() => (
+              <button ref={printRef} style={{ display: "none" }}>
+                Print
+              </button>
+            )}
+            content={() => componentRef.current}
+            onAfterPrint={handlePrintComplete}
+          />
+        )}
+        {shouldPrint && rowData && (
+          <Receipt
+            ref={componentRef}
+            reference_code={rowData.reference_code}
+            course={rowData.course}
+            product_name={rowData.product_name}
+            batch={rowData.batch}
+            size={rowData.size}
+            variation={rowData.variation}
+            total={50}
+            cash={rowData.cash}
+            year={rowData.year}
+            name={selectedStudent}
+            type={rowData.type}
+            admin={rowData.admin}
+            reprint={true}
+            qty={1}
+            itemTotal={50}
+          />
+        )}
       </div>
     </>
   );

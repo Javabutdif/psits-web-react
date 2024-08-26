@@ -82,7 +82,7 @@ function ApproveModal({
         } else {
           if (await approveOrder(formData)) {
             showToast("success", "Approve Order Successfully");
-            console.log(formData);
+
             setShouldPrint(true);
           } else {
             showToast("error", "Internal Server Error!");

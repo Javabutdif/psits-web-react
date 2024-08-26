@@ -164,26 +164,41 @@ router.put("/approve-order", async (req, res) => {
   const { reference_code, order_id, admin } = req.body;
 
   try {
+    // Validate input
+    if (!ObjectId.isValid(order_id)) {
+      return res.status(400).json({ message: "Invalid order ID" });
+    }
+
     const orderId = new ObjectId(order_id);
-    const successfulOrder = await Orders.findByIdAndUpdate(orderId, {
-      $set: {
-        reference_code: reference_code,
-        order_status: "Paid",
-        admin: admin,
-        transaction_date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+    const successfulOrder = await Orders.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          reference_code: reference_code,
+          order_status: "Paid",
+          admin: admin,
+          transaction_date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+        },
       },
-    });
+      { new: true }
+    ); // Use `new: true` to return the updated document
 
     if (!successfulOrder) {
-      return res.status(404).json({ message: "Order didn't process" });
+      return res.status(404).json({ message: "Order not found" });
     }
 
     // Fetch each item in the order and update the corresponding merchandise
     const { items } = successfulOrder;
 
-    if (items && items.length > 0) {
+    if (Array.isArray(items) && items.length > 0) {
       await Promise.all(
         items.map(async (item) => {
+          // Ensure item.sizes and item.variation are arrays
+          const sizes = Array.isArray(item.sizes) ? item.sizes : [];
+          const variations = Array.isArray(item.variation)
+            ? item.variation
+            : [];
+
           await Merch.findByIdAndUpdate(item.product_id, {
             $push: {
               order_details: {
@@ -192,22 +207,30 @@ router.put("/approve-order", async (req, res) => {
                 student_name: successfulOrder.student_name,
                 rfid: successfulOrder.rfid,
                 batch: item.batch,
-                size: item.sizes,
-                variation: item.variation,
+                size: { $each: sizes },
+                variation: { $each: variations },
                 quantity: item.quantity,
                 total: item.sub_total,
                 order_date: successfulOrder.order_date,
                 transaction_date: successfulOrder.transaction_date,
               },
             },
+            $inc: {
+              "sales_data.unitsSold": item.quantity,
+              "sales_data.totalRevenue": item.sub_total,
+            },
           });
         })
       );
     }
 
-    res.status(200).json({ message: "Approve Order Successfully" });
+    res.status(200).json({ message: "Order approved successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error occurred:", error); // Log the error details with context
+    res.status(500).json({
+      message: "An error occurred while approving the order",
+      error: error.message,
+    });
   }
 });
 
