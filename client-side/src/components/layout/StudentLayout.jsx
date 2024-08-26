@@ -6,6 +6,7 @@ import ProfileHeader from "../ProfileHeader";
 const StudentLayout = () => {
   const location = useLocation();
   const [label, setLabel] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const pathParts = location.pathname.split("/");
@@ -15,6 +16,13 @@ const StudentLayout = () => {
     );
   }, [location]);
 
+  const toggleSidebar = () => setIsSidebarOpen(true)
+  const toggleCloseSidebar = () => setIsSidebarOpen(false)
+
+
+  useEffect(() => {
+    console.log(isSidebarOpen)
+  })
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
     { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
@@ -25,9 +33,12 @@ const StudentLayout = () => {
 
   return (
     <div className="min-h-screen relative">
-      <AsideBar navItems={navItems}/>
-      <ProfileHeader label={label} /> 
-      <main className="ml-[4rem] md:ml-[5rem] 2xl:ml-[15rem] min-h-screen px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+      <AsideBar navItems={navItems} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}/>
+      <ProfileHeader 
+        label={label} 
+        toggleSidebar={toggleSidebar}
+      /> 
+      <main className="2xl:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
         <Outlet />
       </main>
     </div>

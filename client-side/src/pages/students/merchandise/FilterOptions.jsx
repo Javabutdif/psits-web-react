@@ -18,9 +18,10 @@ const FilterOptions = ({
   onPriceChange,
   minPrice,
   maxPrice,
-  onClose
+  onClose,
+  onReset // Add onReset prop
 }) => {
-  const controlOptions = ['limited', 'bulk'];
+  const controlOptions = ['limited-purchase', 'bulk-purchase'];
   const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
   const colorOptions = [
     'red', 'blue', 'green', 'yellow', 'black', 'white',
@@ -116,6 +117,18 @@ const FilterOptions = ({
     </div>
   );
 
+  const handleReset = () => {
+    onCategoryChange([]); // Clear selected categories
+    onControlChange([]); // Clear selected controls
+    onSizeChange([]); // Clear selected sizes
+    onColorChange([]); // Clear selected colors
+    onStartDateChange(''); // Reset start date
+    onEndDateChange(''); // Reset end date
+    onPriceChange('', 'min'); // Reset min price
+    onPriceChange('', 'max'); // Reset max price
+    onReset(); // Optional: call any additional reset function
+  };
+
   return (
     <motion.div 
       className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-end"
@@ -185,6 +198,15 @@ const FilterOptions = ({
           maxPrice={maxPrice}
           onPriceChange={onPriceChange}
         />
+
+        <div className="flex justify-between mt-6">
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
+          >
+            Reset
+          </button>
+        </div>
       </motion.div>
     </motion.div>
   );

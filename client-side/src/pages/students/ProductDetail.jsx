@@ -324,8 +324,8 @@ const ProductDetail = () => {
 
   return (
     <motion.div
-      className="mt-4 product-detail p-3 sm:p-6 mx-auto bg-white rounded-lg shadow-sm max-w-5xl"
-      initial={{ opacity: 0 }}
+      className="mt-4 product-detail bg-white p-3 sm:p-6 mx-auto rounded-lg shadow-sm "
+      initial={{ opacity: 0 }}z
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
