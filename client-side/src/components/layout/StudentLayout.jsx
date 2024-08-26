@@ -16,33 +16,31 @@ const StudentLayout = () => {
     );
   }, [location]);
 
-  const toggleSidebar = () => setIsSidebarOpen(true)
-  const toggleCloseSidebar = () => setIsSidebarOpen(false)
+  const toggleSidebar = () => setIsSidebarOpen(true);
+  const toggleCloseSidebar = () => setIsSidebarOpen(false);
 
-
-  useEffect(() => {
-    console.log(isSidebarOpen)
-  })
+  useEffect(() => {});
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
     { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
     { text: "Resources", icon: "fas fa-book-open", path: "resources" },
     { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
-    { text: "Settings", icon: "fas fa-cog", path: "settings" }
+    { text: "Settings", icon: "fas fa-cog", path: "settings" },
   ];
 
   return (
     <div className="min-h-screen relative">
-      <AsideBar navItems={navItems} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}/>
-      <ProfileHeader 
-        label={label} 
-        toggleSidebar={toggleSidebar}
-      /> 
+      <AsideBar
+        navItems={navItems}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
+      <ProfileHeader label={label} toggleSidebar={toggleSidebar} />
       <main className="2xl:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
         <Outlet />
       </main>
     </div>
-  )
-} 
+  );
+};
 
-export default StudentLayout
+export default StudentLayout;

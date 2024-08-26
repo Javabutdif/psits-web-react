@@ -5,7 +5,6 @@ import { getId, getRfid } from "../../authentication/Authentication";
 import { getInformationData } from "../../authentication/Authentication";
 import { getMembershipStatusStudents } from "../../api/students";
 
-
 const Modal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
 
@@ -78,21 +77,17 @@ const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
     </div>
   ) : null;
 };
-
-
-const OrderSummary = ({ subTotal, discount, statusVerify, totalPrice }) => {
-  // Calculate the discount amount (assuming discount is a percentage)
-  const discountAmount = subTotal * (discount / 100);
-  
-  // Calculate the adjusted total price
-  const adjustedTotalPrice = statusVerify  ? totalPrice - 0.05 : totalPrice;
-  
-  // Update the total price with the discount
-  const finalTotalPrice = adjustedTotalPrice - discountAmount;
-
+const OrderSummary = ({
+  subTotal,
+  discountedTotal,
+  onCheckout,
+  totalPrice,
+}) => {
   return (
     <div className="row-start-2 col-span-full w-full lg:row-start-1 lg:col-start-4 lg:col-span-2 lg:max-w-sm mx-auto p-4 bg-white shadow-lg rounded-lg">
-      <h2 className="text-lg font-semibold mb-3 text-center sm:text-left">Order Summary</h2>
+      <h2 className="text-lg font-semibold mb-3 text-center sm:text-left">
+        Order Summary
+      </h2>
       <div className="border-t border-gray-200 pt-3">
         <div className="flex justify-between mb-1 text-sm sm:text-base">
           <span className="font-medium">SUB TOTAL</span>
@@ -100,11 +95,13 @@ const OrderSummary = ({ subTotal, discount, statusVerify, totalPrice }) => {
         </div>
         <div className="flex justify-between mb-1 text-sm sm:text-base">
           <span className="font-medium">Discount</span>
-          <span className="text-red-500">-₱{discountAmount.toFixed(2)}</span>
+          <span className="text-red-500">-₱{discountedTotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between mb-3 border-t border-gray-200 pt-1 text-sm sm:text-base">
           <span className="font-semibold text-base">TOTAL PRICE</span>
-          <span className="font-semibold text-base">₱{finalTotalPrice.toFixed(2)}</span>
+          <span className="font-semibold text-base">
+            ₱{totalPrice.toFixed(2)}
+          </span>
         </div>
         <div className="mt-4">
           <h3 className="text-base font-semibold mb-1">Claim Instructions:</h3>
@@ -117,6 +114,7 @@ const OrderSummary = ({ subTotal, discount, statusVerify, totalPrice }) => {
       <button
         type="button"
         className="mt-4 w-full bg-primary text-white py-2 rounded-md hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+        onClick={onCheckout} // Should be a function to handle showing the modal
       >
         Proceed to Checkout
       </button>
@@ -124,11 +122,16 @@ const OrderSummary = ({ subTotal, discount, statusVerify, totalPrice }) => {
   );
 };
 
-
-const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => {
-  const { imageUrl1, product_id, product_name, price, quantity, selected } = product;
+const CartItem = ({
+  product,
+  onQuantityChange,
+  onSelect,
+  onCheckboxChange,
+}) => {
+  const { imageUrl1, product_id, product_name, price, quantity, selected } =
+    product;
   const [isModalOpen, setModalOpen] = useState(false);
-  
+
   const handleDeleteClick = () => {
     setModalOpen(true);
   };
@@ -158,9 +161,9 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
         />
       </div> */}
       <div className="flex-shrink-0 w-full sm:w-1/4 mb-4 sm:mb-0">
-        <img 
-          src={imageUrl1} 
-          alt={product_name} 
+        <img
+          src={imageUrl1}
+          alt={product_name}
           className="object-cover w-full h-24 sm:h-32 rounded-md"
         />
       </div>
@@ -169,24 +172,52 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
           {product_name}
           <span className="block text-sm text-gray-600">ID: {product_id}</span>
         </h4>
-        <p className="text-sm sm:text-base font-medium text-gray-700">₱{price.toFixed(2)}</p>
+        <p className="text-sm sm:text-base font-medium text-gray-700">
+          ₱{price.toFixed(2)}
+        </p>
       </div>
       <div className="flex items-center mt-4 sm:mt-0 sm:ml-4 space-x-2 sm:space-x-4">
         <button
           className="bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg p-2 transition duration-150 ease-in-out text-xs sm:text-sm"
-          onClick={() => onQuantityChange(product_id, Math.max(quantity - 1, 1))}
+          onClick={() =>
+            onQuantityChange(product_id, Math.max(quantity - 1, 1))
+          }
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 12h14"
+            />
           </svg>
         </button>
-        <span className="text-xs sm:text-base font-medium text-gray-800">{quantity}</span>
+        <span className="text-xs sm:text-base font-medium text-gray-800">
+          {quantity}
+        </span>
         <button
           className="bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg p-2 transition duration-150 ease-in-out text-xs sm:text-sm"
           onClick={() => onQuantityChange(product_id, quantity + 1)}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v14m7-7H5" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 5v14m7-7H5"
+            />
           </svg>
         </button>
         <button
@@ -201,17 +232,15 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
       />
-
     </div>
   );
 };
-
 const StudentCart = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState({ membership: "", renew: "" });
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false); // This manages modal visibility
   const [id_number, student_name, email, course, year, role, position] =
     getInformationData();
   const [formData, setFormData] = useState({});
@@ -245,7 +274,6 @@ const StudentCart = () => {
     fetchStatus();
   }, []);
 
-  
   const statusVerify = () => {
     return (
       (status.membership === "Accepted" && status.renew === "None") ||
@@ -256,19 +284,47 @@ const StudentCart = () => {
   const handleQuantityChange = (id, newQuantity) => {
     setProducts((prevProducts) =>
       prevProducts.map((product) =>
-        product.product_id === id ? { ...product, quantity: newQuantity } : product
+        product.product_id === id
+          ? { ...product, quantity: newQuantity }
+          : product
       )
     );
   };
+  const handleCheckout = () => {
+    setShowModal(true);
+    setFormData({
+      id_number: getId(),
+      rfid: getRfid(),
+      course: course,
+      year: year,
+      student_name: student_name,
+      items: products,
+      membership_discount: statusVerify(),
+      total: totalPrice,
+      order_date: new Date().toLocaleString(),
+      order_status: "Pending",
+    });
+  };
 
+  const confirmOrder = async () => {
+    await makeOrder(formData);
+
+    setShowModal(false);
+  };
+
+  console.log(formData);
   const handleRemove = (id) => {
-    setProducts((prevProducts) => prevProducts.filter((product) => product.product_id !== id));
+    setProducts((prevProducts) =>
+      prevProducts.filter((product) => product.product_id !== id)
+    );
   };
 
   const handleCheckboxChange = (id) => {
     setProducts((prevProducts) =>
       prevProducts.map((product) =>
-        product.product_id === id ? { ...product, selected: !product.selected } : product
+        product.product_id === id
+          ? { ...product, selected: !product.selected }
+          : product
       )
     );
   };
@@ -281,15 +337,18 @@ const StudentCart = () => {
     return <div>Error: {error}</div>;
   }
 
-  const subTotal = products.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const discount = 0.05; // Calculate discount if applicable
-  const totalPrice = subTotal - discount;
+  const subTotal = products.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+  const discount = statusVerify() ? 0.05 : 0;
+  const discountedTotal = subTotal * discount;
+  const totalPrice = subTotal - discountedTotal;
 
   return (
     <div className="grid min-h-main-md grid-rows-[1fr_auto] grid-cols-3 xl:grid-cols-4 lg:grid-rows-2 lg:flex-row items-start gap-4 pb-4">
       <div className="relative row-start-1 col-span-full lg:col-span-3 lg:row-span-2 h-full bg-white">
         <div className="absolute inset-0 overflow-y-auto p-4">
-          {/* Render your cart items here */}
           {products.length === 0 ? (
             <p className="text-center text-gray-700">Your cart is empty.</p>
           ) : (
@@ -306,7 +365,20 @@ const StudentCart = () => {
         </div>
       </div>
 
-      <OrderSummary subTotal={subTotal} statusVerify={statusVerify} discount={discount} totalPrice={totalPrice} />
+      <OrderSummary
+        subTotal={subTotal}
+        discountedTotal={discountedTotal}
+        onCheckout={handleCheckout}
+        totalPrice={totalPrice}
+      />
+
+      <OrderModal
+        isVisible={showModal}
+        onClose={() => setShowModal(false)}
+        items={products}
+        total={totalPrice}
+        onConfirm={confirmOrder}
+      />
     </div>
   );
 };
