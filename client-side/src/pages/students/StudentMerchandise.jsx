@@ -140,7 +140,7 @@ const StudentMerchandise = () => {
     const name = product.name ? product.name.toLowerCase() : "";
     const category = product.category ? product.category.toLowerCase() : "";
     const control = product.control ? product.control.toLowerCase() : "";
-    console.log(control)
+
     const sizes = Array.isArray(product.selectedSizes)
       ? product.selectedSizes
       : [];
@@ -255,6 +255,3 @@ const StudentMerchandise = () => {
 };
 
 export default StudentMerchandise;
-
-
-  
