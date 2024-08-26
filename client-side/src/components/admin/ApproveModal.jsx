@@ -31,6 +31,7 @@ function ApproveModal({
   const componentRef = useRef();
   let [cash, setCash] = useState("");
   const [adminName, position] = getUser();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     reference_code: reference_code,
     id_number: id_number,
@@ -59,6 +60,7 @@ function ApproveModal({
   };
 
   const handleSubmit = async () => {
+    setIsLoading(true);
     try {
       if (formData.rfid === "") {
         formData.rfid = "N/A";
@@ -92,6 +94,7 @@ function ApproveModal({
     } catch (error) {
       console.error("Error submitting form", error);
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -164,6 +167,7 @@ function ApproveModal({
               type="button"
               className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
               onClick={handleSubmit}
+              disabled={isLoading}
             >
               Approve
             </button>
