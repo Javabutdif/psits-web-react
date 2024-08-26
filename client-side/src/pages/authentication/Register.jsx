@@ -71,12 +71,8 @@ function Register() {
     // Validate Names
     if (!formData.first_name) {
       newErrors.first_name = "First Name is required.";
-    } else if (!/^[A-Za-z]+(\s[A-Za-z]+){0,2}$/.test(formData.first_name)) {
+    } else if (!/^[A-Za-z]+( [A-Za-z]+)*$/.test(formData.first_name)) {
       newErrors.first_name = "Invalid First Name.";
-    }
-
-    if (!/^[A-Za-z]+$/.test(formData.middle_name)) {
-      newErrors.middle_name = "Invalid Middle Name.";
     }
 
     if (!formData.last_name) {
@@ -245,7 +241,7 @@ function Register() {
                 styles="w-full p-2 border border-gray-300 rounded"
               />
               <FormInput
-                label={"Middle Name"}
+                label={"Middle Name (Optional)"}
                 type="text"
                 id="middle_name"
                 name="middle_name"
