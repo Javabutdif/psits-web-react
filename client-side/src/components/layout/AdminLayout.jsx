@@ -6,6 +6,8 @@ import ProfileHeader from "../ProfileHeader";
 const AdminLayout = () => {
   const location = useLocation();
   const [label, setLabel] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
   useEffect(() => {
     const pathParts = location.pathname.split("/");
@@ -14,6 +16,13 @@ const AdminLayout = () => {
       extractedLabel === "profile" ? "Account Settings" : extractedLabel
     );
   }, [location]);
+
+
+  const toggleSidebar = () => setIsSidebarOpen(true)
+  
+  useEffect(() => {
+    console.log(isSidebarOpen)
+  })
 
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
@@ -27,12 +36,15 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className="flex w-full min-h-screen">
-      <AsideBar navItems={navItems} />
-      <div className="flex-1 ml-[4.4rem] min-h-screen  md:px-4: px-3 md:px-4: lg:px-6">
-        <ProfileHeader label={label} />
+    <div className="min-h-screen relative">
+      <AsideBar navItems={navItems} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}/>
+      <ProfileHeader 
+        label={label} 
+        toggleSidebar={toggleSidebar}
+      /> 
+      <main className="2xl:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };
