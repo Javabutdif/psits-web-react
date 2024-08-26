@@ -139,7 +139,7 @@ router.post("/approve-membership", async (req, res) => {
     );
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL,
       to: student.email, // Assuming student has an email field
       subject: "Your Receipt from PSITS - UC Main",
       html: emailTemplate,
