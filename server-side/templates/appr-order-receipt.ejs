@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      h2 {
+        text-align: center;
+        color: #333;
+      }
+      .details {
+        margin-bottom: 20px;
+      }
+      .details div {
+        margin-bottom: 10px;
+      }
+      .details label {
+        font-weight: bold;
+      }
+      .footer {
+        text-align: center;
+        font-size: 12px;
+        color: #777;
+      }
+      .logo-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .logo-container img {
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo-container">
+        <img src="cid:logo" alt="Logo" />
+      </div>
+      <h2>Order Receipt</h2>
+      <div class="details">
+        <div><label>Order ID:</label> <%= reference_code %></div>
+        <div><label>Transaction Date:</label> <%= transaction_date %></div>
+        <div><label>Student Name:</label> <%= student_name || 'N/A' %></div>
+        <div><label>RFID:</label> <%= rfid || 'N/A' %></div>
+        <div><label>Course:</label> <%= course || 'N/A' %></div>
+        <div><label>Year:</label> <%= year || 'N/A' %></div>
+        <div><label>Admin:</label> <%= admin || 'N/A' %></div>
+      </div>
+      <h3>Order Details</h3>
+      <table style="width: 100%; border-collapse: collapse">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
+              Product Name
+            </th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
+              Batch
+            </th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
+              Size
+            </th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
+              Variation
+            </th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
+              Quantity
+            </th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
+              Total
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(item => { %>
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px">
+              <%= item.product_name %>
+            </td>
+            <td style="border: 1px solid #ddd; padding: 8px">
+              <%= item.batch %>
+            </td>
+            <td style="border: 1px solid #ddd; padding: 8px">
+              <%= item.sizes %>
+            </td>
+            <td style="border: 1px solid #ddd; padding: 8px">
+              <%= item.variation %>
+            </td>
+            <td style="border: 1px solid #ddd; padding: 8px">
+              <%= item.quantity %>
+            </td>
+            <td style="border: 1px solid #ddd; padding: 8px">
+              ₱<%= item.sub_total %>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      <div class="details">
+        <div><label>Total:</label> ₱<%= total || 'N/A' %></div>
+        <div><label>Cash Given:</label> ₱<%= cash || 'N/A' %></div>
+        <div><label>Change:</label> ₱<%= (cash - total) || 'N/A' %></div>
+      </div>
+      <div class="footer">Thank you for your purchase!</div>
+    </div>
+  </body>
+</html>
