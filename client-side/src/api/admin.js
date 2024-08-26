@@ -102,12 +102,15 @@ export const approveMembership = async (formData) => {
     if (response.status === 200) {
       return true;
     } else {
+      console.error(response.data.message);
       showToast("error", response.data.message || "An error occurred");
     }
   } catch (error) {
     if (error.response && error.response.data) {
+      console.error(error);
       showToast("error", error.response.data.message || "An error occurred");
     } else {
+      console.error(error);
       showToast("error", "An error occurred");
     }
   }
@@ -276,7 +279,6 @@ export const merchandise = async () => {
     console.error("Error:", error);
   }
 };
-
 
 export const merchandiseAdmin = async () => {
   try {
