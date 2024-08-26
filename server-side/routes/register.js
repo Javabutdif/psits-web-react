@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const bycrypt = require("bcrypt");
 
 const Student = require("../models/StudentModel");
+const Admin = require("../models/AdminModel");
 
 const router = express.Router();
 
@@ -55,9 +56,23 @@ router.post("/register", async (req, res) => {
 // Student forgot password
 router.post("/student/forgot-password", async (req, res) => {
   try {
+    let user;
+    let position;
+
     // Find the user by email
-    const user = await Student.findOne({ email: req.body.email });
-    if (!user) {
+    const userAdmin = await Admin.findOne({ email: req.body.email });
+    const getUser = await Student.findOne({ email: req.body.email });
+    if (userAdmin) {
+      user = userAdmin;
+    } else if (getUser) {
+      user = getUser;
+    } else if (!getUser) {
+      console.error(`User with email ${req.body.email} not found`);
+      return res.status(404).send({ message: "User not found" });
+    } else if (!userAdmin) {
+      console.error(`User with email ${req.body.email} not found`);
+      return res.status(404).send({ message: "User not found" });
+    } else {
       console.error(`User with email ${req.body.email} not found`);
       return res.status(404).send({ message: "User not found" });
     }
@@ -133,20 +148,28 @@ router.post("/student/reset-password/:token", async (req, res) => {
     if (!decodedToken) {
       return res.status(401).send({ message: "Invalid token" });
     }
-
+    let user;
     // find the user with the id from the token
-    const user = await Student.findOne({ _id: decodedToken.userId });
-    if (!user) {
+    const getStudent = await Student.findOne({ _id: decodedToken.userId });
+    const getAdmin = await Admin.findOne({ _id: decodedToken.userId });
+    if (getStudent) {
+      // Hash the new password
+      const salt = await bycrypt.genSalt(10);
+      req.body.newPassword = await bycrypt.hash(req.body.newPassword, salt);
+
+      // Update user's password, clear reset token and expiration time
+      getStudent.password = req.body.newPassword;
+      await getStudent.save();
+    } else if (getAdmin) {
+      const salt = await bycrypt.genSalt(10);
+      req.body.newPassword = await bycrypt.hash(req.body.newPassword, salt);
+
+      // Update user's password, clear reset token and expiration time
+      getAdmin.password = req.body.newPassword;
+      await getAdmin.save();
+    } else {
       return res.status(401).send({ message: "no user found" });
     }
-
-    // Hash the new password
-    const salt = await bycrypt.genSalt(10);
-    req.body.newPassword = await bycrypt.hash(req.body.newPassword, salt);
-
-    // Update user's password, clear reset token and expiration time
-    user.password = req.body.newPassword;
-    await user.save();
 
     // Send success response
     res.status(200).send({ message: "Password updated" });

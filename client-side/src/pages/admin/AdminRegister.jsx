@@ -7,13 +7,16 @@ import { showToast } from "../../utils/alertHelper";
 function AdminRegister() {
   const [formData, setFormData] = useState({
     id_number: "",
+    email: "",
     password: "",
+    confirmPassword: "",
     name: "",
     course: "",
     year: "",
     position: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,6 +29,13 @@ function AdminRegister() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Password error trapping
+    if (formData.password !== formData.confirmPassword) {
+      showToast("error", "Passwords do not match");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -87,13 +97,30 @@ function AdminRegister() {
                 </div>
                 <div className="mb-4">
                   <label
+                    htmlFor="email"
+                    className="block text-gray-700 text-sm font-bold mb-2"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label
                     htmlFor="password"
                     className="block text-gray-700 text-sm font-bold mb-2"
                   >
                     Password
                   </label>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     id="password"
                     name="password"
@@ -101,6 +128,37 @@ function AdminRegister() {
                     onChange={handleChange}
                     required
                   />
+                </div>
+                <div className="mb-4">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-gray-700 text-sm font-bold mb-2"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <input
+                    type="checkbox"
+                    id="showPassword"
+                    checked={showPassword}
+                    onChange={() => setShowPassword(!showPassword)}
+                  />
+                  <label
+                    htmlFor="showPassword"
+                    className="ml-2 text-sm text-gray-700"
+                  >
+                    Show Password
+                  </label>
                 </div>
                 <div className="mb-4">
                   <label
@@ -220,7 +278,7 @@ function AdminRegister() {
                     to="/login"
                     className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                   >
-                    Back
+                    Cancel
                   </Link>
                 </div>
               </form>
