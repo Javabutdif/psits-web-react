@@ -8,6 +8,9 @@ const Merch = require("../models/MerchModel");
 const { ObjectId } = require("mongodb");
 require("dotenv").config();
 const { format } = require("date-fns");
+const nodemailer = require("nodemailer");
+const ejs = require("ejs");
+const path = require("path"); // Import path module
 
 const router = express.Router();
 router.get("/", async (req, res) => {
@@ -161,7 +164,7 @@ router.put("/cancel/:product_id", async (req, res) => {
 });
 
 router.put("/approve-order", async (req, res) => {
-  const { reference_code, order_id, admin } = req.body;
+  const { reference_code, order_id, admin, cash } = req.body;
 
   try {
     // Validate input
@@ -185,6 +188,15 @@ router.put("/approve-order", async (req, res) => {
 
     if (!successfulOrder) {
       return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Fetch the student based on id_number from the order
+    const student = await Student.findOne({
+      id_number: successfulOrder.id_number,
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
     }
 
     // Fetch each item in the order and update the corresponding merchandise
@@ -224,7 +236,63 @@ router.put("/approve-order", async (req, res) => {
       );
     }
 
-    res.status(200).json({ message: "Order approved successfully" });
+    console.log(successfulOrder);
+
+    // Render the email template
+    const emailTemplate = await ejs.renderFile(
+      path.join(__dirname, "../templates/appr-order-receipt.ejs"), // Path to the ejs file
+      {
+        reference_code: successfulOrder.reference_code,
+        transaction_date: format(
+          new Date(successfulOrder.transaction_date),
+          "MMMM d, yyyy"
+        ),
+        student_name: student
+          ? `${student.first_name} ${student.middle_name} ${student.last_name}`
+          : "N/A",
+        rfid: successfulOrder.rfid || "N/A",
+        course: student.course || "N/A",
+        year: student.year || "N/A",
+        admin: admin || "N/A",
+        items: successfulOrder.items,
+        cash: cash || "N/A",
+        total: successfulOrder.total || "N/A",
+      }
+    );
+
+    // Send Email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD_APP_EMAIL,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: student.email, // Use the student's email
+      subject: "Your Order Receipt from PSITS - UC Main",
+      html: emailTemplate,
+      attachments: [
+        {
+          filename: "psits.jpg",
+          path: path.join(__dirname, "../src/psits.jpg"),
+          cid: "logo", // Same CID as used in the EJS template
+        },
+      ],
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        return res.status(500).json({ message: "Error sending email", error });
+      } else {
+        console.log("Email sent: " + info.response);
+        return res
+          .status(200)
+          .json({ message: "Order approved and email sent" });
+      }
+    });
   } catch (error) {
     console.error("Error occurred:", error); // Log the error details with context
     res.status(500).json({
