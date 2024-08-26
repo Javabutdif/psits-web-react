@@ -35,7 +35,7 @@ export default {
       },
       minHeight: {
         'main': "calc(100vh - 100px)",
-        'main-md': "calc(100vh - 80px)",
+        'main-md': "calc(100vh - 72px)",
         'footer': "calc(100vh - 218px)",
       },
       container: {

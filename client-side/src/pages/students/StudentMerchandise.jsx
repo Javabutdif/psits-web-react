@@ -8,6 +8,7 @@ import { FaFilter, FaShoppingCart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import FilterOptions from "./merchandise/FilterOptions";
 import { motion, AnimatePresence } from "framer-motion";
+import Pagination from "../../components/Custom/Pagination";
 
 const StudentMerchandise = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,6 +23,8 @@ const StudentMerchandise = () => {
   const [endDate, setEndDate] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Customize this value based on your design
 
   const buttonVariants = {
     initial: { scale: 1 },
@@ -33,6 +36,19 @@ const StudentMerchandise = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleReset = () => {
+    setSearchQuery("");
+    setSelectedCategories([]);
+    setSelectedControls([]);
+    setSelectedSizes([]);
+    setSelectedColors([]);
+    setStartDate("");
+    setEndDate("");
+    setMinPrice("");
+    setMaxPrice("");
+    setCurrentPage(1);
   };
 
   const handleCategoryChange = (category) => {
@@ -67,49 +83,6 @@ const StudentMerchandise = () => {
     );
   };
 
-  const toggleFilterOption = () => {
-    setIsFilterOptionOpen((prevState) => !prevState);
-  };
-
- 
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const result = await merchandise();
-
-        const currentDate = new Date();
-
-        const filteredProducts = result.filter((item) => {
-          const startDate = new Date(item.start_date);
-          const endDate = new Date(item.end_date);
-
-          return currentDate >= startDate && currentDate <= endDate;
-        });
-
-        setProducts(filteredProducts);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
- useEffect(() => {
-   fetchData();
- }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        filterOptionsRef.current &&
-        !filterOptionsRef.current.contains(event.target)
-      ) {
-        setIsFilterOptionOpen(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   const handleStartDateChange = (date) => {
     setStartDate(date);
   };
@@ -126,10 +99,48 @@ const StudentMerchandise = () => {
     }
   };
 
+  const toggleFilterOption = () => {
+    setIsFilterOptionOpen((prevState) => !prevState);
+  };
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const result = await merchandise();
+
+      const currentDate = new Date();
+
+      const filteredProducts = result.filter((item) => {
+        const startDate = new Date(item.start_date);
+        const endDate = new Date(item.end_date);
+
+        return currentDate >= startDate && currentDate <= endDate;
+      });
+
+      setProducts(filteredProducts);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleCart = () => navigate("../cart");
+
+  // Filter and paginate products
   const filteredProducts = products.filter((product) => {
     const name = product.name ? product.name.toLowerCase() : "";
     const category = product.category ? product.category.toLowerCase() : "";
     const control = product.control ? product.control.toLowerCase() : "";
+    console.log(control)
     const sizes = Array.isArray(product.selectedSizes)
       ? product.selectedSizes
       : [];
@@ -167,7 +178,14 @@ const StudentMerchandise = () => {
       matchesMaxPrice
     );
   });
-  const handleCart = () => navigate("../cart");
+
+  // Calculate the products to display based on pagination
+  const totalItems = filteredProducts.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="max-w-[1600px] mx-auto py-5">
@@ -182,7 +200,7 @@ const StudentMerchandise = () => {
                 icon={<FaFilter />}
                 onClick={toggleFilterOption}
                 styles="self-stretch bg-neutral-medium hover:bg-neutral-dark hover:text-neutral-light rounded-md flex items-center text-md lg:text-xl gap-2 p-3"
-                textClass="hidden md:block text-sm"
+                textClass="text-sm"
                 variants={buttonVariants}
                 whileHover="hover"
                 whileTap="tap"
@@ -206,6 +224,7 @@ const StudentMerchandise = () => {
                     minPrice={minPrice}
                     maxPrice={maxPrice}
                     onClose={toggleFilterOption}
+                    onReset={handleReset}
                   />
                 )}
               </AnimatePresence>
@@ -215,7 +234,7 @@ const StudentMerchandise = () => {
               text="Cart"
               icon={<FaShoppingCart />}
               styles="self-stretch bg-primary text-neutral-light hover:bg-secondary hover:text-accent rounded-md flex items-center text-md lg:text-xl gap-2 p-3"
-              textClass="hidden md:block text-sm"
+              textClass="text-sm"
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
@@ -223,9 +242,19 @@ const StudentMerchandise = () => {
           </ButtonsComponent>
         }
       />
-      <ProductList products={filteredProducts} />
+      <ProductList products={paginatedProducts} isLoading={isLoading} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        handlePageChange={handlePageChange}
+      />
     </div>
   );
 };
 
 export default StudentMerchandise;
+
+
+  
