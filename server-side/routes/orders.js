@@ -200,6 +200,10 @@ router.put("/approve-order", async (req, res) => {
                 transaction_date: successfulOrder.transaction_date,
               },
             },
+            $inc: {
+              "sales_data.unitsSold": item.quantity,
+              "sales_data.totalRevenue": item.sub_total,
+            },
           });
         })
       );
