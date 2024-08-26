@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+      }
+      .container {
+        width: 90%;
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .header img {
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .header h1 {
+        font-size: 24px;
+        margin: 10px 0;
+      }
+      .content p {
+        margin: 10px 0;
+        font-size: 16px;
+      }
+      .content hr {
+        border: 0;
+        border-top: 1px solid #eee;
+        margin: 20px 0;
+      }
+      .content .total,
+      .content .cash,
+      .content .change {
+        font-weight: bold;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .footer p {
+        font-size: 14px;
+        color: #777;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="cid:logo" alt="Logo" />
+        <h1>Official Receipt</h1>
+      </div>
+      <div class="content">
+        <p><strong>Name:</strong> <%= name %></p>
+        <p><strong>Course & Year:</strong> <%= course %> - <%= year %></p>
+        <hr />
+        <p><strong>Item:</strong> Membership</p>
+        <p>
+          <strong>Qty:</strong> 1
+          <span style="float: right">₱<%= total %></span>
+        </p>
+        <hr />
+        <p class="total"><strong>Total:</strong> ₱<%= total %></p>
+        <p class="cash"><strong>Cash:</strong> ₱<%= cash %></p>
+        <p class="change"><strong>Change:</strong> ₱<%= change %></p>
+        <hr />
+        <p><strong>Reference Code:</strong> <%= reference_code %></p>
+        <p><strong>Date:</strong> <%= date %></p>
+        <p><strong>Managed by:</strong> <%= admin %></p>
+      </div>
+      <div class="footer">
+        <p>Thank you for your membership payment!</p>
+      </div>
+    </div>
+  </body>
+</html>
