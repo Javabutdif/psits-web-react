@@ -58,14 +58,18 @@ const Login = () => {
 
   const validateInputs = () => {
     const newErrors = {};
+    const idNumberRegex = /^\d{8}(-admin)?$/; // Regex for 8 digits, with optional "-admin"
+
     if (!formData.id_number) {
       newErrors.id_number = "ID Number is required.";
-    } else if (!/^\d+$/.test(formData.id_number)) {
-      newErrors.id_number = "ID Number must be a valid number.";
+    } else if (!idNumberRegex.test(formData.id_number)) {
+      newErrors.id_number = "ID Number must be 8 digits or 8 digits .";
     }
+
     if (!formData.password) {
       newErrors.password = "Password is required.";
     }
+
     return newErrors;
   };
 

@@ -9,16 +9,22 @@ import { getPosition } from "../../authentication/Authentication";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [selectedTab, setSelectedTab] = useState("Pending");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [rowData, setPrintData] = useState("");
   const [selectedStudent, setSelectedStudentName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [shouldPrint, setShouldPrint] = useState(false);
   const componentRef = useRef();
   const printRef = useRef();
   const position = getPosition();
 
   const handlePrintData = (row) => {
     setPrintData(row);
+    setShouldPrint(true);
     const name = row.student_name;
     const words = name.split(" ");
     let fullName = "";
@@ -30,14 +36,10 @@ const Orders = () => {
 
     setSelectedStudentName(fullName);
   };
-  useEffect(() => {
-    if (rowData) {
-      printRef.current.click();
-    }
-  }, [rowData]);
 
   const handlePrintComplete = () => {
     setPrintData("");
+    setShouldPrint(false);
   };
 
   // Modal state
@@ -52,15 +54,40 @@ const Orders = () => {
 
     fetchOrders();
   }, []);
+
   useEffect(() => {
     if (selectedOrder) {
       console.log(selectedOrder.items);
     }
   }, [selectedOrder]);
 
-  const filteredOrders = orders.filter(
-    (order) => order.order_status === selectedTab
+  useEffect(() => {
+    const filterOrders = () => {
+      const result = orders.filter(
+        (order) =>
+          order.order_status === selectedTab &&
+          (order.student_name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+            order.id_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.rfid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.reference_code.includes(searchTerm) ||
+            order._id.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredOrders(result);
+    };
+
+    filterOrders();
+  }, [orders, selectedTab, searchTerm]);
+
+  // Pagination logic
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
   );
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
 
   const handleApproveClick = (order) => {
     setSelectedOrder(order);
@@ -71,10 +98,13 @@ const Orders = () => {
     setIsModalOpen(false);
     setSelectedOrder(null);
   };
-
+useEffect(() => {
+    if (rowData) {
+      printRef.current.click();
+    }
+  }, [rowData]);
   const handleApproveConfirm = () => {
     // Implement the approval logic here
-
     handleModalClose();
   };
 
@@ -82,11 +112,26 @@ const Orders = () => {
     setOpenDropdown(openDropdown === orderId ? null : orderId);
   };
 
+  console.log(rowData);
+
+  console.log(printRef.current);
+
   return (
     <div className="p-4 pt-20">
+      {/* Search Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md w-full"
+        />
+      </div>
+
       {/* Tabs */}
       <div className="flex justify-around bg-gray-100 p-2 rounded">
-        {["Pending", "Paid", "Cancelled"].map((tab) => (
+        {["Pending", "Paid"].map((tab) => (
           <button
             key={tab}
             onClick={() => setSelectedTab(tab)}
@@ -110,22 +155,29 @@ const Orders = () => {
               </th>
               <th className="p-4">Student Name</th>
               <th className="p-4">Membership</th>
-              <th className="p-4">Total Price</th>
+              <th className="p-4">Total</th>
               <th className="p-4">Order Date</th>
               {selectedTab === "Paid" && (
                 <th className="p-4">Transaction Date</th>
               )}
-
               <th className="p-4">Status</th>
               {selectedTab !== "Paid" && <th className="p-4">Actions</th>}
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => (
-                <React.Fragment key={order._id}>
+            {currentOrders.length >= 0 ? (
+              currentOrders.map((order) => (
+                <React.Fragment
+                  key={
+                    selectedTab === "Pending" ? order._id : order.reference_code
+                  }
+                >
                   <tr className="border-t">
-                    <td className="p-4 text-xs">{selectedTab === "Pending" ? order._id : order.reference_code}</td>
+                    <td className="p-4 text-xs">
+                      {selectedTab === "Pending"
+                        ? order._id
+                        : order.reference_code}
+                    </td>
                     <td className="p-4">
                       <span className="text-sm "> {order.student_name}</span>
                       <div>
@@ -143,7 +195,6 @@ const Orders = () => {
                     {order.order_status === "Paid" && (
                       <td className="p-4">{order.transaction_date}</td>
                     )}
-
                     <td className="p-4">
                       <span
                         className={`px-3 py-1 rounded-full ${
@@ -167,7 +218,6 @@ const Orders = () => {
                         </button>
                       </td>
                     )}
-
                     <td className="p-4">
                       <button
                         onClick={() => toggleDropdown(order._id)}
@@ -232,18 +282,21 @@ const Orders = () => {
                             }
                           />
                           <div style={{ display: "none" }}>
-                            <ReactToPrint
-                              trigger={() => (
-                                <button
-                                  ref={printRef}
-                                  style={{ display: "none" }}
-                                >
-                                  Print
-                                </button>
-                              )}
-                              content={() => componentRef.current}
-                              onAfterPrint={handlePrintComplete}
-                            />
+                            {shouldPrint && (
+                              <ReactToPrint
+                                trigger={() => (
+                                  <button
+                                    ref={printRef}
+                                    style={{ display: "none" }}
+                                  >
+                                    Print
+                                  </button>
+                                )}
+                                content={() => componentRef.current}
+                                onAfterPrint={handlePrintComplete}
+                              />
+                            )}
+
                             <Receipt
                               ref={componentRef}
                               reference_code={rowData.reference_code}
@@ -275,57 +328,59 @@ const Orders = () => {
                   </tr>
                   {openDropdown === order._id && (
                     <tr>
-                      <td colSpan="8" className="p-4 bg-gray-100">
-                        {order.items.map((item, index) => (
-                          <div
-                            key={index}
-                            className="text-sm mb-2 p-2 flex flex-row mx-3 gap-10"
-                          >
-                            <img src={item.imageUrl1} className="w-16 h-16" />
-                            <span className="font-medium ms-2">
-                              {item.product_name}
-                              <div className="text-xs text-gray-500">
-                                {item._id}
+                      <td colSpan="10" className="p-4">
+                        <ul>
+                          {order.items.map((item, index) => (
+                            <div
+                              key={index}
+                              className="text-sm mb-2 p-2 flex flex-row mx-3 gap-10"
+                            >
+                              <img src={item.imageUrl1} className="w-16 h-16" />
+                              <span className="font-medium ms-2">
+                                {item.product_name}
+                                <div className="text-xs text-gray-500">
+                                  {item._id}
+                                </div>
+                              </span>
+                              <div className="mx-3 mb-2 flex flex-col">
+                                <span>Price</span>
+                                <span className="text-xs text-center">
+                                  ₱{item.price}
+                                </span>
                               </div>
-                            </span>
-                            <div className="mx-3 mb-2 flex flex-col">
-                              <span>Price</span>
-                              <span className="text-xs text-center">
-                                ₱{item.price}
-                              </span>
+                              <div className="mx-3 mb-2 flex flex-col">
+                                <span>Quantity</span>
+                                <span className="text-xs text-center">
+                                  {item.quantity}
+                                </span>
+                              </div>
+                              <div className="mx-3 mb-2 flex flex-col">
+                                <span>Variation</span>
+                                <span className="text-xs text-center">
+                                  {item.variation ? item.variation : "Null"}
+                                </span>
+                              </div>
+                              <div className="mx-3 mb-2 flex flex-col">
+                                <span>Size</span>
+                                <span className="text-xs text-center">
+                                  {item.sizes ? item.sizes : "Null"}
+                                </span>
+                              </div>
+                              <div className="mx-3 mb-2 flex flex-col">
+                                <span>Batch</span>
+                                <span className="text-xs text-center">
+                                  {item.batch ? item.batch : "Null"}
+                                </span>
+                              </div>
+                              <div className="mx-3 mb-2 flex flex-col">
+                                <span>Subtotal</span>
+                                <span className="text-xs text-center">
+                                  ₱{item.sub_total ? item.sub_total : "Null"}
+                                </span>
+                              </div>
                             </div>
-                            <div className="mx-3 mb-2 flex flex-col">
-                              <span>Quantity</span>
-                              <span className="text-xs text-center">
-                                {item.quantity}
-                              </span>
-                            </div>
-                            <div className="mx-3 mb-2 flex flex-col">
-                              <span>Variation</span>
-                              <span className="text-xs text-center">
-                                {item.variation ? item.variation : "Null"}
-                              </span>
-                            </div>
-                            <div className="mx-3 mb-2 flex flex-col">
-                              <span>Size</span>
-                              <span className="text-xs text-center">
-                                {item.sizes ? item.sizes : "Null"}
-                              </span>
-                            </div>
-                            <div className="mx-3 mb-2 flex flex-col">
-                              <span>Batch</span>
-                              <span className="text-xs text-center">
-                                {item.batch ? item.batch : "Null"}
-                              </span>
-                            </div>
-                            <div className="mx-3 mb-2 flex flex-col">
-                              <span>Subtotal</span>
-                              <span className="text-xs text-center">
-                                ₱{item.sub_total ? item.sub_total : "Null"}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </ul>
                       </td>
                     </tr>
                   )}
@@ -333,8 +388,8 @@ const Orders = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="p-4 text-center text-gray-500">
-                  No orders found.
+                <td colSpan="10" className="p-4 text-center">
+                  No orders found
                 </td>
               </tr>
             )}
@@ -342,7 +397,28 @@ const Orders = () => {
         </table>
       </div>
 
-      {/* Modal */}
+      {/* Pagination Controls */}
+      <div className="mt-4 flex justify-between items-center">
+        <button
+          onClick={() => setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
+        >
+          Previous
+        </button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
+        >
+          Next
+        </button>
+      </div>
+
+      {/* Approve Modal */}
       {isModalOpen && (
         <ApproveModal
           reference_code={
@@ -363,17 +439,6 @@ const Orders = () => {
           total={selectedOrder.total}
         />
       )}
-      {/* Pagination and Export Button */}
-      <div className="mt-4 flex justify-between items-center">
-        <div className="flex items-center">
-          <button className="p-2 bg-gray-200 rounded-md">&lt;</button>
-          <span className="mx-2">Page 1 of 10</span>
-          <button className="p-2 bg-gray-200 rounded-md">&gt;</button>
-        </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-md">
-          Export to CSV
-        </button>
-      </div>
     </div>
   );
 };

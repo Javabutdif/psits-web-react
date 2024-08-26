@@ -306,7 +306,7 @@ const Membership = () => {
               <FormButton
                 type="button"
                 text="Delete All"
-                // onClick={handleDeleteAll} // Ensure this is the correct handler for deletion
+            
                 icon={<i className="fas fa-trash-alt"></i>} // Updated icon
                 styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
                 textClass="hidden"
@@ -320,7 +320,7 @@ const Membership = () => {
               text={
                 position !== "President" && position !== "Developer"
                   ? "Not Authorized"
-                  : "Renew All"
+                  : "Renew"
               }
               onClick={() => {
                 if (position === "President" || position === "Developer") {

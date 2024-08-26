@@ -8,13 +8,14 @@ const { format } = require("date-fns");
 const router = express.Router();
 
 router.post("/admin", async (req, res) => {
-  const { id_number, password, name, course, year, position } = req.body;
+  const { id_number, email, password, name, course, year, position } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newAdmin = new Admin({
       id_number,
+      email,
       password: hashedPassword,
       name,
       course,
