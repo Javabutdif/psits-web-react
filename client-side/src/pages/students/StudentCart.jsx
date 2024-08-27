@@ -57,7 +57,7 @@ const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white p-6 rounded-lg shadow-lg w-1/2 max-w-lg"
+            className="bg-white p-6 rounded-lg shadow-lg w-full mx-4 max-w-lg"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.8 }}
