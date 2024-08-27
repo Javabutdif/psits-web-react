@@ -14,6 +14,7 @@ import {
   getAttemptAuthentication,
   getRoute,
 } from "../../authentication/Authentication";
+import { IoArrowBack } from "react-icons/io5"; // Import the icon
 
 const Login = () => {
   const [remainingTime, setRemainingTime] = useState();
@@ -132,7 +133,14 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100 px-4">
+    <div className="relative min-h-screen flex justify-center items-center bg-gray-100 px-4">
+      <button
+        type="button"
+        onClick={handleNavigate("/")}
+        className=" absolute top-4 left-4 bg-opacity-0 text-white transition duration-300 ease-in-out transform hover:scale-105"
+      >
+        <IoArrowBack size={35} color="#074873" />
+      </button>
       {isLoading ? (
         <div className="flex justify-center items-center h-60vh">
           <InfinitySpin
@@ -190,7 +198,7 @@ const Login = () => {
             <FormButton
               type="submit"
               text="Login"
-              styles="w-full bg-blue-500 hover:bg-blue-400 text-white p-2 rounded"
+              styles="w-full bg-[#08568a] hover:bg-[#074873] text-white p-2 rounded"
               variants={loginButtonVariants}
             />
 
