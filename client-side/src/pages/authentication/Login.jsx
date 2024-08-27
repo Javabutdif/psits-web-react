@@ -191,7 +191,7 @@ const Login = () => {
               type="button"
               text="Forgot Password?"
               onClick={handleNavigate("/forgot-password")}
-              styles="text-xs self-end text-blue-500 hover:underline mb-4"
+              styles="text-xs self-end text-[#08568a] hover:underline mb-4"
               variants={buttonVariants}
             />
 
