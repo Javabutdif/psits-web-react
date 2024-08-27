@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { getId } from "../../../authentication/Authentication";
 import { requestMembership } from "../../../api/students";
@@ -27,11 +27,13 @@ function Membership({ styles }) {
 
   const buttonVariants = {
     hover: { scale: 1.05, transition: { duration: 0.2 } },
-    tap: { scale: 0.95 }
+    tap: { scale: 0.95 },
   };
 
   return (
-    <div className={`${styles} bg-[#074873] p-3 sm:p-4 rounded-lg shadow-md text-center text-neutral-light`}>
+    <div
+      className={`${styles} bg-[#074873] p-3 sm:p-4 rounded-lg shadow-md text-center text-neutral-light`}
+    >
       <h1 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
         Join Our Membership Program
       </h1>
@@ -92,7 +94,7 @@ function Membership({ styles }) {
         </div>
       )}
       {isRequested && (
-        <div className="fixed inset-0 flex items-center justify-center bg-green-500 bg-opacity-75 z-50 p-2 sm:p-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-opacity-75 z-50 p-2 sm:p-4">
           <div className="bg-white p-3 sm:p-4 rounded-lg shadow-md text-center w-full max-w-xs sm:max-w-sm mx-auto">
             <h2 className="text-md sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-800">
               Membership Requested

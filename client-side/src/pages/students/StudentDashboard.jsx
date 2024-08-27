@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { events } from "../../@fakedb/data";
 import Events from "./dashboard/Events";
 import OperationHours from "./dashboard/OperationHours";
 import MembershipBanner from "./dashboard/Membership";
 import Posts from "./dashboard/Posts";
 import backendConnection from "../../api/backendApi";
-import { getMembershipStatus } from "../../authentication/Authentication";
+import { getPosition, getId } from "../../authentication/Authentication";
+import { getMembershipStatusStudents } from "../../api/students";
 
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-gray-200 ${className}`}></div>
@@ -15,7 +16,21 @@ const StudentDashboard = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const membershipStatus = getMembershipStatus();
+  const [membershipStatus, setMemebershipStatus] = useState({
+    membership: "",
+    renew: "",
+  });
+  const position = getPosition();
+
+  if (position === "N/A") {
+    useEffect(() => {
+      const fetchStatus = async () => {
+        const membershipStatus = await getMembershipStatusStudents(getId());
+        setMemebershipStatus(membershipStatus);
+      };
+      fetchStatus();
+    });
+  }
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -40,7 +55,6 @@ const StudentDashboard = () => {
   if (error) {
     return <div>Error: {error}</div>;
   }
-  console.log(membershipStatus)
 
   return (
     <div className="max-w-[1600px] mx-auto grid grid-cols-1 gap-4 py-5 md:grid-cols-2 lg:grid-cols-7 ">
@@ -52,15 +66,23 @@ const StudentDashboard = () => {
         </>
       ) : (
         <>
-          <OperationHours styles={`self-start md:col-start-1 md:${membershipStatus === 'Accepted' && 'text-sm'} lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3`}/>
-          {membershipStatus === "None" && (
+          <OperationHours
+            styles={`self-start md:col-start-1 md:${
+              membershipStatus === "Accepted" && "text-sm"
+            } lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3`}
+          />
+          {(membershipStatus.membership === "None" ||
+            membershipStatus.renew === "None") && (
             <MembershipBanner styles="lg:row-start-3 lg:col-start-6 lg:col-end-8" />
           )}
-          <Posts posts={posts} styles="col-span-full lg:row-start-1 lg:row-span-5 lg:col-span-5" />
+          <Posts
+            posts={posts}
+            styles="col-span-full lg:row-start-1 lg:row-span-5 lg:col-span-5"
+          />
         </>
       )}
     </div>
   );
-}
+};
 
 export default StudentDashboard;

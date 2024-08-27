@@ -88,6 +88,7 @@ const Reports = () => {
       setFilteredMerchandiseData(filteredOrderDetails);
       setProductNames(data);
       setSalesData(allSalesData);
+      console.log(filteredOrderDetails);
     } catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
@@ -175,17 +176,17 @@ const Reports = () => {
           (item) => item.batch === Number(filterBatch)
         );
       }
-
       if (filterSize) {
         filteredData = filteredData.filter((item) =>
-          item.size?.includes(filterSize)
+          item.size?.[0]?.$each?.[0]?.includes(filterSize)
         );
       }
-      if (filterColor) {
-        filteredData = filteredData.filter((item) =>
-          item.variation?.includes(filterColor)
-        );
-      }
+       if (filterColor) {
+         filteredData = filteredData.filter((item) =>
+           item.variation?.[0]?.$each?.[0]?.includes(filterColor)
+         );
+       }
+     
     }
 
     setData(filteredData);
@@ -260,14 +261,24 @@ const Reports = () => {
 
   const merchandiseColumns = [
     { name: "Order ID", selector: (row) => row._id, sortable: true },
+    { name: "Name", selector: (row) => row.student_name, sortable: true },
     {
       name: "Product Name",
       selector: (row) => row.product_name,
       sortable: true,
     },
     { name: "Batch", selector: (row) => row.batch, sortable: true },
-    { name: "Size", selector: (row) => row.size, sortable: true },
-    { name: "Color", selector: (row) => row.variation, sortable: true },
+    {
+      name: "Size",
+      selector: (row) => row.size?.[0]?.$each?.[0] || "",
+      sortable: true,
+    },
+    {
+      name: "Color",
+      selector: (row) => row.variation?.[0]?.$each?.[0] || "",
+      sortable: true,
+    },
+
     { name: "Quantity", selector: (row) => row.quantity, sortable: true },
 
     { name: "Total", selector: (row) => row.total, sortable: true },
@@ -285,9 +296,16 @@ const Reports = () => {
     (data) => data.type === "Renewal"
   ).length;
 
-  // Calculate the total revenue
+
   const membershipRevenue = membershipCount * 50;
   const renewalRevenue = renewalCount * 50;
+
+  const formattedMerchandiseData = filteredMerchandiseData.map((row) => ({
+    ...row,
+    size: row.size?.[0]?.$each?.[0] || "",
+    variation: row.variation?.[0]?.$each?.[0] || "",
+  }));
+  console.log(productNames);
   return (
     <div className="container mx-auto p-4">
       <Tabs selectedIndex={activeTab} onSelect={(index) => setActiveTab(index)}>
@@ -394,7 +412,7 @@ const Reports = () => {
 
             <CSVLink
               data={
-                filteredMerchandiseData.length ? filteredMerchandiseData : []
+                formattedMerchandiseData.length ? formattedMerchandiseData : []
               }
               filename="merchandise-data.csv"
             >
@@ -433,7 +451,8 @@ const Reports = () => {
                 value={filterProductName}
                 onChange={(e) => {
                   setFilterProductName(e.target.value);
-                  setFilterBatch(""); // Clear the selected batch when product changes
+                  setFilterBatch("");
+                  changes;
                 }}
               >
                 <option value="">Select a Product</option>
@@ -442,6 +461,39 @@ const Reports = () => {
                     {product.name}
                   </option>
                 ))}
+              </select>
+            )}
+            {activeTab !== 0 && (
+              <select
+                className="border w-full p-2 mb-2"
+                value={filterSize}
+                onChange={(e) => setFilterSize(e.target.value)}
+              >
+                <option value="">Select Size</option>
+                <option key="18" value="18">
+                  18
+                </option>
+                <option key="XS" value="XS">
+                  XS
+                </option>
+                <option key="S" value="S">
+                  S
+                </option>
+                <option key="M" value="M">
+                  M
+                </option>
+                <option key="L" value="L">
+                  L
+                </option>
+                <option key="XL" value="XL">
+                  XL
+                </option>
+                <option key="2XL" value="2XL">
+                  2XL
+                </option>
+                <option key="3XL" value="3XL">
+                  3XL
+                </option>
               </select>
             )}
             {activeTab !== 0 && filterProductName && (
