@@ -167,7 +167,7 @@ const PendingOrders = () => {
           <p>Loading...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
-        ) : (
+        ) : currentOrders.length > 0 ? (
           <>
             <OrderList
               orders={currentOrders}
@@ -181,6 +181,9 @@ const PendingOrders = () => {
               handlePageChange={handlePageChange}
             />
           </>
+        ) : (
+        <div>No Product.</div>
+
         )}
       </div>
 
