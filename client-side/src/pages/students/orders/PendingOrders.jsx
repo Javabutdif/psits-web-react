@@ -111,7 +111,7 @@ const PendingOrders = () => {
     }
   };
 
-  // Handle multiple order cancellations
+
   const handleMultipleCancel = async () => {
     try {
       for (const order_id of selectedOrders) {
@@ -125,7 +125,7 @@ const PendingOrders = () => {
   };
 
   useEffect(() => {
-    // If all orders on the current page are selected, check the "Check All" checkbox
+
     const allOrderIds = currentOrders.map((order) => order._id);
     const allChecked = allOrderIds.every((id) => selectedOrders.includes(id));
     setIsAllChecked(allChecked);

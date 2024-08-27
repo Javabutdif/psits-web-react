@@ -121,7 +121,8 @@ const ProductDetail = () => {
   const statusVerify = () => {
     return (
       (status.membership === "Accepted" && status.renew === "None") ||
-      status.renew === "Accepted"
+      status.renew === "Accepted" ||
+      status.membership === "Accepted"
     );
   };
 
@@ -281,6 +282,7 @@ const ProductDetail = () => {
         product_name: name,
         limited: product.control === "limited-purchase" ? true : false,
         price: price,
+        membership_discount: statusVerify(),
         quantity: quantity,
         sub_total: calculateTotal(),
         variation: category === "uniform" ? selectedVariations : selectedColor,
@@ -305,7 +307,7 @@ const ProductDetail = () => {
       setShowModal(true);
     }
   };
-
+  
   const handleCloseModal = () => {
     setShowModal(false);
   };
@@ -325,7 +327,8 @@ const ProductDetail = () => {
   return (
     <motion.div
       className="mt-4 product-detail bg-white p-3 sm:p-6 mx-auto rounded-lg shadow-sm "
-      initial={{ opacity: 0 }}z
+      initial={{ opacity: 0 }}
+      z
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
@@ -437,7 +440,7 @@ const ProductDetail = () => {
                 <p className="hidden md:inline-block">Add To Cart</p>
               </button>
             )}
-            
+
             <button
               className={`text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
                 stocks <= 0 || limited || cartLimited

@@ -9,7 +9,10 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [status, setStatus] = useState({ membership: "", renew: "" });
 
-  const isChecked = useMemo(() => selectedOrders.includes(order._id), [selectedOrders, order._id]);
+  const isChecked = useMemo(
+    () => selectedOrders.includes(order._id),
+    [selectedOrders, order._id]
+  );
   const isNotPaidPage = pathname !== "/student/orders/paid";
 
   useEffect(() => {
@@ -56,7 +59,9 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
         onClick={handleCardClick}
       >
         <div className="flex flex-col md:flex-row relative py-4 gap-4 w-full">
-          <p className="text-xs text-gray-500 absolute top-0 right-0 md:-top-1 md:left-4">{order.order_date}</p>
+          <p className="text-xs text-gray-500 absolute top-0 right-0 md:-top-1 md:left-4">
+            {order.order_date}
+          </p>
           {isNotPaidPage && (
             <div
               className="flex items-center mb-2 md:mb-0 md:ml-4"
@@ -72,37 +77,49 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
           )}
           <div className="flex-shrink-0 mb-2 md:mb-0">
             <img
-              src={order.items[0].imageUrl1 || "https://via.placeholder.com/100"}
+              src={
+                order.items[0].imageUrl1 || "https://via.placeholder.com/100"
+              }
               alt="Product"
               className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg border border-gray-300"
             />
           </div>
           <div className="flex flex-col flex-grow">
             {order.items.map((item, index) => (
-              <div key={index} className="flex justify-between items-center mb-1">
+              <div
+                key={index}
+                className="flex justify-between items-center mb-1"
+              >
                 <h6 className="text-sm md:text-md font-semibold text-gray-800">
                   {item.product_name}
                 </h6>
-                <span className="text-xs md:text-sm text-gray-500">Qty: {item.quantity}</span>
+                <span className="text-xs md:text-sm text-gray-500">
+                  Qty: {item.quantity}
+                </span>
               </div>
             ))}
             <div className="flex flex-col text-xs md:text-sm text-gray-700">
               <div className="flex justify-between mb-1">
                 <p className="text-sm md:text-md font-semibold">
-                  <span className="font-medium">Total:</span> ₱{order.total.toFixed(2)}
+                  <span className="font-medium">Total:</span> ₱
+                  {order.total.toFixed(2)}
                 </p>
               </div>
               <div className="flex flex-col md:flex-row justify-between items-center">
                 <p
                   className={`font-medium text-xs md:text-sm ${
-                    order.order_status === "Paid" ? "text-teal-600" : "text-red-600"
+                    order.order_status === "Paid"
+                      ? "text-teal-600"
+                      : "text-red-600"
                   }`}
                 >
-                  <span className="text-gray-600">Status:</span> {order.order_status}
+                  <span className="text-gray-600">Status:</span>{" "}
+                  {order.order_status}
                 </p>
                 {order.order_status !== "Pending" && (
                   <p className="text-xs md:text-sm text-gray-600">
-                    <span className="font-medium">Ref:</span> {order.product_id}
+                    <span className="font-medium">REF:</span>{" "}
+                    {order.reference_code}
                   </p>
                 )}
                 {order.order_status === "Pending" && (
@@ -142,19 +159,24 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <h2 className="text-lg md:text-xl font-semibold mb-2">{order.order_date}</h2>
+            <h2 className="text-lg md:text-xl font-semibold mb-2">
+              {order.order_date}
+            </h2>
             <p className="mb-2 text-sm md:text-base">
-              <strong className="font-medium">Student:</strong> {order.student_name}
+              <strong className="font-medium">Student:</strong>{" "}
+              {order.student_name}
             </p>
             <p className="mb-2 text-sm md:text-base">
               <strong className="font-medium">Membership Discount:</strong>{" "}
               {order.membership_discount ? "Eligible" : "Not Eligible"}
             </p>
             <p className="mb-2 text-sm md:text-base">
-              <strong className="font-medium">Total:</strong> ₱{order.total.toFixed(2)}
+              <strong className="font-medium">Total:</strong> ₱
+              {order.total.toFixed(2)}
             </p>
             <p className="mb-2 text-sm md:text-base">
-              <strong className="font-medium">Status:</strong> {order.order_status}
+              <strong className="font-medium">Status:</strong>{" "}
+              {order.order_status}
             </p>
             <p className="mb-4 text-sm md:text-base">
               <strong className="font-medium">Date:</strong> {order.order_date}
@@ -177,16 +199,20 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
                   </div>
                   <div>
                     <p className="mb-1 text-sm md:text-base">
-                      <strong className="font-medium">Product Name:</strong> {item.product_name}
+                      <strong className="font-medium">Product Name:</strong>{" "}
+                      {item.product_name}
                     </p>
                     <p className="mb-1 text-sm md:text-base">
-                      <strong className="font-medium">Quantity:</strong> {item.quantity}
+                      <strong className="font-medium">Quantity:</strong>{" "}
+                      {item.quantity}
                     </p>
                     <p className="mb-1 text-sm md:text-base">
-                      <strong className="font-medium">Price:</strong> ₱{item.price.toFixed(2)}
+                      <strong className="font-medium">Price:</strong> ₱
+                      {item.price.toFixed(2)}
                     </p>
                     <p className="mb-1 text-sm md:text-base">
-                      <strong className="font-medium">Status:</strong> {order.order_status}
+                      <strong className="font-medium">Status:</strong>{" "}
+                      {order.order_status}
                     </p>
                   </div>
                 </div>
