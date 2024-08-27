@@ -12,6 +12,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import { InfinitySpin } from "react-loader-spinner";
+import { IoArrowBack } from "react-icons/io5";
 
 function Register() {
   const [startDate, setStartDate] = useState(new Date());
@@ -163,6 +164,10 @@ function Register() {
     setIsLoading(false);
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to the previous page
+  };
+
   const handleNavigate = (pageRoute) => () => {
     navigate(pageRoute);
   };
@@ -195,9 +200,16 @@ function Register() {
         <motion.div
           initial={{ x: -100 }}
           animate={{ x: 0 }}
-          className="max-w-lg md:max-w-4xl space-y-8 sm:space-y-0 sm:space-y-10 w-full flex flex-col md:flex-row md:items-stretch items-center justify-center bg-white shadow-lg rounded-lg"
+          className="relative max-w-lg md:max-w-4xl space-y-8 sm:space-y-10 w-full flex flex-col md:flex-row md:items-stretch items-center justify-center bg-white shadow-lg rounded-lg"
         >
           <div className="flex md:flex-col md:justify-center md:items-center md:space-y-5 md:text-center md:border-0 bg-[#074873] text-white space-x-4 p-4 rounded-t md:rounded-l-lg items-center">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="hidden md:block absolute top-4 left-4 bg-opacity-0 text-white transition duration-300 ease-in-out transform hover:scale-105"
+            >
+              <IoArrowBack size={25} />
+            </button>
             <img
               src={logo}
               alt="PSITS Logo"
@@ -241,7 +253,7 @@ function Register() {
                 styles="w-full p-2 border border-gray-300 rounded"
               />
               <FormInput
-                label={"Middle Name (Optional)"}
+                label={"Middle Name"}
                 type="text"
                 id="middle_name"
                 name="middle_name"
@@ -319,7 +331,7 @@ function Register() {
             <FormButton
               type="submit"
               text="Register"
-              styles="w-full bg-blue-500 hover:bg-blue-400 text-white p-2 rounded"
+              styles="w-full hover:bg-[#074873] bg-[#08568a] text-white p-2 rounded"
             />
 
             <div className="text-sm sm:text-md flex items-center justify-center">
