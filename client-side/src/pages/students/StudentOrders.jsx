@@ -12,10 +12,10 @@ function StudentOrders() {
     { path: "/student/orders/paid", text: `Paid`, icon: "fas fa-check-circle" }, // Changed to a check-circle icon
   ];
   return (
-    <main className="py-5 ">
+    <div className="min-h-main-md py-5 grid-cols-1 grid-rows-[auto_auto">
       <Tab tabs={tabs} activePath={currentPath} styles={"grid grid-cols-2"} />
       <Outlet />
-    </main>
+    </div>
   );
 }
 
