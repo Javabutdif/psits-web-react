@@ -19,13 +19,14 @@ export const login = async (formData) => {
     const { token, message } = response.data;
 
     const data = jwtDecode(token);
-    console.log(data.user.first_name);
+
     if (data.role === "Admin" || data.role === "Student") {
       showToast("success", message || "Signed in successfully");
       setAuthentication(token);
 
       return data.role;
     } else {
+      console.log(message);
       showToast("error", message || "An error occurred");
     }
   } catch (error) {

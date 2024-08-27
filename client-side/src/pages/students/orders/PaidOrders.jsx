@@ -83,6 +83,8 @@ const PaidOrders = () => {
   const handlePageChange = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
+    } else {
+      setCurrentPage(0);
     }
   };
 
@@ -104,29 +106,6 @@ const PaidOrders = () => {
         </div>
       ) : (
         <div>No Product.</div>
-      )}
-
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded shadow-lg max-w-sm w-full">
-            <h2 className="text-lg font-bold mb-4">Confirm Cancellation</h2>
-            <p className="mb-4">Are you sure you want to cancel this order?</p>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={handleModalConfirm}
-                className="bg-red-500 text-white py-1 px-3 rounded"
-              >
-                Yes
-              </button>
-              <button
-                onClick={handleModalClose}
-                className="bg-gray-300 text-gray-800 py-1 px-3 rounded"
-              >
-                No
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
