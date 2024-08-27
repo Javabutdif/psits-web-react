@@ -38,8 +38,10 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
   // Monitor screen size and handle sidebar visibility
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1536) {
+      if (window.innerWidth >= 1024) {
         setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
       }
     };
 
@@ -53,7 +55,7 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
 
   return (
     <AnimatePresence>
-      {(isSidebarOpen || window.innerWidth >= 1536) && (
+      {(isSidebarOpen || window.innerWidth >= 1024) && (
         <motion.aside
           ref={sidebarRef}
           initial={{ x: "-100%" }}
@@ -64,7 +66,7 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
             w-[15rem]
             fixed z-50 top-0 left-0 bg-[#074873] text-neutral-light
             h-full flex flex-col gap-4 p-4 overflow-hidden
-            ${window.innerWidth < 1536 ? 'block' : 'hidden'} 2xl:block
+            ${window.innerWidth < 1024 ? 'block' : 'hidden'} lg:block
           `}
           aria-label="Sidebar Navigation"
         >
@@ -73,7 +75,7 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
               <img src={logo} alt="PSITS Logo" className="w-10 h-10 md:w-12 md:h-12" />
             </Link>
             <button
-              className={`text-white ${window.innerWidth < 1536 ? 'block' : 'hidden'}`}
+              className={`text-white ${window.innerWidth < 1024 ? 'block' : 'hidden'}`}
               onClick={() => setIsSidebarOpen(false)}
             >
               <i className="fas fa-times"></i>
