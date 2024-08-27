@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { showToast } from "../../utils/alertHelper";
+import { motion, AnimatePresence } from 'framer-motion'
 import { viewCart, deleteItem } from "../../api/students";
 import { makeOrder } from "../../api/orders";
 import { getId, getRfid } from "../../authentication/Authentication";
@@ -6,77 +8,107 @@ import { getInformationData } from "../../authentication/Authentication";
 import { getMembershipStatusStudents } from "../../api/students";
 
 const Modal = ({ isOpen, onClose, onConfirm }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-4 rounded">
-        <h2 className="text-lg font-bold">Confirm Deletion</h2>
-        <p>Are you sure you want to delete this item?</p>
-        <div className="flex space-x-4 mt-4">
-          <button
-            className="px-4 py-2 bg-red-500 text-white rounded"
-            onClick={onConfirm}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="bg-white p-4 rounded"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.8 }}
           >
-            Delete
-          </button>
-          <button className="px-4 py-2 bg-gray-300 rounded" onClick={onClose}>
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+            <h2 className="text-lg font-bold">Confirm Deletion</h2>
+            <p>Are you sure you want to delete this item?</p>
+            <div className="flex space-x-4 mt-4">
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded"
+                onClick={onConfirm}
+              >
+                Delete
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-300 rounded"
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
-  return isVisible ? (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-1/2 max-w-lg">
-        <h2 className="text-xl font-semibold mb-4">Review Your Items</h2>
-        <div className="space-y-4">
-          {items.map((item) => (
-            <div key={item._id} className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <img
-                  src={item.imageUrl1}
-                  alt={item.product_name}
-                  className="w-12 h-12"
-                />
-                <div>
-                  <h3 className="text-sm font-medium">{item.product_name}</h3>
-                  <p className="text-xs text-gray-500">{`₱${item.price}`}</p>
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="bg-white p-6 rounded-lg shadow-lg w-1/2 max-w-lg"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.8 }}
+          >
+            <h2 className="text-xl font-semibold mb-4">Review Your Items</h2>
+            <div className="space-y-4">
+              {items.map((item) => (
+                <div key={item._id} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <img
+                      src={item.imageUrl1}
+                      alt={item.product_name}
+                      className="w-12 h-12"
+                    />
+                    <div>
+                      <h3 className="text-sm font-medium">{item.product_name}</h3>
+                      <p className="text-xs text-gray-500">{`₱${item.price}`}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm">{item.quantity}</p>
+                  <p className="text-sm">{`₱${(item.price * item.quantity).toFixed(
+                    2
+                  )}`}</p>
                 </div>
+              ))}
+              <div className="flex justify-between font-semibold mt-4">
+                <span>Total Price:</span>
+                <span>₱{total.toFixed(2)}</span>
               </div>
-              <p className="text-sm">{item.quantity}</p>
-              <p className="text-sm">{`₱${(item.price * item.quantity).toFixed(
-                2
-              )}`}</p>
             </div>
-          ))}
-          <div className="flex justify-between font-semibold mt-4">
-            <span>Total Price:</span>
-            <span>₱{total.toFixed(2)}</span>
-          </div>
-        </div>
-        <div className="mt-4 flex justify-end space-x-4">
-          <button
-            onClick={onClose}
-            className="bg-gray-500 text-white py-2 px-4 rounded-lg"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="bg-blue-500 text-white py-2 px-4 rounded-lg"
-          >
-            Confirm Order
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null;
+            <div className="mt-4 flex justify-end space-x-4">
+              <button
+                onClick={onClose}
+                className="bg-gray-500 text-white py-2 px-4 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+              >
+                Confirm Order
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 };
+
 const OrderSummary = ({
   subTotal,
   discountedTotal,
@@ -84,7 +116,13 @@ const OrderSummary = ({
   totalPrice,
 }) => {
   return (
-    <div className="row-start-2 col-span-full w-full lg:row-start-1 lg:col-start-4 lg:col-span-2 lg:max-w-sm mx-auto p-4 bg-white shadow-lg rounded-lg">
+    <motion.div
+      className="row-start-2 col-span-full w-full lg:row-start-1 lg:col-start-4 lg:col-span-2 lg:max-w-sm mx-auto p-4 bg-white shadow-lg rounded-lg"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.3 }}
+    >
       <h2 className="text-lg font-semibold mb-3 text-center sm:text-left">
         Order Summary
       </h2>
@@ -111,22 +149,21 @@ const OrderSummary = ({
           </ul>
         </div>
       </div>
-      <button
+      <motion.button
         type="button"
         className="mt-4 w-full bg-primary text-white py-2 rounded-md hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-        onClick={onCheckout} // Should be a function to handle showing the modal
+        onClick={onCheckout}
+        whileHover={{ scale: 1.05 }}
       >
         Proceed to Checkout
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   );
 };
 
-
 const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => {
-  const { imageUrl1, product_id, product_name, price, quantity, selected, limited} = product;
+  const { imageUrl1, product_id, product_name, price, quantity, selected, limited } = product;
   const [isModalOpen, setModalOpen] = useState(false);
-
 
   const handleDeleteClick = () => {
     setModalOpen(true);
@@ -145,17 +182,28 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
     setModalOpen(false);
   };
 
+  const handleItemClick = (e) => {
+    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+      onCheckboxChange(product_id);
+    }
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row items-start p-4 border-b border-gray-200 bg-white shadow-sm rounded-lg mb-4">
-      {/* checkbox   */}
-      {/* <div className="flex-shrink-0 flex items-center mr-4 mb-4 sm:mb-0">
+    <div 
+      className="flex flex-col sm:flex-row items-start p-4 border-b border-gray-200 bg-white shadow-sm rounded-lg mb-4 cursor-pointer"
+      onClick={handleItemClick}
+    >
+      {/* Checkbox */}
+      <div className="flex-shrink-0 md:self-center flex items-center mb-3 sm:mr-3 sm:mb-0" onClick={(e) => e.stopPropagation()}>
         <input
+          id={`checkbox-${product_id}`}
           type="checkbox"
           checked={selected || false}
           onChange={() => onCheckboxChange(product_id)}
           className="form-checkbox h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
         />
-      </div> */}
+      </div>
+      {/* Product Image */}
       <div className="flex-shrink-0 w-full sm:w-1/4 mb-4 sm:mb-0">
         <img
           src={imageUrl1}
@@ -163,6 +211,7 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
           className="object-cover w-full h-24 sm:h-32 rounded-md"
         />
       </div>
+      {/* Product Details */}
       <div className="flex-1 sm:ml-4">
         <h4 className="text-base sm:text-lg font-semibold text-gray-800">
           {product_name}
@@ -172,12 +221,15 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
           ₱{price.toFixed(2)}
         </p>
       </div>
+      {/* Quantity Controls */}
       <div className="flex items-center mt-4 sm:mt-0 sm:ml-4 space-x-2 sm:space-x-4">
         <button
+          type="button"
           className="bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg p-2 transition duration-150 ease-in-out text-xs sm:text-sm"
-          onClick={() =>
-            onQuantityChange(product_id, Math.max(quantity - 1, 1))
-          }
+          onClick={(e) => {
+            e.stopPropagation();
+            onQuantityChange(product_id, Math.max(quantity - 1, 1));
+          }}
         >
           <svg
             className="w-4 h-4"
@@ -198,9 +250,13 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
           {quantity}
         </span>
         <button
+          type="button"
           className="bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg p-2 transition duration-150 ease-in-out text-xs sm:text-sm"
-          onClick={() => onQuantityChange(product_id, quantity + 1)}
-          disabled={limited} // Corrected attribute
+          onClick={(e) => {
+            e.stopPropagation();
+            onQuantityChange(product_id, quantity + 1);
+          }}
+          disabled={limited}
         >
           <svg
             className="w-4 h-4"
@@ -218,14 +274,17 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
           </svg>
         </button>
         <button
+          type="button"
           className="ml-0 sm:ml-4 text-red-600 hover:text-red-800 font-medium transition duration-150 ease-in-out text-xs sm:text-sm"
-          onClick={handleDeleteClick}
-          disabled={limited} // Corrected attribute
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteClick();
+          }}
         >
           Remove
         </button>
-
       </div>
+      {/* Modal for Deletion */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCancelDelete}
@@ -234,6 +293,7 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
     </div>
   );
 };
+
 const StudentCart = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -280,6 +340,8 @@ const StudentCart = () => {
     );
   };
 
+  console.log(statusVerify())
+
   const handleQuantityChange = (id, newQuantity) => {
     setProducts((prevProducts) =>
       prevProducts.map((product) =>
@@ -290,6 +352,22 @@ const StudentCart = () => {
     );
   };
   const handleCheckout = () => {
+    // Check if there are no items in the cart
+    if (products.length === 0) {
+      showToast("error", "Your cart is empty. Please add items to the cart before proceeding.");
+      return;
+    }
+
+    // Filter the selected items from the cart
+    const selectedItems = products.filter((item) => item.selected);
+
+    // Check if no items are selected
+    if (selectedItems.length === 0) {
+      showToast("error", "Please select at least one item to proceed with checkout.");
+      return;
+    }
+
+    // If items are selected, proceed with checkout
     setShowModal(true);
     setFormData({
       id_number: getId(),
@@ -297,13 +375,13 @@ const StudentCart = () => {
       course: course,
       year: year,
       student_name: student_name,
-      items: products,
+      items: selectedItems, // Use selectedItems instead of all products
       membership_discount: statusVerify(),
       total: totalPrice,
       order_date: new Date().toLocaleString(),
       order_status: "Pending",
     });
-  };
+};
 
   const confirmOrder = async () => {
     await makeOrder(formData);
@@ -311,7 +389,6 @@ const StudentCart = () => {
     setShowModal(false);
   };
 
-  console.log(formData);
   const handleRemove = (id) => {
     setProducts((prevProducts) =>
       prevProducts.filter((product) => product.product_id !== id)
@@ -336,49 +413,56 @@ const StudentCart = () => {
     return <div>Error: {error}</div>;
   }
 
-  const subTotal = products.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-  const discount = statusVerify() ? 0.05 : 0;
-  const discountedTotal = subTotal * discount;
-  const totalPrice = subTotal - discountedTotal;
+  const calculateTotals = () => {
+    const selectedProducts = products.filter(product => product.selected);
+    const subTotal = selectedProducts.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
+    const discount = !statusVerify() ? 0.05 : 0;
+    const discountedTotal = subTotal * discount;
+    const totalPrice = subTotal - discountedTotal;
+
+    return { subTotal, discountedTotal, totalPrice };
+  };
+
+  const { subTotal, discountedTotal, totalPrice } = calculateTotals();
 
   return (
     <div className="grid min-h-main-md grid-rows-[1fr_auto] grid-cols-3 xl:grid-cols-4 lg:grid-rows-2 lg:flex-row items-start gap-4 pb-4">
-      <div className="relative row-start-1 col-span-full lg:col-span-3 lg:row-span-2 h-full bg-white">
-        <div className="absolute inset-0 overflow-y-auto p-4">
-          {products.length === 0 ? (
-            <p className="text-center text-gray-700">Your cart is empty.</p>
-          ) : (
-            products.map((product) => (
-              <CartItem
-                key={product.product_id}
-                product={product}
-                onQuantityChange={handleQuantityChange}
-                onSelect={handleRemove}
-                onCheckboxChange={handleCheckboxChange}
-              />
-            ))
-          )}
-        </div>
+    <div className="relative row-start-1 col-span-full lg:col-span-3 lg:row-span-2 h-full bg-white">
+      <div className="absolute inset-0 overflow-y-auto p-4">
+        {products.length === 0 ? (
+          <p className="text-center text-gray-700">Your cart is empty.</p>
+        ) : (
+          products.map((product) => (
+            <CartItem
+              key={product.product_id}
+              product={product}
+              onQuantityChange={handleQuantityChange}
+              onSelect={handleRemove}
+              onCheckboxChange={handleCheckboxChange}
+            />
+          ))
+        )}
       </div>
-
-      <OrderSummary
-        subTotal={subTotal}
-        discountedTotal={discountedTotal}
-        onCheckout={handleCheckout}
-        totalPrice={totalPrice}
-      />
-
-      <OrderModal
-        isVisible={showModal}
-        onClose={() => setShowModal(false)}
-        items={products}
-        total={totalPrice}
-        onConfirm={confirmOrder}
-      />
     </div>
+
+    <OrderSummary
+      subTotal={subTotal}
+      discountedTotal={discountedTotal}
+      onCheckout={handleCheckout}
+      totalPrice={totalPrice}
+    />
+
+    <OrderModal
+      isVisible={showModal}
+      onClose={() => setShowModal(false)}
+      items={products.filter(product => product.selected)}
+      total={totalPrice}
+      onConfirm={confirmOrder}
+    />
+  </div>
   );
 };
 

@@ -52,6 +52,7 @@ import StudentPaidOrders from "./pages/students/orders/PaidOrders";
 import StudentPendingOrder from "./pages/students/orders/PendingOrders";
 import Community from "./pages/Community";
 import Events from "./pages/Events";
+import Resouces from "./pages/students/Resouces";
 
 const App = () => {
   return (
@@ -161,6 +162,10 @@ const App = () => {
           <Route
             path="history"
             element={<PrivateRouteStudent element={StudentHistory} />}
+          />
+          <Route
+            path="resources"
+            element={<PrivateRouteStudent element={Resouces} />}
           />
           <Route
             path="shop"

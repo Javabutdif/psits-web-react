@@ -7,12 +7,12 @@ const ProfileHeader = ({ label, toggleSidebar }) => {
   return (
     <header className={`
       transition-all duration-300
-      2xl:ml-[15rem]
+      lg:ml-[15rem]
     `}>
       <div className="flex items-center justify-between py-4 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
         <div className="flex items-center">
           <motion.button
-            className="mr-4 p-2 rounded-full bg-gray-200 text-gray-800 2xl:hidden"
+            className="mr-4 p-2 rounded-full bg-gray-200 text-gray-800 lg:hidden"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleSidebar}
