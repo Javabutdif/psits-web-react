@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { showToast } from "../../utils/alertHelper";
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from "framer-motion";
 import { viewCart, deleteItem } from "../../api/students";
 import { makeOrder } from "../../api/orders";
 import { getId, getRfid } from "../../authentication/Authentication";
@@ -65,7 +65,10 @@ const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
             <h2 className="text-xl font-semibold mb-4">Review Your Items</h2>
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item._id} className="flex items-center justify-between">
+                <div
+                  key={item._id}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center space-x-2">
                     <img
                       src={item.imageUrl1}
@@ -73,14 +76,16 @@ const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
                       className="w-12 h-12"
                     />
                     <div>
-                      <h3 className="text-sm font-medium">{item.product_name}</h3>
+                      <h3 className="text-sm font-medium">
+                        {item.product_name}
+                      </h3>
                       <p className="text-xs text-gray-500">{`₱${item.price}`}</p>
                     </div>
                   </div>
                   <p className="text-sm">{item.quantity}</p>
-                  <p className="text-sm">{`₱${(item.price * item.quantity).toFixed(
-                    2
-                  )}`}</p>
+                  <p className="text-sm">{`₱${(
+                    item.price * item.quantity
+                  ).toFixed(2)}`}</p>
                 </div>
               ))}
               <div className="flex justify-between font-semibold mt-4">
@@ -161,8 +166,21 @@ const OrderSummary = ({
   );
 };
 
-const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => {
-  const { imageUrl1, product_id, product_name, price, quantity, selected, limited } = product;
+const CartItem = ({
+  product,
+  onQuantityChange,
+  onSelect,
+  onCheckboxChange,
+}) => {
+  const {
+    imageUrl1,
+    product_id,
+    product_name,
+    price,
+    quantity,
+    selected,
+    limited,
+  } = product;
   const [isModalOpen, setModalOpen] = useState(false);
 
   const handleDeleteClick = () => {
@@ -183,18 +201,21 @@ const CartItem = ({ product, onQuantityChange, onSelect, onCheckboxChange }) => 
   };
 
   const handleItemClick = (e) => {
-    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+    if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
       onCheckboxChange(product_id);
     }
   };
 
   return (
-    <div 
+    <div
       className="flex flex-col sm:flex-row items-start p-4 border-b border-gray-200 bg-white shadow-sm rounded-lg mb-4 cursor-pointer"
       onClick={handleItemClick}
     >
       {/* Checkbox */}
-      <div className="flex-shrink-0 md:self-center flex items-center mb-3 sm:mr-3 sm:mb-0" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="flex-shrink-0 md:self-center flex items-center mb-3 sm:mr-3 sm:mb-0"
+        onClick={(e) => e.stopPropagation()}
+      >
         <input
           id={`checkbox-${product_id}`}
           type="checkbox"
@@ -336,11 +357,10 @@ const StudentCart = () => {
   const statusVerify = () => {
     return (
       (status.membership === "Accepted" && status.renew === "None") ||
-      status.renew === "Accepted"
+      status.renew === "Accepted" ||
+      status.membership === "Accepted"
     );
   };
-
-  console.log(statusVerify())
 
   const handleQuantityChange = (id, newQuantity) => {
     setProducts((prevProducts) =>
@@ -354,7 +374,10 @@ const StudentCart = () => {
   const handleCheckout = () => {
     // Check if there are no items in the cart
     if (products.length === 0) {
-      showToast("error", "Your cart is empty. Please add items to the cart before proceeding.");
+      showToast(
+        "error",
+        "Your cart is empty. Please add items to the cart before proceeding."
+      );
       return;
     }
 
@@ -363,7 +386,10 @@ const StudentCart = () => {
 
     // Check if no items are selected
     if (selectedItems.length === 0) {
-      showToast("error", "Please select at least one item to proceed with checkout.");
+      showToast(
+        "error",
+        "Please select at least one item to proceed with checkout."
+      );
       return;
     }
 
@@ -381,7 +407,7 @@ const StudentCart = () => {
       order_date: new Date().toLocaleString(),
       order_status: "Pending",
     });
-};
+  };
 
   const confirmOrder = async () => {
     await makeOrder(formData);
@@ -414,12 +440,12 @@ const StudentCart = () => {
   }
 
   const calculateTotals = () => {
-    const selectedProducts = products.filter(product => product.selected);
+    const selectedProducts = products.filter((product) => product.selected);
     const subTotal = selectedProducts.reduce(
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const discount = !statusVerify() ? 0.05 : 0;
+    const discount = statusVerify() ? 0.05 : 0;
     const discountedTotal = subTotal * discount;
     const totalPrice = subTotal - discountedTotal;
 
@@ -430,39 +456,39 @@ const StudentCart = () => {
 
   return (
     <div className="grid min-h-main-md grid-rows-[1fr_auto] grid-cols-3 xl:grid-cols-4 lg:grid-rows-2 lg:flex-row items-start gap-4 pb-4">
-    <div className="relative row-start-1 col-span-full lg:col-span-3 lg:row-span-2 h-full bg-white">
-      <div className="absolute inset-0 overflow-y-auto p-4">
-        {products.length === 0 ? (
-          <p className="text-center text-gray-700">Your cart is empty.</p>
-        ) : (
-          products.map((product) => (
-            <CartItem
-              key={product.product_id}
-              product={product}
-              onQuantityChange={handleQuantityChange}
-              onSelect={handleRemove}
-              onCheckboxChange={handleCheckboxChange}
-            />
-          ))
-        )}
+      <div className="relative row-start-1 col-span-full lg:col-span-3 lg:row-span-2 h-full bg-white">
+        <div className="absolute inset-0 overflow-y-auto p-4">
+          {products.length === 0 ? (
+            <p className="text-center text-gray-700">Your cart is empty.</p>
+          ) : (
+            products.map((product) => (
+              <CartItem
+                key={product.product_id}
+                product={product}
+                onQuantityChange={handleQuantityChange}
+                onSelect={handleRemove}
+                onCheckboxChange={handleCheckboxChange}
+              />
+            ))
+          )}
+        </div>
       </div>
+
+      <OrderSummary
+        subTotal={subTotal}
+        discountedTotal={discountedTotal}
+        onCheckout={handleCheckout}
+        totalPrice={totalPrice}
+      />
+
+      <OrderModal
+        isVisible={showModal}
+        onClose={() => setShowModal(false)}
+        items={products.filter((product) => product.selected)}
+        total={totalPrice}
+        onConfirm={confirmOrder}
+      />
     </div>
-
-    <OrderSummary
-      subTotal={subTotal}
-      discountedTotal={discountedTotal}
-      onCheckout={handleCheckout}
-      totalPrice={totalPrice}
-    />
-
-    <OrderModal
-      isVisible={showModal}
-      onClose={() => setShowModal(false)}
-      items={products.filter(product => product.selected)}
-      total={totalPrice}
-      onConfirm={confirmOrder}
-    />
-  </div>
   );
 };
 
