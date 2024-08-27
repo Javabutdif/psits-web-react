@@ -1,5 +1,5 @@
 import React from "react";
-import { FaThumbsUp, FaComment } from "react-icons/fa";
+import { FaThumbsUp, FaComment, FaPlay } from "react-icons/fa";
 
 const PostCard = ({ post }) => {
   const {
@@ -12,7 +12,6 @@ const PostCard = ({ post }) => {
     url,
   } = post;
 
-  // Determine the description based on the type
   const getDescription = () => {
     switch (type) {
       case "profile_media":
@@ -55,7 +54,6 @@ const PostCard = ({ post }) => {
     } ago`;
   };
 
-  // Slice imageSources to limit to 5 images and handle the "plus" indicator
   const visibleImages = imageSources.slice(0, 5);
   const extraImagesCount =
     imageSources.length > 4 ? imageSources.length - 3 : 0;
@@ -91,11 +89,16 @@ const PostCard = ({ post }) => {
         {imageSources.length > 0 && (
           <div className="relative">
             {imageSources.length === 1 ? (
-              <img
-                src={imageSources[0]}
-                alt="Post"
-                className="w-full rounded-md object-cover"
-              />
+              <div className="relative">
+                <img
+                  src={imageSources[0]}
+                  alt="Post"
+                  className="w-full rounded-md object-cover"
+                />
+                {type === "video_inline" && (
+                  <FaPlay className="absolute inset-0 m-auto text-white text-4xl" />
+                )}
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-[1px]">
                 {visibleImages.slice(0, 4).map((src, index) => (
@@ -108,6 +111,9 @@ const PostCard = ({ post }) => {
                       alt={`Post Image ${index + 1}`}
                       className="w-full object-cover"
                     />
+                    {type === "video_inline" && index === 0 && (
+                      <FaPlay className="absolute inset-0 m-auto text-white text-4xl" />
+                    )}
                     {index === 3 && extraImagesCount > 0 && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-lg font-bold">
                         +{extraImagesCount}
