@@ -88,7 +88,7 @@ const Reports = () => {
       setFilteredMerchandiseData(filteredOrderDetails);
       setProductNames(data);
       setSalesData(allSalesData);
-      console.log(filteredOrderDetails);
+     
     } catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
@@ -288,13 +288,33 @@ const Reports = () => {
       sortable: true,
     },
   ];
+  const getMembershipCounts = (membershipData) => {
+    try {
+      // Ensure membershipData is an array
+      if (!Array.isArray(membershipData)) {
+        throw new Error(
+          "Invalid data format: membershipData should be an array."
+        );
+      }
 
-  const membershipCount = membershipData.filter(
-    (data) => data.type === "Membership"
-  ).length;
-  const renewalCount = membershipData.filter(
-    (data) => data.type === "Renewal"
-  ).length;
+      // Calculate membership and renewal counts
+      const membershipCount = membershipData.filter(
+        (data) => data.type === "Membership"
+      ).length;
+
+      const renewalCount = membershipData.filter(
+        (data) => data.type === "Renewal"
+      ).length;
+
+      return { membershipCount, renewalCount };
+    } catch (error) {
+      console.error("Error processing membership data:", error);
+      // Handle the error appropriately
+      return { membershipCount: 0, renewalCount: 0 };
+    }
+  };
+
+ const { membershipCount, renewalCount } = getMembershipCounts(membershipData);
 
 
   const membershipRevenue = membershipCount * 50;
@@ -305,7 +325,7 @@ const Reports = () => {
     size: row.size?.[0]?.$each?.[0] || "",
     variation: row.variation?.[0]?.$each?.[0] || "",
   }));
-  console.log(productNames);
+ 
   return (
     <div className="container mx-auto p-4">
       <Tabs selectedIndex={activeTab} onSelect={(index) => setActiveTab(index)}>
