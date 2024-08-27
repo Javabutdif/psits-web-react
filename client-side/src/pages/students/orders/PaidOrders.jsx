@@ -87,7 +87,7 @@ const PaidOrders = () => {
   };
 
   return (
-    <div>
+    <div className="h-full">
       {currentOrders.length > 0 ? (
         <div className="space-y-4 py-4">
           <OrderList

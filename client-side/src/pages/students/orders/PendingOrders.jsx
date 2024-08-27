@@ -133,7 +133,7 @@ const PendingOrders = () => {
 
   return (
     <div>
-      <div className="space-y-4 py-4">
+      <div className="space-y-4 py-4 h-full">
         {/* Uncomment and configure SearchFilter if needed */}
         {/* <SearchFilter 
            searchQuery={searchQuery}
