@@ -20,17 +20,33 @@ const Orders = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [error, setError] = useState(null);
   const componentRef = useRef();
   const printRef = useRef();
   const position = getPosition();
 
-  // Fetch and filter orders logic
   useEffect(() => {
     const fetchOrders = async () => {
-      const data = await getAllOrders();
-      setOrders(data);
-      setFilteredOrders(data);
+      try {
+        const data = await getAllOrders();
+
+        if (data === 0 || data.length === 0) {
+          setOrders([]);
+          setFilteredOrders([]);
+          setError("No orders found.");
+        } else {
+          setOrders(data);
+          setFilteredOrders(data);
+          setError(null);
+        }
+      } catch (err) {
+        setOrders([]);
+        setFilteredOrders([]);
+        setError("Failed to fetch orders. Please try again later.");
+        console.error("Error fetching orders:", err);
+      }
     };
+
     fetchOrders();
   }, []);
 
