@@ -427,7 +427,7 @@ const ProductDetail = () => {
                 onClick={handleCart}
                 className={`flex gap-2 px-4 py-3 font-medium 
             text-white rounded-lg bg-[#4398AC] hover:bg-opacity-80 
-              transition-colors duration-300 ${
+              transition-colors duration-300flex-1  ${
                 stocks <= 0 || (cartLimited && "cursor-not-allowed")
               } `}
                 disabled={
@@ -442,7 +442,7 @@ const ProductDetail = () => {
             )}
 
             <button
-              className={`text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
+              className={`flex-1 text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
                 stocks <= 0 || limited || cartLimited
                   ? "bg-red-500 text-white"
                   : "bg-[#002E48] text-white"

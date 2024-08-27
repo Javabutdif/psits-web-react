@@ -21,7 +21,7 @@ const ImageGallery = ({ imageUrl, setPreview, activeIndex }) => {
   };
 
   return (
-    <div className="grid grid-cols-[3rem_3rem_3rem] grid-rows-[3rem] gap-2 md:grid-cols-[4rem] md:grid-rows-[4rem_4rem_4rem]">
+    <div className="grid grid-cols-[3rem_3rem_3rem] grid-rows-[3rem] gap-2 lg:grid-cols-[4rem] lg:grid-rows-[4rem_4rem_4rem]">
       {imageUrl.map((img, index) => (
         <motion.div
           key={index}
