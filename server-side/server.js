@@ -21,7 +21,7 @@ app.use(bodyParser.json());
 //Connection to Mongoose
 mongoose
   .connect(process.env.MONGODB_URI, {
-    dbName: "psits",
+    dbName: process.env.DB_NAME,
   })
   .then(() => console.log("MongoDB PSITS connected"))
   .catch((err) => console.log(err));
