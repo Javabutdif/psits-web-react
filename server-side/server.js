@@ -15,7 +15,11 @@ const cartRoutes = require("./routes/cart");
 
 require("dotenv").config();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 app.use(bodyParser.json());
 
 //Connection to Mongoose
