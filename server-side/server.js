@@ -17,7 +17,9 @@ require("dotenv").config();
 
 app.use(
   cors({
-    origin: "*",
+    origin: "*", // Adjust as needed
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(bodyParser.json());
