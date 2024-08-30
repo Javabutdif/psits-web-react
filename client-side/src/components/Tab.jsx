@@ -2,15 +2,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-const Tab = ({ tabs, activePath, styles }) => {
+const Tab = ({ tabs, activePath}) => {
   return (
-    <div className={`${styles} border-b border-gray-200 bg-white`}>
+    <div className={` border-b border-gray-200 bg-white`}>
       <div className="relative flex items-center">
         {tabs.map(tab => (
           <motion.div
             key={tab.path}
-            whileHover={{ scale: 1.05 }}
-            className={`relative flex items-center p-3 transition duration-150 ease-in-out ${activePath === tab.path ? 'text-blue-700 border-b-2 border-blue-700' : 'text-gray-600'} hover:text-blue-600`}
+            whileHover={{ scale: 1.01 }}
+            className={`flex-1 relative flex items-center p-3 transition duration-150 ease-in-out ${activePath === tab.path ? 'text-blue-700 border-b-2 border-blue-700' : 'text-gray-600'} hover:text-blue-600`}
           >
             <Link
               to={tab.path}
