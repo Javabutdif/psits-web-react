@@ -42,7 +42,7 @@ const AdminLayout = () => {
         label={label} 
         toggleSidebar={toggleSidebar}
       /> 
-      <main className="2xl:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+      <main className="lg:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
         <Outlet />
       </main>
     </div>
