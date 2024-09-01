@@ -152,7 +152,7 @@ function Merchandise() {
     if (isBefore(currentDate, startDate)) {
       return row.is_active ? "Publishing" : "Pending";
     } else if (isAfter(currentDate, endDate)) {
-      return row.is_active ? "Expired" : "Expired"; // Handle cases where `is_active` is false but expired
+      return row.is_active ? "Expired" : "Expired"; 
     } else {
       return row.is_active ? "Publishing" : "Deleted";
     }

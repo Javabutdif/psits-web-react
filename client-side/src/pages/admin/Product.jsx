@@ -61,14 +61,27 @@ function Product({ handleCloseAddProduct }) {
 
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState({});
+  const [isShown, setIsShown] = useState(false);
 
   useEffect(() => {
-    // Check if 'Uniform' is present in the formData.type
-  }, [formData.type]);
+    
+    if (
+      formData.type.includes("Uniform") ||
+      formData.type.includes("Tshirt") ||
+      formData.type.includes("Tshirt w/ Bundle")
+    ) {
+      setIsShown(true);
+    } else {
+      setIsShown(false);
+    }
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
   };
 
   const handleImageChange = (e) => {
@@ -144,7 +157,6 @@ function Product({ handleCloseAddProduct }) {
     setIsLoading(true);
     const data = new FormData();
 
-    // Append all images to FormData
     if (images) {
       images.forEach((image) => data.append("images", image));
     }
@@ -222,23 +234,19 @@ function Product({ handleCloseAddProduct }) {
   ];
 
   const typeOptions = {
-    uniform: [
-      { value: "CCS Uniform", label: "CCS Uniform" },
-      { value: "Shorts", label: "Shorts" },
-      { value: "Jacket", label: "Jacket" },
-    ],
+    uniform: [{ value: "Uniform", label: "Uniform" }],
     intramurals: [
       { value: "Tshirt", label: "T-shirt" },
       { value: "Ticket", label: "Ticket" },
       { value: "Others", label: "Others" },
     ],
-    "ict-congress": [{ value: "Ticket w/ Bundle", label: "Ticket w/ Bundle" }],
+    "ict-congress": [{ value: "Tshirt w/ Bundle", label: "Tshirt w/ Bundle" }],
     merchandise: [
       { value: "Tshirt", label: "Tshirt" },
       { value: "Item", label: "Item" },
     ],
     acquintance: [
-      { value: "Ticket", label: "Ticket" },
+      { value: "Ticket w/ Bundle", label: "Ticket w/ Bundle" },
       {
         value: "Others",
         label: "Others",
@@ -443,8 +451,7 @@ function Product({ handleCloseAddProduct }) {
               labelStyle={"text-xs"}
               optionStyle={"text-xs"}
             />
-            {(formData.type.split(" ").includes("Uniform") ||
-              formData.type.includes("Tshirt")) && (
+            {isShown && (
               <div className="flex flex-wrap gap-y-4 text-xs">
                 <div>
                   <p>Sizes:</p>
