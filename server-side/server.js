@@ -24,7 +24,7 @@ app.use(
 );
 app.use(bodyParser.json());
 
-//Connection to Mongoose
+
 mongoose
   .connect(process.env.MONGODB_URI, {
     dbName: process.env.DB_NAME,
