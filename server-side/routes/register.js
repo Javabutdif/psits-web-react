@@ -13,7 +13,7 @@ require("dotenv").config();
 const indicator = process.env.DB_NAME !== "psits-test" ? true : false;
 const url = indicator
   ? "https://psits-web.vercel.app/reset-password/"
-  : "https://psits-web-react-staging.vercel.app/reset-password";
+  : "https://psits-web-react-staging.vercel.app/reset-password/";
 
 router.post("/register", async (req, res) => {
   const {
