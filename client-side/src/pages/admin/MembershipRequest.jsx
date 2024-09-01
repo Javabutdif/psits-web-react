@@ -398,8 +398,8 @@ function MembershipRequest() {
           onCancel={handleCloseModal}
           onSubmit={handleFormSubmit}
           qty={1}
-          itemTotal={50}
-          total={50}
+          itemTotal={100}
+          total={100}
         />
       )}
     </>

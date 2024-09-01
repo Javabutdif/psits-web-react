@@ -4,11 +4,15 @@ const Student = require("../models/StudentModel");
 const { ObjectId } = require("mongodb");
 
 const router = express.Router();
+
 router.post("/add-cart", async (req, res) => {
   const {
     id_number,
     product_id,
+    category,
     product_name,
+    end_date,
+    start_date,
     limited,
     price,
     quantity,
@@ -42,7 +46,7 @@ router.post("/add-cart", async (req, res) => {
         const itemIndex = student.cart.findIndex(
           (item) => item.product_id.toString() === product_id
         );
-        console.log(itemIndex);
+
         if (itemIndex > -1) {
           student.cart[itemIndex].quantity = existingCart.quantity + quantity;
           await student.save();
@@ -57,6 +61,9 @@ router.post("/add-cart", async (req, res) => {
         product_id,
         product_name,
         price,
+        end_date,
+        start_date,
+        category,
         quantity,
         limited,
         sub_total,

@@ -17,6 +17,16 @@ const cartItemSchema = new Schema({
   limited: {
     type: Boolean,
   },
+  start_date: {
+    type: String,
+  },
+  end_date: {
+    type: String,
+  },
+
+  category: {
+    type: String,
+  },
   price: {
     type: Number,
     required: true,
@@ -24,7 +34,6 @@ const cartItemSchema = new Schema({
   quantity: {
     type: Number,
     required: true,
-  
   },
   sub_total: {
     type: Number,

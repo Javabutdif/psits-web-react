@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { getAllOrders } from "../../api/orders";
+import { getAllOrders, cancelOrder } from "../../api/orders";
 import ApproveModal from "../../components/admin/ApproveModal";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt";
 import { getPosition } from "../../authentication/Authentication";
+import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
+import { ConfirmActionType } from "../../enums/commonEnums";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -18,6 +20,7 @@ const Orders = () => {
   const [itemsPerPage] = useState(10);
   const [shouldPrint, setShouldPrint] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [delModal, setDelModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [error, setError] = useState(null);
@@ -95,6 +98,18 @@ const Orders = () => {
   const handleApproveClick = (order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
+  };
+  const handleCancelClick = (order) => {
+    setSelectedOrder(order);
+    setDelModal(true);
+  };
+  const handleConfirmDeletion = async () => {
+    await cancelOrder(selectedOrder._id);
+    console.log(selectedOrder._id);
+    handleDeleteModal();
+  };
+  const handleDeleteModal = () => {
+    setDelModal(false);
   };
 
   const handleModalClose = () => {
@@ -268,12 +283,18 @@ const Orders = () => {
                       </td>
                     )}
                     {order.order_status !== "Paid" && (
-                      <td className="p-4">
+                      <td className="p-4 flex flex-row gap-3">
                         <button
                           onClick={() => handleApproveClick(order)}
                           className="p-1 rounded hover:bg-green-600 text-white bg-green-500"
                         >
                           Approve
+                        </button>
+                        <button
+                          onClick={() => handleCancelClick(order)}
+                          className="p-1 rounded hover:bg-red-600 text-white bg-red-500"
+                        >
+                          Cancel
                         </button>
                       </td>
                     )}
@@ -402,6 +423,13 @@ const Orders = () => {
           onSubmit={handleApproveConfirm}
           items={selectedOrder.items}
           total={selectedOrder.total}
+        />
+      )}
+      {delModal && (
+        <ConfirmationModal
+          confirmType={ConfirmActionType.ORDER}
+          onCancel={handleDeleteModal}
+          onConfirm={handleConfirmDeletion}
         />
       )}
 
