@@ -180,6 +180,8 @@ const CartItem = ({
     quantity,
     selected,
     limited,
+    sizes,
+    variation,
   } = product;
   const [isModalOpen, setModalOpen] = useState(false);
 
@@ -239,10 +241,16 @@ const CartItem = ({
           <span className="block text-sm text-gray-600">ID: {product_id}</span>
         </h4>
         <p className="text-sm sm:text-base font-medium text-gray-700">
+          Size: {sizes !== null ? sizes : null}
+        </p>
+        <p className="text-sm sm:text-base font-medium text-gray-700">
+          Color: {variation !== null ? variation : null}
+        </p>
+        <p className="text-sm sm:text-base font-medium text-gray-700">
           ₱{price.toFixed(2)}
         </p>
       </div>
-      {/* Quantity Controls */}
+
       <div className="flex items-center mt-4 sm:mt-0 sm:ml-4 space-x-2 sm:space-x-4">
         <button
           type="button"
@@ -314,30 +322,35 @@ const CartItem = ({
     </div>
   );
 };
-
 const StudentCart = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState({ membership: "", renew: "" });
-  const [showModal, setShowModal] = useState(false); // This manages modal visibility
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({});
   const [id_number, student_name, email, course, year, role, position] =
     getInformationData();
-  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const data = await viewCart(getId());
         if (data && data.length > 0) {
-          setProducts(data);
+          const currentDate = new Date();
+          const filteredProducts = data.filter((item) => {
+            const startDate = new Date(item.start_date);
+            const endDate = new Date(item.end_date);
+            return currentDate >= startDate && currentDate <= endDate;
+          });
+          setProducts(filteredProducts);
+          setLoading(false);
         } else {
           setProducts([]);
+          setLoading(false);
         }
       } catch (error) {
         setError(error.message || "Failed to fetch products");
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -371,8 +384,8 @@ const StudentCart = () => {
       )
     );
   };
+
   const handleCheckout = () => {
-    // Check if there are no items in the cart
     if (products.length === 0) {
       showToast(
         "error",
@@ -381,10 +394,8 @@ const StudentCart = () => {
       return;
     }
 
-    // Filter the selected items from the cart
     const selectedItems = products.filter((item) => item.selected);
 
-    // Check if no items are selected
     if (selectedItems.length === 0) {
       showToast(
         "error",
@@ -393,7 +404,6 @@ const StudentCart = () => {
       return;
     }
 
-    // If items are selected, proceed with checkout
     setShowModal(true);
     setFormData({
       id_number: getId(),
@@ -401,18 +411,32 @@ const StudentCart = () => {
       course: course,
       year: year,
       student_name: student_name,
-      items: selectedItems, // Use selectedItems instead of all products
+      items: selectedItems,
       membership_discount: statusVerify(),
-      total: totalPrice,
+      total: calculateTotals().totalPrice,
       order_date: new Date().toLocaleString(),
       order_status: "Pending",
     });
   };
 
   const confirmOrder = async () => {
-    await makeOrder(formData);
-
-    setShowModal(false);
+    setLoading(true);
+    try {
+      const result = await makeOrder(formData);
+      if (result) {
+        showToast("success", "Order Placed");
+      } else {
+        showToast("error", "Order wasn't placed");
+      }
+    } catch (error) {
+      showToast("error", "Order failed due to an error");
+    } finally {
+      setLoading(false);
+      setShowModal(false);
+    }
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   };
 
   const handleRemove = (id) => {
@@ -431,30 +455,36 @@ const StudentCart = () => {
     );
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const calculateTotals = () => {
+    const selectedProducts = products.filter((product) => product.selected);
+
+    const merchandiseSubtotal = selectedProducts
+      .filter((item) => item.category === "merchandise")
+      .reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+    const nonMerchandiseSubtotal = selectedProducts
+      .filter((item) => item.category !== "merchandise")
+      .reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+    const discount = merchandiseSubtotal * 0.05;
+    const subTotal = merchandiseSubtotal + nonMerchandiseSubtotal;
+    const discountedTotal = merchandiseSubtotal - discount;
+    const totalPrice = discountedTotal + nonMerchandiseSubtotal;
+
+    return { subTotal, discountedTotal, discount, totalPrice };
+  };
+
+  const { subTotal, discountedTotal, discount, totalPrice } = calculateTotals();
 
   if (error) {
     return <div>Error: {error}</div>;
   }
 
-  const calculateTotals = () => {
-    const selectedProducts = products.filter((product) => product.selected);
-    const subTotal = selectedProducts.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    const discount = statusVerify() ? 0.05 : 0;
-    const discountedTotal = subTotal * discount;
-    const totalPrice = subTotal - discountedTotal;
-
-    return { subTotal, discountedTotal, totalPrice };
-  };
-
-  const { subTotal, discountedTotal, totalPrice } = calculateTotals();
-
-  return (
+  return loading ? (
+    <div className="flex items-center justify-center">
+      <div className="w-16 h-16 border-4 border-t-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+    </div>
+  ) : (
     <div className="grid min-h-main-md grid-rows-[1fr_auto] grid-cols-3 xl:grid-cols-4 lg:grid-rows-2 lg:flex-row items-start gap-4 pb-4">
       <div className="relative row-start-1 col-span-full lg:col-span-3 lg:row-span-2 h-full bg-white">
         <div className="absolute inset-0 overflow-y-auto p-4">
@@ -476,7 +506,7 @@ const StudentCart = () => {
 
       <OrderSummary
         subTotal={subTotal}
-        discountedTotal={discountedTotal}
+        discountedTotal={discount}
         onCheckout={handleCheckout}
         totalPrice={totalPrice}
       />
