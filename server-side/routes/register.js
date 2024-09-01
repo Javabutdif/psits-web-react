@@ -60,8 +60,14 @@ router.post("/student/forgot-password", async (req, res) => {
     let position;
 
     // Find the user by email
-    const userAdmin = await Admin.findOne({ email: req.body.email });
-    const getUser = await Student.findOne({ email: req.body.email });
+    const userAdmin = await Admin.findOne({
+      email: req.body.email,
+      id_number: req.body.id_number,
+    });
+    const getUser = await Student.findOne({
+      email: req.body.email,
+      id_number: req.body.id_number,
+    });
     if (userAdmin) {
       user = userAdmin;
     } else if (getUser) {
@@ -77,12 +83,12 @@ router.post("/student/forgot-password", async (req, res) => {
       return res.status(404).send({ message: "User not found" });
     }
 
-    // Generate a unique JWT token for the user
+    
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "10m",
     });
 
-    // Send the token to the user's email
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -141,15 +147,13 @@ router.post("/student/forgot-password", async (req, res) => {
 // Student reset password
 router.post("/student/reset-password/:token", async (req, res) => {
   try {
-    // Verify the token sent by the user
     const decodedToken = jwt.verify(req.params.token, process.env.JWT_SECRET);
 
-    // If the token is invalid, return an error
     if (!decodedToken) {
       return res.status(401).send({ message: "Invalid token" });
     }
     let user;
-    // find the user with the id from the token
+
     const getStudent = await Student.findOne({ _id: decodedToken.userId });
     const getAdmin = await Admin.findOne({ _id: decodedToken.userId });
     if (getStudent) {
