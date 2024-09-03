@@ -165,6 +165,7 @@ const ProductDetail = () => {
   };
 
   useEffect(() => {
+    setIsLoading(true);
     const fetchOrderData = async () => {
       try {
         const orders = await getOrder(getId());
@@ -196,6 +197,7 @@ const ProductDetail = () => {
             setCartLimited(true);
           }
         }
+        setIsLoading(false);
       } catch (error) {
         setError("Unable to fetch order details. Please try again later.");
         console.error("Error fetching orders:", error);
@@ -405,7 +407,7 @@ const ProductDetail = () => {
               {category !== "" ? "Category: " : ""} {category}
             </p>
             <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
-              {type !== "" ? "Type: " : ""} {type}
+              {stocks !== "" ? "Stocks: " : ""} {stocks}
             </p>
 
             {(type.includes("Tshirt") || type.includes("Uniform")) && (
