@@ -335,7 +335,7 @@ function MembershipRequest() {
   };
 
   const handleFormSubmit = async () => {
-    // Add logic for form submission if needed
+   
     handleCloseModal();
   };
 

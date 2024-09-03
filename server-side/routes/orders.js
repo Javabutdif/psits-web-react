@@ -236,7 +236,7 @@ router.put("/approve-order", async (req, res) => {
       );
     }
 
-    console.log(successfulOrder);
+    
 
     // Render the email template
     const emailTemplate = await ejs.renderFile(

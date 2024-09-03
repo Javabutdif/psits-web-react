@@ -142,7 +142,7 @@ const Receipt = forwardRef(
               <b>Cash:</b> ₱{cash}
             </p>
             <p>
-              <b>Change:</b> ₱{cash - total}
+              <b>Change:</b> ₱{(cash - total).toFixed(2)}
             </p>
           </div>
         )}
