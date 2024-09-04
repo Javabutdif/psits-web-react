@@ -82,7 +82,6 @@ function ApproveModal({
         } else {
           if (await approveOrder(formData)) {
             showToast("success", "Approve Order Successfully");
-
             setShouldPrint(true);
           } else {
             showToast("error", "Internal Server Error!");
@@ -160,16 +159,43 @@ function ApproveModal({
               type="button"
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
               onClick={onCancel}
+              disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="button"
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 relative"
               onClick={handleSubmit}
               disabled={isLoading}
             >
-              Approve
+              {isLoading ? (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <svg
+                    className="animate-spin h-15 w-15 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 1116 0A8 8 0 014 12z"
+                    />
+                  </svg>
+                </span>
+              ) : (
+                "Approve"
+              )}
             </button>
           </div>
         </div>

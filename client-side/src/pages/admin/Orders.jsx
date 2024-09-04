@@ -284,18 +284,110 @@ const Orders = () => {
                     )}
                     {order.order_status !== "Paid" && (
                       <td className="p-4 flex flex-row gap-3">
-                        <button
-                          onClick={() => handleApproveClick(order)}
-                          className="p-1 rounded hover:bg-green-600 text-white bg-green-500"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleCancelClick(order)}
-                          className="p-1 rounded hover:bg-red-600 text-white bg-red-500"
-                        >
-                          Cancel
-                        </button>
+                        <ButtonsComponent>
+                          <FormButton
+                            type="button"
+                            text={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "Not Authorized"
+                                : "Approve"
+                            }
+                            onClick={() => {
+                              if (
+                                position === "Treasurer" ||
+                                position === "Assistant Treasurer" ||
+                                position === "Auditor" ||
+                                position === "Developer"
+                              ) {
+                                handleApproveClick(order);
+                              }
+                            }}
+                            icon={
+                              <i
+                                className={`fa ${
+                                  position !== "Treasurer" &&
+                                  position !== "Assistant Treasurer" &&
+                                  position !== "Auditor" &&
+                                  position !== "Developer"
+                                    ? "fa-lock"
+                                    : "fa-check"
+                                }`}
+                              ></i>
+                            }
+                            styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "bg-gray-500 cursor-not-allowed"
+                                : "bg-blue-500"
+                            }`}
+                            textClass="text-white"
+                            whileHover={{ scale: 1.02, opacity: 0.95 }}
+                            whileTap={{ scale: 0.98, opacity: 0.9 }}
+                            disabled={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                            }
+                          />
+                        </ButtonsComponent>
+                        <ButtonsComponent>
+                          <FormButton
+                            type="button"
+                            text={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "Not Authorized"
+                                : "Cancel"
+                            }
+                            onClick={() => {
+                              if (
+                                position === "Treasurer" ||
+                                position === "Assistant Treasurer" ||
+                                position === "Auditor" ||
+                                position === "Developer"
+                              ) {
+                                handleCancelClick(order);
+                              }
+                            }}
+                            icon={
+                              <i
+                                className={`fa ${
+                                  position !== "Treasurer" &&
+                                  position !== "Assistant Treasurer" &&
+                                  position !== "Auditor" &&
+                                  position !== "Developer"
+                                    ? "fa-lock"
+                                    : "fa-cancel"
+                                }`}
+                              ></i>
+                            }
+                            styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "bg-gray-500 cursor-not-allowed"
+                                : "bg-red-500"
+                            }`}
+                            textClass="text-white"
+                            whileHover={{ scale: 1.02, opacity: 0.95 }}
+                            whileTap={{ scale: 0.98, opacity: 0.9 }}
+                            disabled={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                            }
+                          />
+                        </ButtonsComponent>
                       </td>
                     )}
                     {order.order_status === "Paid" && (
