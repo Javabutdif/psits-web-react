@@ -15,6 +15,7 @@ const FormInput = ({
   inputStyle = "",
   disabled = false,
   max,
+  placeholder
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +57,7 @@ const FormInput = ({
         aria-invalid={!!error}
         aria-describedby={`${id}-error`}
         min={max}
+        placeholder={placeholder}
       />
 
       {type === "password" && (

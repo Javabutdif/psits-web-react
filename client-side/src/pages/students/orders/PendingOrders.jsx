@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { getOrder, cancelOrder } from "../../../api/orders";
 import { getId } from "../../../authentication/Authentication";
 import OrderList from "./OrderList";
@@ -111,7 +112,6 @@ const PendingOrders = () => {
     }
   };
 
-
   const handleMultipleCancel = async () => {
     try {
       for (const order_id of selectedOrders) {
@@ -125,7 +125,6 @@ const PendingOrders = () => {
   };
 
   useEffect(() => {
-
     const allOrderIds = currentOrders.map((order) => order._id);
     const allChecked = allOrderIds.every((id) => selectedOrders.includes(id));
     setIsAllChecked(allChecked);
@@ -154,7 +153,7 @@ const PendingOrders = () => {
               type="button"
               text="Cancel All Orders"
               icon={<i className="fas fa-trash-alt text-sm"></i>}
-              styles="space-x-1 bg-red-500 text-white rounded py-1 px-2 text-sm transition duration-150 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+              styles="space-x-1 bg-blue-500 text-white rounded py-1 px-2 text-sm transition duration-150 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
               textClass="text-sm hidden md:inline-block"
               whileHover={{ scale: 1.01, opacity: 0.9 }}
               whileTap={{ scale: 0.95, opacity: 0.8 }}
@@ -178,36 +177,48 @@ const PendingOrders = () => {
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
+              itemPerPage={ordersPerPage}
               handlePageChange={handlePageChange}
             />
           </>
         ) : (
-        <div>No Product.</div>
-
+          <div>No Product.</div>
         )}
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded shadow-lg max-w-sm w-full">
+        <motion.div
+          className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div
+            className="bg-white p-4 rounded shadow-lg max-w-sm w-full"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
             <h2 className="text-lg font-bold mb-4">Confirm Cancellation</h2>
             <p className="mb-4">Are you sure you want to cancel this order?</p>
             <div className="flex justify-end space-x-2">
               <button
                 onClick={handleModalConfirm}
-                className="bg-red-500 text-white py-1 px-3 rounded"
+                className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-150"
               >
                 Yes
               </button>
               <button
                 onClick={handleModalClose}
-                className="bg-gray-300 text-gray-800 py-1 px-3 rounded"
+                className="bg-gray-300 text-gray-800 py-1 px-3 rounded hover:bg-gray-400 transition duration-150"
               >
                 No
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );

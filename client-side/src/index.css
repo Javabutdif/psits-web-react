@@ -39,3 +39,20 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-slate-300
 }
+
+/* Add this to your global stylesheet or a specific module */
+.table-resizer {
+  position: relative;
+  cursor: col-resize;
+}
+
+.table-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}

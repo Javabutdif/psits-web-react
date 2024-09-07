@@ -356,38 +356,19 @@ function Merchandise() {
   };
 
   return (
-    <div className="p-4 relative">
+    <div className="py-4 relative">
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="text-gray-500">Loading...</div>
         </div>
       ) : (
         <>
-          <div className="pt-20 flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
+          <div className=" flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
             <motion.h1
               whileHover={{ scale: 1.05 }}
               className="text-3xl text-gray-700 text-center md:text-left"
             ></motion.h1>
-            <div className="flex flex-col md:flex-row items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="text-xs md:text-base text-gray-600 flex items-center gap-2 px-4 py-1 border rounded-md shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
-                onClick={() => setIsFilterOptionOpen(!isFilterOptionOpen)}
-              >
-                <i className="fas fa-filter"></i>
-                Filters
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="text-xs md:text-base text-gray-600 flex items-center gap-2 px-4 py-1 border rounded-md shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
-                onClick={handleOpenAddProduct}
-              >
-                <i className="fas fa-plus"></i>
-                Add Product
-              </motion.button>
-            </div>
+           
           </div>
           <div className="overflow-x-auto">
             <TableComponent
@@ -395,6 +376,31 @@ function Merchandise() {
               data={filteredData}
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
+              customButtons={
+                <ButtonsComponent>
+                  {/* Filters Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05, backgroundColor: '#0056b3' }}  // Hover effect for primary
+                    whileTap={{ scale: 0.98, backgroundColor: '#003d7a' }}    // Active effect for primary
+                    className="text-sm md:text-base bg-primary text-white flex items-center gap-2 px-5 py-2 border border-neutral-medium rounded-lg shadow-sm hover:shadow-md transition ease-in-out duration-150 focus:outline-none focus:ring-2 focus:ring-highlight"
+                    onClick={() => setIsFilterOptionOpen(!isFilterOptionOpen)}
+                  >
+                    <i className="fas fa-filter text-white"></i>
+                    <span className="font-medium">Filters</span>
+                  </motion.button>
+
+                  {/* Add Product Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05, backgroundColor: '#0056b3' }}  // Hover effect for primary
+                    whileTap={{ scale: 0.98, backgroundColor: '#003d7a' }}    // Active effect for primary
+                    className="text-sm md:text-base bg-accent text-white flex items-center gap-2 px-5 py-2 border border-neutral-medium rounded-lg shadow-sm hover:shadow-md transition ease-in-out duration-150 focus:outline-none focus:ring-2 focus:ring-highlight"
+                    onClick={handleOpenAddProduct}
+                  >
+                    <i className="fas fa-plus text-white"></i>
+                    <span className="font-medium">Add </span>
+                  </motion.button>
+    </ButtonsComponent>
+              }
             />
           </div>
         </>
