@@ -25,7 +25,6 @@ const StudentLayout = () => {
     { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
     { text: "Resources", icon: "fas fa-book-open", path: "resources" },
     { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
-    { text: "Settings", icon: "fas fa-cog", path: "settings" },
   ];
 
   return (

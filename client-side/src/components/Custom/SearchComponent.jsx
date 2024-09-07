@@ -3,7 +3,7 @@ import FormInput from '../../components/forms/FormInput';
 
 const SearchComponent = ({ searchQuery, handleSearchChange }) => (
   <FormInput
-    label="Search"
+    placeholder="Search"
     type="text"
     id="id-number"
     name="id_number"
