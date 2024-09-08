@@ -70,8 +70,6 @@ router.post("/approve-membership", async (req, res) => {
   const { reference_code, id_number, type, admin, rfid, date, cash, total } =
     req.body;
 
-  console.log("Received Request Payload:", req.body);
-
   try {
     // Fetch the student from the database
     const student = await Student.findOne({ id_number });
@@ -140,7 +138,7 @@ router.post("/approve-membership", async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL,
-      to: student.email, // Assuming student has an email field
+      to: student.email, 
       subject: "Your Receipt from PSITS - UC Main",
       html: emailTemplate,
       attachments: [
@@ -160,7 +158,6 @@ router.post("/approve-membership", async (req, res) => {
           .status(500)
           .json({ message: "Error sending email", error: error.message });
       } else {
-        console.log("Email sent:", info.response);
         return res
           .status(200)
           .json({ message: "Approve student successful and email sent" });

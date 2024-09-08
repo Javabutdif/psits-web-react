@@ -64,7 +64,6 @@ function Product({ handleCloseAddProduct }) {
   const [isShown, setIsShown] = useState(false);
 
   useEffect(() => {
-    
     if (
       formData.type.includes("Uniform") ||
       formData.type.includes("Tshirt") ||
@@ -269,85 +268,64 @@ function Product({ handleCloseAddProduct }) {
 
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-        <div className="relative max-w-lg w-full mx-4 md:mx-auto p-6 bg-white rounded-2xl shadow-xl transition-transform transform scale-100">
+        <div className="relative max-w-md w-full mx-4 md:mx-6 p-4 bg-white rounded-lg shadow-lg">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <i className="fas fa-times text-lg"></i>
           </button>
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Preview</h2>
-          <div className="space-y-4">
-            {imagesToShow.length > 0 && (
-              <div className="flex gap-2">
-                {imagesToShow.map((image, index) => (
-                  <img
-                    key={index}
-                    src={URL.createObjectURL(image)}
-                    alt={`Product Preview ${index + 1}`}
-                    className="w-24 h-24 object-cover rounded-lg shadow-sm border border-gray-200"
-                  />
-                ))}
-                {images.length > 3 && (
-                  <div className="flex items-center justify-center w-24 h-24 bg-gray-100 rounded-lg shadow-sm border border-gray-200">
-                    <p className="text-xs text-gray-500">
-                      +{images.length - 3} more
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="text-gray-700 space-y-1">
-              <p className="text-sm">
-                <strong>Product Name:</strong> {data.name}
-              </p>
-              <p className="text-sm">
-                <strong>Price:</strong> ₱{data.price}
-              </p>
-              <p className="text-sm">
-                <strong>Stocks:</strong> {data.stocks}
-              </p>
-              <p className="text-sm">
-                <strong>Batch:</strong> {data.batch}
-              </p>
-              <p className="text-sm">
-                <strong>Category:</strong> {data.category}
-              </p>
-              <p className="text-sm">
-                <strong>Type:</strong> {data.type}
-              </p>
-              <p className="text-sm">
-                <strong>Description:</strong> {data.description}
-              </p>
-              <p className="text-sm">
-                <strong>Purchase Control:</strong> {data.control}
-              </p>
-              <p className="text-sm">
-                <strong>Start Date:</strong> {data.start_date}
-              </p>
-              <p className="text-sm">
-                <strong>End Date:</strong> {data.end_date}
-              </p>
-              <p className="text-sm">
-                <strong>Sizes:</strong> {data.selectedSizes.join(", ")}
-              </p>
-              <p className="text-sm">
-                <strong>Variations:</strong>{" "}
-                {data.selectedVariations.join(", ")}
-              </p>
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">Preview</h2>
+          {imagesToShow.length > 0 && (
+            <div className="flex gap-2 mb-4 overflow-x-auto">
+              {imagesToShow.map((image, index) => (
+                <img
+                  key={index}
+                  src={URL.createObjectURL(image)}
+                  alt={`Product Preview ${index + 1}`}
+                  className="w-20 h-20 object-cover rounded-md shadow-sm border border-gray-200"
+                />
+              ))}
+              {images.length > 3 && (
+                <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-md shadow-sm border border-gray-200">
+                  <p className="text-xs text-gray-500">
+                    +{images.length - 3} more
+                  </p>
+                </div>
+              )}
             </div>
+          )}
+          <div className="text-gray-700 space-y-1 mb-4">
+            {Object.entries({
+              "Product Name": data.name,
+              Price: `₱${data.price}`,
+              Stocks: data.stocks,
+              Batch: data.batch,
+              Category: data.category,
+              Type: data.type,
+              Description: data.description,
+              "Purchase Control": data.control,
+              "Start Date": data.start_date,
+              "End Date": data.end_date,
+              Sizes: data.selectedSizes.join(", "),
+              Variations: data.selectedVariations.join(", "),
+            }).map(([label, value]) => (
+              <p key={label} className="text-sm">
+                <strong>{label}:</strong> {value}
+              </p>
+            ))}
           </div>
-          <div className="mt-6 flex justify-end space-x-3">
+          <div className="flex justify-end space-x-3">
             <button
               onClick={onClose}
-              className="px-5 py-2 bg-gray-200 text-gray-600 rounded-full text-sm transition-colors hover:bg-gray-300"
+              className="px-4 py-2 bg-gray-200 text-gray-600 rounded-full text-sm transition-colors hover:bg-gray-300"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
               disabled={isLoading}
-              className="px-5 py-2 bg-blue-500 text-white rounded-full text-sm transition-colors hover:bg-blue-600"
+              className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm transition-colors hover:bg-blue-600"
             >
               Confirm
             </button>
@@ -356,187 +334,181 @@ function Product({ handleCloseAddProduct }) {
       </div>
     );
   };
-
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="relative  h-[72%] overflow-y-scroll max-w-md w-full mx-4 md:mx-auto p-6 bg-white rounded-lg shadow-lg">
-        <div>
-          <button
-            onClick={handleCloseAddProduct}
-            className="absolute top-6 right-4 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <i className="fas fa-times"></i>
-          </button>
-          <h2 className="text-xl font-semibold mb-4">Add Product</h2>
-          <form onSubmit={handlePreview} className="space-y-4">
-            <ImageInput
-              label={"Product Image"}
-              handleImageChange={handleImageChange}
-              multiple={true}
-              previews={imagePreviews}
+      <div className="relative h-[90%] max-w-md w-full mx-4 md:mx-8 p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
+        <button
+          onClick={handleCloseAddProduct}
+          className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <i className="fas fa-times"></i>
+        </button>
+        <h2 className="text-2xl font-semibold mb-4">Add Product</h2>
+        <form onSubmit={handlePreview} className="space-y-6">
+          <ImageInput
+            label={"Product Image"}
+            handleImageChange={handleImageChange}
+            multiple={true}
+            previews={imagePreviews}
+          />
+          <FormInput
+            label="Product Name"
+            name="name"
+            type="text"
+            value={formData.name}
+            onChange={handleChange}
+            labelStyle="text-sm"
+            inputStyle="text-sm"
+          />
+          <div className="flex flex-col md:flex-row gap-4">
+            <FormInput
+              label="Price"
+              name="price"
+              type="number"
+              value={formData.price}
+              onChange={handleChange}
+              labelStyle="text-sm"
+              inputStyle="text-sm"
             />
             <FormInput
-              label="Product Name"
-              name="name"
-              type="text"
-              value={formData.name}
+              label="Stocks"
+              name="stocks"
+              type="number"
+              value={formData.stocks}
               onChange={handleChange}
-              labelStyle="text-xs"
-              inputStyle="text-xs"
+              labelStyle="text-sm"
+              inputStyle="text-sm"
             />
-            <div className="flex flex-col md:flex-row  space-x-0 flex-wrap md:space-x-4 gap-y-4">
-              <FormInput
-                label="Price"
-                name="price"
-                type="number"
-                value={formData.price}
-                onChange={handleChange}
-                labelStyle="text-xs"
-                inputStyle="text-xs"
-              />
-              <FormInput
-                label="Stocks"
-                name="stocks"
-                type="number"
-                value={formData.stocks}
-                onChange={handleChange}
-                labelStyle="text-xs"
-                inputStyle="text-xs"
-              />
-              <FormInput
-                label="Batch"
-                name="batch"
-                type="number"
-                value={formData.batch}
-                onChange={handleChange}
-                labelStyle="text-xs"
-                inputStyle="text-xs"
-              />
-            </div>
-
-            <FormTextArea
-              name="description"
-              label="Description"
-              value={formData.description}
+            <FormInput
+              label="Batch"
+              name="batch"
+              type="number"
+              value={formData.batch}
               onChange={handleChange}
+              labelStyle="text-sm"
+              inputStyle="text-sm"
             />
-            <div className="flex flex-wrap space-x-4 gap-y-4">
-              <FormSelect
-                name="category"
-                label="Category"
-                options={categoryOptions}
-                value={formData.category}
-                onChange={handleChange}
-                labelStyle={"text-xs"}
-                optionStyle={"text-xs"}
-                styles={"flex-1"}
-              />
-              <FormSelect
-                name="type"
-                label="Type"
-                options={getTypeOptions(formData.category)}
-                value={formData.type}
-                onChange={handleChange}
-                styles={"flex-1"}
-                labelStyle={"text-xs"}
-                optionStyle={"text-xs"}
-              />
-            </div>
+          </div>
+          <FormTextArea
+            name="description"
+            label="Description"
+            value={formData.description}
+            onChange={handleChange}
+            labelStyle="text-sm"
+            inputStyle="text-sm"
+          />
+          <div className="flex flex-col md:flex-row gap-4">
             <FormSelect
-              name="control"
-              label="Purchase Control"
-              options={purchaseControlOptions}
-              value={formData.control}
+              name="category"
+              label="Category"
+              options={categoryOptions}
+              value={formData.category}
               onChange={handleChange}
-              labelStyle={"text-xs"}
-              optionStyle={"text-xs"}
+              labelStyle="text-sm"
+              optionStyle="text-sm"
+              styles="flex-1"
             />
-            {isShown && (
-              <div className="flex flex-wrap gap-y-4 text-xs">
-                <div>
-                  <p>Sizes:</p>
-                  <div className="flex gap-2">
-                    {size.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => handleSizeClick(s)}
-                        className={`p-2 border rounded ${
-                          formData.selectedSizes.includes(s)
-                            ? "bg-blue-500 text-white"
-                            : ""
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p>Variations:</p>
-                  <div className="flex gap-2 flex-wrap text-xs">
-                    {variation.map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => handleVariationClick(v)}
-                        className={`p-2 border rounded ${
-                          formData.selectedVariations.includes(v)
-                            ? "bg-blue-500 text-white"
-                            : ""
-                        }`}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                  </div>
+            <FormSelect
+              name="type"
+              label="Type"
+              options={getTypeOptions(formData.category)}
+              value={formData.type}
+              onChange={handleChange}
+              styles="flex-1"
+              labelStyle="text-sm"
+              optionStyle="text-sm"
+            />
+          </div>
+          <FormSelect
+            name="control"
+            label="Purchase Control"
+            options={purchaseControlOptions}
+            value={formData.control}
+            onChange={handleChange}
+            labelStyle="text-sm"
+            optionStyle="text-sm"
+          />
+          {isShown && (
+            <div className="flex flex-col gap-4 text-sm">
+              <div>
+                <p className="font-semibold">Sizes:</p>
+                <div className="flex gap-2 flex-wrap">
+                  {size.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => handleSizeClick(s)}
+                      className={`p-2 border rounded ${
+                        formData.selectedSizes.includes(s)
+                          ? "bg-blue-500 text-white"
+                          : "bg-white text-gray-800"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-
-            <div className="flex flex-wrap space-x-0 md:space-x-4 gap-y-4">
-              <FormInput
-                label="Start Date"
-                name="start_date"
-                type="date"
-                value={formData.start_date}
-                onChange={handleChange}
-                labelStyle="text-xs"
-                inputStyle="text-xs"
-                error={errors.start_date} // Pass the error message for start_date
-                max={today}
-              />
-              <FormInput
-                label="End Date"
-                name="end_date"
-                type="date"
-                value={formData.end_date}
-                onChange={handleChange}
-                labelStyle="text-xs"
-                inputStyle="text-xs"
-                error={errors.end_date} // Pass the error message for end_date
-                max={today}
-              />
+              <div>
+                <p className="font-semibold">Variations:</p>
+                <div className="flex gap-2 flex-wrap text-sm">
+                  {variation.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => handleVariationClick(v)}
+                      className={`p-2 border rounded ${
+                        formData.selectedVariations.includes(v)
+                          ? "bg-blue-500 text-white"
+                          : "bg-white text-gray-800"
+                      }`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-
-            <FormButton
-              type="button"
-              text="Preview"
-              onClick={handlePreview}
-              styles={"w-full bg-blue-400 p-2 rounded"}
+          )}
+          <div className="flex flex-col md:flex-row gap-4">
+            <FormInput
+              label="Start Date"
+              name="start_date"
+              type="date"
+              value={formData.start_date}
+              onChange={handleChange}
+              labelStyle="text-sm"
+              inputStyle="text-sm"
+              error={errors.start_date}
+              max={today}
             />
-          </form>
-          <div>
-            {showPreview && (
-              <PreviewModal
-                data={previewData}
-                images={images}
-                onClose={() => setShowPreview(false)}
-                onConfirm={handleConfirm}
-              />
-            )}
+            <FormInput
+              label="End Date"
+              name="end_date"
+              type="date"
+              value={formData.end_date}
+              onChange={handleChange}
+              labelStyle="text-sm"
+              inputStyle="text-sm"
+              error={errors.end_date}
+              max={today}
+            />
           </div>
-        </div>
+          <FormButton
+            type="button"
+            text="Preview"
+            onClick={handlePreview}
+            styles="w-full bg-blue-500 p-2 rounded text-white"
+          />
+        </form>
+        {showPreview && (
+          <PreviewModal
+            data={previewData}
+            images={images}
+            onClose={() => setShowPreview(false)}
+            onConfirm={handleConfirm}
+          />
+        )}
       </div>
     </div>
   );

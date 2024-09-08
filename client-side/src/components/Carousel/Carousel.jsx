@@ -1,6 +1,6 @@
-import React from 'react';
-import useCarousel from './UseCarousel';
-import CarouselCard from './CarouselCard';
+import React from "react";
+import useCarousel from "./UseCarousel";
+import CarouselCard from "./CarouselCard";
 
 const Carousel = ({ members }) => {
   const { currentIndex, handleDragEnd } = useCarousel(members.length);
@@ -11,7 +11,8 @@ const Carousel = ({ members }) => {
         {members.map((member, index) => {
           const isCurrent = index === currentIndex;
           const isNext = index === (currentIndex + 1) % members.length;
-          const isPrevious = index === (currentIndex - 1 + members.length) % members.length;
+          const isPrevious =
+            index === (currentIndex - 1 + members.length) % members.length;
 
           return (
             <CarouselCard
