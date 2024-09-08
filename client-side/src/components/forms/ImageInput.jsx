@@ -1,6 +1,12 @@
-import React from 'react';
+import React from "react";
 
-const ImageInput = ({ label, handleImageChange, multiple, previews }) => {
+const ImageInput = ({
+  label,
+  handleImageChange,
+  multiple,
+  previews,
+  onRemoveImage,
+}) => {
   return (
     <div>
       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -8,12 +14,20 @@ const ImageInput = ({ label, handleImageChange, multiple, previews }) => {
       </label>
       <div className="mt-2 flex flex-wrap mb-2 gap-2">
         {previews.map((preview, index) => (
-          <img
-            key={index}
-            src={preview}
-            alt={`Preview ${index + 1}`}
-            className="w-24 h-24 object-cover rounded-md border border-gray-300"
-          />
+          <div key={index} className="relative">
+            <img
+              src={preview}
+              alt={`Preview ${index + 1}`}
+              className="w-24 h-24 object-cover rounded-md border border-gray-300"
+            />
+            <button
+              type="button"
+              onClick={() => onRemoveImage(index)}
+              className="absolute top-0 right-0 bg-red-500 text-white text-xs p-1 rounded-full"
+            >
+              &times;
+            </button>
+          </div>
         ))}
       </div>
       <input
