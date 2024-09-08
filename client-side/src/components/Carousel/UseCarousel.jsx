@@ -1,31 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
-const useCarousel = (itemsCount) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % itemsCount);
-  };
-
-  const goToPrevious = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount);
-  };
-
-  const handleDragEnd = (event, info) => {
-    if (info.offset.x > 100) {
-      goToPrevious();
-    } else if (info.offset.x < -100) {
-      goToNext();
-    }
-  };
+const useCarousel = (totalItems, isActive, onIndexChange, currentIndex) => {
+  const [localIndex, setLocalIndex] = useState(currentIndex);
 
   useEffect(() => {
-    const interval = setInterval(goToNext, 3000); // Change card every 3 seconds
+    setLocalIndex(currentIndex);
+  }, [currentIndex]);
 
-    return () => clearInterval(interval); // Clear interval on component unmount
-  }, [itemsCount]);
+  const handleDragEnd = useCallback((event, info) => {
+    if (!isActive) return;
 
-  return { currentIndex, handleDragEnd, goToNext, goToPrevious };
+    const { offset, velocity } = info;
+    const swipeThreshold = 100; // Swipe threshold for sensitivity
+    const velocityThreshold = 0.2; // Velocity threshold to determine direction
+
+    let direction = 0;
+
+    if (Math.abs(velocity.x) > velocityThreshold) {
+      direction = velocity.x > 0 ? -1 : 1; // Velocity determines direction
+    } else if (Math.abs(offset.x) > swipeThreshold) {
+      direction = offset.x > 0 ? -1 : 1; // Offset determines direction
+    }
+
+    if (direction !== 0) {
+      let newIndex = (localIndex - direction + totalItems) % totalItems;
+      if (newIndex < 0) newIndex += totalItems;
+
+      setLocalIndex(newIndex);
+      onIndexChange(newIndex);
+    }
+  }, [localIndex, totalItems, isActive, onIndexChange]);
+
+  return { currentIndex: localIndex, handleDragEnd };
 };
 
 export default useCarousel;

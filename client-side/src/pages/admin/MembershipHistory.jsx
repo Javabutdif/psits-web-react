@@ -75,7 +75,17 @@ function MembershipHistory() {
   const columns = [
     {
       key: "reference_code",
-      label: "Reference ID",
+      label: "Reference",
+      sortable: true,
+    },
+    {
+      key: "id_number",
+      label: "ID",
+      sortable: true,
+    },
+    {
+      key: "rfid",
+      label: "RFID",
       sortable: true,
     },
     {
@@ -86,8 +96,6 @@ function MembershipHistory() {
       cell: (row) => (
         <div className="text-xs">
           <div>{row.name} </div>
-          <div className="text-gray-500">ID: {row.id_number}</div>
-          <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
       ),
     },
@@ -161,7 +169,7 @@ function MembershipHistory() {
               position !== "Auditor" &&
               position !== "Developer"
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500"
+                : "bg-[#002E48]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}

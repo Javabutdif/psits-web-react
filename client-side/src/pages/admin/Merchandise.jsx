@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import "../../App.css";
-import { merchandiseAdmin, deleteMerchandise , publishMerchandise } from "../../api/admin";
+import {
+  merchandiseAdmin,
+  deleteMerchandise,
+  publishMerchandise,
+} from "../../api/admin";
 import TableComponent from "../../components/Custom/TableComponent"; // Adjust the import path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -45,6 +49,7 @@ function Merchandise() {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const result = await merchandiseAdmin();
       setData(result);
       setFilteredData(result);
@@ -102,7 +107,6 @@ function Merchandise() {
   };
 
   const handleOpenAddProduct = () => {
-    console.log("Opening Add Product Modal");
     setIsAddProductModal(true);
   };
 
@@ -139,10 +143,10 @@ function Merchandise() {
     setMerchToDelete(id);
     setDeleteModalOpen(true);
   };
-   const handlePublishProductModal = (id) => {
-     setMerchToPublish(id);
-     setPublishModalOpen(true);
-   };
+  const handlePublishProductModal = (id) => {
+    setMerchToPublish(id);
+    setPublishModalOpen(true);
+  };
 
   const getStatus = (row) => {
     const currentDate = new Date();
@@ -152,7 +156,7 @@ function Merchandise() {
     if (isBefore(currentDate, startDate)) {
       return row.is_active ? "Publishing" : "Pending";
     } else if (isAfter(currentDate, endDate)) {
-      return row.is_active ? "Expired" : "Expired"; // Handle cases where `is_active` is false but expired
+      return row.is_active ? "Expired" : "Expired";
     } else {
       return row.is_active ? "Publishing" : "Deleted";
     }
@@ -198,10 +202,11 @@ function Merchandise() {
       ),
     },
     {
-      key: "category",
-      label: "Category",
+      key: "name",
+      label: "Name",
       sortable: true,
     },
+
     {
       key: "batch",
       label: "Batch",
@@ -356,38 +361,18 @@ function Merchandise() {
   };
 
   return (
-    <div className="p-4 relative">
+    <div className="py-4 relative">
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-500">Loading...</div>
+        <div className="flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-t-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
         </div>
       ) : (
         <>
-          <div className="pt-20 flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
+          <div className=" flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
             <motion.h1
               whileHover={{ scale: 1.05 }}
               className="text-3xl text-gray-700 text-center md:text-left"
             ></motion.h1>
-            <div className="flex flex-col md:flex-row items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="text-xs md:text-base text-gray-600 flex items-center gap-2 px-4 py-1 border rounded-md shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
-                onClick={() => setIsFilterOptionOpen(!isFilterOptionOpen)}
-              >
-                <i className="fas fa-filter"></i>
-                Filters
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="text-xs md:text-base text-gray-600 flex items-center gap-2 px-4 py-1 border rounded-md shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
-                onClick={handleOpenAddProduct}
-              >
-                <i className="fas fa-plus"></i>
-                Add Product
-              </motion.button>
-            </div>
           </div>
           <div className="overflow-x-auto">
             <TableComponent
@@ -395,6 +380,22 @@ function Merchandise() {
               data={filteredData}
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
+              customButtons={
+                <ButtonsComponent>
+                  {/* Filters Button */}
+
+                  {/* Add Product Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05, backgroundColor: "#0056b3" }} // Hover effect for primary
+                    whileTap={{ scale: 0.98, backgroundColor: "#003d7a" }} // Active effect for primary
+                    className="text-sm md:text-base bg-accent text-white flex items-center gap-2 px-5 py-2 border border-neutral-medium rounded-lg shadow-sm hover:shadow-md transition ease-in-out duration-150 focus:outline-none focus:ring-2 focus:ring-highlight"
+                    onClick={handleOpenAddProduct}
+                  >
+                    <i className="fas fa-plus text-white"></i>
+                    <span className="font-medium">Add </span>
+                  </motion.button>
+                </ButtonsComponent>
+              }
             />
           </div>
         </>
@@ -447,52 +448,52 @@ function Merchandise() {
         <Dialog
           open={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
-          className="fixed inset-0 z-50 overflow-y-auto"
+          className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4"
         >
-          <div className="fixed inset-0 bg-black/30" aria-hidden="true"></div>
-          <div className="flex items-center justify-center min-h-screen p-4">
-            <Dialog.Panel className="bg-white rounded-lg shadow-lg max-w-full w-full sm:max-w-md md:max-w-lg lg:max-w-xl p-6 relative mx-auto">
-              <button
-                type="button"
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                onClick={() => setIsViewModalOpen(false)}
-              >
-                <span className="sr-only">Close</span>
-                <AiOutlineClose className="w-6 h-6" aria-hidden="true" />
-              </button>
+          <div className="fixed inset-0 bg-black/40" aria-hidden="true"></div>
+          <Dialog.Panel className="relative bg-white rounded-lg shadow-lg max-w-full w-full sm:max-w-md lg:max-w-lg p-4 sm:p-6 md:p-8">
+            <button
+              type="button"
+              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
+              onClick={() => setIsViewModalOpen(false)}
+            >
+              <span className="sr-only">Close</span>
+              <AiOutlineClose className="w-6 h-6" aria-hidden="true" />
+            </button>
 
-              {/* Product Image */}
-              <div className="mb-4">
-                <img
-                  src={selectedItem?.imageUrl}
-                  alt={selectedItem?.name}
-                  className="w-full h-64 object-cover rounded-md"
-                />
-              </div>
+            {/* Product Image */}
+            <div className="mb-4">
+              <img
+                src={selectedItem?.imageUrl[0]}
+                alt={selectedItem?.name}
+                className="w-full h-48 object-cover rounded-md"
+              />
+            </div>
 
-              {/* Product Details */}
-              <div className="space-y-4">
-                <h2 className="text-2xl font-semibold text-gray-800">
-                  {selectedItem?.name}
-                </h2>
-                <p className="text-gray-600">Price: ₱{selectedItem?.price}</p>
-                <p className="text-gray-600">Stocks: {selectedItem?.stocks}</p>
-                <p className="text-gray-600">Batch: {selectedItem?.batch}</p>
-                <p className="text-gray-600">
-                  Description: {selectedItem?.description}
-                </p>
-                <p className="text-gray-600">
-                  Category: {selectedItem?.category}
-                </p>
-                <p className="text-gray-600">
-                  Start Date: {selectedItem?.start_date}
-                </p>
-                <p className="text-gray-600">
-                  End Date: {selectedItem?.end_date}
-                </p>
-              </div>
-            </Dialog.Panel>
-          </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {selectedItem?.name}
+              </h2>
+              <p className="text-gray-600">Price: ₱{selectedItem?.price}</p>
+              <p className="text-gray-600">Stocks: {selectedItem?.stocks}</p>
+              <p className="text-gray-600">Batch: {selectedItem?.batch}</p>
+              <p className="text-gray-600">
+                Description: {selectedItem?.description}
+              </p>
+              <p className="text-gray-600">
+                Category: {selectedItem?.category}
+              </p>
+              <p className="text-gray-600">
+                Start Date: {selectedItem?.start_date}
+              </p>
+              <p className="text-gray-600">
+                End Date: {selectedItem?.end_date}
+              </p>
+              <p className="text-gray-600">
+                Created By: {selectedItem?.created_by}
+              </p>
+            </div>
+          </Dialog.Panel>
         </Dialog>
       )}
 
@@ -553,6 +554,5 @@ function Merchandise() {
     </div>
   );
 }
-
 
 export default Merchandise;

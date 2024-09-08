@@ -1,7 +1,9 @@
 import React from 'react';
 import PostCard from './PostCard';
+import { useEffect } from 'react';
 
 const Posts = ({ posts, styles }) => {
+
   return (
     <div className={`${styles} flex flex-col  mx-auto gap-6`}>
       {Object.values(posts).map((post, index) => (

@@ -217,7 +217,7 @@ const Membership = () => {
     },
     {
       key: "id_number",
-      label: "Id Number",
+      label: "Id ",
       selector: (row) => row.id_number,
       sortable: true,
     },
@@ -251,15 +251,17 @@ const Membership = () => {
             className={`px-2 py-1 rounded text-xs ${
               row.membership === "None"
                 ? "bg-gray-200 text-gray-800"
-                : row.membership === "Pending"
+                : row.membership === "Pending" || row.renew === "Pending"
                 ? "bg-yellow-200 text-yellow-800"
                 : "bg-green-200 text-green-800"
             }`}
           >
             {row.membership === "None"
               ? "None"
-              : row.membership === "Pending"
-              ? "Pending"
+              : row.membership === "Pending" || row.renew === "Pending"
+              ? row.renew === "Pending"
+                ? "Renewal"
+                : "Pending"
               : "Active"}
           </span>
         </div>
@@ -306,7 +308,6 @@ const Membership = () => {
               <FormButton
                 type="button"
                 text="Delete All"
-            
                 icon={<i className="fas fa-trash-alt"></i>} // Updated icon
                 styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
                 textClass="hidden"

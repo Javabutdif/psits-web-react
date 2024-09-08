@@ -114,7 +114,7 @@ const StudentMerchandise = () => {
         const startDate = new Date(item.start_date);
         const endDate = new Date(item.end_date);
 
-        return currentDate >= startDate && currentDate <= endDate;
+        return currentDate <= endDate;
       });
 
       setProducts(filteredProducts);

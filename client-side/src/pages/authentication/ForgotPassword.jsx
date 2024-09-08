@@ -9,11 +9,13 @@ import { showToast } from "../../utils/alertHelper";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
+  const [id_number, setIdNumber] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (!email) {
       setError("Email is required.");
       return;
@@ -25,6 +27,7 @@ function ForgotPassword() {
     axios
       .post(`${backendConnection()}/api/student/forgot-password`, {
         email: email,
+        id_number: id_number,
       })
       .then((res) => {
         showToast("success", "Email sent successfully!");
@@ -55,8 +58,13 @@ function ForgotPassword() {
   };
 
   const handleChange = (e) => {
-    setEmail(e.target.value);
-    setError(""); // Reset error on change
+    const { name, value } = e.target;
+    if (name === "email") {
+      setEmail(value);
+    } else if (name === "id_number") {
+      setIdNumber(value);
+    }
+    setError("");
   };
 
   const variants = {
@@ -80,11 +88,21 @@ function ForgotPassword() {
         <div className="space-y-4 text-center">
           <h3 className="text-xl sm:text-2xl font-bold">Forgot Password</h3>
           <p className="text-sm sm:text-md sm:max-w-96">
-            Enter the email associated with your account, and we’ll send you
-            instructions to reset your password.
+            Enter the email and ID number associated with your account, and
+            we’ll send you instructions to reset your password.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="w-full space-y-5">
+          <FormInput
+            label="ID Number"
+            type="text"
+            id="id_number"
+            name="id_number"
+            value={id_number}
+            onChange={handleChange}
+            styles="w-full text-black p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            error={error}
+          />
           <FormInput
             label="Email Address"
             type="email"

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { getAllOrders } from "../../api/orders";
+import { getAllOrders, cancelOrder } from "../../api/orders";
 import ApproveModal from "../../components/admin/ApproveModal";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt";
 import { getPosition } from "../../authentication/Authentication";
+import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
+import { ConfirmActionType } from "../../enums/commonEnums";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -18,6 +20,7 @@ const Orders = () => {
   const [itemsPerPage] = useState(10);
   const [shouldPrint, setShouldPrint] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [delModal, setDelModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [error, setError] = useState(null);
@@ -51,7 +54,6 @@ const Orders = () => {
   }, []);
 
   useEffect(() => {
-    // Filter orders based on searchTerm and selectedTab
     const filtered = orders.filter(
       (order) =>
         order.order_status === selectedTab &&
@@ -96,6 +98,19 @@ const Orders = () => {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
+  const handleCancelClick = (order) => {
+    setSelectedOrder(order);
+    setDelModal(true);
+  };
+  const handleConfirmDeletion = async () => {
+    await cancelOrder(selectedOrder._id);
+
+    handleDeleteModal();
+    window.location.reload();
+  };
+  const handleDeleteModal = () => {
+    setDelModal(false);
+  };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
@@ -103,7 +118,7 @@ const Orders = () => {
   };
 
   const handleApproveConfirm = () => {
-    // Handle approve confirmation logic
+    window.location.reload();
     handleModalClose();
   };
 
@@ -111,16 +126,13 @@ const Orders = () => {
     setOpenDropdown(openDropdown === id ? null : id);
   };
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const currentOrders = filteredOrders.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
   return (
     <div className="p-4 pt-20">
-      {/* Search Input */}
       <div className="mb-4">
         <input
           type="text"
@@ -132,13 +144,13 @@ const Orders = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex justify-around bg-gray-100 p-2 rounded">
+      <div className="flex flex-wrap justify-around bg-gray-100 p-2 rounded">
         {["Pending", "Paid"].map((tab) => (
           <button
             key={tab}
             onClick={() => setSelectedTab(tab)}
             className={`px-4 py-2 ${
-              selectedTab === tab ? "bg-blue-600 text-white" : "text-gray-600"
+              selectedTab === tab ? "bg-[#002E48] text-white" : "text-gray-600"
             }`}
           >
             {tab} ({orders.filter((order) => order.order_status === tab).length}
@@ -148,26 +160,46 @@ const Orders = () => {
       </div>
 
       {/* Orders Table */}
-      <div className="mt-4 bg-white shadow rounded-md">
-        <table className="min-w-full">
+      <div className="mt-4 bg-white shadow rounded-md overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="p-4">
+              <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {selectedTab === "Pending" ? "Order ID" : "Reference Code"}
               </th>
-              <th className="p-4">Student Name</th>
-              <th className="p-4">Membership</th>
-              <th className="p-4">Total</th>
-              <th className="p-4">Order Date</th>
+              <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Student Name
+              </th>
+              <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Membership
+              </th>
+              <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total
+              </th>
+              <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Order Date
+              </th>
               {selectedTab === "Paid" && (
-                <th className="p-4">Transaction Date</th>
+                <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Transaction Date
+                </th>
               )}
-              <th className="p-4">Status</th>
-              {selectedTab === "Paid" && <th className="p-4">Managed By</th>}
-              {selectedTab !== "Paid" && <th className="p-4">Actions</th>}
+              <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              {selectedTab === "Paid" && (
+                <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Managed By
+                </th>
+              )}
+              {selectedTab !== "Paid" && (
+                <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {currentOrders.length > 0 ? (
               currentOrders.map((order) => (
                 <React.Fragment
@@ -175,30 +207,36 @@ const Orders = () => {
                     selectedTab === "Pending" ? order._id : order.reference_code
                   }
                 >
-                  <tr className="border-t">
-                    <td className="p-4 text-xs">
+                  <tr className="hover:bg-gray-50">
+                    <td className="p-2 text-xs text-gray-500">
                       {selectedTab === "Pending"
                         ? order._id
                         : order.reference_code}
                     </td>
-                    <td className="p-4">
-                      <span className="text-sm">{order.student_name}</span>
-                      <div>
-                        <span className="text-xs">ID: {order.id_number}</span>
+                    <td className="p-4 text-sm text-gray-500">
+                      <div>{order.student_name}</div>
+                      <div className="text-xs text-gray-500">
+                        ID: {order.id_number}
                       </div>
-                      <div>
-                        <span className="text-xs">RFID: {order.rfid}</span>
+                      <div className="text-xs text-gray-500">
+                        RFID: {order.rfid}
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-2 text-sm text-gray-500">
                       {order.membership_discount ? "Discounted" : "No Discount"}
                     </td>
-                    <td className="p-4">₱{order.total}</td>
-                    <td className="p-4">{order.order_date}</td>
+                    <td className="p-2 text-sm text-gray-500">
+                      ₱{order.total}
+                    </td>
+                    <td className="p-2 text-sm text-gray-500">
+                      {order.order_date}
+                    </td>
                     {order.order_status === "Paid" && (
-                      <td className="p-4">{order.transaction_date}</td>
+                      <td className="p-2 text-sm text-gray-500">
+                        {order.transaction_date}
+                      </td>
                     )}
-                    <td className="p-4">
+                    <td className="p-2 text-sm">
                       <span
                         className={`px-3 py-1 rounded-full ${
                           order.order_status === "Completed"
@@ -211,6 +249,130 @@ const Orders = () => {
                         {order.order_status}
                       </span>
                     </td>
+                    {order.order_status === "Paid" && (
+                      <td className="p-2 text-sm text-gray-500">
+                        {order.admin}
+                      </td>
+                    )}
+                    <td className="p-2 text-sm">
+                      <button
+                        onClick={() => toggleDropdown(order._id)}
+                        className="text-blue-500 hover:underline"
+                      >
+                        {openDropdown === order._id
+                          ? "Hide Items"
+                          : "Show Items"}
+                      </button>
+                    </td>
+                    {order.order_status !== "Paid" && (
+                      <td className="p-4 text-sm flex gap-2 mt-8">
+                        <ButtonsComponent>
+                          <FormButton
+                            type="button"
+                            text={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "Not Authorized"
+                                : "Approve"
+                            }
+                            onClick={() => {
+                              if (
+                                position === "Treasurer" ||
+                                position === "Assistant Treasurer" ||
+                                position === "Auditor" ||
+                                position === "Developer"
+                              ) {
+                                handleApproveClick(order);
+                              }
+                            }}
+                            icon={
+                              <i
+                                className={`fa ${
+                                  position !== "Treasurer" &&
+                                  position !== "Assistant Treasurer" &&
+                                  position !== "Auditor" &&
+                                  position !== "Developer"
+                                    ? "fa-lock"
+                                    : "fa-check"
+                                }`}
+                              ></i>
+                            }
+                            styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "bg-gray-500 cursor-not-allowed"
+                                : "bg-[#002E48]"
+                            }`}
+                            textClass="text-white text-sm" // Ensure the text size is consistent
+                            whileHover={{ scale: 1.02, opacity: 0.95 }}
+                            whileTap={{ scale: 0.98, opacity: 0.9 }}
+                            disabled={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                            }
+                          />
+                        </ButtonsComponent>
+                        <ButtonsComponent>
+                          <FormButton
+                            type="button"
+                            text={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "Not Authorized"
+                                : "Cancel"
+                            }
+                            onClick={() => {
+                              if (
+                                position === "Treasurer" ||
+                                position === "Assistant Treasurer" ||
+                                position === "Auditor" ||
+                                position === "Developer"
+                              ) {
+                                handleCancelClick(order);
+                              }
+                            }}
+                            icon={
+                              <i
+                                className={`fa ${
+                                  position !== "Treasurer" &&
+                                  position !== "Assistant Treasurer" &&
+                                  position !== "Auditor" &&
+                                  position !== "Developer"
+                                    ? "fa-lock"
+                                    : "fa-times"
+                                }`}
+                              ></i>
+                            }
+                            styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                                ? "bg-gray-500 cursor-not-allowed"
+                                : "bg-[#4398AC]"
+                            }`}
+                            textClass="text-white text-sm" // Ensure the text size is consistent
+                            whileHover={{ scale: 1.02, opacity: 0.95 }}
+                            whileTap={{ scale: 0.98, opacity: 0.9 }}
+                            disabled={
+                              position !== "Treasurer" &&
+                              position !== "Assistant Treasurer" &&
+                              position !== "Auditor" &&
+                              position !== "Developer"
+                            }
+                          />
+                        </ButtonsComponent>
+                      </td>
+                    )}
+
                     {order.order_status === "Paid" && (
                       <td className="p-4">
                         <ButtonsComponent>
@@ -236,23 +398,23 @@ const Orders = () => {
                             }}
                             icon={
                               <i
-                                className={`fa ${
+                                className={
                                   position !== "Treasurer" &&
                                   position !== "Assistant Treasurer" &&
                                   position !== "Auditor" &&
                                   position !== "Developer"
-                                    ? "fa-lock"
-                                    : "fa-print"
-                                }`}
+                                    ? "fa fa-lock"
+                                    : "fa fa-print"
+                                }
                               ></i>
                             }
-                            styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
+                            styles={`relative flex items-center space-x-2 px-4 py-2 rounded  text-white ${
                               position !== "Treasurer" &&
                               position !== "Assistant Treasurer" &&
                               position !== "Auditor" &&
                               position !== "Developer"
                                 ? "bg-gray-500 cursor-not-allowed"
-                                : "bg-blue-500"
+                                : "bg-[#002E48]"
                             }`}
                             textClass="text-white"
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
@@ -267,83 +429,48 @@ const Orders = () => {
                         </ButtonsComponent>
                       </td>
                     )}
-                    {order.order_status !== "Paid" && (
-                      <td className="p-4">
-                        <button
-                          onClick={() => handleApproveClick(order)}
-                          className="p-1 rounded hover:bg-green-600 text-white bg-green-500"
-                        >
-                          Approve
-                        </button>
-                      </td>
-                    )}
-                    {order.order_status === "Paid" && (
-                      <td className="p-4">{order.admin}</td>
-                    )}
-                    <td className="p-4">
-                      <button
-                        onClick={() => toggleDropdown(order._id)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        {openDropdown === order._id
-                          ? "Hide Items"
-                          : "Show Items"}
-                      </button>
-                    </td>
                   </tr>
                   {openDropdown === order._id && (
                     <tr>
                       <td colSpan="10" className="p-4">
                         <ul>
                           {order.items.map((item, index) => (
-                            <div
+                            <li
                               key={index}
-                              className="text-sm mb-2 p-2 flex flex-row mx-3 gap-10"
+                              className="text-sm mb-2 p-2 flex flex-row items-center gap-4"
                             >
-                              <img src={item.imageUrl1} className="w-16 h-16" />
-                              <span className="font-medium ms-2">
-                                {item.product_name}
+                              <img
+                                src={item.imageUrl1}
+                                className="w-16 h-16"
+                                alt={item.product_name}
+                              />
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {item.product_name}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  ID: {item._id}
+                                </span>
                                 <div className="text-xs text-gray-500">
-                                  {item._id}
+                                  Price: ₱{item.price}
                                 </div>
-                              </span>
-                              <div className="mx-3 mb-2 flex flex-col">
-                                <span>Price</span>
-                                <span className="text-xs text-center">
-                                  ₱{item.price}
-                                </span>
+                                <div className="text-xs text-gray-500">
+                                  Quantity: {item.quantity}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Variation: {item.variation || "Null"}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Size: {item.sizes || "Null"}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Batch: {item.batch || "Null"}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Subtotal: ₱{item.sub_total || "Null"}
+                                </div>
                               </div>
-                              <div className="mx-3 mb-2 flex flex-col">
-                                <span>Quantity</span>
-                                <span className="text-xs text-center">
-                                  {item.quantity}
-                                </span>
-                              </div>
-                              <div className="mx-3 mb-2 flex flex-col">
-                                <span>Variation</span>
-                                <span className="text-xs text-center">
-                                  {item.variation ? item.variation : "Null"}
-                                </span>
-                              </div>
-                              <div className="mx-3 mb-2 flex flex-col">
-                                <span>Size</span>
-                                <span className="text-xs text-center">
-                                  {item.sizes ? item.sizes : "Null"}
-                                </span>
-                              </div>
-                              <div className="mx-3 mb-2 flex flex-col">
-                                <span>Batch</span>
-                                <span className="text-xs text-center">
-                                  {item.batch ? item.batch : "Null"}
-                                </span>
-                              </div>
-                              <div className="mx-3 mb-2 flex flex-col">
-                                <span>Subtotal</span>
-                                <span className="text-xs text-center">
-                                  ₱{item.sub_total ? item.sub_total : "Null"}
-                                </span>
-                              </div>
-                            </div>
+                            </li>
                           ))}
                         </ul>
                       </td>
@@ -353,7 +480,7 @@ const Orders = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="p-4 text-center text-gray-500">
+                <td colSpan="10" className="p-4 text-center text-gray-500">
                   No orders found
                 </td>
               </tr>
@@ -366,7 +493,7 @@ const Orders = () => {
           <button
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
+            className="px-4 py-1 bg-[#002E48] text-white rounded-md disabled:bg-gray-300"
           >
             Previous
           </button>
@@ -376,7 +503,7 @@ const Orders = () => {
           <button
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
+            className="px-4 py-1 bg-[#002E48] text-white rounded-md disabled:bg-gray-300"
           >
             Next
           </button>
@@ -402,6 +529,13 @@ const Orders = () => {
           onSubmit={handleApproveConfirm}
           items={selectedOrder.items}
           total={selectedOrder.total}
+        />
+      )}
+      {delModal && (
+        <ConfirmationModal
+          confirmType={ConfirmActionType.ORDER}
+          onCancel={handleDeleteModal}
+          onConfirm={handleConfirmDeletion}
         />
       )}
 

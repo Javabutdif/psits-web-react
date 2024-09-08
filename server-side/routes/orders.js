@@ -167,7 +167,6 @@ router.put("/approve-order", async (req, res) => {
   const { reference_code, order_id, admin, cash } = req.body;
 
   try {
-    // Validate input
     if (!ObjectId.isValid(order_id)) {
       return res.status(400).json({ message: "Invalid order ID" });
     }
@@ -201,11 +200,10 @@ router.put("/approve-order", async (req, res) => {
 
     // Fetch each item in the order and update the corresponding merchandise
     const { items } = successfulOrder;
-
+    console.log(items);
     if (Array.isArray(items) && items.length > 0) {
       await Promise.all(
         items.map(async (item) => {
-          // Ensure item.sizes and item.variation are arrays
           const sizes = Array.isArray(item.sizes) ? item.sizes : [];
           const variations = Array.isArray(item.variation)
             ? item.variation
@@ -214,6 +212,7 @@ router.put("/approve-order", async (req, res) => {
           await Merch.findByIdAndUpdate(item.product_id, {
             $push: {
               order_details: {
+                reference_code: reference_code,
                 product_name: item.product_name,
                 id_number: successfulOrder.id_number,
                 student_name: successfulOrder.student_name,
@@ -235,8 +234,6 @@ router.put("/approve-order", async (req, res) => {
         })
       );
     }
-
-    console.log(successfulOrder);
 
     // Render the email template
     const emailTemplate = await ejs.renderFile(

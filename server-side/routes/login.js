@@ -68,7 +68,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign({ user, role }, token_key, {
       expiresIn: role === "Admin" ? "1h" : "10m",
     });
-    console.log("Walay error");
+
     return res.json({ token, message: "Login successful" });
   } catch (error) {
     console.error(error);

@@ -6,6 +6,9 @@ const orderDetailSchema = new Schema({
   product_name: {
     type: String,
   },
+  reference_code: {
+    type: String,
+  },
   id_number: {
     type: String,
     required: true,

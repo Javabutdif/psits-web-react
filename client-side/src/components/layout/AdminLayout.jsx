@@ -8,7 +8,6 @@ const AdminLayout = () => {
   const [label, setLabel] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-
   useEffect(() => {
     const pathParts = location.pathname.split("/");
     const extractedLabel = pathParts[2];
@@ -17,32 +16,30 @@ const AdminLayout = () => {
     );
   }, [location]);
 
+  const toggleSidebar = () => setIsSidebarOpen(true);
 
-  const toggleSidebar = () => setIsSidebarOpen(true)
-  
   useEffect(() => {
-    console.log(isSidebarOpen)
-  })
+    console.log(isSidebarOpen);
+  });
 
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
     { text: "Membership", icon: "fas fa-users", path: "membership" },
     { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
-    { text: "Inventory", icon: "fas fa-warehouse", path: "inventory" },
+
     { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
     { text: "Reports", icon: "fas fa-chart-line", path: "reports" },
-    { text: "Resources", icon: "fas fa-book-open", path: "resources" },
-    { text: "Settings", icon: "fas fa-cog", path: "settings" },
   ];
 
   return (
     <div className="min-h-screen relative">
-      <AsideBar navItems={navItems} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}/>
-      <ProfileHeader 
-        label={label} 
-        toggleSidebar={toggleSidebar}
-      /> 
-      <main className="2xl:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+      <AsideBar
+        navItems={navItems}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
+      <ProfileHeader label={label} toggleSidebar={toggleSidebar} />
+      <main className="lg:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
         <Outlet />
       </main>
     </div>

@@ -1,25 +1,39 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { allMembers } from "../../api/admin";
+import { allMembers, merchCreated, placedOrders } from "../../api/admin";
 
 const AdminDashboard = () => {
   const [merchandiseCount, setMerchandiseCount] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
-  const [membershipRevenue, setMembershipRevenue] = useState(0);
+
+  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const handleSubmit = (data) => {
-    console.log("Form Data:", data);
-  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const studentRes = await allMembers();
+        const merchCreate = await merchCreated();
+        const placedOrder = await placedOrders();
 
         setStudentCount(studentRes);
+
+        setMerchandiseCount(merchCreate);
+        setOrderCount(placedOrder);
+
+        setLogs([
+          {
+            date: "2024-09-01",
+            action: "Created",
+            details: "Added new merchandise",
+          },
+          {
+            date: "2024-09-02",
+            action: "Order Placed",
+            details: "Order #1234",
+          },
+        ]);
       } catch (error) {
         setError("Error fetching dashboard data");
         console.error("Error fetching dashboard data", error);
@@ -48,33 +62,23 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="mt-16 md:mt-20 lg:mt-[5.5rem">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white shadow rounded-lg p-4 sm:p-6 flex flex-col items-center">
-          <i className="fas fa-box text-4xl text-blue-500"></i>
-          <h2 className="text-lg sm:text-xl font-semibold mt-4">
-            Merchandise Created
-          </h2>
-          <p className="text-xl sm:text-2xl mt-2 sm:mt-4">{}</p>
+    <div className="p-4 md:p-8 lg:p-12">
+      {/* Metrics Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 flex flex-col items-center">
+          <i className="fas fa-box text-3xl text-blue-500 mb-2"></i>
+          <h2 className="text-sm font-semibold mb-1">Merchandise Created</h2>
+          <p className="text-lg text-gray-700">{merchandiseCount}</p>
         </div>
-        <div className="bg-white shadow rounded-lg p-4 sm:p-6 flex flex-col items-center">
-          <i className="fas fa-user text-4xl text-green-500"></i>
-          <h2 className="text-lg sm:text-xl font-semibold mt-4">Students</h2>
-          <p className="text-xl sm:text-2xl mt-2 sm:mt-4">{studentCount}</p>
+        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 flex flex-col items-center">
+          <i className="fas fa-user text-3xl text-green-500 mb-2"></i>
+          <h2 className="text-sm font-semibold mb-1">Students</h2>
+          <p className="text-lg text-gray-700">{studentCount}</p>
         </div>
-        <div className="bg-white shadow rounded-lg p-4 sm:p-6 flex flex-col items-center">
-          <i className="fas fa-shopping-cart text-4xl text-yellow-500"></i>
-          <h2 className="text-lg sm:text-xl font-semibold mt-4">
-            Placed Orders
-          </h2>
-          <p className="text-xl sm:text-2xl mt-2 sm:mt-4">{}</p>
-        </div>
-        <div className="bg-white shadow rounded-lg p-4 sm:p-6 flex flex-col items-center">
-          <i className="fas fa-dollar-sign text-4xl text-red-500"></i>
-          <h2 className="text-lg sm:text-xl font-semibold mt-4">
-            Membership Revenue
-          </h2>
-          <p className="text-xl sm:text-2xl mt-2 sm:mt-4">${}</p>
+        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 flex flex-col items-center">
+          <i className="fas fa-shopping-cart text-3xl text-yellow-500 mb-2"></i>
+          <h2 className="text-sm font-semibold mb-1">Placed Orders</h2>
+          <p className="text-lg text-gray-700">{orderCount}</p>
         </div>
       </div>
     </div>

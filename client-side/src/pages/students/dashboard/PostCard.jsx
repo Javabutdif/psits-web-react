@@ -1,5 +1,6 @@
 import React from "react";
 import { FaThumbsUp, FaComment, FaPlay } from "react-icons/fa";
+import PostProfile from '../../../assets/images/psits-logo.jpg'
 
 const PostCard = ({ post }) => {
   const {
@@ -22,9 +23,6 @@ const PostCard = ({ post }) => {
         return description.replace(/\n/g, "<br />"); // Replace \n with <br> tags
     }
   };
-
-  const psitsprofile =
-    "https://scontent.fmnl13-1.fna.fbcdn.net/v/t39.30808-6/455793697_894768099336887_7380834457130486496_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEMLApj1f0amlyuNB_tM9qQq5MeuI7C0X2rkx64jsLRfR7Ww7AM98xdGIhBmckBBmZ179l6pU51YLGxkey9xKD1&_nc_ohc=T7tX5H6ZCRkQ7kNvgHpM2ox&_nc_ht=scontent.fmnl13-1.fna&oh=00_AYCdgkuBQGufBEPB9aYWH_o-N9WYXUUlVriCaWNy2ChLZQ&oe=66CA7AE2";
 
   const formatTimeAgo = (time) => {
     const now = new Date();
@@ -60,30 +58,32 @@ const PostCard = ({ post }) => {
 
   return (
     <div
-      className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden cursor-pointer"
+      className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden cursor-pointer max-w-5xl"
       onClick={() => window.open(url, "_blank")}
     >
-      <div className="flex items-center p-4">
+      <div className="flex items-center p-4 md:p-6 pb-0">
         <img
-          src={psitsprofile}
+          src={PostProfile}
           alt={"Profile"}
           className="w-12 h-12 rounded-full mr-4"
         />
-        <div>
-          <div className="flex items-center">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
               PSITS - UC Main
             </h3>
             <span className="ml-2 bg-gray-800 text-white text-xs px-2 py-0.5 rounded-full flex items-center justify-center">
               {type}
             </span>
           </div>
-          <p className="text-gray-500 text-sm">{formatTimeAgo(created_time)}</p>
+          <p className="text-gray-500 text-xs sm:text-sm md:text-base">
+            {formatTimeAgo(created_time)}
+          </p>
         </div>
       </div>
-      <div className="p-4">
+      <div className="p-4 lmdg:p-6">
         <p
-          className="text-gray-800 mb-4"
+          className="text-gray-800 mb-4 text-xs sm:text-sm md:text-base"
           dangerouslySetInnerHTML={{ __html: getDescription() }}
         />
         {imageSources.length > 0 && (
@@ -100,11 +100,11 @@ const PostCard = ({ post }) => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-[1px]">
+              <div className="grid grid-cols-2 gap-1">
                 {visibleImages.slice(0, 4).map((src, index) => (
                   <div
                     key={index}
-                    className={`relative ${index === 4 ? "col-span-2" : ""}`}
+                    className={`relative ${index === 4 ? "col-span-2" : imageSources.length < 4 && index === 2 ? "col-span-full" : ""}`}
                   >
                     <img
                       src={src}
@@ -126,15 +126,15 @@ const PostCard = ({ post }) => {
           </div>
         )}
       </div>
-      <div className="p-4 pl-5 space-y-4">
-        <div className="flex items-center space-x-4 text-gray-600">
+      <div className="p-4 pl-6 md:p-6 pt-0 md:pl-8 space-y-4">
+        <div className="flex items-center space-x-4 text-gray-600 text-xs sm:text-sm md:text-base">
           <div className="flex items-center">
             <FaThumbsUp className="text-blue-500" />
-            <span className="ml-1 text-sm">{reactions_count}</span>
+            <span className="ml-1">{reactions_count}</span>
           </div>
           <div className="flex items-center">
             <FaComment className="text-green-500" />
-            <span className="ml-1 text-sm">{comments_count}</span>
+            <span className="ml-1">{comments_count}</span>
           </div>
         </div>
       </div>

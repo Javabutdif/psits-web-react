@@ -67,9 +67,9 @@ const StudentDashboard = () => {
       ) : (
         <>
           <OperationHours
-            styles={`self-start md:col-start-1 md:${
-              membershipStatus === "Accepted" && "text-sm"
-            } lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3`}
+            styles={`self-start ${
+              (membershipStatus.membership === "Accepted" | membershipStatus.membership === "Pending") && "col-start-1 col-end-2 md:col-end-3  lg:col-start-6 lg:row-start-1 lg:row-end-3"
+            }  lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3`}
           />
           {(membershipStatus.membership === "None" ||
             membershipStatus.renew === "None") && (

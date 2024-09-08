@@ -15,10 +15,16 @@ const cartRoutes = require("./routes/cart");
 
 require("dotenv").config();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", 
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(bodyParser.json());
 
-//Connection to Mongoose
+
 mongoose
   .connect(process.env.MONGODB_URI, {
     dbName: process.env.DB_NAME,

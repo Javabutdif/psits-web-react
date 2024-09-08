@@ -13,6 +13,7 @@ router.get("/students", async (req, res) => {
       status: "True",
       $or: [
         { renew: "Accepted" },
+        { renew: "Pending" },
         { renew: { $exists: false } },
         { renew: "" },
       ],

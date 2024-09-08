@@ -89,6 +89,7 @@ const ProductDetail = () => {
   const [cartIndicator, setCartIndicator] = useState(false);
   const [status, setStatus] = useState({ membership: "", renew: "" });
   const [cartLimited, setCartLimited] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     _id = "",
@@ -120,9 +121,10 @@ const ProductDetail = () => {
   });
   const statusVerify = () => {
     return (
-      (status.membership === "Accepted" && status.renew === "None") ||
-      status.renew === "Accepted" ||
-      status.membership === "Accepted"
+      ((status.membership === "Accepted" && status.renew === "None") ||
+        status.renew === "Accepted" ||
+        (status.membership === "Accepted" && status.renew !== "Pending")) &&
+      category === "merchandise"
     );
   };
 
@@ -133,7 +135,11 @@ const ProductDetail = () => {
       errors.name = "Select size!.";
       showToast("error", "You need to select a size");
     }
-    if (selectedVariations[0] !== "" && selectedColor === null) {
+    if (
+      selectedVariations[0] !== "" &&
+      selectedColor === null &&
+      category !== "uniform"
+    ) {
       errors.name = "Select color!.";
       showToast("error", "You need to select a color");
     }
@@ -143,9 +149,10 @@ const ProductDetail = () => {
   };
 
   const discount =
-    (status.membership === "Accepted" && status.renew === "None") ||
-    (status.renew === "Accepted" && category !== "uniform") ||
-    status.membership === "Accepted"
+    ((status.membership === "Accepted" && status.renew === "None") ||
+      (status.renew === "Accepted" && category !== "uniform") ||
+      status.membership === "Accepted") &&
+    category === "merchandise"
       ? price - price * 0.05
       : price;
 
@@ -158,6 +165,7 @@ const ProductDetail = () => {
   };
 
   useEffect(() => {
+    setIsLoading(true);
     const fetchOrderData = async () => {
       try {
         const orders = await getOrder(getId());
@@ -189,6 +197,7 @@ const ProductDetail = () => {
             setCartLimited(true);
           }
         }
+        setIsLoading(false);
       } catch (error) {
         setError("Unable to fetch order details. Please try again later.");
         console.error("Error fetching orders:", error);
@@ -199,14 +208,6 @@ const ProductDetail = () => {
 
     fetchOrderData();
   }, [_id]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-500 text-sm">Loading...</p>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -236,6 +237,7 @@ const ProductDetail = () => {
 
   const handleCart = () => {
     setCartIndicator(true);
+
     if (validate()) {
       const id_number = getId();
       const product_id = _id;
@@ -246,11 +248,16 @@ const ProductDetail = () => {
       const sub_total = price * quantity;
       const imageUrl1 = imageUrl[0];
       const limited = product.control === "limited-purchase" ? true : false;
+      const start_date = product.start_date;
+      const end_date = product.end_date;
 
       setFormData({
         id_number,
         product_id,
         product_name,
+        start_date,
+        end_date,
+        category,
         price,
         sizes,
         variation,
@@ -307,21 +314,46 @@ const ProductDetail = () => {
       setShowModal(true);
     }
   };
-  
+
   const handleCloseModal = () => {
     setShowModal(false);
   };
 
-  const handleOrder = async () => {
-    await makeOrder(formData);
+  const handleOperation = async (operation, string) => {
+    setIsLoading(true);
+    try {
+      const result = await operation(formData);
 
-    handleCloseModal();
-    navigate("/student/merchandise");
+      if (result) {
+        if (string === "addcart") {
+          showToast("success", "Added Item into the cart successfully");
+        } else {
+          showToast("success", "Order Placed");
+        }
+
+        navigate("/student/merchandise");
+      } else {
+        if (string === "addcart") {
+          showToast("error", "Item did not added into the cart");
+        } else {
+          showToast("error", "The order wasn't placed.");
+        }
+      }
+    } catch (error) {
+      console.error("Operation failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
-  const addToCart = async () => {
-    await addToCartApi(formData);
+
+  const handleOrder = () => {
+    handleOperation(makeOrder, "makeorder");
     handleCloseModal();
-    navigate("/student/merchandise");
+  };
+
+  const addToCart = () => {
+    handleOperation(addToCartApi, "addcart");
+    handleCloseModal();
   };
 
   return (
@@ -341,134 +373,146 @@ const ProductDetail = () => {
         className="mb-4"
       />
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 flex flex-col lg:flex-row gap-2">
-          <ImagePreview
-            preview={preview}
-            alt={`Preview of ${name}`}
-            className="w-full"
-          />
-          <ImageGallery
-            imageUrl={imageUrl}
-            setPreview={setPreview}
-            className="w-full"
-          />
+      {isLoading ? (
+        <div className="flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-t-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
         </div>
-        <div className="flex-1">
-          <h3 className="text-lg md:text-2xl font-bold mb-2">{name}</h3>
-          <p className="text-xs text-gray-700 md:text-sm mb-3">{description}</p>
-          <p className="text-md md:text-lg font-semibold text-gray-900 mb-3">
-            ₱ {price.toFixed(2)}
-          </p>
+      ) : (
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 flex flex-col lg:flex-row gap-2">
+            <ImagePreview
+              preview={preview}
+              alt={`Preview of ${name}`}
+              className="w-full"
+            />
+            <ImageGallery
+              imageUrl={imageUrl}
+              setPreview={setPreview}
+              className="w-full"
+            />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg md:text-2xl font-bold mb-2">{name}</h3>
+            <p className="text-xs text-gray-700 md:text-sm mb-3">
+              {description}
+            </p>
+            <p className="text-md md:text-lg font-semibold text-gray-900 mb-3">
+              ₱ {price.toFixed(2)}
+            </p>
 
-          <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
-            {batch !== "" ? "Batch: " : ""} {batch}
-          </p>
-          <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
-            {category !== "" ? "Category: " : ""} {category}
-          </p>
-          <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
-            {type !== "" ? "Type: " : ""} {type}
-          </p>
+            <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
+              {batch !== "" ? "Batch: " : ""} {batch}
+            </p>
+            <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
+              {category !== "" ? "Category: " : ""} {category}
+            </p>
+            <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
+              {stocks !== "" ? "Stocks: " : ""} {stocks}
+            </p>
 
-          {type.includes("Tshirt") && (
-            <div className="flex flex-wrap gap-4 mb-4">
-              <ButtonGroup
-                items={selectedSizes}
-                selectedItem={selectedSize}
-                onSelect={setSelectedSize}
-                label="Sizes"
-              />
-              <ButtonGroup
-                items={selectedVariations}
-                selectedItem={selectedColor}
-                onSelect={setSelectedColor}
-                label="Color"
-                disabled={category === "uniform"}
-              />
-            </div>
-          )}
-
-          <div className="mb-10 sm:mb-6 relative flexitems-center">
-            <span className="mr-2 text-xs sm:text-sm font-medium text-gray-700">
-              Quantity:
-            </span>
-            <button
-              className="border text-xs sm:text-sm rounded-full px-4 py-2 mr-2 bg-gray-100 text-gray-700"
-              onClick={decreaseQuantity}
-              disabled={product.control === "limited-purchase"}
-            >
-              -
-            </button>
-            <span className="text-lg font-semibold">{quantity}</span>
-            <button
-              className="border text-xs sm:text-sm rounded-full px-4 py-2 ml-2 bg-gray-100 text-gray-700"
-              onClick={increaseQuantity}
-              disabled={product.control === "limited-purchase"}
-            >
-              +
-            </button>
-
-            {control.toLowerCase().includes("limited") && (
-              <div className="absolute -bottom-5 sm:bottom-2 sm:left-48  text-red-500 text-xs sm:text-sm font-medium">
-                Limited Purchase
+            {(type.includes("Tshirt") || type.includes("Uniform")) && (
+              <div className="flex flex-wrap gap-4 mb-4">
+                <ButtonGroup
+                  items={selectedSizes}
+                  selectedItem={selectedSize}
+                  onSelect={setSelectedSize}
+                  label="Sizes"
+                />
+                <ButtonGroup
+                  items={selectedVariations}
+                  selectedItem={selectedColor}
+                  onSelect={setSelectedColor}
+                  label="Color"
+                  disabled={category === "uniform"}
+                />
               </div>
             )}
-          </div>
 
-          {formError && (
-            <div className="mb-4 text-red-500 text-sm font-medium">
-              {formError}
-            </div>
-          )}
-          <div className="flex gap-2">
-            {!cartLimited && orderId !== _id && (
+            <div className="mb-10 sm:mb-6 relative flexitems-center">
+              <span className="mr-2 text-xs sm:text-sm font-medium text-gray-700">
+                Quantity:
+              </span>
               <button
-                onClick={handleCart}
-                className={`flex gap-2 px-4 py-3 font-medium 
+                className="border text-xs sm:text-sm rounded-full px-4 py-2 mr-2 bg-gray-100 text-gray-700"
+                onClick={decreaseQuantity}
+                disabled={product.control === "limited-purchase"}
+              >
+                -
+              </button>
+              <span className="text-lg font-semibold">{quantity}</span>
+              <button
+                className="border text-xs sm:text-sm rounded-full px-4 py-2 ml-2 bg-gray-100 text-gray-700"
+                onClick={increaseQuantity}
+                disabled={product.control === "limited-purchase"}
+              >
+                +
+              </button>
+
+              {control.toLowerCase().includes("limited") && (
+                <div className="absolute -bottom-5 sm:bottom-2 sm:left-48  text-red-500 text-xs sm:text-sm font-medium">
+                  Limited Purchase
+                </div>
+              )}
+            </div>
+
+            {formError && (
+              <div className="mb-4 text-red-500 text-sm font-medium">
+                {formError}
+              </div>
+            )}
+            <div className="flex gap-2">
+              {!cartLimited && orderId !== _id && (
+                <button
+                  onClick={handleCart}
+                  className={`flex gap-2 px-4 py-3 font-medium 
             text-white rounded-lg bg-[#4398AC] hover:bg-opacity-80 
               transition-colors duration-300flex-1  ${
                 stocks <= 0 || (cartLimited && "cursor-not-allowed")
               } `}
+                  disabled={
+                    stocks <= 0 ||
+                    (product.control === "limited-purchase" &&
+                      orderId === _id) ||
+                    cartLimited
+                  }
+                >
+                  <MdAddShoppingCart color="white" size={20} />
+                  <p className="hidden md:inline-block">Add To Cart</p>
+                </button>
+              )}
+
+              <button
+                className={`flex-1 text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
+                  stocks <= 0 || limited || cartLimited
+                    ? "bg-red-500 text-white"
+                    : "bg-[#002E48] text-white"
+                } ${
+                  stocks <= 0 || cartLimited
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:bg-opacity-80"
+                }`}
+                aria-label={limited ? "Limited stock" : "Buy Now"}
+                title={
+                  limited ? "Limited stock available" : "Click to purchase"
+                }
+                onClick={handleBuyNow}
                 disabled={
-                  stocks <= 0 ||
-                  (product.control === "limited-purchase" && orderId === _id) ||
-                  cartLimited
+                  stocks <= 0 || (limited && orderId === _id) || cartLimited
                 }
               >
-                <MdAddShoppingCart color="white" size={20} />
-                <p className="hidden md:inline-block">Add To Cart</p>
+                {stocks <= 0
+                  ? "Out of STOCK"
+                  : cartLimited
+                  ? "Already added to Cart"
+                  : limited && orderId === _id
+                  ? "Purchased"
+                  : "Buy Now"}
               </button>
-            )}
-
-            <button
-              className={`flex-1 text-sm w-full px-4 py-3 font-medium rounded-lg transition-colors duration-300 ${
-                stocks <= 0 || limited || cartLimited
-                  ? "bg-red-500 text-white"
-                  : "bg-[#002E48] text-white"
-              } ${
-                stocks <= 0 || cartLimited
-                  ? "opacity-60 cursor-not-allowed"
-                  : "hover:bg-opacity-80"
-              }`}
-              aria-label={limited ? "Limited stock" : "Buy Now"}
-              title={limited ? "Limited stock available" : "Click to purchase"}
-              onClick={handleBuyNow}
-              disabled={
-                stocks <= 0 || (limited && orderId === _id) || cartLimited
-              }
-            >
-              {stocks <= 0
-                ? "Out of STOCK"
-                : cartLimited
-                ? "Already added to Cart"
-                : limited && orderId === _id
-                ? "Purchased"
-                : "Buy Now"}
-            </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
       <Modal show={showModal} onClose={handleCloseModal}>
         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
           <div className="text-center">
@@ -492,13 +536,15 @@ const ProductDetail = () => {
                     {selectedVariations}
                   </>
                 )}
-                {type !== "Item" && selectedVariations === null && (
-                  <>
-                    <span className="font-semibold">Color:</span>{" "}
-                    {selectedColor}
-                  </>
-                )}
-                {type !== "Item" && (
+                {type !== "Item" &&
+                  selectedVariations === null &&
+                  category !== "uniform" && (
+                    <>
+                      <span className="font-semibold">Color:</span>{" "}
+                      {selectedColor}
+                    </>
+                  )}
+                {type !== "Item" && category !== "uniform" && (
                   <>
                     <span className="font-semibold">Color:</span>{" "}
                     {selectedColor}
@@ -508,7 +554,6 @@ const ProductDetail = () => {
               <p className="mb-2">
                 <span className="font-semibold">Batch:</span> {batch}
               </p>
-
               <p className="mb-2">
                 <span className="font-semibold">Price:</span> ₱ {price}
               </p>
@@ -517,8 +562,8 @@ const ProductDetail = () => {
               </p>
               <p className="mb-2">
                 <span className="font-semibold">Membership Discount:</span>
-                {status.membership === "Accepted" || status.renew === "Accepted"
-                  ? " ₱" + calculateDiscount() * 0.05
+                {statusVerify()
+                  ? " ₱" + (calculateDiscount() * 0.05).toFixed(2)
                   : "Not Eligible"}
               </p>
               <p className="mb-4">
@@ -533,13 +578,13 @@ const ProductDetail = () => {
             </div>
             <div className="mt-6 flex justify-center gap-4">
               <button
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-all duration-300 ease-in-out"
+                className="bg-[#4398AC] hover:bg-opacity-80  px-4 py-2 rounded-md text-white transition-all duration-300 ease-in-out"
                 onClick={handleCloseModal}
               >
                 Cancel
               </button>
               <button
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all duration-300 ease-in-out"
+                className="bg-[#002E48] text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition-all duration-300 ease-in-out"
                 onClick={cartIndicator ? addToCart : handleOrder}
               >
                 Confirm

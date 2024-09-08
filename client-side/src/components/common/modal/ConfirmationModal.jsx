@@ -9,7 +9,9 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
   let confirmTypeWord = ConfirmActionWords[confirmType];
 
   const confirmButtonColor =
-    confirmType === ConfirmActionType.DELETION || ConfirmActionType.RENEWAL
+    confirmType === ConfirmActionType.DELETION ||
+    ConfirmActionType.RENEWAL ||
+    ConfirmationType.ORDER
       ? "bg-red-500 hover:bg-red-600"
       : "bg-green-500 hover:bg-green-600";
 
@@ -31,7 +33,7 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
           <p>
             Are you sure you want to {confirmTypeWord}
             {confirmTypeWord === "cancel" ? " the membership request of " : " "}
-            this student?
+            {confirmTypeWord === "cancel this order" ? "" : "this student"}?
           </p>
         </div>
         <div className="p-4 border-t flex justify-end space-x-2">
@@ -47,7 +49,9 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
             className={`px-4 py-2 text-white rounded ${confirmButtonColor}`}
             onClick={onConfirm}
           >
-            {confirmTypeWord !== 'cancel' ? capitalizeFirstLetter(confirmTypeWord) : "Yes"}
+            {confirmTypeWord !== "cancel"
+              ? capitalizeFirstLetter(confirmTypeWord)
+              : "Yes"}
           </button>
         </div>
       </div>
