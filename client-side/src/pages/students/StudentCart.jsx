@@ -96,13 +96,13 @@ const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
             <div className="mt-4 flex justify-end space-x-4">
               <button
                 onClick={onClose}
-                className="bg-gray-500 text-white py-2 px-4 rounded-lg"
+                className="bg-[#4398AC] text-white py-2 px-4 rounded-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={onConfirm}
-                className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+                className="bg-[#002E48] text-white py-2 px-4 rounded-lg"
               >
                 Confirm Order
               </button>
@@ -371,7 +371,7 @@ const StudentCart = () => {
     return (
       (status.membership === "Accepted" && status.renew === "None") ||
       status.renew === "Accepted" ||
-      status.membership === "Accepted"
+      (status.membership === "Accepted" && status.renew !== "Pending")
     );
   };
 
@@ -466,7 +466,7 @@ const StudentCart = () => {
       .filter((item) => item.category !== "merchandise")
       .reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-    const discount =  statusVerify() ?  merchandiseSubtotal * 0.05 : 0;
+    const discount = statusVerify() ? merchandiseSubtotal * 0.05 : 0;
     const subTotal = merchandiseSubtotal + nonMerchandiseSubtotal;
     const discountedTotal = merchandiseSubtotal - discount;
     const totalPrice = discountedTotal + nonMerchandiseSubtotal;
