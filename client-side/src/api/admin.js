@@ -217,6 +217,48 @@ export const totalHistory = async () => {
     }
   }
 };
+
+export const merchCreated = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/merchandise-created`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+export const placedOrders = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/placed-orders`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+
 export const renewStudent = async () => {
   try {
     const response = await axios.get(`${backendConnection()}/api/renew`, {

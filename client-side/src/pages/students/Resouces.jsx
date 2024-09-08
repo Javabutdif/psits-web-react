@@ -135,6 +135,14 @@ const Resources = () => {
           "https://cdn.dribbble.com/users/42044/screenshots/3005802/media/18e91928154957a9baf2fcefbbd94f81.jpg?resize=400x300&vertical=center",
       },
     ],
+    fourthYear: [
+      {
+        course: "Hacker Rank",
+        link: "https://www.hackerrank.com",
+        image:
+          "https://upload.wikimedia.org/wikipedia/commons/4/40/HackerRank_Icon-1000px.png",
+      },
+    ],
   };
 
   const [...course] = getUser();

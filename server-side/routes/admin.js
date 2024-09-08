@@ -2,7 +2,9 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const Admin = require("../models/AdminModel");
 const MembershipHistory = require("../models/MembershipHistory");
+const Merch = require("../models/MerchModel");
 const Student = require("../models/StudentModel");
+const Order = require("../models/OrdersModel");
 const { format } = require("date-fns");
 const nodemailer = require("nodemailer");
 const ejs = require("ejs");
@@ -138,7 +140,7 @@ router.post("/approve-membership", async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL,
-      to: student.email, 
+      to: student.email,
       subject: "Your Receipt from PSITS - UC Main",
       html: emailTemplate,
       attachments: [
@@ -202,7 +204,12 @@ router.get("/membershipRequest", async (req, res) => {
 router.get("/all-members", async (req, res) => {
   const count = await Student.countDocuments({
     status: "True",
-    $or: [{ renew: "Accepted" }, { renew: { $exists: false } }, { renew: "" }],
+    $or: [
+      { renew: "Accepted" },
+      { renew: { $exists: false } },
+      { renew: "" },
+      { renew: "Pending" },
+    ],
   });
   return res.json({ message: count });
 });
@@ -220,6 +227,14 @@ router.get("/deleted-members", async (req, res) => {
 });
 router.get("/history-members", async (req, res) => {
   const count = await MembershipHistory.countDocuments();
+  return res.json({ message: count });
+});
+router.get("/merchandise-created", async (req, res) => {
+  const count = await Merch.countDocuments();
+  return res.json({ message: count });
+});
+router.get("/placed-orders", async (req, res) => {
+  const count = await Order.countDocuments({ order_status: "Pending" });
   return res.json({ message: count });
 });
 

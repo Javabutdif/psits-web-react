@@ -464,13 +464,12 @@ function Merchandise() {
             {/* Product Image */}
             <div className="mb-4">
               <img
-                src={selectedItem?.imageUrl}
+                src={selectedItem?.imageUrl[0]}
                 alt={selectedItem?.name}
                 className="w-full h-48 object-cover rounded-md"
               />
             </div>
 
-            {/* Product Details */}
             <div className="space-y-2">
               <h2 className="text-xl font-semibold text-gray-800">
                 {selectedItem?.name}
@@ -489,6 +488,9 @@ function Merchandise() {
               </p>
               <p className="text-gray-600">
                 End Date: {selectedItem?.end_date}
+              </p>
+              <p className="text-gray-600">
+                Created By: {selectedItem?.created_by}
               </p>
             </div>
           </Dialog.Panel>
