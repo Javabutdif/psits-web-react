@@ -396,9 +396,8 @@ const Reports = () => {
               Merchandise Sales Summary
             </h2>
             <div className="overflow-hidden">
-              <div className="h-25 overflow-y-auto">
+              <div className="h-36 overflow-y-auto">
                 {" "}
-                {/* Set a fixed height for the container */}
                 <table className="min-w-full bg-gray-100 rounded-lg shadow-md">
                   <thead className="bg-gray-200">
                     <tr>
@@ -454,180 +453,185 @@ const Reports = () => {
           />
         </TabPanel>
       </Tabs>
-
       {isFilterOpen && (
         <div className="fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-75">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Filter Data</h2>
-            <input
-              className="border w-full p-2 mb-2"
-              placeholder="ID Number"
-              value={filterID}
-              onChange={(e) => setFilterID(e.target.value)}
-            />
-            <input
-              className="border w-full p-2 mb-2"
-              placeholder="Name"
-              value={filterName}
-              onChange={(e) => setFilterName(e.target.value)}
-            />
-            {activeTab !== 0 && (
-              <select
-                className="border w-full p-2 mb-2"
-                value={filterProductName}
-                onChange={(e) => {
-                  setFilterProductName(e.target.value);
-                  setFilterBatch("");
-                  changes;
-                }}
-              >
-                <option value="">Select a Product</option>
-                {productNames.map((product) => (
-                  <option key={product._id} value={product.name}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            )}
-            {activeTab !== 0 && (
-              <select
-                className="border w-full p-2 mb-2"
-                value={filterSize}
-                onChange={(e) => setFilterSize(e.target.value)}
-              >
-                <option value="">Select Size</option>
-                <option key="18" value="18">
-                  18
-                </option>
-                <option key="XS" value="XS">
-                  XS
-                </option>
-                <option key="S" value="S">
-                  S
-                </option>
-                <option key="M" value="M">
-                  M
-                </option>
-                <option key="L" value="L">
-                  L
-                </option>
-                <option key="XL" value="XL">
-                  XL
-                </option>
-                <option key="2XL" value="2XL">
-                  2XL
-                </option>
-                <option key="3XL" value="3XL">
-                  3XL
-                </option>
-              </select>
-            )}
-            {activeTab !== 0 && filterProductName && (
-              <select
-                className="border w-full p-2 mb-2"
-                value={filterBatch}
-                onChange={(e) => setFilterBatch(e.target.value)}
-              >
-                <option value="">Select Batch</option>
-                {productNames
-                  .filter((product) => product.name === filterProductName)
-                  .map((product) => (
-                    <option key={product.batch} value={product.batch}>
-                      {product.batch}
+          <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-lg w-full max-w-xs sm:max-w-sm md:max-w-md">
+            <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">
+              Filter Data
+            </h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <input
+                className="border w-full p-1 sm:p-2 mb-2"
+                placeholder="ID Number"
+                value={filterID}
+                onChange={(e) => setFilterID(e.target.value)}
+              />
+              <input
+                className="border w-full p-1 sm:p-2 mb-2"
+                placeholder="Name"
+                value={filterName}
+                onChange={(e) => setFilterName(e.target.value)}
+              />
+              {activeTab !== 0 && (
+                <>
+                  <select
+                    className="border w-full p-1 sm:p-2 mb-2"
+                    value={filterProductName}
+                    onChange={(e) => {
+                      setFilterProductName(e.target.value);
+                      setFilterBatch("");
+                      changes;
+                    }}
+                  >
+                    <option value="">Select a Product</option>
+                    {productNames.map((product) => (
+                      <option key={product._id} value={product.name}>
+                        {product.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="border w-full p-1 sm:p-2 mb-2"
+                    value={filterSize}
+                    onChange={(e) => setFilterSize(e.target.value)}
+                  >
+                    <option value="">Select Size</option>
+                    <option key="18" value="18">
+                      18
                     </option>
-                  ))}
-              </select>
-            )}
-
-            <input
-              className="border w-full p-2 mb-2"
-              placeholder="RFID"
-              value={filterRFID}
-              onChange={(e) => setFilterRFID(e.target.value)}
-            />
-            {activeTab === 0 && (
+                    <option key="XS" value="XS">
+                      XS
+                    </option>
+                    <option key="S" value="S">
+                      S
+                    </option>
+                    <option key="M" value="M">
+                      M
+                    </option>
+                    <option key="L" value="L">
+                      L
+                    </option>
+                    <option key="XL" value="XL">
+                      XL
+                    </option>
+                    <option key="2XL" value="2XL">
+                      2XL
+                    </option>
+                    <option key="3XL" value="3XL">
+                      3XL
+                    </option>
+                  </select>
+                  {filterProductName && (
+                    <select
+                      className="border w-full p-1 sm:p-2 mb-2"
+                      value={filterBatch}
+                      onChange={(e) => setFilterBatch(e.target.value)}
+                    >
+                      <option value="">Select Batch</option>
+                      {productNames
+                        .filter((product) => product.name === filterProductName)
+                        .map((product) => (
+                          <option key={product.batch} value={product.batch}>
+                            {product.batch}
+                          </option>
+                        ))}
+                    </select>
+                  )}
+                </>
+              )}
+              <input
+                className="border w-full p-1 sm:p-2 mb-2"
+                placeholder="RFID"
+                value={filterRFID}
+                onChange={(e) => setFilterRFID(e.target.value)}
+              />
+              {activeTab === 0 && (
+                <select
+                  className="border w-full p-1 sm:p-2 mb-2"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
+                  <option value="">Select Type</option>
+                  <option key="Membership" value="Membership">
+                    Membership
+                  </option>
+                  <option key="Renewal" value="Renewal">
+                    Renewal
+                  </option>
+                </select>
+              )}
               <select
-                className="border w-full p-2 mb-2"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
+                className="border w-full p-1 sm:p-2 mb-2"
+                value={filterCourse}
+                onChange={(e) => setFilterCourse(e.target.value)}
               >
-                <option value="">Select Type</option>
-                <option key="Membership" value="Membership">
-                  Membership
+                <option value="">Select Course</option>
+                <option key="BSIT" value="BSIT">
+                  BSIT
                 </option>
-                <option key="Renewal" value="Renewal">
-                  Renewal
+                <option key="BSCS" value="BSCS">
+                  BSCS
+                </option>
+                <option key="ACT" value="ACT">
+                  ACT
                 </option>
               </select>
-            )}
-
-            <select
-              className="border w-full p-2 mb-2"
-              value={filterCourse}
-              onChange={(e) => setFilterCourse(e.target.value)}
-            >
-              <option value="">Select Course</option>
-              <option key="BSIT" value="BSIT">
-                BSIT
-              </option>
-              <option key="BSCS" value="BSCS">
-                BSCS
-              </option>
-              <option key="ACT" value="ACT">
-                ACT
-              </option>
-            </select>
-
-            <select
-              className="border w-full p-2 mb-2"
-              value={filterYear}
-              onChange={(e) => setFilterYear(e.target.value)}
-            >
-              <option value="">Select Year</option>
-              <option key="1" value="1">
-                1
-              </option>
-              <option key="2" value="2">
-                2
-              </option>
-              <option key="3" value="3">
-                3
-              </option>
-              <option key="4" value="4">
-                4
-              </option>
-            </select>
-            <div>
-              <label>Start Date</label>
-              <input
-                className="border w-full p-2 mb-2"
-                type="date"
-                value={filterDateFrom}
-                onChange={(e) => setFilterDateFrom(e.target.value)}
-              />
-            </div>
-            <div>
-              <label>End Date</label>
-              <input
-                className="border w-full p-2 mb-2"
-                type="date"
-                value={filterDateTo}
-                onChange={(e) => setFilterDateTo(e.target.value)}
-              />
-            </div>
-
-            <div className="flex justify-between mt-4">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded"
-                onClick={handleClearFilters} // Call the clear function
+              <select
+                className="border w-full p-1 sm:p-2 mb-2"
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
               >
-                Clear
+                <option value="">Select Year</option>
+                <option key="1" value="1">
+                  1
+                </option>
+                <option key="2" value="2">
+                  2
+                </option>
+                <option key="3" value="3">
+                  3
+                </option>
+                <option key="4" value="4">
+                  4
+                </option>
+              </select>
+              <div>
+                <label className="block text-sm font-medium">Start Date</label>
+                <input
+                  className="border w-full p-1 sm:p-2 mb-2"
+                  type="date"
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">End Date</label>
+                <input
+                  className="border w-full p-1 sm:p-2 mb-2"
+                  type="date"
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between mt-4">
+              <button
+                className="bg-[#4398AC] text-white px-4 py-2 rounded mb-2 sm:mb-0"
+                onClick={() => setIsFilterOpen(false)}
+              >
+                Cancel
               </button>
               <button
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                className="bg-[#002E48] text-white px-4 py-2 rounded"
                 onClick={handleFilter}
               >
                 Apply
+              </button>
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded mb-2 sm:mb-0"
+                onClick={handleClearFilters}
+              >
+                Clear
               </button>
             </div>
           </div>

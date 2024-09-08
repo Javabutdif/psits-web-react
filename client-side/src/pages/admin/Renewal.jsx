@@ -139,6 +139,12 @@ function MembershipRequest() {
 
   const columns = [
     {
+      key: "id_number",
+      label: "ID",
+      selector: (row) => row.id_number,
+      sortable: true,
+    },
+    {
       key: "name",
       label: "Name",
       selector: (row) =>
@@ -147,7 +153,7 @@ function MembershipRequest() {
       cell: (row) => (
         <div className="text-xs">
           <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
-          <div className="text-gray-500">ID: {row.id_number}</div>
+
           <div className="text-gray-500">RFID: {row.rfid}</div>
         </div>
       ),
@@ -165,19 +171,7 @@ function MembershipRequest() {
       selector: (row) => row.email,
       sortable: true,
     },
-    {
-      key: "type",
-      label: "Type",
-      selector: () => "Student", // Static value for all rows
-      sortable: true,
-      cell: () => (
-        <div className="text-center">
-          <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">
-            Student
-          </span>
-        </div>
-      ),
-    },
+
     {
       name: "Renewed on",
       label: "Renewed on",
@@ -257,7 +251,7 @@ function MembershipRequest() {
               position !== "Auditor" &&
               position !== "Developer"
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500"
+                : "bg-[#002E48]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}

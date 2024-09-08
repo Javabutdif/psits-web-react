@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { allMembers } from "../../api/admin";
+import { allMembers, merchCreated, placedOrders } from "../../api/admin";
 
 const AdminDashboard = () => {
   const [merchandiseCount, setMerchandiseCount] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
-  const [membershipRevenue, setMembershipRevenue] = useState(0);
+
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,18 +14,14 @@ const AdminDashboard = () => {
     const fetchData = async () => {
       try {
         const studentRes = await allMembers();
+        const merchCreate = await merchCreated();
+        const placedOrder = await placedOrders();
+
         setStudentCount(studentRes);
 
-        // Example fetching other data (replace with actual API calls)
-        // const merchandiseRes = await getMerchandiseCount();
-        // const orderRes = await getOrderCount();
-        // const revenueRes = await getMembershipRevenue();
-        // const logsRes = await getLogs();
+        setMerchandiseCount(merchCreate);
+        setOrderCount(placedOrder);
 
-        // Simulate data
-        setMerchandiseCount(120); // Example value
-        setOrderCount(45); // Example value
-        setMembershipRevenue(1500); // Example value
         setLogs([
           {
             date: "2024-09-01",
@@ -84,43 +80,6 @@ const AdminDashboard = () => {
           <h2 className="text-sm font-semibold mb-1">Placed Orders</h2>
           <p className="text-lg text-gray-700">{orderCount}</p>
         </div>
-        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 flex flex-col items-center">
-          <i className="fas fa-dollar-sign text-3xl text-red-500 mb-2"></i>
-          <h2 className="text-sm font-semibold mb-1">Membership Revenue</h2>
-          <p className="text-lg text-gray-700"> ₱{membershipRevenue}</p>
-        </div>
-      </div>
-
-      {/* Logs Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                Date
-              </th>
-              <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                Action
-              </th>
-              <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                Details
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {logs.map((log, index) => (
-              <tr key={index}>
-                <td className="px-4 py-2 text-sm text-gray-600">{log.date}</td>
-                <td className="px-4 py-2 text-sm text-gray-600">
-                  {log.action}
-                </td>
-                <td className="px-4 py-2 text-sm text-gray-600">
-                  {log.details}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );
