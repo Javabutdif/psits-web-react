@@ -167,7 +167,6 @@ router.put("/approve-order", async (req, res) => {
   const { reference_code, order_id, admin, cash } = req.body;
 
   try {
-    // Validate input
     if (!ObjectId.isValid(order_id)) {
       return res.status(400).json({ message: "Invalid order ID" });
     }
@@ -213,7 +212,7 @@ router.put("/approve-order", async (req, res) => {
           await Merch.findByIdAndUpdate(item.product_id, {
             $push: {
               order_details: {
-                reference_code: item.reference_code,
+                reference_code: reference_code,
                 product_name: item.product_name,
                 id_number: successfulOrder.id_number,
                 student_name: successfulOrder.student_name,

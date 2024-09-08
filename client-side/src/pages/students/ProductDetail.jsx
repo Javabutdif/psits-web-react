@@ -123,7 +123,7 @@ const ProductDetail = () => {
     return (
       ((status.membership === "Accepted" && status.renew === "None") ||
         status.renew === "Accepted" ||
-        status.membership === "Accepted") &&
+        (status.membership === "Accepted" && status.renew !== "Pending")) &&
       category === "merchandise"
     );
   };
