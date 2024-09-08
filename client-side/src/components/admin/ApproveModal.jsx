@@ -157,7 +157,7 @@ function ApproveModal({
           <div className="p-4 border-t flex justify-end space-x-2">
             <button
               type="button"
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              className="px-4 py-2 bg-[#4398AC] text-white rounded hover:bg-opacity-80"
               onClick={onCancel}
               disabled={isLoading}
             >
@@ -165,34 +165,47 @@ function ApproveModal({
             </button>
             <button
               type="button"
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 relative"
+              className="px-4 py-2 bg-[#002E48] text-white rounded hover:bg-opacity-80 relative flex items-center justify-center"
               onClick={handleSubmit}
               disabled={isLoading}
             >
               {isLoading ? (
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <svg
-                    className="animate-spin h-15 w-15 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 1116 0A8 8 0 014 12z"
-                    />
-                  </svg>
-                </span>
+                <div className="relative flex items-center">
+                  <div className="dot-container">
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                  </div>
+                  <style jsx>{`
+                    .dot-container {
+                      display: flex;
+                      justify-content: space-between;
+                      width: 30px; /* Adjust width as needed */
+                    }
+                    .dot {
+                      width: 8px;
+                      height: 8px;
+                      background-color: white;
+                      border-radius: 50%;
+                      animation: bounce 1s infinite;
+                    }
+                    .dot:nth-child(2) {
+                      animation-delay: 0.2s;
+                    }
+                    .dot:nth-child(3) {
+                      animation-delay: 0.4s;
+                    }
+                    @keyframes bounce {
+                      0%,
+                      100% {
+                        transform: translateY(0);
+                      }
+                      50% {
+                        transform: translateY(-10px);
+                      }
+                    }
+                  `}</style>
+                </div>
               ) : (
                 "Approve"
               )}

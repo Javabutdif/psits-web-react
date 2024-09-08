@@ -578,13 +578,13 @@ const ProductDetail = () => {
             </div>
             <div className="mt-6 flex justify-center gap-4">
               <button
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-all duration-300 ease-in-out"
+                className="bg-[#4398AC] hover:bg-opacity-80  px-4 py-2 rounded-md text-white transition-all duration-300 ease-in-out"
                 onClick={handleCloseModal}
               >
                 Cancel
               </button>
               <button
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all duration-300 ease-in-out"
+                className="bg-[#002E48] text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition-all duration-300 ease-in-out"
                 onClick={cartIndicator ? addToCart : handleOrder}
               >
                 Confirm

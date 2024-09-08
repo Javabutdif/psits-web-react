@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 const useCarousel = (itemsCount) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,7 +20,7 @@ const useCarousel = (itemsCount) => {
   };
 
   useEffect(() => {
-    const interval = setInterval(goToNext, 3000); // Change card every 3 seconds
+    const interval = setInterval(goToNext, 2000); // Change card every 3 seconds
 
     return () => clearInterval(interval); // Clear interval on component unmount
   }, [itemsCount]);

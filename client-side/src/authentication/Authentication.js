@@ -161,20 +161,7 @@ export const getRenewStatus = () => {
   const token = jwtDecode(sessionToken);
   return token.user.renew === undefined ? "None" : token.user.renew;
 };
-export const setMembershipStatus = () => {
-  const authen = localStorage.getItem("Data");
-  if (!authen) return null;
-  const users = JSON.parse(authen);
 
-  const edited = {
-    id: users.id,
-
-    position: users.position,
-    expiry: users.expiry,
-    membership: "Pending",
-  };
-  localStorage.setItem("Data", JSON.stringify(edited));
-};
 export const getInformationData = () => {
   const sessionToken = sessionStorage.getItem("Token");
   const token = jwtDecode(sessionToken);

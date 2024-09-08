@@ -161,7 +161,7 @@ function MembershipHistory() {
               position !== "Auditor" &&
               position !== "Developer"
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500"
+                : "bg-[#002E48]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}

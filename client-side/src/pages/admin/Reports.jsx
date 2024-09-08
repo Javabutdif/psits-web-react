@@ -88,7 +88,6 @@ const Reports = () => {
       setFilteredMerchandiseData(filteredOrderDetails);
       setProductNames(data);
       setSalesData(allSalesData);
-     
     } catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
@@ -181,12 +180,11 @@ const Reports = () => {
           item.size?.[0]?.$each?.[0]?.includes(filterSize)
         );
       }
-       if (filterColor) {
-         filteredData = filteredData.filter((item) =>
-           item.variation?.[0]?.$each?.[0]?.includes(filterColor)
-         );
-       }
-     
+      if (filterColor) {
+        filteredData = filteredData.filter((item) =>
+          item.variation?.[0]?.$each?.[0]?.includes(filterColor)
+        );
+      }
     }
 
     setData(filteredData);
@@ -194,7 +192,6 @@ const Reports = () => {
 
   const calculateSalesData = () => {
     if (activeTab === 1 && filteredMerchandiseData.length) {
-      // Create a map to store the aggregated data
       const salesMap = filteredMerchandiseData.reduce((acc, item) => {
         if (!acc[item.product_name]) {
           acc[item.product_name] = { unitsSold: 0, totalRevenue: 0 };
@@ -213,8 +210,10 @@ const Reports = () => {
   const handleFilter = () => {
     if (activeTab === 0) {
       applyFilter(membershipData, setFilteredMembershipData);
+      calculateSalesData();
     } else {
       applyFilter(merchandiseData, setFilteredMerchandiseData);
+      calculateSalesData();
     }
     setIsFilterOpen(false);
   };
@@ -260,7 +259,7 @@ const Reports = () => {
   ];
 
   const merchandiseColumns = [
-    { name: "Order ID", selector: (row) => row._id, sortable: true },
+    { name: "Order ID", selector: (row) => row.reference_code, sortable: true },
     { name: "Name", selector: (row) => row.student_name, sortable: true },
     {
       name: "Product Name",
@@ -314,8 +313,7 @@ const Reports = () => {
     }
   };
 
- const { membershipCount, renewalCount } = getMembershipCounts(membershipData);
-
+  const { membershipCount, renewalCount } = getMembershipCounts(membershipData);
 
   const membershipRevenue = membershipCount * 50;
   const renewalRevenue = renewalCount * 50;
@@ -325,7 +323,7 @@ const Reports = () => {
     size: row.size?.[0]?.$each?.[0] || "",
     variation: row.variation?.[0]?.$each?.[0] || "",
   }));
- 
+
   return (
     <div className="container mx-auto p-4">
       <Tabs selectedIndex={activeTab} onSelect={(index) => setActiveTab(index)}>
@@ -335,7 +333,6 @@ const Reports = () => {
         </TabList>
 
         <TabPanel>
-          {/* Sales Summary for Membership */}
           <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
             <h2 className="text-xl font-bold mb-4">Membership Sales Summary</h2>
             <table className="min-w-full bg-gray-100 rounded-lg overflow-hidden shadow-md">
@@ -394,31 +391,40 @@ const Reports = () => {
         </TabPanel>
 
         <TabPanel>
-          {/* Sales Summary for Merchandise */}
           <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
             <h2 className="text-xl font-bold mb-4">
               Merchandise Sales Summary
             </h2>
-            <table className="min-w-full bg-gray-100 rounded-lg overflow-hidden shadow-md">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2 text-left">Product Name</th>
-                  <th className="border px-4 py-2 text-left">Units Sold</th>
-                  <th className="border px-4 py-2 text-left">Total Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(salesData).map(([productName, data]) => (
-                  <tr key={productName}>
-                    <td className="border px-4 py-2">{productName}</td>
-                    <td className="border px-4 py-2">{data.unitsSold}</td>
-                    <td className="border px-4 py-2">
-                      ₱{data.totalRevenue.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-hidden">
+              <div className="h-25 overflow-y-auto">
+                {" "}
+                {/* Set a fixed height for the container */}
+                <table className="min-w-full bg-gray-100 rounded-lg shadow-md">
+                  <thead className="bg-gray-200">
+                    <tr>
+                      <th className="border px-4 py-2 text-left">
+                        Product Name
+                      </th>
+                      <th className="border px-4 py-2 text-left">Units Sold</th>
+                      <th className="border px-4 py-2 text-left">
+                        Total Revenue
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(salesData).map(([productName, data]) => (
+                      <tr key={productName}>
+                        <td className="border px-4 py-2">{productName}</td>
+                        <td className="border px-4 py-2">{data.unitsSold}</td>
+                        <td className="border px-4 py-2">
+                          ₱{data.totalRevenue.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           {/* Merchandise Tab Content */}

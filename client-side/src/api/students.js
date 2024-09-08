@@ -2,10 +2,7 @@ import "../App.css";
 import backendConnection from "./backendApi";
 import axios from "axios";
 import { showToast } from "../utils/alertHelper";
-import {
-  setRetrieveStudent,
-  setMembershipStatus,
-} from "../authentication/Authentication";
+import { setRetrieveStudent } from "../authentication/Authentication";
 
 export const requestMembership = async (id_number) => {
   try {
@@ -22,7 +19,7 @@ export const requestMembership = async (id_number) => {
 
     if (response.status === 200) {
       showToast("success", response.data.message);
-      setMembershipStatus();
+      window.location.reload();
     } else {
       showToast("error", response.data.message);
     }
