@@ -466,7 +466,7 @@ const StudentCart = () => {
       .filter((item) => item.category !== "merchandise")
       .reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-    const discount = merchandiseSubtotal * 0.05;
+    const discount =  statusVerify() ?  merchandiseSubtotal * 0.05 : 0;
     const subTotal = merchandiseSubtotal + nonMerchandiseSubtotal;
     const discountedTotal = merchandiseSubtotal - discount;
     const totalPrice = discountedTotal + nonMerchandiseSubtotal;
