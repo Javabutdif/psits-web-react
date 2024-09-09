@@ -73,7 +73,7 @@ function Product({ handleCloseAddProduct }) {
     } else {
       setIsShown(false);
     }
-  });
+  }, [formData.type]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -94,17 +94,27 @@ function Product({ handleCloseAddProduct }) {
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setImagePreviews((prevPreviews) => [...prevPreviews, ...newPreviews]);
   };
+
+  const handleRemoveImage = (index) => {
+    setImages((prevImages) => {
+      const updatedImages = prevImages.filter((_, i) => i !== index);
+      return updatedImages;
+    });
+
+    setImagePreviews((prevPreviews) => {
+      const updatedPreviews = prevPreviews.filter((_, i) => i !== index);
+      return updatedPreviews;
+    });
+  };
+
   const validate = () => {
     let errors = {};
-
-    // Validate Product Name
 
     if (formData.name.length === 0) {
       errors.name = "Product Name is required.";
       showToast("error", "Product Name is required.");
     }
 
-    // Validate Price
     if (!formData.price) {
       errors.price = "Price is required.";
       showToast("error", "Price is required.");
@@ -113,7 +123,6 @@ function Product({ handleCloseAddProduct }) {
       showToast("error", "Price must be a positive number.");
     }
 
-    // Validate Stocks
     if (formData.stocks.length === 0) {
       errors.stocks = "Stocks must be filled.";
       showToast("error", "Stocks must be filled.");
@@ -122,13 +131,11 @@ function Product({ handleCloseAddProduct }) {
       showToast("error", "Stocks must be a non-negative or zero integer.");
     }
 
-    // Validate Start Date
     if (!formData.start_date) {
       errors.start_date = "Start date is required.";
       showToast("error", "Start date is required.");
     }
 
-    // Validate End Date
     if (!formData.end_date) {
       errors.end_date = "End date is required.";
       showToast("error", "End date is required.");
@@ -148,7 +155,6 @@ function Product({ handleCloseAddProduct }) {
     e.preventDefault();
 
     setPreviewData(formData);
-
     setShowPreview(true);
   };
 
@@ -160,21 +166,17 @@ function Product({ handleCloseAddProduct }) {
       images.forEach((image) => data.append("images", image));
     }
 
-    // Append other form data
     for (const key in formData) {
       let value = formData[key];
-
-      // Ensure arrays are converted to strings before appending to FormData
       if (Array.isArray(value)) {
         value = value.join(",");
       }
-
       data.append(key, value);
     }
 
     try {
       if (await addMerchandise(data)) {
-        showToast("success", "Merchandise Publish");
+        showToast("success", "Merchandise Published");
         handleCloseAddProduct();
         setShowPreview(false);
         setIsLoading(false);
@@ -187,7 +189,6 @@ function Product({ handleCloseAddProduct }) {
 
   const handleSizeClick = (size) => {
     setFormData((prevState) => {
-      // Ensure selectedSizes is treated as an array
       const selectedSizesArray = Array.isArray(prevState.selectedSizes)
         ? prevState.selectedSizes
         : prevState.selectedSizes.split(",");
@@ -246,10 +247,7 @@ function Product({ handleCloseAddProduct }) {
     ],
     acquintance: [
       { value: "Ticket w/ Bundle", label: "Ticket w/ Bundle" },
-      {
-        value: "Others",
-        label: "Others",
-      },
+      { value: "Others", label: "Others" },
     ],
   };
 
@@ -263,7 +261,6 @@ function Product({ handleCloseAddProduct }) {
   };
 
   const PreviewModal = ({ data, images, onClose, onConfirm }) => {
-    // Show up to 3 images in the preview
     const imagesToShow = images.slice(0, 3);
 
     return (
@@ -334,6 +331,7 @@ function Product({ handleCloseAddProduct }) {
       </div>
     );
   };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="relative h-[90%] max-w-md w-full mx-4 md:mx-8 p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
@@ -350,6 +348,7 @@ function Product({ handleCloseAddProduct }) {
             handleImageChange={handleImageChange}
             multiple={true}
             previews={imagePreviews}
+            onRemoveImage={handleRemoveImage}
           />
           <FormInput
             label="Product Name"
