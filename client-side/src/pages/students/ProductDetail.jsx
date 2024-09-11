@@ -519,7 +519,7 @@ const ProductDetail = () => {
       )}
 
       <Modal show={showModal} onClose={handleCloseModal}>
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
+        <div className="bg-white p-6 max-w-md mx-auto">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4 text-gray-800">
               {!cartIndicator ? "Confirm Purchase" : "Cart"}
