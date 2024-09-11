@@ -403,9 +403,7 @@ const ProductDetail = () => {
             <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
               {batch !== "" ? "Batch: " : ""} {batch}
             </p>
-            <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
-              {category !== "" ? "Category: " : ""} {category}
-            </p>
+
             <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
               {stocks !== "" ? "Stocks: " : ""} {stocks}
             </p>
@@ -418,13 +416,20 @@ const ProductDetail = () => {
                   onSelect={setSelectedSize}
                   label="Sizes"
                 />
-                <ButtonGroup
-                  items={selectedVariations}
-                  selectedItem={selectedColor}
-                  onSelect={setSelectedColor}
-                  label="Color"
-                  disabled={category === "uniform"}
-                />
+                <div>
+                  <ButtonGroup
+                    items={selectedVariations}
+                    selectedItem={selectedColor}
+                    onSelect={setSelectedColor}
+                    label="Color"
+                    disabled={category === "uniform"}
+                  />
+                  <p className="text-xs text-red-500">
+                    {type.includes("Uniform")
+                      ? "Color set to White and Purple"
+                      : ""}
+                  </p>
+                </div>
               </div>
             )}
 

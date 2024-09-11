@@ -155,19 +155,6 @@ function ApproveModal({
             </div>
           </div>
           <div className="p-4 border-t flex justify-end space-x-2">
-            {isLoading ? (
-              <div></div>
-            ) : (
-              <button
-                type="button"
-                className="px-4 py-2 bg-[#4398AC] text-white rounded hover:bg-opacity-80"
-                onClick={onCancel}
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-            )}
-
             <button
               type="button"
               className="px-4 py-2 bg-[#002E48] text-white rounded hover:bg-opacity-80 relative flex items-center justify-center"
@@ -216,6 +203,18 @@ function ApproveModal({
                 "Approve"
               )}
             </button>
+            {isLoading ? (
+              <div></div>
+            ) : (
+              <button
+                type="button"
+                className="px-4 py-2 bg-[#4398AC] text-white rounded hover:bg-opacity-80"
+                onClick={onCancel}
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </div>
       </div>

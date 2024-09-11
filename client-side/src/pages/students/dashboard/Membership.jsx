@@ -13,12 +13,10 @@ function Membership({ styles }) {
   const request = async () => {
     try {
       await requestMembership(id);
-  
     } catch (error) {
       console.error("Error requesting membership:", error);
     }
   };
-
 
   const buttonVariants = {
     hover: { scale: 1.05, transition: { duration: 0.2 } },
@@ -53,7 +51,7 @@ function Membership({ styles }) {
             </h2>
             <p className="text-xs sm:text-sm mb-2 sm:mb-3 text-gray-600">
               Are you sure you want to request membership? Please note that you
-              need to pay PHP 100 in the PSITS Office to activate your membership
+              need to pay PHP 50 in the PSITS Office to activate your membership
               until the end of the semester.
             </p>
             <div className="bg-gray-100 p-2 rounded-lg mb-3 sm:mb-4 border border-gray-300">
@@ -88,7 +86,6 @@ function Membership({ styles }) {
           </div>
         </div>
       )}
-    
     </div>
   );
 }

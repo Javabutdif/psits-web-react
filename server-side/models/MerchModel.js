@@ -75,7 +75,7 @@ const merchSchema = new Schema(
     },
     description: {
       type: String,
-      required: true,
+     
     },
     selectedVariations: {
       type: Array,

@@ -79,8 +79,6 @@ const Orders = () => {
     fullName += " " + words[words.length - 1];
 
     setSelectedStudentName(fullName);
-    console.log(shouldPrint);
-    console.log(rowData);
   };
   useEffect(() => {
     if (rowData) {
@@ -96,6 +94,16 @@ const Orders = () => {
 
   const handleApproveClick = (order) => {
     setSelectedOrder(order);
+    const name = order.student_name;
+    const words = name.split(" ");
+    let fullName = "";
+
+    for (let i = 0; i < words.length - 1; i++) {
+      fullName += words[i].charAt(0) + ".";
+    }
+    fullName += " " + words[words.length - 1];
+
+    setSelectedStudentName(fullName);
     setIsModalOpen(true);
   };
   const handleCancelClick = (order) => {
@@ -510,7 +518,6 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* Approve Modal */}
       {isModalOpen && selectedOrder && (
         <ApproveModal
           reference_code={
@@ -520,7 +527,7 @@ const Orders = () => {
           id_number={selectedOrder.id_number}
           course={selectedOrder.course}
           year={selectedOrder.year}
-          name={selectedOrder.student_name}
+          name={selectedStudent}
           type={"Order"}
           membership={
             selectedOrder.membership_discount ? "Discounted" : "No Discount"

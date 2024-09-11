@@ -168,7 +168,7 @@ function MembershipRequest() {
               position !== "Auditor" &&
               position !== "Developer"
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500"
+                : "bg-[#002E48]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
@@ -218,7 +218,7 @@ function MembershipRequest() {
               position !== "Auditor" &&
               position !== "Developer"
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-red-500"
+                : "bg-[#4398AC]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
@@ -335,7 +335,6 @@ function MembershipRequest() {
   };
 
   const handleFormSubmit = async () => {
-   
     handleCloseModal();
   };
 
@@ -366,7 +365,6 @@ function MembershipRequest() {
               <FormButton
                 type="button"
                 text="Delete All"
-                // onClick={handleDeleteAll} // Ensure this is the correct handler for deletion
                 icon={<i className="fas fa-trash-alt"></i>} // Updated icon
                 styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
                 textClass="hidden"
@@ -398,8 +396,8 @@ function MembershipRequest() {
           onCancel={handleCloseModal}
           onSubmit={handleFormSubmit}
           qty={1}
-          itemTotal={100}
-          total={100}
+          itemTotal={50}
+          total={50}
         />
       )}
     </>

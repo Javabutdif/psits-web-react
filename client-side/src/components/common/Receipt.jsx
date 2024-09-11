@@ -83,11 +83,11 @@ const Receipt = forwardRef(
           </div>
         )}
 
-        <hr className="my-2" />
-        <span>Membership: {membership}</span>
-        <hr className="my-2" />
         {type === "Order" && (
           <>
+            <hr className="my-2" />
+            <span>Membership: {membership}</span>
+            <hr className="my-2" />
             {batch && (
               <p className="mb-2">
                 <b>Batch: </b> {batch}

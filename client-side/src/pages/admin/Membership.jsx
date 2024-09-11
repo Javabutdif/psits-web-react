@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import MembershipTab from '../../components/admin/MembershipTab';
-import { Outlet, useLocation } from 'react-router-dom';
-import Tab from '../../components/Tab';
+import React, { useState, useEffect, useCallback } from "react";
+import MembershipTab from "../../components/admin/MembershipTab";
+import { Outlet, useLocation } from "react-router-dom";
+import Tab from "../../components/Tab";
 import {
   allMembers,
   totalRequest,
@@ -9,6 +9,7 @@ import {
   totalDeleted,
   totalHistory,
 } from "../../api/admin";
+import { InfinitySpin } from "react-loader-spinner";
 
 const Membership = () => {
   const [counts, setCounts] = useState({
@@ -18,13 +19,21 @@ const Membership = () => {
     deleted: 0,
     history: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const [allMembersCount, requestCount, renewalCount, deletedCount, historyCount] = await Promise.all([
+      const [
+        allMembersCount,
+        requestCount,
+        renewalCount,
+        deletedCount,
+        historyCount,
+      ] = await Promise.all([
         allMembers(),
         totalRequest(),
         totalRenewal(),
@@ -41,30 +50,74 @@ const Membership = () => {
       });
     } catch (err) {
       console.error("Error fetching membership data: ", err);
+      setError("Failed to fetch membership data.");
     }
-  };
-
-  useEffect(() => {
-    fetchData();
-    const intervalId = setInterval(fetchData, 300); // Increased interval time for practicality
-
-    return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    setIsLoading(true);
+    fetchData();
+    setIsLoading(false);
+    const intervalId = setInterval(fetchData, 3000); // Adjusted interval
+
+    return () => clearInterval(intervalId);
+  }, [fetchData]);
+
   const tabs = [
-    { path: "/admin/membership", text: `All Members ${counts.allMembers}`, icon: "fas fa-users" },
-    { path: "/admin/membership/request", text: `Request ${counts.request}`, icon: "fas fa-hand-paper" },
-    { path: "/admin/membership/renewal", text: `Renewals ${counts.renewals}`, icon: "fas fa-refresh" },
-    { path: "/admin/membership/delete", text: `Deleted ${counts.deleted}`, icon: "fas fa-trash-alt" },
-    { path: "/admin/membership/history", text: `History ${counts.history}`, icon: "fas fa-history" },
+    {
+      path: "/admin/membership",
+      text: `All Members ${counts.allMembers}`,
+      icon: "fas fa-users",
+    },
+    {
+      path: "/admin/membership/request",
+      text: `Request ${counts.request}`,
+      icon: "fas fa-hand-paper",
+    },
+    {
+      path: "/admin/membership/renewal",
+      text: `Renewals ${counts.renewals}`,
+      icon: "fas fa-refresh",
+    },
+    {
+      path: "/admin/membership/delete",
+      text: `Deleted ${counts.deleted}`,
+      icon: "fas fa-trash-alt",
+    },
+    {
+      path: "/admin/membership/history",
+      text: `History ${counts.history}`,
+      icon: "fas fa-history",
+    },
   ];
 
   return (
-    <div className="flex flex-col py-4 space-y-4">
-      <div className="w-full flex flex-col ">
-        <Tab tabs={tabs} styles={"flex flex-col lg:flex-row items-stretch"} activePath={currentPath} />
-      </div>
-      <Outlet />
+    <div>
+      {isLoading ? (
+        <div className="flex justify-center items-center w-full h-full">
+          <InfinitySpin
+            visible={true}
+            width={200}
+            color="#0d6efd"
+            ariaLabel="infinity-spin-loading"
+          />
+        </div>
+      ) : error ? (
+        <div className="flex justify-center items-center w-full h-full">
+          <p className="text-red-600">{error}</p>
+        </div>
+      ) : (
+        <div className="flex flex-col py-4 space-y-4">
+          <div className="w-full flex flex-col">
+            <Tab
+              tabs={tabs}
+              styles={"flex flex-col lg:flex-row items-stretch"}
+              activePath={currentPath}
+            />
+          </div>
+          <Outlet />
+        </div>
+      )}
     </div>
   );
 };
