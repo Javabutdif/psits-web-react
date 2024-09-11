@@ -134,13 +134,6 @@ const Login = () => {
 
   return (
     <div className="relative min-h-screen flex justify-center items-center bg-gray-100 px-4">
-      <button
-        type="button"
-        onClick={handleNavigate("/")}
-        className=" absolute top-4 left-4 bg-opacity-0 text-white transition duration-300 ease-in-out transform hover:scale-105"
-      >
-        <IoArrowBack size={35} color="#074873" />
-      </button>
       {isLoading ? (
         <div className="flex justify-center items-center h-60vh">
           <InfinitySpin
@@ -156,6 +149,13 @@ const Login = () => {
           animate={{ x: 0 }}
           className="w-full max-w-lg flex flex-col items-center justify-center bg-white shadow-lg rounded-lg"
         >
+          <button
+            type="button"
+            onClick={handleNavigate("/")}
+            className=" absolute top-4 left-4 bg-opacity-0 text-white transition duration-300 ease-in-out transform hover:scale-105"
+          >
+            <IoArrowBack size={35} color="#074873" />
+          </button>
           <img src={logo} alt="Logo" className="" />
           <form
             onSubmit={handleLogin}

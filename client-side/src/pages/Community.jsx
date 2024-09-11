@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import president from "../assets/Core Officers/2.png";
 import viceInternal from "../assets/Core Officers/4.png";
 import viceExternal from "../assets/Core Officers/3.png";
@@ -30,7 +30,11 @@ const faculty = [
 ];
 
 const teamMembers = [
-  { name: "Anton James Genabio", image: jims, role: "Lead / Backend Developer" },
+  {
+    name: "Anton James Genabio",
+    image: jims,
+    role: "Lead / Backend Developer",
+  },
   { name: "Vince Datanagan", image: beans, role: "Front End Developer" },
   { name: "Ralph Adriane Dilao", image: driane, role: "FullStack Developer" },
   { name: "Marianne Joy Ybrado Napisa", image: marianne, role: "Web Designer" },
@@ -38,12 +42,24 @@ const teamMembers = [
 
 const officersAndReps = [
   { role: "President", name: "Vince Andrew Santoya", image: president },
-  { role: "Vice President Internal", name: "Aubrey Leyros", image: viceInternal },
-  { role: "Vice President External", name: "Clint Louie Tuyor", image: viceExternal },
+  {
+    role: "Vice President Internal",
+    name: "Aubrey Leyros",
+    image: viceInternal,
+  },
+  {
+    role: "Vice President External",
+    name: "Clint Louie Tuyor",
+    image: viceExternal,
+  },
   { role: "Secretary", name: "Marlou Tadlip", image: secretary },
   { role: "Auditor", name: "Daisy Lyn Laygan", image: auditor },
   { role: "Treasurer", name: "Jeraiza Gacang", image: treasurer },
-  { role: "Asst. Treasurer", name: "Stephanie Echavez", image: assistantTreasurer },
+  {
+    role: "Asst. Treasurer",
+    name: "Stephanie Echavez",
+    image: assistantTreasurer,
+  },
   { role: "P.I.O", name: "Princess Villanueva", image: pio },
   { role: "P.R.O", name: "John Paul Costillas", image: pro },
   { role: "Chief Volunteer", name: "Arvin Albeos", image: chiefVol },
@@ -59,7 +75,7 @@ const Community = () => {
 
   const handleTabClick = useCallback((tab) => {
     setActiveTab(tab);
-    setCarouselIndex(0);  // Reset the carousel index when changing tabs
+    setCarouselIndex(0);
   }, []);
 
   const handleCarouselIndexChange = useCallback((newIndex) => {
@@ -95,27 +111,14 @@ const Community = () => {
 
   return (
     <div className="bg-gradient-to-b from-primary min-h-main-md relative overflow-hidden">
-      {/* Floating Boxes */}
-      {Array.from({ length: 5 }).map((_, index) => (
-        <motion.div
-          key={index}
-          className="absolute bg-neutral-light w-24 h-24 rounded-lg"
-          style={{
-            top: `${Math.random() * 80 + 10}%`,
-            left: `${Math.random() * 80 + 10}%`,
-          }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.6, scale: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut", delay: index * 0.3 }}
-        />
-      ))}
-
       <div className="text-center">
         <ul className="absolute z-30 pt-20 left-1/2 transform -translate-x-1/2 flex justify-center space-x-4 text-white">
           {["Advisors", "Officers", "Developers"].map((tab) => (
             <li
               key={tab}
-              className={`cursor-pointer p-2 text-base sm:text-sm md:text-base ${activeTab === tab ? "font-bold border-b-2 border-primary" : ""}`}
+              className={`cursor-pointer p-2 text-base sm:text-sm md:text-base transition-all duration-300 ease-in-out ${
+                activeTab === tab ? "font-bold border-b-2 border-primary" : ""
+              }`}
               onClick={() => handleTabClick(tab)}
             >
               {tab}
@@ -124,9 +127,17 @@ const Community = () => {
         </ul>
 
         <div className="relative -top-2/4 translate-y-2/4">
-          <section>
-            {tabContent[activeTab] || <div>No content available</div>}
-          </section>
+          <AnimatePresence>
+            <motion.section
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {tabContent[activeTab] || <div>No content available</div>}
+            </motion.section>
+          </AnimatePresence>
         </div>
       </div>
     </div>
