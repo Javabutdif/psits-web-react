@@ -31,7 +31,19 @@ function Product({ handleCloseAddProduct }) {
     "Teal",
     "Maroon",
   ];
-  const size = ["18", "XS", "S", "M", "L", "XL", "2XL", "3XL"];
+  const size = [
+    "18",
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL",
+    "5XL",
+    "6XL",
+  ];
 
   const [formData, setFormData] = useState({
     name: "",
@@ -55,6 +67,9 @@ function Product({ handleCloseAddProduct }) {
     stocks: "",
     start_date: "",
     end_date: "",
+    category: "",
+    type: "",
+    control: "",
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -112,39 +127,51 @@ function Product({ handleCloseAddProduct }) {
 
     if (formData.name.length === 0) {
       errors.name = "Product Name is required.";
-      showToast("error", "Product Name is required.");
+      showToast("error", errors.name);
+    }
+    if (formData.control.length === 0) {
+      errors.control = "Product Control is required.";
+      showToast("error", errors.control);
+    }
+    if (formData.type.length === 0) {
+      errors.type = "Product Type is required.";
+      showToast("error", errors.type);
     }
 
     if (!formData.price) {
       errors.price = "Price is required.";
-      showToast("error", "Price is required.");
+      showToast("error", errors.price);
     } else if (isNaN(formData.price) || parseFloat(formData.price) <= 0) {
       errors.price = "Price must be a positive number.";
-      showToast("error", "Price must be a positive number.");
+      showToast("error", errors.price);
     }
 
     if (formData.stocks.length === 0) {
       errors.stocks = "Stocks must be filled.";
-      showToast("error", "Stocks must be filled.");
+      showToast("error", errors.stocks);
     } else if (isNaN(formData.stocks) || parseInt(formData.stocks) <= 0) {
       errors.stocks = "Stocks must be a non-negative integer.";
-      showToast("error", "Stocks must be a non-negative or zero integer.");
+      showToast("error", errors.stocks);
+    }
+    if (formData.category === "") {
+      errors.category = "Category must filled up";
+      showToast("error", errors.category);
     }
 
     if (!formData.start_date) {
       errors.start_date = "Start date is required.";
-      showToast("error", "Start date is required.");
+      showToast("error", errors.start_date);
     }
 
     if (!formData.end_date) {
       errors.end_date = "End date is required.";
-      showToast("error", "End date is required.");
+      showToast("error", errors.end_date);
     } else if (
       formData.start_date &&
       new Date(formData.end_date) < new Date(formData.start_date)
     ) {
       errors.end_date = "End date must be after the start date.";
-      showToast("error", "End date must be after the start date.");
+      showToast("error", errors.end_date);
     }
 
     setErrors(errors);
@@ -153,9 +180,10 @@ function Product({ handleCloseAddProduct }) {
 
   const handlePreview = (e) => {
     e.preventDefault();
-
-    setPreviewData(formData);
-    setShowPreview(true);
+    if (validate()) {
+      setPreviewData(formData);
+      setShowPreview(true);
+    }
   };
 
   const handleConfirm = async () => {
@@ -264,68 +292,113 @@ function Product({ handleCloseAddProduct }) {
     const imagesToShow = images.slice(0, 3);
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-        <div className="relative max-w-md w-full mx-4 md:mx-6 p-4 bg-white rounded-lg shadow-lg">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <i className="fas fa-times text-lg"></i>
-          </button>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Preview</h2>
-          {imagesToShow.length > 0 && (
-            <div className="flex gap-2 mb-4 overflow-x-auto">
-              {imagesToShow.map((image, index) => (
-                <img
-                  key={index}
-                  src={URL.createObjectURL(image)}
-                  alt={`Product Preview ${index + 1}`}
-                  className="w-20 h-20 object-cover rounded-md shadow-sm border border-gray-200"
-                />
-              ))}
-              {images.length > 3 && (
-                <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-md shadow-sm border border-gray-200">
-                  <p className="text-xs text-gray-500">
-                    +{images.length - 3} more
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-          <div className="text-gray-700 space-y-1 mb-4">
-            {Object.entries({
-              "Product Name": data.name,
-              Price: `₱${data.price}`,
-              Stocks: data.stocks,
-              Batch: data.batch,
-              Category: data.category,
-              Type: data.type,
-              Description: data.description,
-              "Purchase Control": data.control,
-              "Start Date": data.start_date,
-              "End Date": data.end_date,
-              Sizes: data.selectedSizes.join(", "),
-              Variations: data.selectedVariations.join(", "),
-            }).map(([label, value]) => (
-              <p key={label} className="text-sm">
-                <strong>{label}:</strong> {value}
-              </p>
-            ))}
-          </div>
-          <div className="flex justify-end space-x-3">
+      <div>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+          <div className="relative max-w-md w-full mx-4 md:mx-6 p-4 bg-white rounded-lg shadow-lg">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-200 text-gray-600 rounded-full text-sm transition-colors hover:bg-gray-300"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
             >
-              Cancel
+              <i className="fas fa-times text-lg"></i>
             </button>
-            <button
-              onClick={onConfirm}
-              disabled={isLoading}
-              className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm transition-colors hover:bg-blue-600"
-            >
-              Confirm
-            </button>
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">
+              Preview
+            </h2>
+            {imagesToShow.length > 0 && (
+              <div className="flex gap-2 mb-4 overflow-x-auto">
+                {imagesToShow.map((image, index) => (
+                  <img
+                    key={index}
+                    src={URL.createObjectURL(image)}
+                    alt={`Product Preview ${index + 1}`}
+                    className="w-20 h-20 object-cover rounded-md shadow-sm border border-gray-200"
+                  />
+                ))}
+                {images.length > 3 && (
+                  <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-md shadow-sm border border-gray-200">
+                    <p className="text-xs text-gray-500">
+                      +{images.length - 3} more
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="text-gray-700 space-y-1 mb-4">
+              {Object.entries({
+                "Product Name": data.name,
+                Price: `₱${data.price}`,
+                Stocks: data.stocks,
+                Batch: data.batch,
+                Category: data.category,
+                Type: data.type,
+                Description: data.description,
+                "Purchase Control": data.control,
+                "Start Date": data.start_date,
+                "End Date": data.end_date,
+                Sizes: data.selectedSizes.join(", "),
+                Variations: data.selectedVariations.join(", "),
+              }).map(([label, value]) => (
+                <p key={label} className="text-sm">
+                  <strong>{label}:</strong> {value}
+                </p>
+              ))}
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-[#4398AC] text-white rounded-full text-sm transition-colors hover:bg-opacity-80"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-[#002E48] text-white rounded-full hover:bg-opacity-80 relative flex items-center justify-center"
+                onClick={onConfirm}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="relative flex items-center">
+                    <div className="dot-container">
+                      <div className="dot"></div>
+                      <div className="dot"></div>
+                      <div className="dot"></div>
+                    </div>
+                    <style jsx>{`
+                      .dot-container {
+                        display: flex;
+                        justify-content: space-between;
+                        width: 50px;
+                        height: 20px;
+                      }
+                      .dot {
+                        width: 8px;
+                        height: 8px;
+                        background-color: white;
+                        border-radius: 50%;
+                        animation: bounce 1s infinite;
+                      }
+                      .dot:nth-child(2) {
+                        animation-delay: 0.2s;
+                      }
+                      .dot:nth-child(3) {
+                        animation-delay: 0.4s;
+                      }
+                      @keyframes bounce {
+                        0%,
+                        100% {
+                          transform: translateY(10px);
+                        }
+                        50% {
+                          transform: translateY(-8px);
+                        }
+                      }
+                    `}</style>
+                  </div>
+                ) : (
+                  "Approve"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -333,181 +406,183 @@ function Product({ handleCloseAddProduct }) {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="relative h-[90%] max-w-md w-full mx-4 md:mx-8 p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
-        <button
-          onClick={handleCloseAddProduct}
-          className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <i className="fas fa-times"></i>
-        </button>
-        <h2 className="text-2xl font-semibold mb-4">Add Product</h2>
-        <form onSubmit={handlePreview} className="space-y-6">
-          <ImageInput
-            label={"Product Image"}
-            handleImageChange={handleImageChange}
-            multiple={true}
-            previews={imagePreviews}
-            onRemoveImage={handleRemoveImage}
-          />
-          <FormInput
-            label="Product Name"
-            name="name"
-            type="text"
-            value={formData.name}
-            onChange={handleChange}
-            labelStyle="text-sm"
-            inputStyle="text-sm"
-          />
-          <div className="flex flex-col md:flex-row gap-4">
+    <div>
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="relative h-[90%] max-w-md w-full mx-4 md:mx-8 p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
+          <button
+            onClick={handleCloseAddProduct}
+            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <i className="fas fa-times"></i>
+          </button>
+          <h2 className="text-2xl font-semibold mb-4">Add Product</h2>
+          <form onSubmit={handlePreview} className="space-y-6">
+            <ImageInput
+              label={"Product Image"}
+              handleImageChange={handleImageChange}
+              multiple={true}
+              previews={imagePreviews}
+              onRemoveImage={handleRemoveImage}
+            />
             <FormInput
-              label="Price"
-              name="price"
-              type="number"
-              value={formData.price}
+              label="Product Name"
+              name="name"
+              type="text"
+              value={formData.name}
               onChange={handleChange}
               labelStyle="text-sm"
               inputStyle="text-sm"
             />
-            <FormInput
-              label="Stocks"
-              name="stocks"
-              type="number"
-              value={formData.stocks}
-              onChange={handleChange}
-              labelStyle="text-sm"
-              inputStyle="text-sm"
-            />
-            <FormInput
-              label="Batch"
-              name="batch"
-              type="number"
-              value={formData.batch}
-              onChange={handleChange}
-              labelStyle="text-sm"
-              inputStyle="text-sm"
-            />
-          </div>
-          <FormTextArea
-            name="description"
-            label="Description"
-            value={formData.description}
-            onChange={handleChange}
-            labelStyle="text-sm"
-            inputStyle="text-sm"
-          />
-          <div className="flex flex-col md:flex-row gap-4">
-            <FormSelect
-              name="category"
-              label="Category"
-              options={categoryOptions}
-              value={formData.category}
-              onChange={handleChange}
-              labelStyle="text-sm"
-              optionStyle="text-sm"
-              styles="flex-1"
-            />
-            <FormSelect
-              name="type"
-              label="Type"
-              options={getTypeOptions(formData.category)}
-              value={formData.type}
-              onChange={handleChange}
-              styles="flex-1"
-              labelStyle="text-sm"
-              optionStyle="text-sm"
-            />
-          </div>
-          <FormSelect
-            name="control"
-            label="Purchase Control"
-            options={purchaseControlOptions}
-            value={formData.control}
-            onChange={handleChange}
-            labelStyle="text-sm"
-            optionStyle="text-sm"
-          />
-          {isShown && (
-            <div className="flex flex-col gap-4 text-sm">
-              <div>
-                <p className="font-semibold">Sizes:</p>
-                <div className="flex gap-2 flex-wrap">
-                  {size.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => handleSizeClick(s)}
-                      className={`p-2 border rounded ${
-                        formData.selectedSizes.includes(s)
-                          ? "bg-blue-500 text-white"
-                          : "bg-white text-gray-800"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="font-semibold">Variations:</p>
-                <div className="flex gap-2 flex-wrap text-sm">
-                  {variation.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => handleVariationClick(v)}
-                      className={`p-2 border rounded ${
-                        formData.selectedVariations.includes(v)
-                          ? "bg-blue-500 text-white"
-                          : "bg-white text-gray-800"
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <FormInput
+                label="Price"
+                name="price"
+                type="number"
+                value={formData.price}
+                onChange={handleChange}
+                labelStyle="text-sm"
+                inputStyle="text-sm"
+              />
+              <FormInput
+                label="Stocks"
+                name="stocks"
+                type="number"
+                value={formData.stocks}
+                onChange={handleChange}
+                labelStyle="text-sm"
+                inputStyle="text-sm"
+              />
+              <FormInput
+                label="Batch"
+                name="batch"
+                type="number"
+                value={formData.batch}
+                onChange={handleChange}
+                labelStyle="text-sm"
+                inputStyle="text-sm"
+              />
             </div>
+            <FormTextArea
+              name="description"
+              label="Description"
+              value={formData.description}
+              onChange={handleChange}
+              labelStyle="text-sm"
+              inputStyle="text-sm"
+            />
+            <div className="flex flex-col md:flex-row gap-4">
+              <FormSelect
+                name="category"
+                label="Category"
+                options={categoryOptions}
+                value={formData.category}
+                onChange={handleChange}
+                labelStyle="text-sm"
+                optionStyle="text-sm"
+                styles="flex-1"
+              />
+              <FormSelect
+                name="type"
+                label="Type"
+                options={getTypeOptions(formData.category)}
+                value={formData.type}
+                onChange={handleChange}
+                styles="flex-1"
+                labelStyle="text-sm"
+                optionStyle="text-sm"
+              />
+            </div>
+            <FormSelect
+              name="control"
+              label="Purchase Control"
+              options={purchaseControlOptions}
+              value={formData.control}
+              onChange={handleChange}
+              labelStyle="text-sm"
+              optionStyle="text-sm"
+            />
+            {isShown && (
+              <div className="flex flex-col gap-4 text-sm">
+                <div>
+                  <p className="font-semibold">Sizes:</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {size.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => handleSizeClick(s)}
+                        className={`p-2 border rounded ${
+                          formData.selectedSizes.includes(s)
+                            ? "bg-blue-500 text-white"
+                            : "bg-white text-gray-800"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="font-semibold">Variations:</p>
+                  <div className="flex gap-2 flex-wrap text-sm">
+                    {variation.map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => handleVariationClick(v)}
+                        className={`p-2 border rounded ${
+                          formData.selectedVariations.includes(v)
+                            ? "bg-blue-500 text-white"
+                            : "bg-white text-gray-800"
+                        }`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="flex flex-col md:flex-row gap-4">
+              <FormInput
+                label="Start Date"
+                name="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={handleChange}
+                labelStyle="text-sm"
+                inputStyle="text-sm"
+                error={errors.start_date}
+                max={today}
+              />
+              <FormInput
+                label="End Date"
+                name="end_date"
+                type="date"
+                value={formData.end_date}
+                onChange={handleChange}
+                labelStyle="text-sm"
+                inputStyle="text-sm"
+                error={errors.end_date}
+                max={today}
+              />
+            </div>
+            <FormButton
+              type="button"
+              text="Preview"
+              onClick={handlePreview}
+              styles="w-full bg-[#002E48] p-2 rounded text-white"
+            />
+          </form>
+          {showPreview && (
+            <PreviewModal
+              data={previewData}
+              images={images}
+              onClose={() => setShowPreview(false)}
+              onConfirm={handleConfirm}
+            />
           )}
-          <div className="flex flex-col md:flex-row gap-4">
-            <FormInput
-              label="Start Date"
-              name="start_date"
-              type="date"
-              value={formData.start_date}
-              onChange={handleChange}
-              labelStyle="text-sm"
-              inputStyle="text-sm"
-              error={errors.start_date}
-              max={today}
-            />
-            <FormInput
-              label="End Date"
-              name="end_date"
-              type="date"
-              value={formData.end_date}
-              onChange={handleChange}
-              labelStyle="text-sm"
-              inputStyle="text-sm"
-              error={errors.end_date}
-              max={today}
-            />
-          </div>
-          <FormButton
-            type="button"
-            text="Preview"
-            onClick={handlePreview}
-            styles="w-full bg-blue-500 p-2 rounded text-white"
-          />
-        </form>
-        {showPreview && (
-          <PreviewModal
-            data={previewData}
-            images={images}
-            onClose={() => setShowPreview(false)}
-            onConfirm={handleConfirm}
-          />
-        )}
+        </div>
       </div>
     </div>
   );

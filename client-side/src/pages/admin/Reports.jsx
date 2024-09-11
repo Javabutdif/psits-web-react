@@ -315,7 +315,7 @@ const Reports = () => {
 
   const { membershipCount, renewalCount } = getMembershipCounts(membershipData);
 
-  const membershipRevenue = membershipCount * 100;
+  const membershipRevenue = membershipCount * 50;
   const renewalRevenue = renewalCount * 50;
 
   const formattedMerchandiseData = filteredMerchandiseData.map((row) => ({

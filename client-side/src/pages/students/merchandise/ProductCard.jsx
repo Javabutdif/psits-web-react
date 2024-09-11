@@ -42,6 +42,7 @@ const ProductCard = React.memo(({ product }) => {
         <h2 className="text-sm font-semibold text-gray-800 truncate mb-2">
           {product.name}
         </h2>
+
         <div className="flex justify-between items-center mb-3">
           <span className="text-sm font-medium text-gray-900">
             ₱{product.price.toFixed(2)}
@@ -50,7 +51,7 @@ const ProductCard = React.memo(({ product }) => {
         </div>
         {currentDate < start_date ? (
           <motion.button className="w-full bg-gray-400 text-white text-sm font-medium py-2 px-4 rounded-md">
-            Coming Soon
+            Coming Soon..
           </motion.button>
         ) : (
           <motion.button

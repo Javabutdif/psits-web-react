@@ -7,9 +7,8 @@ import {
   deleteMerchandise,
   publishMerchandise,
 } from "../../api/admin";
-import TableComponent from "../../components/Custom/TableComponent"; // Adjust the import path as needed
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import TableComponent from "../../components/Custom/TableComponent";
+import { InfinitySpin } from "react-loader-spinner";
 import Product from "./Product";
 import FormButton from "../../components/forms/FormButton";
 import EditProduct from "./EditProduct";
@@ -111,8 +110,10 @@ function Merchandise() {
   };
 
   const handleCloseAddProduct = () => {
+    setLoading(true);
     fetchData();
     setIsAddProductModal(false);
+    setLoading(false);
   };
 
   const handleOpenEditModal = (row) => {
@@ -363,8 +364,13 @@ function Merchandise() {
   return (
     <div className="py-4 relative">
       {loading ? (
-        <div className="flex items-center justify-center">
-          <div className="w-16 h-16 border-4 border-t-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+        <div className="flex justify-center items-center w-full h-full">
+          <InfinitySpin
+            visible={true}
+            width={200}
+            color="#0d6efd"
+            ariaLabel="infinity-spin-loading"
+          />
         </div>
       ) : (
         <>

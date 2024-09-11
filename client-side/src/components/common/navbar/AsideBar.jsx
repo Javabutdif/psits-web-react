@@ -10,15 +10,16 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const sidebarRef = useRef(null); // Ref to the sidebar
-  const currentPath = location.pathname.split('/')[2];
+  const currentPath = location.pathname.split("/")[2];
 
-  const getLogoLink = location.pathname.split('/')[1] === "admin" ? "/admin/" : "/student/";
+  const getLogoLink =
+    location.pathname.split("/")[1] === "admin" ? "/admin/" : "/student/";
 
   const handleLogout = () => {
     removeAuthentication();
     removeStudentData();
     showToast("success", "Signed out successfully");
-    navigate('/login');
+    navigate("/login");
   };
 
   // Close sidebar on outside click
@@ -66,16 +67,22 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
             w-[15rem]
             fixed z-50 top-0 left-0 bg-[#074873] text-neutral-light
             h-full flex flex-col gap-4 p-4 overflow-hidden
-            ${window.innerWidth < 1024 ? 'block' : 'hidden'} lg:block
+            ${window.innerWidth < 1024 ? "block" : "hidden"} lg:block
           `}
           aria-label="Sidebar Navigation"
         >
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center pb-3">
             <Link to={`${getLogoLink}dashboard`}>
-              <img src={logo} alt="PSITS Logo" className="w-10 h-10 md:w-12 md:h-12" />
+              <img
+                src={logo}
+                alt="PSITS Logo"
+                className="w-10 h-10 md:w-12 md:h-12"
+              />
             </Link>
             <button
-              className={`text-white ${window.innerWidth < 1024 ? 'block' : 'hidden'}`}
+              className={`text-white ${
+                window.innerWidth < 1024 ? "block" : "hidden"
+              }`}
               onClick={() => setIsSidebarOpen(false)}
             >
               <i className="fas fa-times"></i>
@@ -89,11 +96,18 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
                     to={`${getLogoLink}${item.path}`}
                     onClick={() => setIsSidebarOpen(false)} // Close sidebar on link click
                     className={`flex items-center py-3 px-4 rounded-lg transition-colors duration-300 ${
-                      currentPath === item.path ? 'bg-neutral-light text-dark' : 'hover:bg-neutral-medium hover:text-dark'
+                      currentPath === item.path
+                        ? "bg-neutral-light text-dark"
+                        : "hover:bg-neutral-medium hover:text-dark"
                     }`}
-                    aria-current={currentPath === item.path ? "page" : undefined}
+                    aria-current={
+                      currentPath === item.path ? "page" : undefined
+                    }
                   >
-                    <i className={`fa ${item.icon} text-xl`} aria-hidden="true" />
+                    <i
+                      className={`fa ${item.icon} text-xl`}
+                      aria-hidden="true"
+                    />
                     <span className="ml-4 text-sm font-medium whitespace-nowrap">
                       {item.text}
                     </span>
