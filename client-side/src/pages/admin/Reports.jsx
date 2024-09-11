@@ -614,7 +614,7 @@ const Reports = () => {
                 />
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row justify-between mt-4">
+            <div className="flex flex-col sm:flex-row justify-between mt-4 gap-2">
               <button
                 className="bg-[#4398AC] text-white px-4 py-2 rounded mb-2 sm:mb-0"
                 onClick={() => setIsFilterOpen(false)}
