@@ -56,66 +56,77 @@ function Register() {
       [name]: "",
     }));
   };
-
   const validateInputs = () => {
     const newErrors = {};
 
-    // Validate ID Number
-    if (!formData.id_number) {
+    
+    const trimmedFormData = {
+      id_number: formData.id_number?.trim(),
+      first_name: formData.first_name?.trim(),
+      last_name: formData.last_name?.trim(),
+      email: formData.email?.trim(),
+      course: formData.course?.trim(),
+      year: formData.year?.trim(),
+      password: formData.password?.trim(),
+      confirm_password: formData.confirm_password?.trim(),
+    };
+
+  
+    if (!trimmedFormData.id_number) {
       newErrors.id_number = "ID Number is required.";
-    } else if (!/^\d+$/.test(formData.id_number)) {
+    } else if (!/^\d+$/.test(trimmedFormData.id_number)) {
       newErrors.id_number = "Invalid ID Number.";
-    } else if (formData.id_number.length !== 8) {
-      newErrors.id_number = "ID Number must only contains 8 digits";
+    } else if (trimmedFormData.id_number.length !== 8) {
+      newErrors.id_number = "ID Number must only contain 8 digits.";
     }
 
-    // Validate Names
-    if (!formData.first_name) {
+ 
+    if (!trimmedFormData.first_name) {
       newErrors.first_name = "First Name is required.";
-    } else if (!/^[A-Za-z]+( [A-Za-z]+)*$/.test(formData.first_name)) {
+    } else if (!/^[A-Za-z]+( [A-Za-z]+)*$/.test(trimmedFormData.first_name)) {
       newErrors.first_name = "Invalid First Name.";
     }
 
-    if (!formData.last_name) {
+    if (!trimmedFormData.last_name) {
       newErrors.last_name = "Last Name is required.";
-    } else if (!/^[A-Za-z]+$/.test(formData.last_name)) {
+    } else if (!/^[A-Za-z]+$/.test(trimmedFormData.last_name)) {
       newErrors.last_name = "Invalid Last Name.";
     }
 
-    // Validate Email
-    if (!formData.email) {
+
+    if (!trimmedFormData.email) {
       newErrors.email = "Email is required.";
     } else if (
-      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(trimmedFormData.email)
     ) {
       newErrors.email = "Invalid Email.";
     }
 
-    // Validate Course
-    if (!formData.course) {
+
+    if (!trimmedFormData.course) {
       newErrors.course = "Course is required.";
     }
 
-    // Validate Year
-    if (!formData.year) {
+ 
+    if (!trimmedFormData.year) {
       newErrors.year = "Year is required.";
     }
 
-    // Validate Password
-    if (!formData.password) {
+  
+    if (!trimmedFormData.password) {
       newErrors.password = "Password is required.";
-    } else if (formData.password.length < 8) {
+    } else if (trimmedFormData.password.length < 8) {
       newErrors.password = "Password too short.";
-    } else if (!/[a-z]/.test(formData.password)) {
+    } else if (!/[a-z]/.test(trimmedFormData.password)) {
       newErrors.password = "Include a lowercase letter.";
-    } else if (!/[A-Z]/.test(formData.password)) {
+    } else if (!/[A-Z]/.test(trimmedFormData.password)) {
       newErrors.password = "Include an uppercase letter.";
     }
 
-    // Validate Confirm Password
-    if (!formData.confirm_password) {
+
+    if (!trimmedFormData.confirm_password) {
       newErrors.confirm_password = "Confirm Password is required.";
-    } else if (formData.password !== formData.confirm_password) {
+    } else if (trimmedFormData.password !== trimmedFormData.confirm_password) {
       newErrors.confirm_password = "Passwords do not match.";
     }
 
