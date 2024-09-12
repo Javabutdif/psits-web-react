@@ -71,11 +71,10 @@ const merchSchema = new Schema(
       required: true,
     },
     batch: {
-      type: Number,
+      type: String,
     },
     description: {
       type: String,
-     
     },
     selectedVariations: {
       type: Array,
