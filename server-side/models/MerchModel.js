@@ -21,7 +21,7 @@ const orderDetailSchema = new Schema({
     type: String,
   },
   batch: {
-    type: Number,
+    type: String,
   },
   size: {
     type: Array,
