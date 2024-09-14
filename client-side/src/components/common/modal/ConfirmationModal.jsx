@@ -10,43 +10,61 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
 
   const confirmButtonColor =
     confirmType === ConfirmActionType.DELETION ||
-    ConfirmActionType.RENEWAL ||
-    ConfirmationType.ORDER
-      ? "bg-red-500 hover:bg-red-600"
+    confirmType === ConfirmActionType.RENEWAL ||
+    confirmType === ConfirmActionType.ORDER ||
+    confirmType === ConfirmActionType.CANCEL
+      ? "bg-[#991b1b] hover:bg-[#b92121]"
       : "bg-green-500 hover:bg-green-600";
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-auto">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h5 className="text-lg font-semibold">Confirm {confirmType}</h5>
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      {/* Semi-transparent background */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"
+        onClick={onCancel}
+      ></div>
+
+      {/* Modal Container */}
+      <div className="bg-white rounded-xl shadow-xl min-w-96 md:min-w-[450px] w-fit z-10 overflow-hidden transform transition-all duration-300 scale-95">
+        {/* Header */}
+        <div
+          className={`flex justify-between items-center p-5 ${confirmButtonColor} text-white rounded-t-xl shadow-md`}
+        >
+          <h5 className="text-xl font-primary font-bold">
+            Confirm {capitalizeFirstLetter(confirmType)}{" "}
+            {confirmType === ConfirmActionType.ORDER && "Cancellation"}
+          </h5>
           <button
             type="button"
-            className="text-gray-400 hover:text-gray-600 focus:outline-none"
+            className="text-3xl leading-none hover:text-gray-200 focus:outline-none"
             aria-label="Close"
             onClick={onCancel}
           >
             &times;
           </button>
         </div>
-        <div className="p-4">
+
+        {/* Body */}
+        <div className="p-6 space-y-4 font-secondary text-lg bg-gray-50 text-gray-800">
           <p>
             Are you sure you want to {confirmTypeWord}
             {confirmTypeWord === "cancel" ? " the membership request of " : " "}
             {confirmTypeWord === "cancel this order" ? "" : "this student"}?
           </p>
         </div>
-        <div className="p-4 border-t flex justify-end space-x-2">
+
+        {/* Footer */}
+        <div className="flex items-center justify-end p-6 bg-white border-t border-gray-200 rounded-b-xl">
           <button
             type="button"
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            className="px-5 py-2 text-gray-500 hover:text-gray-700 transition-all focus:outline-none rounded-md border border-gray-300 hover:border-gray-400"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button
             type="button"
-            className={`px-4 py-2 text-white rounded ${confirmButtonColor}`}
+            className={`ml-3 px-6 py-2 text-white rounded ${confirmButtonColor}`}
             onClick={onConfirm}
           >
             {confirmTypeWord !== "cancel"
