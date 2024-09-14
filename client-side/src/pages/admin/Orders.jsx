@@ -53,17 +53,24 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
+  console.log(orders)
+
   useEffect(() => {
-    const filtered = orders.filter(
-      (order) =>
-        order.order_status === selectedTab &&
-        (order.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.id_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.rfid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.reference_code.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const filtered = orders.filter((order) => {
+      const matchesStatus = order.order_status === selectedTab;
+      const searchTermLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        order.student_name.toLowerCase().includes(searchTermLower) ||
+        order._id.toLowerCase().includes(searchTermLower) ||
+        order.id_number.toLowerCase().includes(searchTermLower) ||
+        order.rfid.toLowerCase().includes(searchTermLower) ||
+        (order.reference_code && order.reference_code.toString().includes(searchTerm));
+  
+      return matchesStatus && (searchTerm === '' || matchesSearch);
+    });
+  
     setFilteredOrders(filtered);
+    setCurrentPage(1); // Reset to first page when filter changes
   }, [orders, selectedTab, searchTerm]);
 
   const handlePrintData = (row) => {
