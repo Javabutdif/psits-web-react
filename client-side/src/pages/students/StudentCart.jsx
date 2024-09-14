@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { showToast } from "../../utils/alertHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import { viewCart, deleteItem } from "../../api/students";
@@ -47,27 +47,49 @@ const Modal = ({ isOpen, onClose, onConfirm }) => {
 };
 
 const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
+  const modalRef = useRef(null);
+
+  const handleOverlayClick = (e) => {
+    if (modalRef.current && !modalRef.current.contains(e.target)) {
+      onClose();
+    }
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50"
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={handleOverlayClick}
         >
           <motion.div
-            className="bg-white p-6 rounded-lg shadow-lg w-full mx-4 max-w-lg"
+            ref={modalRef}
+            className="bg-white rounded-lg shadow-lg w-full mx-4 max-w-lg"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.8 }}
           >
-            <h2 className="text-xl font-semibold mb-4">Review Your Items</h2>
-            <div className="space-y-4">
+            {/* Updated Header */}
+            <div className="bg-navy text-white p-4 rounded-t-lg">
+              <h2 className="text-xl font-semibold">Review Your Items</h2>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 space-y-4">
+              <div className="grid grid-cols-3 gap-4 font-semibold">
+                <span className="flex items-center justify-start">Product</span>
+                <span className="flex items-center justify-center">
+                  Quantity
+                </span>
+                <span className="flex items-center justify-end">Price</span>
+              </div>
               {items.map((item) => (
                 <div
                   key={item._id}
-                  className="flex items-center justify-between"
+                  className="grid grid-cols-3 gap-4 items-center"
                 >
                   <div className="flex items-center space-x-2">
                     <img
@@ -82,27 +104,30 @@ const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
                       <p className="text-xs text-gray-500">{`₱${item.price}`}</p>
                     </div>
                   </div>
-                  <p className="text-sm">{item.quantity}</p>
-                  <p className="text-sm">{`₱${(
+                  <p className="text-sm text-center">{item.quantity}</p>
+                  <p className="text-sm text-right">{`₱${(
                     item.price * item.quantity
                   ).toFixed(2)}`}</p>
                 </div>
               ))}
-              <div className="flex justify-between font-semibold mt-4">
+              <div className="grid grid-cols-3 gap-4 font-semibold mt-4">
                 <span>Total Price:</span>
-                <span>₱{total.toFixed(2)}</span>
+                <span></span>
+                <span className="text-right">₱{total.toFixed(2)}</span>
               </div>
             </div>
-            <div className="mt-4 flex justify-end space-x-4">
+
+            {/* Updated Footer */}
+            <div className="p-4 flex justify-end space-x-4 bg-gray-100 rounded-b-lg border-t">
               <button
                 onClick={onClose}
-                className="bg-[#4398AC] text-white py-2 px-4 rounded-lg"
+                className="px-5 py-2 text-gray-500 hover:text-gray-700 transition-all focus:outline-none rounded-md border border-gray-300 hover:border-gray-400"
               >
                 Cancel
               </button>
               <button
                 onClick={onConfirm}
-                className="bg-[#002E48] text-white py-2 px-4 rounded-lg"
+                className="ml-3 px-6 py-2 bg-gradient-to-r bg-navy text-white rounded-md hover:shadow-lg hover:from-primary hover:to-navy focus:outline-none transition-all duration-300 ease-in-out"
               >
                 Confirm Order
               </button>
