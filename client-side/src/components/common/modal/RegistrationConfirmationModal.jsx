@@ -14,7 +14,7 @@ function RegistrationConfirmationModal({ formData, onSubmit, onCancel }) {
       ></div>
 
       {/* Modal Container */}
-      <div className="bg-white rounded-xl shadow-xl min-w-96 w-fit z-10 overflow-hidden transform transition-all duration-300 scale-95">
+      <div className="bg-white rounded-xl shadow-xl min-w-96 md:min-w-[450px] w-fit z-10 overflow-hidden transform transition-all duration-300 scale-95">
         {/* Header */}
         <div className="flex justify-between items-center p-6 bg-navy text-white rounded-t-xl shadow-md">
           <h5 className="text-xl font-primary font-bold">Confirm Details</h5>
