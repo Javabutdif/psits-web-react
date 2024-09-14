@@ -47,9 +47,14 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
         {/* Body */}
         <div className="p-6 space-y-4 font-secondary text-lg bg-gray-50 text-gray-800">
           <p>
-            Are you sure you want to {confirmTypeWord}
+            Are you sure you want to {confirmTypeWord === "renewal" && "do "}
+            {confirmTypeWord}
             {confirmTypeWord === "cancel" ? " the membership request of " : " "}
-            {confirmTypeWord === "cancel this order" ? "" : "this student"}?
+            {confirmTypeWord === "cancel this order" ||
+            confirmTypeWord === "renewal"
+              ? ""
+              : " this student"}
+            ?
           </p>
         </div>
 
