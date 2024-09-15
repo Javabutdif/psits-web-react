@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { InfinitySpin } from "react-loader-spinner";
 import backendConnection from "../../api/backendApi";
 import { showToast } from "../../utils/alertHelper";
+import { getPosition } from "../../authentication/Authentication";
 
 function AdminRegister() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,12 @@ function AdminRegister() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (getPosition() !== "Developer") {
+      navigate("/admin/dashboard");
+    }
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;

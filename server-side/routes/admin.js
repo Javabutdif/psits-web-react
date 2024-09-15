@@ -5,7 +5,7 @@ const MembershipHistory = require("../models/MembershipHistory");
 const Merch = require("../models/MerchModel");
 const Student = require("../models/StudentModel");
 const Order = require("../models/OrdersModel");
-const { format } = require("date-fns");
+const { format, startOfDay, endOfDay, parse } = require("date-fns");
 const nodemailer = require("nodemailer");
 const ejs = require("ejs");
 const path = require("path");
@@ -237,5 +237,36 @@ router.get("/placed-orders", async (req, res) => {
   const count = await Order.countDocuments({ order_status: "Pending" });
   return res.json({ message: count });
 });
+router.get("/get-bsit", async (req, res) => {
+  const count = await Student.countDocuments({ course: "BSIT" });
+  return res.json({ message: count });
+});
+router.get("/get-bscs", async (req, res) => {
+  const count = await Student.countDocuments({ course: "BSCS" });
+  return res.json({ message: count });
+});
+router.get("/get-act", async (req, res) => {
+  const count = await Student.countDocuments({ course: "ACT" });
+  return res.json({ message: count });
+});
+router.get("/get-year1", async (req, res) => {
+  const count = await Student.countDocuments({ year: "1" });
+  return res.json({ message: count });
+});
+router.get("/get-year2", async (req, res) => {
+  const count = await Student.countDocuments({ year: "2" });
+  return res.json({ message: count });
+});
+router.get("/get-year3", async (req, res) => {
+  const count = await Student.countDocuments({ year: "3" });
+  return res.json({ message: count });
+});
+router.get("/get-year4", async (req, res) => {
+  const count = await Student.countDocuments({ year: "4" });
+  return res.json({ message: count });
+});
+
+
+
 
 module.exports = router;
