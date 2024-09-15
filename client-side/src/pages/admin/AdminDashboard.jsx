@@ -1,84 +1,135 @@
 import React, { useEffect, useState } from "react";
-import { allMembers, merchCreated, placedOrders } from "../../api/admin";
+import {
+  membership,
+  allMembers,
+  merchCreated,
+  placedOrders,
+} from "../../api/admin";
+import {
+  faBoxOpen,
+  faUserGraduate,
+  faShoppingCart,
+} from "@fortawesome/free-solid-svg-icons";
+import DashboardCard from "./dashboard/DashboardCard.";
+import DoughnutChart from "./dashboard/DoughnutChart";
+import BarGraph from "./dashboard/BarGraph";
+import PieChart from "./dashboard/PieChart";
 
 const AdminDashboard = () => {
-  const [merchandiseCount, setMerchandiseCount] = useState(0);
-  const [studentCount, setStudentCount] = useState(0);
-  const [orderCount, setOrderCount] = useState(0);
+  const [counts, setCounts] = useState({
+    merchandise: 0,
+    student: 0,
+    order: 0,
+  });
 
-  const [logs, setLogs] = useState([]);
+  const [data, setData] = useState([]);
+
+  const [finalCounts, setFinalCounts] = useState({
+    merchandise: 0,
+    student: 0,
+    order: 0,
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const animateCount = () => {
+    const increment = Math.ceil(
+      Math.max(
+        finalCounts.student,
+        finalCounts.merchandise,
+        finalCounts.order
+      ) / 100
+    );
+
+    const interval = setInterval(() => {
+      setCounts((prevCounts) => {
+        const newCounts = {
+          student: Math.min(
+            prevCounts.student + increment,
+            finalCounts.student
+          ),
+          merchandise: Math.min(
+            prevCounts.merchandise + increment,
+            finalCounts.merchandise
+          ),
+          order: Math.min(prevCounts.order + increment, finalCounts.order),
+        };
+
+        if (
+          newCounts.student === finalCounts.student &&
+          newCounts.merchandise === finalCounts.merchandise &&
+          newCounts.order === finalCounts.order
+        ) {
+          clearInterval(interval);
+        }
+
+        return newCounts;
+      });
+    }, 20);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const studentRes = await allMembers();
-        const merchCreate = await merchCreated();
-        const placedOrder = await placedOrders();
-
-        setStudentCount(studentRes);
-
-        setMerchandiseCount(merchCreate);
-        setOrderCount(placedOrder);
-
-        setLogs([
-          {
-            date: "2024-09-01",
-            action: "Created",
-            details: "Added new merchandise",
-          },
-          {
-            date: "2024-09-02",
-            action: "Order Placed",
-            details: "Order #1234",
-          },
+        const [studentRes, merchCreate, placedOrder] = await Promise.all([
+          allMembers(),
+          merchCreated(),
+          placedOrders(),
         ]);
+
+        const members = await membership();
+        setData(members);
+
+        setFinalCounts({
+          student: studentRes || 0,
+          merchandise: merchCreate || 0,
+          order: placedOrder || 0,
+        });
+
+        animateCount();
       } catch (error) {
         setError("Error fetching dashboard data");
-        console.error("Error fetching dashboard data", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="p-8">
-        <p className="text-center text-xl">Loading...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <p className="text-center text-xl text-red-500">{error}</p>
-      </div>
-    );
-  }
-
+  }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
   return (
-    <div className="p-4 md:p-8 lg:p-12">
-      {/* Metrics Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 flex flex-col items-center">
-          <i className="fas fa-box text-3xl text-blue-500 mb-2"></i>
-          <h2 className="text-sm font-semibold mb-1">Merchandise Created</h2>
-          <p className="text-lg text-gray-700">{merchandiseCount}</p>
+    <div className="pt-4 md:pt-8">
+      <div className="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-8 text-center lg:flex lg:justify-between">
+        <div className="col-start-1 col-end-3 lg:flex-1 md:col-start-1 md:col-end-3">
+          <DashboardCard
+            icon={faBoxOpen}
+            title="Merchandise Created"
+            count={counts.merchandise}
+          />
         </div>
-        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 flex flex-col items-center">
-          <i className="fas fa-user text-3xl text-green-500 mb-2"></i>
-          <h2 className="text-sm font-semibold mb-1">Students</h2>
-          <p className="text-lg text-gray-700">{studentCount}</p>
+        <div className="col-start-3 col-end-5 lg:flex-1 md:col-start-3 md:col-end-5">
+          <DashboardCard
+            icon={faUserGraduate}
+            title="Students"
+            count={counts.student}
+          />
         </div>
-        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 flex flex-col items-center">
-          <i className="fas fa-shopping-cart text-3xl text-yellow-500 mb-2"></i>
-          <h2 className="text-sm font-semibold mb-1">Placed Orders</h2>
-          <p className="text-lg text-gray-700">{orderCount}</p>
+        <div className="row-start-2 col-span-full md:row-start-1 md:col-start-5 lg:flex-1">
+          <DashboardCard
+            icon={faShoppingCart}
+            title="Orders"
+            count={counts.order}
+          />
+        </div>
+      </div>
+      <div className="flex flex-col xl:flex-row items-center mt-8 pt-2 gap-8">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full max-w-6xl flex items-center justify-center">
+            <BarGraph className="w-full h-96" />
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <DoughnutChart className="w-64 h-64" />
         </div>
       </div>
     </div>

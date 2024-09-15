@@ -4,6 +4,7 @@ import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { CSVLink } from "react-csv";
 import { membershipHistory, merchandiseAdmin } from "../../api/admin";
+import TableComponent from "../../components/Custom/TableComponent";
 
 const Reports = () => {
   const [membershipData, setMembershipData] = useState([]);
@@ -162,12 +163,12 @@ const Reports = () => {
       }
       if (filterDateFrom) {
         filteredData = filteredData.filter(
-          (item) => new Date(item.order_date) >= new Date(filterDateFrom)
+          (item) => new Date(item.transaction_date) >= new Date(filterDateFrom)
         );
       }
       if (filterDateTo) {
         filteredData = filteredData.filter(
-          (item) => new Date(item.order_date) <= new Date(filterDateTo)
+          (item) => new Date(item.transaction_date) <= new Date(filterDateTo)
         );
       }
       if (filterBatch) {
@@ -282,8 +283,8 @@ const Reports = () => {
 
     { name: "Total", selector: (row) => row.total, sortable: true },
     {
-      name: "Order Date",
-      selector: (row) => new Date(row.order_date).toLocaleString(),
+      name: "Transaction Date",
+      selector: (row) => new Date(row.transaction_date).toLocaleString(),
       sortable: true,
     },
   ];
@@ -308,7 +309,7 @@ const Reports = () => {
       return { membershipCount, renewalCount };
     } catch (error) {
       console.error("Error processing membership data:", error);
-      // Handle the error appropriately
+
       return { membershipCount: 0, renewalCount: 0 };
     }
   };
@@ -383,6 +384,7 @@ const Reports = () => {
               </button>
             </CSVLink>
           </div>
+
           <DataTable
             columns={membershipColumns}
             data={filteredMembershipData}
