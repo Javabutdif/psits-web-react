@@ -45,6 +45,7 @@ function ApproveModal({
     admin: adminName,
     cash: "",
     date: new Date(),
+   transaction_date : format(new Date(), "MMMM d, yyyy h:mm:ss a"),
     total: total,
   });
 

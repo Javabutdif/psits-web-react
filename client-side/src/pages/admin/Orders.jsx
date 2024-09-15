@@ -28,6 +28,15 @@ const Orders = () => {
   const printRef = useRef();
   const position = getPosition();
 
+  const conditionalPosition = () => {
+    return (
+      position === "Treasurer" ||
+      position === "Assistant Treasurer" ||
+      position === "Auditor" ||
+      position === "Developer"
+    );
+  };
+
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -53,22 +62,25 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  console.log(orders)
+
+
+  
 
   useEffect(() => {
     const filtered = orders.filter((order) => {
       const matchesStatus = order.order_status === selectedTab;
       const searchTermLower = searchTerm.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         order.student_name.toLowerCase().includes(searchTermLower) ||
         order._id.toLowerCase().includes(searchTermLower) ||
         order.id_number.toLowerCase().includes(searchTermLower) ||
         order.rfid.toLowerCase().includes(searchTermLower) ||
-        (order.reference_code && order.reference_code.toString().includes(searchTerm));
-  
-      return matchesStatus && (searchTerm === '' || matchesSearch);
+        (order.reference_code &&
+          order.reference_code.toString().includes(searchTerm));
+
+      return matchesStatus && (searchTerm === "" || matchesSearch);
     });
-  
+
     setFilteredOrders(filtered);
     setCurrentPage(1); // Reset to first page when filter changes
   }, [orders, selectedTab, searchTerm]);
@@ -214,7 +226,7 @@ const Orders = () => {
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-400">
             {currentOrders.length > 0 ? (
               currentOrders.map((order) => (
                 <React.Fragment
@@ -270,119 +282,86 @@ const Orders = () => {
                       </td>
                     )}
                     <td className="p-2 text-sm">
-                      <button
-                        onClick={() => toggleDropdown(order._id)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        {openDropdown === order._id
-                          ? "Hide Items"
-                          : "Show Items"}
-                      </button>
+                      <ButtonsComponent>
+                        <FormButton
+                          type="button"
+                          onClick={() => toggleDropdown(order._id)}
+                          icon={
+                            <i
+                              className={`fa ${
+                                openDropdown === order._id
+                                  ? "fa fa-chevron-up"
+                                  : "fa fa-chevron-down"
+                              }`}
+                            ></i>
+                          }
+                          styles={`relative flex items-center justify-center  px-2 py-2 rounded text-white bg-[#002E48]`}
+                          textClass="text-white text-sm"
+                          whileHover={{ scale: 1.02, opacity: 0.95 }}
+                          whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        />
+                      </ButtonsComponent>
                     </td>
                     {order.order_status !== "Paid" && (
-                      <td className="p-4 text-sm flex gap-2 mt-8">
+                      <td className="p-2 text-sm flex gap-2 mt-13.5 ">
                         <ButtonsComponent>
                           <FormButton
                             type="button"
                             text={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
+                              !conditionalPosition
                                 ? "Not Authorized"
                                 : "Approve"
                             }
                             onClick={() => {
-                              if (
-                                position === "Treasurer" ||
-                                position === "Assistant Treasurer" ||
-                                position === "Auditor" ||
-                                position === "Developer"
-                              ) {
+                              if (conditionalPosition) {
                                 handleApproveClick(order);
                               }
                             }}
                             icon={
                               <i
                                 className={`fa ${
-                                  position !== "Treasurer" &&
-                                  position !== "Assistant Treasurer" &&
-                                  position !== "Auditor" &&
-                                  position !== "Developer"
-                                    ? "fa-lock"
-                                    : "fa-check"
+                                  !conditionalPosition ? "fa-lock" : "fa-check"
                                 }`}
                               ></i>
                             }
                             styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
+                              !conditionalPosition
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#002E48]"
                             }`}
-                            textClass="text-white text-sm" // Ensure the text size is consistent
+                            textClass="text-white text-sm"
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                            }
+                            disabled={!conditionalPosition}
                           />
                         </ButtonsComponent>
                         <ButtonsComponent>
                           <FormButton
                             type="button"
                             text={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                                ? "Not Authorized"
-                                : "Cancel"
+                              !conditionalPosition ? "Not Authorized" : "Cancel"
                             }
                             onClick={() => {
-                              if (
-                                position === "Treasurer" ||
-                                position === "Assistant Treasurer" ||
-                                position === "Auditor" ||
-                                position === "Developer"
-                              ) {
+                              if (conditionalPosition) {
                                 handleCancelClick(order);
                               }
                             }}
                             icon={
                               <i
                                 className={`fa ${
-                                  position !== "Treasurer" &&
-                                  position !== "Assistant Treasurer" &&
-                                  position !== "Auditor" &&
-                                  position !== "Developer"
-                                    ? "fa-lock"
-                                    : "fa-times"
+                                  !conditionalPosition ? "fa-lock" : "fa-times"
                                 }`}
                               ></i>
                             }
                             styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
+                              !conditionalPosition
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#4398AC]"
                             }`}
                             textClass="text-white text-sm" // Ensure the text size is consistent
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                            }
+                            disabled={!conditionalPosition}
                           />
                         </ButtonsComponent>
                       </td>
@@ -394,52 +373,31 @@ const Orders = () => {
                           <FormButton
                             type="button"
                             text={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                                ? "Not Authorized"
-                                : "Print"
+                              !conditionalPosition ? "Not Authorized" : "Print"
                             }
                             onClick={() => {
-                              if (
-                                position === "Treasurer" ||
-                                position === "Assistant Treasurer" ||
-                                position === "Auditor" ||
-                                position === "Developer"
-                              ) {
+                              if (conditionalPosition) {
                                 handlePrintData(order);
                               }
                             }}
                             icon={
                               <i
                                 className={
-                                  position !== "Treasurer" &&
-                                  position !== "Assistant Treasurer" &&
-                                  position !== "Auditor" &&
-                                  position !== "Developer"
+                                  !conditionalPosition
                                     ? "fa fa-lock"
                                     : "fa fa-print"
                                 }
                               ></i>
                             }
                             styles={`relative flex items-center space-x-2 px-4 py-2 rounded  text-white ${
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
+                              !conditionalPosition
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#002E48]"
                             }`}
                             textClass="text-white"
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                            }
+                            disabled={!conditionalPosition}
                           />
                         </ButtonsComponent>
                       </td>

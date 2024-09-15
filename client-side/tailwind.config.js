@@ -3,6 +3,9 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      spacing: {
+        13.5: "3.375rem", // 13.5 x 0.25rem = 3.375rem
+      },
       colors: {
         primary: "#4398AC", // Main brand color
         secondary: "#A4CDD7", // Complementary color

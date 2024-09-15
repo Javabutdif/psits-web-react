@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { membership, allMembers, merchCreated, placedOrders } from "../../api/admin";
-import { faBoxOpen, faUserGraduate, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
+import {
+  membership,
+  allMembers,
+  merchCreated,
+  placedOrders,
+} from "../../api/admin";
+import {
+  faBoxOpen,
+  faUserGraduate,
+  faShoppingCart,
+} from "@fortawesome/free-solid-svg-icons";
 import DashboardCard from "./dashboard/DashboardCard.";
 import DoughnutChart from "./dashboard/DoughnutChart";
+import BarGraph from "./dashboard/BarGraph";
+import PieChart from "./dashboard/PieChart";
 
 const AdminDashboard = () => {
   const [counts, setCounts] = useState({
@@ -11,7 +22,7 @@ const AdminDashboard = () => {
     order: 0,
   });
 
-  const [ data, setData ] = useState([])
+  const [data, setData] = useState([]);
 
   const [finalCounts, setFinalCounts] = useState({
     merchandise: 0,
@@ -23,13 +34,25 @@ const AdminDashboard = () => {
   const [error, setError] = useState(null);
 
   const animateCount = () => {
-    const increment = Math.ceil(Math.max(finalCounts.student, finalCounts.merchandise, finalCounts.order) / 100);
+    const increment = Math.ceil(
+      Math.max(
+        finalCounts.student,
+        finalCounts.merchandise,
+        finalCounts.order
+      ) / 100
+    );
 
     const interval = setInterval(() => {
       setCounts((prevCounts) => {
         const newCounts = {
-          student: Math.min(prevCounts.student + increment, finalCounts.student),
-          merchandise: Math.min(prevCounts.merchandise + increment, finalCounts.merchandise),
+          student: Math.min(
+            prevCounts.student + increment,
+            finalCounts.student
+          ),
+          merchandise: Math.min(
+            prevCounts.merchandise + increment,
+            finalCounts.merchandise
+          ),
           order: Math.min(prevCounts.order + increment, finalCounts.order),
         };
 
@@ -55,8 +78,8 @@ const AdminDashboard = () => {
           placedOrders(),
         ]);
 
-        const members = await membership()
-        setData(members)
+        const members = await membership();
+        setData(members);
 
         setFinalCounts({
           student: studentRes || 0,
@@ -74,7 +97,6 @@ const AdminDashboard = () => {
 
     fetchData();
   }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
-
   return (
     <div className="pt-4 md:pt-8">
       <div className="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-8 text-center lg:flex lg:justify-between">
@@ -100,10 +122,14 @@ const AdminDashboard = () => {
           />
         </div>
       </div>
-      <div className="flex flex-col xl:flex-row items-center mt-8">
-        <div className="flex-1"></div>
-        <div className="flex-1 w-full xl:w-48 xl:h-48 ">
-          <DoughnutChart />
+      <div className="flex flex-col xl:flex-row items-center mt-8 pt-2 gap-8">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full max-w-6xl flex items-center justify-center">
+            <BarGraph className="w-full h-96" />
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <DoughnutChart className="w-64 h-64" />
         </div>
       </div>
     </div>

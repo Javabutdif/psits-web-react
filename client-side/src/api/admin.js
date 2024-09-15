@@ -276,11 +276,7 @@ export const renewStudent = async () => {
     }
   }
 };
-export const approveOrders = () => {};
 
-export const editStudent = async () => {};
-export const inventory = async () => {};
-export const analytics = async () => {};
 export const membershipHistory = async () => {
   try {
     const response = await axios.get(`${backendConnection()}/api/history`, {
@@ -298,7 +294,6 @@ export const membershipHistory = async () => {
     }
   }
 };
-export const membershipRenewal = async () => {};
 
 export const merchandise = async () => {
   try {
@@ -419,7 +414,7 @@ export const requestDeletion = async (id_number) => {
     console.error("Error:", error);
   }
 };
-//Soft Delete
+
 export const studentDeletion = async (id_number, name) => {
   try {
     const response = await axios.put(
@@ -492,10 +487,144 @@ export const addMerchandise = async (formData) => {
     console.error("Error:", error);
   }
 };
-export const updateMerchandise = async () => {};
-export const merchandiseHistory = async () => {};
-export const merchandiseOrder = async () => {};
-export const orders = async () => {};
-export const resources = async () => {};
-export const settings = async () => {};
-export const student = async () => {};
+
+export const getBsit = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/get-bsit`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+export const getBscs = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/get-bscs`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+export const getAct = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/get-act`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+export const getYear1 = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/get-year1`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+export const getYear2 = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/get-year2`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+export const getYear3 = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/get-year3`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+export const getYear4 = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/get-year4`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
+
+export const getOrderDate = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-order-date`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
+  }
+};
