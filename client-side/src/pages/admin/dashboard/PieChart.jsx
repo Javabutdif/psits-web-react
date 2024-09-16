@@ -9,6 +9,7 @@ const PieChart = () => {
   const [data, setData] = useState({
     products: [],
     orders: [],
+    subtotal: [],
   });
 
   useEffect(() => {
@@ -17,9 +18,11 @@ const PieChart = () => {
         const result = await getOrderDate();
         const orders = result.map((item) => item.numberOfOrders);
         const products = result.map((item) => item.product_name);
+        const subtotal = result.map((item) => item.totalSubtotal);
         setData({
           products,
           orders,
+          subtotal,
         });
       } catch (error) {
         console.error("Failed to fetch data", error);
@@ -34,7 +37,7 @@ const PieChart = () => {
     datasets: [
       {
         label: "Number of Orders by Product",
-        data: data.orders, // Dynamic data here
+        data: data.orders,
         backgroundColor: [
           "rgba(255, 99, 132, 0.2)",
           "rgba(54, 162, 235, 0.2)",
@@ -53,7 +56,6 @@ const PieChart = () => {
       },
     ],
   };
-
   const options = {
     responsive: true,
     plugins: {
@@ -63,20 +65,24 @@ const PieChart = () => {
       tooltip: {
         callbacks: {
           label: function (context) {
-            let label = context.label || "";
-            if (context.parsed) {
-              label += `: ${context.parsed}`;
-            }
-            return label;
+       
+            const index = context.dataIndex;
+      
+            const label = context.label || "";
+            const value = context.raw;
+            const subtotal = data.subtotal[index];
+          
+            return `${label}: ${value} \nSubtotal: ₱${subtotal}`;
           },
         },
       },
     },
   };
-
   return (
     <div className="text-center">
-      <h2 className="text-xl sm:text-xl text-gray-600">Orders by Product</h2>
+      <h2 className="text-xl sm:text-xl text-gray-600">
+        Daily Product Sales Distribution
+      </h2>
       <Pie data={chartData} options={options} />
     </div>
   );

@@ -4,7 +4,7 @@ import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { CSVLink } from "react-csv";
 import { membershipHistory, merchandiseAdmin } from "../../api/admin";
-import TableComponent from "../../components/Custom/TableComponent";
+import { formattedDate } from "../../components/tools/clientTools";
 
 const Reports = () => {
   const [membershipData, setMembershipData] = useState([]);
@@ -163,12 +163,15 @@ const Reports = () => {
       }
       if (filterDateFrom) {
         filteredData = filteredData.filter(
-          (item) => new Date(item.transaction_date) >= new Date(filterDateFrom)
+          (item) =>
+            formattedDate(item.transaction_date) >=
+            formattedDate(filterDateFrom)
         );
       }
       if (filterDateTo) {
         filteredData = filteredData.filter(
-          (item) => new Date(item.transaction_date) <= new Date(filterDateTo)
+          (item) =>
+            formattedDate(item.transaction_date) <= formattedDate(filterDateTo)
         );
       }
       if (filterBatch) {
@@ -253,7 +256,7 @@ const Reports = () => {
     { name: "Year", selector: (row) => row.year, sortable: true },
     {
       name: "Date",
-      selector: (row) => new Date(row.date).toLocaleString(),
+      selector: (row) => formattedDate(row.date),
       sortable: true,
     },
     { name: "Type", selector: (row) => row.type, sortable: true },
@@ -284,7 +287,7 @@ const Reports = () => {
     { name: "Total", selector: (row) => row.total, sortable: true },
     {
       name: "Transaction Date",
-      selector: (row) => new Date(row.transaction_date).toLocaleString(),
+      selector: (row) => formattedDate(row.transaction_date),
       sortable: true,
     },
   ];
@@ -297,7 +300,6 @@ const Reports = () => {
         );
       }
 
-      // Calculate membership and renewal counts
       const membershipCount = membershipData.filter(
         (data) => data.type === "Membership"
       ).length;

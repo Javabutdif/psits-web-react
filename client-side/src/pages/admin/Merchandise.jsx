@@ -19,6 +19,7 @@ import { Dialog } from "@headlessui/react";
 import { AiOutlineClose } from "react-icons/ai";
 import { showToast } from "../../utils/alertHelper";
 import { isBefore, isAfter, isWithinInterval } from "date-fns";
+import { formattedDate } from "../../components/tools/clientTools";
 
 function Merchandise() {
   const [data, setData] = useState([]);
@@ -490,10 +491,10 @@ function Merchandise() {
                 Category: {selectedItem?.category}
               </p>
               <p className="text-gray-600">
-                Start Date: {selectedItem?.start_date}
+                Start Date: {formattedDate(selectedItem?.start_date)}
               </p>
               <p className="text-gray-600">
-                End Date: {selectedItem?.end_date}
+                End Date: {formattedDate(selectedItem?.end_date)}
               </p>
               <p className="text-gray-600">
                 Created By: {selectedItem?.created_by}

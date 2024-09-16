@@ -66,7 +66,7 @@ router.post("/", upload.array("images", 3), async (req, res) => {
       category,
       type,
       control,
-      imageUrl, // Save the array of image URLs to the database
+      imageUrl, 
     });
 
     await newMerch.save();

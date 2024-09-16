@@ -32,11 +32,11 @@ const orderSchema = new Schema({
     required: true,
   },
   order_date: {
-    type: String,
+    type: Date,
     required: true,
   },
   transaction_date: {
-    type: String,
+    type: Date,
   },
   order_status: {
     type: String,

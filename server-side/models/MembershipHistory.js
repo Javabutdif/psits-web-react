@@ -32,7 +32,7 @@ const historySchema = new Schema({
     require: true,
   },
   date: {
-    type: String,
+    type: Date,
     require: true,
   },
   admin: {

@@ -183,13 +183,12 @@ router.put("/approve-order", async (req, res) => {
         },
       },
       { new: true }
-    ); // Use `new: true` to return the updated document
+    ); 
 
     if (!successfulOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Fetch the student based on id_number from the order
     const student = await Student.findOne({
       id_number: successfulOrder.id_number,
     });
@@ -198,9 +197,9 @@ router.put("/approve-order", async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // Fetch each item in the order and update the corresponding merchandise
+  
     const { items } = successfulOrder;
-    console.log(items);
+    
     if (Array.isArray(items) && items.length > 0) {
       await Promise.all(
         items.map(async (item) => {
