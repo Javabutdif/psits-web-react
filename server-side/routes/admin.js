@@ -5,7 +5,7 @@ const MembershipHistory = require("../models/MembershipHistory");
 const Merch = require("../models/MerchModel");
 const Student = require("../models/StudentModel");
 const Order = require("../models/OrdersModel");
-const { format, startOfDay, endOfDay, parse } = require("date-fns");
+const { format, startOfDay, endOfDay } = require("date-fns");
 const nodemailer = require("nodemailer");
 const ejs = require("ejs");
 const path = require("path");
@@ -50,7 +50,7 @@ router.put("/renew-student", async (req, res) => {
       {
         $set: {
           renew: "Pending",
-          renewedOn: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+          renewedOn: new Date(),
         },
       }
     );
@@ -73,7 +73,6 @@ router.post("/approve-membership", async (req, res) => {
     req.body;
 
   try {
-    // Fetch the student from the database
     const student = await Student.findOne({ id_number });
 
     if (!student) {
@@ -81,7 +80,6 @@ router.post("/approve-membership", async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // Create and save membership history
     const history = new MembershipHistory({
       id_number,
       rfid,
@@ -110,10 +108,8 @@ router.post("/approve-membership", async (req, res) => {
       updateQuery = { renew: "Accepted" };
     }
 
-    // Update student information
     await Student.updateOne({ id_number }, { $set: updateQuery });
 
-    // Setup email transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -122,7 +118,6 @@ router.post("/approve-membership", async (req, res) => {
       },
     });
 
-    // Render the email template
     const emailTemplate = await ejs.renderFile(
       path.join(__dirname, "../templates/appr-membership-receipt.ejs"), // Path to the ejs file
       {
@@ -265,8 +260,45 @@ router.get("/get-year4", async (req, res) => {
   const count = await Student.countDocuments({ year: "4" });
   return res.json({ message: count });
 });
+router.get("/get-order-date", async (req, res) => {
+  try {
+    const currentDate = new Date();
+    const startOfDayDate = startOfDay(currentDate);
+    const endOfDayDate = endOfDay(currentDate);
 
-
-
+    const result = await Order.aggregate([
+      {
+        $match: {
+          transaction_date: {
+            $gte: startOfDayDate,
+            $lte: endOfDayDate,
+          },
+          order_status: "Paid",
+        },
+      },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.product_name",
+          totalQuantity: { $sum: "$items.quantity" },
+          totalSubtotal: { $sum: "$items.sub_total" },
+        },
+      },
+      {
+        $project: {
+          product_name: "$_id",
+          totalQuantity: 1,
+          totalSubtotal: 1,
+          _id: 0,
+        },
+      },
+    ]);
+    
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching orders by date:", error);
+    res.status(500).json({ error: "An error occurred while fetching orders" });
+  }
+});
 
 module.exports = router;

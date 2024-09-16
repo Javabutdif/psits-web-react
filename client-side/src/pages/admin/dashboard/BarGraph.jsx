@@ -49,48 +49,48 @@ const BarGraph = () => {
     callTotal();
   }, []);
 
-  // Define unique colors for each year
+ 
   const colors = [
-    "rgba(75, 192, 192, 0.2)", // Year 1 color
-    "rgba(255, 99, 132, 0.2)", // Year 2 color
-    "rgba(255, 159, 64, 0.2)", // Year 3 color
-    "rgba(153, 102, 255, 0.2)", // Year 4 color
+    "rgba(75, 192, 192, 0.2)", 
+    "rgba(255, 99, 132, 0.2)", 
+    "rgba(255, 159, 64, 0.2)", 
+    "rgba(153, 102, 255, 0.2)", 
   ];
 
   const borderColors = [
-    "rgba(75, 192, 192, 1)", // Year 1 border color
-    "rgba(255, 99, 132, 1)", // Year 2 border color
-    "rgba(255, 159, 64, 1)", // Year 3 border color
-    "rgba(153, 102, 255, 1)", // Year 4 border color
+    "rgba(75, 192, 192, 1)",
+    "rgba(255, 99, 132, 1)", 
+    "rgba(255, 159, 64, 1)", 
+    "rgba(153, 102, 255, 1)", 
   ];
 
   const data = {
     labels: ["Freshmen", "Sophomore", "Junior", "Senior"],
     datasets: [
       {
-        label: "Year 1",
+        label: "1",
         data: [year.year1, 0, 0, 0], // Set only Year 1 data
         backgroundColor: colors[0],
         borderColor: borderColors[0],
         borderWidth: 1,
       },
       {
-        label: "Year 2",
-        data: [0, year.year2, 0, 0], // Set only Year 2 data
+        label: "2",
+        data: [0, year.year2, 0, 0], 
         backgroundColor: colors[1],
         borderColor: borderColors[1],
         borderWidth: 1,
       },
       {
-        label: "Year 3",
-        data: [0, 0, year.year3, 0], // Set only Year 3 data
+        label: "3",
+        data: [0, 0, year.year3, 0], 
         backgroundColor: colors[2],
         borderColor: borderColors[2],
         borderWidth: 1,
       },
       {
-        label: "Year 4",
-        data: [0, 0, 0, year.year4], // Set only Year 4 data
+        label: "4",
+        data: [0, 0, 0, year.year4], 
         backgroundColor: colors[3],
         borderColor: borderColors[3],
         borderWidth: 1,
@@ -98,10 +98,10 @@ const BarGraph = () => {
     ],
   };
 
-  // Options for the bar chart
+ 
   const options = {
     responsive: true,
-    maintainAspectRatio: false, // Ensure chart can resize
+    maintainAspectRatio: false, 
     plugins: {
       legend: {
         position: "top",

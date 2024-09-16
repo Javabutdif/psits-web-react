@@ -414,7 +414,7 @@ const StudentCart = () => {
       items: selectedItems,
       membership_discount: statusVerify(),
       total: calculateTotals().totalPrice,
-      order_date: new Date().toLocaleString(),
+      order_date: new Date(),
       order_status: "Pending",
     });
   };

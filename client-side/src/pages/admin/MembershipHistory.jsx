@@ -5,8 +5,10 @@ import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt";
-import { getPosition } from "../../authentication/Authentication";
-import { CSVLink } from "react-csv";
+import {
+  conditionalPosition,
+  formattedDate,
+} from "../../components/tools/clientTools";
 
 function MembershipHistory() {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +21,6 @@ function MembershipHistory() {
 
   const componentRef = useRef();
   const printRef = useRef();
-  const position = getPosition();
 
   const headers = [
     { label: "Reference ID", key: "reference_code" },
@@ -87,6 +88,11 @@ function MembershipHistory() {
       key: "rfid",
       label: "RFID",
       sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div>{row.rfid} </div>
+        </div>
+      ),
     },
     {
       key: "name",
@@ -119,6 +125,11 @@ function MembershipHistory() {
       key: "date",
       label: "Date",
       sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div>{`${formattedDate(row.date)}`}</div>
+        </div>
+      ),
     },
     {
       key: "admin",
@@ -133,53 +144,28 @@ function MembershipHistory() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-                ? "Not Authorized"
-                : "Print"
-            }
+            text={!conditionalPosition ? "Not Authorized" : "Print"}
             onClick={() => {
-              if (
-                position === "Treasurer" ||
-                position === "Assistant Treasurer" ||
-                position === "Auditor" ||
-                position === "Developer"
-              ) {
+              if (conditionalPosition) {
                 handlePrintData(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  position !== "Treasurer" &&
-                  position !== "Assistant Treasurer" &&
-                  position !== "Auditor" &&
-                  position !== "Developer"
-                    ? "fa-lock"
-                    : "fa-print"
+                  !conditionalPosition ? "fa-lock" : "fa-print"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
+              !conditionalPosition
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[#002E48]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-            }
+            disabled={!conditionalPosition}
           />
         </ButtonsComponent>
       ),
