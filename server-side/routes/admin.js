@@ -260,11 +260,9 @@ router.get("/get-year4", async (req, res) => {
   const count = await Student.countDocuments({ year: "4" });
   return res.json({ message: count });
 });
-
 router.get("/get-order-date", async (req, res) => {
   try {
     const currentDate = new Date();
-
     const startOfDayDate = startOfDay(currentDate);
     const endOfDayDate = endOfDay(currentDate);
 
@@ -282,20 +280,20 @@ router.get("/get-order-date", async (req, res) => {
       {
         $group: {
           _id: "$items.product_name",
-          numberOfOrders: { $sum: 1 },
+          totalQuantity: { $sum: "$items.quantity" },
           totalSubtotal: { $sum: "$items.sub_total" },
         },
       },
       {
         $project: {
           product_name: "$_id",
-          numberOfOrders: 1,
+          totalQuantity: 1,
           totalSubtotal: 1,
           _id: 0,
         },
       },
     ]);
-
+    
     res.json(result);
   } catch (error) {
     console.error("Error fetching orders by date:", error);

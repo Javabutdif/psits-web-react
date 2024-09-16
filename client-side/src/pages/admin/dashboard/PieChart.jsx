@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from "chart.js";
-import { getOrderDate } from "../../../api/admin"; // Replace with your actual data fetching function
+import { getOrderDate } from "../../../api/admin";
 
 ChartJS.register(Title, Tooltip, Legend, ArcElement);
 
@@ -10,20 +10,32 @@ const PieChart = () => {
     products: [],
     orders: [],
     subtotal: [],
+    quantity: [],
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const result = await getOrderDate();
-        const orders = result.map((item) => item.numberOfOrders);
-        const products = result.map((item) => item.product_name);
-        const subtotal = result.map((item) => item.totalSubtotal);
-        setData({
-          products,
-          orders,
-          subtotal,
-        });
+     
+
+        if (Array.isArray(result)) {
+          const orders = result.map((item) => item.totalQuantity);
+          const products = result.map((item) => item.product_name);
+          const subtotal = result.map((item) => item.totalSubtotal);
+          const quantity = result.map((item) => item.totalQuantity);
+
+       
+
+          setData({
+            products,
+            orders,
+            subtotal,
+            quantity,
+          });
+        } else {
+          console.error("Unexpected data format", result);
+        }
       } catch (error) {
         console.error("Failed to fetch data", error);
       }
@@ -56,6 +68,7 @@ const PieChart = () => {
       },
     ],
   };
+
   const options = {
     responsive: true,
     plugins: {
@@ -65,25 +78,27 @@ const PieChart = () => {
       tooltip: {
         callbacks: {
           label: function (context) {
-       
             const index = context.dataIndex;
-      
             const label = context.label || "";
-            const value = context.raw;
-            const subtotal = data.subtotal[index];
-          
-            return `${label}: ${value} \nSubtotal: ₱${subtotal}`;
+            const subtotal = data.subtotal[index] || 0;
+            const quantity = data.quantity[index] || 0;
+            return `${label}: ${quantity} \nSubtotal: ₱${subtotal}`;
           },
         },
       },
     },
   };
+
   return (
     <div className="text-center">
       <h2 className="text-xl sm:text-xl text-gray-600">
         Daily Product Sales Distribution
       </h2>
-      <Pie data={chartData} options={options} />
+      {data.products.length > 0 ? (
+        <Pie data={chartData} options={options} />
+      ) : (
+        <p>No data available</p>
+      )}
     </div>
   );
 };
