@@ -5,9 +5,12 @@ import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt";
-import { getPosition } from "../../authentication/Authentication";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../enums/commonEnums";
+import {
+  conditionalPosition,
+  formattedDate,
+} from "../../components/tools/clientTools";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -26,16 +29,6 @@ const Orders = () => {
   const [error, setError] = useState(null);
   const componentRef = useRef();
   const printRef = useRef();
-  const position = getPosition();
-
-  const conditionalPosition = () => {
-    return (
-      position === "Treasurer" ||
-      position === "Assistant Treasurer" ||
-      position === "Auditor" ||
-      position === "Developer"
-    );
-  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -61,10 +54,6 @@ const Orders = () => {
 
     fetchOrders();
   }, []);
-
-
-
-  
 
   useEffect(() => {
     const filtered = orders.filter((order) => {
@@ -192,10 +181,10 @@ const Orders = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {selectedTab === "Pending" ? "Order ID" : "Reference Code"}
+                {selectedTab === "Pending" ? "ID" : "Reference"}
               </th>
               <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Student Name
+                Name
               </th>
               <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Membership
@@ -204,7 +193,7 @@ const Orders = () => {
                 Total
               </th>
               <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Order Date
+                Date
               </th>
               {selectedTab === "Paid" && (
                 <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -256,11 +245,11 @@ const Orders = () => {
                       ₱{order.total}
                     </td>
                     <td className="p-2 text-sm text-gray-500">
-                      {order.order_date}
+                      {formattedDate(order.order_date)}
                     </td>
                     {order.order_status === "Paid" && (
                       <td className="p-2 text-sm text-gray-500">
-                        {order.transaction_date}
+                        {formattedDate(order.transaction_date)}
                       </td>
                     )}
                     <td className="p-2 text-sm">
@@ -281,7 +270,7 @@ const Orders = () => {
                         {order.admin}
                       </td>
                     )}
-                    <td className="p-2 text-sm">
+                    <td className="p-2 text-sm ">
                       <ButtonsComponent>
                         <FormButton
                           type="button"
@@ -303,7 +292,7 @@ const Orders = () => {
                       </ButtonsComponent>
                     </td>
                     {order.order_status !== "Paid" && (
-                      <td className="p-2 text-sm flex gap-2 mt-13.5 ">
+                      <td className="p-2 text-sm flex gap-2 mt-6 ">
                         <ButtonsComponent>
                           <FormButton
                             type="button"

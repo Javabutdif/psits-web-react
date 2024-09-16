@@ -18,10 +18,10 @@ const cartItemSchema = new Schema({
     type: Boolean,
   },
   start_date: {
-    type: String,
+    type: Date,
   },
   end_date: {
-    type: String,
+    type: Date,
   },
 
   category: {

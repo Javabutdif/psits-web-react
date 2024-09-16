@@ -131,6 +131,9 @@ const AdminDashboard = () => {
         <div className="flex-1 flex items-center justify-center">
           <DoughnutChart className="w-64 h-64" />
         </div>
+        <div className="flex-1 flex items-center justify-center">
+          <PieChart className="w-64 h-64" />
+        </div>
       </div>
     </div>
   );
