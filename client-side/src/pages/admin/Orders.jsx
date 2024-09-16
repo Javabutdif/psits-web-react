@@ -292,7 +292,7 @@ const Orders = () => {
                       </ButtonsComponent>
                     </td>
                     {order.order_status !== "Paid" && (
-                      <td className="p-2 text-sm flex gap-2 mt-6 ">
+                      <td className="p-2 text-sm flex gap-2 mt-9 ">
                         <ButtonsComponent>
                           <FormButton
                             type="button"
