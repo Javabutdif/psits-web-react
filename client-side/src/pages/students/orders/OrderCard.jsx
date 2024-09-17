@@ -200,6 +200,18 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
                       <strong className="font-medium">Quantity:</strong>{" "}
                       {item.quantity}
                     </p>
+                    {(item.batch !== null && item.batch !== "") && (
+                      <p className="text-xs mb-1">
+                        <strong className="font-medium">Batch:</strong>{" "}
+                        {item.batch}
+                      </p>
+                    )}
+                    {(item.sizes !== null && item.sizes !== "") && (
+                      <p className="text-xs mb-1">
+                        <strong className="font-medium">Size:</strong>{" "}
+                        {item.sizes}
+                      </p>
+                    )}
                     <p className="text-xs mb-1">
                       <strong className="font-medium">Price:</strong> ₱
                       {item.price.toFixed(2)}

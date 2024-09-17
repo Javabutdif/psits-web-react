@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
+const Orders = require("../models/OrdersModel");
 const { format } = require("date-fns");
 
 const router = express.Router();
@@ -153,9 +154,8 @@ router.put("/students/cancel/:id_number", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-//Membership Request Fetch
 
-//Edit Student Admin Side
+
 router.post("/editedStudent", async (req, res) => {
   const {
     id_number,
@@ -167,8 +167,10 @@ router.post("/editedStudent", async (req, res) => {
     course,
     year,
   } = req.body;
+
   try {
-    const result = await Student.updateOne(
+   
+    const studentResult = await Student.updateOne(
       { id_number: id_number },
       {
         $set: {
@@ -183,9 +185,24 @@ router.post("/editedStudent", async (req, res) => {
       }
     );
 
-    res.status(200).json({ message: "Student updated successfully" });
+  
+    await Orders.updateMany(
+      { student: studentResult._id }, 
+      {
+        $set: {
+          student_name: `${first_name} ${middle_name} ${last_name}`,
+          course: course,
+          year: year,
+          rfid: rfid,
+        },
+      }
+    );
+
+    res
+      .status(200)
+      .json({ message: "Student and related orders updated successfully" });
   } catch (error) {
-    console.error("Error fetching students:", error);
+    console.error("Error updating student and orders:", error);
     res.status(500).json("Internal Server Error");
   }
 });

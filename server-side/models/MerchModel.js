@@ -20,6 +20,12 @@ const orderDetailSchema = new Schema({
   rfid: {
     type: String,
   },
+  course: {
+    type: String,
+  },
+  year: {
+    type: Number,
+  },
   batch: {
     type: String,
   },

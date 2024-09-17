@@ -1,6 +1,7 @@
 const express = require("express");
 const Merch = require("../models/MerchModel");
 const Student = require("../models/StudentModel");
+const Orders = require("../models/OrdersModel");
 const { default: mongoose } = require("mongoose");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -66,7 +67,7 @@ router.post("/", upload.array("images", 3), async (req, res) => {
       category,
       type,
       control,
-      imageUrl, 
+      imageUrl,
     });
 
     await newMerch.save();
@@ -99,7 +100,6 @@ router.get("/retrieve-admin", async (req, res) => {
   }
 });
 
-// UPDATE merch by id
 router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
   const {
     name,
@@ -122,36 +122,35 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
   let imageUrl = req.files.map((file) => file.location);
 
   try {
-    // Fetch the existing merch data
     const existingMerch = await Merch.findById(id);
     if (!existingMerch) {
       console.error("Merch not found");
       return res.status(404).send("Merch not found");
     }
 
-    // If no new images are uploaded, retain the existing imageUrl
+   
     if (imageUrl.length === 0) {
       imageUrl = existingMerch.imageUrl;
     }
 
-    // Create an update object
+  
     const updateFields = {
       name: name,
       price: price,
       stocks: stocks,
-      batch: batch, // unrequired
+      batch: batch,
       description: description,
       selectedVariations: selectedVariations.split(","),
       selectedSizes: selectedSizes.split(","),
       start_date: start_date,
-      end_date: end_date, // unrequired
+      end_date: end_date,
       category: category,
       type: type,
       control: control,
       imageUrl: imageUrl,
     };
 
-    // Add sales_data fields to the update object
+   
     if (sales_data) {
       for (const key in sales_data) {
         if (sales_data.hasOwnProperty(key)) {
@@ -160,6 +159,7 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
       }
     }
 
+    
     const result = await Merch.updateOne({ _id: id }, { $set: updateFields });
 
     if (result.matchedCount === 0) {
@@ -167,9 +167,60 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
       return res.status(404).send("Merch not found");
     }
 
-    res.status(200).send("Merch updated successfully");
+ 
+    const students = await Student.find({ "cart.product_id": id });
+
+    for (const student of students) {
+    
+      for (let item of student.cart) {
+        if (item.product_id.toString() === id) {
+          item.product_name = name;
+          item.price = price;
+          item.sub_total = price * item.quantity;
+          item.imageUrl1 = imageUrl[0]; 
+
+          item.category = category;
+          item.batch = batch;
+          item.limited = control === "limited-purchase" ? true : false;
+          item.quantity = control === "limited-purchase" ? 1 : item.quantity;
+        }
+      }
+   
+      await student.save();
+    }
+    const orders = await Orders.find({ "items.product_id": id });
+
+    for (const order of orders) {
+      let newTotal = 0;
+
+    
+      for (let item of order.items) {
+        if (item.product_id.toString() === id) {
+          item.product_name = name;
+          item.price = price;
+
+          item.imageUrl1 = imageUrl[0]; 
+
+          item.category = category;
+          item.batch = batch;
+          item.limited = control === "limited-purchase" ? true : false;
+          item.quantity = control === "limited-purchase" ? 1 : item.quantity;
+          item.sub_total = price * item.quantity;
+        }
+
+      
+        newTotal += item.sub_total;
+      }
+
+    
+      order.total = newTotal;
+
+   
+      await order.save();
+    }
+    res.status(200).send("Merch, carts, and orders updated successfully");
   } catch (error) {
-    console.error("Error updating merch:", error.message);
+    console.error("Error updating merch, carts, and orders:", error.message);
     res.status(500).send(error.message);
   }
 });
@@ -180,7 +231,6 @@ router.put("/delete-soft", async (req, res) => {
 
   try {
     const product_id = new ObjectId(_id);
-   
 
     const result = await Merch.updateOne(
       { _id: product_id },
@@ -317,9 +367,5 @@ router.delete("/remove-from-cart/:student_id/:merch_id", async (req, res) => {
     });
   }
 });
-
-
-
-
 
 module.exports = router;
