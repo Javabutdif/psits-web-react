@@ -573,7 +573,7 @@ const ProductDetail = () => {
               </p>
               <p className="mb-4">
                 <span className="font-semibold">Total: </span> ₱{" "}
-                {calculateTotal()}
+                {calculateTotal().toFixed(2)}
               </p>
               <p className="text-gray-700">
                 {!cartIndicator
