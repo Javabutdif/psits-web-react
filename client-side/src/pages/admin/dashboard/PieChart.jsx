@@ -5,6 +5,26 @@ import { getOrderDate } from "../../../api/admin";
 
 ChartJS.register(Title, Tooltip, Legend, ArcElement);
 
+export const formatString = (str, abbreviate = true) => {
+  if (!str || typeof str !== "string") {
+    return "Unknown";
+  }
+
+  const words = str.split(" ");
+  let formattedString = "";
+
+  if (abbreviate) {
+    for (let i = 0; i < words.length - 1; i++) {
+      formattedString += words[i].charAt(0) + ".";
+    }
+    formattedString += " " + words[words.length - 1];
+  } else {
+    formattedString = str;
+  }
+
+  return formattedString;
+};
+
 const PieChart = () => {
   const [data, setData] = useState({
     products: [],
@@ -17,15 +37,12 @@ const PieChart = () => {
     const fetchData = async () => {
       try {
         const result = await getOrderDate();
-     
 
         if (Array.isArray(result)) {
           const orders = result.map((item) => item.totalQuantity);
           const products = result.map((item) => item.product_name);
           const subtotal = result.map((item) => item.totalSubtotal);
           const quantity = result.map((item) => item.totalQuantity);
-
-       
 
           setData({
             products,
@@ -79,7 +96,7 @@ const PieChart = () => {
         callbacks: {
           label: function (context) {
             const index = context.dataIndex;
-            const label = context.label || "";
+            const label = formatString(context.label) || "";
             const subtotal = data.subtotal[index] || 0;
             const quantity = data.quantity[index] || 0;
             return `${label}: ${quantity} \nSubtotal: ₱${subtotal}`;

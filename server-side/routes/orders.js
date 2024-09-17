@@ -183,7 +183,7 @@ router.put("/approve-order", async (req, res) => {
         },
       },
       { new: true }
-    ); 
+    );
 
     if (!successfulOrder) {
       return res.status(404).json({ message: "Order not found" });
@@ -197,9 +197,8 @@ router.put("/approve-order", async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-  
     const { items } = successfulOrder;
-    
+
     if (Array.isArray(items) && items.length > 0) {
       await Promise.all(
         items.map(async (item) => {
@@ -216,6 +215,8 @@ router.put("/approve-order", async (req, res) => {
                 id_number: successfulOrder.id_number,
                 student_name: successfulOrder.student_name,
                 rfid: successfulOrder.rfid,
+                course: successfulOrder.course,
+                year: successfulOrder.year,
                 batch: item.batch,
                 size: { $each: sizes },
                 variation: { $each: variations },

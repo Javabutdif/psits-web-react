@@ -175,8 +175,8 @@ const Reports = () => {
         );
       }
       if (filterBatch) {
-        filteredData = filteredData.filter(
-          (item) => item.batch === Number(filterBatch)
+        filteredData = filteredData.filter((item) =>
+          item.batch?.includes(filterBatch)
         );
       }
       if (filterSize) {
