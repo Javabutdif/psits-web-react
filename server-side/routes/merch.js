@@ -128,12 +128,10 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
       return res.status(404).send("Merch not found");
     }
 
-   
     if (imageUrl.length === 0) {
       imageUrl = existingMerch.imageUrl;
     }
 
-  
     const updateFields = {
       name: name,
       price: price,
@@ -150,7 +148,6 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
       imageUrl: imageUrl,
     };
 
-   
     if (sales_data) {
       for (const key in sales_data) {
         if (sales_data.hasOwnProperty(key)) {
@@ -159,7 +156,6 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
       }
     }
 
-    
     const result = await Merch.updateOne({ _id: id }, { $set: updateFields });
 
     if (result.matchedCount === 0) {
@@ -167,17 +163,15 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
       return res.status(404).send("Merch not found");
     }
 
- 
     const students = await Student.find({ "cart.product_id": id });
 
     for (const student of students) {
-    
       for (let item of student.cart) {
         if (item.product_id.toString() === id) {
           item.product_name = name;
           item.price = price;
           item.sub_total = price * item.quantity;
-          item.imageUrl1 = imageUrl[0]; 
+          item.imageUrl1 = imageUrl[0];
 
           item.category = category;
           item.batch = batch;
@@ -185,21 +179,23 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
           item.quantity = control === "limited-purchase" ? 1 : item.quantity;
         }
       }
-   
+
       await student.save();
     }
-    const orders = await Orders.find({ "items.product_id": id });
+    const orders = await Orders.find({
+      "items.product_id": id,
+      order_status: "Pending",
+    });
 
     for (const order of orders) {
       let newTotal = 0;
 
-    
       for (let item of order.items) {
         if (item.product_id.toString() === id) {
           item.product_name = name;
           item.price = price;
 
-          item.imageUrl1 = imageUrl[0]; 
+          item.imageUrl1 = imageUrl[0];
 
           item.category = category;
           item.batch = batch;
@@ -208,14 +204,11 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
           item.sub_total = price * item.quantity;
         }
 
-      
         newTotal += item.sub_total;
       }
 
-    
       order.total = newTotal;
 
-   
       await order.save();
     }
     res.status(200).send("Merch, carts, and orders updated successfully");
