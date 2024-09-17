@@ -64,6 +64,7 @@ const Orders = () => {
         order._id.toLowerCase().includes(searchTermLower) ||
         order.id_number.toLowerCase().includes(searchTermLower) ||
         order.rfid.toLowerCase().includes(searchTermLower) ||
+        order.course.toLowerCase().includes(searchTermLower) ||
         (order.reference_code &&
           order.reference_code.toString().includes(searchTerm));
 
@@ -226,16 +227,22 @@ const Orders = () => {
                   <tr className="hover:bg-gray-50">
                     <td className="p-2 text-xs text-gray-500">
                       {selectedTab === "Pending"
-                        ? order._id
+                        ? order.id_number
                         : order.reference_code}
                     </td>
                     <td className="p-4 text-sm text-gray-500">
                       <div>{order.student_name}</div>
-                      <div className="text-xs text-gray-500">
-                        ID: {order.id_number}
-                      </div>
+                      {selectedTab !== "Pending" && (
+                        <div className="text-xs text-gray-500">
+                          ID: {order.id_number}
+                        </div>
+                      )}
+
                       <div className="text-xs text-gray-500">
                         RFID: {order.rfid}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {order.course}-{order.year}
                       </div>
                     </td>
                     <td className="p-2 text-sm text-gray-500">
@@ -292,7 +299,7 @@ const Orders = () => {
                       </ButtonsComponent>
                     </td>
                     {order.order_status !== "Paid" && (
-                      <td className="p-2 text-sm flex gap-2 mt-9 ">
+                      <td className="p-2 text-sm flex gap-2 mt-4 ">
                         <ButtonsComponent>
                           <FormButton
                             type="button"
