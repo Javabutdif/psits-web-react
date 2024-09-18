@@ -29,8 +29,7 @@ function MembershipRequest() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  console.log("Data: " + conditionalPosition());
-  console.log("Data1: " + !conditionalPosition());
+  
   const columns = [
     {
       key: "select",
@@ -132,21 +131,21 @@ function MembershipRequest() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={conditionalPosition ? "Approve" : "Not Authorized"}
+            text={conditionalPosition() ? "Approve" : "Not Authorized"}
             onClick={() => {
-              if (conditionalPosition) {
+              if (conditionalPosition()) {
                 handleOpenModal(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  !conditionalPosition ? "fa-check" : "fa-lock"
+                  !conditionalPosition() ? "fa-check" : "fa-lock"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              conditionalPosition
+              conditionalPosition()
               ? "bg-[#002E48]"
                 : "bg-gray-500 cursor-not-allowed"
                 
@@ -154,25 +153,25 @@ function MembershipRequest() {
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={!conditionalPosition}
+            disabled={!conditionalPosition()}
           />
           <FormButton
             type="button"
-            text={!conditionalPosition ? "Not Authorized" : "Cancel"}
+            text={!conditionalPosition() ? "Not Authorized" : "Cancel"}
             onClick={() => {
-              if (conditionalPosition) {
+              if (conditionalPosition()) {
                 showModal(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  !conditionalPosition ? "fa-lock" : "fa-trash"
+                  !conditionalPosition() ? "fa-lock" : "fa-trash"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              !conditionalPosition
+              !conditionalPosition()
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[#4398AC]"
             }`}
