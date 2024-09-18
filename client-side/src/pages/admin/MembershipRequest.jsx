@@ -130,7 +130,7 @@ function MembershipRequest() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={!conditionalPosition ? "Not Authorized" : "Approve"}
+            text={conditionalPosition ? "Approve" : "Not Authorized"}
             onClick={() => {
               if (conditionalPosition) {
                 handleOpenModal(row);
@@ -139,14 +139,15 @@ function MembershipRequest() {
             icon={
               <i
                 className={`fa ${
-                  !conditionalPosition ? "fa-lock" : "fa-check"
+                  !conditionalPosition ? "fa-check" : "fa-lock"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              !conditionalPosition
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-[#002E48]"
+              conditionalPosition
+              ? "bg-[#002E48]"
+                : "bg-gray-500 cursor-not-allowed"
+                
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
