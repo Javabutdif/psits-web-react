@@ -304,60 +304,60 @@ const Orders = () => {
                           <FormButton
                             type="button"
                             text={
-                              !conditionalPosition
+                              !conditionalPosition()
                                 ? "Not Authorized"
                                 : "Approve"
                             }
                             onClick={() => {
-                              if (conditionalPosition) {
+                              if (conditionalPosition()) {
                                 handleApproveClick(order);
                               }
                             }}
                             icon={
                               <i
                                 className={`fa ${
-                                  !conditionalPosition ? "fa-lock" : "fa-check"
+                                  !conditionalPosition() ? "fa-lock" : "fa-check"
                                 }`}
                               ></i>
                             }
                             styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
-                              !conditionalPosition
+                              !conditionalPosition()
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#002E48]"
                             }`}
                             textClass="text-white text-sm"
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={!conditionalPosition}
+                            disabled={!conditionalPosition()}
                           />
                         </ButtonsComponent>
                         <ButtonsComponent>
                           <FormButton
                             type="button"
                             text={
-                              !conditionalPosition ? "Not Authorized" : "Cancel"
+                              !conditionalPosition() ? "Not Authorized" : "Cancel"
                             }
                             onClick={() => {
-                              if (conditionalPosition) {
+                              if (conditionalPosition()) {
                                 handleCancelClick(order);
                               }
                             }}
                             icon={
                               <i
                                 className={`fa ${
-                                  !conditionalPosition ? "fa-lock" : "fa-times"
+                                  !conditionalPosition() ? "fa-lock" : "fa-times"
                                 }`}
                               ></i>
                             }
                             styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
-                              !conditionalPosition
+                              !conditionalPosition()
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#4398AC]"
                             }`}
                             textClass="text-white text-sm" // Ensure the text size is consistent
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={!conditionalPosition}
+                            disabled={!conditionalPosition()}
                           />
                         </ButtonsComponent>
                       </td>
@@ -369,31 +369,31 @@ const Orders = () => {
                           <FormButton
                             type="button"
                             text={
-                              !conditionalPosition ? "Not Authorized" : "Print"
+                              !conditionalPosition() ? "Not Authorized" : "Print"
                             }
                             onClick={() => {
-                              if (conditionalPosition) {
+                              if (conditionalPosition()) {
                                 handlePrintData(order);
                               }
                             }}
                             icon={
                               <i
                                 className={
-                                  !conditionalPosition
+                                  !conditionalPosition()
                                     ? "fa fa-lock"
                                     : "fa fa-print"
                                 }
                               ></i>
                             }
                             styles={`relative flex items-center space-x-2 px-4 py-2 rounded  text-white ${
-                              !conditionalPosition
+                              !conditionalPosition()
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#002E48]"
                             }`}
                             textClass="text-white"
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={!conditionalPosition}
+                            disabled={!conditionalPosition()}
                           />
                         </ButtonsComponent>
                       </td>
