@@ -140,7 +140,7 @@ function MembershipRequest() {
             icon={
               <i
                 className={`fa ${
-                  !conditionalPosition() ? "fa-check" : "fa-lock"
+                  !conditionalPosition() ? "fa-lock" : "fa-check"
                 }`}
               ></i>
             }
