@@ -29,6 +29,7 @@ function MembershipRequest() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
+  console.log(conditionalPosition);
   const columns = [
     {
       key: "select",
