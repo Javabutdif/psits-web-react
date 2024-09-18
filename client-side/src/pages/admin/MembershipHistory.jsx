@@ -144,28 +144,28 @@ function MembershipHistory() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={!conditionalPosition ? "Not Authorized" : "Print"}
+            text={!conditionalPosition() ? "Not Authorized" : "Print"}
             onClick={() => {
-              if (conditionalPosition) {
+              if (conditionalPosition()) {
                 handlePrintData(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  !conditionalPosition ? "fa-lock" : "fa-print"
+                  !conditionalPosition() ? "fa-lock" : "fa-print"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              !conditionalPosition
+              !conditionalPosition()
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[#002E48]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={!conditionalPosition}
+            disabled={!conditionalPosition()}
           />
         </ButtonsComponent>
       ),
