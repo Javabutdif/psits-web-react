@@ -187,7 +187,7 @@ router.post("/editedStudent", async (req, res) => {
 
   
     await Orders.updateMany(
-      { student: studentResult._id }, 
+      {  id_number: studentResult.id_number }, 
       {
         $set: {
           student_name: `${first_name} ${middle_name} ${last_name}`,
