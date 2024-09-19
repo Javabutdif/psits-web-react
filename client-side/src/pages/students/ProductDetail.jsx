@@ -511,7 +511,9 @@ const ProductDetail = () => {
           <div className="bg-white rounded-xl shadow-xl min-w-96 md:min-w-[450px] w-fit z-10 overflow-hidden transform transition-all duration-300 scale-95">
             {/* Header */}
             <div className="flex justify-between items-center p-6 bg-navy text-white rounded-t-xl shadow-md">
-              <h5 className="text-xl font-primary font-bold">Add to Cart?</h5>
+              <h5 className="text-xl font-primary font-bold">
+                {cartIndicator ? "Add to Cart?" : "Buy Now?"}
+              </h5>
               <button
                 type="button"
                 className="text-3xl leading-none hover:text-gray-200 focus:outline-none"
