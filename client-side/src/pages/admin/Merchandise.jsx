@@ -451,56 +451,96 @@ function Merchandise() {
       {/* View Product Modal */}
 
       {isViewModalOpen && (
-        <Dialog
-          open={isViewModalOpen}
-          onClose={() => setIsViewModalOpen(false)}
-          className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4"
-        >
-          <div className="fixed inset-0 bg-black/40" aria-hidden="true"></div>
-          <Dialog.Panel className="relative bg-white rounded-lg shadow-lg max-w-full w-full sm:max-w-md lg:max-w-lg p-4 sm:p-6 md:p-8">
-            <button
-              type="button"
-              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
-              onClick={() => setIsViewModalOpen(false)}
-            >
-              <span className="sr-only">Close</span>
-              <AiOutlineClose className="w-6 h-6" aria-hidden="true" />
-            </button>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {/* Semi-transparent background */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"
+            onClick={() => setIsViewModalOpen(false)}
+          ></div>
 
-            {/* Product Image */}
-            <div className="mb-4">
-              <img
-                src={selectedItem?.imageUrl[0]}
-                alt={selectedItem?.name}
-                className="w-full h-48 object-cover rounded-md"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-gray-800">
+          {/* Modal Container */}
+          <div className="bg-white rounded-xl shadow-xl min-w-96 md:min-w-[450px] w-fit z-10 overflow-hidden transform transition-all duration-300 scale-95">
+            {/* Header */}
+            <div className="flex justify-between items-center p-6 bg-navy text-white rounded-t-xl shadow-md">
+              <h5 className="text-xl font-primary font-bold">
                 {selectedItem?.name}
-              </h2>
-              <p className="text-gray-600">Price: ₱{selectedItem?.price}</p>
-              <p className="text-gray-600">Stocks: {selectedItem?.stocks}</p>
-              <p className="text-gray-600">Batch: {selectedItem?.batch}</p>
-              <p className="text-gray-600">
-                Description: {selectedItem?.description}
-              </p>
-              <p className="text-gray-600">
-                Category: {selectedItem?.category}
-              </p>
-              <p className="text-gray-600">
-                Start Date: {selectedItem?.start_date}
-              </p>
-              <p className="text-gray-600">
-                End Date: {selectedItem?.end_date}
-              </p>
-              <p className="text-gray-600">
-                Created By: {selectedItem?.created_by}
-              </p>
+              </h5>
+              <button
+                type="button"
+                className="text-3xl leading-none hover:text-gray-200 focus:outline-none"
+                aria-label="Close"
+                onClick={() => setIsViewModalOpen(false)}
+              >
+                &times;
+              </button>
             </div>
-          </Dialog.Panel>
-        </Dialog>
+
+            {/* Body */}
+            <div className="p-6 space-y-3 bg-gray-50 text-gray-800">
+              {/* Product Image */}
+              <div className="mb-4 w-full">
+                <img
+                  src={selectedItem?.imageUrl[0]}
+                  alt={selectedItem?.name}
+                  className="w-min h-32 object-cover rounded-md"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Price:</span>
+                  <span className="text-lg">₱{selectedItem?.price}</span>
+                </div>
+
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Stocks:</span>
+                  <span className="text-lg">{selectedItem?.stocks}</span>
+                </div>
+
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Batch:</span>
+                  <span className="text-lg">{selectedItem?.batch}</span>
+                </div>
+
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Description:</span>
+                  <span className="text-lg">{selectedItem?.description}</span>
+                </div>
+
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Category:</span>
+                  <span className="text-lg">{selectedItem?.category}</span>
+                </div>
+
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Start Date:</span>
+                  <span className="text-lg">{selectedItem?.start_date}</span>
+                </div>
+
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">End Date:</span>
+                  <span className="text-lg">{selectedItem?.end_date}</span>
+                </div>
+
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Created By:</span>
+                  <span className="text-lg">{selectedItem?.created_by}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end p-6 bg-white border-t border-gray-200 rounded-b-xl">
+              <button
+                type="button"
+                className="px-5 py-2 text-gray-500 hover:text-gray-700 transition-all focus:outline-none rounded-md border border-gray-300 hover:border-gray-400"
+                onClick={() => setIsViewModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {isEditModalOpen && (
