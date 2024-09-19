@@ -47,27 +47,6 @@ const ButtonGroup = ({ items, selectedItem, onSelect, label, disabled }) => (
   </div>
 );
 
-const Modal = ({ show, onClose, children }) => {
-  if (!show) {
-    return null;
-  }
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg p-4 max-w-md w-full">
-        <div className="flex justify-end">
-          <button
-            className="text-gray-700 hover:text-gray-900"
-            onClick={onClose}
-          >
-            &times;
-          </button>
-        </div>
-        <div className="mt-2">{children}</div>
-      </div>
-    </div>
-  );
-};
-
 const ProductDetail = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -265,6 +244,7 @@ const ProductDetail = () => {
         quantity,
         sub_total,
         imageUrl1,
+        preview,
         limited,
       });
 
@@ -309,6 +289,7 @@ const ProductDetail = () => {
         total,
         order_date,
         order_status,
+        preview, // Add the preview image to formData
       });
 
       setShowModal(true);
@@ -518,86 +499,119 @@ const ProductDetail = () => {
         </div>
       )}
 
-      <Modal show={showModal} onClose={handleCloseModal}>
-        <div className="bg-white p-6 max-w-md mx-auto">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">
-              {!cartIndicator ? "Confirm Purchase" : "Cart"}
-            </h2>
-            <div className="mb-4 text-left">
-              <p className="mb-2">
-                <span className="font-semibold">Name:</span> {name}
-              </p>
-              <p className="mb-2">
-                <span className="font-semibold">
-                  {selectedSize !== null ? "Sizes: " : ""}
-                </span>{" "}
-                {selectedSize}
-              </p>
-              <p className="mb-2">
-                {category === "uniform" && (
-                  <>
-                    <span className="font-semibold">Color:</span>{" "}
-                    {selectedVariations}
-                  </>
-                )}
-                {type !== "Item" &&
-                  selectedVariations === null &&
-                  category !== "uniform" && (
-                    <>
-                      <span className="font-semibold">Color:</span>{" "}
-                      {selectedColor}
-                    </>
-                  )}
-                {type !== "Item" && category !== "uniform" && (
-                  <>
-                    <span className="font-semibold">Color:</span>{" "}
-                    {selectedColor}
-                  </>
-                )}
-              </p>
-              <p className="mb-2">
-                <span className="font-semibold">Batch:</span> {batch}
-              </p>
-              <p className="mb-2">
-                <span className="font-semibold">Price:</span> ₱ {price}
-              </p>
-              <p className="mb-2">
-                <span className="font-semibold">Quantity:</span> {quantity}
-              </p>
-              <p className="mb-2">
-                <span className="font-semibold">Membership Discount:</span>
-                {statusVerify()
-                  ? " ₱" + (calculateDiscount() * 0.05).toFixed(2)
-                  : "Not Eligible"}
-              </p>
-              <p className="mb-4">
-                <span className="font-semibold">Total: </span> ₱{" "}
-                {calculateTotal().toFixed(2)}
-              </p>
-              <p className="text-gray-700">
-                {!cartIndicator
-                  ? " Are you sure you want to purchase this item?"
-                  : "Add to Cart?"}
-              </p>
-            </div>
-            <div className="mt-6 flex justify-center gap-4">
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {/* Semi-transparent background */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"
+            onClick={handleCloseModal}
+          ></div>
+
+          {/* Modal Container */}
+          <div className="bg-white rounded-xl shadow-xl min-w-96 md:min-w-[450px] w-fit z-10 overflow-hidden transform transition-all duration-300 scale-95">
+            {/* Header */}
+            <div className="flex justify-between items-center p-6 bg-navy text-white rounded-t-xl shadow-md">
+              <h5 className="text-xl font-primary font-bold">
+                {cartIndicator ? "Add to Cart?" : "Buy Now?"}
+              </h5>
               <button
-                className="bg-[#4398AC] hover:bg-opacity-80  px-4 py-2 rounded-md text-white transition-all duration-300 ease-in-out"
+                type="button"
+                className="text-3xl leading-none hover:text-gray-200 focus:outline-none"
+                aria-label="Close"
+                onClick={handleCloseModal}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-3 bg-gray-50 text-gray-800">
+              <div className="flex items-center font-primary font-semibold justify-between gap-10">
+                <span className="text-2xl">{name}</span>
+              </div>
+              {formData.preview && (
+                <div className="mb-4 w-full">
+                  <img
+                    src={formData.preview}
+                    alt="Product Preview"
+                    className="w-min h-32 rounded-md"
+                  />
+                </div>
+              )}
+              {selectedSize && (
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Sizes:</span>
+                  <span className="text-lg">
+                    {Array.isArray(selectedSize)
+                      ? selectedSize.join(", ")
+                      : selectedSize}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center font-secondary justify-between gap-10">
+                <span className="font-medium text-lg">Color:</span>
+                <span className="text-lg">
+                  {category === "uniform"
+                    ? Array.isArray(selectedVariations)
+                      ? selectedVariations.join(", ")
+                      : selectedVariations
+                    : Array.isArray(selectedColor)
+                    ? selectedColor.join(", ")
+                    : selectedColor}
+                </span>
+              </div>
+
+              {batch && (
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Batch:</span>
+                  <span className="text-lg">{batch}</span>
+                </div>
+              )}
+              <div className="flex items-center font-secondary justify-between gap-10">
+                <span className="font-medium text-lg">Price:</span>
+                <span className="text-lg">₱ {price}</span>
+              </div>
+              <div className="flex items-center font-secondary justify-between gap-10">
+                <span className="font-medium text-lg">Quantity:</span>
+                <span className="text-lg">{quantity}</span>
+              </div>
+              <div className="flex items-center font-secondary justify-between gap-10">
+                <span className="font-medium text-lg">
+                  Membership Discount:
+                </span>
+                <span className="text-lg">
+                  {statusVerify()
+                    ? `₱ ${(calculateDiscount() * 0.05).toFixed(2)}`
+                    : "Not Eligible"}
+                </span>
+              </div>
+              <div className="flex items-center font-secondary justify-between gap-10">
+                <span className="font-medium text-lg">Total:</span>
+                <span className="text-lg">₱ {calculateTotal()}</span>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end p-6 bg-white border-t border-gray-200 rounded-b-xl">
+              <button
+                type="button"
+                className="px-5 py-2 text-gray-500 hover:text-gray-700 transition-all focus:outline-none rounded-md border border-gray-300 hover:border-gray-400"
                 onClick={handleCloseModal}
               >
                 Cancel
               </button>
               <button
-                className="bg-[#002E48] text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition-all duration-300 ease-in-out"
+                type="button"
+                className="ml-3 px-6 py-2 bg-navy text-white rounded-md hover:shadow-lg hover:bg-primary focus:outline-none transition-all duration-300 ease-in-out"
                 onClick={cartIndicator ? addToCart : handleOrder}
               >
-                Confirm
+                Yes
               </button>
             </div>
           </div>
         </div>
-      </Modal>
+      )}
     </motion.div>
   );
 };

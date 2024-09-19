@@ -1,6 +1,6 @@
 import React from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { motion } from 'framer-motion';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { motion } from "framer-motion";
 
 const DashboardCard = ({ icon, title, count }) => {
   const cardVariants = {
@@ -16,13 +16,20 @@ const DashboardCard = ({ icon, title, count }) => {
       animate="visible"
       whileHover="hover"
       variants={cardVariants}
-      transition={{ duration: 0.3, type: 'spring', stiffness: 100 }}
+      transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
     >
       <div className="mb-3 flex flex-col items-center justify-center gap-2">
-        <FontAwesomeIcon icon={icon} className="text-2xl sm:text-3xl text-gray-600" />
-        <h3 className="text-sm sm:text-base font-medium text-gray-500">{title}</h3>
+        <FontAwesomeIcon
+          icon={icon}
+          className="text-2xl sm:text-3xl text-gray-600"
+        />
+        <h3 className="text-sm sm:text-base font-medium text-gray-500">
+          {title}
+        </h3>
       </div>
-      <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mt-auto">{count}</p>
+      <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mt-auto">
+        {count}
+      </p>
     </motion.div>
   );
 };

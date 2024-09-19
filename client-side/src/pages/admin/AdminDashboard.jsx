@@ -10,7 +10,7 @@ import {
   faUserGraduate,
   faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
-import DashboardCard from "./dashboard/DashboardCard.";
+import DashboardCard from "./dashboard/DashboardCard";
 import DoughnutChart from "./dashboard/DoughnutChart";
 import BarGraph from "./dashboard/BarGraph";
 import PieChart from "./dashboard/PieChart";
