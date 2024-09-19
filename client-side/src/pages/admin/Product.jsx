@@ -288,71 +288,93 @@ function Product({ handleCloseAddProduct }) {
     return typeOptions[category] || [];
   };
 
-  const PreviewModal = ({ data, images, onClose, onConfirm }) => {
+  const PreviewModal = ({ data, images, onClose, onConfirm, isLoading }) => {
     const imagesToShow = images.slice(0, 3);
 
     return (
       <div>
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-          <div className="relative max-w-md w-full mx-4 md:mx-6 p-4 bg-white rounded-lg shadow-lg">
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <i className="fas fa-times text-lg"></i>
-            </button>
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              Preview
-            </h2>
-            {imagesToShow.length > 0 && (
-              <div className="flex gap-2 mb-4 overflow-x-auto">
-                {imagesToShow.map((image, index) => (
-                  <img
-                    key={index}
-                    src={URL.createObjectURL(image)}
-                    alt={`Product Preview ${index + 1}`}
-                    className="w-20 h-20 object-cover rounded-md shadow-sm border border-gray-200"
-                  />
-                ))}
-                {images.length > 3 && (
-                  <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-md shadow-sm border border-gray-200">
-                    <p className="text-xs text-gray-500">
-                      +{images.length - 3} more
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="text-gray-700 space-y-1 mb-4">
-              {Object.entries({
-                "Product Name": data.name,
-                Price: `₱${data.price}`,
-                Stocks: data.stocks,
-                Batch: data.batch,
-                Category: data.category,
-                Type: data.type,
-                Description: data.description,
-                "Purchase Control": data.control,
-                "Start Date": data.start_date,
-                "End Date": data.end_date,
-                Sizes: data.selectedSizes.join(", "),
-                Variations: data.selectedVariations.join(", "),
-              }).map(([label, value]) => (
-                <p key={label} className="text-sm">
-                  <strong>{label}:</strong> {value}
-                </p>
-              ))}
-            </div>
-            <div className="flex justify-end space-x-3">
+        {/** Semi-transparent background */}
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          onClick={onClose}
+        >
+          <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
+
+          {/** Modal Container */}
+          <div className="bg-white rounded-xl shadow-xl min-w-96 md:min-w-[450px] w-fit z-10 overflow-hidden transform transition-all duration-300 scale-95">
+            {/** Header */}
+            <div className="flex justify-between items-center p-6 bg-navy text-white rounded-t-xl shadow-md">
+              <h5 className="text-xl font-primary font-bold">Preview</h5>
               <button
+                type="button"
+                className="text-3xl leading-none hover:text-gray-200 focus:outline-none"
+                aria-label="Close"
                 onClick={onClose}
-                className="px-4 py-2 bg-[#4398AC] text-white rounded-full text-sm transition-colors hover:bg-opacity-80"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/** Body */}
+            <div className="p-6 space-y-3 bg-gray-50 text-gray-800">
+              {imagesToShow.length > 0 && (
+                <div className="flex gap-2 mb-4 overflow-x-auto">
+                  {imagesToShow.map((image, index) => (
+                    <img
+                      key={index}
+                      src={URL.createObjectURL(image)}
+                      alt={`Product Preview ${index + 1}`}
+                      className="w-20 h-20 object-cover rounded-md shadow-sm border border-gray-200"
+                    />
+                  ))}
+                  {images.length > 3 && (
+                    <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-md shadow-sm border border-gray-200">
+                      <p className="text-xs text-gray-500">
+                        +{images.length - 3} more
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="text-gray-700 space-y-1">
+                {Object.entries({
+                  "Product Name": data.name,
+                  Price: `₱${data.price}`,
+                  Stocks: data.stocks,
+                  Batch: data.batch,
+                  Category: data.category,
+                  Type: data.type,
+                  Description: data.description,
+                  "Purchase Control": data.control,
+                  "Start Date": data.start_date,
+                  "End Date": data.end_date,
+                  Sizes: data.selectedSizes.join(", "),
+                  Variations: data.selectedVariations.join(", "),
+                }).map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between gap-10"
+                  >
+                    <span className="font-medium text-md">{label}:</span>
+                    <span className="text-md">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/** Footer */}
+            <div className="flex items-center justify-end p-6 bg-white border-t border-gray-200 rounded-b-xl">
+              <button
+                type="button"
+                className="px-5 py-2 text-gray-500 hover:text-gray-700 transition-all focus:outline-none rounded-md border border-gray-300 hover:border-gray-400"
+                onClick={onClose}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="px-4 py-2 bg-[#002E48] text-white rounded-full hover:bg-opacity-80 relative flex items-center justify-center"
+                className="ml-3 px-6 py-2 bg-navy text-white rounded-md hover:shadow-lg hover:bg-primary focus:outline-none transition-all duration-300 ease-in-out"
                 onClick={onConfirm}
                 disabled={isLoading}
               >
