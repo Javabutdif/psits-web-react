@@ -265,20 +265,17 @@ const CartItem = ({
           {product_name}
           <span className="block text-sm text-gray-600">ID: {product_id}</span>
         </h4>
-        {sizes !== null
-          ? sizes
-          : null && (
-              <p className="text-sm sm:text-base font-medium text-gray-700">
-                Size: {sizes}
-              </p>
-            )}
-        {variation !== null
-          ? variation
-          : null && (
-              <p className="text-sm sm:text-base font-medium text-gray-700">
-                Color:{variation}
-              </p>
-            )}
+        {sizes && sizes.length > 0 && (
+          <p className="text-sm sm:text-base font-medium text-gray-700">
+            Size: {sizes.join(", ")}
+          </p>
+        )}
+
+        {variation && variation.length > 0 && (
+          <p className="text-sm sm:text-base font-medium text-gray-700">
+            Color: {variation.join(", ")}
+          </p>
+        )}
 
         <p className="text-sm sm:text-base font-medium text-gray-700">
           ₱{price.toFixed(2)}
