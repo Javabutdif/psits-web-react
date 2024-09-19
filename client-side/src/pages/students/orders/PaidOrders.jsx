@@ -4,6 +4,7 @@ import { getId } from "../../../authentication/Authentication";
 import OrderList from "./OrderList";
 import Pagination from "../../../components/Custom/Pagination";
 
+
 const PaidOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,8 +14,7 @@ const PaidOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [ordersPerPage] = useState(5); // Number of orders to show per page
   const [selectedOrders, setSelectedOrders] = useState([]);
-  const [isAllChecked, setIsAllChecked] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+
 
   const pendingOrders = orders.filter((order) => order.order_status === "Paid");
 
@@ -42,24 +42,7 @@ const PaidOrders = () => {
     setIsModalOpen(true);
   };
 
-  // Confirm cancellation of the selected order
-  const handleModalConfirm = async () => {
-    if (selectedOrderId) {
-      try {
-        await cancelOrder(selectedOrderId);
-        await fetchOrders(); // Refetch orders after cancellation
-        setIsModalOpen(false);
-        setSelectedOrderId(null);
-      } catch (error) {
-        console.error("Failed to cancel the order", error);
-      }
-    }
-  };
 
-  // Close the modal
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-  };
 
   // Handle checkbox change
   const handleCheckboxChange = (order_id) => {

@@ -5,9 +5,12 @@ import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt";
-import { getPosition } from "../../authentication/Authentication";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../enums/commonEnums";
+import {
+  conditionalPosition,
+  formattedDate,
+} from "../../components/tools/clientTools";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -26,7 +29,6 @@ const Orders = () => {
   const [error, setError] = useState(null);
   const componentRef = useRef();
   const printRef = useRef();
-  const position = getPosition();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -53,22 +55,22 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  console.log(orders)
-
   useEffect(() => {
     const filtered = orders.filter((order) => {
       const matchesStatus = order.order_status === selectedTab;
       const searchTermLower = searchTerm.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         order.student_name.toLowerCase().includes(searchTermLower) ||
         order._id.toLowerCase().includes(searchTermLower) ||
         order.id_number.toLowerCase().includes(searchTermLower) ||
         order.rfid.toLowerCase().includes(searchTermLower) ||
-        (order.reference_code && order.reference_code.toString().includes(searchTerm));
-  
-      return matchesStatus && (searchTerm === '' || matchesSearch);
+        order.course.toLowerCase().includes(searchTermLower) ||
+        (order.reference_code &&
+          order.reference_code.toString().includes(searchTerm));
+
+      return matchesStatus && (searchTerm === "" || matchesSearch);
     });
-  
+
     setFilteredOrders(filtered);
     setCurrentPage(1); // Reset to first page when filter changes
   }, [orders, selectedTab, searchTerm]);
@@ -180,10 +182,10 @@ const Orders = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {selectedTab === "Pending" ? "Order ID" : "Reference Code"}
+                {selectedTab === "Pending" ? "ID" : "Reference"}
               </th>
               <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Student Name
+                Name
               </th>
               <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Membership
@@ -192,7 +194,7 @@ const Orders = () => {
                 Total
               </th>
               <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Order Date
+                Date
               </th>
               {selectedTab === "Paid" && (
                 <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -214,7 +216,7 @@ const Orders = () => {
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-400">
             {currentOrders.length > 0 ? (
               currentOrders.map((order) => (
                 <React.Fragment
@@ -225,16 +227,22 @@ const Orders = () => {
                   <tr className="hover:bg-gray-50">
                     <td className="p-2 text-xs text-gray-500">
                       {selectedTab === "Pending"
-                        ? order._id
+                        ? order.id_number
                         : order.reference_code}
                     </td>
                     <td className="p-4 text-sm text-gray-500">
                       <div>{order.student_name}</div>
-                      <div className="text-xs text-gray-500">
-                        ID: {order.id_number}
-                      </div>
+                      {selectedTab !== "Pending" && (
+                        <div className="text-xs text-gray-500">
+                          ID: {order.id_number}
+                        </div>
+                      )}
+
                       <div className="text-xs text-gray-500">
                         RFID: {order.rfid}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {order.course}-{order.year}
                       </div>
                     </td>
                     <td className="p-2 text-sm text-gray-500">
@@ -244,11 +252,11 @@ const Orders = () => {
                       ₱{order.total}
                     </td>
                     <td className="p-2 text-sm text-gray-500">
-                      {order.order_date}
+                      {formattedDate(order.order_date)}
                     </td>
                     {order.order_status === "Paid" && (
                       <td className="p-2 text-sm text-gray-500">
-                        {order.transaction_date}
+                        {formattedDate(order.transaction_date)}
                       </td>
                     )}
                     <td className="p-2 text-sm">
@@ -269,120 +277,87 @@ const Orders = () => {
                         {order.admin}
                       </td>
                     )}
-                    <td className="p-2 text-sm">
-                      <button
-                        onClick={() => toggleDropdown(order._id)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        {openDropdown === order._id
-                          ? "Hide Items"
-                          : "Show Items"}
-                      </button>
+                    <td className="p-2 text-sm ">
+                      <ButtonsComponent>
+                        <FormButton
+                          type="button"
+                          onClick={() => toggleDropdown(order._id)}
+                          icon={
+                            <i
+                              className={`fa ${
+                                openDropdown === order._id
+                                  ? "fa fa-chevron-up"
+                                  : "fa fa-chevron-down"
+                              }`}
+                            ></i>
+                          }
+                          styles={`relative flex items-center justify-center  px-2 py-2 rounded text-white bg-[#002E48]`}
+                          textClass="text-white text-sm"
+                          whileHover={{ scale: 1.02, opacity: 0.95 }}
+                          whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        />
+                      </ButtonsComponent>
                     </td>
                     {order.order_status !== "Paid" && (
-                      <td className="p-4 text-sm flex gap-2 mt-8">
+                      <td className="p-2 text-sm flex gap-2 mt-4 ">
                         <ButtonsComponent>
                           <FormButton
                             type="button"
                             text={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
+                              !conditionalPosition()
                                 ? "Not Authorized"
                                 : "Approve"
                             }
                             onClick={() => {
-                              if (
-                                position === "Treasurer" ||
-                                position === "Assistant Treasurer" ||
-                                position === "Auditor" ||
-                                position === "Developer"
-                              ) {
+                              if (conditionalPosition()) {
                                 handleApproveClick(order);
                               }
                             }}
                             icon={
                               <i
                                 className={`fa ${
-                                  position !== "Treasurer" &&
-                                  position !== "Assistant Treasurer" &&
-                                  position !== "Auditor" &&
-                                  position !== "Developer"
-                                    ? "fa-lock"
-                                    : "fa-check"
+                                  !conditionalPosition() ? "fa-lock" : "fa-check"
                                 }`}
                               ></i>
                             }
                             styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
+                              !conditionalPosition()
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#002E48]"
                             }`}
-                            textClass="text-white text-sm" // Ensure the text size is consistent
+                            textClass="text-white text-sm"
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                            }
+                            disabled={!conditionalPosition()}
                           />
                         </ButtonsComponent>
                         <ButtonsComponent>
                           <FormButton
                             type="button"
                             text={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                                ? "Not Authorized"
-                                : "Cancel"
+                              !conditionalPosition() ? "Not Authorized" : "Cancel"
                             }
                             onClick={() => {
-                              if (
-                                position === "Treasurer" ||
-                                position === "Assistant Treasurer" ||
-                                position === "Auditor" ||
-                                position === "Developer"
-                              ) {
+                              if (conditionalPosition()) {
                                 handleCancelClick(order);
                               }
                             }}
                             icon={
                               <i
                                 className={`fa ${
-                                  position !== "Treasurer" &&
-                                  position !== "Assistant Treasurer" &&
-                                  position !== "Auditor" &&
-                                  position !== "Developer"
-                                    ? "fa-lock"
-                                    : "fa-times"
+                                  !conditionalPosition() ? "fa-lock" : "fa-times"
                                 }`}
                               ></i>
                             }
                             styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
+                              !conditionalPosition()
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#4398AC]"
                             }`}
                             textClass="text-white text-sm" // Ensure the text size is consistent
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                            }
+                            disabled={!conditionalPosition()}
                           />
                         </ButtonsComponent>
                       </td>
@@ -394,52 +369,31 @@ const Orders = () => {
                           <FormButton
                             type="button"
                             text={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                                ? "Not Authorized"
-                                : "Print"
+                              !conditionalPosition() ? "Not Authorized" : "Print"
                             }
                             onClick={() => {
-                              if (
-                                position === "Treasurer" ||
-                                position === "Assistant Treasurer" ||
-                                position === "Auditor" ||
-                                position === "Developer"
-                              ) {
+                              if (conditionalPosition()) {
                                 handlePrintData(order);
                               }
                             }}
                             icon={
                               <i
                                 className={
-                                  position !== "Treasurer" &&
-                                  position !== "Assistant Treasurer" &&
-                                  position !== "Auditor" &&
-                                  position !== "Developer"
+                                  !conditionalPosition()
                                     ? "fa fa-lock"
                                     : "fa fa-print"
                                 }
                               ></i>
                             }
                             styles={`relative flex items-center space-x-2 px-4 py-2 rounded  text-white ${
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
+                              !conditionalPosition()
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-[#002E48]"
                             }`}
                             textClass="text-white"
                             whileHover={{ scale: 1.02, opacity: 0.95 }}
                             whileTap={{ scale: 0.98, opacity: 0.9 }}
-                            disabled={
-                              position !== "Treasurer" &&
-                              position !== "Assistant Treasurer" &&
-                              position !== "Auditor" &&
-                              position !== "Developer"
-                            }
+                            disabled={!conditionalPosition()}
                           />
                         </ButtonsComponent>
                       </td>

@@ -20,6 +20,12 @@ const orderDetailSchema = new Schema({
   rfid: {
     type: String,
   },
+  course: {
+    type: String,
+  },
+  year: {
+    type: Number,
+  },
   batch: {
     type: String,
   },
@@ -91,11 +97,11 @@ const merchSchema = new Schema(
       required: true,
     },
     start_date: {
-      type: String,
+      type: Date,
       required: true,
     },
     end_date: {
-      type: String,
+      type: Date,
     },
     is_active: {
       type: Boolean,

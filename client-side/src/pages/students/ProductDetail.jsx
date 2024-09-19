@@ -259,7 +259,7 @@ const ProductDetail = () => {
       const rfid = getRfid();
       const imageUrl1 = imageUrl[0];
       const total = calculateTotal();
-      const order_date = format(new Date(), "MMMM d, yyyy h:mm:ss a");
+      const order_date = new Date();
       const order_status = "Pending";
       const membership_discount = statusVerify() ? true : false;
 

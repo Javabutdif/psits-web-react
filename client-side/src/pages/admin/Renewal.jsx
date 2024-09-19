@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from "react";
 import "../../App.css";
-import backendConnection from "../../api/backendApi";
-import { InfinitySpin } from "react-loader-spinner";
-import axios from "axios";
-import { showToast } from "../../utils/alertHelper";
-import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
-import { ConfirmActionType } from "../../enums/commonEnums";
 import ApproveModal from "../../components/admin/ApproveModal";
 import { renewStudent } from "../../api/admin";
-import MembershipHeader from "../../components/admin/MembershipHeader";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getUser } from "../../authentication/Authentication";
 import TableComponent from "../../components/Custom/TableComponent";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
-import c from "../../components/ToolTip";
+import {
+  conditionalPosition,
+  formattedDate,
+} from "../../components/tools/clientTools";
 
 function MembershipRequest() {
   const [data, setData] = useState([]);
@@ -107,36 +103,6 @@ function MembershipRequest() {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [
-        ["Name", "Id Number", "Course", "Year", "Email", "Type", "Renewed On"],
-      ],
-      body: filteredData.map((item) => [
-        item.first_name + " " + item.middle_name + " " + item.last_name,
-        item.id_number,
-        item.course,
-        item.year,
-        item.email,
-        "Student",
-        item.renewedOn,
-      ]),
-      startY: 20,
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [22, 160, 133],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-      },
-      margin: { top: 10 },
-    });
-    doc.save("students.pdf");
-  };
-
   const columns = [
     {
       key: "id_number",
@@ -161,9 +127,14 @@ function MembershipRequest() {
 
     {
       key: "course",
-      label: "Course",
+      label: "Course & Year",
       selector: (row) => row.course,
       sortable: true,
+      cell: (row) => (
+        <div>
+          <p className="text-xs">{row.course + "-" + row.year}</p>
+        </div>
+      ),
     },
     {
       key: "email",
@@ -179,7 +150,7 @@ function MembershipRequest() {
       sortable: true,
       cell: (row) => (
         <div>
-          <p className="text-xs">{row.renewedOn}</p>
+          <p className="text-xs">{formattedDate(row.renewedOn)}</p>
         </div>
       ),
     },
@@ -211,62 +182,35 @@ function MembershipRequest() {
     },
     {
       name: "Action",
+      label: "Action",
       cell: (row) => (
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-                ? "Not Authorized"
-                : "Approve"
-            }
+            text={!conditionalPosition() ? "Not Authorized" : "Approve"}
             onClick={() => {
-              if (
-                position === "Treasurer" ||
-                position === "Assistant Treasurer" ||
-                position === "Auditor" ||
-                position === "Developer"
-              ) {
+              if (conditionalPosition()) {
                 handleOpenModal(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  position !== "Treasurer" &&
-                  position !== "Assistant Treasurer" &&
-                  position !== "Auditor" &&
-                  position !== "Developer"
-                    ? "fa-lock"
-                    : "fa-check"
+                  !conditionalPosition() ? "fa-lock" : "fa-check"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
+              !conditionalPosition()
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[#002E48]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-            }
+            disabled={!conditionalPosition()}
           />
-          {position !== "Treasurer" &&
-            position !== "Assistant Treasurer" &&
-            position !== "Auditor" &&
-            position !== "Developer" && <c visible={true}></c>}
+          {!conditionalPosition() && <c visible={true}></c>}
         </ButtonsComponent>
       ),
     },

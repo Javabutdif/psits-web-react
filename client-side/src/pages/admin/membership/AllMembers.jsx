@@ -6,12 +6,9 @@ import {
   studentDeletion,
   renewAllStudent,
 } from "../../../api/admin";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-import { InfinitySpin } from "react-loader-spinner";
 import { getUser } from "../../../authentication/Authentication";
 import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";

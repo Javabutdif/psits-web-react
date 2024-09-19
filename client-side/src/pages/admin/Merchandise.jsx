@@ -19,6 +19,7 @@ import { Dialog } from "@headlessui/react";
 import { AiOutlineClose } from "react-icons/ai";
 import { showToast } from "../../utils/alertHelper";
 import { isBefore, isAfter, isWithinInterval } from "date-fns";
+import { formattedDate } from "../../components/tools/clientTools";
 
 function Merchandise() {
   const [data, setData] = useState([]);

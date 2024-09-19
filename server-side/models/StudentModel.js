@@ -60,7 +60,7 @@ const studentSchema = new Schema({
   renewedOn: {
     type: String,
   },
-  cart: [CartItem.schema], // Embed the CartItem schema
+  cart: [CartItem.schema], 
 });
 
 const Student = mongoose.model("Student", studentSchema);

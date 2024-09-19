@@ -29,7 +29,6 @@ function ApproveModal({
   membership,
 }) {
   const componentRef = useRef();
-  let [cash, setCash] = useState("");
   const [adminName, position] = getUser();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -45,6 +44,7 @@ function ApproveModal({
     admin: adminName,
     cash: "",
     date: new Date(),
+    transaction_date: new Date(),
     total: total,
   });
 

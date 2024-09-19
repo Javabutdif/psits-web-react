@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { getMembershipStatusStudents } from "../../../api/students";
 import { getId } from "../../../authentication/Authentication";
+import { formattedDate } from "../../../components/tools/clientTools";
 
 const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
   const { pathname } = useLocation();
@@ -60,7 +61,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
       >
         <div className="flex flex-col md:flex-row relative gap-3 w-full">
           <p className="text-xs text-neutral-dark absolute top-0 right-0">
-            {order.order_date}
+            {formattedDate(order.order_date)}
           </p>
           {isNotPaidPage && (
             <div
@@ -77,9 +78,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
           )}
           <div className="flex-shrink-0">
             <img
-              src={
-                order.items[0].imageUrl1 || "https://via.placeholder.com/80"
-              }
+              src={order.items[0].imageUrl1 || "https://via.placeholder.com/80"}
               alt="Product"
               className="w-16 h-16 object-cover rounded-md border border-neutral-medium"
             />
@@ -148,7 +147,6 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
         </div>
       </motion.div>
 
-      {/* Modal Component */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
           <motion.div
@@ -158,7 +156,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
             transition={{ duration: 0.2 }}
           >
             <h2 className="text-md font-medium mb-2">
-              {order.order_date}
+              {formattedDate(order.order_date)}
             </h2>
             <p className="mb-2 text-xs">
               <strong className="font-medium">Student:</strong>{" "}
@@ -177,17 +175,15 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
               {order.order_status}
             </p>
             <p className="mb-4 text-xs">
-              <strong className="font-medium">Date:</strong> {order.order_date}
+              <strong className="font-medium">Date:</strong>{" "}
+              {formattedDate(order.order_date)}
             </p>
 
             {/* Map through order.items */}
             <div className="mb-4">
               <h3 className="text-md font-medium mb-2">Items:</h3>
               {order.items.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center mb-3"
-                >
+                <div key={index} className="flex items-center mb-3">
                   <div className="flex-shrink-0 mr-3">
                     <img
                       src={item.imageUrl1 || "https://via.placeholder.com/80"}
@@ -204,6 +200,18 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
                       <strong className="font-medium">Quantity:</strong>{" "}
                       {item.quantity}
                     </p>
+                    {(item.batch !== null && item.batch !== "") && (
+                      <p className="text-xs mb-1">
+                        <strong className="font-medium">Batch:</strong>{" "}
+                        {item.batch}
+                      </p>
+                    )}
+                    {(item.sizes !== null && item.sizes !== "") && (
+                      <p className="text-xs mb-1">
+                        <strong className="font-medium">Size:</strong>{" "}
+                        {item.sizes}
+                      </p>
+                    )}
                     <p className="text-xs mb-1">
                       <strong className="font-medium">Price:</strong> ₱
                       {item.price.toFixed(2)}

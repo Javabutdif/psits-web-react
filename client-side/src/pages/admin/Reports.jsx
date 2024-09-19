@@ -4,6 +4,7 @@ import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { CSVLink } from "react-csv";
 import { membershipHistory, merchandiseAdmin } from "../../api/admin";
+import { formattedDate } from "../../components/tools/clientTools";
 
 const Reports = () => {
   const [membershipData, setMembershipData] = useState([]);
@@ -162,17 +163,20 @@ const Reports = () => {
       }
       if (filterDateFrom) {
         filteredData = filteredData.filter(
-          (item) => new Date(item.order_date) >= new Date(filterDateFrom)
+          (item) =>
+            formattedDate(item.transaction_date) >=
+            formattedDate(filterDateFrom)
         );
       }
       if (filterDateTo) {
         filteredData = filteredData.filter(
-          (item) => new Date(item.order_date) <= new Date(filterDateTo)
+          (item) =>
+            formattedDate(item.transaction_date) <= formattedDate(filterDateTo)
         );
       }
       if (filterBatch) {
-        filteredData = filteredData.filter(
-          (item) => item.batch === Number(filterBatch)
+        filteredData = filteredData.filter((item) =>
+          item.batch?.includes(filterBatch)
         );
       }
       if (filterSize) {
@@ -252,7 +256,7 @@ const Reports = () => {
     { name: "Year", selector: (row) => row.year, sortable: true },
     {
       name: "Date",
-      selector: (row) => new Date(row.date).toLocaleString(),
+      selector: (row) => formattedDate(row.date),
       sortable: true,
     },
     { name: "Type", selector: (row) => row.type, sortable: true },
@@ -282,8 +286,8 @@ const Reports = () => {
 
     { name: "Total", selector: (row) => row.total, sortable: true },
     {
-      name: "Order Date",
-      selector: (row) => new Date(row.order_date).toLocaleString(),
+      name: "Transaction Date",
+      selector: (row) => formattedDate(row.transaction_date),
       sortable: true,
     },
   ];
@@ -296,7 +300,6 @@ const Reports = () => {
         );
       }
 
-      // Calculate membership and renewal counts
       const membershipCount = membershipData.filter(
         (data) => data.type === "Membership"
       ).length;
@@ -308,7 +311,7 @@ const Reports = () => {
       return { membershipCount, renewalCount };
     } catch (error) {
       console.error("Error processing membership data:", error);
-      // Handle the error appropriately
+
       return { membershipCount: 0, renewalCount: 0 };
     }
   };
@@ -383,6 +386,7 @@ const Reports = () => {
               </button>
             </CSVLink>
           </div>
+
           <DataTable
             columns={membershipColumns}
             data={filteredMembershipData}

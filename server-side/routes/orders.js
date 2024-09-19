@@ -164,7 +164,7 @@ router.put("/cancel/:product_id", async (req, res) => {
 });
 
 router.put("/approve-order", async (req, res) => {
-  const { reference_code, order_id, admin, cash } = req.body;
+  const { transaction_date, reference_code, order_id, admin, cash } = req.body;
 
   try {
     if (!ObjectId.isValid(order_id)) {
@@ -179,17 +179,16 @@ router.put("/approve-order", async (req, res) => {
           reference_code: reference_code,
           order_status: "Paid",
           admin: admin,
-          transaction_date: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+          transaction_date: transaction_date,
         },
       },
       { new: true }
-    ); // Use `new: true` to return the updated document
+    );
 
     if (!successfulOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Fetch the student based on id_number from the order
     const student = await Student.findOne({
       id_number: successfulOrder.id_number,
     });
@@ -198,9 +197,8 @@ router.put("/approve-order", async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // Fetch each item in the order and update the corresponding merchandise
     const { items } = successfulOrder;
-    console.log(items);
+
     if (Array.isArray(items) && items.length > 0) {
       await Promise.all(
         items.map(async (item) => {
@@ -217,6 +215,8 @@ router.put("/approve-order", async (req, res) => {
                 id_number: successfulOrder.id_number,
                 student_name: successfulOrder.student_name,
                 rfid: successfulOrder.rfid,
+                course: successfulOrder.course,
+                year: successfulOrder.year,
                 batch: item.batch,
                 size: { $each: sizes },
                 variation: { $each: variations },

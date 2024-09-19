@@ -4,14 +4,13 @@ import { showToast } from "../../utils/alertHelper";
 import { membershipRequest, requestDeletion } from "../../api/admin";
 import MembershipHeader from "../../components/admin/MembershipHeader";
 import TableComponent from "../../components/Custom/TableComponent";
-import { getPosition } from "../../authentication/Authentication";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 
 import { ConfirmActionType } from "../../enums/commonEnums";
 import ApproveModal from "../../components/admin/ApproveModal";
-
+import { conditionalPosition } from "../../components/tools/clientTools";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 
@@ -27,10 +26,10 @@ function MembershipRequest() {
   const [selectedStudentCourse, setSelectedStudentCourse] = useState("");
   const [selectedStudentYear, setSelectedStudentYear] = useState("");
   const [selectedStudentName, setSelectedStudentName] = useState("");
-  const position = getPosition();
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
+  
   const columns = [
     {
       key: "select",
@@ -132,103 +131,54 @@ function MembershipRequest() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-                ? "Not Authorized"
-                : "Approve"
-            }
+            text={conditionalPosition() ? "Approve" : "Not Authorized"}
             onClick={() => {
-              if (
-                position === "Treasurer" ||
-                position === "Assistant Treasurer" ||
-                position === "Auditor" ||
-                position === "Developer"
-              ) {
+              if (conditionalPosition()) {
                 handleOpenModal(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  position !== "Treasurer" &&
-                  position !== "Assistant Treasurer" &&
-                  position !== "Auditor" &&
-                  position !== "Developer"
-                    ? "fa-lock"
-                    : "fa-check"
+                  !conditionalPosition() ? "fa-lock" : "fa-check"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-[#002E48]"
+              conditionalPosition()
+              ? "bg-[#002E48]"
+                : "bg-gray-500 cursor-not-allowed"
+                
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-            }
+            disabled={!conditionalPosition()}
           />
           <FormButton
             type="button"
-            text={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-                ? "Not Authorized"
-                : "Cancel"
-            }
+            text={!conditionalPosition() ? "Not Authorized" : "Cancel"}
             onClick={() => {
-              if (
-                position === "Treasurer" ||
-                position === "Assistant Treasurer" ||
-                position === "Auditor" ||
-                position === "Developer"
-              ) {
+              if (conditionalPosition()) {
                 showModal(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  position !== "Treasurer" &&
-                  position !== "Assistant Treasurer" &&
-                  position !== "Auditor" &&
-                  position !== "Developer"
-                    ? "fa-lock"
-                    : "fa-trash"
+                  !conditionalPosition() ? "fa-lock" : "fa-trash"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
+              !conditionalPosition()
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[#4398AC]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={
-              position !== "Treasurer" &&
-              position !== "Assistant Treasurer" &&
-              position !== "Auditor" &&
-              position !== "Developer"
-            }
+            disabled={!conditionalPosition}
           />
         </ButtonsComponent>
       ),

@@ -265,12 +265,21 @@ const CartItem = ({
           {product_name}
           <span className="block text-sm text-gray-600">ID: {product_id}</span>
         </h4>
-        <p className="text-sm sm:text-base font-medium text-gray-700">
-          Size: {sizes !== null ? sizes : null}
-        </p>
-        <p className="text-sm sm:text-base font-medium text-gray-700">
-          Color: {variation !== null ? variation : null}
-        </p>
+        {sizes !== null
+          ? sizes
+          : null && (
+              <p className="text-sm sm:text-base font-medium text-gray-700">
+                Size: {sizes}
+              </p>
+            )}
+        {variation !== null
+          ? variation
+          : null && (
+              <p className="text-sm sm:text-base font-medium text-gray-700">
+                Color:{variation}
+              </p>
+            )}
+
         <p className="text-sm sm:text-base font-medium text-gray-700">
           ₱{price.toFixed(2)}
         </p>
@@ -439,7 +448,7 @@ const StudentCart = () => {
       items: selectedItems,
       membership_discount: statusVerify(),
       total: calculateTotals().totalPrice,
-      order_date: new Date().toLocaleString(),
+      order_date: new Date(),
       order_status: "Pending",
     });
   };
