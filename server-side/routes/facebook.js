@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const router = express.Router();
 
+// TODO: improve data fetched and ui
 // GET 5 recent posts
 router.get("/", async (req, res) => {
   const page_id = process.env.PSITS_PAGE_ID;
