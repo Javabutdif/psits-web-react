@@ -172,7 +172,8 @@ router.put("/update/:_id", upload.array("images", 3), async (req, res) => {
           item.price = price;
           item.sub_total = price * item.quantity;
           item.imageUrl1 = imageUrl[0];
-
+          item.start_date = start_date;
+          item.end_date = end_date;
           item.category = category;
           item.batch = batch;
           item.limited = control === "limited-purchase" ? true : false;
