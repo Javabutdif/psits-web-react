@@ -17,13 +17,12 @@ require("dotenv").config();
 
 app.use(
   cors({
-    origin: "*", 
+    origin: process.env.CORS,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(bodyParser.json());
-
 
 mongoose
   .connect(process.env.MONGODB_URI, {
