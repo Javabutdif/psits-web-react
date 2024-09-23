@@ -9,7 +9,7 @@ import {
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-import { getUser } from "../../../authentication/Authentication";
+import { useUser } from "../../../authentication/Authentication";
 import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
@@ -142,8 +142,16 @@ const Membership = () => {
     setIsLoading(true);
     try {
       const id_number = studentIdToBeDeleted;
-      const [name] = getUser();
-      if ((await studentDeletion(id_number, name)) === 200) {
+      const [user, setUser] = useState(null);
+      useEffect(() => {
+        const fetchUser = async () => {
+          const retrievedUser = await useUser();
+          setUser(retrievedUser);
+        };
+
+        fetchUser();
+      }, []);
+      if ((await studentDeletion(id_number, user.name)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );

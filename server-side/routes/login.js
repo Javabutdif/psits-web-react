@@ -2,12 +2,23 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
 const token_key = process.env.JWT_SECRET;
-router.post("/login", async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 10,
+  message:
+    "Too many login attempts from this IP, please try again after 15 minutes.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post("/login", loginLimiter, async (req, res) => {
   const { id_number, password } = req.body;
 
   try {
@@ -48,6 +59,7 @@ router.post("/login", async (req, res) => {
           .json({ message: "Invalid ID number or password" });
       }
     }
+
     const user = {
       id_number: users.id_number,
       rfid: role === "Student" ? users.rfid : "",
@@ -65,15 +77,32 @@ router.post("/login", async (req, res) => {
       position: role === "Admin" ? users.position : "N/A",
     };
 
+    // Create the token
     const token = jwt.sign({ user, role }, token_key, {
       expiresIn: role === "Admin" ? "1h" : "10m",
     });
 
-    return res.json({ token, message: "Login successful" });
+    // Set the token in an HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true, // Prevents client-side access to the cookie
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      maxAge: role === "Admin" ? 3600000 : 600000, // Same expiration as JWT
+      sameSite: "Strict", // Adjust as necessary for your app
+    });
+
+    return res.json({ message: "Login successful", role });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "An error occurred", error });
   }
+});
+
+router.get("/protected-route", authenticateToken, (req, res) => {
+  return res.json({
+    message: "Access granted",
+    user: req.user,
+    role: req.role,
+  });
 });
 
 module.exports = router;
