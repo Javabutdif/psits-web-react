@@ -1,4 +1,7 @@
 import { jwtDecode } from "jwt-decode";
+import { react, useEffect, useState } from "react";
+import axios from "axios";
+import backendConnection from "../api/backendApi";
 
 //Set Authentication when successful login
 export const setAuthentication = (token) => {
@@ -28,39 +31,22 @@ export const setAuthentication = (token) => {
   sessionStorage.setItem("Token", token);
 };
 
-//Retrive Token sa Private Route, every route e check if valid pa ang token
 export const getAuthentication = () => {
-  try {
-    const authen = localStorage.getItem("Data");
-    const sessionToken = sessionStorage.getItem("Token");
-    const token = jwtDecode(sessionToken);
-    if (!authen) return null;
-    if (!sessionToken) return null;
+  const cookies = document.cookie.split("; ");
+  const tokenCookie = cookies.find((row) => row.startsWith("token="));
 
-    const item = JSON.parse(authen);
-    const now = new Date();
+  if (!tokenCookie) return null;
 
-    if (now.getTime() > item.expiry) {
-      localStorage.removeItem("Data");
-      sessionStorage.removeItem("Token");
-      return null;
-    }
-    if (
-      item.id === token.user.id_number &&
-      item.position === token.user.position
-    ) {
-      if (item.role === "Admin") {
-        return "Administrator";
-      } else {
-        return "Student";
-      }
-    } else {
-      return null;
-    }
-  } catch (Exception) {
-    removeAuthentication();
-    return null;
+  const token = tokenCookie.split("=")[1]; // Extract the token value
+
+  // Check if the token exists and is valid
+  if (token) {
+    // You can add logic here to check the validity of the token
+    console.log(token);
+    return "Token is present"; // Return a placeholder or flag
   }
+
+  return null; // Token not found
 };
 
 export const getRoute = () => {
@@ -102,24 +88,47 @@ export const setRetrieveStudent = (data, course, year) => {
   localStorage.setItem("Data", JSON.stringify(edited));
 };
 
-export const getUser = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
+export const useUser = async () => {
+  let user;
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/protected-route`,
+      {
+        withCredentials: true,
+      }
+    );
 
-  if (token.role === "Student")
-    return [
-      token.user.first_name +
-        " " +
-        token.user.middle_name +
-        " " +
-        token.user.last_name,
-      token.user.course + "-" + token.user.year,
-    ];
+    if (response.data.role === "Admin") {
+      console.log(response.data);
+      user = {
+        name: response.data.user.name,
+        position: response.data.user.position,
+        id: response.data.user.id_number,
+      };
+    } else if (response.data.role === "Student") {
+      console.log(response.data);
+      user = {
+        id: response.data.user.id_number,
+        course: response.data.user.course,
+        name:
+          response.data.user.first_name +
+          " " +
+          response.data.user.middle_name +
+          " " +
+          response.data.user.last_name,
 
-  return [token.user.name, token.user.position, token.user.id];
+        position: response.data.user.position,
+        year: response.data.user.year,
+        rfid: response.data.user.rfid,
+      };
+    }
+  } catch (err) {
+    console.error("Not authorized:", err);
+  } finally {
+  }
+  console.log(user.id);
+  return user; // Return user, loading state, and error
 };
-
 export const getPosition = () => {
   const sessionToken = sessionStorage.getItem("Token");
   if (!sessionToken) return null;

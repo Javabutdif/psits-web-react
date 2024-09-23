@@ -4,7 +4,7 @@ import ApproveModal from "../../components/admin/ApproveModal";
 import { renewStudent } from "../../api/admin";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { getUser } from "../../authentication/Authentication";
+import { useUser } from "../../authentication/Authentication";
 import TableComponent from "../../components/Custom/TableComponent";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
@@ -26,7 +26,6 @@ function MembershipRequest() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isChecked, setIsChecked] = useState(false);
-  const [name, position] = getUser();
 
   const toggleCheckbox = () => {
     setIsChecked(!isChecked);

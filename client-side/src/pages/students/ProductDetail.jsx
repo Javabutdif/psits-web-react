@@ -6,11 +6,7 @@ import { makeOrder } from "../../api/orders";
 import { getMembershipStatusStudents } from "../../api/students";
 import { MdAddShoppingCart } from "react-icons/md";
 
-import {
-  getId,
-  getRfid,
-  getInformationData,
-} from "../../authentication/Authentication";
+import { useUser } from "../../authentication/Authentication";
 import { getOrder } from "../../api/orders";
 import { addToCartApi, viewCart } from "../../api/students";
 import ImagePreview from "../../components/Image/ImagePreview";
@@ -55,8 +51,7 @@ const ProductDetail = () => {
   const [orderId, setOrderId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const [id_number, student_name, email, course, year, role, position] =
-    getInformationData();
+
   const [formData, setFormData] = useState({});
   const [preview, setPreview] = useState(product.imageUrl?.[0] || "");
   const [selectedSize, setSelectedSize] = useState(null);
@@ -69,7 +64,7 @@ const ProductDetail = () => {
   const [status, setStatus] = useState({ membership: "", renew: "" });
   const [cartLimited, setCartLimited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const user = useUser();
   const {
     _id = "",
     imageUrl = [],
@@ -85,15 +80,17 @@ const ProductDetail = () => {
     type = "",
   } = product;
 
-  if (position === "N/A") {
+  if (user.position === "N/A") {
     useEffect(() => {
       const fetchStatus = async () => {
-        const membershipStatus = await getMembershipStatusStudents(getId());
+        const membershipStatus = await getMembershipStatusStudents(user.id);
+
         setStatus(membershipStatus);
       };
       fetchStatus();
     });
   }
+
   const [errors, setErrors] = useState({
     selectedSize: "",
     selectedColor: "",
@@ -106,7 +103,7 @@ const ProductDetail = () => {
       category === "merchandise"
     );
   };
-
+  console.log(status);
   const validate = () => {
     let errors = {};
 
@@ -147,8 +144,8 @@ const ProductDetail = () => {
     setIsLoading(true);
     const fetchOrderData = async () => {
       try {
-        const orders = await getOrder(getId());
-        const carts = await viewCart(getId());
+        const orders = await getOrder(user.id);
+        const carts = await viewCart(user.id);
         if (orders) {
           const order = orders.find((order) =>
             order.items.some(
@@ -218,7 +215,7 @@ const ProductDetail = () => {
     setCartIndicator(true);
 
     if (validate()) {
-      const id_number = getId();
+      const id_number = user.id;
       const product_id = _id;
       const product_name = name;
       const sizes = selectedSize;
@@ -255,8 +252,8 @@ const ProductDetail = () => {
   const handleBuyNow = () => {
     setCartIndicator(false);
     if (validate()) {
-      const id_number = getId();
-      const rfid = getRfid();
+      const id_number = user.id;
+      const rfid = user.rfid;
       const imageUrl1 = imageUrl[0];
       const total = calculateTotal();
       const order_date = new Date();

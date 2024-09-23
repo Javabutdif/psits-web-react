@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { getUser } from "../../authentication/Authentication";
+import { useUser } from "../../authentication/Authentication";
 
 const Resources = () => {
   const tutorials = {
@@ -145,8 +145,8 @@ const Resources = () => {
     ],
   };
 
-  const [...course] = getUser();
-  const year = course[1].split("-")[1];
+  const user = useUser();
+  const year = user.course[1].split("-")[1];
   console.log(year);
 
   const yearMap = {

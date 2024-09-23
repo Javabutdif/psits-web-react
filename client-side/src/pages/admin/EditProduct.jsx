@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { showToast } from "../../utils/alertHelper";
-import { getUser } from "../../authentication/Authentication";
+import { useUser } from "../../authentication/Authentication";
 import FormInput from "../../components/forms/FormInput";
 import FormSelect from "../../components/forms/FormSelect";
 import FormButton from "../../components/forms/FormButton";
@@ -10,7 +10,15 @@ import backendConnection from "../../api/backendApi";
 import axios from "axios";
 
 function EditProduct({ handleCloseEditProduct, merchData }) {
-  const [name] = getUser();
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const retrievedUser = await useUser();
+      setUser(retrievedUser);
+    };
+
+    fetchUser();
+  }, []);
   const today = new Date().toISOString().split("T")[0];
   const [isLoading, setIsLoading] = useState(false);
   const variation = [
@@ -67,7 +75,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
     end_date: "",
     category: "",
     type: "",
-    created_by: name,
+    created_by: user.name,
     control: "",
     selectedSizes: [],
     selectedVariations: [],
