@@ -152,12 +152,12 @@ function Merchandise() {
 
   const getStatus = (row) => {
     const currentDate = new Date();
-    const startDate = new Date(row.start_date);
-    const endDate = new Date(row.end_date);
+    const startDate = formattedDate(row.start_date);
+    const endDate = formattedDate(row.end_date);
 
-    if (isBefore(currentDate, startDate)) {
+    if (isBefore(formattedDate(currentDate), startDate)) {
       return row.is_active ? "Publishing" : "Pending";
-    } else if (isAfter(currentDate, endDate)) {
+    } else if (isAfter(formattedDate(currentDate), endDate)) {
       return row.is_active ? "Expired" : "Expired";
     } else {
       return row.is_active ? "Publishing" : "Deleted";
