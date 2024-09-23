@@ -6,6 +6,7 @@ import { makeOrder } from "../../api/orders";
 import { getId, getRfid } from "../../authentication/Authentication";
 import { getInformationData } from "../../authentication/Authentication";
 import { getMembershipStatusStudents } from "../../api/students";
+import { formattedDate } from "../../components/tools/clientTools";
 
 const Modal = ({ isOpen, onClose, onConfirm }) => {
   return (
@@ -370,10 +371,12 @@ const StudentCart = () => {
         if (data && data.length > 0) {
           const currentDate = new Date();
           const filteredProducts = data.filter((item) => {
-            const startDate = new Date(item.start_date);
-            const endDate = new Date(item.end_date);
-            return currentDate >= startDate && currentDate <= endDate;
+            return (
+              formattedDate(currentDate) >= formattedDate(item.start_date) &&
+              formattedDate(currentDate) <= formattedDate(item.end_date)
+            );
           });
+
           setProducts(filteredProducts);
           setLoading(false);
         } else {
