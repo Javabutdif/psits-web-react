@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { getOrder, cancelOrder } from "../../../api/orders";
-import { getId } from "../../../authentication/Authentication";
+import { getInformationData } from "../../../authentication/Authentication";
 import OrderList from "./OrderList";
 import Pagination from "../../../components/Custom/Pagination";
 import FormButton from "../../../components/forms/FormButton";
@@ -17,7 +17,7 @@ const PendingOrders = () => {
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [isAllChecked, setIsAllChecked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const user = getInformationData();
   // Filter pending orders
   const pendingOrders = orders.filter(
     (order) => order.order_status === "Pending"
@@ -28,7 +28,7 @@ const PendingOrders = () => {
     setLoading(true);
     setError(null);
     try {
-      const ordersData = await getOrder(getId());
+      const ordersData = await getOrder(user.id_number);
       setOrders(ordersData || []);
     } catch (error) {
       setError("Failed to fetch orders");

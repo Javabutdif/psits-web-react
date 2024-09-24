@@ -24,11 +24,15 @@ router.post("/login", loginLimiter, async (req, res) => {
   try {
     let users;
     let role;
+    let admin = null;
+    let student = null;
 
-    const admin = await Admin.findOne({ id_number });
+    if (id_number.includes("-admin")) {
+      admin = await Admin.findOne({ id_number });
+    }
 
     if (!admin) {
-      const student = await Student.findOne({ id_number });
+      student = await Student.findOne({ id_number });
       if (!student) {
         return res.status(400).json({ message: "Invalid Credentials" });
       }
@@ -77,17 +81,15 @@ router.post("/login", loginLimiter, async (req, res) => {
       position: role === "Admin" ? users.position : "N/A",
     };
 
-    // Create the token
     const token = jwt.sign({ user, role }, token_key, {
       expiresIn: role === "Admin" ? "1h" : "10m",
     });
 
-    // Set the token in an HTTP-only cookie
     res.cookie("token", token, {
-      httpOnly: true, // Prevents client-side access to the cookie
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-      maxAge: role === "Admin" ? 3600000 : 600000, // Same expiration as JWT
-      sameSite: "Strict", // Adjust as necessary for your app
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: role === "Admin" ? 3600000 : 600000,
+      sameSite: "Strict",
     });
 
     return res.json({ message: "Login successful", role });
@@ -97,6 +99,7 @@ router.post("/login", loginLimiter, async (req, res) => {
   }
 });
 
+
 router.get("/protected-route", authenticateToken, (req, res) => {
   return res.json({
     message: "Access granted",
@@ -104,5 +107,16 @@ router.get("/protected-route", authenticateToken, (req, res) => {
     role: req.role,
   });
 });
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+  });
+
+  res.json({ message: "Logout successful" });
+});
+
 
 module.exports = router;

@@ -6,7 +6,7 @@ import { makeOrder } from "../../api/orders";
 import { getMembershipStatusStudents } from "../../api/students";
 import { MdAddShoppingCart } from "react-icons/md";
 
-import { useUser } from "../../authentication/Authentication";
+import { getInformationData } from "../../authentication/Authentication";
 import { getOrder } from "../../api/orders";
 import { addToCartApi, viewCart } from "../../api/students";
 import ImagePreview from "../../components/Image/ImagePreview";
@@ -64,7 +64,7 @@ const ProductDetail = () => {
   const [status, setStatus] = useState({ membership: "", renew: "" });
   const [cartLimited, setCartLimited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const user = useUser();
+  const user = getInformationData();
   const {
     _id = "",
     imageUrl = [],
@@ -83,7 +83,9 @@ const ProductDetail = () => {
   if (user.position === "N/A") {
     useEffect(() => {
       const fetchStatus = async () => {
-        const membershipStatus = await getMembershipStatusStudents(user.id);
+        const membershipStatus = await getMembershipStatusStudents(
+          user.id_number
+        );
 
         setStatus(membershipStatus);
       };
@@ -103,7 +105,7 @@ const ProductDetail = () => {
       category === "merchandise"
     );
   };
-  console.log(status);
+
   const validate = () => {
     let errors = {};
 
@@ -144,8 +146,8 @@ const ProductDetail = () => {
     setIsLoading(true);
     const fetchOrderData = async () => {
       try {
-        const orders = await getOrder(user.id);
-        const carts = await viewCart(user.id);
+        const orders = await getOrder(user.id_number);
+        const carts = await viewCart(user.id_number);
         if (orders) {
           const order = orders.find((order) =>
             order.items.some(
@@ -215,7 +217,7 @@ const ProductDetail = () => {
     setCartIndicator(true);
 
     if (validate()) {
-      const id_number = user.id;
+      const id_number = user.id_number;
       const product_id = _id;
       const product_name = name;
       const sizes = selectedSize;
@@ -252,8 +254,11 @@ const ProductDetail = () => {
   const handleBuyNow = () => {
     setCartIndicator(false);
     if (validate()) {
-      const id_number = user.id;
+      const id_number = user.id_number;
       const rfid = user.rfid;
+      const course = user.course;
+      const year = user.year;
+      const student_name = user.name;
       const imageUrl1 = imageUrl[0];
       const total = calculateTotal();
       const order_date = new Date();
@@ -286,9 +291,9 @@ const ProductDetail = () => {
         total,
         order_date,
         order_status,
-        preview, // Add the preview image to formData
+        preview,
       });
-
+      console.log(formData);
       setShowModal(true);
     }
   };

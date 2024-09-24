@@ -1,22 +1,22 @@
 import React, { useState } from "react";
 import { getInformationData } from "../../authentication/Authentication";
-import { edit } from "../../api/students";
+
 import FormInput from "../../components/forms/FormInput";
 import FormSelect from "../../components/forms/FormSelect";
 import FormButton from "../../components/forms/FormButton";
 import FormTextArea from "../../components/forms/FormTextArea";
 
 const Profile = () => {
-  const [id, name, email, course, year, role, position] = getInformationData();
+  const user = getInformationData();
   const [profile, setProfile] = useState({
-    id_number: id,
-    name: name,
+    id_number: user.id_number,
+    name: user.name,
     bio: "",
-    email: email,
-    course: course,
-    year: year,
-    role: role,
-    position: position,
+    email: user.email,
+    course: user.course,
+    year: user.year,
+
+    position: user.position,
   });
 
   const [isEditable, setIsEditable] = useState(false);
@@ -61,7 +61,7 @@ const Profile = () => {
             />
           </div>
 
-          {role === "Admin" ? (
+          {user.role === "Admin" ? (
             <div className="space-y-10">
               <FormInput
                 label="ID Number"
@@ -138,7 +138,7 @@ const Profile = () => {
                 label="Email"
                 type="text"
                 id="email"
-                value={email}
+                value={profile.email}
                 name="email"
                 styles="w-full p-2 text-sm border border-gray-300 rounded-md"
                 disabled

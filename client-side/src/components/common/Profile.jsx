@@ -1,10 +1,10 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useUser } from "../../authentication/Authentication";
+import { getInformationData } from "../../authentication/Authentication";
 
 const Profile = () => {
   const location = useLocation().pathname.split("/")[1];
-  const user = useUser();
+  const user = getInformationData();
 
   return (
     <div className="flex space-x-4  rounded-lg">
@@ -24,7 +24,9 @@ const Profile = () => {
       <div className="hidden sm:block">
         <h3 className="text-sm font-semibold text-gray-800">{user.name}</h3>
         <span className="text-xs text-gray-600  block">
-          {user.position ? user.position : user.course}
+          {user.position === "N/A"
+            ? user.course + "-" + user.year
+            : user.position}
         </span>
       </div>
     </div>

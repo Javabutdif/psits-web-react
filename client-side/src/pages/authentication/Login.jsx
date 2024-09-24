@@ -13,6 +13,7 @@ import {
   getTimeout,
   getAttemptAuthentication,
   getRoute,
+  useUser,
 } from "../../authentication/Authentication";
 import { IoArrowBack } from "react-icons/io5"; // Import the icon
 
@@ -59,7 +60,7 @@ const Login = () => {
 
   const validateInputs = () => {
     const newErrors = {};
-    const idNumberRegex = /^\d{8}(-admin)?$/; // Regex for 8 digits, with optional "-admin"
+    const idNumberRegex = /^\d{8}(-admin)?$/;
 
     if (!formData.id_number) {
       newErrors.id_number = "ID Number is required.";
@@ -89,7 +90,9 @@ const Login = () => {
         const data = await login(formData);
 
         if (data === "Admin" || data === "Student") {
+          useUser();
           resetAttemptAuthentication();
+
           navigate(`/${data.toLowerCase()}/dashboard`);
         } else {
           attemptAuthentication();
