@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { showToast } from "../../utils/alertHelper";
 import { addMerchandise } from "../../api/admin";
-import { useUser } from "../../authentication/Authentication";
+import { getInformationData } from "../../authentication/Authentication";
 import FormInput from "../../components/forms/FormInput";
 import FormSelect from "../../components/forms/FormSelect";
 import FormButton from "../../components/forms/FormButton";
@@ -11,15 +11,7 @@ import { format } from "date-fns";
 import { InfinitySpin } from "react-loader-spinner";
 
 function Product({ handleCloseAddProduct }) {
-  const [user, setUser] = useState(null);
-  useEffect(() => {
-    const fetchUser = async () => {
-      const retrievedUser = await useUser();
-      setUser(retrievedUser);
-    };
-
-    fetchUser();
-  }, []);
+  const user = getInformationData();
   const today = new Date().toISOString().split("T")[0];
   const [isLoading, setIsLoading] = useState(false);
   const variation = [

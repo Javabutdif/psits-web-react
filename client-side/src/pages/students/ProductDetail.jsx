@@ -293,7 +293,7 @@ const ProductDetail = () => {
         order_status,
         preview,
       });
-      console.log(formData);
+     
       setShowModal(true);
     }
   };

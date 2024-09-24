@@ -452,7 +452,7 @@ const StudentCart = () => {
       order_date: new Date(),
       order_status: "Pending",
     });
-    console.log(formData);
+    
   };
 
   const confirmOrder = async () => {
