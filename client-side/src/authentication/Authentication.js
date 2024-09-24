@@ -50,6 +50,8 @@ export const useUser = async () => {
   } catch (err) {
     console.error("Not authorized:", err);
   } finally {
+    console.log(user.id);
+    return user; // Return user, loading state, and error
   }
 };
 export const getPosition = () => {

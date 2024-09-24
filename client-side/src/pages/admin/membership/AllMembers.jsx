@@ -30,7 +30,9 @@ const Membership = () => {
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+
   const user = getInformationData();
+
 
   const fetchData = async () => {
     try {
