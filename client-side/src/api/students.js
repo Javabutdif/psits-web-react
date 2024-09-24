@@ -2,7 +2,7 @@ import "../App.css";
 import backendConnection from "./backendApi";
 import axios from "axios";
 import { showToast } from "../utils/alertHelper";
-import { setRetrieveStudent } from "../authentication/Authentication";
+
 
 export const requestMembership = async (id_number) => {
   try {
@@ -33,35 +33,6 @@ export const requestMembership = async (id_number) => {
   }
 };
 
-export const edit = async (formData) => {
-  try {
-    const response = await axios.post(
-      `${backendConnection()}/api/edit`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const { student, message } = response.data;
-    if (response.status === 200) {
-      showToast("success", message);
-
-      setRetrieveStudent(student.data, student.course, student.year);
-    } else {
-      showToast("error", message);
-    }
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log(error.response.data.message);
-    } else {
-      console.log(error.response.data.message);
-    }
-    console.error("Error:", error);
-  }
-};
 
 export const getMembershipStatusStudents = async (id_number) => {
   try {

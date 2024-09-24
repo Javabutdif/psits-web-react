@@ -9,14 +9,13 @@ import {
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-import { useUser } from "../../../authentication/Authentication";
+import { getInformationData } from "../../../authentication/Authentication";
 import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import EditMember from "./EditMember";
 import axios from "axios";
 import backendConnection from "../../../api/backendApi";
-import { getPosition } from "../../../authentication/Authentication";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -31,7 +30,7 @@ const Membership = () => {
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const position = getPosition();
+  const user = getInformationData();
 
   const fetchData = async () => {
     try {
@@ -142,15 +141,7 @@ const Membership = () => {
     setIsLoading(true);
     try {
       const id_number = studentIdToBeDeleted;
-      const [user, setUser] = useState(null);
-      useEffect(() => {
-        const fetchUser = async () => {
-          const retrievedUser = await useUser();
-          setUser(retrievedUser);
-        };
 
-        fetchUser();
-      }, []);
       if ((await studentDeletion(id_number, user.name)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
@@ -323,34 +314,28 @@ const Membership = () => {
 
             <FormButton
               type="button"
-              text={
-                position !== "President" && position !== "Developer"
-                  ? "Not Authorized"
-                  : "Renew"
-              }
+              text={user.position !== "Developer" ? "Not Authorized" : "Renew"}
               onClick={() => {
-                if (position === "President" || position === "Developer") {
+                if (user.position === "Developer") {
                   showConfirm(); // Invoke the function
                 }
               }}
               icon={
                 <i
                   className={`fa ${
-                    position !== "President" && position !== "Developer"
-                      ? "fa-lock"
-                      : "fa-sync-alt"
+                    user.position !== "Developer" ? "fa-lock" : "fa-sync-alt"
                   }`}
                 ></i>
               }
               styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-                position !== "President" && position !== "Developer"
+                user.position !== "Developer"
                   ? "bg-gray-500 cursor-not-allowed"
                   : "bg-red-500"
               }`}
               textClass="text-white"
               whileHover={{ scale: 1.02, opacity: 0.95 }}
               whileTap={{ scale: 0.98, opacity: 0.9 }}
-              disabled={position !== "President" && position !== "Developer"} // Use && instead of ||
+              disabled={user.position !== "Developer"}
             />
           </ButtonsComponent>
         }

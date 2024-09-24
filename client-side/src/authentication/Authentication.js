@@ -3,90 +3,8 @@ import { react, useEffect, useState } from "react";
 import axios from "axios";
 import backendConnection from "../api/backendApi";
 
-//Set Authentication when successful login
-export const setAuthentication = (token) => {
-  if (!token) return null;
-  const user = jwtDecode(token);
-  const currentTime = new Date().getTime();
-  const time = user.role === "Student" ? 20 * 60 * 1000 : 60 * 60 * 1000;
-  const expiryTime = currentTime + time;
 
-  const authen =
-    user.role === "Admin"
-      ? {
-          name: user.user.name,
-          id: user.user.id_number,
-          course: user.user.course,
-          year: user.user.year,
-          position: user.user.position,
-          expiry: expiryTime,
-          role: user.role,
-        }
-      : {
-          id: user.user.id_number,
-          position: user.user.position,
-          expiry: expiryTime,
-        };
-  localStorage.setItem("Data", JSON.stringify(authen));
-  sessionStorage.setItem("Token", token);
-};
 
-export const getAuthentication = () => {
-  const cookies = document.cookie.split("; ");
-  const tokenCookie = cookies.find((row) => row.startsWith("token="));
-
-  if (!tokenCookie) return null;
-
-  const token = tokenCookie.split("=")[1]; // Extract the token value
-
-  // Check if the token exists and is valid
-  if (token) {
-    // You can add logic here to check the validity of the token
-    console.log(token);
-    return "Token is present"; // Return a placeholder or flag
-  }
-
-  return null; // Token not found
-};
-
-export const getRoute = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-
-  return !sessionToken ? null : token.role;
-};
-
-//Edit Student
-export const setRetrieveStudent = (data, course, year) => {
-  const authen = localStorage.getItem("Data");
-  if (!authen) return null;
-  const users = JSON.parse(authen);
-
-  const edited =
-    users.role === "Student"
-      ? {
-          name: users.name,
-          id: users.id,
-          course: course,
-          year: year,
-          email: data,
-          position: users.position,
-          expiry: users.expiry,
-          membership: users.membership,
-          role: users.role,
-        }
-      : {
-          name: data,
-          id: users.id,
-          course: course,
-          year: year,
-          position: users.position,
-          expiry: users.expiry,
-          role: users.role,
-        };
-  localStorage.setItem("Data", JSON.stringify(edited));
-};
 
 export const useUser = async () => {
   let user;
@@ -97,16 +15,19 @@ export const useUser = async () => {
         withCredentials: true,
       }
     );
-
+    console.log(response.data);
     if (response.data.role === "Admin") {
-      console.log(response.data);
       user = {
         name: response.data.user.name,
         position: response.data.user.position,
         id: response.data.user.id_number,
+        course: response.data.user.course,
+        role: response.data.role,
+        year: response.data.user.year,
+        email: response.data.user.email,
       };
+      sessionStorage.setItem("Data", JSON.stringify(user));
     } else if (response.data.role === "Student") {
-      console.log(response.data);
       user = {
         id: response.data.user.id_number,
         course: response.data.user.course,
@@ -120,14 +41,16 @@ export const useUser = async () => {
         position: response.data.user.position,
         year: response.data.user.year,
         rfid: response.data.user.rfid,
+        role: response.data.role,
+        email: response.data.user.email,
       };
+
+      sessionStorage.setItem("Data", JSON.stringify(user));
     }
   } catch (err) {
     console.error("Not authorized:", err);
   } finally {
   }
-  console.log(user.id);
-  return user; // Return user, loading state, and error
 };
 export const getPosition = () => {
   const sessionToken = sessionStorage.getItem("Token");
@@ -170,33 +93,31 @@ export const getRenewStatus = () => {
   const token = jwtDecode(sessionToken);
   return token.user.renew === undefined ? "None" : token.user.renew;
 };
+export const getRoute = () => {
+  const sessionToken = sessionStorage.getItem("Data");
+  if (!sessionToken) return null;
 
+  return !sessionToken ? null : sessionToken.role;
+};
 export const getInformationData = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  const token = jwtDecode(sessionToken);
-  let name =
-    token.role === "Admin"
-      ? token.user.name
-      : token.user.first_name +
-        " " +
-        token.user.middle_name +
-        " " +
-        token.user.last_name;
-  return [
-    token.user.id_number,
-    name,
-    token.user.email,
-    token.user.course,
-    token.user.year,
-    token.user.role,
-    token.user.position,
-  ];
+  const sessionToken = JSON.parse(sessionStorage.getItem("Data"));
+
+  
+  return {
+    id_number: sessionToken.id,
+    name: sessionToken.name,
+    email: sessionToken.email,
+    course: sessionToken.course,
+    year: sessionToken.year,
+    role: sessionToken.role,
+    position: sessionToken.position,
+  };
 };
 
 //Remove Authentication after logout
 export const removeAuthentication = () => {
   localStorage.removeItem("Data");
-  sessionStorage.removeItem("Token");
+  sessionStorage.removeItem("Data");
 };
 
 //Attempt Increment

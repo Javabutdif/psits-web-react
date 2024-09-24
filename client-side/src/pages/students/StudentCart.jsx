@@ -3,7 +3,6 @@ import { showToast } from "../../utils/alertHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import { viewCart, deleteItem } from "../../api/students";
 import { makeOrder } from "../../api/orders";
-import { getId, getRfid } from "../../authentication/Authentication";
 import { getInformationData } from "../../authentication/Authentication";
 import { getMembershipStatusStudents } from "../../api/students";
 import { formattedDate } from "../../components/tools/clientTools";
@@ -210,6 +209,7 @@ const CartItem = ({
     variation,
   } = product;
   const [isModalOpen, setModalOpen] = useState(false);
+  const user = getInformationData();
 
   const handleDeleteClick = () => {
     setModalOpen(true);
@@ -217,7 +217,7 @@ const CartItem = ({
 
   const handleConfirmDelete = async () => {
     const data = {
-      id_number: getId(),
+      id_number: user.id_number,
       cart_id: product._id,
     };
     await deleteItem(data);
@@ -361,13 +361,12 @@ const StudentCart = () => {
   const [status, setStatus] = useState({ membership: "", renew: "" });
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({});
-  const [id_number, student_name, email, course, year, role, position] =
-    getInformationData();
+  const user = getInformationData();
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await viewCart(getId());
+        const data = await viewCart(user.id_number);
         if (data && data.length > 0) {
           const currentDate = new Date();
           const filteredProducts = data.filter((item) => {
@@ -390,7 +389,9 @@ const StudentCart = () => {
 
     const fetchStatus = async () => {
       try {
-        const membershipStatus = await getMembershipStatusStudents(getId());
+        const membershipStatus = await getMembershipStatusStudents(
+          user.id_number
+        );
         setStatus(membershipStatus);
       } catch (error) {
         setError(error.message || "Failed to fetch membership status");
@@ -440,17 +441,18 @@ const StudentCart = () => {
 
     setShowModal(true);
     setFormData({
-      id_number: getId(),
-      rfid: getRfid(),
-      course: course,
-      year: year,
-      student_name: student_name,
+      id_number: user.id_number,
+      rfid: user.rfid,
+      course: user.course,
+      year: user.year,
+      student_name: user.name,
       items: selectedItems,
       membership_discount: statusVerify(),
       total: calculateTotals().totalPrice,
       order_date: new Date(),
       order_status: "Pending",
     });
+    console.log(formData);
   };
 
   const confirmOrder = async () => {
