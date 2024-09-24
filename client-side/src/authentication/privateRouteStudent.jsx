@@ -24,6 +24,7 @@ const PrivateRouteStudent = ({ element: Component }) => {
           setIsAuthenticated(false);
         }
       } catch (error) {
+        console.log("privateRouteStudent");
         console.error("Not authorized:", error);
         setIsAuthenticated(false);
       } finally {

@@ -5,7 +5,7 @@ import axios from "axios";
 
 const PrivateRouteAdmin = ({ element: Component }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuthentication = async () => {
@@ -23,6 +23,7 @@ const PrivateRouteAdmin = ({ element: Component }) => {
           setIsAuthenticated(false);
         }
       } catch (error) {
+        console.log("privateRouteAdmin");
         console.error("Not authorized:", error);
         setIsAuthenticated(false);
       } finally {
@@ -37,7 +38,6 @@ const PrivateRouteAdmin = ({ element: Component }) => {
     return <div>Loading...</div>;
   }
 
- 
   return isAuthenticated ? <Component /> : <Navigate to="/" replace />;
 };
 

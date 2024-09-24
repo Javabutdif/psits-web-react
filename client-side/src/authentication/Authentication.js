@@ -3,9 +3,6 @@ import { react, useEffect, useState } from "react";
 import axios from "axios";
 import backendConnection from "../api/backendApi";
 
-
-
-
 export const useUser = async () => {
   let user;
   try {
@@ -48,6 +45,7 @@ export const useUser = async () => {
       sessionStorage.setItem("Data", JSON.stringify(user));
     }
   } catch (err) {
+    console.log("Authentication");
     console.error("Not authorized:", err);
   } finally {
     console.log(user.id);
@@ -104,7 +102,6 @@ export const getRoute = () => {
 export const getInformationData = () => {
   const sessionToken = JSON.parse(sessionStorage.getItem("Data"));
 
-  
   return {
     id_number: sessionToken.id,
     name: sessionToken.name,
