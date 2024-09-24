@@ -91,7 +91,7 @@ router.post("/login", loginLimiter, async (req, res) => {
         process.env.NODE_ENV === "production" ||
         process.env.NODE_ENV === "staging",
       maxAge: role === "Admin" ? 3600000 : 600000,
-      sameSite: "Strict",
+      sameSite: "None",
     });
 
     return res.json({ message: "Login successful", role });
