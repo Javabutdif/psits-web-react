@@ -87,7 +87,9 @@ router.post("/login", loginLimiter, async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure:
+        process.env.NODE_ENV === "production" ||
+        process.env.NODE_ENV === "staging",
       maxAge: role === "Admin" ? 3600000 : 600000,
       sameSite: "Strict",
     });
@@ -98,7 +100,6 @@ router.post("/login", loginLimiter, async (req, res) => {
     return res.status(500).json({ message: "An error occurred", error });
   }
 });
-
 
 router.get("/protected-route", authenticateToken, (req, res) => {
   return res.json({
@@ -117,6 +118,5 @@ router.post("/logout", (req, res) => {
 
   res.json({ message: "Logout successful" });
 });
-
 
 module.exports = router;
