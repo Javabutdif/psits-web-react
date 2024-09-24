@@ -35,7 +35,7 @@ const StudentDashboard = () => {
       fetchStatus();
     });
   }
-  console.log(getInformationData());
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {

@@ -87,9 +87,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure:
-        process.env.NODE_ENV === "production" ||
-        process.env.NODE_ENV === "staging",
+      secure: process.env.NODE_ENV === "production",
       maxAge: role === "Admin" ? 3600000 : 600000,
       sameSite: "None",
     });
