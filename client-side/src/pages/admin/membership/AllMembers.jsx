@@ -32,6 +32,16 @@ const Membership = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const position = getPosition();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const retrievedUser = await useUser();
+      setUser(retrievedUser);
+    };
+
+    fetchUser();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -142,15 +152,6 @@ const Membership = () => {
     setIsLoading(true);
     try {
       const id_number = studentIdToBeDeleted;
-      const [user, setUser] = useState(null);
-      useEffect(() => {
-        const fetchUser = async () => {
-          const retrievedUser = await useUser();
-          setUser(retrievedUser);
-        };
-
-        fetchUser();
-      }, []);
       if ((await studentDeletion(id_number, user.name)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
