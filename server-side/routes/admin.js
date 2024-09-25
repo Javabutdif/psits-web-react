@@ -12,34 +12,6 @@ const path = require("path");
 
 const router = express.Router();
 
-router.put("/renew-student", async (req, res) => {
-  try {
-    const renewStudent = await Student.updateMany(
-      {
-        status: "True",
-        membership: "Accepted",
-      },
-      {
-        $set: {
-          renew: "Pending",
-          renewedOn: new Date(),
-        },
-      }
-    );
-
-    if (!renewStudent) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    res
-      .status(200)
-      .json({ message: "All Student has been renewed successfully" });
-  } catch (error) {
-    console.error("Error deleting student:", error);
-    res.status(500).json("Internal Server Error");
-  }
-});
-
 router.post("/approve-membership", async (req, res) => {
   const { reference_code, id_number, type, admin, rfid, date, cash, total } =
     req.body;

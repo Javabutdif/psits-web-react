@@ -64,29 +64,6 @@ export const membershipRequest = async () => {
   }
 };
 
-export const renewAllStudent = async () => {
-  try {
-    const response = await axios.put(
-      `${backendConnection()}/api/renew-student`,
-      {}, // Pass an empty object if no data needs to be sent
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    return response.status === 200;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
-    } else {
-      showToast("error", "An error occurred");
-    }
-    console.error("Renew all students error:", error); // Optional: Log the error for debugging
-    return false; // Explicitly return false in case of an error
-  }
-};
 export const approveMembership = async (formData) => {
   try {
     const response = await axios.post(
