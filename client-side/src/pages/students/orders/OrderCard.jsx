@@ -80,11 +80,19 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
             </div>
           )}
           <div className="flex-shrink-0">
-            <img
-              src={order.items[0].imageUrl1 || "https://via.placeholder.com/80"}
-              alt="Product"
-              className="w-16 h-16 object-cover rounded-md border border-neutral-medium"
-            />
+            {order?.items?.[0]?.imageUrl1 ? (
+              <img
+                src={order.items[0].imageUrl1}
+                alt="Product"
+                className="w-16 h-16 object-cover rounded-md border border-neutral-medium"
+              />
+            ) : (
+              <img
+                src="https://via.placeholder.com/80"
+                alt="Product"
+                className="w-16 h-16 object-cover rounded-md border border-neutral-medium"
+              />
+            )}
           </div>
           <div className="flex flex-col flex-grow">
             {order.items.map((item, index) => (
@@ -188,11 +196,19 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
               {order.items.map((item, index) => (
                 <div key={index} className="flex items-center mb-3">
                   <div className="flex-shrink-0 mr-3">
-                    <img
-                      src={item.imageUrl1 || "https://via.placeholder.com/80"}
-                      alt="Product"
-                      className="w-16 h-16 object-cover rounded-md border border-neutral-medium"
-                    />
+                    {item?.imageUrl1 ? (
+                      <img
+                        src={item.imageUrl1}
+                        alt="Product"
+                        className="w-16 h-16 object-cover rounded-md border border-neutral-medium"
+                      />
+                    ) : (
+                      <img
+                        src="https://via.placeholder.com/80"
+                        alt="Product"
+                        className="w-16 h-16 object-cover rounded-md border border-neutral-medium"
+                      />
+                    )}
                   </div>
                   <div>
                     <p className="text-xs mb-1">
