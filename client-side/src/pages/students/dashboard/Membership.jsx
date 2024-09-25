@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { getId } from "../../../authentication/Authentication";
+import { getInformationData } from "../../../authentication/Authentication";
 import { requestMembership } from "../../../api/students";
 
 function Membership({ styles }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const id = getId();
+  const user = getInformationData();
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
   const request = async () => {
     try {
-      await requestMembership(id);
+      await requestMembership(user.id_number);
     } catch (error) {
       console.error("Error requesting membership:", error);
     }

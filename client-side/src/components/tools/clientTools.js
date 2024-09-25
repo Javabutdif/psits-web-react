@@ -1,4 +1,4 @@
-import { getPosition } from "../../authentication/Authentication";
+import { getInformationData } from "../../authentication/Authentication";
 
 export const formattedDate = (date) => {
   const dates = new Date(date);
@@ -7,12 +7,12 @@ export const formattedDate = (date) => {
 };
 
 export const conditionalPosition = () => {
-  const position = getPosition();
+  const user = getInformationData();
 
   return (
-    position === "Treasurer" ||
-    position === "Assistant Treasurer" ||
-    position === "Auditor" ||
-    position === "Developer"
+    user.position === "Treasurer" ||
+    user.position === "Assistant Treasurer" ||
+    user.position === "Auditor" ||
+    user.position === "Developer"
   );
 };

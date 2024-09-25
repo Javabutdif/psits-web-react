@@ -5,7 +5,7 @@ import OperationHours from "./dashboard/OperationHours";
 import MembershipBanner from "./dashboard/Membership";
 import Posts from "./dashboard/Posts";
 import backendConnection from "../../api/backendApi";
-import { getPosition, getId } from "../../authentication/Authentication";
+import { getInformationData } from "../../authentication/Authentication";
 import { getMembershipStatusStudents } from "../../api/students";
 
 const Skeleton = ({ className }) => (
@@ -20,12 +20,14 @@ const StudentDashboard = () => {
     membership: "",
     renew: "",
   });
-  const position = getPosition();
+  const user = getInformationData();
 
-  if (position === "N/A") {
+  if (user.position === "N/A") {
     useEffect(() => {
       const fetchStatus = async () => {
-        const membershipStatus = await getMembershipStatusStudents(getId());
+        const membershipStatus = await getMembershipStatusStudents(
+          user.id_number
+        );
         setMemebershipStatus(membershipStatus);
       };
       fetchStatus();
@@ -68,7 +70,9 @@ const StudentDashboard = () => {
         <>
           <OperationHours
             styles={`self-start ${
-              (membershipStatus.membership === "Accepted" | membershipStatus.membership === "Pending") && "col-start-1 col-end-2 md:col-end-3  lg:col-start-6 lg:row-start-1 lg:row-end-3"
+              (membershipStatus.membership === "Accepted") |
+                (membershipStatus.membership === "Pending") &&
+              "col-start-1 col-end-2 md:col-end-3  lg:col-start-6 lg:row-start-1 lg:row-end-3"
             }  lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3`}
           />
           {(membershipStatus.membership === "None" ||

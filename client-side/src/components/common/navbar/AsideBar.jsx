@@ -4,7 +4,7 @@ import logo from "../../../assets/images/psits-logo.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { showToast } from "../../../utils/alertHelper";
 import { removeAuthentication } from "../../../authentication/Authentication";
-import { removeStudentData } from "../../../utils/editStudentData";
+import { handleLogouts } from "../../../api/index";
 
 const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
@@ -14,12 +14,19 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
 
   const getLogoLink =
     location.pathname.split("/")[1] === "admin" ? "/admin/" : "/student/";
+  const handleLogout = async () => {
+    try {
+      removeAuthentication();
 
-  const handleLogout = () => {
-    removeAuthentication();
-    removeStudentData();
-    showToast("success", "Signed out successfully");
-    navigate("/login");
+      if (await handleLogouts()) {
+        showToast("success", "Signed out successfully");
+      }
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      showToast("error", "Error signing out");
+    }
   };
 
   // Close sidebar on outside click

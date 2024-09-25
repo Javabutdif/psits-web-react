@@ -12,19 +12,21 @@ const merchRoutes = require("./routes/merch");
 const orderRoutes = require("./routes/orders");
 const facebookRoutes = require("./routes/facebook");
 const cartRoutes = require("./routes/cart");
+const cookieParser = require("cookie-parser");
 
 require("dotenv").config();
 
 app.use(
   cors({
-    origin: process.env.CORS, 
+    origin: process.env.CORS,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
+
 app.use(bodyParser.json());
-
-
+app.use(cookieParser());
 mongoose
   .connect(process.env.MONGODB_URI, {
     dbName: process.env.DB_NAME,

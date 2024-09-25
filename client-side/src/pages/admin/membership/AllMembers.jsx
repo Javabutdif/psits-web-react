@@ -5,14 +5,13 @@ import { membership, studentDeletion } from "../../../api/admin";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-import { getUser } from "../../../authentication/Authentication";
+import { getInformationData } from "../../../authentication/Authentication";
 import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import EditMember from "./EditMember";
 import axios from "axios";
 import backendConnection from "../../../api/backendApi";
-import { getPosition } from "../../../authentication/Authentication";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -26,7 +25,8 @@ const Membership = () => {
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const position = getPosition();
+
+  const user = getInformationData();
 
   const fetchData = async () => {
     try {
@@ -110,8 +110,8 @@ const Membership = () => {
     setIsLoading(true);
     try {
       const id_number = studentIdToBeDeleted;
-      const [name] = getUser();
-      if ((await studentDeletion(id_number, name)) === 200) {
+
+      if ((await studentDeletion(id_number, user.name)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );

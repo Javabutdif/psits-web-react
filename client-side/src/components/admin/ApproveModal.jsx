@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { getUser } from "../../authentication/Authentication.js";
+import { getInformationData } from "../../authentication/Authentication.js";
 import { showToast } from "../../utils/alertHelper";
 import ReactToPrint from "react-to-print";
 import Receipt from "../../components/common/Receipt.jsx";
@@ -29,7 +29,7 @@ function ApproveModal({
   membership,
 }) {
   const componentRef = useRef();
-  const [adminName, position] = getUser();
+  const user = getInformationData();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     reference_code: reference_code,
@@ -41,7 +41,7 @@ function ApproveModal({
     size: type === "Order" ? size : "",
     variation: type === "Order" ? variation : "",
     type: type,
-    admin: adminName,
+    admin: user.name,
     cash: "",
     date: new Date(),
     transaction_date: new Date(),
@@ -259,7 +259,7 @@ function ApproveModal({
           year={year}
           name={name}
           type={type}
-          admin={adminName}
+          admin={user.name}
           qty={qty}
           itemTotal={itemTotal}
           items={items}

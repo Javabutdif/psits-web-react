@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getOrder, cancelOrder } from "../../../api/orders";
-import { getId } from "../../../authentication/Authentication";
+import { getInformationData } from "../../../authentication/Authentication";
 import OrderList from "./OrderList";
 import Pagination from "../../../components/Custom/Pagination";
 
@@ -14,7 +14,7 @@ const PaidOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [ordersPerPage] = useState(5); // Number of orders to show per page
   const [selectedOrders, setSelectedOrders] = useState([]);
-
+  const user = getInformationData();
 
   const pendingOrders = orders.filter((order) => order.order_status === "Paid");
 
@@ -23,7 +23,7 @@ const PaidOrders = () => {
     setLoading(true);
     setError(null);
     try {
-      const ordersData = await getOrder(getId());
+      const ordersData = await getOrder(user.id_number);
       setOrders(ordersData || []);
     } catch (error) {
       setError("Failed to fetch orders");

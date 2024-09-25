@@ -2,8 +2,8 @@ import "../App.css";
 import backendConnection from "./backendApi";
 import axios from "axios";
 import { showToast } from "../utils/alertHelper";
-import { setAuthentication } from "../authentication/Authentication";
-import { jwtDecode } from "jwt-decode";
+
+
 export const login = async (formData) => {
   try {
     const response = await axios.post(
@@ -13,22 +13,14 @@ export const login = async (formData) => {
         headers: {
           "Content-Type": "application/json",
         },
+        withCredentials: true,
       }
     );
 
-    const { token, message } = response.data;
+    const { message } = response.data;
 
-    const data = jwtDecode(token);
-
-    if (data.role === "Admin" || data.role === "Student") {
-      showToast("success", "Signed in successfully");
-      setAuthentication(token);
-
-      return data.role;
-    } else {
-      console.log(message);
-      showToast("error", message || "An error occurred");
-    }
+    showToast("success", "Signed in successfully");
+    return response.data.role;
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
@@ -62,3 +54,38 @@ export const register = async (formData) => {
     return null;
   }
 };
+
+export const handleLogouts = async () => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/logout`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+
+    if (response.status === 200) {
+      return true;
+    } else {
+      showToast("error", response.data.message);
+    }
+
+    console.log(response.data.message);
+  } catch (error) {
+    console.error(
+      "Error:",
+      error.response ? error.response.data.message : error.message
+    );
+    showToast(
+      "error",
+      error.response ? error.response.data.message : error.message
+    );
+    return null;
+  }
+};
+
+

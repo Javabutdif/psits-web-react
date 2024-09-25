@@ -1,193 +1,79 @@
 import { jwtDecode } from "jwt-decode";
+import { react, useEffect, useState } from "react";
+import axios from "axios";
+import backendConnection from "../api/backendApi";
 
-//Set Authentication when successful login
-export const setAuthentication = (token) => {
-  if (!token) return null;
-  const user = jwtDecode(token);
-  const currentTime = new Date().getTime();
-  const time = user.role === "Student" ? 20 * 60 * 1000 : 60 * 60 * 1000;
-  const expiryTime = currentTime + time;
-
-  const authen =
-    user.role === "Admin"
-      ? {
-          name: user.user.name,
-          id: user.user.id_number,
-          course: user.user.course,
-          year: user.user.year,
-          position: user.user.position,
-          expiry: expiryTime,
-          role: user.role,
-        }
-      : {
-          id: user.user.id_number,
-          position: user.user.position,
-          expiry: expiryTime,
-        };
-  localStorage.setItem("Data", JSON.stringify(authen));
-  sessionStorage.setItem("Token", token);
-};
-
-//Retrive Token sa Private Route, every route e check if valid pa ang token
-export const getAuthentication = () => {
+export const useUser = async () => {
+  let user;
   try {
-    const authen = localStorage.getItem("Data");
-    const sessionToken = sessionStorage.getItem("Token");
-    const token = jwtDecode(sessionToken);
-    if (!authen) return null;
-    if (!sessionToken) return null;
-
-    const item = JSON.parse(authen);
-    const now = new Date();
-
-    if (now.getTime() > item.expiry) {
-      localStorage.removeItem("Data");
-      sessionStorage.removeItem("Token");
-      return null;
-    }
-    if (
-      item.id === token.user.id_number &&
-      item.position === token.user.position
-    ) {
-      if (item.role === "Admin") {
-        return "Administrator";
-      } else {
-        return "Student";
+    const response = await axios.get(
+      `${backendConnection()}/api/protected-route`,
+      {
+        withCredentials: true,
       }
-    } else {
-      return null;
+    );
+   
+    if (response.data.role === "Admin") {
+      user = {
+        name: response.data.user.name,
+        position: response.data.user.position,
+        id: response.data.user.id_number,
+        course: response.data.user.course,
+        role: response.data.role,
+        year: response.data.user.year,
+        email: response.data.user.email,
+      };
+      sessionStorage.setItem("Data", JSON.stringify(user));
+    } else if (response.data.role === "Student") {
+      user = {
+        id: response.data.user.id_number,
+        course: response.data.user.course,
+        name:
+          response.data.user.first_name +
+          " " +
+          response.data.user.middle_name +
+          " " +
+          response.data.user.last_name,
+
+        position: response.data.user.position,
+        year: response.data.user.year,
+        rfid: response.data.user.rfid,
+        role: response.data.role,
+        email: response.data.user.email,
+      };
+
+      sessionStorage.setItem("Data", JSON.stringify(user));
     }
-  } catch (Exception) {
-    removeAuthentication();
-    return null;
-  }
+  } catch (err) {
+    console.log("Authentication");
+    console.error("Not authorized:", err);
+  } 
 };
 
 export const getRoute = () => {
-  const sessionToken = sessionStorage.getItem("Token");
+  const sessionToken = sessionStorage.getItem("Data");
   if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
 
-  return !sessionToken ? null : token.role;
+  return !sessionToken ? null : sessionToken.role;
 };
-
-//Edit Student
-export const setRetrieveStudent = (data, course, year) => {
-  const authen = localStorage.getItem("Data");
-  if (!authen) return null;
-  const users = JSON.parse(authen);
-
-  const edited =
-    users.role === "Student"
-      ? {
-          name: users.name,
-          id: users.id,
-          course: course,
-          year: year,
-          email: data,
-          position: users.position,
-          expiry: users.expiry,
-          membership: users.membership,
-          role: users.role,
-        }
-      : {
-          name: data,
-          id: users.id,
-          course: course,
-          year: year,
-          position: users.position,
-          expiry: users.expiry,
-          role: users.role,
-        };
-  localStorage.setItem("Data", JSON.stringify(edited));
-};
-
-export const getUser = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-
-  if (token.role === "Student")
-    return [
-      token.user.first_name +
-        " " +
-        token.user.middle_name +
-        " " +
-        token.user.last_name,
-      token.user.course + "-" + token.user.year,
-    ];
-
-  return [token.user.name, token.user.position, token.user.id];
-};
-
-export const getPosition = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-
-  return token.user.position;
-};
-export const getId = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-
-  return token.user.id_number;
-};
-export const getRfid = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-
-  return token.user.rfid;
-};
-export const getMembershipStatus = () => {
-  const authen = localStorage.getItem("Data");
-  if (!authen) return null;
-  const users = JSON.parse(authen);
-
-  if (!users.membership) {
-    const sessionToken = sessionStorage.getItem("Token");
-    if (!sessionToken) return null;
-    const token = jwtDecode(sessionToken);
-    return token.user.membership;
-  } else {
-    return users.membership;
-  }
-};
-export const getRenewStatus = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-  return token.user.renew === undefined ? "None" : token.user.renew;
-};
-
 export const getInformationData = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  const token = jwtDecode(sessionToken);
-  let name =
-    token.role === "Admin"
-      ? token.user.name
-      : token.user.first_name +
-        " " +
-        token.user.middle_name +
-        " " +
-        token.user.last_name;
-  return [
-    token.user.id_number,
-    name,
-    token.user.email,
-    token.user.course,
-    token.user.year,
-    token.user.role,
-    token.user.position,
-  ];
+  const sessionToken = JSON.parse(sessionStorage.getItem("Data"));
+
+  return {
+    id_number: sessionToken.id,
+    name: sessionToken.name,
+    email: sessionToken.email,
+    course: sessionToken.course,
+    year: sessionToken.year,
+    role: sessionToken.role,
+    position: sessionToken.position,
+  };
 };
 
-//Remove Authentication after logout
+
 export const removeAuthentication = () => {
   localStorage.removeItem("Data");
-  sessionStorage.removeItem("Token");
+  sessionStorage.removeItem("Data");
 };
 
 //Attempt Increment
