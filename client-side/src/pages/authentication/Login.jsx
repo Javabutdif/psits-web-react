@@ -17,14 +17,12 @@ import {
 } from "../../authentication/Authentication";
 import { IoArrowBack } from "react-icons/io5"; // Import the icon
 
+
+
+
+
 const Login = () => {
   const [remainingTime, setRemainingTime] = useState();
-  const [cookiesEnabled, setCookiesEnabled] = useState(true); // State to check cookies
-
-  useEffect(() => {
-    // Check if cookies are enabled in the browser
-    setCookiesEnabled(navigator.cookieEnabled);
-  }, []);
 
   useEffect(() => {
     let interval;
@@ -204,16 +202,10 @@ const Login = () => {
               variants={buttonVariants}
             />
 
-            {/* Disable the login button if cookies are disabled */}
             <FormButton
               type="submit"
               text="Login"
-              disabled={!cookiesEnabled}
-              styles={`w-full ${
-                cookiesEnabled
-                  ? "bg-[#08568a] hover:bg-[#074873]"
-                  : "bg-gray-400 cursor-not-allowed"
-              } text-white p-2 rounded`}
+              styles="w-full bg-[#08568a] hover:bg-[#074873] text-white p-2 rounded"
               variants={loginButtonVariants}
             />
 
@@ -228,14 +220,6 @@ const Login = () => {
               />
             </div>
           </form>
-
-          {/* Message prompting the user to enable cookies */}
-          {!cookiesEnabled && (
-            <p className="text-red-500 mt-4 text-center">
-              Cookies are required for this website to function properly. Please
-              enable cookies in your browser settings.
-            </p>
-          )}
         </motion.div>
       )}
     </div>
