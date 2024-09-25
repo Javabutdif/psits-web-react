@@ -20,7 +20,7 @@ const PostCard = ({ post }) => {
       case "cover_photo":
         return "PSITS - UC Main updated their cover photo.";
       default:
-        return description.replace(/\n/g, "<br />"); // Replace \n with <br> tags
+        return description.replace(/\n/g, "<br />"); 
     }
   };
 
@@ -72,9 +72,7 @@ const PostCard = ({ post }) => {
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
               PSITS - UC Main
             </h3>
-            <span className="ml-2 bg-gray-800 text-white text-xs px-2 py-0.5 rounded-full flex items-center justify-center">
-              {type}
-            </span>
+           
           </div>
           <p className="text-gray-500 text-xs sm:text-sm md:text-base">
             {formatTimeAgo(created_time)}

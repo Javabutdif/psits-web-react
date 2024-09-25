@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 
 import axios from "axios";
 import backendConnection from "../api/backendApi";
+import { InfinitySpin } from "react-loader-spinner";
 
 const PrivateRouteStudent = ({ element: Component }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,8 +25,7 @@ const PrivateRouteStudent = ({ element: Component }) => {
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.log("privateRouteStudent");
-        console.error("Not authorized:", error);
+        console.error("Not authorized:");
         setIsAuthenticated(false);
       } finally {
         setLoading(false);
@@ -36,7 +36,16 @@ const PrivateRouteStudent = ({ element: Component }) => {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-60vh">
+        <InfinitySpin
+          visible={true}
+          width={200}
+          color="#0d6efd"
+          ariaLabel="infinity-spin-loading"
+        />
+      </div>
+    );
   }
 
   return isAuthenticated ? <Component /> : <Navigate to="/" replace />;
