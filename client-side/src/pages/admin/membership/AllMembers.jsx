@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useOutletContext } from "react-router-dom";
-import {
-  membership,
-  studentDeletion,
-  renewAllStudent,
-} from "../../../api/admin";
+import { membership, studentDeletion } from "../../../api/admin";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
@@ -24,7 +20,6 @@ const Membership = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isRenewalModalVisible, setIsRenewalModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -106,36 +101,9 @@ const Membership = () => {
     setStudentIdToBeDeleted(row.id_number);
   };
 
-  const showConfirm = () => {
-    setIsRenewalModalVisible(true);
-  };
-
   const hideModal = () => {
     setIsModalVisible(false);
-    setIsRenewalModalVisible(false);
     setStudentIdToBeDeleted("");
-  };
-
-  const handleRenewal = async () => {
-    setIsLoading(true);
-    try {
-      if (await renewAllStudent()) {
-        setIsRenewalModalVisible(false);
-        showToast(
-          "success",
-          "All student memberships are currently being renewed."
-        );
-        fetchData();
-      } else {
-        console.error("Failed to renew all students");
-        showToast("error", "Student Renewal Failed! Please try again.");
-      }
-    } catch (error) {
-      console.error("Error renewing all students:", error);
-      showToast("error", "Student Renewal Failed! Please try again.");
-    }
-    setIsRenewalModalVisible(false);
-    setIsLoading(false);
   };
 
   const handleConfirmDeletion = async () => {
@@ -296,57 +264,7 @@ const Membership = () => {
 
   return (
     <div className="">
-      <TableComponent
-        columns={columns}
-        data={filteredData}
-        customButtons={
-          <ButtonsComponent>
-            {selectedRows.length > 0 && (
-              <FormButton
-                type="button"
-                text="Delete All"
-                icon={<i className="fas fa-trash-alt"></i>} // Updated icon
-                styles="flex items-center space-x-2 bg-gray-100 text-gray-800 rounded-md py-2 px-4 transition duration-150 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm" // Elegant and minimal
-                textClass="hidden"
-                whileHover={{ scale: 1.01, opacity: 0.9 }}
-                whileTap={{ scale: 0.95, opacity: 0.8 }}
-              />
-            )}
-
-            <FormButton
-              type="button"
-              text={
-                position !== "President" && position !== "Developer"
-                  ? "Not Authorized"
-                  : "Renew"
-              }
-              onClick={() => {
-                if (position === "President" || position === "Developer") {
-                  showConfirm(); // Invoke the function
-                }
-              }}
-              icon={
-                <i
-                  className={`fa ${
-                    position !== "President" && position !== "Developer"
-                      ? "fa-lock"
-                      : "fa-sync-alt"
-                  }`}
-                ></i>
-              }
-              styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-                position !== "President" && position !== "Developer"
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-red-500"
-              }`}
-              textClass="text-white"
-              whileHover={{ scale: 1.02, opacity: 0.95 }}
-              whileTap={{ scale: 0.98, opacity: 0.9 }}
-              disabled={position !== "President" && position !== "Developer"} // Use && instead of ||
-            />
-          </ButtonsComponent>
-        }
-      />
+      <TableComponent columns={columns} data={filteredData} />
       {isEditModalVisible && (
         <EditMember
           isVisible={isEditModalVisible}
@@ -360,13 +278,6 @@ const Membership = () => {
           confirmType={ConfirmActionType.DELETION}
           onCancel={hideModal}
           onConfirm={handleConfirmDeletion}
-        />
-      )}
-      {isRenewalModalVisible && (
-        <ConfirmationModal
-          confirmType={ConfirmActionType.RENEWAL}
-          onCancel={hideModal}
-          onConfirm={handleRenewal}
         />
       )}
     </div>
