@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { InfinitySpin } from "react-loader-spinner";
 import backendConnection from "../../api/backendApi";
 import { showToast } from "../../utils/alertHelper";
-import { getPosition } from "../../authentication/Authentication";
+import { getInformationData } from "../../authentication/Authentication";
 
 function AdminRegister() {
+  const user = getInformationData();
   const [formData, setFormData] = useState({
     id_number: "",
     email: "",
@@ -21,7 +22,7 @@ function AdminRegister() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (getPosition() !== "Developer") {
+    if (user.position !== "Developer") {
       navigate("/admin/dashboard");
     }
   });

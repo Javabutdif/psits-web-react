@@ -12,8 +12,7 @@ export const useUser = async () => {
         withCredentials: true,
       }
     );
-    console.log("useUser");
-    console.log(response.data);
+   
     if (response.data.role === "Admin") {
       user = {
         name: response.data.user.name,
@@ -48,52 +47,9 @@ export const useUser = async () => {
   } catch (err) {
     console.log("Authentication");
     console.error("Not authorized:", err);
-  } finally {
-    console.log(user.id);
-    return user; // Return user, loading state, and error
-  }
+  } 
 };
-export const getPosition = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
 
-  return token.user.position;
-};
-export const getId = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-
-  return token.user.id_number;
-};
-export const getRfid = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-
-  return token.user.rfid;
-};
-export const getMembershipStatus = () => {
-  const authen = localStorage.getItem("Data");
-  if (!authen) return null;
-  const users = JSON.parse(authen);
-
-  if (!users.membership) {
-    const sessionToken = sessionStorage.getItem("Token");
-    if (!sessionToken) return null;
-    const token = jwtDecode(sessionToken);
-    return token.user.membership;
-  } else {
-    return users.membership;
-  }
-};
-export const getRenewStatus = () => {
-  const sessionToken = sessionStorage.getItem("Token");
-  if (!sessionToken) return null;
-  const token = jwtDecode(sessionToken);
-  return token.user.renew === undefined ? "None" : token.user.renew;
-};
 export const getRoute = () => {
   const sessionToken = sessionStorage.getItem("Data");
   if (!sessionToken) return null;
@@ -114,7 +70,7 @@ export const getInformationData = () => {
   };
 };
 
-//Remove Authentication after logout
+
 export const removeAuthentication = () => {
   localStorage.removeItem("Data");
   sessionStorage.removeItem("Data");
