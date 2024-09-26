@@ -54,17 +54,15 @@ const Orders = () => {
 
     fetchOrders();
   }, []);
-
   useEffect(() => {
     const filtered = orders.filter((order) => {
       const matchesStatus = order.order_status === selectedTab;
-      const searchTermLower = searchTerm.toLowerCase();
+
+      const searchTermLower = searchTerm?.toLowerCase() || ""; // Safely handle undefined search term
       const matchesSearch =
-        order.student_name.toLowerCase().includes(searchTermLower) ||
-        order._id.toLowerCase().includes(searchTermLower) ||
-        order.id_number.toLowerCase().includes(searchTermLower) ||
-        order.rfid.toLowerCase().includes(searchTermLower) ||
-        order.course.toLowerCase().includes(searchTermLower) ||
+        order.student_name?.toLowerCase().includes(searchTermLower) || // Safely handle undefined student_name
+        order.id_number?.toLowerCase().includes(searchTermLower) || // Safely handle undefined id_number
+        order.rfid?.toLowerCase().includes(searchTermLower) || // Safely handle undefined rfid
         (order.reference_code &&
           order.reference_code.toString().includes(searchTerm));
 
