@@ -27,7 +27,7 @@ const PrivateRouteAdmin = ({ element: Component }) => {
         console.error("Not authorized:");
         setIsAuthenticated(false);
       } finally {
-        setIsAuthenticated(false);
+    
         setLoading(false);
       }
     };
