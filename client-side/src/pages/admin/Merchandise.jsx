@@ -150,153 +150,155 @@ function Merchandise() {
     setPublishModalOpen(true);
   };
 
-  const getStatus = (row) => {
-    const currentDate = new Date();
-    const startDate = formattedDate(row.start_date);
-    const endDate = formattedDate(row.end_date);
+ const getStatus = (row) => {
+   const currentDate = new Date();
+   const startDate = formattedDate(row.start_date);
+   const endDate = formattedDate(row.end_date);
 
-    if (isBefore(formattedDate(currentDate), startDate)) {
-      return row.is_active ? "Publishing" : "Pending";
-    } else if (isAfter(formattedDate(currentDate), endDate)) {
-      return row.is_active ? "Expired" : "Expired";
-    } else {
-      return row.is_active ? "Publishing" : "Deleted";
-    }
-  };
+   if (isBefore(formattedDate(currentDate), startDate)) {
+     return row.is_active ? "Publishing" : "Pending";
+   } else if (isAfter(formattedDate(currentDate), endDate)) {
+     return !row.is_active ? "Deleted" : "Expired";
+   } else {
+     return row.is_active ? "Publishing" : "Deleted";
+   }
+ };
 
-  const columns = [
-    {
-      key: "select",
-      label: (
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <input
-            type="checkbox"
-            checked={selectAll}
-            onChange={() => setSelectAll(!selectAll)}
-          />
-        </motion.div>
-      ),
-      cell: (row) => (
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <input
-            type="checkbox"
-            checked={selectedRows.includes(row.id_number)}
-            onChange={() => handleRowSelection(row.id_number)}
-          />
-        </motion.div>
-      ),
-    },
+ const columns = [
+   {
+     key: "select",
+     label: (
+       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+         <input
+           type="checkbox"
+           checked={selectAll}
+           onChange={() => setSelectAll(!selectAll)}
+         />
+       </motion.div>
+     ),
+     cell: (row) => (
+       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+         <input
+           type="checkbox"
+           checked={selectedRows.includes(row.id_number)}
+           onChange={() => handleRowSelection(row.id_number)}
+         />
+       </motion.div>
+     ),
+   },
 
-    {
-      key: "name",
-      label: "Product",
-      sortable: true,
-      cell: (row) => (
-        <div className="flex items-center justify-center md:justify-start gap-2">
-          <img
-            src={row.imageUrl[0]}
-            alt={row.name}
-            width="50"
-            height="50"
-            className="rounded-md shadow-sm"
-          />
-        </div>
-      ),
-    },
-    {
-      key: "name",
-      label: "Name",
-      sortable: true,
-    },
+   {
+     key: "name",
+     label: "Product",
+     sortable: true,
+     cell: (row) => (
+       <div className="flex items-center justify-center md:justify-start gap-2">
+         <img
+           src={row.imageUrl[0]}
+           alt={row.name}
+           width="50"
+           height="50"
+           className="rounded-md shadow-sm"
+         />
+       </div>
+     ),
+   },
+   {
+     key: "name",
+     label: "Name",
+     sortable: true,
+   },
 
-    {
-      key: "batch",
-      label: "Batch",
-      sortable: true,
-      cell: (row) => `Batch ${row.batch}`,
-    },
-    {
-      key: "price",
-      label: "Price",
-      sortable: true,
-      cell: (row) => `₱ ${row.price}`,
-    },
-    {
-      key: "control",
-      label: "Product Controls",
-      sortable: true,
-    },
-    {
-      key: "is_active",
-      label: "Status",
-      sortable: true,
-      cell: (row) => (
-        <div className="text-center">
-          <span
-            className={`px-2 py-1 rounded text-xs ${
-              getStatus(row) === "Publishing"
-                ? "bg-green-200 text-green-800"
-                : getStatus(row) === "Expired"
-                ? "bg-yellow-200 text-yellow-800"
-                : "bg-red-200 text-red-800"
-            }`}
-          >
-            {getStatus(row)}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "actions",
-      label: "",
-      cell: (row) => (
-        <ButtonsComponent>
-          <FormButton
-            type="button"
-            text="View"
-            onClick={() => handleView(row)}
-            styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-            icon={<i className="fas fa-eye text-sm"></i>}
-            textClass="ml-2 md:inline"
-            iconClass="text-sm text-base"
-          />
+   {
+     key: "batch",
+     label: "Batch",
+     sortable: true,
+     cell: (row) => `Batch ${row.batch}`,
+   },
+   {
+     key: "price",
+     label: "Price",
+     sortable: true,
+     cell: (row) => `₱ ${row.price}`,
+   },
+   {
+     key: "control",
+     label: "Product Controls",
+     sortable: true,
+   },
+   {
+     key: "is_active",
+     label: "Status",
+     sortable: true,
+     cell: (row) => (
+       <div className="text-center">
+         <span
+           className={`px-2 py-1 rounded text-xs ${
+             getStatus(row) === "Publishing"
+               ? "bg-green-200 text-green-800"
+               : getStatus(row) === "Expired"
+               ? "bg-yellow-200 text-yellow-800"
+               : getStatus(row) === "Deleted"
+               ? "bg-red-200 text-red-800"
+               : "bg-gray-200 text-gray-800"
+           }`}
+         >
+           {getStatus(row)}
+         </span>
+       </div>
+     ),
+   },
+   {
+     key: "actions",
+     label: "",
+     cell: (row) => (
+       <ButtonsComponent>
+         <FormButton
+           type="button"
+           text="View"
+           onClick={() => handleView(row)}
+           styles="bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+           icon={<i className="fas fa-eye text-sm"></i>}
+           textClass="ml-2 md:inline"
+           iconClass="text-sm text-base"
+         />
 
-          <FormButton
-            type="button"
-            text="Edit"
-            onClick={() => handleOpenEditModal(row)}
-            styles="bg-green-200 text-green-800 hover:bg-green-200 active:bg-green-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
-            icon={<i className="fas fa-edit text-sm"></i>}
-            textClass="ml-2 md:inline"
-            iconClass="text-sm text-base"
-          />
+         <FormButton
+           type="button"
+           text="Edit"
+           onClick={() => handleOpenEditModal(row)}
+           styles="bg-green-200 text-green-800 hover:bg-green-200 active:bg-green-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
+           icon={<i className="fas fa-edit text-sm"></i>}
+           textClass="ml-2 md:inline"
+           iconClass="text-sm text-base"
+         />
 
-          {row.is_active && (
-            <FormButton
-              type="button"
-              text="Delete"
-              onClick={() => handleDeleteProductModal(row._id)}
-              styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-              icon={<i className="fas fa-trash text-sm"></i>}
-              textClass="ml-2 md:inline"
-              iconClass="text-sm text-base"
-            />
-          )}
-          {!row.is_active && (
-            <FormButton
-              type="button"
-              text="Publish"
-              onClick={() => handlePublishProductModal(row._id)}
-              styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
-              icon={<i className="fas fa-pen text-sm"></i>}
-              textClass="ml-2 md:inline"
-              iconClass="text-sm text-base"
-            />
-          )}
-        </ButtonsComponent>
-      ),
-    },
-  ];
+         {row.is_active && (
+           <FormButton
+             type="button"
+             text="Delete"
+             onClick={() => handleDeleteProductModal(row._id)}
+             styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+             icon={<i className="fas fa-trash text-sm"></i>}
+             textClass="ml-2 md:inline"
+             iconClass="text-sm text-base"
+           />
+         )}
+         {!row.is_active && (
+           <FormButton
+             type="button"
+             text="Publish"
+             onClick={() => handlePublishProductModal(row._id)}
+             styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
+             icon={<i className="fas fa-pen text-sm"></i>}
+             textClass="ml-2 md:inline"
+             iconClass="text-sm text-base"
+           />
+         )}
+       </ButtonsComponent>
+     ),
+   },
+ ];
 
   useEffect(() => {
     if (selectAll) {
