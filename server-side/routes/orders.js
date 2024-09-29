@@ -30,20 +30,20 @@ router.get("/", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-
 router.get("/get-all-orders", async (req, res) => {
   try {
-    const orders = await Orders.find();
+    const orders = await Orders.find().sort({ order_date: -1 });
     if (orders.length > 0) {
       res.status(200).json(orders);
     } else {
       res.status(400).json({ message: "No Records" });
     }
   } catch (error) {
-    console.error("Error fetching students:", error);
+    console.error("Error fetching orders:", error);
     res.status(500).json("Internal Server Error");
   }
 });
+
 
 router.post("/student-order", async (req, res) => {
   const {

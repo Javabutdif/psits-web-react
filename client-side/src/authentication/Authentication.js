@@ -12,7 +12,7 @@ export const useUser = async () => {
         withCredentials: true,
       }
     );
-   
+    
     if (response.data.role === "Admin") {
       user = {
         name: response.data.user.name,
