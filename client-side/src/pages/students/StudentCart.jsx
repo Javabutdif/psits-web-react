@@ -369,12 +369,15 @@ const StudentCart = () => {
         const data = await viewCart(user.id_number);
         if (data && data.length > 0) {
           const currentDate = new Date();
+        
+
+				
           const filteredProducts = data.filter((item) => {
-            return (
-              formattedDate(currentDate) >= formattedDate(item.start_date) &&
-              formattedDate(currentDate) <= formattedDate(item.end_date)
-            );
-          });
+						return (
+							currentDate >= new Date(item.start_date) &&
+							currentDate <= new Date(item.end_date)
+						);
+					});
 
           setProducts(filteredProducts);
           setLoading(false);

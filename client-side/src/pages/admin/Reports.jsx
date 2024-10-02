@@ -95,202 +95,191 @@ const Reports = () => {
   };
 
   const applyFilter = (data, setData) => {
-    let filteredData = data;
+		let filteredData = data;
 
-    if (activeTab === 0) {
-      if (filterID) {
-        filteredData = filteredData.filter((item) =>
-          item.reference_code?.includes(filterID)
-        );
-      }
-      if (filterName) {
-        filteredData = filteredData.filter((item) =>
-          item.name?.toLowerCase().includes(filterName.toLowerCase())
-        );
-      }
-      if (filterType) {
-        filteredData = filteredData.filter((item) =>
-          item.type?.toLowerCase().includes(filterType.toLowerCase())
-        );
-      }
-      if (filterRFID) {
-        filteredData = filteredData.filter((item) =>
-          item.rfid?.includes(filterRFID)
-        );
-      }
-      if (filterCourse) {
-        filteredData = filteredData.filter((item) =>
-          item.course?.toLowerCase().includes(filterCourse.toLowerCase())
-        );
-      }
-      if (filterYear) {
-        filteredData = filteredData.filter((item) =>
-          item.year?.includes(filterYear)
-        );
-      }
-      if (filterDateFrom) {
-        filteredData = filteredData.filter(
-          (item) => new Date(item.date) >= new Date(filterDateFrom)
-        );
-      }
-      if (filterDateTo) {
-        filteredData = filteredData.filter(
-          (item) => new Date(item.date) <= new Date(filterDateTo)
-        );
-      }
-    } else {
-      if (filterID) {
-        filteredData = filteredData.filter((item) =>
-          item.id_number?.includes(filterID)
-        );
-      }
-      if (filterName) {
-        filteredData = filteredData.filter((item) =>
-          item.student_name?.toLowerCase().includes(filterName.toLowerCase())
-        );
-      }
-      if (filterProductName) {
-        filteredData = filteredData.filter((item) =>
-          item.product_name
-            ?.toLowerCase()
-            .includes(filterProductName.toLowerCase())
-        );
-      }
-      if (filterRFID) {
-        filteredData = filteredData.filter((item) =>
-          item.rfid?.includes(filterRFID)
-        );
-      }
-      if (filterDateFrom) {
-        filteredData = filteredData.filter(
-          (item) =>
-            formattedDate(item.transaction_date) >=
-            formattedDate(filterDateFrom)
-        );
-      }
-      if (filterDateTo) {
-        filteredData = filteredData.filter(
-          (item) =>
-            formattedDate(item.transaction_date) <= formattedDate(filterDateTo)
-        );
-      }
-      if (filterBatch) {
-        filteredData = filteredData.filter((item) =>
-          item.batch?.includes(filterBatch)
-        );
-      }
-      if (filterSize) {
-        filteredData = filteredData.filter((item) =>
-          item.size?.[0]?.$each?.[0]?.includes(filterSize)
-        );
-      }
-      if (filterColor) {
-        filteredData = filteredData.filter((item) =>
-          item.variation?.[0]?.$each?.[0]?.includes(filterColor)
-        );
-      }
-    }
+		if (activeTab === 0) {
+			if (filterID) {
+				filteredData = filteredData.filter((item) =>
+					item.reference_code?.includes(filterID)
+				);
+			}
+			if (filterName) {
+				filteredData = filteredData.filter((item) =>
+					item.name?.toLowerCase().includes(filterName.toLowerCase())
+				);
+			}
+			if (filterType) {
+				filteredData = filteredData.filter((item) =>
+					item.type?.toLowerCase().includes(filterType.toLowerCase())
+				);
+			}
+			if (filterRFID) {
+				filteredData = filteredData.filter((item) =>
+					item.rfid?.includes(filterRFID)
+				);
+			}
+			if (filterCourse) {
+				filteredData = filteredData.filter((item) =>
+					item.course?.toLowerCase().includes(filterCourse.toLowerCase())
+				);
+			}
+			if (filterYear) {
+				filteredData = filteredData.filter((item) =>
+					item.year?.includes(filterYear)
+				);
+			}
+		} else {
+			if (filterID) {
+				filteredData = filteredData.filter((item) =>
+					item.id_number?.includes(filterID)
+				);
+			}
+			if (filterName) {
+				filteredData = filteredData.filter((item) =>
+					item.student_name?.toLowerCase().includes(filterName.toLowerCase())
+				);
+			}
+			if (filterProductName) {
+				filteredData = filteredData.filter((item) =>
+					item.product_name
+						?.toLowerCase()
+						.includes(filterProductName.toLowerCase())
+				);
+			}
+			if (filterRFID) {
+				filteredData = filteredData.filter((item) =>
+					item.rfid?.includes(filterRFID)
+				);
+			}
+			if (filterDateFrom && filterDateTo) {
+				filteredData = filteredData.filter(
+					(item) =>
+						new Date(formattedDate(item.transaction_date)) >=
+							new Date(formattedDate(filterDateFrom)) &&
+						new Date(formattedDate(item.transaction_date)) <=
+							new Date(formattedDate(filterDateTo))
+				);
 
-    setData(filteredData);
-  };
+				console.log(filteredData);
+			}
 
-  const calculateSalesData = () => {
-    if (activeTab === 1 && filteredMerchandiseData.length) {
-      const salesMap = filteredMerchandiseData.reduce((acc, item) => {
-        if (!acc[item.product_name]) {
-          acc[item.product_name] = { unitsSold: 0, totalRevenue: 0 };
-        }
-        acc[item.product_name].unitsSold += item.quantity;
-        acc[item.product_name].totalRevenue += item.total;
-        return acc;
-      }, {});
+			if (filterBatch) {
+				filteredData = filteredData.filter((item) =>
+					item.batch?.includes(filterBatch)
+				);
+			}
+			if (filterSize) {
+				filteredData = filteredData.filter((item) =>
+					item.size?.[0]?.$each?.[0]?.includes(filterSize)
+				);
+			}
+			if (filterColor) {
+				filteredData = filteredData.filter((item) =>
+					item.variation?.[0]?.$each?.[0]?.includes(filterColor)
+				);
+			}
+		}
 
-      setSalesData(salesMap);
-    } else {
-      setSalesData({});
-    }
-  };
+		setData(filteredData);
+	};
 
-  const handleFilter = () => {
-    if (activeTab === 0) {
-      applyFilter(membershipData, setFilteredMembershipData);
-      calculateSalesData();
-    } else {
-      applyFilter(merchandiseData, setFilteredMerchandiseData);
-      calculateSalesData();
-    }
-    setIsFilterOpen(false);
-  };
+	const calculateSalesData = () => {
+		if (activeTab === 1 && filteredMerchandiseData.length) {
+			const salesMap = filteredMerchandiseData.reduce((acc, item) => {
+				if (!acc[item.product_name]) {
+					acc[item.product_name] = { unitsSold: 0, totalRevenue: 0 };
+				}
+				acc[item.product_name].unitsSold += item.quantity;
+				acc[item.product_name].totalRevenue += item.total;
+				return acc;
+			}, {});
 
-  const handleClearFilters = () => {
-    setFilterID("");
-    setFilterName("");
-    setFilterRFID("");
-    setFilterCourse("");
-    setFilterYear("");
-    setFilterDateFrom("");
-    setFilterDateTo("");
-    setFilterProductName("");
-    setFilterBatch("");
-    setFilterSize("");
-    setFilterColor("");
-    setFilterType("");
+			setSalesData(salesMap);
+		} else {
+			setSalesData({});
+		}
+	};
 
-    if (activeTab === 0) {
-      setFilteredMembershipData(membershipData);
-    } else {
-      setFilteredMerchandiseData(merchandiseData);
-    }
-  };
+	const handleFilter = () => {
+		if (activeTab === 0) {
+			applyFilter(membershipData, setFilteredMembershipData);
+			calculateSalesData();
+		} else {
+			applyFilter(merchandiseData, setFilteredMerchandiseData);
+			calculateSalesData();
+		}
+		setIsFilterOpen(false);
+	};
 
-  const membershipColumns = [
-    {
-      name: "Reference Code",
-      selector: (row) => row.reference_code,
-      sortable: true,
-    },
-    { name: "ID Number", selector: (row) => row.id_number, sortable: true },
-    { name: "Name", selector: (row) => row.name, sortable: true },
-    { name: "RFID", selector: (row) => row.rfid, sortable: true },
-    { name: "Course", selector: (row) => row.course, sortable: true },
-    { name: "Year", selector: (row) => row.year, sortable: true },
-    {
-      name: "Date",
-      selector: (row) => formattedDate(row.date),
-      sortable: true,
-    },
-    { name: "Type", selector: (row) => row.type, sortable: true },
-  ];
+	const handleClearFilters = () => {
+		setFilterID("");
+		setFilterName("");
+		setFilterRFID("");
+		setFilterCourse("");
+		setFilterYear("");
+		setFilterDateFrom("");
+		setFilterDateTo("");
+		setFilterProductName("");
+		setFilterBatch("");
+		setFilterSize("");
+		setFilterColor("");
+		setFilterType("");
 
-  const merchandiseColumns = [
-    { name: "Order ID", selector: (row) => row.reference_code, sortable: true },
-    { name: "Name", selector: (row) => row.student_name, sortable: true },
-    {
-      name: "Product Name",
-      selector: (row) => row.product_name,
-      sortable: true,
-    },
-    { name: "Batch", selector: (row) => row.batch, sortable: true },
-    {
-      name: "Size",
-      selector: (row) => row.size?.[0]?.$each?.[0] || "",
-      sortable: true,
-    },
-    {
-      name: "Color",
-      selector: (row) => row.variation?.[0]?.$each?.[0] || "",
-      sortable: true,
-    },
+		if (activeTab === 0) {
+			setFilteredMembershipData(membershipData);
+		} else {
+			setFilteredMerchandiseData(merchandiseData);
+		}
+	};
 
-    { name: "Quantity", selector: (row) => row.quantity, sortable: true },
+	const membershipColumns = [
+		{
+			name: "Reference Code",
+			selector: (row) => row.reference_code,
+			sortable: true,
+		},
+		{ name: "ID Number", selector: (row) => row.id_number, sortable: true },
+		{ name: "Name", selector: (row) => row.name, sortable: true },
+		{ name: "RFID", selector: (row) => row.rfid, sortable: true },
+		{ name: "Course", selector: (row) => row.course, sortable: true },
+		{ name: "Year", selector: (row) => row.year, sortable: true },
+		{
+			name: "Date",
+			selector: (row) => formattedDate(row.date),
+			sortable: true,
+		},
+		{ name: "Type", selector: (row) => row.type, sortable: true },
+	];
 
-    { name: "Total", selector: (row) => row.total, sortable: true },
-    {
-      name: "Transaction Date",
-      selector: (row) => formattedDate(row.transaction_date),
-      sortable: true,
-    },
-  ];
+	const merchandiseColumns = [
+		{ name: "Order ID", selector: (row) => row.reference_code, sortable: true },
+		{ name: "Name", selector: (row) => row.student_name, sortable: true },
+		{
+			name: "Product Name",
+			selector: (row) => row.product_name,
+			sortable: true,
+		},
+		{ name: "Batch", selector: (row) => row.batch, sortable: true },
+		{
+			name: "Size",
+			selector: (row) => row.size?.[0]?.$each?.[0] || "",
+			sortable: true,
+		},
+		{
+			name: "Color",
+			selector: (row) => row.variation?.[0]?.$each?.[0] || "",
+			sortable: true,
+		},
+
+		{ name: "Quantity", selector: (row) => row.quantity, sortable: true },
+
+		{ name: "Total", selector: (row) => row.total, sortable: true },
+		{
+			name: "Transaction Date",
+			selector: (row) => formattedDate(row.transaction_date),
+			sortable: true,
+		},
+	];
   const getMembershipCounts = (membershipData) => {
     try {
       // Ensure membershipData is an array
