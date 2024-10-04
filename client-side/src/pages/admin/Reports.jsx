@@ -316,321 +316,316 @@ const Reports = () => {
     variation: row.variation?.[0]?.$each?.[0] || "",
   }));
 
-  return (
-    <div className="container mx-auto p-4">
-      <Tabs selectedIndex={activeTab} onSelect={(index) => setActiveTab(index)}>
-        <TabList>
-          <Tab>Membership</Tab>
-          <Tab>Merchandise</Tab>
-        </TabList>
+  console.log(merchandiseData);
+	return (
+		<div className="container mx-auto p-4">
+			<Tabs selectedIndex={activeTab} onSelect={(index) => setActiveTab(index)}>
+				<TabList>
+					<Tab>Membership</Tab>
+					<Tab>Merchandise</Tab>
+				</TabList>
 
-        <TabPanel>
-          <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold mb-4">Membership Sales Summary</h2>
-            <table className="min-w-full bg-gray-100 rounded-lg overflow-hidden shadow-md">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2 text-left">
-                    Membership Type
-                  </th>
-                  <th className="border px-4 py-2 text-left">
-                    Registered Students
-                  </th>
-                  <th className="border px-4 py-2 text-left">Total Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border px-4 py-2">Membership</td>
-                  <td className="border px-4 py-2">{membershipCount}</td>
-                  <td className="border px-4 py-2">
-                    ₱{membershipRevenue.toFixed(2)}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border px-4 py-2">Renewal</td>
-                  <td className="border px-4 py-2">{renewalCount}</td>
-                  <td className="border px-4 py-2">
-                    ₱{renewalRevenue.toFixed(2)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+				<TabPanel>
+					<div className="mb-6 bg-white p-4 rounded-lg shadow-md">
+						<h2 className="text-xl font-bold mb-4">Membership Sales Summary</h2>
+						<table className="min-w-full bg-gray-100 rounded-lg overflow-hidden shadow-md">
+							<thead className="bg-gray-200">
+								<tr>
+									<th className="border px-4 py-2 text-left">
+										Membership Type
+									</th>
+									<th className="border px-4 py-2 text-left">
+										Registered Students
+									</th>
+									<th className="border px-4 py-2 text-left">Total Revenue</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td className="border px-4 py-2">Membership</td>
+									<td className="border px-4 py-2">{membershipCount}</td>
+									<td className="border px-4 py-2">
+										₱{membershipRevenue.toFixed(2)}
+									</td>
+								</tr>
+								<tr>
+									<td className="border px-4 py-2">Renewal</td>
+									<td className="border px-4 py-2">{renewalCount}</td>
+									<td className="border px-4 py-2">
+										₱{renewalRevenue.toFixed(2)}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 
-          {/* Membership Tab Content */}
-          <div className="flex justify-between items-center mb-4">
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-              onClick={() => setIsFilterOpen(true)}
-            >
-              Filter
-            </button>
-            <CSVLink
-              data={filteredMembershipData.length ? filteredMembershipData : []}
-              filename="membership-data.csv"
-            >
-              <button className="bg-green-500 text-white px-4 py-2 rounded">
-                Export CSV
-              </button>
-            </CSVLink>
-          </div>
+					{/* Membership Tab Content */}
+					<div className="flex justify-between items-center mb-4">
+						<button
+							className="bg-blue-500 text-white px-4 py-2 rounded"
+							onClick={() => setIsFilterOpen(true)}>
+							Filter
+						</button>
+						<CSVLink
+							data={filteredMembershipData.length ? filteredMembershipData : []}
+							filename="membership-data.csv">
+							<button className="bg-green-500 text-white px-4 py-2 rounded">
+								Export CSV
+							</button>
+						</CSVLink>
+					</div>
 
-          <DataTable
-            columns={membershipColumns}
-            data={filteredMembershipData}
-            pagination
-          />
-        </TabPanel>
+					<DataTable
+						columns={membershipColumns}
+						data={filteredMembershipData}
+						pagination
+					/>
+				</TabPanel>
 
-        <TabPanel>
-          <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold mb-4">
-              Merchandise Sales Summary
-            </h2>
-            <div className="overflow-hidden">
-              <div className="h-36 overflow-y-auto">
-                {" "}
-                <table className="min-w-full bg-gray-100 rounded-lg shadow-md">
-                  <thead className="bg-gray-200">
-                    <tr>
-                      <th className="border px-4 py-2 text-left">
-                        Product Name
-                      </th>
-                      <th className="border px-4 py-2 text-left">Units Sold</th>
-                      <th className="border px-4 py-2 text-left">
-                        Total Revenue
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(salesData).map(([productName, data]) => (
-                      <tr key={productName}>
-                        <td className="border px-4 py-2">{productName}</td>
-                        <td className="border px-4 py-2">{data.unitsSold}</td>
-                        <td className="border px-4 py-2">
-                          ₱{data.totalRevenue.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+				<TabPanel>
+					<div className="mb-6 bg-white p-4 rounded-lg shadow-md">
+						<h2 className="text-xl font-bold mb-4">
+							Merchandise Sales Summary
+						</h2>
+						<div className="overflow-hidden">
+							<div className="h-36 overflow-y-auto">
+								{" "}
+								<table className="min-w-full bg-gray-100 rounded-lg shadow-md">
+									<thead className="bg-gray-200">
+										<tr>
+											<th className="border px-4 py-2 text-left">
+												Product Name
+											</th>
+											<th className="border px-4 py-2 text-left">Units Sold</th>
+											<th className="border px-4 py-2 text-left">
+												Total Revenue
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										{Object.entries(salesData).map(([productName, data]) => (
+											<tr key={productName}>
+												<td className="border px-4 py-2">{productName}</td>
+												<td className="border px-4 py-2">{data.unitsSold}</td>
+												<td className="border px-4 py-2">
+													₱{data.totalRevenue.toFixed(2)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
 
-          {/* Merchandise Tab Content */}
-          <div className="flex justify-between items-center mb-4">
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-              onClick={() => setIsFilterOpen(true)}
-            >
-              Filter
-            </button>
+					{/* Merchandise Tab Content */}
+					<div className="flex justify-between items-center mb-4">
+						<button
+							className="bg-blue-500 text-white px-4 py-2 rounded"
+							onClick={() => setIsFilterOpen(true)}>
+							Filter
+						</button>
 
-            <CSVLink
-              data={
-                formattedMerchandiseData.length ? formattedMerchandiseData : []
-              }
-              filename="merchandise-data.csv"
-            >
-              <button className="bg-green-500 text-white px-4 py-2 rounded">
-                Export CSV
-              </button>
-            </CSVLink>
-          </div>
-          <DataTable
-            columns={merchandiseColumns}
-            data={filteredMerchandiseData}
-            pagination
-          />
-        </TabPanel>
-      </Tabs>
-      {isFilterOpen && (
-        <div className="fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-75">
-          <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-lg w-full max-w-xs sm:max-w-sm md:max-w-md">
-            <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">
-              Filter Data
-            </h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <input
-                className="border w-full p-1 sm:p-2 mb-2"
-                placeholder="ID Number"
-                value={filterID}
-                onChange={(e) => setFilterID(e.target.value)}
-              />
-              <input
-                className="border w-full p-1 sm:p-2 mb-2"
-                placeholder="Name"
-                value={filterName}
-                onChange={(e) => setFilterName(e.target.value)}
-              />
-              {activeTab !== 0 && (
-                <>
-                  <select
-                    className="border w-full p-1 sm:p-2 mb-2"
-                    value={filterProductName}
-                    onChange={(e) => {
-                      setFilterProductName(e.target.value);
-                      setFilterBatch("");
-                      changes;
-                    }}
-                  >
-                    <option value="">Select a Product</option>
-                    {productNames.map((product) => (
-                      <option key={product._id} value={product.name}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="border w-full p-1 sm:p-2 mb-2"
-                    value={filterSize}
-                    onChange={(e) => setFilterSize(e.target.value)}
-                  >
-                    <option value="">Select Size</option>
-                    <option key="18" value="18">
-                      18
-                    </option>
-                    <option key="XS" value="XS">
-                      XS
-                    </option>
-                    <option key="S" value="S">
-                      S
-                    </option>
-                    <option key="M" value="M">
-                      M
-                    </option>
-                    <option key="L" value="L">
-                      L
-                    </option>
-                    <option key="XL" value="XL">
-                      XL
-                    </option>
-                    <option key="2XL" value="2XL">
-                      2XL
-                    </option>
-                    <option key="3XL" value="3XL">
-                      3XL
-                    </option>
-                  </select>
-                  {filterProductName && (
-                    <select
-                      className="border w-full p-1 sm:p-2 mb-2"
-                      value={filterBatch}
-                      onChange={(e) => setFilterBatch(e.target.value)}
-                    >
-                      <option value="">Select Batch</option>
-                      {productNames
-                        .filter((product) => product.name === filterProductName)
-                        .map((product) => (
-                          <option key={product.batch} value={product.batch}>
-                            {product.batch}
-                          </option>
-                        ))}
-                    </select>
-                  )}
-                </>
-              )}
-              <input
-                className="border w-full p-1 sm:p-2 mb-2"
-                placeholder="RFID"
-                value={filterRFID}
-                onChange={(e) => setFilterRFID(e.target.value)}
-              />
-              {activeTab === 0 && (
-                <select
-                  className="border w-full p-1 sm:p-2 mb-2"
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                >
-                  <option value="">Select Type</option>
-                  <option key="Membership" value="Membership">
-                    Membership
-                  </option>
-                  <option key="Renewal" value="Renewal">
-                    Renewal
-                  </option>
-                </select>
-              )}
-              <select
-                className="border w-full p-1 sm:p-2 mb-2"
-                value={filterCourse}
-                onChange={(e) => setFilterCourse(e.target.value)}
-              >
-                <option value="">Select Course</option>
-                <option key="BSIT" value="BSIT">
-                  BSIT
-                </option>
-                <option key="BSCS" value="BSCS">
-                  BSCS
-                </option>
-                <option key="ACT" value="ACT">
-                  ACT
-                </option>
-              </select>
-              <select
-                className="border w-full p-1 sm:p-2 mb-2"
-                value={filterYear}
-                onChange={(e) => setFilterYear(e.target.value)}
-              >
-                <option value="">Select Year</option>
-                <option key="1" value="1">
-                  1
-                </option>
-                <option key="2" value="2">
-                  2
-                </option>
-                <option key="3" value="3">
-                  3
-                </option>
-                <option key="4" value="4">
-                  4
-                </option>
-              </select>
-              <div>
-                <label className="block text-sm font-medium">Start Date</label>
-                <input
-                  className="border w-full p-1 sm:p-2 mb-2"
-                  type="date"
-                  value={filterDateFrom}
-                  onChange={(e) => setFilterDateFrom(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">End Date</label>
-                <input
-                  className="border w-full p-1 sm:p-2 mb-2"
-                  type="date"
-                  value={filterDateTo}
-                  onChange={(e) => setFilterDateTo(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row justify-between mt-4 gap-2">
-              <button
-                className="bg-[#4398AC] text-white px-4 py-2 rounded mb-2 sm:mb-0"
-                onClick={() => setIsFilterOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-[#002E48] text-white px-4 py-2 rounded"
-                onClick={handleFilter}
-              >
-                Apply
-              </button>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded mb-2 sm:mb-0"
-                onClick={handleClearFilters}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+						<CSVLink
+							data={
+								formattedMerchandiseData.length ? formattedMerchandiseData : []
+							}
+							filename="merchandise-data.csv">
+							<button className="bg-green-500 text-white px-4 py-2 rounded">
+								Export CSV
+							</button>
+						</CSVLink>
+					</div>
+					<DataTable
+						columns={merchandiseColumns}
+						data={filteredMerchandiseData}
+						pagination
+					/>
+				</TabPanel>
+			</Tabs>
+			{isFilterOpen && (
+				<div className="fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-75">
+					<div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-lg w-full max-w-xs sm:max-w-sm md:max-w-md">
+						<h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">
+							Filter Data
+						</h2>
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+							<input
+								className="border w-full p-1 sm:p-2 mb-2"
+								placeholder="ID Number"
+								value={filterID}
+								onChange={(e) => setFilterID(e.target.value)}
+							/>
+							<input
+								className="border w-full p-1 sm:p-2 mb-2"
+								placeholder="Name"
+								value={filterName}
+								onChange={(e) => setFilterName(e.target.value)}
+							/>
+							{activeTab !== 0 && (
+								<>
+									<select
+										className="border w-full p-1 sm:p-2 mb-2"
+										value={filterProductName}
+										onChange={(e) => {
+											setFilterProductName(e.target.value);
+											setFilterBatch("");
+											changes;
+										}}>
+										<option value="">Select a Product</option>
+										{productNames.map((product) => (
+											<option key={product._id} value={product.name}>
+												{product.name}
+											</option>
+										))}
+									</select>
+									<select
+										className="border w-full p-1 sm:p-2 mb-2"
+										value={filterSize}
+										onChange={(e) => setFilterSize(e.target.value)}>
+										<option value="">Select Size</option>
+										<option key="18" value="18">
+											18
+										</option>
+										<option key="XS" value="XS">
+											XS
+										</option>
+										<option key="S" value="S">
+											S
+										</option>
+										<option key="M" value="M">
+											M
+										</option>
+										<option key="L" value="L">
+											L
+										</option>
+										<option key="XL" value="XL">
+											XL
+										</option>
+										<option key="2XL" value="2XL">
+											2XL
+										</option>
+										<option key="3XL" value="3XL">
+											3XL
+										</option>
+									</select>
+									{filterProductName && (
+										<select
+											className="border w-full p-1 sm:p-2 mb-2"
+											value={filterBatch}
+											onChange={(e) => setFilterBatch(e.target.value)}>
+											<option value="">Select Batch</option>
+											{[
+												...new Set(
+													merchandiseData
+														.filter(
+															(product) =>
+																product.product_name === filterProductName
+														) 
+														.map((product) => product.batch) 
+												),
+											].map((batch) => (
+												<option key={batch} value={batch}>
+													{batch}
+												</option>
+											))}
+										</select>
+									)}
+								</>
+							)}
+							<input
+								className="border w-full p-1 sm:p-2 mb-2"
+								placeholder="RFID"
+								value={filterRFID}
+								onChange={(e) => setFilterRFID(e.target.value)}
+							/>
+							{activeTab === 0 && (
+								<select
+									className="border w-full p-1 sm:p-2 mb-2"
+									value={filterType}
+									onChange={(e) => setFilterType(e.target.value)}>
+									<option value="">Select Type</option>
+									<option key="Membership" value="Membership">
+										Membership
+									</option>
+									<option key="Renewal" value="Renewal">
+										Renewal
+									</option>
+								</select>
+							)}
+							<select
+								className="border w-full p-1 sm:p-2 mb-2"
+								value={filterCourse}
+								onChange={(e) => setFilterCourse(e.target.value)}>
+								<option value="">Select Course</option>
+								<option key="BSIT" value="BSIT">
+									BSIT
+								</option>
+								<option key="BSCS" value="BSCS">
+									BSCS
+								</option>
+								<option key="ACT" value="ACT">
+									ACT
+								</option>
+							</select>
+							<select
+								className="border w-full p-1 sm:p-2 mb-2"
+								value={filterYear}
+								onChange={(e) => setFilterYear(e.target.value)}>
+								<option value="">Select Year</option>
+								<option key="1" value="1">
+									1
+								</option>
+								<option key="2" value="2">
+									2
+								</option>
+								<option key="3" value="3">
+									3
+								</option>
+								<option key="4" value="4">
+									4
+								</option>
+							</select>
+							<div>
+								<label className="block text-sm font-medium">Start Date</label>
+								<input
+									className="border w-full p-1 sm:p-2 mb-2"
+									type="date"
+									value={filterDateFrom}
+									onChange={(e) => setFilterDateFrom(e.target.value)}
+								/>
+							</div>
+							<div>
+								<label className="block text-sm font-medium">End Date</label>
+								<input
+									className="border w-full p-1 sm:p-2 mb-2"
+									type="date"
+									value={filterDateTo}
+									onChange={(e) => setFilterDateTo(e.target.value)}
+								/>
+							</div>
+						</div>
+						<div className="flex flex-col sm:flex-row justify-between mt-4 gap-2">
+							<button
+								className="bg-[#4398AC] text-white px-4 py-2 rounded mb-2 sm:mb-0"
+								onClick={() => setIsFilterOpen(false)}>
+								Cancel
+							</button>
+							<button
+								className="bg-[#002E48] text-white px-4 py-2 rounded"
+								onClick={handleFilter}>
+								Apply
+							</button>
+							<button
+								className="bg-red-500 text-white px-4 py-2 rounded mb-2 sm:mb-0"
+								onClick={handleClearFilters}>
+								Clear
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+		</div>
+	);
 };
 export default Reports;

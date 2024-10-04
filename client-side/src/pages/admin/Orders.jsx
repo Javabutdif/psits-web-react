@@ -29,49 +29,54 @@ const Orders = () => {
   const [error, setError] = useState(null);
   const componentRef = useRef();
   const printRef = useRef();
+  console.log(filteredOrders);
+	useEffect(() => {
+		const fetchOrders = async () => {
+			try {
+				const data = await getAllOrders();
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const data = await getAllOrders();
+				if (data === 0 || data.length === 0) {
+					setOrders([]);
+					setFilteredOrders([]);
+					setError("No orders found.");
+				} else {
+					setOrders(data);
+					setFilteredOrders(data);
+					setError(null);
+				}
+			} catch (err) {
+				setOrders([]);
+				setFilteredOrders([]);
+				setError("Failed to fetch orders. Please try again later.");
+				console.error("Error fetching orders:", err);
+			}
+		};
 
-        if (data === 0 || data.length === 0) {
-          setOrders([]);
-          setFilteredOrders([]);
-          setError("No orders found.");
-        } else {
-          setOrders(data);
-          setFilteredOrders(data);
-          setError(null);
-        }
-      } catch (err) {
-        setOrders([]);
-        setFilteredOrders([]);
-        setError("Failed to fetch orders. Please try again later.");
-        console.error("Error fetching orders:", err);
-      }
-    };
+		fetchOrders();
+	}, []);
+	useEffect(() => {
+		const filtered = orders.filter((order) => {
+			const matchesStatus = order.order_status === selectedTab;
 
-    fetchOrders();
-  }, []);
-  useEffect(() => {
-    const filtered = orders.filter((order) => {
-      const matchesStatus = order.order_status === selectedTab;
+			const searchTermLower = searchTerm?.toLowerCase() || ""; // Safely handle undefined search term
 
-      const searchTermLower = searchTerm?.toLowerCase() || ""; // Safely handle undefined search term
-      const matchesSearch =
-        order.student_name?.toLowerCase().includes(searchTermLower) || // Safely handle undefined student_name
-        order.id_number?.toLowerCase().includes(searchTermLower) || // Safely handle undefined id_number
-        order.rfid?.toLowerCase().includes(searchTermLower) || // Safely handle undefined rfid
-        (order.reference_code &&
-          order.reference_code.toString().includes(searchTerm));
+			const matchesSearch =
+				order.student_name?.toLowerCase().includes(searchTermLower) || // Safely handle undefined student_name
+				order.id_number?.toLowerCase().includes(searchTermLower) || // Safely handle undefined id_number
+				order.rfid?.toLowerCase().includes(searchTermLower) ||
+				order.items?.some(
+					(item) => item.product_name?.toLowerCase().includes(searchTermLower) // Loop through items to check product_name
+				) ||
+				(order.reference_code &&
+					order.reference_code.toString().includes(searchTerm));
 
-      return matchesStatus && (searchTerm === "" || matchesSearch);
-    });
+			return matchesStatus && (searchTerm === "" || matchesSearch);
+		});
 
-    setFilteredOrders(filtered);
-    setCurrentPage(1); // Reset to first page when filter changes
-  }, [orders, selectedTab, searchTerm]);
+		setFilteredOrders(filtered);
+		setCurrentPage(1); // Reset to first page when filter changes
+	}, [orders, selectedTab, searchTerm]);
+
 
   const handlePrintData = (row) => {
     setPrintData(row);
