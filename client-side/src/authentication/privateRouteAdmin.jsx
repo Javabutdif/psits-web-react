@@ -3,11 +3,12 @@ import { Navigate } from "react-router-dom";
 import backendConnection from "../api/backendApi";
 import axios from "axios";
 import { InfinitySpin } from "react-loader-spinner";
+import { setInformationData } from "./Authentication";
 
 const PrivateRouteAdmin = ({ element: Component }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const token = sessionStorage.getItem("Token");
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [loading, setLoading] = useState(true);
+	const token = sessionStorage.getItem("Token");
 
 	useEffect(() => {
 		const checkAuthentication = async () => {
@@ -20,7 +21,7 @@ const PrivateRouteAdmin = ({ element: Component }) => {
 						},
 					}
 				);
-			
+				setInformationData(response.data.user, response.data.role);
 				if (response.data.role === "Admin") {
 					setIsAuthenticated(true);
 				} else {
@@ -37,20 +38,20 @@ const PrivateRouteAdmin = ({ element: Component }) => {
 		checkAuthentication();
 	}, []);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-60vh">
-        <InfinitySpin
-          visible={true}
-          width={200}
-          color="#0d6efd"
-          ariaLabel="infinity-spin-loading"
-        />
-      </div>
-    );
-  }
+	if (loading) {
+		return (
+			<div className="flex justify-center items-center h-60vh">
+				<InfinitySpin
+					visible={true}
+					width={200}
+					color="#0d6efd"
+					ariaLabel="infinity-spin-loading"
+				/>
+			</div>
+		);
+	}
 
-  return isAuthenticated ? <Component /> : <Navigate to="/" replace />;
+	return isAuthenticated ? <Component /> : <Navigate to="/" replace />;
 };
 
 export default PrivateRouteAdmin;
