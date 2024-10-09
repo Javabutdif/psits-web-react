@@ -146,7 +146,7 @@ const Resources = () => {
   };
 
   const user = getInformationData();
-  const year = user.course[1].split("-")[1];
+  const year = user.year;
 
   const yearMap = {
     1: "firstYear",
