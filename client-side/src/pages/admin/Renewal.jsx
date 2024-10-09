@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import "../../App.css";
 import ApproveModal from "../../components/admin/ApproveModal";
 import { renewStudent } from "../../api/admin";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { useUser } from "../../authentication/Authentication";
+
+
 import TableComponent from "../../components/Custom/TableComponent";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";

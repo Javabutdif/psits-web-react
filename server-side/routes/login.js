@@ -65,34 +65,22 @@ router.post("/login", loginLimiter, async (req, res) => {
     }
 
     const user = {
-      id_number: users.id_number,
-      rfid: role === "Student" ? users.rfid : "",
-      name: role === "Admin" ? users.name : "",
-      first_name: role === "Student" ? users.first_name : "",
-      middle_name: role === "Student" ? users.middle_name : "",
-      last_name: role === "Student" ? users.last_name : "",
-      email: users.email,
-      course: users.course,
-      year: users.year,
-      status: users.status,
-      membership: users.membership,
-      applied: users.applied,
-      renew: users.renew,
-      position: role === "Admin" ? users.position : "N/A",
-    };
+			id_number: users.id_number,
+			name:
+				role === "Admin"
+					? users.name
+					: users.first_name + " " + users.middle_name + " " + users.last_name,
+			email: users.email,
+			course: users.course,
+			year: users.year,
+			position: role === "Admin" ? users.position : "Student",
+		};
 
-    const token = jwt.sign({ user, role }, token_key, {
-      expiresIn: role === "Admin" ? "1h" : "10m",
-    });
+		const token = jwt.sign({ user, role }, token_key, {
+			expiresIn: role === "Admin" ? "1h" : "10m",
+		});
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: role === "Admin" ? 3600000 : 600000,
-      sameSite: "None",
-    });
-
-    return res.json({ message: "Login successful", role });
+		return res.json({ message: "Signed in successfully", role, token , user });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "An error occurred", error });
