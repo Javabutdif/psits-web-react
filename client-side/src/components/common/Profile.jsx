@@ -23,7 +23,7 @@ const Profile = () => {
 			<div className="hidden sm:block">
 				<h3 className="text-sm font-semibold text-gray-800">{user.name}</h3>
 				<span className="text-xs text-gray-600  block">
-					{user.position === "N/A"
+					{user.position === "Student"
 						? user.course + "-" + user.year
 						: user.position}
 				</span>
