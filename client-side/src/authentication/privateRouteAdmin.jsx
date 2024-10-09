@@ -7,33 +7,35 @@ import { InfinitySpin } from "react-loader-spinner";
 const PrivateRouteAdmin = ({ element: Component }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const token = sessionStorage.getItem("Token");
 
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const response = await axios.get(
-          `${backendConnection()}/api/protected-route`,
-          {
-            withCredentials: true,
-          }
-        );
+	useEffect(() => {
+		const checkAuthentication = async () => {
+			try {
+				const response = await axios.get(
+					`${backendConnection()}/api/protected-route`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					}
+				);
+			
+				if (response.data.role === "Admin") {
+					setIsAuthenticated(true);
+				} else {
+					setIsAuthenticated(false);
+				}
+			} catch (error) {
+				console.error("Not authorized:");
+				setIsAuthenticated(false);
+			} finally {
+				setLoading(false);
+			}
+		};
 
-        if (response.data.role === "Admin") {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error("Not authorized:");
-        setIsAuthenticated(false);
-      } finally {
-    
-        setLoading(false);
-      }
-    };
-
-    checkAuthentication();
-  }, []);
+		checkAuthentication();
+	}, []);
 
   if (loading) {
     return (
