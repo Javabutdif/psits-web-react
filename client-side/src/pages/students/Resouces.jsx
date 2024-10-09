@@ -146,7 +146,9 @@ const Resources = () => {
   };
 
   const user = getInformationData();
+
   const year = user.year;
+
 
   const yearMap = {
     1: "firstYear",
