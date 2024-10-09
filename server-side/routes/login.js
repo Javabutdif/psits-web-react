@@ -80,7 +80,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 			expiresIn: role === "Admin" ? "1h" : "10m",
 		});
 
-		return res.json({ message: "Signed in successfully", role, token , user });
+		return res.json({ message: "Signed in successfully", role, token });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "An error occurred", error });
