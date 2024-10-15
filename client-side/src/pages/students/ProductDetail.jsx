@@ -80,18 +80,18 @@ const ProductDetail = () => {
     type = "",
   } = product;
 
-  if (user.position === "N/A") {
-    useEffect(() => {
-      const fetchStatus = async () => {
-        const membershipStatus = await getMembershipStatusStudents(
-          user.id_number
-        );
+  if (user.position === "Student") {
+		useEffect(() => {
+			const fetchStatus = async () => {
+				const membershipStatus = await getMembershipStatusStudents(
+					user.id_number
+				);
 
-        setStatus(membershipStatus);
-      };
-      fetchStatus();
-    });
-  }
+				setStatus(membershipStatus);
+			};
+			fetchStatus();
+		});
+	}
 
   const [errors, setErrors] = useState({
     selectedSize: "",

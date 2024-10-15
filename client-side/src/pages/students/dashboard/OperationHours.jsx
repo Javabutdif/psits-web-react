@@ -52,7 +52,7 @@ const OperationHours = ({ styles }) => {
         </p>
         <p className="text-xs sm:text-sm text-dark flex items-center space-x-2">
           <i className="fas fa-map-marker-alt text-base" aria-hidden="true" />
-          <span>PSITS Office, Room 101, Student Union Building</span>
+          <span>PSITS Office, Room 537, 5th Floor</span>
         </p>
       </div>
     </div>

@@ -64,7 +64,7 @@ const Login = () => {
 		if (!formData.id_number) {
 			newErrors.id_number = "ID Number is required.";
 		} else if (!idNumberRegex.test(formData.id_number)) {
-			newErrors.id_number = "ID Number must be 8 digits or 8 digits .";
+			newErrors.id_number = "ID Number must be 8 digits.";
 		}
 
 		if (!formData.password) {

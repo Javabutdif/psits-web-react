@@ -150,28 +150,38 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setIsModalVisible(false);
-    try {
-      if (await register(formData)) {
-        showToast("success", "Registration successful");
+     const trimmedFormData = {
+				id_number: formData.id_number?.trim(),
+				first_name: formData.first_name?.trim(),
+				last_name: formData.last_name?.trim(),
+				email: formData.email?.trim(),
+				course: formData.course?.trim(),
+				year: formData.year?.trim(),
+				password: formData.password?.trim(),
+				confirm_password: formData.confirm_password?.trim(),
+			};
+			setIsModalVisible(false);
+			try {
+				if (await register(trimmedFormData)) {
+					showToast("success", "Registration successful");
 
-        setFormData({
-          id_number: "",
-          rfid: "",
-          password: "",
-          confirm_password: "",
-          first_name: "",
-          middle_name: "",
-          last_name: "",
-          email: "",
-          course: "",
-          year: "",
-        });
-        navigate("/login");
-      }
-    } catch (error) {
-      showToast("error", JSON.stringify(error));
-    }
+					setFormData({
+						id_number: "",
+						rfid: "",
+						password: "",
+						confirm_password: "",
+						first_name: "",
+						middle_name: "",
+						last_name: "",
+						email: "",
+						course: "",
+						year: "",
+					});
+					navigate("/login");
+				}
+			} catch (error) {
+				showToast("error", JSON.stringify(error));
+			}
     setIsLoading(false);
   };
 
