@@ -153,12 +153,12 @@ function Register() {
      const trimmedFormData = {
 				id_number: formData.id_number?.trim(),
 				first_name: formData.first_name?.trim(),
+				middle_name: formData.middle_name?.trim(),
 				last_name: formData.last_name?.trim(),
 				email: formData.email?.trim(),
 				course: formData.course?.trim(),
 				year: formData.year?.trim(),
 				password: formData.password?.trim(),
-				confirm_password: formData.confirm_password?.trim(),
 			};
 			setIsModalVisible(false);
 			try {
