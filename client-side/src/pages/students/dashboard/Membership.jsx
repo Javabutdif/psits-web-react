@@ -25,7 +25,6 @@ function Membership({ styles }) {
 			};
 			fetchStatus();
 		});
-		console.log(membershipStatus);
 	}
 
 	const toggleModal = () => setIsModalOpen(!isModalOpen);
