@@ -69,13 +69,13 @@ router.post("/login", loginLimiter, async (req, res) => {
 			name:
 				role === "Admin"
 					? users.name
-					: users.first_name + " " + users.middle_name + " " + users.last_name,
+					: users.first_name + " " + users?.middle_name + " " + users.last_name,
 			email: users.email,
 			course: users.course,
 			year: users.year,
 			position: role === "Admin" ? users.position : "Student",
 		};
-
+		
 		const token = jwt.sign({ user, role }, token_key, {
 			expiresIn: role === "Admin" ? "1h" : "10m",
 		});

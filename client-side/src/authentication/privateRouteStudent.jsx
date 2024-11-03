@@ -42,13 +42,15 @@ const PrivateRouteStudent = ({ element: Component }) => {
 
 	if (loading) {
 		return (
-			<div className="flex justify-center items-center h-60vh">
-				<InfinitySpin
-					visible={true}
-					width={200}
-					color="#0d6efd"
-					ariaLabel="infinity-spin-loading"
-				/>
+			<div className="relative min-h-screen flex justify-center items-center bg-gray-100 px-4">
+				<div className="flex justify-center items-center h-60vh">
+					<InfinitySpin
+						visible={true}
+						width={200}
+						color="#0d6efd"
+						ariaLabel="infinity-spin-loading"
+					/>
+				</div>
 			</div>
 		);
 	}

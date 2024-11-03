@@ -1,15 +1,15 @@
 import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import president from "../assets/Core Officers/2.png";
-import viceInternal from "../assets/Core Officers/4.png";
+import president from "../assets/Core Officers/4.jpg";
+import viceInternal from "../assets/Core Officers/5.jpg";
 import viceExternal from "../assets/Core Officers/3.png";
-import secretary from "../assets/Core Officers/5.png";
+import secretary from "../assets/Core Officers/sec.jpg";
 import auditor from "../assets/Core Officers/8.png";
 import treasurer from "../assets/Core Officers/6.png";
 import assistantTreasurer from "../assets/Core Officers/7.png";
 import pio from "../assets/Core Officers/9.png";
 import pro from "../assets/Core Officers/10.png";
-import firstRep from "../assets/Core Officers/12.png";
+import firstRep from "../assets/Core Officers/12.jpg";
 import secondRep from "../assets/Core Officers/13.png";
 import thirdRep from "../assets/Core Officers/14.png";
 import fourthRep from "../assets/Core Officers/15.png";
@@ -25,7 +25,6 @@ import marianne from "../assets/Development Team/31.png";
 
 const faculty = [
   { name: "Dennis Durano", image: dennis, role: "Advisor" },
-  { name: "Christian Barral", image: barral, role: "Advisor" },
   { name: "Jia Nova Montecino", image: jia, role: "Advisor" },
 ];
 
@@ -41,10 +40,10 @@ const teamMembers = [
 ];
 
 const officersAndReps = [
-  { role: "President", name: "Vince Andrew Santoya", image: president },
+  { role: "President", name: "Aubrey Leyros", image: president },
   {
     role: "Vice President Internal",
-    name: "Aubrey Leyros",
+    name: "Marlou Tadlip",
     image: viceInternal,
   },
   {
@@ -52,7 +51,7 @@ const officersAndReps = [
     name: "Clint Louie Tuyor",
     image: viceExternal,
   },
-  { role: "Secretary", name: "Marlou Tadlip", image: secretary },
+  { role: "Secretary", name: "Sainth Anneshka N. Cuico", image: secretary },
   { role: "Auditor", name: "Daisy Lyn Laygan", image: auditor },
   { role: "Treasurer", name: "Jeraiza Gacang", image: treasurer },
   {
@@ -63,7 +62,7 @@ const officersAndReps = [
   { role: "P.I.O", name: "Princess Villanueva", image: pio },
   { role: "P.R.O", name: "John Paul Costillas", image: pro },
   { role: "Chief Volunteer", name: "Arvin Albeos", image: chiefVol },
-  { role: "1st Year Rep", name: "Sainth Anneshka N. Cuico", image: firstRep },
+  { role: "1st Year Rep", name: "Lee Vincent Laurito", image: firstRep },
   { role: "2nd Year Rep", name: "Christ Hanzen Rallos", image: secondRep },
   { role: "3rd Year Rep", name: "Angela Postrero", image: thirdRep },
   { role: "4th Year Rep", name: "Shainnah Lhyn Taborada", image: fourthRep },
