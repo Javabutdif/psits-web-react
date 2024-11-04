@@ -23,8 +23,8 @@ const Login = () => {
   const [remainingTime, setRemainingTime] = useState();
   const currentDate = new Date();
   const novStart = new Date(currentDate.getFullYear(), 10, 1);
-  const novEnd = new Date(currentDate.getFullYear(), 10, 10);
-  const startChristmas = new Date(currentDate.getFullYear(), 10, 30);
+  const novEnd = new Date(currentDate.getFullYear(), 10, 4);
+	const startChristmas = new Date(currentDate.getFullYear(), 10, 5);
   const endChristmas = new Date(currentDate.getFullYear(), 11, 31);
 
   useEffect(() => {
