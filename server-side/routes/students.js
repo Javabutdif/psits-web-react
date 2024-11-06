@@ -155,7 +155,6 @@ router.put("/students/cancel/:id_number", async (req, res) => {
   }
 });
 
-
 router.post("/editedStudent", async (req, res) => {
   const {
     id_number,
@@ -169,7 +168,6 @@ router.post("/editedStudent", async (req, res) => {
   } = req.body;
 
   try {
-   
     const studentResult = await Student.updateOne(
       { id_number: id_number },
       {
@@ -185,9 +183,8 @@ router.post("/editedStudent", async (req, res) => {
       }
     );
 
-  
     await Orders.updateMany(
-      {  id_number: id_number  }, 
+      { id_number: id_number },
       {
         $set: {
           student_name: `${first_name} ${middle_name} ${last_name}`,
@@ -258,6 +255,26 @@ router.post("/edit", async (req, res) => {
   } catch (error) {
     console.error("Error fetching students:", error);
     res.status(500).json("Internal Server Error");
+  }
+});
+
+router.post("/students/change-password-admin", async (req, res) => {
+  try {
+    const getStudent = await Student.findOne({ id_number: req.body.id_number });
+
+    if (!getStudent) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    getStudent.password = hashedPassword;
+    await getStudent.save();
+
+    res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "An error occurred", error: error.message });
   }
 });
 
