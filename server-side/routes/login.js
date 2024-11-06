@@ -47,6 +47,8 @@ router.post("/login", loginLimiter, async (req, res) => {
         users = student;
         role = "Student";
       } else {
+        console.log(`Invalid password from ${id_number}`);
+
         return res
           .status(400)
           .json({ message: "Invalid ID number or password" });
@@ -65,22 +67,22 @@ router.post("/login", loginLimiter, async (req, res) => {
     }
 
     const user = {
-			id_number: users.id_number,
-			name:
-				role === "Admin"
-					? users.name
-					: users.first_name + " " + users?.middle_name + " " + users.last_name,
-			email: users.email,
-			course: users.course,
-			year: users.year,
-			position: role === "Admin" ? users.position : "Student",
-		};
-		
-		const token = jwt.sign({ user, role }, token_key, {
-			expiresIn: role === "Admin" ? "1h" : "10m",
-		});
+      id_number: users.id_number,
+      name:
+        role === "Admin"
+          ? users.name
+          : users.first_name + " " + users?.middle_name + " " + users.last_name,
+      email: users.email,
+      course: users.course,
+      year: users.year,
+      position: role === "Admin" ? users.position : "Student",
+    };
 
-		return res.json({ message: "Signed in successfully", role, token });
+    const token = jwt.sign({ user, role }, token_key, {
+      expiresIn: role === "Admin" ? "1h" : "10m",
+    });
+    console.log(`${id_number} signed in successfully`);
+    return res.json({ message: "Signed in successfully", role, token });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "An error occurred", error });

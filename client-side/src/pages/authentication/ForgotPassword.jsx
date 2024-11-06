@@ -1,19 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import FormInput from "../../components/forms/FormInput";
 import FormButton from "../../components/forms/FormButton";
-import axios from "axios";
-import backendConnection from "../../api/backendApi";
+import { forgotPassword } from "../../api/forgot";
+import {
+  attemptAuthentication,
+  resetAttemptAuthentication,
+  getTimeout,
+  getAttemptAuthentication,
+} from "../../authentication/Authentication";
 import { showToast } from "../../utils/alertHelper";
-
 function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [id_number, setIdNumber] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [remainingTime, setRemainingTime] = useState();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    let interval;
+    if (remainingTime !== null) {
+      interval = setInterval(() => {
+        setRemainingTime((prevTime) => {
+          if (prevTime > 1) {
+            return prevTime - 1;
+          } else {
+            clearInterval(interval);
+            return 0;
+          }
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [remainingTime]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email) {
@@ -23,38 +46,31 @@ function ForgotPassword() {
       setError("Email is invalid.");
       return;
     }
+    try {
+      if (getAttemptAuthentication() < 3 && getTimeout() === null) {
+        const response = await forgotPassword(email, id_number);
 
-    axios
-      .post(`${backendConnection()}/api/student/forgot-password`, {
-        email: email,
-        id_number: id_number,
-      })
-      .then((res) => {
-        showToast("success", "Email sent successfully!");
-        navigate(`/email-verification/${email}`);
-      })
-      .catch((error) => {
-        if (error.response) {
-          // The request was made, and the server responded with a status code that falls out of the range of 2xx
-          console.error("Error response data:", error.response.data);
-          console.error("Error response status:", error.response.status);
-          console.error("Error response headers:", error.response.headers);
-          if (error.response.status === 404) {
-            showToast("error", "Email not found!");
-          } else {
-            showToast("error", "Server Error!");
-          }
-        } else if (error.request) {
-          // The request was made, but no response was received
-          console.error("Error request:", error.request);
-          showToast("error", "No response from server.");
+        if (response) {
+          resetAttemptAuthentication();
+
+          navigate(`/email-verification/${email}`);
         } else {
-          // Something happened in setting up the request that triggered an Error
-          console.error("Error message:", error.message);
-          showToast("error", "Request Error!");
+          attemptAuthentication();
+          setRemainingTime(60);
         }
-        console.error("Error config:", error.config);
-      });
+      } else {
+        showToast(
+          "error",
+          `You've reached the maximum number of attempts. Please wait ${remainingTime} seconds before trying again!`
+        );
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      showToast("error", "An unexpected error occurred. Please try again.");
+    } finally {
+      getTimeout();
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e) => {

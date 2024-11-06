@@ -12,6 +12,8 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import EditMember from "./EditMember";
 import axios from "axios";
 import backendConnection from "../../../api/backendApi";
+import ChangePassword from "../../../components/ChangePassword";
+import { higherPosition } from "../../../components/tools/clientTools";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -25,6 +27,8 @@ const Membership = () => {
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [id, setId] = useState("");
+  const [viewChange, setViewChange] = useState(false);
 
   const user = getInformationData();
 
@@ -48,6 +52,14 @@ const Membership = () => {
   const handleEditModalClose = () => {
     setIsEditModalVisible(false);
     setMemberToEdit(null);
+  };
+
+  const handleChangePassword = (id) => {
+    setId(id);
+    setViewChange(true);
+  };
+  const handleHideChangePassword = () => {
+    setViewChange(false);
   };
 
   const handleSaveEditedMember = async (updatedMember) => {
@@ -237,6 +249,19 @@ const Membership = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
+          {higherPosition() && (
+            <FormButton
+              type="button"
+              text="Change Password"
+              onClick={() => handleChangePassword(row.id_number)}
+              icon={<i className="fas fa-edit" />} // Simple icon
+              styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              textClass="text-gray-800"
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+            />
+          )}
+
           <FormButton
             type="button"
             text="Edit"
@@ -279,6 +304,15 @@ const Membership = () => {
           onCancel={hideModal}
           onConfirm={handleConfirmDeletion}
         />
+      )}
+      {viewChange && (
+        <>
+          <ChangePassword
+            id={id}
+            onCancel={handleHideChangePassword}
+            onSubmit={() => setViewChange(false)}
+          />
+        </>
       )}
     </div>
   );
