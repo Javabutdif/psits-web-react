@@ -10,7 +10,8 @@ require("dotenv").config();
 const { format } = require("date-fns");
 const nodemailer = require("nodemailer");
 const ejs = require("ejs");
-const path = require("path"); // Import path module
+const path = require("path");
+const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
 router.get("/", async (req, res) => {
@@ -30,7 +31,7 @@ router.get("/", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-router.get("/get-all-orders", async (req, res) => {
+router.get("/get-all-orders", authenticateToken, async (req, res) => {
   try {
     const orders = await Orders.find().sort({ order_date: -1 });
     if (orders.length > 0) {
@@ -43,7 +44,6 @@ router.get("/get-all-orders", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-
 
 router.post("/student-order", async (req, res) => {
   const {
