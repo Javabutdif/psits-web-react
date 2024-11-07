@@ -9,10 +9,11 @@ const { format, startOfDay, endOfDay } = require("date-fns");
 const nodemailer = require("nodemailer");
 const ejs = require("ejs");
 const path = require("path");
+const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
 
-router.post("/approve-membership", async (req, res) => {
+router.post("/approve-membership", authenticateToken, async (req, res) => {
   const { reference_code, id_number, type, admin, rfid, date, cash, total } =
     req.body;
 
@@ -112,7 +113,7 @@ router.post("/approve-membership", async (req, res) => {
   }
 });
 
-router.get("/history", async (req, res) => {
+router.get("/history", authenticateToken, async (req, res) => {
   try {
     const students = await MembershipHistory.find().sort({ date: -1 });
     res.status(200).json(students);
@@ -121,7 +122,7 @@ router.get("/history", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-router.get("/renew", async (req, res) => {
+router.get("/renew", authenticateToken, async (req, res) => {
   try {
     const students = await Student.find({ renew: "Pending" });
     res.status(200).json(students);
@@ -131,7 +132,7 @@ router.get("/renew", async (req, res) => {
   }
 });
 
-router.get("/membershipRequest", async (req, res) => {
+router.get("/membershipRequest", authenticateToken, async (req, res) => {
   try {
     const students = await Student.find({ membership: "Pending" });
     res.status(200).json(students);
@@ -140,7 +141,7 @@ router.get("/membershipRequest", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-router.get("/all-members", async (req, res) => {
+router.get("/all-members", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({
     status: "True",
     $or: [
@@ -152,59 +153,59 @@ router.get("/all-members", async (req, res) => {
   });
   return res.json({ message: count });
 });
-router.get("/request-members", async (req, res) => {
+router.get("/request-members", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ membership: "Pending" });
   return res.json({ message: count });
 });
-router.get("/renewal-members", async (req, res) => {
+router.get("/renewal-members", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ renew: "Pending" });
   return res.json({ message: count });
 });
-router.get("/deleted-members", async (req, res) => {
+router.get("/deleted-members", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ status: "False" });
   return res.json({ message: count });
 });
-router.get("/history-members", async (req, res) => {
+router.get("/history-members", authenticateToken, async (req, res) => {
   const count = await MembershipHistory.countDocuments();
   return res.json({ message: count });
 });
-router.get("/merchandise-created", async (req, res) => {
+router.get("/merchandise-created", authenticateToken, async (req, res) => {
   const count = await Merch.countDocuments();
   return res.json({ message: count });
 });
-router.get("/placed-orders", async (req, res) => {
+router.get("/placed-orders", authenticateToken, async (req, res) => {
   const count = await Order.countDocuments({ order_status: "Pending" });
   return res.json({ message: count });
 });
-router.get("/get-bsit", async (req, res) => {
+router.get("/get-bsit", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ course: "BSIT" });
   return res.json({ message: count });
 });
-router.get("/get-bscs", async (req, res) => {
+router.get("/get-bscs", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ course: "BSCS" });
   return res.json({ message: count });
 });
-router.get("/get-act", async (req, res) => {
+router.get("/get-act", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ course: "ACT" });
   return res.json({ message: count });
 });
-router.get("/get-year1", async (req, res) => {
+router.get("/get-year1", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ year: "1" });
   return res.json({ message: count });
 });
-router.get("/get-year2", async (req, res) => {
+router.get("/get-year2", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ year: "2" });
   return res.json({ message: count });
 });
-router.get("/get-year3", async (req, res) => {
+router.get("/get-year3", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ year: "3" });
   return res.json({ message: count });
 });
-router.get("/get-year4", async (req, res) => {
+router.get("/get-year4", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ year: "4" });
   return res.json({ message: count });
 });
-router.get("/get-order-date", async (req, res) => {
+router.get("/get-order-date", authenticateToken, async (req, res) => {
   try {
     const currentDate = new Date();
     const startOfDayDate = startOfDay(currentDate);

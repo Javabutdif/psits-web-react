@@ -2,10 +2,10 @@ const express = require("express");
 const Cart = require("../models/CartModel");
 const Student = require("../models/StudentModel");
 const { ObjectId } = require("mongodb");
-
+const authenticateToken = require("../middlewares/authenticateToken");
 const router = express.Router();
 
-router.post("/add-cart", async (req, res) => {
+router.post("/add-cart", authenticateToken, async (req, res) => {
   const {
     id_number,
     product_id,
@@ -95,7 +95,7 @@ router.post("/add-cart", async (req, res) => {
   }
 });
 
-router.get("/view-cart", async (req, res) => {
+router.get("/view-cart", authenticateToken, async (req, res) => {
   const { id_number } = req.query;
 
   try {
@@ -113,7 +113,7 @@ router.get("/view-cart", async (req, res) => {
   }
 });
 
-router.put("/delete-item-cart", async (req, res) => {
+router.put("/delete-item-cart", authenticateToken, async (req, res) => {
   const { id_number, cart_id } = req.body;
 
   try {
