@@ -55,12 +55,14 @@ export const getOrder = async (id_number) => {
 };
 
 export const getAllOrders = async () => {
+  const token = sessionStorage.getItem("Token");
   try {
     const response = await axios.get(
       `${backendConnection()}/api/orders/get-all-orders`,
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
