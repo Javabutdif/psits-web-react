@@ -8,6 +8,7 @@ import FormTextArea from "../../components/forms/FormTextArea";
 import ImageInput from "../../components/forms/ImageInput";
 import backendConnection from "../../api/backendApi";
 import axios from "axios";
+const token = sessionStorage.getItem("Token");
 
 function EditProduct({ handleCloseEditProduct, merchData }) {
   const user = getInformationData();
@@ -202,6 +203,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
           },
         }
       );

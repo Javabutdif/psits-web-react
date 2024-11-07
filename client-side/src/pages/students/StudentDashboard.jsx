@@ -7,6 +7,7 @@ import Posts from "./dashboard/Posts";
 import backendConnection from "../../api/backendApi";
 import { getInformationData } from "../../authentication/Authentication";
 import { getMembershipStatusStudents } from "../../api/students";
+const token = sessionStorage.getItem("Token");
 
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-gray-200 ${className}`}></div>

@@ -8,7 +8,7 @@ const router = express.Router();
 
 // TODO: improve data fetched and ui
 // GET 5 recent posts
-router.get("/", authenticateToken, async (req, res) => {
+router.get("/", async (req, res) => {
   const page_id = process.env.PSITS_PAGE_ID;
   const access_token = process.env.PSITS_ACCESS_TOKEN;
 
