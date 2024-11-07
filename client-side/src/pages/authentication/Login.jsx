@@ -5,7 +5,7 @@ import { showToast } from "../../utils/alertHelper";
 import { InfinitySpin } from "react-loader-spinner";
 import logo from "../../assets/images/login.png";
 import halloween from "../../assets/images/haloween.png";
-import christmas from "../../assets/images/christmas.png";
+import christmas from "../../assets/images/christmass.png";
 import FormButton from "../../components/forms/FormButton";
 import FormInput from "../../components/forms/FormInput";
 import { login } from "../../api/index";
@@ -24,7 +24,7 @@ const Login = () => {
   const currentDate = new Date();
   const novStart = new Date(currentDate.getFullYear(), 10, 1);
   const novEnd = new Date(currentDate.getFullYear(), 10, 4);
-	const startChristmas = new Date(currentDate.getFullYear(), 10, 5);
+  const startChristmas = new Date(currentDate.getFullYear(), 10, 5);
   const endChristmas = new Date(currentDate.getFullYear(), 11, 31);
 
   useEffect(() => {
