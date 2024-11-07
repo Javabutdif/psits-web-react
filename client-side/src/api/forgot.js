@@ -2,6 +2,7 @@ import "../App.css";
 import backendConnection from "./backendApi";
 import axios from "axios";
 import { showToast } from "../utils/alertHelper";
+const token = sessionStorage.getItem("Token");
 
 export const forgotPassword = async (email, id_number) => {
   try {
@@ -14,6 +15,7 @@ export const forgotPassword = async (email, id_number) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -47,6 +49,7 @@ export const changePassword = async (password, id_number) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );

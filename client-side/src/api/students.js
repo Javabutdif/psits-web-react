@@ -2,6 +2,7 @@ import "../App.css";
 import backendConnection from "./backendApi";
 import axios from "axios";
 import { showToast } from "../utils/alertHelper";
+const token = sessionStorage.getItem("Token");
 
 
 export const requestMembership = async (id_number) => {
@@ -13,6 +14,7 @@ export const requestMembership = async (id_number) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -39,9 +41,10 @@ export const getMembershipStatusStudents = async (id_number) => {
     const response = await axios.get(
       `${backendConnection()}/api/students/get-membership-status`,
       {
-        params: { id_number }, // Use params to pass query parameters
+        params: { id_number }, 
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -69,6 +72,7 @@ export const addToCartApi = async (formData) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -96,6 +100,7 @@ export const viewCart = async (id_number) => {
         params: { id_number },
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -123,6 +128,7 @@ export const deleteItem = async (data) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );

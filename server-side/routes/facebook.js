@@ -2,12 +2,13 @@ const express = require("express");
 const axios = require("axios");
 const { finalizeFacebookData } = require("../utils/facebookUtils");
 require("dotenv").config();
+const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
 
 // TODO: improve data fetched and ui
 // GET 5 recent posts
-router.get("/", async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
   const page_id = process.env.PSITS_PAGE_ID;
   const access_token = process.env.PSITS_ACCESS_TOKEN;
 

@@ -14,7 +14,7 @@ const path = require("path");
 const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
-router.get("/", async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
   const { id_number } = req.query;
 
   try {
@@ -45,7 +45,7 @@ router.get("/get-all-orders", authenticateToken, async (req, res) => {
   }
 });
 
-router.post("/student-order", async (req, res) => {
+router.post("/student-order", authenticateToken, async (req, res) => {
   const {
     id_number,
     rfid,
@@ -123,7 +123,7 @@ router.post("/student-order", async (req, res) => {
 });
 
 //Cancel Order
-router.put("/cancel/:product_id", async (req, res) => {
+router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
   const { product_id } = req.params;
 
   if (!product_id) {
@@ -163,7 +163,7 @@ router.put("/cancel/:product_id", async (req, res) => {
   }
 });
 
-router.put("/approve-order", async (req, res) => {
+router.put("/approve-order", authenticateToken, async (req, res) => {
   const { transaction_date, reference_code, order_id, admin, cash } = req.body;
 
   try {

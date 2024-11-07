@@ -5,29 +5,29 @@ import { showToast } from "../utils/alertHelper";
 import { setData } from "../authentication/Authentication";
 
 export const login = async (formData) => {
-	try {
-		const response = await axios.post(
-			`${backendConnection()}/api/login`,
-			formData,
-			{
-				headers: {
-					"Content-Type": "application/json",
-				},
-			}
-		);
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/login`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-		showToast("success", response.data.message);
+    showToast("success", response.data.message);
 
-		setData(response.data.token);
-		return response.data.role;
-	} catch (error) {
-		if (error.response && error.response.data) {
-			showToast("error", error.response.data.message || "An error occurred");
-		} else {
-			showToast("error", "An error occurred");
-		}
-		console.error("Error:", error);
-	}
+    setData(response.data.token);
+    return response.data.role;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
 };
 
 export const register = async (formData) => {
@@ -38,6 +38,7 @@ export const register = async (formData) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -86,5 +87,3 @@ export const handleLogouts = async () => {
     return null;
   }
 };
-
-
