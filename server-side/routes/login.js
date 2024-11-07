@@ -47,7 +47,15 @@ router.post("/login", loginLimiter, async (req, res) => {
         users = student;
         role = "Student";
       } else {
-        console.log(`Invalid password from ${id_number} in ${currentDate} `);
+        console.log(
+          `Invalid password from ${id_number} - ${
+            student.first_name +
+            " " +
+            student.middle_name +
+            " " +
+            student.last_name
+          } in ${currentDate} `
+        );
 
         return res
           .status(400)
@@ -60,7 +68,9 @@ router.post("/login", loginLimiter, async (req, res) => {
         users = admin;
         role = "Admin";
       } else {
-        console.log(`Invalid password from ${id_number} in ${currentDate} `);
+        console.log(
+          `Invalid password from ${id_number} - ${admin.name +" "}in ${currentDate} `
+        );
         return res
           .status(400)
           .json({ message: "Invalid ID number or password" });
@@ -82,7 +92,9 @@ router.post("/login", loginLimiter, async (req, res) => {
     const token = jwt.sign({ user, role }, token_key, {
       expiresIn: role === "Admin" ? "2h" : "10m",
     });
-    console.log(`${id_number} signed in successfully in ${currentDate}`);
+    console.log(
+      `${id_number} - ${user.name} signed in successfully in ${currentDate}`
+    );
     return res.json({ message: "Signed in successfully", role, token });
   } catch (error) {
     console.error(error);
