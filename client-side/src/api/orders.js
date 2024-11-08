@@ -83,11 +83,11 @@ export const getAllOrders = async () => {
     console.error("Error:", error);
   }
 };
-
 export const cancelOrder = async (product_id) => {
   try {
     const response = await axios.put(
       `${backendConnection()}/api/orders/cancel/${product_id}`,
+      {},
       {
         headers: {
           "Content-Type": "application/json",

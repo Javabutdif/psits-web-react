@@ -57,6 +57,7 @@ const PendingOrders = () => {
   const handleCancelClick = (order_id) => {
     setSelectedOrderId(order_id);
     setIsModalOpen(true);
+    
   };
 
   // Confirm cancellation of the selected order

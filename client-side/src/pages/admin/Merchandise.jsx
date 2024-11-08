@@ -20,6 +20,7 @@ import { AiOutlineClose } from "react-icons/ai";
 import { showToast } from "../../utils/alertHelper";
 import { isBefore, isAfter, isWithinInterval } from "date-fns";
 import { formattedDate } from "../../components/tools/clientTools";
+import { conditionalPosition } from "../../components/tools/clientTools";
 
 function Merchandise() {
   const [data, setData] = useState([]);
@@ -263,38 +264,41 @@ function Merchandise() {
             textClass="ml-2 md:inline"
             iconClass="text-sm text-base"
           />
+          {conditionalPosition() && (
+            <>
+              <FormButton
+                type="button"
+                text="Edit"
+                onClick={() => handleOpenEditModal(row)}
+                styles="bg-green-200 text-green-800 hover:bg-green-200 active:bg-green-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
+                icon={<i className="fas fa-edit text-sm"></i>}
+                textClass="ml-2 md:inline"
+                iconClass="text-sm text-base"
+              />
 
-          <FormButton
-            type="button"
-            text="Edit"
-            onClick={() => handleOpenEditModal(row)}
-            styles="bg-green-200 text-green-800 hover:bg-green-200 active:bg-green-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
-            icon={<i className="fas fa-edit text-sm"></i>}
-            textClass="ml-2 md:inline"
-            iconClass="text-sm text-base"
-          />
-
-          {row.is_active && (
-            <FormButton
-              type="button"
-              text="Delete"
-              onClick={() => handleDeleteProductModal(row._id)}
-              styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-              icon={<i className="fas fa-trash text-sm"></i>}
-              textClass="ml-2 md:inline"
-              iconClass="text-sm text-base"
-            />
-          )}
-          {!row.is_active && (
-            <FormButton
-              type="button"
-              text="Publish"
-              onClick={() => handlePublishProductModal(row._id)}
-              styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
-              icon={<i className="fas fa-pen text-sm"></i>}
-              textClass="ml-2 md:inline"
-              iconClass="text-sm text-base"
-            />
+              {row.is_active && (
+                <FormButton
+                  type="button"
+                  text="Delete"
+                  onClick={() => handleDeleteProductModal(row._id)}
+                  styles="bg-red-100 text-pink-800 hover:bg-red-200 active:bg-red-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+                  icon={<i className="fas fa-trash text-sm"></i>}
+                  textClass="ml-2 md:inline"
+                  iconClass="text-sm text-base"
+                />
+              )}
+              {!row.is_active && (
+                <FormButton
+                  type="button"
+                  text="Publish"
+                  onClick={() => handlePublishProductModal(row._id)}
+                  styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
+                  icon={<i className="fas fa-pen text-sm"></i>}
+                  textClass="ml-2 md:inline"
+                  iconClass="text-sm text-base"
+                />
+              )}
+            </>
           )}
         </ButtonsComponent>
       ),
@@ -391,20 +395,22 @@ function Merchandise() {
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
               customButtons={
-                <ButtonsComponent>
-                  {/* Filters Button */}
+                conditionalPosition() && (
+                  <ButtonsComponent>
+                    {/* Filters Button */}
 
-                  {/* Add Product Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.05, backgroundColor: "#0056b3" }} // Hover effect for primary
-                    whileTap={{ scale: 0.98, backgroundColor: "#003d7a" }} // Active effect for primary
-                    className="text-sm md:text-base bg-accent text-white flex items-center gap-2 px-5 py-2 border border-neutral-medium rounded-lg shadow-sm hover:shadow-md transition ease-in-out duration-150 focus:outline-none focus:ring-2 focus:ring-highlight"
-                    onClick={handleOpenAddProduct}
-                  >
-                    <i className="fas fa-plus text-white"></i>
-                    <span className="font-medium">Add </span>
-                  </motion.button>
-                </ButtonsComponent>
+                    {/* Add Product Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.05, backgroundColor: "#0056b3" }} // Hover effect for primary
+                      whileTap={{ scale: 0.98, backgroundColor: "#003d7a" }} // Active effect for primary
+                      className="text-sm md:text-base bg-accent text-white flex items-center gap-2 px-5 py-2 border border-neutral-medium rounded-lg shadow-sm hover:shadow-md transition ease-in-out duration-150 focus:outline-none focus:ring-2 focus:ring-highlight"
+                      onClick={handleOpenAddProduct}
+                    >
+                      <i className="fas fa-plus text-white"></i>
+                      <span className="font-medium">Add </span>
+                    </motion.button>
+                  </ButtonsComponent>
+                )
               }
             />
           </div>
