@@ -24,7 +24,7 @@ const AdminLayout = () => {
 
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
-    { text: "Membership", icon: "fas fa-users", path: "membership" },
+    { text: "Students", icon: "fas fa-users", path: "students" },
     { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
 
     { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
