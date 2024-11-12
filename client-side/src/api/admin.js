@@ -17,6 +17,7 @@ export const membership = async () => {
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
+      window.location.reload();
     } else {
       showToast("error", "An error occurred");
     }
