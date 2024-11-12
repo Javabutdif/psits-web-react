@@ -4,7 +4,6 @@ import axios from "axios";
 import { showToast } from "../utils/alertHelper";
 const token = sessionStorage.getItem("Token");
 
-
 export const requestMembership = async (id_number) => {
   try {
     console.log("Sending request for ID:", id_number);
@@ -35,13 +34,12 @@ export const requestMembership = async (id_number) => {
   }
 };
 
-
 export const getMembershipStatusStudents = async (id_number) => {
   try {
     const response = await axios.get(
       `${backendConnection()}/api/students/get-membership-status`,
       {
-        params: { id_number }, 
+        params: { id_number },
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

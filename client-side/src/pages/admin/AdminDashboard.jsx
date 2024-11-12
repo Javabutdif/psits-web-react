@@ -68,14 +68,10 @@ const AdminDashboard = () => {
       });
     }, 20);
   };
+
   useEffect(() => {
+    
     const fetchData = async () => {
-      const token = sessionStorage.getItem("Token");
-
-      if (!token) {
-        return;
-      }
-
       try {
         const [studentRes, merchCreate, placedOrder] = await Promise.all([
           allMembers(),
@@ -102,7 +98,6 @@ const AdminDashboard = () => {
 
     fetchData();
   }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
-
   return (
     <div className="pt-4 md:pt-8">
       <div className="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-8 text-center lg:flex lg:justify-between">
