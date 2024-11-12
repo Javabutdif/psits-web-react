@@ -11,7 +11,7 @@ import Team from "./pages/Team";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRegister from "./pages/admin/AdminRegister";
-import Membership from "./pages/admin/Membership";
+import Students from "./pages/admin/Students";
 import Merchandise from "./pages/admin/Merchandise";
 import Inventory from "./pages/admin/Inventory";
 import Orders from "./pages/admin/Orders";
@@ -46,7 +46,6 @@ import PrivateRouteStudent from "./authentication/privateRouteStudent";
 import AllMembers from "./pages/admin/membership/AllMembers";
 import StudentCart from "./pages/students/StudentCart";
 
-
 import StudentPaidOrders from "./pages/students/orders/PaidOrders";
 import StudentPendingOrder from "./pages/students/orders/PendingOrders";
 import Community from "./pages/Community";
@@ -77,8 +76,8 @@ const App = () => {
             element={<PrivateRouteAdmin element={AdminRegister} />}
           />
           <Route
-            path="membership/"
-            element={<PrivateRouteAdmin element={Membership} />}
+            path="students/"
+            element={<PrivateRouteAdmin element={Students} />}
           >
             <Route index element={<PrivateRouteAdmin element={AllMembers} />} />
             <Route
