@@ -4,29 +4,29 @@ export default {
   theme: {
     extend: {
       spacing: {
-        13.5: "3.375rem", // 13.5 x 0.25rem = 3.375rem
+        13.5: "3.375rem", 
       },
       colors: {
-        primary: "#4398AC", // Main brand color
-        secondary: "#A4CDD7", // Complementary color
-        accent: "#002E48", // Darker tone for accents
-        highlight: "#FFEB3B", // Bright highlight color
-        dark: "#001621", // Dark background or text
+        primary: "#4398AC", 
+        secondary: "#A4CDD7",
+        accent: "#002E48",
+        highlight: "#FFEB3B", 
+        dark: "#001621", 
         navy: "#074873",
 
         hover: {
-          primary: "#0056b3", // Hover effect for primary elements
+          primary: "#0056b3", 
         },
         active: {
-          primary: "#003d7a", // Active effect for primary elements
+          primary: "#003d7a", 
         },
-        disabled: "#C0C0C0", // Disabled state color
+        disabled: "#C0C0C0", 
 
-        // Neutral colors
+      
         neutral: {
-          light: "#F5F5F5", // Light neutral for backgrounds
-          medium: "#E0E0E0", // Medium neutral for borders and dividers
-          dark: "#B0B0B0", // Dark neutral for text and secondary elements
+          light: "#F5F5F5", 
+          medium: "#E0E0E0", 
+          dark: "#B0B0B0", 
         },
       },
       width: {

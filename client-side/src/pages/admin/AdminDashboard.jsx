@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from "react";
 import {
   membership,
   allMembers,
   merchCreated,
   placedOrders,
 } from "../../api/admin";
+import BarGraph from "./dashboard/BarGraph";
+import DashboardCard from "./dashboard/DashboardCard";
+import DoughnutChart from "./dashboard/DoughnutChart";
+import PieChart from "./dashboard/PieChart";
 import {
   faBoxOpen,
   faUserGraduate,
   faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
-import DashboardCard from "./dashboard/DashboardCard";
-import DoughnutChart from "./dashboard/DoughnutChart";
-import BarGraph from "./dashboard/BarGraph";
-import PieChart from "./dashboard/PieChart";
+import React, { useEffect, useState } from "react";
 
 const AdminDashboard = () => {
   const [counts, setCounts] = useState({
@@ -70,7 +70,6 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    
     const fetchData = async () => {
       try {
         const [studentRes, merchCreate, placedOrder] = await Promise.all([
@@ -96,7 +95,11 @@ const AdminDashboard = () => {
       }
     };
 
-    fetchData();
+    const delayFetch = setTimeout(() => {
+      fetchData();
+    }, 2000);
+
+    return () => clearTimeout(delayFetch);
   }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
   return (
     <div className="pt-4 md:pt-8">

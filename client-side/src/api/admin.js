@@ -1,7 +1,8 @@
 import "../App.css";
+import { showToast } from "../utils/alertHelper";
 import backendConnection from "./backendApi";
 import axios from "axios";
-import { showToast } from "../utils/alertHelper";
+
 const token = sessionStorage.getItem("Token");
 
 export const membership = async () => {
@@ -634,5 +635,35 @@ export const getOrderDate = async () => {
     } else {
       console.log("error", "An error occurred");
     }
+  }
+};
+
+export const deleteReports = async (id, merchName) => {
+  try {
+    const response = await axios.delete(
+      `${backendConnection()}/api/merch/delete-report`,
+
+      {
+        data: { id, merchName },
+        headers: {
+          "Content-Type": "application/json",
+
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
   }
 };

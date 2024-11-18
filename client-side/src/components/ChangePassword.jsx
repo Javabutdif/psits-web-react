@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { changePassword } from "../api/forgot";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React, { useState } from "react";
 
 const ChangePassword = ({ id, onCancel, onSubmit }) => {
   const [password, setPassword] = useState("");
@@ -16,6 +16,7 @@ const ChangePassword = ({ id, onCancel, onSubmit }) => {
   const handleSubmit = async () => {
     if (password === confirmPassword) {
       const result = await changePassword(password, id);
+      onSubmit(result ? true : false);
     } else {
     }
   };

@@ -2,9 +2,18 @@ import React, { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
-import { CSVLink } from "react-csv";
-import { membershipHistory, merchandiseAdmin } from "../../api/admin";
+import {
+  membershipHistory,
+  merchandiseAdmin,
+  deleteReports,
+} from "../../api/admin";
+import ButtonsComponent from "../../components/Custom/ButtonsComponent";
+import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
+import FormButton from "../../components/forms/FormButton";
 import { formattedDate } from "../../components/tools/clientTools";
+import { deletePosition } from "../../components/tools/clientTools";
+import { ConfirmActionType } from "../../enums/commonEnums";
+import { CSVLink } from "react-csv";
 
 const Reports = () => {
   const [membershipData, setMembershipData] = useState([]);
@@ -15,6 +24,9 @@ const Reports = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [productNames, setProductNames] = useState([]);
   const [salesData, setSalesData] = useState({});
+  const [confirmModal, setConfirmModal] = useState(false);
+  const [deleteId, setDeleteId] = useState("");
+  const [deleteName, setDeleteName] = useState("");
 
   const [filterID, setFilterID] = useState("");
   const [filterName, setFilterName] = useState("");
@@ -54,6 +66,25 @@ const Reports = () => {
         color: "#333",
       },
     },
+  };
+
+  const handleConfirmModal = (id, name) => {
+    setDeleteId(id);
+    setDeleteName(name);
+    setConfirmModal(true);
+  };
+  const handleHideConfirmModal = () => {
+    setConfirmModal(false);
+    setDeleteId("");
+    setDeleteName("");
+  };
+
+  const handleDeleteReport = async () => {
+    //logic
+    if (await deleteReports(deleteId, deleteName)) {
+      handleHideConfirmModal();
+      fetchMerchandiseData();
+    }
   };
 
   useEffect(() => {
@@ -116,6 +147,7 @@ const Reports = () => {
       setFilteredMerchandiseData(filteredOrderDetails);
       setProductNames(data);
       setSalesData(allSalesData);
+      console.log(allOrderDetails);
     } catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
@@ -314,11 +346,17 @@ const Reports = () => {
       wrap: true,
       cell: (row) => <div className="text-xs">{row.product_name}</div>,
     },
-    { name: "Batch", selector: (row) => row.batch, sortable: true },
+    {
+      name: "Batch",
+      selector: (row) => row.batch,
+      sortable: true,
+      width: "70px",
+    },
     {
       name: "Size",
       selector: (row) => row.size?.[0]?.$each?.[0] || "",
       sortable: true,
+      width: "70px",
     },
     {
       name: "Color",
@@ -334,6 +372,33 @@ const Reports = () => {
       selector: (row) => formattedDate(row.transaction_date),
       sortable: true,
     },
+    ...(deletePosition()
+      ? [
+          {
+            name: "Action",
+            selector: (row) => row.product_name,
+            wrap: true,
+            cell: (row) => (
+              <div className="text-xs">
+                <ButtonsComponent>
+                  <FormButton
+                    type="button"
+                    text="Delete"
+                    onClick={() =>
+                      handleConfirmModal(row._id, row.product_name)
+                    }
+                    icon={<i className="fas fa-trash" />}
+                    styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-1 py-2 transition duration-150 hover:bg-red-300  focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    textClass="text-gray-800"
+                    whileHover={{ scale: 1.02, opacity: 0.95 }}
+                    whileTap={{ scale: 0.98, opacity: 0.9 }}
+                  />
+                </ButtonsComponent>
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
   const getMembershipCounts = (membershipData) => {
     try {
@@ -500,9 +565,17 @@ const Reports = () => {
             data={filteredMerchandiseData}
             customStyles={customStyles}
             pagination
+            responsive={true}
           />
         </TabPanel>
       </Tabs>
+      {confirmModal && (
+        <ConfirmationModal
+          confirmType={ConfirmActionType.DELETION}
+          onConfirm={handleDeleteReport}
+          onCancel={handleHideConfirmModal}
+        />
+      )}
       {isFilterOpen && (
         <div className="fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-75">
           <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-lg w-full max-w-xs sm:max-w-sm md:max-w-md">
