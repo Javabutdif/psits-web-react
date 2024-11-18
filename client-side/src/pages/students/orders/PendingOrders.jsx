@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { getOrder, cancelOrder } from "../../../api/orders";
+import pending from "../../../assets/images/no_pending.jpg";
 import { getInformationData } from "../../../authentication/Authentication";
-import OrderList from "./OrderList";
 import Pagination from "../../../components/Custom/Pagination";
 import FormButton from "../../../components/forms/FormButton";
+import OrderList from "./OrderList";
+import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
 
 const PendingOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -57,7 +58,6 @@ const PendingOrders = () => {
   const handleCancelClick = (order_id) => {
     setSelectedOrderId(order_id);
     setIsModalOpen(true);
-    
   };
 
   // Confirm cancellation of the selected order
@@ -134,11 +134,6 @@ const PendingOrders = () => {
   return (
     <div>
       <div className="space-y-4 py-4 h-full">
-        {/* Uncomment and configure SearchFilter if needed */}
-        {/* <SearchFilter 
-           searchQuery={searchQuery}
-           handleSearchChange={handleSearchChange}
-        /> */}
         {selectedOrders.length > 0 && (
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-1">
@@ -183,7 +178,9 @@ const PendingOrders = () => {
             />
           </>
         ) : (
-          <div>No Product.</div>
+          <div className="flex flex-col justify-center items-center min-h-screen">
+            <img className="h-96 w-96" src={pending} alt="Under Construction" />
+          </div>
         )}
       </div>
 

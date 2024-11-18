@@ -33,52 +33,57 @@ const upload = multer({
   }),
 });
 
-router.post("/",authenticateToken, upload.array("images", 3), async (req, res) => {
-  const {
-    name,
-    price,
-    stocks,
-    batch,
-    description,
-    selectedVariations,
-    selectedSizes,
-    created_by,
-    start_date,
-    end_date,
-    category,
-    type,
-    control,
-  } = req.body;
-
-  // Get the URLs of the uploaded images
-  const imageUrl = req.files.map((file) => file.location);
-
-  try {
-    const newMerch = new Merch({
+router.post(
+  "/",
+  authenticateToken,
+  upload.array("images", 3),
+  async (req, res) => {
+    const {
       name,
       price,
       stocks,
       batch,
       description,
-      selectedVariations: selectedVariations.split(","),
-      selectedSizes: selectedSizes.split(","),
+      selectedVariations,
+      selectedSizes,
       created_by,
       start_date,
       end_date,
       category,
       type,
       control,
-      imageUrl,
-    });
+    } = req.body;
 
-    await newMerch.save();
+    // Get the URLs of the uploaded images
+    const imageUrl = req.files.map((file) => file.location);
 
-    res.status(201).json("Merch Addition Successful");
-  } catch (error) {
-    console.error("Error saving new merch:", error.message);
-    res.status(500).send(error.message);
+    try {
+      const newMerch = new Merch({
+        name,
+        price,
+        stocks,
+        batch,
+        description,
+        selectedVariations: selectedVariations.split(","),
+        selectedSizes: selectedSizes.split(","),
+        created_by,
+        start_date,
+        end_date,
+        category,
+        type,
+        control,
+        imageUrl,
+      });
+
+      await newMerch.save();
+
+      res.status(201).json("Merch Addition Successful");
+    } catch (error) {
+      console.error("Error saving new merch:", error.message);
+      res.status(500).send(error.message);
+    }
   }
-});
+);
 
 router.get("/retrieve", authenticateToken, async (req, res) => {
   try {
@@ -98,6 +103,35 @@ router.get("/retrieve-admin", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Error fetching merches:", error.message);
     res.status(500).send(error.message);
+  }
+});
+
+router.delete("/delete-report", authenticateToken, async (req, res) => {
+  const { id, merchName } = req.body;
+
+  try {
+    const objectId = new mongoose.Types.ObjectId(id);
+    console.log(`ObjectId: ${objectId}, MerchName: ${merchName}`);
+
+    const result = await Merch.findOneAndUpdate(
+      { name: merchName },
+      { $pull: { order_details: { _id: objectId } } },
+      { new: true }
+    );
+
+    if (!result) {
+      console.log("Merch item not found or update failed.");
+      return res
+        .status(404)
+        .json({ message: "Merch item not found or update failed." });
+    }
+
+    res.status(200).json({
+      message: "Success deleting student in reports",
+    });
+  } catch (error) {
+    console.error("Error deleting order detail:", error);
+    res.status(500).json({ message: "Error deleting order detail." });
   }
 });
 
