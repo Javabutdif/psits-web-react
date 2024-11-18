@@ -189,7 +189,7 @@ router.get("/get-act", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ course: "ACT" });
   return res.json({ message: count });
 });
-router.get("/get-year1", authenticateToken, async (req, res) => {
+router.get("/get-year1", async (req, res) => {
   const count = await Student.countDocuments({ year: "1" });
   return res.json({ message: count });
 });
