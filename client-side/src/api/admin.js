@@ -17,6 +17,7 @@ export const membership = async () => {
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
+      window.location.reload();
       return false;
     } else {
       console.log("error", "An error occurred");

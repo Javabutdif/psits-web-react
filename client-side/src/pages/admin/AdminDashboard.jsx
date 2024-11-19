@@ -68,30 +68,28 @@ const AdminDashboard = () => {
       });
     }, 20);
   };
+  const fetchData = async () => {
+    try {
+      const [studentRes, merchCreate, placedOrder] = await Promise.all([
+        allMembers(),
+        merchCreated(),
+        placedOrders(),
+      ]);
 
+      setFinalCounts({
+        student: studentRes || 0,
+        merchandise: merchCreate || 0,
+        order: placedOrder || 0,
+      });
+
+      animateCount();
+    } catch (error) {
+      setError("Error fetching dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [studentRes, merchCreate, placedOrder] = await Promise.all([
-          allMembers(),
-          merchCreated(),
-          placedOrders(),
-        ]);
-
-        setFinalCounts({
-          student: studentRes || 0,
-          merchandise: merchCreate || 0,
-          order: placedOrder || 0,
-        });
-
-        animateCount();
-      } catch (error) {
-        setError("Error fetching dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     const delayFetch = setTimeout(() => {
       fetchData();
     }, 2000);
