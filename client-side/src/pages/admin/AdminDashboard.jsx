@@ -93,7 +93,7 @@ const AdminDashboard = () => {
     }, 1000);
 
     return () => clearInterval(delayFetch);
-  }, []);
+  }, [studentRes, merchCreate, placedOrder]);
   return (
     <div className="pt-4 md:pt-8">
       <div className="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-8 text-center lg:flex lg:justify-between">
