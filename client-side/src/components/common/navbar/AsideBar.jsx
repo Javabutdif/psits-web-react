@@ -1,10 +1,10 @@
+import { handleLogouts } from "../../../api/index";
+import logo from "../../../assets/images/psits-logo.png";
+import { removeAuthentication } from "../../../authentication/Authentication";
+import { showToast } from "../../../utils/alertHelper";
+import { motion, AnimatePresence } from "framer-motion";
 import React, { useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "../../../assets/images/psits-logo.png";
-import { motion, AnimatePresence } from "framer-motion";
-import { showToast } from "../../../utils/alertHelper";
-import { removeAuthentication } from "../../../authentication/Authentication";
-import { handleLogouts } from "../../../api/index";
 
 const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
@@ -14,13 +14,11 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
 
   const getLogoLink =
     location.pathname.split("/")[1] === "admin" ? "/admin/" : "/student/";
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
       removeAuthentication();
 
-      if (await handleLogouts()) {
-        showToast("success", "Signed out successfully");
-      }
+      showToast("success", "Signed out successfully");
 
       navigate("/login");
     } catch (error) {

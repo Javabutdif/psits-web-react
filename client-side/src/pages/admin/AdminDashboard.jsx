@@ -78,9 +78,6 @@ const AdminDashboard = () => {
           placedOrders(),
         ]);
 
-        const members = await membership();
-        setData(members);
-
         setFinalCounts({
           student: studentRes || 0,
           merchandise: merchCreate || 0,

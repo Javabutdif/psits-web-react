@@ -178,8 +178,12 @@ const PendingOrders = () => {
             />
           </>
         ) : (
-          <div className="flex flex-col justify-center items-center min-h-screen">
-            <img className="h-96 w-96" src={pending} alt="Under Construction" />
+          <div className="flex flex-col justify-center items-center min-h-screen px-4">
+            <img
+              className="h-64 sm:h-80 md:h-96 lg:h-96 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg"
+              src={pending}
+              alt="Under Construction"
+            />
           </div>
         )}
       </div>

@@ -177,34 +177,46 @@ router.get("/placed-orders", authenticateToken, async (req, res) => {
   const count = await Order.countDocuments({ order_status: "Pending" });
   return res.json({ message: count });
 });
-router.get("/get-bsit", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ course: "BSIT" });
-  return res.json({ message: count });
+router.get("/dashboard-stats", authenticateToken, async (req, res) => {
+  try {
+    const [
+      bsitCount,
+      bscsCount,
+      actCount,
+      year1Count,
+      year2Count,
+      year3Count,
+      year4Count,
+    ] = await Promise.all([
+      Student.countDocuments({ course: "BSIT" }),
+      Student.countDocuments({ course: "BSCS" }),
+      Student.countDocuments({ course: "ACT" }),
+      Student.countDocuments({ year: "1" }),
+      Student.countDocuments({ year: "2" }),
+      Student.countDocuments({ year: "3" }),
+      Student.countDocuments({ year: "4" }),
+    ]);
+
+    return res.json({
+      courses: {
+        BSIT: bsitCount,
+        BSCS: bscsCount,
+        ACT: actCount,
+      },
+      years: {
+        year1: year1Count,
+        year2: year2Count,
+        year3: year3Count,
+        year4: year4Count,
+      },
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching statistics." });
+  }
 });
-router.get("/get-bscs", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ course: "BSCS" });
-  return res.json({ message: count });
-});
-router.get("/get-act", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ course: "ACT" });
-  return res.json({ message: count });
-});
-router.get("/get-year1", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ year: "1" });
-  return res.json({ message: count });
-});
-router.get("/get-year2", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ year: "2" });
-  return res.json({ message: count });
-});
-router.get("/get-year3", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ year: "3" });
-  return res.json({ message: count });
-});
-router.get("/get-year4", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ year: "4" });
-  return res.json({ message: count });
-});
+
 router.get("/get-order-date", authenticateToken, async (req, res) => {
   try {
     const currentDate = new Date();

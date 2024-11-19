@@ -17,10 +17,10 @@ export const membership = async () => {
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
-      window.location.reload();
+      return false;
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
+      return false;
     }
     console.error("Error:", error);
   }
@@ -489,124 +489,19 @@ export const addMerchandise = async (formData) => {
   }
 };
 
-export const getBsit = async () => {
+export const getDashboardStats = async () => {
   try {
-    const response = await axios.get(`${backendConnection()}/api/get-bsit`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.get(
+      `${backendConnection()}/api/dashboard-stats`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getBscs = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-bscs`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getAct = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-act`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getYear1 = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-year1`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getYear2 = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-year2`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getYear3 = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-year3`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getYear4 = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-year4`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data.message;
+    return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
       console.log("error", error.response.data.message || "An error occurred");
