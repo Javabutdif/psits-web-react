@@ -67,6 +67,7 @@ const AdminDashboard = () => {
     }, 20);
   };
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -89,9 +90,10 @@ const AdminDashboard = () => {
         setLoading(false);
       }
     };
+
     const delayFetch = setInterval(() => {
       fetchData();
-    }, 5000);
+    }, 1000);
 
     return () => clearInterval(delayFetch);
   }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
