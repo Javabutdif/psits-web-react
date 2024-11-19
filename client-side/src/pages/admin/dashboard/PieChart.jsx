@@ -1,7 +1,7 @@
+import { getOrderDate } from "../../../api/admin";
+import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from "chart.js";
 import React, { useState, useEffect } from "react";
 import { Pie } from "react-chartjs-2";
-import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from "chart.js";
-import { getOrderDate } from "../../../api/admin";
 
 ChartJS.register(Title, Tooltip, Legend, ArcElement);
 
@@ -68,19 +68,20 @@ const PieChart = () => {
         label: "Number of Orders by Product",
         data: data.orders,
         backgroundColor: [
-          "rgba(255, 99, 132, 0.2)",
-          "rgba(54, 162, 235, 0.2)",
-          "rgba(255, 206, 86, 0.2)",
-          "rgba(75, 192, 192, 0.2)",
-          "rgba(153, 102, 255, 0.2)",
+          "rgba(209, 213, 219, 0.7)",
+          "rgba(156, 163, 175, 0.7)",
+          "rgba(107, 114, 128, 0.7)",
+          "rgba(75, 85, 99, 0.7)",
+          "rgba(55, 65, 81, 0.7)",
         ],
         borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-          "rgba(75, 192, 192, 1)",
-          "rgba(153, 102, 255, 1)",
+          "rgba(209, 213, 219, 1)",
+          "rgba(156, 163, 175, 1)",
+          "rgba(107, 114, 128, 1)",
+          "rgba(75, 85, 99, 1)",
+          "rgba(55, 65, 81, 1)",
         ],
+
         borderWidth: 1,
       },
     ],
@@ -108,8 +109,8 @@ const PieChart = () => {
 
   return (
     <div className="text-center">
-      <h2 className="text-xl sm:text-xl text-gray-600">
-        Daily Product Sales Distribution
+      <h2 className="text-sm sm:text-xl text-gray-600">
+        Daily Sales Distribution
       </h2>
       {data.products.length > 0 ? (
         <Pie data={chartData} options={options} />

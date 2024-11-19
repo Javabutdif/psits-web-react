@@ -69,7 +69,9 @@ router.post("/login", loginLimiter, async (req, res) => {
         role = "Admin";
       } else {
         console.log(
-          `Invalid password from ${id_number} - ${admin.name +" "}in ${currentDate} `
+          `Invalid password from ${id_number} - ${
+            admin.name + " "
+          }in ${currentDate} `
         );
         return res
           .status(400)
@@ -108,16 +110,6 @@ router.get("/protected-route", authenticateToken, (req, res) => {
     user: req.user,
     role: req.role,
   });
-});
-
-router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-  });
-
-  res.json({ message: "Logout successful" });
 });
 
 module.exports = router;

@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
 import { getAllOrders, cancelOrder } from "../../api/orders";
-import ApproveModal from "../../components/admin/ApproveModal";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
-import FormButton from "../../components/forms/FormButton";
-import ReactToPrint from "react-to-print";
+import ApproveModal from "../../components/admin/ApproveModal";
 import Receipt from "../../components/common/Receipt";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
-import { ConfirmActionType } from "../../enums/commonEnums";
+import FormButton from "../../components/forms/FormButton";
 import {
   conditionalPosition,
   formattedDate,
 } from "../../components/tools/clientTools";
+import { ConfirmActionType } from "../../enums/commonEnums";
+import React, { useState, useEffect, useRef } from "react";
+import ReactToPrint from "react-to-print";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -478,7 +478,7 @@ const Orders = () => {
           <button
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-4 py-1 bg-[#002E48] text-white rounded-md disabled:bg-gray-600"
+            className="px-4 py-1 bg-[#002E48] text-white rounded-md disabled:bg-white disabled:text-black"
           >
             Previous
           </button>
@@ -488,7 +488,7 @@ const Orders = () => {
           <button
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="px-4 py-1 bg-[#002E48] text-white rounded-md disabled:bg-gray-300"
+            className="px-4 py-1 bg-[#002E48] text-white rounded-md disabled:bg-white disabled:text-black"
           >
             Next
           </button>

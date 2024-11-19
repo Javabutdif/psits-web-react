@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { showToast } from "../../utils/alertHelper.js";
-import RegistrationConfirmationModal from "../../components/common/modal/RegistrationConfirmationModal.jsx";
-import logo from "../../assets/images/psits-logo.png";
-import FormInput from "../../components/forms/FormInput.jsx";
-import FormButton from "../../components/forms/FormButton.jsx";
-import FormSelect from "../../components/forms/FormSelect.jsx";
 import { register } from "../../api/index.js";
+import logo from "../../assets/images/psits-logo.png";
+import RegistrationConfirmationModal from "../../components/common/modal/RegistrationConfirmationModal.jsx";
+import FormButton from "../../components/forms/FormButton.jsx";
+import FormInput from "../../components/forms/FormInput.jsx";
+import FormSelect from "../../components/forms/FormSelect.jsx";
+import { showToast } from "../../utils/alertHelper.js";
+import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
+import { useNavigate } from "react-router-dom";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
-import { InfinitySpin } from "react-loader-spinner";
 import { IoArrowBack } from "react-icons/io5";
+import { InfinitySpin } from "react-loader-spinner";
 
 function Register() {
   const [startDate, setStartDate] = useState(new Date());
@@ -59,7 +59,6 @@ function Register() {
   const validateInputs = () => {
     const newErrors = {};
 
-    
     const trimmedFormData = {
       id_number: formData.id_number?.trim(),
       first_name: formData.first_name?.trim(),
@@ -71,7 +70,6 @@ function Register() {
       confirm_password: formData.confirm_password?.trim(),
     };
 
-  
     if (!trimmedFormData.id_number) {
       newErrors.id_number = "ID Number is required.";
     } else if (!/^\d+$/.test(trimmedFormData.id_number)) {
@@ -80,7 +78,6 @@ function Register() {
       newErrors.id_number = "ID Number must only contain 8 digits.";
     }
 
- 
     if (!trimmedFormData.first_name) {
       newErrors.first_name = "First Name is required.";
     } else if (!/^[A-Za-z]+( [A-Za-z]+)*$/.test(trimmedFormData.first_name)) {
@@ -93,7 +90,6 @@ function Register() {
       newErrors.last_name = "Invalid Last Name.";
     }
 
-
     if (!trimmedFormData.email) {
       newErrors.email = "Email is required.";
     } else if (
@@ -102,17 +98,14 @@ function Register() {
       newErrors.email = "Invalid Email.";
     }
 
-
     if (!trimmedFormData.course) {
       newErrors.course = "Course is required.";
     }
 
- 
     if (!trimmedFormData.year) {
       newErrors.year = "Year is required.";
     }
 
-  
     if (!trimmedFormData.password) {
       newErrors.password = "Password is required.";
     } else if (trimmedFormData.password.length < 8) {
@@ -122,7 +115,6 @@ function Register() {
     } else if (!/[A-Z]/.test(trimmedFormData.password)) {
       newErrors.password = "Include an uppercase letter.";
     }
-
 
     if (!trimmedFormData.confirm_password) {
       newErrors.confirm_password = "Confirm Password is required.";
@@ -150,38 +142,38 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-     const trimmedFormData = {
-				id_number: formData.id_number?.trim(),
-				first_name: formData.first_name?.trim(),
-				middle_name: formData.middle_name?.trim(),
-				last_name: formData.last_name?.trim(),
-				email: formData.email?.trim(),
-				course: formData.course?.trim(),
-				year: formData.year?.trim(),
-				password: formData.password?.trim(),
-			};
-			setIsModalVisible(false);
-			try {
-				if (await register(trimmedFormData)) {
-					showToast("success", "Registration successful");
+    const trimmedFormData = {
+      id_number: formData.id_number?.trim(),
+      first_name: formData.first_name?.trim(),
+      middle_name: formData.middle_name?.trim(),
+      last_name: formData.last_name?.trim(),
+      email: formData.email?.trim(),
+      course: formData.course?.trim(),
+      year: formData.year?.trim(),
+      password: formData.password?.trim(),
+    };
+    setIsModalVisible(false);
+    try {
+      if (await register(trimmedFormData)) {
+        showToast("success", "Registration successful");
 
-					setFormData({
-						id_number: "",
-						rfid: "",
-						password: "",
-						confirm_password: "",
-						first_name: "",
-						middle_name: "",
-						last_name: "",
-						email: "",
-						course: "",
-						year: "",
-					});
-					navigate("/login");
-				}
-			} catch (error) {
-				showToast("error", JSON.stringify(error));
-			}
+        setFormData({
+          id_number: "",
+          rfid: "",
+          password: "",
+          confirm_password: "",
+          first_name: "",
+          middle_name: "",
+          last_name: "",
+          email: "",
+          course: "",
+          year: "",
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      showToast("error", JSON.stringify(error));
+    }
     setIsLoading(false);
   };
 
@@ -196,7 +188,6 @@ function Register() {
   const courseOptions = [
     { value: "BSIT", label: "BSIT" },
     { value: "BSCS", label: "BSCS" },
-    { value: "ACT", label: "ACT" },
   ];
 
   const yearOptions = [
