@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { getInformationData } from "../../../authentication/Authentication";
 import {
   requestMembership,
   getMembershipStatusStudents,
 } from "../../../api/students";
+import { getInformationData } from "../../../authentication/Authentication";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 function Membership({ styles }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,17 +14,14 @@ function Membership({ styles }) {
   });
 
   const user = getInformationData();
-
+  const fetchStatus = async () => {
+    const membershipStatus = await getMembershipStatusStudents(user.id_number);
+    setMemebershipStatus(membershipStatus);
+  };
   if (user.position === "Student") {
     useEffect(() => {
-      const fetchStatus = async () => {
-        const membershipStatus = await getMembershipStatusStudents(
-          user.id_number
-        );
-        setMemebershipStatus(membershipStatus);
-      };
       fetchStatus();
-    });
+    }, []);
   }
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
