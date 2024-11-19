@@ -22,8 +22,6 @@ const AdminDashboard = () => {
     order: 0,
   });
 
-  const [data, setData] = useState([]);
-
   const [finalCounts, setFinalCounts] = useState({
     merchandise: 0,
     student: 0,
@@ -90,12 +88,12 @@ const AdminDashboard = () => {
     }
   };
   useEffect(() => {
-    const delayFetch = setTimeout(() => {
+    const delayFetch = setInterval(() => {
       fetchData();
-    }, 2000);
+    }, 5000);
 
-    return () => clearTimeout(delayFetch);
-  }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
+    return () => clearInterval(delayFetch);
+  }, []);
   return (
     <div className="pt-4 md:pt-8">
       <div className="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-8 text-center lg:flex lg:justify-between">
