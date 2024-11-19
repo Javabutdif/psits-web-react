@@ -90,7 +90,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const delayFetch = setInterval(() => {
       fetchData();
-    }, 5000);
+    }, 1000);
 
     return () => clearInterval(delayFetch);
   }, []);
