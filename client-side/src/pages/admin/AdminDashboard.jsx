@@ -66,34 +66,35 @@ const AdminDashboard = () => {
       });
     }, 20);
   };
-  const fetchData = async () => {
-    try {
-      const [studentRes, merchCreate, placedOrder] = await Promise.all([
-        allMembers(),
-        merchCreated(),
-        placedOrders(),
-      ]);
 
-      setFinalCounts({
-        student: studentRes || 0,
-        merchandise: merchCreate || 0,
-        order: placedOrder || 0,
-      });
-
-      animateCount();
-    } catch (error) {
-      setError("Error fetching dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  };
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [studentRes, merchCreate, placedOrder] = await Promise.all([
+          allMembers(),
+          merchCreated(),
+          placedOrders(),
+        ]);
+
+        setFinalCounts({
+          student: studentRes || 0,
+          merchandise: merchCreate || 0,
+          order: placedOrder || 0,
+        });
+        console.log(studentRes);
+        animateCount();
+      } catch (error) {
+        setError("Error fetching dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
     const delayFetch = setInterval(() => {
       fetchData();
     }, 5000);
 
     return () => clearInterval(delayFetch);
-  }, []);
+  }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
   return (
     <div className="pt-4 md:pt-8">
       <div className="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-8 text-center lg:flex lg:justify-between">
