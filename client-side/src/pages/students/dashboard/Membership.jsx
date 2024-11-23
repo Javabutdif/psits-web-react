@@ -8,15 +8,23 @@ import { useState, useEffect } from "react";
 
 function Membership({ styles }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [membershipStatus, setMemebershipStatus] = useState({
+  const [membershipStatus, setMembershipStatus] = useState({
     membership: "",
     renew: "",
   });
 
   const user = getInformationData();
   const fetchStatus = async () => {
-    const membershipStatus = await getMembershipStatusStudents(user.id_number);
-    setMemebershipStatus(membershipStatus);
+    try {
+      const status = await getMembershipStatusStudents(user.id_number);
+      setMemebershipStatus({
+        membership: status?.membership || "",
+        renew: status?.renew || "",
+      });
+    } catch (error) {
+      console.error("Error fetching membership status:", error);
+      setMembershipStatus({ membership: "", renew: "" });
+    }
   };
   if (user.position === "Student") {
     useEffect(() => {

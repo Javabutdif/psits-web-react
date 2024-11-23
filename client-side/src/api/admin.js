@@ -114,6 +114,7 @@ export const allMembers = async () => {
   } catch (error) {
     if (error.response && error.response.data) {
       console.log("error", error.response.data.message || "An error occurred");
+      window.location.reload();
     } else {
       console.log("error", "An error occurred");
     }

@@ -69,7 +69,7 @@ const Carousel = () => {
       setCurrentIndex((prevIndex) =>
         prevIndex === imageArray.length - 1 ? 0 : prevIndex + 1
       );
-    }, 3000); // Change image every 3 seconds
+    }, 3000); 
   };
 
   const handleDragEnd = (event, info) => {
