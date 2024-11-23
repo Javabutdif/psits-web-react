@@ -17,7 +17,7 @@ function Membership({ styles }) {
   const fetchStatus = async () => {
     try {
       const status = await getMembershipStatusStudents(user.id_number);
-      setMemebershipStatus({
+      setMembershipStatus({
         membership: status?.membership || "",
         renew: status?.renew || "",
       });
