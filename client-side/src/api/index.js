@@ -1,8 +1,7 @@
 import "../App.css";
+import { showToast } from "../utils/alertHelper";
 import backendConnection from "./backendApi";
 import axios from "axios";
-import { showToast } from "../utils/alertHelper";
-import { setData } from "../authentication/Authentication";
 
 export const login = async (formData) => {
   try {
@@ -18,7 +17,7 @@ export const login = async (formData) => {
 
     showToast("success", response.data.message);
 
-    setData(response.data.token);
+    sessionStorage.setItem("Token", response.data.token);
     return response.data.role;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -38,7 +37,6 @@ export const register = async (formData) => {
       {
         headers: {
           "Content-Type": "application/json",
-      
         },
       }
     );

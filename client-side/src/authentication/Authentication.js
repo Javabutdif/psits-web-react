@@ -3,10 +3,7 @@ import axios from "axios";
 let storedData;
 let storedRole;
 
-export const setData = (token) => {
-  sessionStorage.setItem("Token", token);
-  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-};
+
 
 export const getRoute = () => {
   return storedRole || null;
