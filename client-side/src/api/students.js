@@ -51,6 +51,7 @@ export const getMembershipStatusStudents = async (id_number) => {
       return response.data;
     } else {
       console.log(response.data.message);
+      window.location.reload();
     }
   } catch (error) {
     if (error.response && error.response.data) {
@@ -59,6 +60,7 @@ export const getMembershipStatusStudents = async (id_number) => {
       console.log(error.response.data.message);
     }
     console.error("Error:", error);
+   
   }
 };
 
