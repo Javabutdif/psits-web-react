@@ -26,11 +26,11 @@ function Membership({ styles }) {
       setMembershipStatus({ membership: "", renew: "" });
     }
   };
-  if (user.position === "Student") {
+  
     useEffect(() => {
       fetchStatus();
     }, []);
-  }
+  
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
