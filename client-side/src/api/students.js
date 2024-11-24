@@ -1,7 +1,8 @@
 import "../App.css";
+import { showToast } from "../utils/alertHelper";
 import backendConnection from "./backendApi";
 import axios from "axios";
-import { showToast } from "../utils/alertHelper";
+
 const token = sessionStorage.getItem("Token");
 
 export const requestMembership = async (id_number) => {
@@ -56,6 +57,7 @@ export const getMembershipStatusStudents = async (id_number) => {
   } catch (error) {
     if (error.response && error.response.data) {
       console.log(error.response.data.message);
+
        window.location.reload();
     } else {
       console.log(error.response.data.message);
@@ -64,6 +66,7 @@ export const getMembershipStatusStudents = async (id_number) => {
     console.error("Error:", error);
      window.location.reload();
    
+
   }
 };
 

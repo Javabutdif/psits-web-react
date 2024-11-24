@@ -1,14 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { showToast } from "../../utils/alertHelper";
-import { InfinitySpin } from "react-loader-spinner";
-import logo from "../../assets/images/login.png";
-import halloween from "../../assets/images/haloween.png";
-import christmas from "../../assets/images/christmass.png";
-import FormButton from "../../components/forms/FormButton";
-import FormInput from "../../components/forms/FormInput";
 import { login } from "../../api/index";
+import christ from "../../assets/images/ch.png";
+import christmas from "../../assets/images/christmass.png";
+import halloween from "../../assets/images/haloween.png";
+import logo from "../../assets/images/login.png";
 import {
   attemptAuthentication,
   resetAttemptAuthentication,
@@ -16,8 +10,15 @@ import {
   getAttemptAuthentication,
   getRoute,
 } from "../../authentication/Authentication";
-import { IoArrowBack } from "react-icons/io5";
+import FormButton from "../../components/forms/FormButton";
+import FormInput from "../../components/forms/FormInput";
+import { showToast } from "../../utils/alertHelper";
+import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
 import { GiPumpkin } from "react-icons/gi";
+import { IoArrowBack } from "react-icons/io5";
+import { InfinitySpin } from "react-loader-spinner";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [remainingTime, setRemainingTime] = useState();
@@ -170,7 +171,7 @@ const Login = () => {
               currentDate >= novStart && currentDate <= novEnd
                 ? halloween
                 : currentDate >= startChristmas && currentDate <= endChristmas
-                ? christmas
+                ? christ
                 : logo
             }
             alt="Logo"
