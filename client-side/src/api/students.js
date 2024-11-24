@@ -56,10 +56,13 @@ export const getMembershipStatusStudents = async (id_number) => {
   } catch (error) {
     if (error.response && error.response.data) {
       console.log(error.response.data.message);
+       window.location.reload();
     } else {
       console.log(error.response.data.message);
+       window.location.reload();
     }
     console.error("Error:", error);
+     window.location.reload();
    
   }
 };
