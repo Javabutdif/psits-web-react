@@ -193,6 +193,17 @@ const Reports = () => {
           item.id_number?.includes(filterID)
         );
       }
+      if (filterCourse) {
+        filteredData = filteredData.filter((item) =>
+          item.course?.toLowerCase().includes(filterCourse.toLowerCase())
+        );
+      }
+      if (filterYear) {
+        filteredData = filteredData.filter((item) =>
+          String(item.year).includes(filterYear)
+        );
+      }
+
       if (filterName) {
         filteredData = filteredData.filter((item) =>
           item.student_name?.toLowerCase().includes(filterName.toLowerCase())
@@ -345,6 +356,18 @@ const Reports = () => {
       sortable: true,
       wrap: true,
       cell: (row) => <div className="text-xs">{row.product_name}</div>,
+    },
+    {
+      name: "Course",
+      selector: (row) => row.course,
+      sortable: true,
+      width: "70px",
+    },
+    {
+      name: "Year",
+      selector: (row) => row.year,
+      sortable: true,
+      width: "70px",
     },
     {
       name: "Batch",
