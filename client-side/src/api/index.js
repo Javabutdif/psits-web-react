@@ -18,7 +18,7 @@ export const login = async (formData) => {
     showToast("success", response.data.message);
 
     sessionStorage.setItem("Token", response.data.token);
-    return response.data.role;
+    return sessionStorage.getItem("Token") !== "" ? response.data.role : null;
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");

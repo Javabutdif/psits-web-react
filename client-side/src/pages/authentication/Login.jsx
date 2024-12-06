@@ -27,6 +27,7 @@ const Login = () => {
   const novEnd = new Date(currentDate.getFullYear(), 10, 4);
   const startChristmas = new Date(currentDate.getFullYear(), 10, 5);
   const endChristmas = new Date(currentDate.getFullYear(), 11, 31);
+ 
 
   useEffect(() => {
     let interval;
@@ -99,7 +100,7 @@ const Login = () => {
 
         if (data === "Admin" || data === "Student") {
           resetAttemptAuthentication();
-
+          
           navigate(`/${data.toLowerCase()}/dashboard`);
         } else {
           attemptAuthentication();
