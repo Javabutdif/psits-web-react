@@ -151,6 +151,7 @@ function Register() {
       course: formData.course?.trim(),
       year: formData.year?.trim(),
       password: formData.password?.trim(),
+      applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
     };
     setIsModalVisible(false);
     try {
