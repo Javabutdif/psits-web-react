@@ -69,7 +69,7 @@ const Carousel = () => {
       setCurrentIndex((prevIndex) =>
         prevIndex === imageArray.length - 1 ? 0 : prevIndex + 1
       );
-    }, 3000); 
+    }, 3000);
   };
 
   const handleDragEnd = (event, info) => {
@@ -102,10 +102,10 @@ const Carousel = () => {
     currentIndex === imageArray.length - 1 ? 0 : currentIndex + 1;
 
   return (
-    <div className="my-auto relative w-full max-w-4xl mx-auto pt-4">
+    <div className="my-auto relative w-full max-w-6xl mx-auto pt-4">
       <div className="flex items-center justify-center space-x-4 pb-10">
         <motion.div
-          className="w-1/4"
+          className="w-1/3"
           initial={{ opacity: 0, x: -100 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -100 }}
@@ -114,12 +114,12 @@ const Carousel = () => {
           <img
             src={imageArray[getPreviousIndex()]}
             alt="Previous"
-            className="w-full h-auto"
+            className="w-full h-auto object-cover"
           />
         </motion.div>
 
         <motion.div
-          className="w-96"
+          className="w-2/3"
           key={currentIndex}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -132,12 +132,12 @@ const Carousel = () => {
           <img
             src={imageArray[currentIndex]}
             alt="Current"
-            className="w-full h-auto"
+            className="w-full h-auto object-cover"
           />
         </motion.div>
 
         <motion.div
-          className="w-1/4"
+          className="w-1/3"
           initial={{ opacity: 0, x: 100 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 100 }}
@@ -146,17 +146,17 @@ const Carousel = () => {
           <img
             src={imageArray[getNextIndex()]}
             alt="Next"
-            className="w-full h-auto"
+            className="w-full h-auto object-cover"
           />
         </motion.div>
       </div>
 
-      <div className="absolute  inset-x-0 bottom-0 flex justify-center space-x-2 pb-4">
+      <div className="absolute inset-x-0 bottom-0 flex justify-center space-x-2 pb-4">
         {imageArray.map((_, index) => (
           <button
             key={index}
             onClick={() => handleDotClick(index)}
-            className={`w-3  h-3 rounded-full ${
+            className={`w-3 h-3 rounded-full ${
               index === currentIndex ? "bg-primary" : "bg-gray-400"
             } transition-colors duration-300`}
           />
