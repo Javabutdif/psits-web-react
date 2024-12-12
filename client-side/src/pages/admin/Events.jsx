@@ -1,25 +1,34 @@
-import React, { useState } from "react";
-import { QrReader } from "react-qr-reader";
+import React, { useState, useRef, useEffect } from "react";
+import QrScanner from "qr-scanner";
 
 const Events = (props) => {
-	const [data, setData] = useState("No result");
+	const videoRef = useRef(null);
+	const [result, setResult] = useState("");
+
+	useEffect(() => {
+		const qrScanner = new QrScanner(
+			videoRef.current,
+			(result) => {
+				alert("QR Code result:", result.data);
+				setResult(result.data);
+			},
+			{
+				returnDetailedScanResult: true, // Optional: more scan data
+			}
+		);
+
+		qrScanner.start();
+
+		// Clean up the scanner on unmount
+		return () => qrScanner.destroy();
+	}, []);
 
 	return (
-		<>
-			<QrReader
-				onResult={(result, error) => {
-					if (!!result) {
-						setData(result?.text);
-					}
-
-					if (!!error) {
-						console.info(error);
-					}
-				}}
-				style={{ width: "100%" }}
-			/>
-			<p>{data}</p>
-		</>
+		<div>
+			<h1>QR Scanner</h1>
+			<video ref={videoRef} style={{ width: "100%" }}></video>
+			<p>Result: {result}</p>
+		</div>
 	);
 };
 
