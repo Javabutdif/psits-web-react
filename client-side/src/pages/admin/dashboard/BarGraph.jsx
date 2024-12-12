@@ -1,5 +1,4 @@
-import { React, useState, useEffect } from "react";
-import { Bar } from "react-chartjs-2";
+import { getDashboardStats } from "../../../api/admin";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,7 +8,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { getYear1, getYear2, getYear3, getYear4 } from "../../../api/admin";
+import { React, useState, useEffect } from "react";
+import { Bar } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -31,10 +31,11 @@ const BarGraph = () => {
   useEffect(() => {
     const callTotal = async () => {
       try {
-        const year1 = await getYear1();
-        const year2 = await getYear2();
-        const year3 = await getYear3();
-        const year4 = await getYear4();
+        const response = await getDashboardStats();
+        const {
+          years: { year1, year2, year3, year4 },
+        } = response;
+
         setYear({
           year1,
           year2,
@@ -49,19 +50,18 @@ const BarGraph = () => {
     callTotal();
   }, []);
 
- 
   const colors = [
-    "rgba(75, 192, 192, 0.2)", 
-    "rgba(255, 99, 132, 0.2)", 
-    "rgba(255, 159, 64, 0.2)", 
-    "rgba(153, 102, 255, 0.2)", 
+    "rgba(190, 213, 219, 0.7)", 
+    "rgba(156, 163, 175, 0.7)",
+    "rgba(107, 114, 128, 0.7)", 
+    "rgba(75, 85, 99, 0.7)", 
   ];
 
   const borderColors = [
-    "rgba(75, 192, 192, 1)",
-    "rgba(255, 99, 132, 1)", 
-    "rgba(255, 159, 64, 1)", 
-    "rgba(153, 102, 255, 1)", 
+    "rgba(209, 213, 219, 1)", 
+    "rgba(156, 163, 175, 1)", 
+    "rgba(107, 114, 128, 1)", 
+    "rgba(75, 85, 99, 1)", 
   ];
 
   const data = {
@@ -76,21 +76,21 @@ const BarGraph = () => {
       },
       {
         label: "2",
-        data: [0, year.year2, 0, 0], 
+        data: [0, year.year2, 0, 0],
         backgroundColor: colors[1],
         borderColor: borderColors[1],
         borderWidth: 1,
       },
       {
         label: "3",
-        data: [0, 0, year.year3, 0], 
+        data: [0, 0, year.year3, 0],
         backgroundColor: colors[2],
         borderColor: borderColors[2],
         borderWidth: 1,
       },
       {
         label: "4",
-        data: [0, 0, 0, year.year4], 
+        data: [0, 0, 0, year.year4],
         backgroundColor: colors[3],
         borderColor: borderColors[3],
         borderWidth: 1,
@@ -98,10 +98,9 @@ const BarGraph = () => {
     ],
   };
 
- 
   const options = {
     responsive: true,
-    maintainAspectRatio: false, 
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top",

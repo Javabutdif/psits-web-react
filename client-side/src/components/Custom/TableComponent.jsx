@@ -1,20 +1,26 @@
-import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import SearchComponent from './SearchComponent';
-import ButtonsComponent from './ButtonsComponent';
-import TableHeader from './TableHeader';
-import TableBody from './TableBody';
-import Pagination from './Pagination';
+import ButtonsComponent from "./ButtonsComponent";
+import Pagination from "./Pagination";
+import SearchComponent from "./SearchComponent";
+import TableBody from "./TableBody";
+import TableHeader from "./TableHeader";
+import { motion } from "framer-motion";
+import React, { useState, useMemo } from "react";
 
-const TableComponent = ({ data = [], columns = [], style, customSearch, customButtons }) => {
+const TableComponent = ({
+  data = [],
+  columns = [],
+  style,
+  customSearch,
+  customButtons,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const getColumnValue = (item, key) => {
-    if (key === 'name') {
-      return `${item.first_name} ${item.middle_name} ${item.last_name} RFID: ${item.rfid}`;
+    if (key === "name") {
+      return `${item.first_name} ${item.middle_name} ${item.last_name} ${item.name} RFID: ${item.rfid}`;
     }
     return item[key];
   };
@@ -24,8 +30,8 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
     return [...data].sort((a, b) => {
       const aValue = getColumnValue(a, sortConfig.key);
       const bValue = getColumnValue(b, sortConfig.key);
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
   }, [data, sortConfig]);
@@ -42,7 +48,10 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
 
   const indexOfLastRow = currentPage * itemsPerPage;
   const indexOfFirstRow = indexOfLastRow - itemsPerPage;
-  const currentRows = filteredDataBySearch.slice(indexOfFirstRow, indexOfLastRow);
+  const currentRows = filteredDataBySearch.slice(
+    indexOfFirstRow,
+    indexOfLastRow
+  );
 
   const totalPages = Math.ceil(filteredDataBySearch.length / itemsPerPage);
 
@@ -53,9 +62,9 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
   };
 
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
@@ -69,17 +78,24 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
     <div className="md:overflow-x-auto shadow-sm rounded-sm border bg-white p-6 space-y-4">
       <div className="flex flex-col gap-4 items-end justify-between">
         {customSearch || (
-          <SearchComponent 
-            searchQuery={searchQuery} 
-            handleSearchChange={handleSearchChange} 
-            placeholder="Search data..." 
+          <SearchComponent
+            searchQuery={searchQuery}
+            handleSearchChange={handleSearchChange}
+            placeholder="Search data..."
             className="w-full sm:max-w-xs bg-gray-50 border rounded-lg p-2 text-sm"
           />
         )}
-        {customButtons || <ButtonsComponent style="flex-1 justify-between w-full flex flex-row space-x-3" />}
+        {customButtons || (
+          <ButtonsComponent style="flex-1 justify-between w-full flex flex-row space-x-3" />
+        )}
       </div>
 
-      <motion.div className={`overflow-hidden ${style} mt-4`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      <motion.div
+        className={`overflow-hidden ${style} mt-4`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <motion.table
           aria-label="Data Table"
           role="table"
@@ -88,16 +104,24 @@ const TableComponent = ({ data = [], columns = [], style, customSearch, customBu
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <TableHeader columns={columns} sortConfig={sortConfig} handleSort={handleSort} />
-          <TableBody columns={columns} currentRows={currentRows} loading={false} />
+          <TableHeader
+            columns={columns}
+            sortConfig={sortConfig}
+            handleSort={handleSort}
+          />
+          <TableBody
+            columns={columns}
+            currentRows={currentRows}
+            loading={false}
+          />
         </motion.table>
       </motion.div>
 
       {/* Pagination Section */}
       <div className="mt-4 flex justify-between items-center">
-        <Pagination 
-          currentPage={currentPage} 
-          totalPages={totalPages} 
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
           handlePageChange={handlePageChange}
           totalItems={filteredDataBySearch.length}
           itemsPerPage={itemsPerPage}

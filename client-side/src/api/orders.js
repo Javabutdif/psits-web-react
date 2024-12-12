@@ -2,6 +2,7 @@ import "../App.css";
 import backendConnection from "./backendApi";
 import axios from "axios";
 import { showToast } from "../utils/alertHelper";
+const token = sessionStorage.getItem("Token");
 
 export const makeOrder = async (formData) => {
   try {
@@ -11,6 +12,7 @@ export const makeOrder = async (formData) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -36,6 +38,7 @@ export const getOrder = async (id_number) => {
       params: { id_number },
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -61,6 +64,7 @@ export const getAllOrders = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -79,14 +83,15 @@ export const getAllOrders = async () => {
     console.error("Error:", error);
   }
 };
-
 export const cancelOrder = async (product_id) => {
   try {
     const response = await axios.put(
       `${backendConnection()}/api/orders/cancel/${product_id}`,
+      {},
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -114,6 +119,7 @@ export const approveOrder = async (formData) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );

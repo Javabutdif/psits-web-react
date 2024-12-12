@@ -1,8 +1,9 @@
 import "../App.css";
+import { showToast } from "../utils/alertHelper";
 import backendConnection from "./backendApi";
 import axios from "axios";
-import { showToast } from "../utils/alertHelper";
 
+const token = sessionStorage.getItem("Token");
 
 export const requestMembership = async (id_number) => {
   try {
@@ -13,6 +14,7 @@ export const requestMembership = async (id_number) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -33,15 +35,15 @@ export const requestMembership = async (id_number) => {
   }
 };
 
-
 export const getMembershipStatusStudents = async (id_number) => {
   try {
     const response = await axios.get(
       `${backendConnection()}/api/students/get-membership-status`,
       {
-        params: { id_number }, // Use params to pass query parameters
+        params: { id_number },
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -50,14 +52,21 @@ export const getMembershipStatusStudents = async (id_number) => {
       return response.data;
     } else {
       console.log(response.data.message);
+      window.location.reload();
     }
   } catch (error) {
     if (error.response && error.response.data) {
       console.log(error.response.data.message);
+
+       window.location.reload();
     } else {
       console.log(error.response.data.message);
+       window.location.reload();
     }
     console.error("Error:", error);
+     window.location.reload();
+   
+
   }
 };
 
@@ -69,6 +78,7 @@ export const addToCartApi = async (formData) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -96,6 +106,7 @@ export const viewCart = async (id_number) => {
         params: { id_number },
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -123,6 +134,7 @@ export const deleteItem = async (data) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );

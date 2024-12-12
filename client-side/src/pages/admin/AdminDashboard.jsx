@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from "react";
 import {
   membership,
   allMembers,
   merchCreated,
   placedOrders,
 } from "../../api/admin";
+import BarGraph from "./dashboard/BarGraph";
+import DashboardCard from "./dashboard/DashboardCard";
+import DoughnutChart from "./dashboard/DoughnutChart";
+import PieChart from "./dashboard/PieChart";
 import {
   faBoxOpen,
   faUserGraduate,
   faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
-import DashboardCard from "./dashboard/DashboardCard";
-import DoughnutChart from "./dashboard/DoughnutChart";
-import BarGraph from "./dashboard/BarGraph";
-import PieChart from "./dashboard/PieChart";
+import React, { useEffect, useState } from "react";
 
 const AdminDashboard = () => {
   const [counts, setCounts] = useState({
@@ -21,8 +21,6 @@ const AdminDashboard = () => {
     student: 0,
     order: 0,
   });
-
-  const [data, setData] = useState([]);
 
   const [finalCounts, setFinalCounts] = useState({
     merchandise: 0,
@@ -69,6 +67,7 @@ const AdminDashboard = () => {
     }, 20);
   };
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -78,15 +77,12 @@ const AdminDashboard = () => {
           placedOrders(),
         ]);
 
-        const members = await membership();
-        setData(members);
-
         setFinalCounts({
           student: studentRes || 0,
           merchandise: merchCreate || 0,
           order: placedOrder || 0,
         });
-
+        console.log(studentRes);
         animateCount();
       } catch (error) {
         setError("Error fetching dashboard data");
@@ -95,7 +91,11 @@ const AdminDashboard = () => {
       }
     };
 
-    fetchData();
+    const delayFetch = setInterval(() => {
+      fetchData();
+    }, 1000);
+
+    return () => clearInterval(delayFetch);
   }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
   return (
     <div className="pt-4 md:pt-8">

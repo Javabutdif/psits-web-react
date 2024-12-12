@@ -1,22 +1,27 @@
 import "../App.css";
+import { showToast } from "../utils/alertHelper";
 import backendConnection from "./backendApi";
 import axios from "axios";
-import { showToast } from "../utils/alertHelper";
+
+const token = sessionStorage.getItem("Token");
 
 export const membership = async () => {
   try {
     const response = await axios.get(`${backendConnection()}/api/students`, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
-      showToast("error", error.response.data.message || "An error occurred");
+      window.location.reload();
+      return false;
     } else {
-      showToast("error", "An error occurred");
+      console.log("error", "An error occurred");
+      return false;
     }
     console.error("Error:", error);
   }
@@ -28,6 +33,7 @@ export const deletedStudent = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -49,6 +55,7 @@ export const membershipRequest = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -72,6 +79,7 @@ export const approveMembership = async (formData) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -98,6 +106,7 @@ export const allMembers = async () => {
     const response = await axios.get(`${backendConnection()}/api/all-members`, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -105,6 +114,7 @@ export const allMembers = async () => {
   } catch (error) {
     if (error.response && error.response.data) {
       console.log("error", error.response.data.message || "An error occurred");
+      window.location.reload();
     } else {
       console.log("error", "An error occurred");
     }
@@ -118,6 +128,7 @@ export const totalRequest = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -139,6 +150,7 @@ export const totalRenewal = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -160,6 +172,7 @@ export const totalDeleted = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -181,6 +194,7 @@ export const totalHistory = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -202,6 +216,7 @@ export const merchCreated = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -222,6 +237,7 @@ export const placedOrders = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -241,6 +257,7 @@ export const renewStudent = async () => {
     const response = await axios.get(`${backendConnection()}/api/renew`, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -259,6 +276,7 @@ export const membershipHistory = async () => {
     const response = await axios.get(`${backendConnection()}/api/history`, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -279,6 +297,7 @@ export const merchandise = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -301,6 +320,7 @@ export const merchandiseAdmin = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -324,6 +344,7 @@ export const deleteMerchandise = async (_id) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -351,6 +372,7 @@ export const publishMerchandise = async (_id) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -377,6 +399,7 @@ export const requestDeletion = async (id_number) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -400,6 +423,7 @@ export const studentDeletion = async (id_number, name) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -422,6 +446,7 @@ export const studentRestore = async (id_number) => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -447,6 +472,7 @@ export const addMerchandise = async (formData) => {
         headers: {
           "Content-Type": "application/json",
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -465,117 +491,19 @@ export const addMerchandise = async (formData) => {
   }
 };
 
-export const getBsit = async () => {
+export const getDashboardStats = async () => {
   try {
-    const response = await axios.get(`${backendConnection()}/api/get-bsit`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.get(
+      `${backendConnection()}/api/dashboard-stats`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getBscs = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-bscs`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getAct = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-act`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getYear1 = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-year1`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getYear2 = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-year2`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getYear3 = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-year3`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-export const getYear4 = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/get-year4`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    return response.data.message;
+    return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
       console.log("error", error.response.data.message || "An error occurred");
@@ -592,6 +520,7 @@ export const getOrderDate = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -603,5 +532,35 @@ export const getOrderDate = async () => {
     } else {
       console.log("error", "An error occurred");
     }
+  }
+};
+
+export const deleteReports = async (id, merchName) => {
+  try {
+    const response = await axios.delete(
+      `${backendConnection()}/api/merch/delete-report`,
+
+      {
+        data: { id, merchName },
+        headers: {
+          "Content-Type": "application/json",
+
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
   }
 };

@@ -171,13 +171,6 @@ const OrderSummary = ({
             ₱{totalPrice.toFixed(2)}
           </span>
         </div>
-        <div className="mt-4">
-          <h3 className="text-base font-semibold mb-1">Claim Instructions:</h3>
-          <ul className="list-disc list-inside text-gray-700 text-sm sm:text-base">
-            <li>Pick up your items at the office on the assigned date.</li>
-            <li>Present your order number.</li>
-          </ul>
-        </div>
       </div>
       <motion.button
         type="button"
@@ -369,15 +362,13 @@ const StudentCart = () => {
         const data = await viewCart(user.id_number);
         if (data && data.length > 0) {
           const currentDate = new Date();
-        
 
-				
           const filteredProducts = data.filter((item) => {
-						return (
-							currentDate >= new Date(item.start_date) &&
-							currentDate <= new Date(item.end_date)
-						);
-					});
+            return (
+              currentDate >= new Date(item.start_date) &&
+              currentDate <= new Date(item.end_date)
+            );
+          });
 
           setProducts(filteredProducts);
           setLoading(false);
@@ -455,7 +446,6 @@ const StudentCart = () => {
       order_date: new Date(),
       order_status: "Pending",
     });
-    
   };
 
   const confirmOrder = async () => {

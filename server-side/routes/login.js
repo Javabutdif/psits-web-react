@@ -20,7 +20,7 @@ const loginLimiter = rateLimit({
 
 router.post("/login", loginLimiter, async (req, res) => {
   const { id_number, password } = req.body;
-
+  const currentDate = new Date();
   try {
     let users;
     let role;
@@ -47,6 +47,16 @@ router.post("/login", loginLimiter, async (req, res) => {
         users = student;
         role = "Student";
       } else {
+        console.log(
+          `Invalid password from ${id_number} - ${
+            student.first_name +
+            " " +
+            student.middle_name +
+            " " +
+            student.last_name
+          } in ${currentDate} `
+        );
+
         return res
           .status(400)
           .json({ message: "Invalid ID number or password" });
@@ -58,6 +68,11 @@ router.post("/login", loginLimiter, async (req, res) => {
         users = admin;
         role = "Admin";
       } else {
+        console.log(
+          `Invalid password from ${id_number} - ${
+            admin.name + " "
+          }in ${currentDate} `
+        );
         return res
           .status(400)
           .json({ message: "Invalid ID number or password" });
@@ -65,22 +80,24 @@ router.post("/login", loginLimiter, async (req, res) => {
     }
 
     const user = {
-			id_number: users.id_number,
-			name:
-				role === "Admin"
-					? users.name
-					: users.first_name + " " + users?.middle_name + " " + users.last_name,
-			email: users.email,
-			course: users.course,
-			year: users.year,
-			position: role === "Admin" ? users.position : "Student",
-		};
-		
-		const token = jwt.sign({ user, role }, token_key, {
-			expiresIn: role === "Admin" ? "1h" : "10m",
-		});
+      id_number: users.id_number,
+      name:
+        role === "Admin"
+          ? users.name
+          : users.first_name + " " + users?.middle_name + " " + users.last_name,
+      email: users.email,
+      course: users.course,
+      year: users.year,
+      position: role === "Admin" ? users.position : "Student",
+    };
 
-		return res.json({ message: "Signed in successfully", role, token });
+    const token = jwt.sign({ user, role }, token_key, {
+      expiresIn: role === "Admin" ? "2h" : "10m",
+    });
+    console.log(
+      `${id_number} - ${user.name} signed in successfully in ${currentDate}`
+    );
+    return res.json({ message: "Signed in successfully", role, token });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "An error occurred", error });
@@ -93,16 +110,6 @@ router.get("/protected-route", authenticateToken, (req, res) => {
     user: req.user,
     role: req.role,
   });
-});
-
-router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-  });
-
-  res.json({ message: "Logout successful" });
 });
 
 module.exports = router;

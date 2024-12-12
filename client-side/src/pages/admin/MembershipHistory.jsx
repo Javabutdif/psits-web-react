@@ -1,20 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
-import TableComponent from "../../components/Custom/TableComponent";
 import { membershipHistory } from "../../api/admin";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
-import FormButton from "../../components/forms/FormButton";
-import ReactToPrint from "react-to-print";
+import TableComponent from "../../components/Custom/TableComponent";
 import Receipt from "../../components/common/Receipt";
+import FormButton from "../../components/forms/FormButton";
 import {
   conditionalPosition,
   formattedDate,
 } from "../../components/tools/clientTools";
+import React, { useState, useEffect, useRef } from "react";
+import ReactToPrint from "react-to-print";
 
 function MembershipHistory() {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [shouldPrint, setShouldPrint] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [rowData, setPrintData] = useState("");
   const [selectedStudent, setSelectedStudentName] = useState("");
@@ -32,21 +33,39 @@ function MembershipHistory() {
     { label: "Admin", key: "admin" },
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const result = await membershipHistory();
-        setData(result);
-        setFilteredData(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-      setIsLoading(false);
-    };
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const result = await membershipHistory();
+      setData(result);
+      setFilteredData(result);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+    setIsLoading(false);
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const searchLower = searchQuery.toLowerCase();
+      return [
+        item.name,
+
+        item.id_number,
+        item.email,
+        item.type,
+        item.course,
+        item.rfid,
+      ]
+        .map((value) => (value ? value.toString().toLowerCase() : ""))
+        .some((value) => value.includes(searchLower));
+    });
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
 
   const handlePrintData = (row) => {
     setPrintData(row);
@@ -144,7 +163,7 @@ function MembershipHistory() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={!conditionalPosition() ? "Not Authorized" : "Print"}
+            text={conditionalPosition() ? "Print" : ""}
             onClick={() => {
               if (conditionalPosition()) {
                 handlePrintData(row);

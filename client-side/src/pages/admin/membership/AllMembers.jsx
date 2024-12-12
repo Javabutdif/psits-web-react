@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { useOutletContext } from "react-router-dom";
 import { membership, studentDeletion } from "../../../api/admin";
+import backendConnection from "../../../api/backendApi";
+import { getInformationData } from "../../../authentication/Authentication";
+import ChangePassword from "../../../components/ChangePassword";
+import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
+import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
+import FormButton from "../../../components/forms/FormButton";
+import { higherPosition } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-import { getInformationData } from "../../../authentication/Authentication";
-import TableComponent from "../../../components/Custom/TableComponent";
-import FormButton from "../../../components/forms/FormButton";
-import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import EditMember from "./EditMember";
 import axios from "axios";
-import backendConnection from "../../../api/backendApi";
+import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -25,6 +27,9 @@ const Membership = () => {
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [id, setId] = useState("");
+  const [viewChange, setViewChange] = useState(false);
+  const token = sessionStorage.getItem("Token");
 
   const user = getInformationData();
 
@@ -50,12 +55,25 @@ const Membership = () => {
     setMemberToEdit(null);
   };
 
+  const handleChangePassword = (id) => {
+    setId(id);
+    setViewChange(true);
+  };
+  const handleHideChangePassword = () => {
+    setViewChange(false);
+  };
+
   const handleSaveEditedMember = async (updatedMember) => {
     setIsLoading(true);
     try {
       const response = await axios.post(
         `${backendConnection()}/api/editedStudent`,
-        updatedMember
+        updatedMember,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       console.log(response.data.message);
       showToast("success", "Student updated successfully!");
@@ -237,6 +255,19 @@ const Membership = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
+          {higherPosition() && (
+            <FormButton
+              type="button"
+              text="Change"
+              onClick={() => handleChangePassword(row.id_number)}
+              icon={<i className="fas fa-key" />} // Simple icon
+              styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              textClass="text-gray-800"
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+            />
+          )}
+
           <FormButton
             type="button"
             text="Edit"
@@ -279,6 +310,15 @@ const Membership = () => {
           onCancel={hideModal}
           onConfirm={handleConfirmDeletion}
         />
+      )}
+      {viewChange && (
+        <>
+          <ChangePassword
+            id={id}
+            onCancel={handleHideChangePassword}
+            onSubmit={() => setViewChange(false)}
+          />
+        </>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const { finalizeFacebookData } = require("../utils/facebookUtils");
 require("dotenv").config();
+const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
 

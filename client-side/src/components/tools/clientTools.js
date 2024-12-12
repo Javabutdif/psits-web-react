@@ -12,6 +12,25 @@ export const conditionalPosition = () => {
   return (
     user.position === "Treasurer" ||
     user.position === "Assistant Treasurer" ||
-    user.position === "Auditor" 
+    user.position === "Auditor" ||
+    user.position === "Head Developer"
   );
+};
+
+export const higherPosition = () => {
+  const user = getInformationData();
+
+  return user.position === "Developer" || user.position === "Head Developer";
+};
+
+export const headDevPosition = () => {
+	const user = getInformationData();
+
+	return user.position === "Head Developer";
+};
+
+export const deletePosition = () => {
+  const user = getInformationData();
+
+  return user.position === "Treasurer" || user.position === "Head Developer";
 };

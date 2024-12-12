@@ -11,7 +11,7 @@ import {
 } from "../../api/admin";
 import { InfinitySpin } from "react-loader-spinner";
 
-const Membership = () => {
+const Students = () => {
   const [counts, setCounts] = useState({
     allMembers: 0,
     request: 0,
@@ -65,27 +65,27 @@ const Membership = () => {
 
   const tabs = [
     {
-      path: "/admin/membership",
+      path: "/admin/students",
       text: `All Members ${counts.allMembers}`,
       icon: "fas fa-users",
     },
     {
-      path: "/admin/membership/request",
+      path: "/admin/students/request",
       text: `Request ${counts.request}`,
       icon: "fas fa-hand-paper",
     },
     {
-      path: "/admin/membership/renewal",
+      path: "/admin/students/renewal",
       text: `Renewals ${counts.renewals}`,
       icon: "fas fa-refresh",
     },
     {
-      path: "/admin/membership/delete",
+      path: "/admin/students/delete",
       text: `Deleted ${counts.deleted}`,
       icon: "fas fa-trash-alt",
     },
     {
-      path: "/admin/membership/history",
+      path: "/admin/students/history",
       text: `History ${counts.history}`,
       icon: "fas fa-history",
     },
@@ -122,4 +122,4 @@ const Membership = () => {
   );
 };
 
-export default Membership;
+export default Students;

@@ -4,11 +4,12 @@ const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
 const Orders = require("../models/OrdersModel");
 const { format } = require("date-fns");
+const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
 
 // GET list of accepted students
-router.get("/students", async (req, res) => {
+router.get("/students", authenticateToken, async (req, res) => {
   try {
     const students = await Student.find({
       status: "True",
@@ -26,7 +27,7 @@ router.get("/students", async (req, res) => {
   }
 });
 
-router.put("/students/request", async (req, res) => {
+router.put("/students/request", authenticateToken, async (req, res) => {
   try {
     const { id_number } = req.body;
 
@@ -46,40 +47,48 @@ router.put("/students/request", async (req, res) => {
   }
 });
 
-router.get("/students/deleted-students", async (req, res) => {
-  try {
-    const students = await Student.find({
-      status: "False",
-    });
-    res.status(200).json(students);
-  } catch (error) {
-    console.error("Error fetching students:", error);
-    res.status(500).json("Internal Server Error");
-  }
-});
-
-router.get("/students/get-membership-status", async (req, res) => {
-  const { id_number } = req.query;
-  try {
-    const student = await Student.findOne({ id_number });
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+router.get(
+  "/students/deleted-students",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const students = await Student.find({
+        status: "False",
+      });
+      res.status(200).json(students);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      res.status(500).json("Internal Server Error");
     }
-
-    const studentStatus = {
-      membership: student.membership,
-      renew: student.renew,
-    };
-
-    res.status(200).json(studentStatus);
-  } catch (error) {
-    console.error("Error fetching student:", error);
-    res.status(500).json({ message: "Internal Server Error" });
   }
-});
+);
+
+router.get(
+  "/students/get-membership-status",
+  authenticateToken,
+  async (req, res) => {
+    const { id_number } = req.query;
+    try {
+      const student = await Student.findOne({ id_number });
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const studentStatus = {
+        membership: student.membership,
+        renew: student.renew,
+      };
+
+      res.status(200).json(studentStatus);
+    } catch (error) {
+      console.error("Error fetching student:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+);
 
 // SOFT DELETE student by id_number
-router.put("/students/softdelete", async (req, res) => {
+router.put("/students/softdelete", authenticateToken, async (req, res) => {
   const { id_number, name } = req.body;
 
   try {
@@ -106,7 +115,7 @@ router.put("/students/softdelete", async (req, res) => {
   }
 });
 
-router.put("/students/restore", async (req, res) => {
+router.put("/students/restore", authenticateToken, async (req, res) => {
   const { id_number } = req.body;
 
   try {
@@ -131,32 +140,37 @@ router.put("/students/restore", async (req, res) => {
 });
 
 // HARD DELETE student by id_number
-router.put("/students/cancel/:id_number", async (req, res) => {
-  const id_number = req.params.id_number;
+router.put(
+  "/students/cancel/:id_number",
+  authenticateToken,
+  async (req, res) => {
+    const id_number = req.params.id_number;
 
-  try {
-    const cancel = await Student.updateOne(
-      { id_number: id_number },
-      {
-        $set: {
-          membership: "None",
-        },
+    try {
+      const cancel = await Student.updateOne(
+        { id_number: id_number },
+        {
+          $set: {
+            membership: "None",
+          },
+        }
+      );
+
+      if (!cancel) {
+        return res.status(404).json({ message: "Student not found" });
       }
-    );
 
-    if (!cancel) {
-      return res.status(404).json({ message: "Student not found" });
+      res
+        .status(200)
+        .json({ message: "Student cancel membership successfully" });
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      res.status(500).json("Internal Server Error");
     }
-
-    res.status(200).json({ message: "Student cancel membership successfully" });
-  } catch (error) {
-    console.error("Error deleting student:", error);
-    res.status(500).json("Internal Server Error");
   }
-});
+);
 
-
-router.post("/editedStudent", async (req, res) => {
+router.post("/editedStudent", authenticateToken, async (req, res) => {
   const {
     id_number,
     rfid,
@@ -169,7 +183,6 @@ router.post("/editedStudent", async (req, res) => {
   } = req.body;
 
   try {
-   
     const studentResult = await Student.updateOne(
       { id_number: id_number },
       {
@@ -185,9 +198,8 @@ router.post("/editedStudent", async (req, res) => {
       }
     );
 
-  
     await Orders.updateMany(
-      {  id_number: id_number  }, 
+      { id_number: id_number },
       {
         $set: {
           student_name: `${first_name} ${middle_name} ${last_name}`,
@@ -209,7 +221,7 @@ router.post("/editedStudent", async (req, res) => {
 
 //Edit Profile Side
 
-router.post("/edit", async (req, res) => {
+router.post("/edit", authenticateToken, async (req, res) => {
   const { id_number, name, email, course, year, role } = req.body;
   try {
     if (role === "Admin") {
@@ -260,5 +272,31 @@ router.post("/edit", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
+
+router.post(
+  "/students/change-password-admin",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const getStudent = await Student.findOne({
+        id_number: req.body.id_number,
+      });
+
+      if (!getStudent) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      getStudent.password = hashedPassword;
+      await getStudent.save();
+
+      res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
+    }
+  }
+);
 
 module.exports = router;

@@ -23,8 +23,10 @@ const StudentLayout = () => {
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
     { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
+
+    { text: "Cart", icon: "fas fa-shopping-cart", path: "cart" },
+    { text: "Orders", icon: "fas fa-clipboard-list", path: "orders" },
     { text: "Resources", icon: "fas fa-book-open", path: "resources" },
-    { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
   ];
 
   return (
