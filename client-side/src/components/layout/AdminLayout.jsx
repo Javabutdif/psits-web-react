@@ -23,13 +23,14 @@ const AdminLayout = () => {
   });
 
   const navItems = [
-    { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
-    { text: "Students", icon: "fas fa-users", path: "students" },
-    { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
+		{ text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
+		{ text: "Students", icon: "fas fa-users", path: "students" },
+		{ text: "Events", icon: "fas fa-calendar-alt", path: "events" },
+		{ text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
 
-    { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
-    { text: "Reports", icon: "fas fa-chart-line", path: "reports" },
-  ];
+		{ text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
+		{ text: "Reports", icon: "fas fa-chart-line", path: "reports" },
+	];
 
   return (
     <div className="min-h-screen relative">
