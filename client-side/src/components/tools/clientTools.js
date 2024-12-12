@@ -23,6 +23,12 @@ export const higherPosition = () => {
   return user.position === "Developer" || user.position === "Head Developer";
 };
 
+export const headDevPosition = () => {
+	const user = getInformationData();
+
+	return user.position === "Head Developer";
+};
+
 export const deletePosition = () => {
   const user = getInformationData();
 
