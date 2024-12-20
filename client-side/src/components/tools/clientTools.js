@@ -13,7 +13,8 @@ export const conditionalPosition = () => {
     user.position === "Treasurer" ||
     user.position === "Assistant Treasurer" ||
     user.position === "Auditor" ||
-    user.position === "Head Developer"
+    user.position === "Head Developer" ||
+	  user.position === "President"
   );
 };
 
