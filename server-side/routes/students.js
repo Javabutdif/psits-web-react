@@ -171,6 +171,7 @@ router.put(
 );
 
 router.post("/editedStudent", authenticateToken, async (req, res) => {
+  //TODO: Log
   const {
     id_number,
     rfid,
@@ -277,6 +278,7 @@ router.post(
   "/students/change-password-admin",
   authenticateToken,
   async (req, res) => {
+    //TODO: Log
     try {
       const getStudent = await Student.findOne({
         id_number: req.body.id_number,

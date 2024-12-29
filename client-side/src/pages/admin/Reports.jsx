@@ -514,6 +514,7 @@ const Reports = () => {
               filename="membership-data.csv"
             >
               <button className="bg-green-500 text-white px-4 py-2 rounded">
+                {/* TODO: Log */}
                 Export CSV
               </button>
             </CSVLink>
@@ -579,6 +580,7 @@ const Reports = () => {
               filename="merchandise-data.csv"
             >
               <button className="bg-green-500 text-white px-4 py-2 rounded">
+                {/* TODO: Log */}
                 Export CSV
               </button>
             </CSVLink>
