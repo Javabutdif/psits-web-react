@@ -153,7 +153,7 @@ router.get("/all-members", authenticateToken, async (req, res) => {
   });
   return res.json({ message: count });
 });
-router.get("/request-members", authenticateToken, async (req, res) => {
+router.get("/request-members", async (req, res) => {
   const count = await Student.countDocuments({ membership: "Pending" });
   return res.json({ message: count });
 });
