@@ -1,10 +1,8 @@
 import {
-  studentDeletion,
   getAllOfficers,
   editOfficerApi,
   officerSuspend,
 } from "../../../api/admin";
-import { getInformationData } from "../../../authentication/Authentication";
 import ChangePassword from "../../../components/ChangePassword";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
@@ -14,7 +12,6 @@ import { higherPosition } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditOfficer from "../EditOfficer";
-import axios from "axios";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 
@@ -32,15 +29,12 @@ const AllOfficers = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [id, setId] = useState("");
   const [viewChange, setViewChange] = useState(false);
-  const token = sessionStorage.getItem("Token");
-
-  const user = getInformationData();
 
   const fetchData = async () => {
     try {
       const result = await getAllOfficers();
-      setData(result);
-      setFilteredData(result);
+      setData(result ? result : []);
+      setFilteredData(result ? result : []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
