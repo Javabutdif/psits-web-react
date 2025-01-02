@@ -1,9 +1,9 @@
-import { changePassword } from "../api/forgot";
+import { changePassword , changePasswordAdmin } from "../api/forgot";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
 
-const ChangePassword = ({ id, onCancel, onSubmit }) => {
+const ChangePassword = ({ id, onCancel, onSubmit, position }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -15,9 +15,8 @@ const ChangePassword = ({ id, onCancel, onSubmit }) => {
 
   const handleSubmit = async () => {
     if (password === confirmPassword) {
-      const result = await changePassword(password, id);
+      const result = await position === "officer" ? changePasswordAdmin(password, id) : changePassword(password, id);
       onSubmit(result ? true : false);
-    } else {
     }
   };
 

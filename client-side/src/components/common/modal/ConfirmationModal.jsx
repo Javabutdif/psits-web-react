@@ -10,6 +10,7 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
 
   const confirmButtonColor =
     confirmType === ConfirmActionType.DELETION ||
+    confirmType === ConfirmActionType.SUSPEND ||
     confirmType === ConfirmActionType.RENEWAL ||
     confirmType === ConfirmActionType.ORDER ||
     confirmType === ConfirmActionType.CANCEL
@@ -53,6 +54,8 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
             {confirmTypeWord === "cancel this order" ||
             confirmTypeWord === "renewal"
               ? ""
+              : confirmTypeWord === "suspend"
+              ? " this officer"
               : " this student"}
             ?
           </p>

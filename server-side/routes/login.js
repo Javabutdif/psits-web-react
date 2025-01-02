@@ -64,15 +64,14 @@ router.post("/login", loginLimiter, async (req, res) => {
     } else {
       const passwordMatch = await bcrypt.compare(password, admin.password);
 
-      if (passwordMatch) {
+      if (passwordMatch && admin.status === "Active") {
         users = admin;
         role = "Admin";
+      } else if (passwordMatch && admin.status === "Suspend") {
+        return res.status(400).json({
+          message: "Your account has been suspended! Please contact president",
+        });
       } else {
-        console.log(
-          `Invalid password from ${id_number} - ${
-            admin.name + " "
-          }in ${currentDate} `
-        );
         return res
           .status(400)
           .json({ message: "Invalid ID number or password" });

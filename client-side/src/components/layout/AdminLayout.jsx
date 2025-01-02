@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import AsideBar from "../common/navbar/AsideBar";
 import ProfileHeader from "../ProfileHeader";
+import { higherPosition } from "../tools/clientTools";
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -21,16 +22,24 @@ const AdminLayout = () => {
   useEffect(() => {
     console.log(isSidebarOpen);
   });
-
   const navItems = [
-		{ text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
-		{ text: "Students", icon: "fas fa-users", path: "students" },
-		{ text: "Events", icon: "fas fa-calendar-alt", path: "events" },
-		{ text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
+    { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
+    higherPosition() && {
+      text: "Officers",
+      icon: "fas fa-user-tie",
+      path: "officers",
+    },
+    { text: "Students", icon: "fas fa-users", path: "students" },
+    higherPosition() && {
+      text: "Events",
+      icon: "fas fa-calendar-alt",
+      path: "events",
+    },
 
-		{ text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
-		{ text: "Reports", icon: "fas fa-chart-line", path: "reports" },
-	];
+    { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
+    { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
+    { text: "Reports", icon: "fas fa-chart-line", path: "reports" },
+  ].filter(Boolean);
 
   return (
     <div className="min-h-screen relative">
