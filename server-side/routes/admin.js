@@ -258,4 +258,150 @@ router.get("/get-order-date", authenticateToken, async (req, res) => {
   }
 });
 
+router.get("/get-all-officers", authenticateToken, async (req, res) => {
+  try {
+    const officers = await Admin.find({ status: "Active" });
+
+    const users = officers.map((officer) => ({
+      id_number: officer.id_number,
+      email: officer.email,
+      name: officer.name,
+      course: officer.course,
+      year: officer.year,
+      position: officer.position,
+    }));
+
+    res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("Error fetching officers:", error);
+    res.status(500).json({ error: "Failed to fetch officers" });
+  }
+});
+
+router.get("/get-suspend-officers", authenticateToken, async (req, res) => {
+  try {
+    const officers = await Admin.find({ status: "Suspend" });
+
+    const users = officers.map((officer) => ({
+      id_number: officer.id_number,
+      email: officer.email,
+      name: officer.name,
+      course: officer.course,
+      year: officer.year,
+      position: officer.position,
+    }));
+
+    res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("Error fetching officers:", error);
+    res.status(500).json({ error: "Failed to fetch officers" });
+  }
+});
+
+router.post("/editOfficer", authenticateToken, async (req, res) => {
+  const { id_number, name, position, email, course, year } = req.body;
+
+  try {
+    const adminResult = await Admin.updateOne(
+      { id_number: id_number },
+      {
+        $set: {
+          name: name,
+          position: position,
+
+          email: email,
+          course: course,
+          year: year,
+        },
+      }
+    );
+
+    if (adminResult.modifiedCount > 0) {
+      res.status(200).json({ message: "Officer updated successfully" });
+    } else {
+      res.status(404).json({ error: "No officer found with the provided ID" });
+    }
+  } catch (error) {
+    console.error("Error updating officer:", error);
+    res.status(500).json({ error: "Failed to update officer" });
+  }
+});
+
+router.post(
+  "/admin/change-password-officer",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const getAdmin = await Admin.findOne({
+        id_number: req.body.id_number,
+      });
+
+      if (!getAdmin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      getAdmin.password = hashedPassword;
+      await getAdmin.save();
+
+      res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
+    }
+  }
+);
+router.put("/admin/suspend", authenticateToken, async (req, res) => {
+  const { id_number } = req.body;
+
+  try {
+    const updatedAdmin = await Admin.updateOne(
+      { id_number },
+      {
+        $set: {
+          status: "Suspend",
+        },
+      }
+    );
+
+    if (updatedAdmin.modifiedCount > 0) {
+      res.status(200).json({ message: "Admin status updated to Suspend" });
+    } else {
+      res.status(404).json({ message: "Admin not found or already suspended" });
+    }
+  } catch (error) {
+    console.error("Error suspending admin:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred", error: error.message });
+  }
+});
+
+router.put("/admin/restore-officer", authenticateToken, async (req, res) => {
+  const { id_number } = req.body;
+  console.log(id_number);
+  try {
+    const updatedAdmin = await Admin.updateOne(
+      { id_number },
+      {
+        $set: {
+          status: "Active",
+        },
+      }
+    );
+
+    if (updatedAdmin.modifiedCount > 0) {
+      res.status(200).json({ message: "Admin status updated to Active" });
+    } else {
+      res.status(404).json({ message: "Admin not found or already active" });
+    }
+  } catch (error) {
+    console.error("Error activating admin:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred", error: error.message });
+  }
+});
+
 module.exports = router;

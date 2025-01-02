@@ -1,5 +1,9 @@
-import { membership, studentDeletion } from "../../../api/admin";
-import backendConnection from "../../../api/backendApi";
+import {
+  studentDeletion,
+  getAllOfficers,
+  editOfficerApi,
+  officerSuspend,
+} from "../../../api/admin";
 import { getInformationData } from "../../../authentication/Authentication";
 import ChangePassword from "../../../components/ChangePassword";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
@@ -9,12 +13,12 @@ import FormButton from "../../../components/forms/FormButton";
 import { higherPosition } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-import EditMember from "./EditMember";
+import EditOfficer from "../EditOfficer";
 import axios from "axios";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 
-const Membership = () => {
+const AllOfficers = () => {
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -34,7 +38,7 @@ const Membership = () => {
 
   const fetchData = async () => {
     try {
-      const result = await membership();
+      const result = await getAllOfficers();
       setData(result);
       setFilteredData(result);
       setLoading(false);
@@ -65,25 +69,9 @@ const Membership = () => {
   const handleSaveEditedMember = async (updatedMember) => {
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        `${backendConnection()}/api/editedStudent`,
-        updatedMember,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log(response.data.message);
-      showToast("success", "Student updated successfully!");
+      editOfficerApi(updatedMember);
     } catch (error) {
-      console.error("Error updating student:", error);
-      showToast(
-        "error",
-        error.response?.data?.message ||
-          error.message ||
-          "An unexpected error occurred."
-      );
+      console.error("Error updating officer:", error);
     }
 
     fetchData();
@@ -97,16 +85,7 @@ const Membership = () => {
   useEffect(() => {
     const filtered = data.filter((item) => {
       const searchLower = searchQuery.toLowerCase();
-      return [
-        item.first_name,
-        item.middle_name,
-        item.last_name,
-        item.id_number,
-        item.email,
-        item.type,
-        item.course,
-        item.rfid,
-      ]
+      return [item.name, item.id_number, item.email, item.position, item.course]
         .map((value) => (value ? value.toString().toLowerCase() : ""))
         .some((value) => value.includes(searchLower));
     });
@@ -125,23 +104,24 @@ const Membership = () => {
 
   const handleConfirmDeletion = async () => {
     setIsLoading(true);
+    console.log(studentIdToBeDeleted);
     try {
       const id_number = studentIdToBeDeleted;
 
-      if ((await studentDeletion(id_number, user.name)) === 200) {
+      if ((await officerSuspend(id_number)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );
         setData(updatedData);
         setIsModalVisible(false);
-        showToast("success", "Student Deletion Successful!");
+        showToast("success", "Officer Suspend Successful!");
       } else {
-        console.error("Failed to delete student");
-        showToast("error", "Student Deletion Failed! Please try again.");
+        console.error("Failed to delete officer");
+        showToast("error", "Officer Deletion Failed! Please try again.");
       }
     } catch (error) {
-      console.error("Error deleting student:", error);
-      showToast("error", "Student Deletion Failed! Please try again.");
+      console.error("Error deleting officer:", error);
+      showToast("error", "Officer Deletion Failed! Please try again.");
     }
     setIsLoading(false);
   };
@@ -187,13 +167,11 @@ const Membership = () => {
     {
       key: "name",
       label: "Name",
-      selector: (row) =>
-        `${row.first_name} ${row.middle_name} ${row.last_name}`,
+      selector: (row) => `${row.name}`,
       sortable: true,
       cell: (row) => (
         <div className="text-xs">
-          <div>{`${row.first_name} ${row.middle_name} ${row.last_name}`}</div>
-          <div className="text-gray-500">RFID: {row.rfid}</div>
+          <div>{`${row.name}`}</div>
         </div>
       ),
     },
@@ -223,32 +201,12 @@ const Membership = () => {
       sortable: true,
     },
     {
-      key: "membership",
-      label: "Membership",
-      selector: (row) => row.membership,
+      key: "position",
+      label: "Position",
+      selector: (row) => row.position,
       sortable: true,
-      cell: (row) => (
-        <div className="text-center">
-          <span
-            className={`px-2 py-1 rounded text-xs ${
-              row.membership === "None"
-                ? "bg-gray-200 text-gray-800"
-                : row.membership === "Pending" || row.renew === "Pending"
-                ? "bg-yellow-200 text-yellow-800"
-                : "bg-green-200 text-green-800"
-            }`}
-          >
-            {row.membership === "None"
-              ? "None"
-              : row.membership === "Pending" || row.renew === "Pending"
-              ? row.renew === "Pending"
-                ? "Renewal"
-                : "Pending"
-              : "Active"}
-          </span>
-        </div>
-      ),
     },
+
     {
       key: "actions",
       label: "",
@@ -279,7 +237,7 @@ const Membership = () => {
           />
           <FormButton
             type="button"
-            text="Delete"
+            text="Suspend"
             onClick={() => showModal(row)}
             icon={<i className="fas fa-trash" />} // Simple icon
             styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -296,7 +254,7 @@ const Membership = () => {
     <div className="">
       <TableComponent columns={columns} data={filteredData} />
       {isEditModalVisible && (
-        <EditMember
+        <EditOfficer
           isVisible={isEditModalVisible}
           onClose={handleEditModalClose}
           studentData={memberToEdit}
@@ -305,7 +263,7 @@ const Membership = () => {
       )}
       {isModalVisible && (
         <ConfirmationModal
-          confirmType={ConfirmActionType.DELETION}
+          confirmType={ConfirmActionType.SUSPEND}
           onCancel={hideModal}
           onConfirm={handleConfirmDeletion}
         />
@@ -316,6 +274,7 @@ const Membership = () => {
             id={id}
             onCancel={handleHideChangePassword}
             onSubmit={() => setViewChange(false)}
+            position="officer"
           />
         </>
       )}
@@ -323,4 +282,4 @@ const Membership = () => {
   );
 };
 
-export default Membership;
+export default AllOfficers;

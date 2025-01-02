@@ -30,6 +30,9 @@ const adminSchema = new Schema({
     type: String,
     require: true,
   },
+  status: {
+    type: String,
+  },
 });
 
 const Admin = mongoose.model("admin", adminSchema);
