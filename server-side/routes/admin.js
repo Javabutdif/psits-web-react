@@ -258,7 +258,7 @@ router.get("/get-order-date", authenticateToken, async (req, res) => {
   }
 });
 
-router.get("/get-all-officers", authenticateToken, async (req, res) => {
+router.get("/get-all-officers", async (req, res) => {
   try {
     const officers = await Admin.find({ status: "Active" });
 
