@@ -5,6 +5,7 @@ import { showToast } from "../../../utils/alertHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { headDevPosition } from "../../tools/clientTools";
 
 const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
@@ -99,7 +100,7 @@ const AsideBar = ({ navItems, isSidebarOpen, setIsSidebarOpen }) => {
                 <li key={item.path}>
                   <Link
                     to={`${getLogoLink}${item.path}`}
-                    onClick={() => setIsSidebarOpen(false)} // Close sidebar on link click
+                    onClick={() => setIsSidebarOpen(false)}
                     className={`flex items-center py-3 px-4 rounded-lg transition-colors duration-300 ${
                       currentPath === item.path
                         ? "bg-neutral-light text-dark"

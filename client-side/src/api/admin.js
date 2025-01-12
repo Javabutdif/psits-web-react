@@ -23,7 +23,6 @@ export const membership = async () => {
       console.log("error", "An error occurred");
       return false;
     }
-    console.error("Error:", error);
   }
 };
 export const deletedStudent = async () => {
@@ -68,6 +67,30 @@ export const membershipRequest = async () => {
       showToast("error", "An error occurred");
     }
     console.error("Error:", error);
+  }
+};
+
+export const renewAllStudent = async () => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/renew-student`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Renew all students error:", error);
+    return false;
   }
 };
 
@@ -555,6 +578,134 @@ export const deleteReports = async (id, merchName) => {
     } else {
       return false;
     }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
+//get-all-officers
+
+export const getAllOfficers = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-all-officers`,
+
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      console.log(response.data.data);
+      return response.data.data;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      //showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      //showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
+export const getSuspendOfficers = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-suspend-officers`,
+
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      console.log(response.data.data);
+      return response.data.data;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      //showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      //showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
+export const editOfficerApi = async (updatedMember) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/editOfficer`,
+      updatedMember,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      console.error(response.data.message);
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.error(error);
+    } else {
+      console.error(error);
+    }
+  }
+};
+
+export const officerSuspend = async (id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/suspend`,
+      { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log(response.data.message);
+    return response.status;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+export const officerRestore = async (id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/restore-officer`,
+      { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.status;
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");

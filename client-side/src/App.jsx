@@ -25,6 +25,10 @@ import Renewal from "./pages/admin/Renewal";
 import Product from "./pages/admin/Product";
 import EditProduct from "./pages/admin/EditProduct";
 import EventsAdmin from "./pages/admin/Events";
+import Officers from "./pages/admin/Officers";
+import AllOfficers from "./pages/admin/officers/AllOfficers";
+import Suspend from "./pages/admin/officers/Suspend";
+import Request from "./pages/admin/officers/Request";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -54,162 +58,187 @@ import Events from "./pages/Events";
 import Resouces from "./pages/students/Resouces";
 
 const App = () => {
-	return (
-		<Router>
-			<Routes>
-				<Route path="/" element={<LandingLayout />}>
-					<Route index element={<Home />} />
-					<Route path="/explore" element={<Explore />} />
-					<Route path="/event" element={<Events />} />
-					<Route path="/community" element={<Community />} />
-					<Route path="/admin-register" element={<AdminRegister />} />
-				</Route>
-				<Route
-					path="/admin/"
-					element={<PrivateRouteAdmin element={AdminLayout} />}>
-					<Route
-						path="dashboard"
-						element={<PrivateRouteAdmin element={AdminDashboard} />}
-					/>
-					<Route
-						path="events"
-						element={<PrivateRouteAdmin element={EventsAdmin} />}
-					/>
-					<Route
-						path="register"
-						element={<PrivateRouteAdmin element={AdminRegister} />}
-					/>
-					<Route
-						path="students/"
-						element={<PrivateRouteAdmin element={Students} />}>
-						<Route index element={<PrivateRouteAdmin element={AllMembers} />} />
-						<Route
-							path="request"
-							element={<PrivateRouteAdmin element={MembershipRequest} />}
-						/>
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingLayout />}>
+          <Route index element={<Home />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/event" element={<Events />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/admin-register" element={<AdminRegister />} />
+        </Route>
+        <Route
+          path="/admin/"
+          element={<PrivateRouteAdmin element={AdminLayout} />}
+        >
+          <Route
+            path="dashboard"
+            element={<PrivateRouteAdmin element={AdminDashboard} />}
+          />
+          <Route
+            path="officers/"
+            element={<PrivateRouteAdmin element={Officers} />}
+          >
+            <Route
+              index
+              element={<PrivateRouteAdmin element={AllOfficers} />}
+            />
+            <Route
+              path="suspend"
+              element={<PrivateRouteAdmin element={Suspend} />}
+            />
+            <Route
+              path="request"
+              element={<PrivateRouteAdmin element={Request} />}
+            />
+          </Route>
 
-						<Route
-							path="renewal"
-							element={<PrivateRouteAdmin element={Renewal} />}
-						/>
-						<Route
-							path="delete"
-							element={<PrivateRouteAdmin element={Delete} />}
-						/>
-						<Route
-							path="history"
-							element={<PrivateRouteAdmin element={MembershipHistory} />}
-						/>
-					</Route>
+          <Route
+            path="events"
+            element={<PrivateRouteAdmin element={EventsAdmin} />}
+          />
+          <Route
+            path="register"
+            element={<PrivateRouteAdmin element={AdminRegister} />}
+          />
 
-					<Route
-						path="merchandise/"
-						element={<PrivateRouteAdmin element={Merchandise} />}>
-						<Route
-							path="product"
-							element={<PrivateRouteAdmin element={Product} />}>
-							<Route
-								path="edit"
-								element={<PrivateRouteAdmin element={EditProduct} />}
-							/>
-						</Route>
-					</Route>
+          <Route
+            path="students/"
+            element={<PrivateRouteAdmin element={Students} />}
+          >
+            <Route index element={<PrivateRouteAdmin element={AllMembers} />} />
+            <Route
+              path="request"
+              element={<PrivateRouteAdmin element={MembershipRequest} />}
+            />
 
-					<Route
-						path="inventory"
-						element={<PrivateRouteAdmin element={Inventory} />}
-					/>
-					<Route
-						path="orders"
-						element={<PrivateRouteAdmin element={Orders} />}></Route>
-					<Route
-						path="reports"
-						element={<PrivateRouteAdmin element={Reports} />}
-					/>
-					<Route
-						path="resources"
-						element={<PrivateRouteAdmin element={Resources} />}
-					/>
-					<Route
-						path="settings"
-						element={<PrivateRouteAdmin element={Settings} />}
-					/>
-					<Route
-						path="profile"
-						element={<PrivateRouteAdmin element={Profile} />}></Route>
-				</Route>
+            <Route
+              path="renewal"
+              element={<PrivateRouteAdmin element={Renewal} />}
+            />
+            <Route
+              path="delete"
+              element={<PrivateRouteAdmin element={Delete} />}
+            />
+            <Route
+              path="history"
+              element={<PrivateRouteAdmin element={MembershipHistory} />}
+            />
+          </Route>
+          <Route
+            path="merchandise/"
+            element={<PrivateRouteAdmin element={Merchandise} />}
+          >
+            <Route
+              path="product"
+              element={<PrivateRouteAdmin element={Product} />}
+            >
+              <Route
+                path="edit"
+                element={<PrivateRouteAdmin element={EditProduct} />}
+              />
+            </Route>
+          </Route>
+          <Route
+            path="inventory"
+            element={<PrivateRouteAdmin element={Inventory} />}
+          />
+          <Route
+            path="orders"
+            element={<PrivateRouteAdmin element={Orders} />}
+          ></Route>
+          <Route
+            path="reports"
+            element={<PrivateRouteAdmin element={Reports} />}
+          />
+          <Route
+            path="resources"
+            element={<PrivateRouteAdmin element={Resources} />}
+          />
+          <Route
+            path="settings"
+            element={<PrivateRouteAdmin element={Settings} />}
+          />
+          <Route
+            path="profile"
+            element={<PrivateRouteAdmin element={Profile} />}
+          ></Route>
+        </Route>
 
-				<Route
-					path="/student/"
-					element={<PrivateRouteStudent element={StudentLayout} />}>
-					<Route
-						path="cart"
-						element={<PrivateRouteStudent element={StudentCart} />}
-					/>
-					<Route
-						path="dashboard"
-						element={
-							<PrivateRouteStudent element={StudentDashboard} />
-						}></Route>
-					<Route
-						path="history"
-						element={<PrivateRouteStudent element={StudentHistory} />}
-					/>
-					<Route
-						path="resources"
-						element={<PrivateRouteStudent element={Resouces} />}
-					/>
-					<Route
-						path="shop"
-						element={<PrivateRouteStudent element={StudentHistory} />}
-					/>
-					<Route
-						path="merchandise"
-						element={<PrivateRouteStudent element={StudentMerchandise} />}
-					/>
+        <Route
+          path="/student/"
+          element={<PrivateRouteStudent element={StudentLayout} />}
+        >
+          <Route
+            path="cart"
+            element={<PrivateRouteStudent element={StudentCart} />}
+          />
+          <Route
+            path="dashboard"
+            element={<PrivateRouteStudent element={StudentDashboard} />}
+          ></Route>
+          <Route
+            path="history"
+            element={<PrivateRouteStudent element={StudentHistory} />}
+          />
+          <Route
+            path="resources"
+            element={<PrivateRouteStudent element={Resouces} />}
+          />
+          <Route
+            path="shop"
+            element={<PrivateRouteStudent element={StudentHistory} />}
+          />
+          <Route
+            path="merchandise"
+            element={<PrivateRouteStudent element={StudentMerchandise} />}
+          />
 
-					<Route
-						path="merchandise/:id"
-						element={<PrivateRouteStudent element={ProductDetail} />}
-					/>
+          <Route
+            path="merchandise/:id"
+            element={<PrivateRouteStudent element={ProductDetail} />}
+          />
 
-					<Route
-						path="orders"
-						element={<PrivateRouteStudent element={StudentOrders} />}>
-						<Route
-							index
-							element={<PrivateRouteStudent element={StudentPendingOrder} />}
-						/>
-						<Route
-							path="paid"
-							element={<PrivateRouteStudent element={StudentPaidOrders} />}
-						/>
-					</Route>
+          <Route
+            path="orders"
+            element={<PrivateRouteStudent element={StudentOrders} />}
+          >
+            <Route
+              index
+              element={<PrivateRouteStudent element={StudentPendingOrder} />}
+            />
+            <Route
+              path="paid"
+              element={<PrivateRouteStudent element={StudentPaidOrders} />}
+            />
+          </Route>
 
-					<Route path="resources" />
-					<Route
-						path="settings"
-						element={<PrivateRouteStudent element={Settings} />}
-					/>
+          <Route path="resources" />
+          <Route
+            path="settings"
+            element={<PrivateRouteStudent element={Settings} />}
+          />
 
-					<Route
-						path="profile"
-						element={<PrivateRouteStudent element={Profile} />}></Route>
-				</Route>
-				<Route path="/login" element={<Login />} />
-				<Route path="/forgot-password" element={<ForgotPassword />} />
-				<Route
-					path="/email-verification/:email"
-					element={<EmailVerification />}
-				/>
-				<Route path="/otp-verify" element={<OTPVerifier />} />
-				<Route path="/reset-password/:token" element={<ResetPassword />} />
-				<Route path="/register" element={<Register />} />
+          <Route
+            path="profile"
+            element={<PrivateRouteStudent element={Profile} />}
+          ></Route>
+        </Route>
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route
+          path="/email-verification/:email"
+          element={<EmailVerification />}
+        />
+        <Route path="/otp-verify" element={<OTPVerifier />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/register" element={<Register />} />
 
-				<Route path="*" element={<NotFound />} />
-			</Routes>
-		</Router>
-	);
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
+  );
 };
 
 export default App;

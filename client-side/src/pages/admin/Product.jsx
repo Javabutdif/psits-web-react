@@ -30,6 +30,9 @@ function Product({ handleCloseAddProduct }) {
     "Magenta",
     "Teal",
     "Maroon",
+    "Innovatio",
+    "Paradox",
+    "BSIT Wave",
   ];
   const size = [
     "18",
@@ -77,6 +80,7 @@ function Product({ handleCloseAddProduct }) {
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState({});
   const [isShown, setIsShown] = useState(false);
+  const [isVariation, setVariation] = useState(false);
 
   useEffect(() => {
     if (
@@ -85,8 +89,11 @@ function Product({ handleCloseAddProduct }) {
       formData.type.includes("Tshirt w/ Bundle")
     ) {
       setIsShown(true);
+    } else if (formData.type.includes("Item")) {
+      setVariation(true);
     } else {
       setIsShown(false);
+      setVariation(false);
     }
   }, [formData.type]);
 
@@ -523,8 +530,9 @@ function Product({ handleCloseAddProduct }) {
               labelStyle="text-sm"
               optionStyle="text-sm"
             />
-            {isShown && (
-              <div className="flex flex-col gap-4 text-sm">
+
+            <div className="flex flex-col gap-4 text-sm">
+              {isShown && (
                 <div>
                   <p className="font-semibold">Sizes:</p>
                   <div className="flex gap-2 flex-wrap">
@@ -544,6 +552,8 @@ function Product({ handleCloseAddProduct }) {
                     ))}
                   </div>
                 </div>
+              )}
+              {(isShown || isVariation) && (
                 <div>
                   <p className="font-semibold">Variations:</p>
                   <div className="flex gap-2 flex-wrap text-sm">
@@ -563,8 +573,9 @@ function Product({ handleCloseAddProduct }) {
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
             <div className="flex flex-col md:flex-row gap-4">
               <FormInput
                 label="Start Date"
