@@ -116,7 +116,7 @@ router.post("/approve-membership", authenticateToken, async (req, res) => {
   }
 });
 
-router.put("/renew-student", async (req, res) => {
+router.put("/renew-student", authenticateToken, async (req, res) => {
   try {
     const renewStudent = await Student.updateMany(
       {
