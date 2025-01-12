@@ -16,6 +16,7 @@ router.get("/students", authenticateToken, async (req, res) => {
       $or: [
         { renew: "Accepted" },
         { renew: "Pending" },
+        { renew: "None" },
         { renew: { $exists: false } },
         { renew: "" },
       ],
@@ -31,14 +32,29 @@ router.put("/students/request", authenticateToken, async (req, res) => {
   try {
     const { id_number } = req.body;
 
-    await Student.updateOne(
-      { id_number: id_number },
-      {
-        $set: {
-          membership: "Pending",
-        },
-      }
-    );
+    const studentFind = await Student.findOne({ id_number: id_number });
+
+    if (studentFind.renew === "None") {
+      await Student.updateOne(
+        { id_number: id_number },
+        {
+          $set: {
+            renew: "Pending",
+            renewedOn: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+          },
+        }
+      );
+    } else {
+      await Student.updateOne(
+        { id_number: id_number },
+        {
+          $set: {
+            membership: "Pending",
+          },
+        }
+      );
+    }
+
     res.status(200).json({ message: "Request submitted successfully" });
   } catch (error) {
     res

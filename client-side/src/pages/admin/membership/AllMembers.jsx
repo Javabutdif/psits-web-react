@@ -1,4 +1,8 @@
-import { membership, studentDeletion } from "../../../api/admin";
+import {
+  membership,
+  studentDeletion,
+  renewAllStudent,
+} from "../../../api/admin";
 import backendConnection from "../../../api/backendApi";
 import { getInformationData } from "../../../authentication/Authentication";
 import ChangePassword from "../../../components/ChangePassword";
@@ -28,6 +32,7 @@ const Membership = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [id, setId] = useState("");
   const [viewChange, setViewChange] = useState(false);
+  const [renewStudent, setRenewStudent] = useState(false);
   const token = sessionStorage.getItem("Token");
 
   const user = getInformationData();
@@ -41,6 +46,12 @@ const Membership = () => {
     } catch (error) {
       console.error("Error fetching data: ", error);
       setLoading(false);
+    }
+  };
+
+  const handleRenewStudent = () => {
+    if (renewAllStudent()) {
+      setRenewStudent(false);
     }
   };
 
@@ -231,14 +242,14 @@ const Membership = () => {
         <div className="text-center">
           <span
             className={`px-2 py-1 rounded text-xs ${
-              row.membership === "None"
+              row.membership === "None" || row.renew === "None"
                 ? "bg-gray-200 text-gray-800"
                 : row.membership === "Pending" || row.renew === "Pending"
                 ? "bg-yellow-200 text-yellow-800"
                 : "bg-green-200 text-green-800"
             }`}
           >
-            {row.membership === "None"
+            {row.membership === "None" || row.renew === "None"
               ? "None"
               : row.membership === "Pending" || row.renew === "Pending"
               ? row.renew === "Pending"
@@ -294,6 +305,17 @@ const Membership = () => {
 
   return (
     <div className="">
+      {higherPosition() && (
+        <div className="my-2 py-2">
+          <button
+            className="text-white bg-red-500 hover:bg-red-400 p-2 rounded-sm text-sm"
+            onClick={() => setRenewStudent(true)}
+          >
+            Renew All Student
+          </button>
+        </div>
+      )}
+
       <TableComponent columns={columns} data={filteredData} />
       {isEditModalVisible && (
         <EditMember
@@ -316,6 +338,15 @@ const Membership = () => {
             id={id}
             onCancel={handleHideChangePassword}
             onSubmit={() => setViewChange(false)}
+          />
+        </>
+      )}
+      {renewStudent && (
+        <>
+          <ConfirmationModal
+            confirmType={ConfirmActionType.RENEWAL}
+            onCancel={() => setRenewStudent(false)}
+            onConfirm={handleRenewStudent}
           />
         </>
       )}
