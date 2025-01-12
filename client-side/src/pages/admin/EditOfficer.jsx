@@ -61,7 +61,7 @@ const EditOfficer = ({ isVisible, onClose, studentData, onSave }) => {
                   name="id_number"
                   value={formData.id_number || ""}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md p-2 border-gray-300 shadow-sm hover:cursor-not-allowed"
+                  className="mt-1 block w-full rounded-md p-2 border-gray-300 shadow-sm "
                 />
               </div>
 

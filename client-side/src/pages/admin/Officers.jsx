@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import MembershipTab from "../../components/admin/MembershipTab";
 import { Outlet, useLocation } from "react-router-dom";
 import Tab from "../../components/Tab";
 
@@ -25,10 +24,16 @@ const Officers = () => {
       text: `All Officers`,
       icon: "fas fa-users",
     },
+
     {
       path: "/admin/officers/suspend",
       text: `Suspended `,
       icon: "fas fa-hand-paper",
+    },
+    {
+      path: "/admin/officers/request",
+      text: `Request (Under Development)`,
+      icon: "fas fa-file-signature",
     },
   ];
 

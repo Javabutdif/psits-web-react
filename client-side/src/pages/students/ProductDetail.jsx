@@ -81,17 +81,17 @@ const ProductDetail = () => {
   } = product;
 
   if (user.position === "Student") {
-		useEffect(() => {
-			const fetchStatus = async () => {
-				const membershipStatus = await getMembershipStatusStudents(
-					user.id_number
-				);
+    useEffect(() => {
+      const fetchStatus = async () => {
+        const membershipStatus = await getMembershipStatusStudents(
+          user.id_number
+        );
 
-				setStatus(membershipStatus);
-			};
-			fetchStatus();
-		});
-	}
+        setStatus(membershipStatus);
+      };
+      fetchStatus();
+    });
+  }
 
   const [errors, setErrors] = useState({
     selectedSize: "",
@@ -293,7 +293,7 @@ const ProductDetail = () => {
         order_status,
         preview,
       });
-     
+
       setShowModal(true);
     }
   };
@@ -391,30 +391,34 @@ const ProductDetail = () => {
               {stocks !== "" ? "Stocks: " : ""} {stocks}
             </p>
 
-            {(type.includes("Tshirt") || type.includes("Uniform")) && (
-              <div className="flex flex-wrap gap-4 mb-4">
+            <div className="flex flex-wrap gap-4 mb-4">
+              {(type.includes("Tshirt") || type.includes("Uniform")) && (
                 <ButtonGroup
                   items={selectedSizes}
                   selectedItem={selectedSize}
                   onSelect={setSelectedSize}
                   label="Sizes"
                 />
-                <div>
-                  <ButtonGroup
-                    items={selectedVariations}
-                    selectedItem={selectedColor}
-                    onSelect={setSelectedColor}
-                    label="Color"
-                    disabled={category === "uniform"}
-                  />
-                  <p className="text-xs text-red-500">
-                    {type.includes("Uniform")
-                      ? "Color set to White and Purple"
-                      : ""}
-                  </p>
-                </div>
-              </div>
-            )}
+              )}
+              {type.includes("Tshirt") ||
+                type.includes("Uniform") ||
+                (type.includes("Item") && (
+                  <div>
+                    <ButtonGroup
+                      items={selectedVariations}
+                      selectedItem={selectedColor}
+                      onSelect={setSelectedColor}
+                      label="Color"
+                      disabled={category === "uniform"}
+                    />
+                    <p className="text-xs text-red-500">
+                      {type.includes("Uniform")
+                        ? "Color set to White and Purple"
+                        : ""}
+                    </p>
+                  </div>
+                ))}
+            </div>
 
             <div className="mb-10 sm:mb-6 relative flexitems-center">
               <span className="mr-2 text-xs sm:text-sm font-medium text-gray-700">

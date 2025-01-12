@@ -492,49 +492,66 @@ function Merchandise() {
                 <img
                   src={selectedItem?.imageUrl[0]}
                   alt={selectedItem?.name}
-                  className="w-min h-32 object-cover rounded-md"
+                  className="w-min h-14 object-cover rounded-md"
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Price:</span>
-                  <span className="text-lg">₱{selectedItem?.price}</span>
+                  <span className="text-sm">₱{selectedItem?.price}</span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Stocks:</span>
-                  <span className="text-lg">{selectedItem?.stocks}</span>
+                  <span className="text-sm">{selectedItem?.stocks}</span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Batch:</span>
-                  <span className="text-lg">{selectedItem?.batch}</span>
+                  <span className="text-sm">{selectedItem?.batch}</span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Description:</span>
-                  <span className="text-lg">{selectedItem?.description}</span>
+                  <span className="text-sm">{selectedItem?.description}</span>
+                </div>
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Variation:</span>
+                  <span className="text-sm">
+                    {selectedItem?.selectedVariations.map((item, index) => (
+                      <p key={index}> {item}</p>
+                    ))}
+                  </span>
+                </div>
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Sizes:</span>
+                  <span className="text-sm">
+                    {" "}
+                    {selectedItem?.selectedSizes.map((item, index) => (
+                      <p key={index}> {item}</p>
+                    ))}
+                  </span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Category:</span>
-                  <span className="text-lg">{selectedItem?.category}</span>
+                  <span className="text-sm">{selectedItem?.category}</span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Start Date:</span>
-                  <span className="text-lg">{selectedItem?.start_date}</span>
+                  <span className="text-sm">{selectedItem?.start_date}</span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">End Date:</span>
-                  <span className="text-lg">{selectedItem?.end_date}</span>
+                  <span className="text-sm">{selectedItem?.end_date}</span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Created By:</span>
-                  <span className="text-lg">{selectedItem?.created_by}</span>
+                  <span className="text-sm">{selectedItem?.created_by}</span>
                 </div>
               </div>
             </div>

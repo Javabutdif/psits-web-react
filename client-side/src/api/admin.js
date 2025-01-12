@@ -23,7 +23,6 @@ export const membership = async () => {
       console.log("error", "An error occurred");
       return false;
     }
-    console.error("Error:", error);
   }
 };
 export const deletedStudent = async () => {
@@ -68,6 +67,30 @@ export const membershipRequest = async () => {
       showToast("error", "An error occurred");
     }
     console.error("Error:", error);
+  }
+};
+
+export const renewAllStudent = async () => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/renew-student`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Renew all students error:", error);
+    return false;
   }
 };
 

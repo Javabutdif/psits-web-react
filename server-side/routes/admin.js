@@ -113,6 +113,36 @@ router.post("/approve-membership", authenticateToken, async (req, res) => {
   }
 });
 
+
+router.put("/renew-student", async (req, res) => {
+  try {
+    const renewStudent = await Student.updateMany(
+      {
+        status: "True",
+        membership: "Accepted",
+      },
+      {
+        $set: {
+          renew: "Pending",
+          renewedOn: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+        },
+      }
+    );
+
+    if (!renewStudent) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "All Student has been renewed successfully" });
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
+
 router.get("/history", authenticateToken, async (req, res) => {
   try {
     const students = await MembershipHistory.find().sort({ date: -1 });

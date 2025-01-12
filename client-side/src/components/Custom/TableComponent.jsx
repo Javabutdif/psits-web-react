@@ -20,7 +20,7 @@ const TableComponent = ({
 
   const getColumnValue = (item, key) => {
     if (key === "name") {
-      return `${item.first_name} ${item.middle_name} ${item.last_name} ${item.name} RFID: ${item.rfid}`;
+      return `${item.first_name} ${item.middle_name} ${item.last_name}  ${item.name} RFID: ${item.rfid}`;
     }
     return item[key];
   };
