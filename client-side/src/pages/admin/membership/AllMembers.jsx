@@ -310,6 +310,7 @@ const Membership = () => {
           <button
             className="text-white bg-red-500 hover:bg-red-400 p-2 rounded-sm text-sm"
             onClick={() => setRenewStudent(true)}
+            disabled
           >
             Renew All Student
           </button>

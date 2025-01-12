@@ -78,6 +78,7 @@ export const renewAllStudent = async () => {
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
