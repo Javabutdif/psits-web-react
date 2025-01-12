@@ -3,6 +3,7 @@ import christ from "../../assets/images/ch.png";
 import christmas from "../../assets/images/christmass.png";
 import halloween from "../../assets/images/haloween.png";
 import logo from "../../assets/images/login.png";
+import pit from "../../assets/images/pit.png";
 import {
   attemptAuthentication,
   resetAttemptAuthentication,
@@ -23,11 +24,8 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const [remainingTime, setRemainingTime] = useState();
   const currentDate = new Date();
-  const novStart = new Date(currentDate.getFullYear(), 10, 1);
-  const novEnd = new Date(currentDate.getFullYear(), 10, 4);
-  const startChristmas = new Date(currentDate.getFullYear(), 10, 5);
-  const endChristmas = new Date(currentDate.getFullYear(), 11, 31);
- 
+  const janStart = new Date(currentDate.getFullYear(), 0, 12);
+  const janEnd = new Date(currentDate.getFullYear(), 0, 30);
 
   useEffect(() => {
     let interval;
@@ -100,7 +98,7 @@ const Login = () => {
 
         if (data === "Admin" || data === "Student") {
           resetAttemptAuthentication();
-          
+
           navigate(`/${data.toLowerCase()}/dashboard`);
         } else {
           attemptAuthentication();
@@ -168,13 +166,7 @@ const Login = () => {
             <IoArrowBack size={35} color="#074873" />
           </button>
           <img
-            src={
-              currentDate >= novStart && currentDate <= novEnd
-                ? halloween
-                : currentDate >= startChristmas && currentDate <= endChristmas
-                ? christ
-                : logo
-            }
+            src={currentDate >= janStart && currentDate <= janEnd ? pit : logo}
             alt="Logo"
             className=""
           />
