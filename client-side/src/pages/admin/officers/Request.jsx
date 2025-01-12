@@ -1,22 +1,17 @@
-import {
-  getAllOfficers,
-  editOfficerApi,
-  officerSuspend,
-} from "../../../api/admin";
-import ChangePassword from "../../../components/ChangePassword";
+import { officerRestore, getSuspendOfficers } from "../../../api/admin";
+
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import { higherPosition } from "../../../components/tools/clientTools";
+
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-import EditOfficer from "../EditOfficer";
+
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
-import AddOfficer from "../AddOfficer";
 
-const AllOfficers = () => {
+const Request = () => {
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -24,54 +19,20 @@ const AllOfficers = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [memberToEdit, setMemberToEdit] = useState(null);
+
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [id, setId] = useState("");
-  const [viewChange, setViewChange] = useState(false);
-  const [viewAdd, setViewAdd] = useState(false);
 
   const fetchData = async () => {
     try {
-      const result = await getAllOfficers();
-      setData(result ? result : []);
-      setFilteredData(result ? result : []);
+      const result = await getSuspendOfficers();
+      setData(result);
+      setFilteredData(result);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
       setLoading(false);
     }
-  };
-
-  const handleEditButtonClick = (row) => {
-    setMemberToEdit(row);
-    setIsEditModalVisible(true);
-  };
-
-  const handleEditModalClose = () => {
-    setIsEditModalVisible(false);
-    setMemberToEdit(null);
-  };
-
-  const handleChangePassword = (id) => {
-    setId(id);
-    setViewChange(true);
-  };
-  const handleHideChangePassword = () => {
-    setViewChange(false);
-  };
-
-  const handleSaveEditedMember = async (updatedMember) => {
-    setIsLoading(true);
-    try {
-      editOfficerApi(updatedMember);
-    } catch (error) {
-      console.error("Error updating officer:", error);
-    }
-
-    fetchData();
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -100,24 +61,23 @@ const AllOfficers = () => {
 
   const handleConfirmDeletion = async () => {
     setIsLoading(true);
-    console.log(studentIdToBeDeleted);
     try {
       const id_number = studentIdToBeDeleted;
 
-      if ((await officerSuspend(id_number)) === 200) {
+      if ((await officerRestore(id_number)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );
         setData(updatedData);
         setIsModalVisible(false);
-        showToast("success", "Officer Suspend Successful!");
+        showToast("success", "Officer Restored Successful!");
       } else {
-        console.error("Failed to delete officer");
-        showToast("error", "Officer Deletion Failed! Please try again.");
+        console.error("Failed to restore officer");
+        showToast("error", "Officer Restore Failed! Please try again.");
       }
     } catch (error) {
-      console.error("Error deleting officer:", error);
-      showToast("error", "Officer Deletion Failed! Please try again.");
+      console.error("Error restoring officer:", error);
+      showToast("error", "Officer Restoring Failed! Please try again.");
     }
     setIsLoading(false);
   };
@@ -208,36 +168,13 @@ const AllOfficers = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
-          {higherPosition() && (
-            <FormButton
-              type="button"
-              text="Change"
-              onClick={() => handleChangePassword(row.id_number)}
-              icon={<i className="fas fa-key" />} // Simple icon
-              styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-              textClass="text-gray-800"
-              whileHover={{ scale: 1.02, opacity: 0.95 }}
-              whileTap={{ scale: 0.98, opacity: 0.9 }}
-            />
-          )}
-
           <FormButton
             type="button"
-            text="Edit"
-            onClick={() => handleEditButtonClick(row)}
-            icon={<i className="fas fa-edit" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            textClass="text-gray-800" // Elegant text color
-            whileHover={{ scale: 1.02, opacity: 0.95 }}
-            whileTap={{ scale: 0.98, opacity: 0.9 }}
-          />
-          <FormButton
-            type="button"
-            text="Suspend"
+            text="Recover"
             onClick={() => showModal(row)}
             icon={<i className="fas fa-trash" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-            textClass="text-red-800" // Elegant text color
+            styles="flex items-center space-x-2 bg-gray-200 text-green-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+            textClass="text-green-800" // Elegant text color
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
           />
@@ -248,47 +185,17 @@ const AllOfficers = () => {
 
   return (
     <div className="">
-      <div className="py-4 ">
-        <button
-          onClick={() => setViewAdd(true)}
-          className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
-          disabled
-        >
-          Disabled
-        </button>
-      </div>
-
       <TableComponent columns={columns} data={filteredData} />
-      {isEditModalVisible && (
-        <EditOfficer
-          isVisible={isEditModalVisible}
-          onClose={handleEditModalClose}
-          studentData={memberToEdit}
-          onSave={handleSaveEditedMember}
-        />
-      )}
-      {viewAdd && (
-        <AddOfficer isVisible={viewAdd} onClose={() => setViewAdd(false)} />
-      )}
+
       {isModalVisible && (
         <ConfirmationModal
-          confirmType={ConfirmActionType.SUSPEND}
+          confirmType={ConfirmActionType.RESTORE}
           onCancel={hideModal}
           onConfirm={handleConfirmDeletion}
         />
-      )}
-      {viewChange && (
-        <>
-          <ChangePassword
-            id={id}
-            onCancel={handleHideChangePassword}
-            onSubmit={() => setViewChange(false)}
-            position="officer"
-          />
-        </>
       )}
     </div>
   );
 };
 
-export default AllOfficers;
+export default Request;

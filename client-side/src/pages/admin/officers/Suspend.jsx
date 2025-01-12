@@ -1,16 +1,13 @@
 import { officerRestore, getSuspendOfficers } from "../../../api/admin";
-import backendConnection from "../../../api/backendApi";
-import { getInformationData } from "../../../authentication/Authentication";
-import ChangePassword from "../../../components/ChangePassword";
+
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import { higherPosition } from "../../../components/tools/clientTools";
+
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-import EditOfficer from "../EditOfficer";
-import axios from "axios";
+
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 

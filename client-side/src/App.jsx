@@ -28,6 +28,7 @@ import EventsAdmin from "./pages/admin/Events";
 import Officers from "./pages/admin/Officers";
 import AllOfficers from "./pages/admin/officers/AllOfficers";
 import Suspend from "./pages/admin/officers/Suspend";
+import Request from "./pages/admin/officers/Request";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -86,6 +87,10 @@ const App = () => {
             <Route
               path="suspend"
               element={<PrivateRouteAdmin element={Suspend} />}
+            />
+            <Route
+              path="request"
+              element={<PrivateRouteAdmin element={Request} />}
             />
           </Route>
 

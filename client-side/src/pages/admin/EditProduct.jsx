@@ -30,6 +30,9 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
     "Magenta",
     "Teal",
     "Maroon",
+    "Innovatio",
+    "Paradox",
+    "BSIT Wave",
   ];
   const size = [
     "18",
@@ -477,10 +480,11 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
             labelStyle="text-sm"
             optionStyle="text-sm"
           />
-          {formData.type &&
-            (formData.type.split(" ").includes("Uniform") ||
-              formData.type.includes("Tshirt")) && (
-              <div className="flex flex-wrap gap-y-4 text-sm">
+
+          <div className="flex flex-wrap gap-y-4 text-sm">
+            {formData.type &&
+              (formData.type.split(" ").includes("Uniform") ||
+                formData.type.includes("Tshirt")) && (
                 <div>
                   <p className="font-semibold">Sizes:</p>
                   <div className="flex gap-2">
@@ -500,6 +504,11 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
                     ))}
                   </div>
                 </div>
+              )}
+            {formData.type &&
+              (formData.type.split(" ").includes("Uniform") ||
+                formData.type.includes("Tshirt") ||
+                formData.type.includes("Item")) && (
                 <div>
                   <p className="font-semibold">Variations:</p>
                   <div className="flex gap-2 flex-wrap text-sm">
@@ -519,8 +528,9 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+          </div>
+
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
             <FormInput
               label="Start Date"
