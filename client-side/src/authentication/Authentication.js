@@ -1,9 +1,5 @@
-
-
 let storedData;
 let storedRole;
-
-
 
 export const getRoute = () => {
   return storedRole || null;
@@ -28,6 +24,7 @@ export const getInformationData = () => {
 export const removeAuthentication = () => {
   sessionStorage.removeItem("Token");
   sessionStorage.removeItem("Data");
+  sessionStorage.removeItem("hasReloaded");
   storedData = null;
   storedRole = null;
 };

@@ -81,7 +81,9 @@ export const renewAllStudent = async () => {
         },
       }
     );
-
+    if (response.status === 200) {
+       showToast("success", response.data.message);
+    }
     return response.status === 200;
   } catch (error) {
     if (error.response && error.response.data) {

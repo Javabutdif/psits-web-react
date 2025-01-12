@@ -26,11 +26,10 @@ function Membership({ styles }) {
       setMembershipStatus({ membership: "", renew: "" });
     }
   };
-  
-    useEffect(() => {
-      fetchStatus();
-    }, []);
-  
+
+  useEffect(() => {
+    fetchStatus();
+  }, []);
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
@@ -52,26 +51,30 @@ function Membership({ styles }) {
       className={`${styles} bg-[#074873] p-3 sm:p-4 rounded-lg shadow-md text-center text-neutral-light`}
     >
       <h1 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
-        {(membershipStatus.membership === "Accepted" &&
-          membershipStatus.renew === "None") ||
-        membershipStatus.renew === "Accepted" ||
+        {membershipStatus.renew === "Accepted" ||
         (membershipStatus.membership === "Accepted" &&
+          membershipStatus.renew !== "None" &&
           membershipStatus.renew !== "Pending")
           ? "Membership Activated"
-          : " Join Our Membership Program"}
+          : membershipStatus.renew === "None" &&
+            membershipStatus.membership === "Accepted"
+          ? "Renew your Membership"
+          : "Join Our Membership Program"}
       </h1>
       <p className="text-xs sm:text-sm mb-3 sm:mb-4">
-        {(membershipStatus.membership === "Accepted" &&
-          membershipStatus.renew === "None") ||
-        membershipStatus.renew === "Accepted" ||
+        {membershipStatus.renew === "Accepted" ||
         (membershipStatus.membership === "Accepted" &&
+          membershipStatus.renew !== "None" &&
           membershipStatus.renew !== "Pending")
           ? "Thank you for becoming a member of PSITS!"
-          : membershipStatus.membership === "Pending"
+          : membershipStatus.membership === "Pending" ||
+            membershipStatus.renew === "Pending"
           ? "Your membership request has been successfully submitted. If needed, you can cancel this transaction at the PSITS Office."
           : "Get exclusive benefits and stay updated with our latest offers."}
       </p>
-      {membershipStatus.membership === "Pending" ? (
+
+      {membershipStatus.membership === "Pending" ||
+      membershipStatus.renew === "Pending" ? (
         <>
           <motion.button
             className="bg-neutral-light text-dark font-semibold px-3 sm:px-4 py-1 sm:py-2 rounded transition"
@@ -84,10 +87,9 @@ function Membership({ styles }) {
             Pending Request
           </motion.button>
         </>
-      ) : (membershipStatus.membership === "Accepted" &&
-          membershipStatus.renew === "None") ||
-        membershipStatus.renew === "Accepted" ||
+      ) : membershipStatus.renew === "Accepted" ||
         (membershipStatus.membership === "Accepted" &&
+          membershipStatus.renew !== "None" &&
           membershipStatus.renew !== "Pending") ? (
         <></>
       ) : (

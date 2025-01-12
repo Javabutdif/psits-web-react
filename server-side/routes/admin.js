@@ -50,7 +50,10 @@ router.post("/approve-membership", authenticateToken, async (req, res) => {
     if (type === "Membership") {
       updateQuery = { membership: "Accepted", rfid: rfid };
     } else if (type === "Renewal") {
-      updateQuery = { renew: "Accepted" };
+      updateQuery = {
+        renew: "Accepted",
+      
+      };
     }
 
     await Student.updateOne({ id_number }, { $set: updateQuery });
@@ -113,7 +116,6 @@ router.post("/approve-membership", authenticateToken, async (req, res) => {
   }
 });
 
-
 router.put("/renew-student", async (req, res) => {
   try {
     const renewStudent = await Student.updateMany(
@@ -123,8 +125,7 @@ router.put("/renew-student", async (req, res) => {
       },
       {
         $set: {
-          renew: "Pending",
-          renewedOn: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+          renew: "None",
         },
       }
     );
@@ -141,7 +142,6 @@ router.put("/renew-student", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-
 
 router.get("/history", authenticateToken, async (req, res) => {
   try {
