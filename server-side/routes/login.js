@@ -82,6 +82,7 @@ router.post("/login", loginLimiter, async (req, res) => {
     }
 
     const user = {
+      _id: users._id,
       id_number: users.id_number,
       name:
         role === "Admin"
