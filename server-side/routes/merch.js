@@ -2,6 +2,8 @@ const express = require("express");
 const Merch = require("../models/MerchModel");
 const Student = require("../models/StudentModel");
 const Orders = require("../models/OrdersModel");
+const Admin = require("../models/AdminModel");
+const Log = require("../models/LogModel");
 const { default: mongoose } = require("mongoose");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -38,7 +40,7 @@ router.post(
   authenticateToken,
   upload.array("images", 3),
   async (req, res) => {
-    //TODO: Log
+    //TODO: Log (Finished)
     const {
       name,
       price,
@@ -77,6 +79,20 @@ router.post(
       });
 
       await newMerch.save();
+
+      const admin = await Admin.findOne({ name: created_by });
+
+      const log = new Log({
+        admin: admin.name,
+        admin_id: admin._id,
+        action: "Merchandise Creation",
+        target: newMerch.name,
+        target_id: newMerch._id,
+        target_model: "Merchandise",
+      });
+
+      await log.save();
+      console.log("Admin action logged: Merchandise added");
 
       res.status(201).json("Merch Addition Successful");
     } catch (error) {
