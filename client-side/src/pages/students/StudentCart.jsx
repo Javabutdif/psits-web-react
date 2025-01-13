@@ -257,7 +257,6 @@ const CartItem = ({
       <div className="flex-1 sm:ml-4">
         <h4 className="text-base sm:text-lg font-semibold text-gray-800">
           {product_name}
-          <span className="block text-sm text-gray-600">ID: {product_id}</span>
         </h4>
         {sizes && sizes.length > 0 && (
           <p className="text-sm sm:text-base font-medium text-gray-700">

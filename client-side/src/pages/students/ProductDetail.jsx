@@ -81,17 +81,17 @@ const ProductDetail = () => {
   } = product;
 
   if (user.position === "Student") {
-		useEffect(() => {
-			const fetchStatus = async () => {
-				const membershipStatus = await getMembershipStatusStudents(
-					user.id_number
-				);
+    useEffect(() => {
+      const fetchStatus = async () => {
+        const membershipStatus = await getMembershipStatusStudents(
+          user.id_number
+        );
 
-				setStatus(membershipStatus);
-			};
-			fetchStatus();
-		});
-	}
+        setStatus(membershipStatus);
+      };
+      fetchStatus();
+    });
+  }
 
   const [errors, setErrors] = useState({
     selectedSize: "",
@@ -99,9 +99,10 @@ const ProductDetail = () => {
   });
   const statusVerify = () => {
     return (
-      ((status.membership === "Accepted" && status.renew === "None") ||
-        status.renew === "Accepted" ||
-        (status.membership === "Accepted" && status.renew !== "Pending")) &&
+      (status.renew === "Accepted" ||
+        (status.membership === "Accepted" &&
+          status.renew !== "None" &&
+          status.renew !== "Pending")) &&
       category === "merchandise"
     );
   };
@@ -127,10 +128,12 @@ const ProductDetail = () => {
   };
 
   const discount =
-    ((status.membership === "Accepted" && status.renew === "None") ||
-      (status.renew === "Accepted" && category !== "uniform") ||
-      status.membership === "Accepted") &&
-    category === "merchandise"
+    (status.renew === "Accepted" ||
+      (status.membership === "Accepted" &&
+        status.renew !== "None" &&
+        status.renew !== "Pending")) &&
+    category === "merchandise" &&
+    category !== "uniform"
       ? price - price * 0.05
       : price;
 
@@ -293,7 +296,7 @@ const ProductDetail = () => {
         order_status,
         preview,
       });
-     
+
       setShowModal(true);
     }
   };
@@ -391,14 +394,18 @@ const ProductDetail = () => {
               {stocks !== "" ? "Stocks: " : ""} {stocks}
             </p>
 
-            {(type.includes("Tshirt") || type.includes("Uniform")) && (
-              <div className="flex flex-wrap gap-4 mb-4">
+            <div className="flex flex-wrap gap-4 mb-4">
+              {(type.includes("Tshirt") || type.includes("Uniform")) && (
                 <ButtonGroup
                   items={selectedSizes}
                   selectedItem={selectedSize}
                   onSelect={setSelectedSize}
                   label="Sizes"
                 />
+              )}
+              {(type.includes("Tshirt") ||
+                type.includes("Uniform") ||
+                type.includes("Item")) && (
                 <div>
                   <ButtonGroup
                     items={selectedVariations}
@@ -413,8 +420,8 @@ const ProductDetail = () => {
                       : ""}
                   </p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <div className="mb-10 sm:mb-6 relative flexitems-center">
               <span className="mr-2 text-xs sm:text-sm font-medium text-gray-700">
@@ -590,7 +597,7 @@ const ProductDetail = () => {
               </div>
               <div className="flex items-center font-secondary justify-between gap-10">
                 <span className="font-medium text-lg">Total:</span>
-                <span className="text-lg">₱ {calculateTotal()}</span>
+                <span className="text-lg">₱ {calculateTotal().toFixed(2)}</span>
               </div>
             </div>
 

@@ -25,6 +25,7 @@ export const removeAuthentication = () => {
   //TODO: Log
   sessionStorage.removeItem("Token");
   sessionStorage.removeItem("Data");
+  sessionStorage.removeItem("hasReloaded");
   storedData = null;
   storedRole = null;
 };
