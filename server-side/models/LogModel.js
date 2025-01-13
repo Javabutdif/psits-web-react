@@ -31,7 +31,7 @@ const logSchema = new Schema({
   target_model: {
     type: String,
     required: false, // Specifies the collection name for the `target_id` reference
-    enum: ["Admin", "Student", "Merchandise", "Order"], // Allowed models
+    enum: ["Admin", "Student", "Merchandise", "Order", "Merchandise Report"], // Allowed models
   },
 });
 
