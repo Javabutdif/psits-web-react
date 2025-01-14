@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
 const TableHeader = ({ columns, sortConfig, handleSort }) => (
   <thead className="hidden md:table-header-group bg-neutral-light text-xs md:text-sm font-medium text-dark border-b border-neutral-medium">
@@ -7,15 +7,21 @@ const TableHeader = ({ columns, sortConfig, handleSort }) => (
       {columns.map((column, index) => (
         <th
           key={`header-${column.key || index}`}
-          className={`p-3 text-left ${column.hiddenOnMobile ? 'hidden md:table-cell' : ''} ${column.width || 'w-auto'} cursor-pointer select-none transition-transform duration-300 ease-in-out`}
+          className={`p-3 text-left ${
+            column.hiddenOnMobile ? "hidden md:table-cell" : ""
+          } ${
+            column.width || "w-auto"
+          } cursor-pointer select-none transition-transform duration-300 ease-in-out`}
           onClick={() => column.sortable && handleSort(column.key)}
           style={{
-            transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
+            transition: "background-color 0.3s ease, box-shadow 0.3s ease",
           }}
         >
           <div className="flex items-center space-x-2">
             <span className="text-dark">{column.label}</span>
-            {column.sortable && sortConfig.key === column.key && column.key !== 'actions' ? (
+            {column.sortable &&
+            sortConfig.key === column.key &&
+            column.key !== "actions" ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -28,7 +34,7 @@ const TableHeader = ({ columns, sortConfig, handleSort }) => (
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  {sortConfig.direction === 'asc' ? (
+                  {sortConfig.direction === "asc" ? (
                     <path d="M12 16l-6-6h12l-6 6z" />
                   ) : (
                     <path d="M12 8l6 6H6l6-6z" />
@@ -36,7 +42,7 @@ const TableHeader = ({ columns, sortConfig, handleSort }) => (
                 </motion.svg>
               </motion.div>
             ) : (
-              column.key === 'actions' && ""
+              column.key === "actions" && ""
             )}
           </div>
         </th>

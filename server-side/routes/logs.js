@@ -5,6 +5,20 @@ const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
 
+// Fetch all logs
+router.get("/", authenticateToken, async (req, res) => {
+  try {
+    const logs = await Log.find().sort({ timestamp: -1 }); // Fetch logs, sorted by latest
+    res.status(200).json(logs);
+  } catch (error) {
+    console.error("Error fetching logs:", error);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
+// Add a new log
 router.post("/", authenticateToken, async (req, res) => {
   try {
     const { admin_id, action, target, target_id, target_model } = req.body;

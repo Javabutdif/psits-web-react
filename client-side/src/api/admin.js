@@ -755,3 +755,18 @@ export const logAdminAction = async ({
     );
   }
 };
+
+export const fetchAdminLogs = async () => {
+  try {
+    const response = await axios.get(`${backendConnection()}/api/logs`, {
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching admin logs:", error);
+    throw new Error("Unable to fetch admin logs");
+  }
+};
