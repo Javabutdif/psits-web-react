@@ -83,7 +83,7 @@ export const renewAllStudent = async () => {
       }
     );
     if (response.status === 200) {
-       showToast("success", response.data.message);
+      showToast("success", response.data.message);
     }
     return response.status === 200;
   } catch (error) {
@@ -716,5 +716,42 @@ export const officerRestore = async (id_number) => {
       showToast("error", "An error occurred");
     }
     console.error("Error:", error);
+  }
+};
+
+export const logAdminAction = async ({
+  admin_id,
+  action,
+  target,
+  target_id,
+  target_model,
+}) => {
+  try {
+    // Prepare the log payload
+    const logPayload = {
+      admin_id,
+      action,
+      target,
+      target_id,
+      target_model,
+    };
+
+    // Send the request to the logging endpoint
+    const response = await axios.post(
+      `${backendConnection()}/api/logs`,
+      logPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("Token")}`, // Ensure a valid token is included
+        },
+      }
+    );
+
+    console.log("Action logged successfully:", response.data.message);
+  } catch (error) {
+    console.error(
+      "Error logging admin action:",
+      error.response?.data || error.message
+    );
   }
 };
