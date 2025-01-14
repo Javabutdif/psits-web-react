@@ -13,8 +13,16 @@ const StudentDashboard = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    const hasReloaded = sessionStorage.getItem("hasReloaded");
 
-  const user = getInformationData();
+    if (!hasReloaded) {
+      sessionStorage.setItem("hasReloaded", "true");
+      window.location.reload();
+    }
+  }, []);
+
   const fetchPosts = async () => {
     try {
       const response = await fetch(`${backendConnection()}/api/facebook`);

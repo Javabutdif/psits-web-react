@@ -99,9 +99,10 @@ const ProductDetail = () => {
   });
   const statusVerify = () => {
     return (
-      ((status.membership === "Accepted" && status.renew === "None") ||
-        status.renew === "Accepted" ||
-        (status.membership === "Accepted" && status.renew !== "Pending")) &&
+      (status.renew === "Accepted" ||
+        (status.membership === "Accepted" &&
+          status.renew !== "None" &&
+          status.renew !== "Pending")) &&
       category === "merchandise"
     );
   };
@@ -127,10 +128,12 @@ const ProductDetail = () => {
   };
 
   const discount =
-    ((status.membership === "Accepted" && status.renew === "None") ||
-      (status.renew === "Accepted" && category !== "uniform") ||
-      status.membership === "Accepted") &&
-    category === "merchandise"
+    (status.renew === "Accepted" ||
+      (status.membership === "Accepted" &&
+        status.renew !== "None" &&
+        status.renew !== "Pending")) &&
+    category === "merchandise" &&
+    category !== "uniform"
       ? price - price * 0.05
       : price;
 
@@ -400,24 +403,24 @@ const ProductDetail = () => {
                   label="Sizes"
                 />
               )}
-              {type.includes("Tshirt") ||
+              {(type.includes("Tshirt") ||
                 type.includes("Uniform") ||
-                (type.includes("Item") && (
-                  <div>
-                    <ButtonGroup
-                      items={selectedVariations}
-                      selectedItem={selectedColor}
-                      onSelect={setSelectedColor}
-                      label="Color"
-                      disabled={category === "uniform"}
-                    />
-                    <p className="text-xs text-red-500">
-                      {type.includes("Uniform")
-                        ? "Color set to White and Purple"
-                        : ""}
-                    </p>
-                  </div>
-                ))}
+                type.includes("Item")) && (
+                <div>
+                  <ButtonGroup
+                    items={selectedVariations}
+                    selectedItem={selectedColor}
+                    onSelect={setSelectedColor}
+                    label="Color"
+                    disabled={category === "uniform"}
+                  />
+                  <p className="text-xs text-red-500">
+                    {type.includes("Uniform")
+                      ? "Color set to White and Purple"
+                      : ""}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="mb-10 sm:mb-6 relative flexitems-center">
@@ -594,7 +597,7 @@ const ProductDetail = () => {
               </div>
               <div className="flex items-center font-secondary justify-between gap-10">
                 <span className="font-medium text-lg">Total:</span>
-                <span className="text-lg">₱ {calculateTotal()}</span>
+                <span className="text-lg">₱ {calculateTotal().toFixed(2)}</span>
               </div>
             </div>
 

@@ -4,7 +4,6 @@ import { getInformationData } from "../../../authentication/Authentication";
 import OrderList from "./OrderList";
 import Pagination from "../../../components/Custom/Pagination";
 
-
 const PaidOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,8 +40,6 @@ const PaidOrders = () => {
     setSelectedOrderId(order_id);
     setIsModalOpen(true);
   };
-
-
 
   // Handle checkbox change
   const handleCheckboxChange = (order_id) => {
@@ -88,7 +85,9 @@ const PaidOrders = () => {
           />
         </div>
       ) : (
-        <div>No Product.</div>
+        <div className="flex flex-col justify-center items-center min-h-screen px-4">
+          No product.
+        </div>
       )}
     </div>
   );

@@ -16,6 +16,14 @@ import {
 import React, { useEffect, useState } from "react";
 
 const AdminDashboard = () => {
+  useEffect(() => {
+    const hasReloaded = sessionStorage.getItem("hasReloaded");
+
+    if (!hasReloaded) {
+      sessionStorage.setItem("hasReloaded", "true");
+      window.location.reload();
+    }
+  }, []);
   const [counts, setCounts] = useState({
     merchandise: 0,
     student: 0,
@@ -66,7 +74,6 @@ const AdminDashboard = () => {
       });
     }, 20);
   };
-
 
   useEffect(() => {
     const fetchData = async () => {
