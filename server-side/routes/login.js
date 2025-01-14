@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
+const Log = require("../models/LogModel");
 const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
@@ -19,8 +20,10 @@ const loginLimiter = rateLimit({
 });
 
 router.post("/login", loginLimiter, async (req, res) => {
+  //TODO: Log (Done)
   const { id_number, password } = req.body;
   const currentDate = new Date();
+
   try {
     let users;
     let role;
@@ -54,7 +57,7 @@ router.post("/login", loginLimiter, async (req, res) => {
             student.middle_name +
             " " +
             student.last_name
-          } in ${currentDate} `
+          } on ${currentDate}`
         );
 
         return res
@@ -79,6 +82,7 @@ router.post("/login", loginLimiter, async (req, res) => {
     }
 
     const user = {
+      _id: users._id,
       id_number: users.id_number,
       name:
         role === "Admin"
@@ -93,9 +97,23 @@ router.post("/login", loginLimiter, async (req, res) => {
     const token = jwt.sign({ user, role }, token_key, {
       expiresIn: role === "Admin" ? "2h" : "10m",
     });
+
     console.log(
-      `${id_number} - ${user.name} signed in successfully in ${currentDate}`
+      `${id_number} - ${user.name} signed in successfully on ${currentDate}`
     );
+
+    // Create a log only if the user is an Admin
+    if (role === "Admin") {
+      const log = new Log({
+        admin: user.name,
+        admin_id: users._id,
+        action: "Admin Login",
+      });
+
+      await log.save();
+      console.log("Admin login logged successfully!");
+    }
+
     return res.json({ message: "Signed in successfully", role, token });
   } catch (error) {
     console.error(error);

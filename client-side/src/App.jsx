@@ -56,6 +56,7 @@ import StudentPendingOrder from "./pages/students/orders/PendingOrders";
 import Community from "./pages/Community";
 import Events from "./pages/Events";
 import Resouces from "./pages/students/Resouces";
+import Logs from "./pages/admin/Logs";
 
 const App = () => {
   return (
@@ -163,6 +164,10 @@ const App = () => {
           <Route
             path="profile"
             element={<PrivateRouteAdmin element={Profile} />}
+          ></Route>
+          <Route
+            path="logs"
+            element={<PrivateRouteAdmin element={Logs} />}
           ></Route>
         </Route>
 

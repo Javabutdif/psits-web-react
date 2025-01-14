@@ -5,6 +5,7 @@ const MembershipHistory = require("../models/MembershipHistory");
 const Merch = require("../models/MerchModel");
 const Student = require("../models/StudentModel");
 const Order = require("../models/OrdersModel");
+const Log = require("../models/LogModel");
 const { format, startOfDay, endOfDay } = require("date-fns");
 const nodemailer = require("nodemailer");
 const ejs = require("ejs");
@@ -52,7 +53,6 @@ router.post("/approve-membership", authenticateToken, async (req, res) => {
     } else if (type === "Renewal") {
       updateQuery = {
         renew: "Accepted",
-      
       };
     }
 
@@ -183,7 +183,7 @@ router.get("/all-members", authenticateToken, async (req, res) => {
   });
   return res.json({ message: count });
 });
-router.get("/request-members",authenticateToken, async (req, res) => {
+router.get("/request-members", authenticateToken, async (req, res) => {
   const count = await Student.countDocuments({ membership: "Pending" });
   return res.json({ message: count });
 });
@@ -329,9 +329,14 @@ router.get("/get-suspend-officers", authenticateToken, async (req, res) => {
 });
 
 router.post("/editOfficer", authenticateToken, async (req, res) => {
+  // TODO: Log (Done)
   const { id_number, name, position, email, course, year } = req.body;
 
   try {
+    const getAdmin = await Admin.findOne({
+      id_number: req.body.id_number,
+    });
+
     const adminResult = await Admin.updateOne(
       { id_number: id_number },
       {
@@ -347,6 +352,19 @@ router.post("/editOfficer", authenticateToken, async (req, res) => {
     );
 
     if (adminResult.modifiedCount > 0) {
+      // Log the edit admin action
+      const log = new Log({
+        admin: req.user.name,
+        admin_id: req.user._id,
+        action: "Edited Admin",
+        target: `${id_number} - ${name}`,
+        target_id: getAdmin._id,
+        target_model: "Admin",
+      });
+
+      await log.save();
+      console.log("Action logged successfully.");
+
       res.status(200).json({ message: "Officer updated successfully" });
     } else {
       res.status(404).json({ error: "No officer found with the provided ID" });
@@ -361,6 +379,7 @@ router.post(
   "/admin/change-password-officer",
   authenticateToken,
   async (req, res) => {
+    //TODO: Log (Done)
     try {
       const getAdmin = await Admin.findOne({
         id_number: req.body.id_number,
@@ -373,6 +392,19 @@ router.post(
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
       getAdmin.password = hashedPassword;
       await getAdmin.save();
+
+      // Log the password change action
+      const log = new Log({
+        admin: req.user.name,
+        admin_id: req.user._id,
+        action: "Changed Admin Password",
+        target: `${getAdmin.id_number} - ${getAdmin.name}`,
+        target_id: getAdmin._id,
+        target_model: "Admin",
+      });
+
+      await log.save();
+      console.log("Action logged successfully.");
 
       res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
@@ -409,9 +441,14 @@ router.put("/admin/suspend", authenticateToken, async (req, res) => {
 });
 
 router.put("/admin/restore-officer", authenticateToken, async (req, res) => {
+  // TODO: Log
   const { id_number } = req.body;
   console.log(id_number);
   try {
+    const getAdmin = await Admin.findOne({
+      id_number: req.body.id_number,
+    });
+
     const updatedAdmin = await Admin.updateOne(
       { id_number },
       {
@@ -422,6 +459,19 @@ router.put("/admin/restore-officer", authenticateToken, async (req, res) => {
     );
 
     if (updatedAdmin.modifiedCount > 0) {
+      // Log the restore officer action
+      const log = new Log({
+        admin: req.user.name,
+        admin_id: req.user._id,
+        action: "Restored Suspended Admin",
+        target: `${id_number} - ${getAdmin.name}`,
+        target_id: getAdmin._id,
+        target_model: "Admin",
+      });
+
+      await log.save();
+      console.log("Action logged successfully.");
+
       res.status(200).json({ message: "Admin status updated to Active" });
     } else {
       res.status(404).json({ message: "Admin not found or already active" });

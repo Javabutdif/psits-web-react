@@ -2,6 +2,8 @@ const express = require("express");
 const Merch = require("../models/MerchModel");
 const Student = require("../models/StudentModel");
 const Orders = require("../models/OrdersModel");
+const Admin = require("../models/AdminModel");
+const Log = require("../models/LogModel");
 const { default: mongoose } = require("mongoose");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -38,6 +40,7 @@ router.post(
   authenticateToken,
   upload.array("images", 3),
   async (req, res) => {
+    //TODO: Log (Done)
     const {
       name,
       price,
@@ -77,6 +80,20 @@ router.post(
 
       await newMerch.save();
 
+      const admin = await Admin.findOne({ name: created_by });
+
+      const log = new Log({
+        admin: admin.name,
+        admin_id: admin._id,
+        action: "Merchandise Creation",
+        target: newMerch.name,
+        target_id: newMerch._id,
+        target_model: "Merchandise",
+      });
+
+      await log.save();
+      console.log("Admin action logged: Merchandise added");
+
       res.status(201).json("Merch Addition Successful");
     } catch (error) {
       console.error("Error saving new merch:", error.message);
@@ -107,9 +124,15 @@ router.get("/retrieve-admin", authenticateToken, async (req, res) => {
 });
 
 router.delete("/delete-report", authenticateToken, async (req, res) => {
+  // TODO: Log (Done)
   const { id, merchName } = req.body;
 
   try {
+    // Ensure the request comes from an admin
+    if (req.role !== "Admin") {
+      return res.status(403).json({ message: "Forbidden: Admin access only." });
+    }
+
     const objectId = new mongoose.Types.ObjectId(id);
     console.log(`ObjectId: ${objectId}, MerchName: ${merchName}`);
 
@@ -126,6 +149,19 @@ router.delete("/delete-report", authenticateToken, async (req, res) => {
         .json({ message: "Merch item not found or update failed." });
     }
 
+    // Log the deletion action
+    const log = new Log({
+      admin: req.user.name,
+      admin_id: req.user._id,
+      action: "Deleted Merchandise Report",
+      target: merchName,
+      target_id: objectId,
+      target_model: "Merchandise Report",
+    });
+
+    await log.save();
+    console.log("Action logged successfully.");
+
     res.status(200).json({
       message: "Success deleting student in reports",
     });
@@ -140,6 +176,7 @@ router.put(
   authenticateToken,
   upload.array("images", 3),
   async (req, res) => {
+    //TODO: Log (Done)
     const {
       name,
       price,
@@ -251,6 +288,20 @@ router.put(
 
         await order.save();
       }
+
+      // Log the edit merch action
+      const log = new Log({
+        admin: req.user.name,
+        admin_id: req.user._id,
+        action: "Edited Merchandise",
+        target: req.body.name,
+        target_id: req.params._id,
+        target_model: "Merchandise",
+      });
+
+      await log.save();
+      console.log("Action logged successfully.");
+
       res.status(200).send("Merch, carts, and orders updated successfully");
     } catch (error) {
       console.error("Error updating merch, carts, and orders:", error.message);
@@ -261,10 +312,17 @@ router.put(
 
 // DELETE merch by id (soft)
 router.put("/delete-soft", authenticateToken, async (req, res) => {
+  // TODO: Log (Done)
   const { _id } = req.body;
 
   try {
     const product_id = new ObjectId(_id);
+
+    // Find the merchandise before updating for logging purposes
+    const merch = await Merch.findById(product_id);
+    if (!merch) {
+      return res.status(404).json({ message: "Merch not found" });
+    }
 
     const result = await Merch.updateOne(
       { _id: product_id },
@@ -275,18 +333,39 @@ router.put("/delete-soft", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "Merch not found" });
     }
 
+    // Log the soft delete action
+    const log = new Log({
+      admin: req.user.name,
+      admin_id: req.user._id,
+      action: "Soft Deleted Merchandise",
+      target: merch.name,
+      target_id: merch._id,
+      target_model: "Merchandise",
+    });
+
+    await log.save();
+    console.log("Action logged successfully.");
+
     res.status(200).json({ message: "Merch deleted successfully" });
   } catch (error) {
     console.error("Error deleting merch:", error.message);
     res.status(500).send("Error deleting merch");
   }
 });
-//publish merch
+
+// Publish merch
 router.put("/publish", authenticateToken, async (req, res) => {
+  // TODO: Log (Done)
   const { _id } = req.body;
 
   try {
     const product_id = new ObjectId(_id);
+
+    // Find the merchandise before updating for logging purposes
+    const merch = await Merch.findById(product_id);
+    if (!merch) {
+      return res.status(404).json({ message: "Merch not found" });
+    }
 
     const result = await Merch.updateOne(
       { _id: product_id },
@@ -297,12 +376,26 @@ router.put("/publish", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "Merch not found" });
     }
 
-    res.status(200).json({ message: "Merch deleted successfully" });
+    // Log the publish action
+    const log = new Log({
+      admin: req.user.name,
+      admin_id: req.user._id, // Admin's ID from token
+      action: "Re-published Soft Deleted Merchandise",
+      target: merch.name,
+      target_id: merch._id,
+      target_model: "Merchandise",
+    });
+
+    await log.save();
+    console.log("Action logged successfully.");
+
+    res.status(200).json({ message: "Merch published successfully" });
   } catch (error) {
-    console.error("Error deleting merch:", error.message);
-    res.status(500).send("Error deleting merch");
+    console.error("Error publishing merch:", error.message);
+    res.status(500).send("Error publishing merch");
   }
 });
+
 // ADD merch to cart as Student
 router.put(
   "/add-to-cart/:student_id/:merch_id",

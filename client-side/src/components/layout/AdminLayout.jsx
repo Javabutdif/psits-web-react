@@ -39,6 +39,7 @@ const AdminLayout = () => {
     { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
     { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
     { text: "Reports", icon: "fas fa-chart-line", path: "reports" },
+    { text: "Logs", icon: "fa-solid fa-book", path: "logs" },
   ].filter(Boolean);
 
   return (

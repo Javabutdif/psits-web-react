@@ -6,6 +6,7 @@ import {
   membershipHistory,
   merchandiseAdmin,
   deleteReports,
+  logAdminAction,
 } from "../../api/admin";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
@@ -14,6 +15,7 @@ import { formattedDate } from "../../components/tools/clientTools";
 import { deletePosition } from "../../components/tools/clientTools";
 import { ConfirmActionType } from "../../enums/commonEnums";
 import { CSVLink } from "react-csv";
+import { getInformationData } from "../../authentication/Authentication";
 
 const Reports = () => {
   const [membershipData, setMembershipData] = useState([]);
@@ -40,6 +42,9 @@ const Reports = () => {
   const [filterBatch, setFilterBatch] = useState("");
   const [filterSize, setFilterSize] = useState("");
   const [filterColor, setFilterColor] = useState("");
+
+  const userData = getInformationData();
+
   const customStyles = {
     rows: {
       style: {
@@ -513,7 +518,16 @@ const Reports = () => {
               data={filteredMembershipData.length ? filteredMembershipData : []}
               filename="membership-data.csv"
             >
-              <button className="bg-green-500 text-white px-4 py-2 rounded">
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  logAdminAction({
+                    admin_id: userData.id_number,
+                    action: "Exported Membership Report CSV",
+                  });
+                }}
+              >
+                {/* TODO: Log (Done) */}
                 Export CSV
               </button>
             </CSVLink>
@@ -578,7 +592,16 @@ const Reports = () => {
               }
               filename="merchandise-data.csv"
             >
-              <button className="bg-green-500 text-white px-4 py-2 rounded">
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  logAdminAction({
+                    admin_id: userData.id_number,
+                    action: "Exported Merchandise Report CSV",
+                  });
+                }}
+              >
+                {/* TODO: Log (Done) */}
                 Export CSV
               </button>
             </CSVLink>
