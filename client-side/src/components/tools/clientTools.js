@@ -21,7 +21,11 @@ export const conditionalPosition = () => {
 export const higherPosition = () => {
   const user = getInformationData();
 
-  return user.position === "President" || user.position === "Head Developer";
+  return (
+    user.position === "President" ||
+    user.position === "Head Developer" ||
+    user.position === "Developer"
+  );
 };
 
 export const headDevPosition = () => {
