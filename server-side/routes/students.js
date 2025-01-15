@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
 const Orders = require("../models/OrdersModel");
+const Log = require("../models/LogModel");
 const { format } = require("date-fns");
 const authenticateToken = require("../middlewares/authenticateToken");
 
@@ -187,6 +188,7 @@ router.put(
 );
 
 router.post("/editedStudent", authenticateToken, async (req, res) => {
+  //TODO: Log (Done)
   const {
     id_number,
     rfid,
@@ -199,6 +201,14 @@ router.post("/editedStudent", authenticateToken, async (req, res) => {
   } = req.body;
 
   try {
+    // Fetch the student document by id_number to get the _id
+    const student = await Student.findOne({ id_number: id_number });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Update the student's information
     const studentResult = await Student.updateOne(
       { id_number: id_number },
       {
@@ -214,6 +224,7 @@ router.post("/editedStudent", authenticateToken, async (req, res) => {
       }
     );
 
+    // Update related orders with the new student details
     await Orders.updateMany(
       { id_number: id_number },
       {
@@ -225,6 +236,19 @@ router.post("/editedStudent", authenticateToken, async (req, res) => {
         },
       }
     );
+
+    // Log the editing action
+    const log = new Log({
+      admin: req.user.name,
+      admin_id: req.user._id,
+      action: "Edited Student",
+      target: `${id_number} - ${first_name} ${middle_name} ${last_name}`,
+      target_id: student._id,
+      target_model: "Student",
+    });
+
+    await log.save();
+    console.log("Action logged successfully.");
 
     res
       .status(200)
@@ -293,6 +317,7 @@ router.post(
   "/students/change-password-admin",
   authenticateToken,
   async (req, res) => {
+    //TODO: Log (Done)
     try {
       const getStudent = await Student.findOne({
         id_number: req.body.id_number,
@@ -306,8 +331,22 @@ router.post(
       getStudent.password = hashedPassword;
       await getStudent.save();
 
+      // Log the password change action
+      const log = new Log({
+        admin: req.user.name,
+        admin_id: req.user._id,
+        action: "Changed Student Password",
+        target: `${getStudent.id_number} - ${getStudent.first_name} ${getStudent.middle_name} ${getStudent.last_name}`,
+        target_id: getStudent._id,
+        target_model: "Student",
+      });
+
+      await log.save();
+      console.log("Action logged successfully.");
+
       res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
+      console.error("Error changing student password:", error);
       res
         .status(500)
         .json({ message: "An error occurred", error: error.message });

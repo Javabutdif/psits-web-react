@@ -12,16 +12,16 @@ const merchRoutes = require("./routes/merch");
 const orderRoutes = require("./routes/orders");
 const facebookRoutes = require("./routes/facebook");
 const cartRoutes = require("./routes/cart");
+const logRoutes = require("./routes/logs");
 const cookieParser = require("cookie-parser");
 
 require("dotenv").config();
 
 app.use(
   cors({
-    origin: process.env.CORS, 
+    origin: process.env.CORS,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    
   })
 );
 
@@ -43,6 +43,7 @@ app.use("/api/merch", merchRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/facebook", facebookRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/logs", logRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server started, listening at port ${PORT}`);

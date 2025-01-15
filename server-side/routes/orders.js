@@ -5,6 +5,7 @@ const Admin = require("../models/AdminModel");
 const Cart = require("../models/CartModel");
 const Orders = require("../models/OrdersModel");
 const Merch = require("../models/MerchModel");
+const Log = require("../models/LogModel");
 const { ObjectId } = require("mongodb");
 require("dotenv").config();
 const { format } = require("date-fns");
@@ -122,8 +123,9 @@ router.post("/student-order", authenticateToken, async (req, res) => {
   }
 });
 
-//Cancel Order
+// Cancel Order
 router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
+  // TODO: Log (Done)
   const { product_id } = req.params;
 
   if (!product_id) {
@@ -138,6 +140,9 @@ router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+
+    // Prepare the target string by concatenating item names
+    const targetNames = order.items.map((item) => item.product_name).join(", ");
 
     // Iterate through each item in the order
     for (const item of order.items) {
@@ -155,6 +160,19 @@ router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
 
     // Delete the order after updating stock
     await Orders.findByIdAndDelete(productId);
+
+    // Log the cancellation action
+    const log = new Log({
+      admin: req.user.name,
+      admin_id: req.user._id,
+      action: "Canceled Order",
+      target: targetNames,
+      target_id: order._id,
+      target_model: "Order",
+    });
+
+    await log.save();
+    console.log("Action logged successfully.");
 
     res.status(200).json({ message: "Order canceled successfully" });
   } catch (error) {

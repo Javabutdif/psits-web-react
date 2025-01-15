@@ -14,7 +14,7 @@ const TableComponent = ({
   customButtons,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -91,7 +91,7 @@ const TableComponent = ({
       </div>
 
       <motion.div
-        className={`overflow-hidden ${style} mt-4`}
+        className={`overflow-x-auto ${style} mt-4`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}

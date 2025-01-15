@@ -1,3 +1,6 @@
+import axios from "axios";
+import backendConnection from "../api/backendApi";
+
 let storedData;
 let storedRole;
 
@@ -22,6 +25,33 @@ export const getInformationData = () => {
   };
 };
 export const removeAuthentication = () => {
+  //TODO: Log (Done)
+  const userData = getInformationData(); // Use getInformationData to retrieve user information
+
+  // Check if the user has the role of "Admin"
+  if (userData.role === "Admin") {
+    const logData = {
+      admin: userData.name || "Unknown Admin",
+      admin_id: userData.id_number || "Unknown ID",
+      action: "Admin Logged Out",
+    };
+
+    // Send log data to server
+    axios
+      .post(`${backendConnection()}/api/logs`, logData, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
+        },
+      })
+      .then(() => {
+        console.log("Logout action logged successfully.");
+      })
+      .catch((error) => {
+        console.error("Error logging logout action:", error);
+      });
+  }
+
+  // Clear client-side authentication
   sessionStorage.removeItem("Token");
   sessionStorage.removeItem("Data");
   sessionStorage.removeItem("hasReloaded");
