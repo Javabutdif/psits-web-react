@@ -25,7 +25,7 @@ const Events = (props) => {
 
 	return (
 		<div>
-			<h1>QR Scanner</h1>
+			<h1>QR Scanner wasap </h1>
 			<video ref={videoRef} style={{ width: "100%" }}></video>
 			<p>Result: {result}</p>
 		</div>
