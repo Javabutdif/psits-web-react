@@ -91,33 +91,14 @@ function Events() {
 
   ];
 
-  return (
-  
-    <div className="mt-5 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2x1:grid-cols-6">
-    {events.map((event) => (
-      <div className="w-full border border-gray-300 rounded-lg overflow-hidden shadow-md hover:-translate-y-2 transition-transform duration-200" >
-        <img 
-        src={event.imageUrl}
-        alt={event.title}
-          className="object-cover mb-4 p-0 rounded-md w-full h-[300px]"
-        />
-          <div className="p-4"> 
-              <h1 className="text-lg font-semibold text-gray-800 truncate mb-2">{event.title}</h1>
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-sm font-medium text-gray-900">{event.price}</h2>
-                <span class="text-xs text-gray-500">Stock: {event.stock}</span>
-              </div>
-              
-            <button className="w-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105 transition-transform duration-200" tabIndex="0">
-              View
-            </button>
-          </div>
-        </div>
-    ))}
-  </div>
-
-);
-}
+	return (
+		<div>
+			<h1>QR Scanner wasap </h1>
+			<video ref={videoRef} style={{ width: "100%" }}></video>
+			<p>Result: {result}</p>
+		</div>
+	);
+};
 
 export default Events;
 
