@@ -1,10 +1,10 @@
+import { motion } from "framer-motion";
+import React, { useMemo, useState } from "react";
 import ButtonsComponent from "./ButtonsComponent";
 import Pagination from "./Pagination";
 import SearchComponent from "./SearchComponent";
 import TableBody from "./TableBody";
 import TableHeader from "./TableHeader";
-import { motion } from "framer-motion";
-import React, { useState, useMemo } from "react";
 
 const TableComponent = ({
   data = [],

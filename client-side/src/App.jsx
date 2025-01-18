@@ -49,9 +49,9 @@ import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
 
-/// Events Attendace Tab - Not Final
-import Attendance from "./pages/admin/Attendance";
 
+
+import EventsAttendance from "./pages/admin/EventsAttendance";
 import Logs from "./pages/admin/Logs";
 import Community from "./pages/Community";
 import Events from "./pages/Events";
@@ -101,11 +101,10 @@ const App = () => {
               element={<PrivateRouteAdmin element={EventsAdmin} />}
           >
             <Route
-              path="Attendance"
-              element={<PrivateRouteAdmin element={Attendance} />}
-
+              path="attendance/"
+              element={<PrivateRouteAdmin element={EventsAttendance} />}
             />
-            </Route>
+          </Route>
           <Route
             path="register"
             element={<PrivateRouteAdmin element={AdminRegister} />}

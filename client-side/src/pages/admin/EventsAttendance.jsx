@@ -8,7 +8,7 @@ import AttendanceTab from "./AttendanceTab";
 
 
 
-const Events = (props) => {
+const EventsAttendance = (props) => {
 	const navigate = useNavigate();
 	const [data, setData] = useState([]); // Testing
 	const [loading, setLoading] = useState(true); // Testing
@@ -366,4 +366,4 @@ const fetchData = async () => {
 
 };
 
-export default Events;
+export default EventsAttendance;
