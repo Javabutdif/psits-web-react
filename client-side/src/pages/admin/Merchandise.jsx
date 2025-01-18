@@ -1,26 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
+import { isAfter, isBefore } from "date-fns";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { InfinitySpin } from "react-loader-spinner";
+import "swiper/swiper-bundle.css";
 import "../../App.css";
 import {
-  merchandiseAdmin,
   deleteMerchandise,
+  merchandiseAdmin,
   publishMerchandise,
 } from "../../api/admin";
-import TableComponent from "../../components/Custom/TableComponent";
-import { InfinitySpin } from "react-loader-spinner";
-import Product from "./Product";
-import FormButton from "../../components/forms/FormButton";
-import EditProduct from "./EditProduct";
-import "swiper/swiper-bundle.css";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
-import FilterOptions from "../students/merchandise/FilterOptions";
-import { Dialog } from "@headlessui/react";
-import { AiOutlineClose } from "react-icons/ai";
+import TableComponent from "../../components/Custom/TableComponent";
+import FormButton from "../../components/forms/FormButton";
+import { conditionalPosition, formattedDate } from "../../components/tools/clientTools";
 import { showToast } from "../../utils/alertHelper";
-import { isBefore, isAfter, isWithinInterval } from "date-fns";
-import { formattedDate } from "../../components/tools/clientTools";
-import { conditionalPosition } from "../../components/tools/clientTools";
+import FilterOptions from "../students/merchandise/FilterOptions";
+import EditProduct from "./EditProduct";
+import Product from "./Product";
 
 function Merchandise() {
   const [data, setData] = useState([]);
@@ -379,8 +375,7 @@ function Merchandise() {
             color="#0d6efd"
             ariaLabel="infinity-spin-loading"
           />
-        </div>
-      ) : (
+        </div>) : (
         <>
           <div className=" flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
             <motion.h1
