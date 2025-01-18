@@ -161,18 +161,20 @@ router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
     // Delete the order after updating stock
     await Orders.findByIdAndDelete(productId);
 
-    // Log the cancellation action
-    const log = new Log({
-      admin: req.user.name,
-      admin_id: req.user._id,
-      action: "Canceled Order",
-      target: targetNames,
-      target_id: order._id,
-      target_model: "Order",
-    });
+    if (req.user.role === "Admin") {
+      // Log the cancellation action
+      const log = new Log({
+        admin: req.user.name,
+        admin_id: req.user._id,
+        action: "Canceled Order",
+        target: targetNames,
+        target_id: order._id,
+        target_model: "Order",
+      });
 
-    await log.save();
-    console.log("Action logged successfully.");
+      await log.save();
+      console.log("Action logged successfully.");
+    }
 
     res.status(200).json({ message: "Order canceled successfully" });
   } catch (error) {
