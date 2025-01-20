@@ -48,7 +48,8 @@ import StudentDashboard from "./pages/students/StudentDashboard";
 import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
-
+import StudentEvents from "./pages/students/StudentEvents";
+// import QRCodePage from "./pages/students/QRCodePage";
 /// Events Attendace Tab - Not Final
 import Attendance from "./pages/admin/Attendance";
 
@@ -100,6 +101,7 @@ const App = () => {
               path="events/"
               element={<PrivateRouteAdmin element={EventsAdmin} />}
           >
+            
             <Route
               path="Attendance"
               element={<PrivateRouteAdmin element={Attendance} />}
@@ -182,9 +184,17 @@ const App = () => {
           element={<PrivateRouteStudent element={StudentLayout} />}
         >
           <Route
-            path="cart"
+            path="cart" 
             element={<PrivateRouteStudent element={StudentCart} />}
           />
+            <Route
+            path="events"
+            element={<PrivateRouteStudent element={StudentEvents} />}
+          />
+          {/* <Route
+            path="QR"
+            element={<PrivateRouteStudent element={QRCodePage} />}
+          /> */}
           <Route
             path="dashboard"
             element={<PrivateRouteStudent element={StudentDashboard} />}
