@@ -83,6 +83,7 @@ const TableComponent = ({
             handleSearchChange={handleSearchChange}
             placeholder="Search data..."
             className="w-full sm:max-w-xs bg-gray-50 border rounded-lg p-2 text-sm"
+
           />
         )}
         {customButtons || (

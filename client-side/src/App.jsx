@@ -9,9 +9,9 @@ import Home from "./pages/Home";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRegister from "./pages/admin/AdminRegister";
+import AttendanceAdmin from "./pages/admin/Attendance/Attendance";
 import Delete from "./pages/admin/Delete";
 import EditProduct from "./pages/admin/EditProduct";
-import EventsAdmin from "./pages/admin/Events";
 import Inventory from "./pages/admin/Inventory";
 import MembershipHistory from "./pages/admin/MembershipHistory";
 import MembershipRequest from "./pages/admin/MembershipRequest";
@@ -49,9 +49,6 @@ import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
 
-
-
-import EventsAttendance from "./pages/admin/EventsAttendance";
 import Logs from "./pages/admin/Logs";
 import Community from "./pages/Community";
 import Events from "./pages/Events";
@@ -98,12 +95,12 @@ const App = () => {
 
           <Route
               path="events/"
-              element={<PrivateRouteAdmin element={EventsAdmin} />}
+              element={<PrivateRouteAdmin element={AttendanceAdmin} />}
           >
-            <Route
+            {/* <Route
               path="attendance/"
               element={<PrivateRouteAdmin element={EventsAttendance} />}
-            />
+            /> */}
           </Route>
           <Route
             path="register"
