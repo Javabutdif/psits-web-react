@@ -531,6 +531,38 @@ function Product({ handleCloseAddProduct }) {
                 optionStyle="text-sm"
               />
             </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-row relative gap-4">
+                <label
+                  htmlFor="start_date"
+                  className="text-gray-500 mb-1 text-sm"
+                >
+                  Is Merch of Event type?
+                </label>
+                <ToggleSwitch
+                  isToggled={isEventType}
+                  onToggle={toggleIsEventType}
+                />
+              </div>
+            </div>
+            {isEventType && (
+              <div className="flex flex-col relative">
+                <label htmlFor="eventDate" className="text-gray-500 mb-1">
+                  Event Date
+                </label>
+                <FormInput
+                  label=""
+                  name="eventDate"
+                  type="date"
+                  value={formData.eventDate}
+                  onChange={handleChange}
+                  labelStyle="text-sm"
+                  inputStyle="text-sm"
+                  error={errors.eventDate}
+                  max={today}
+                />
+              </div>
+            )}
             <FormSelect
               name="control"
               label="Purchase Control"
@@ -620,39 +652,6 @@ function Product({ handleCloseAddProduct }) {
                 />
               </div>
             </div>
-
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex flex-row relative gap-4">
-                <label
-                  htmlFor="start_date"
-                  className="text-gray-500 mb-1 text-sm"
-                >
-                  Is Merch of Event type?
-                </label>
-                <ToggleSwitch
-                  isToggled={isEventType}
-                  onToggle={toggleIsEventType}
-                />
-              </div>
-            </div>
-            {isEventType && (
-              <div className="flex flex-col relative">
-                <label htmlFor="eventDate" className="text-gray-500 mb-1">
-                  Event Date
-                </label>
-                <FormInput
-                  label=""
-                  name="eventDate"
-                  type="date"
-                  value={formData.eventDate}
-                  onChange={handleChange}
-                  labelStyle="text-sm"
-                  inputStyle="text-sm"
-                  error={errors.eventDate}
-                  max={today}
-                />
-              </div>
-            )}
 
             <FormButton
               type="button"
