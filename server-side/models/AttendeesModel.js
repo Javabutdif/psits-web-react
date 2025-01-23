@@ -6,12 +6,11 @@ const attendeeSchema = new Schema({
   id_number: {
     type: String,
     required: true,
-    unique: true,
   },
   email: {
     type: String,
     required: true,
-    unique: true,
+    
   },
   name: {
     type: String,
@@ -35,11 +34,11 @@ const attendeeSchema = new Schema({
   },
   attendDate: {
     type: Date,
-    default: null,
+    
   },
   confirmedBy: {
     type: String,
-    default: null,
+   
   },
 });
 

@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
-const Attendee = require("./AttendeesModel");
-const Merch = require("./MerchModel");
+const attendeeSchema = require("./AttendeesModel");
 
 const Schema = mongoose.Schema;
 
@@ -12,14 +11,20 @@ const eventSchema = new Schema({
   },
   eventName: {
     type: String,
-    unique: true,
     required: true,
+  },
+  eventImage: {
+    type: Array,
   },
   eventDate: {
     type: Date,
     required: true,
   },
-  attendees: [Attendee],
+  attendees: {
+    type: [attendeeSchema],
+    default: [],
+  },
+  
   status: {
     type: String,
     required: true,

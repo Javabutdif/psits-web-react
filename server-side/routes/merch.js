@@ -55,16 +55,13 @@ router.post(
       end_date,
       category,
       isEvent,
+      eventDate,
       type,
       control,
     } = req.body;
 
     // Get the URLs of the uploaded images
     const imageUrl = req.files.map((file) => file.location);
-
-    
-
-
 
     try {
       const newMerch = new Merch({
@@ -84,9 +81,24 @@ router.post(
         imageUrl,
       });
 
-      await newMerch.save();
+      const newMerchId = await newMerch.save();
 
-      
+      if (isEvent) {
+        try {
+          const newEvent = new Event({
+            eventId: newMerchId,
+            eventName: name,
+            eventImage: imageUrl,
+            eventDate,
+            status: "Ongoing",
+            attendees: [],
+          });
+
+          await newEvent.save();
+        } catch (error) {
+          console.error(error);
+        }
+      }
 
       const admin = await Admin.findOne({ name: created_by });
 
