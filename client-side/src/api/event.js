@@ -7,7 +7,7 @@ const token = sessionStorage.getItem("Token");
 
 export const getEvents = async () => {
   try {
-    const response = await axios.get(`${backendConnection()}/api/events/`, {
+    const response = await axios.get(`${backendConnection()}/api/events`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,

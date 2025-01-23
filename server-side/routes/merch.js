@@ -88,14 +88,15 @@ router.post(
           const newEvent = new Event({
             eventId: newMerchId,
             eventName: name,
-            eventImage: imageUrl[0],
+            eventImage: imageUrl,
             eventDate,
             status: "Ongoing",
+            attendees: [],
           });
 
           await newEvent.save();
         } catch (error) {
-          console.error("Error Creating Event Schema");
+          console.error(error);
         }
       }
 

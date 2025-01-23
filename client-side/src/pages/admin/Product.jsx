@@ -218,7 +218,7 @@ function Product({ handleCloseAddProduct }) {
     }
 
     data.append("isEvent", isEventType);
-    console.log(data);
+   
     try {
       if (await addMerchandise(data)) {
         showToast("success", "Merchandise Published");
@@ -659,6 +659,7 @@ function Product({ handleCloseAddProduct }) {
               text="Preview"
               onClick={handlePreview}
               styles="w-full bg-[#002E48] p-2 rounded text-white"
+              disabled={isLoading}
             />
           </form>
           {showPreview && (
