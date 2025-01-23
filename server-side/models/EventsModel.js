@@ -9,7 +9,7 @@ const eventSchema = new Schema({
     unique: true,
   },
   eventDate: {
-    type: String,
+    type: Date,
   },
   attendees: [Attendee.Schema],
 
