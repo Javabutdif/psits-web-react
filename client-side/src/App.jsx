@@ -9,7 +9,7 @@ import Home from "./pages/Home";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRegister from "./pages/admin/AdminRegister";
-import AttendanceAdmin from "./pages/admin/Attendance/Attendance";
+import Attendance from "./pages/admin/Attendance/Attendance";
 import Delete from "./pages/admin/Delete";
 import EditProduct from "./pages/admin/EditProduct";
 import Inventory from "./pages/admin/Inventory";
@@ -100,13 +100,11 @@ const App = () => {
           <Route
             path="events/"
             element={<PrivateRouteAdmin element={AdminEvents} />}
-          >
-            <Route
-              path="attendance"
-              element={<PrivateRouteAdmin element={AttendanceAdmin} />}
-            />
-          </Route>
-
+          />
+          <Route
+            path="attendance"
+            element={<PrivateRouteAdmin element={Attendance} />}
+          />
           <Route
             path="register"
             element={<PrivateRouteAdmin element={AdminRegister} />}

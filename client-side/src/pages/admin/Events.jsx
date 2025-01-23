@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 // import QrScanner from "qr-scanner";
 
@@ -112,13 +113,14 @@ function Events() {
               </h2>
               <span class="text-xs text-gray-500">Stock: {event.stock}</span>
             </div>
-
-            <button
-              className="w-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105 transition-transform duration-200"
-              tabIndex="0"
-            >
-              View
-            </button>
+            <Link to="/admin/attendance">
+              <button
+                className="w-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105 transition-transform duration-200"
+                tabIndex="0"
+              >
+                View
+              </button>
+            </Link>
           </div>
         </div>
       ))}
