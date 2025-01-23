@@ -577,29 +577,40 @@ function Product({ handleCloseAddProduct }) {
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
-              <FormInput
-                label="Start Date"
-                name="start_date"
-                type="date"
-                value={formData.start_date}
-                onChange={handleChange}
-                labelStyle="text-sm"
-                inputStyle="text-sm"
-                error={errors.start_date}
-                max={today}
-              />
-              <FormInput
-                label="End Date"
-                name="end_date"
-                type="date"
-                value={formData.end_date}
-                onChange={handleChange}
-                labelStyle="text-sm"
-                inputStyle="text-sm"
-                error={errors.end_date}
-                max={today}
-              />
+              <div className="flex flex-col relative">
+                <label htmlFor="start_date" className="text-gray-500 mb-1">
+                  Start Date
+                </label>
+                <FormInput
+                  label=""
+                  name="start_date"
+                  type="date"
+                  value={formData.start_date}
+                  onChange={handleChange}
+                  labelStyle="text-sm"
+                  inputStyle="text-sm"
+                  error={errors.start_date}
+                  max={today}
+                />
+              </div>
+              <div className="flex flex-col relative">
+                <label htmlFor="end_date" className="text-gray-500 mb-1">
+                  End Date
+                </label>
+                <FormInput
+                  label=""
+                  name="end_date"
+                  type="date"
+                  value={formData.end_date}
+                  onChange={handleChange}
+                  labelStyle="text-sm"
+                  inputStyle="text-sm"
+                  error={errors.end_date}
+                  max={today}
+                />
+              </div>
             </div>
+
             <FormButton
               type="button"
               text="Preview"
