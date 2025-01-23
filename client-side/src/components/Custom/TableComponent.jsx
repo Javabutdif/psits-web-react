@@ -1,10 +1,10 @@
+import { motion } from "framer-motion";
+import React, { useMemo, useState } from "react";
 import ButtonsComponent from "./ButtonsComponent";
 import Pagination from "./Pagination";
 import SearchComponent from "./SearchComponent";
 import TableBody from "./TableBody";
 import TableHeader from "./TableHeader";
-import { motion } from "framer-motion";
-import React, { useState, useMemo } from "react";
 
 const TableComponent = ({
   data = [],
@@ -83,6 +83,7 @@ const TableComponent = ({
             handleSearchChange={handleSearchChange}
             placeholder="Search data..."
             className="w-full sm:max-w-xs bg-gray-50 border rounded-lg p-2 text-sm"
+
           />
         )}
         {customButtons || (

@@ -1,7 +1,10 @@
+import axios from "axios";
+import { motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
 import {
   membership,
-  studentDeletion,
   renewAllStudent,
+  studentDeletion,
 } from "../../../api/admin";
 import backendConnection from "../../../api/backendApi";
 import { getInformationData } from "../../../authentication/Authentication";
@@ -14,9 +17,6 @@ import { higherPosition } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditMember from "./EditMember";
-import axios from "axios";
-import { motion } from "framer-motion";
-import React, { useState, useEffect } from "react";
 
 const Membership = () => {
   const [data, setData] = useState([]);
