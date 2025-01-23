@@ -4,6 +4,7 @@ const Student = require("../models/StudentModel");
 const Orders = require("../models/OrdersModel");
 const Admin = require("../models/AdminModel");
 const Log = require("../models/LogModel");
+const Event = require("../models/EventsModel");
 const { default: mongoose } = require("mongoose");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -53,12 +54,17 @@ router.post(
       start_date,
       end_date,
       category,
+      isEvent,
       type,
       control,
     } = req.body;
 
     // Get the URLs of the uploaded images
     const imageUrl = req.files.map((file) => file.location);
+
+    
+
+
 
     try {
       const newMerch = new Merch({
@@ -79,6 +85,8 @@ router.post(
       });
 
       await newMerch.save();
+
+      
 
       const admin = await Admin.findOne({ name: created_by });
 

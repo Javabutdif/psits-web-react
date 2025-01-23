@@ -5,7 +5,6 @@ const Schema = mongoose.Schema;
 const attendeeSchema = new Schema({
   id_number: {
     type: String,
-
   },
   email: {
     type: String,
@@ -13,7 +12,7 @@ const attendeeSchema = new Schema({
 
   name: {
     type: String,
-    require: true,
+    required: true,
   },
   course: {
     type: String,
@@ -21,15 +20,15 @@ const attendeeSchema = new Schema({
   },
   year: {
     type: String,
-    require: true,
+    required: true,
   },
   campus: {
     type: String,
-    require: true,
+    required: true,
   },
   isAttended: {
     type: Boolean,
-    require: false,
+    required: false,
   },
   attendDate: {
     type: String,
@@ -39,6 +38,6 @@ const attendeeSchema = new Schema({
   },
 });
 
-const Attendee = mongoose.model("attendee", attendeeSchema);
 
-module.exports = Attendee;
+
+module.exports = attendeeSchema;

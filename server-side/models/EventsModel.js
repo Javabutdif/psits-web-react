@@ -1,9 +1,15 @@
 const mongoose = require("mongoose");
 const Attendee = require("./AttendeesModel");
+const Merch = require("./MerchModel");
 
 const Schema = mongoose.Schema;
 
 const eventSchema = new Schema({
+  eventId: {
+    type: Schema.Types.ObjectId,
+    ref: "Merch",
+    required: true,
+  },
   eventName: {
     type: String,
     unique: true,
@@ -11,7 +17,7 @@ const eventSchema = new Schema({
   eventDate: {
     type: Date,
   },
-  attendees: [Attendee.Schema],
+  attendees: [Attendee],
 
   status: {
     type: String,
