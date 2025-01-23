@@ -48,6 +48,10 @@ import StudentDashboard from "./pages/students/StudentDashboard";
 import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
+import StudentEvents from "./pages/students/StudentEvents";
+// import QRCodePage from "./pages/students/QRCodePage";
+/// Events Attendace Tab - Not Final
+import AdminEvents from "./pages/admin/Events";
 
 import Logs from "./pages/admin/Logs";
 import Community from "./pages/Community";
@@ -94,14 +98,15 @@ const App = () => {
           </Route>
 
           <Route
-              path="events/"
-              element={<PrivateRouteAdmin element={AttendanceAdmin} />}
+            path="events/"
+            element={<PrivateRouteAdmin element={AdminEvents} />}
           >
-            {/* <Route
-              path="attendance/"
-              element={<PrivateRouteAdmin element={EventsAttendance} />}
-            /> */}
+            <Route
+              path="attendance"
+              element={<PrivateRouteAdmin element={AttendanceAdmin} />}
+            />
           </Route>
+
           <Route
             path="register"
             element={<PrivateRouteAdmin element={AdminRegister} />}
@@ -130,7 +135,8 @@ const App = () => {
               element={<PrivateRouteAdmin element={MembershipHistory} />}
             />
           </Route>
-          <Route path="merchandise/"
+          <Route
+            path="merchandise/"
             element={<PrivateRouteAdmin element={Merchandise} />}
           >
             <Route
@@ -181,6 +187,14 @@ const App = () => {
             path="cart"
             element={<PrivateRouteStudent element={StudentCart} />}
           />
+          <Route
+            path="events"
+            element={<PrivateRouteStudent element={StudentEvents} />}
+          />
+          {/* <Route
+            path="QR"
+            element={<PrivateRouteStudent element={QRCodePage} />}
+          /> */}
           <Route
             path="dashboard"
             element={<PrivateRouteStudent element={StudentDashboard} />}
