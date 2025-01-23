@@ -13,14 +13,16 @@ const eventSchema = new Schema({
   eventName: {
     type: String,
     unique: true,
+    required: true,
   },
   eventDate: {
     type: Date,
+    required: true,
   },
   attendees: [Attendee],
-
   status: {
     type: String,
+    required: true,
   },
 });
 
