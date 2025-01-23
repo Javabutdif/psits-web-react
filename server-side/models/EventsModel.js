@@ -15,6 +15,9 @@ const eventSchema = new Schema({
     unique: true,
     required: true,
   },
+  eventImage: {
+    type: String,
+  },
   eventDate: {
     type: Date,
     required: true,

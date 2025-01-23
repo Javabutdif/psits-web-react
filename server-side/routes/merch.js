@@ -88,6 +88,7 @@ router.post(
           const newEvent = new Event({
             eventId: newMerchId,
             eventName: name,
+            eventImage: imageUrl[0],
             eventDate,
             status: "Ongoing",
           });
