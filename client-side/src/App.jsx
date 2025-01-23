@@ -38,6 +38,7 @@ import Profile from "./pages/admin/Profile";
 import PrivateRouteStudent from "./authentication/privateRouteStudent";
 import StudentLayout from "./components/layout/StudentLayout";
 import AllMembers from "./pages/admin/membership/AllMembers";
+import Statistics from "./pages/admin/Statistics";
 import EmailVerification from "./pages/authentication/EmailVerification";
 import ForgotPassword from "./pages/authentication/ForgotPassword";
 import OTPVerifier from "./pages/authentication/OtpVerifier";
@@ -45,13 +46,13 @@ import ResetPassword from "./pages/authentication/ResetPassword";
 import ProductDetail from "./pages/students/ProductDetail";
 import StudentCart from "./pages/students/StudentCart";
 import StudentDashboard from "./pages/students/StudentDashboard";
+import StudentEvents from "./pages/students/StudentEvents";
 import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
-import StudentEvents from "./pages/students/StudentEvents";
-import Statistics from "./pages/admin/Statistics";
 // import QRCodePage from "./pages/students/QRCodePage";
 /// Events Attendace Tab - Not Final
+import AddAttendeeForm from "./pages/admin/Attendance/AddAttendeeForm";
 import AdminEvents from "./pages/admin/Events";
 
 import Logs from "./pages/admin/Logs";
@@ -109,6 +110,10 @@ const App = () => {
           <Route
             path="statistics"
             element={<PrivateRouteAdmin element={Statistics} />}
+          />
+          <Route
+            path="addAttendee"
+            element={<PrivateRouteAdmin element={AddAttendeeForm} />}
           />
           <Route
             path="register"
