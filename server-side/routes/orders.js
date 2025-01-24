@@ -263,7 +263,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
                     email: successfulOrder.email,
                     course: successfulOrder.course,
                     year: successfulOrder.year,
-                    campus: successfulOrder.campus,
+                    campus: student.campus,
                     isAttended: false,
                   },
                 },
