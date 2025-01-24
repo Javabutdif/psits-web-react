@@ -119,9 +119,7 @@ const merchSchema = new Schema(
     imageUrl: {
       type: Array,
     },
-    isEvent: {
-      type: Boolean,
-    },
+
     sales_data: {
       type: salesDataSchema,
       default: () => ({}),

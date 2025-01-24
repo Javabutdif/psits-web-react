@@ -1,6 +1,7 @@
 const express = require("express");
 const Student = require("../models/StudentModel");
 const Event = require("../models/EventsModel");
+const Cart = require("../models/CartModel");
 const Orders = require("../models/OrdersModel");
 const Merch = require("../models/MerchModel");
 const Log = require("../models/LogModel");
