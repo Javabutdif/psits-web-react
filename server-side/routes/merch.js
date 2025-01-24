@@ -4,6 +4,7 @@ const Student = require("../models/StudentModel");
 const Orders = require("../models/OrdersModel");
 const Admin = require("../models/AdminModel");
 const Log = require("../models/LogModel");
+const Event = require("../models/EventsModel");
 const { default: mongoose } = require("mongoose");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -53,6 +54,8 @@ router.post(
       start_date,
       end_date,
       category,
+      isEvent,
+      eventDate,
       type,
       control,
     } = req.body;
@@ -75,10 +78,28 @@ router.post(
         category,
         type,
         control,
+        isEvent,
         imageUrl,
       });
 
-      await newMerch.save();
+      const newMerchId = await newMerch.save();
+
+      if (isEvent) {
+        try {
+          const newEvent = new Event({
+            eventId: newMerchId,
+            eventName: name,
+            eventImage: imageUrl,
+            eventDate,
+            status: "Ongoing",
+            attendees: [],
+          });
+
+          await newEvent.save();
+        } catch (error) {
+          console.error(error);
+        }
+      }
 
       const admin = await Admin.findOne({ name: created_by });
 
