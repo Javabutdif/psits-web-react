@@ -78,6 +78,7 @@ router.post(
         category,
         type,
         control,
+        isEvent,
         imageUrl,
       });
 
