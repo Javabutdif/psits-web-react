@@ -3,11 +3,11 @@ import React, { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "react-tabs/style/react-tabs.css";
+import { getAttendees } from "../../../api/event";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import FormButton from "../../../components/forms/FormButton";
 import AttendanceTab from "./AttendanceTab";
 import ViewStudentAttendance from "./ViewStudentAttendance";
-import { getAttendees } from "../../../api/event";
 
 const Attendance = (props) => {
   const navigate = useNavigate();
@@ -32,9 +32,13 @@ const Attendance = (props) => {
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(id)
-        ? prevSelectedRows.filter((id) => id !== id)
+        ? prevSelectedRows.filter((rowId) => rowId !== id) // Use "rowId" instead of "id" to avoid shadowing
         : [...prevSelectedRows, id]
     );
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   const getAllAttendees = async () => {
@@ -42,7 +46,7 @@ const Attendance = (props) => {
   };
   useEffect(() => {
     if (selectAll) {
-      setSelectedRows(filteredData.map((item) => item.id));
+      setSelectedRows(filteredData.map((item) => item.id_number));
     } else {
       setSelectedRows([]);
     }
@@ -231,24 +235,24 @@ const Attendance = (props) => {
                 <h2 className="text-3xl font-bold">{eventData.eventName}</h2>
               </div>
 
-              <div>
-                <ButtonsComponent>
-                  <div className="py-2">
-                    <Link to="/admin/addAttendee">
-                      <motion.button
-                        type="button"
-                        text="Add Attendee"
-                        className="bg-gray-500 text-white hover:bg-gray-600 active:bg-gray-700 rounded-md px-6 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-                        textClass="text-white" // Elegant text color
-                        whileHover={{ scale: 1.01, opacity: 0.95 }}
-                        whileTap={{ scale: 0.98, opacity: 0.9 }}
-                      >
-                        <i className="fas fa-add"></i> Add Attendee
-                      </motion.button>
-                    </Link>
-                  </div>
-                </ButtonsComponent>
-              </div>
+              <div className="w-full sm:w-auto flex justify-center sm:justify-end">
+              <ButtonsComponent>
+                <div className="py-2">
+                  <Link to="/admin/addAttendee">
+                    <motion.button
+                      type="button"
+                      text="Add Attendee"
+                      className="bg-gray-500 text-white hover:bg-gray-600 active:bg-gray-700 rounded-md px-6 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+                      textClass="sm:block hidden text-white"
+                      whileHover={{ scale: 1.01, opacity: 0.95 }}
+                      whileTap={{ scale: 0.98, opacity: 0.9 }}
+                    >
+                      <i className="fas fa-add"></i> Add Attendee
+                    </motion.button>
+                  </Link>
+                </div>
+              </ButtonsComponent>
+            </div>
             </motion.div>
 
             {/* Tabs and Table Container */}
@@ -257,8 +261,8 @@ const Attendance = (props) => {
             <AttendanceTab
               columns={columns}
               filteredData={filteredData}
-              // searchQuery={searchQuery}
-              // setSearchQuery={setSearchQuery}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
               setIsFilterOpen={setIsFilterOpen}
             />
           </div>
