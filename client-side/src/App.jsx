@@ -104,7 +104,7 @@ const App = () => {
             element={<PrivateRouteAdmin element={AdminEvents} />}
           />
           <Route
-            path="attendance"
+            path="attendance/:eventId"
             element={<PrivateRouteAdmin element={Attendance} />}
           />
           <Route

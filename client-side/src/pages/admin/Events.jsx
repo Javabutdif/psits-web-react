@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getEvents } from "../../api/event";
 import { MdOutlineQueryStats } from "react-icons/md";
+import Attendance from "./Attendance/Attendance";
 
 function Events() {
   const [events, setEvent] = useState([]);
@@ -32,7 +33,10 @@ function Events() {
               {event.eventName}
             </h1>
             <div className="flex gap-1 items-center">
-              <Link to="/admin/attendance" className="w-[80%] h-full">
+              <Link
+                to={`/admin/attendance/${event.eventId}`}
+                className="w-[80%] h-full"
+              >
                 <button
                   className="w-full h-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105 transition-transform duration-200"
                   tabIndex="0"
@@ -40,7 +44,6 @@ function Events() {
                   View
                 </button>
               </Link>
-
 
               <Link to="/admin/Statistics" className="h-full">
                 <button

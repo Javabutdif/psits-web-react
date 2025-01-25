@@ -253,6 +253,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
           });
           const merchToGet = await Merch.findById(item.product_id);
           if (merchToGet && merchToGet.category === "ict-congress") {
+            console.log(student.campus);
             await Event.findOneAndUpdate(
               { eventId: merchId },
               {
