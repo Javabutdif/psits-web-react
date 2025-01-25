@@ -1,6 +1,8 @@
 import React from 'react';
-import { Bar, Pie } from 'react-chartjs-2';
+import { Bar, Doughnut, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
@@ -31,7 +33,7 @@ const Statistics = () => {
     labels: ['UC-Main', 'UC-Banilad', 'UC-LM', 'UC-PT'],
     datasets: [
       {
-        label: 'Students',
+        label: 'Number of Students',
         data: [8.4, 4.0, 2.7, 2.3, 1.7],
         backgroundColor: 'rgba(137, 121, 255, 1)',
         borderWidth: 1,
@@ -59,7 +61,7 @@ const Statistics = () => {
 
   const chartOption1 = {
     responsive: true,
-    maintainAspectRatio: false, // Ensures the chart fills its container
+    maintainAspectRatio: false, 
     plugins: {
       legend: {
         position: 'top',
@@ -67,46 +69,51 @@ const Statistics = () => {
     },
   };
   const chartOption2 = {
+    maintainAspectRatio: false,
     responsive: true,
-    maintainAspectRatio: false, // Ensures the chart fills its container
+    // Ensures the chart fills its container
     plugins: {
       legend: {
-        position: 'right',
+        position: 'bottom',
       },
     },
   };
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8 text-center">Population Statistics</h1>
-
-      <div className="flex flex-col items-center p-6">
-        <div className="flex flex-col gap-8 w-full items-center">
-          <div className="w-full md:w-[60%] lg:w-[50%] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-            <Pie data={studentYearsData} options={chartOption2} />
-          </div>
-
-          <div className="w-full md:w-[60%] lg:w-[50%] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg">
-            <Bar data={campusData} options={chartOption1} />
-          </div>
-
-          <div className="w-full md:w-[60%] lg:w-[50%] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg">
-            <Pie data={courseData} options={chartOption2} />
-          </div>
-
-          <div className="w-[300px] bg-[#D9D9D9]  text-center p-5 rounded-lg">
+    <h1 className="text-3xl font-bold mb-8 text-center">Population Statistics</h1>
+    <div className="flex flex-wrap lg:flex-nowrap lg:gap-8 md:gap-8 items-center justify-center">
+      {/* Charts Section */}
+      <div className="flex flex-col gap-8 w-full lg:w-[50%]">
+        <div className="w-full h-[250px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+          <Doughnut data={studentYearsData} options={chartOption2} />
+        </div>
+        <div className="w-full h-[280px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+          <Bar data={campusData} options={chartOption1} />
+        </div>
+        <div className="w-full h-[250px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg mb-3">
+          <Doughnut data={courseData} options={chartOption2} />
+        </div>
+      </div> 
+      {/* Total Number of Attendees Section */}
+        <div className="flex flex-col items-center w-full lg:w-[30%] gap-4 mt-8 lg:mt-0 justify-center">
+          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
             <p>Total number of Attendees</p>
             <h3>7000</h3>
           </div>
-          <div className="w-[300px] bg-[#D9D9D9] mb-8 text-center p-5 rounded-lg">
+          <div className="lg:w-[260px] bg-[#D9D9D9] mb-8 text-center p-5 rounded-lg">
             <p>We value your feedback.</p>
-            <p> Please enter your evaluation below.</p>
-          <input type="text" />
+            <p>Please enter your evaluation below.</p>
+            <input 
+              type="text" 
+              className="w-full border rounded p-2"
+              placeholder="Enter your feedback" 
+            />
           </div>
         </div>
-      </div>
     </div>
-
+  </div>
+  
   );
 };
 
