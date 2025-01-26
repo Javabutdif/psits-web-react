@@ -14,6 +14,9 @@ const AddAttendeeForm = () => {
   const [errors, setErrors] = useState({});
   const [useModal, setUseModal] = useState(false);
 
+
+
+  const priceBySize = 1000;
 // FormData
   const [formData, setFormData] = useState({
     id_number: "",
@@ -103,48 +106,13 @@ const AddAttendeeForm = () => {
 
   const fakeRegester = (passedFormData) =>{
 
-    console.log(passedFormData.first_name);
+    // console.log(passedFormData.first_name);
 
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    const trimmedFormData = {
-      id_number: formData.id_number?.trim(),
-      first_name: formData.first_name?.trim(),
-      middle_name: formData.middle_name?.trim(),
-      last_name: formData.last_name?.trim(),
-      email: formData.email?.trim(),
-      course: formData.course?.trim(),
-      year: formData.year?.trim(),
-      campus: formData.campus?.trim(),
-      shirt_size: formData.shirt_size?.trim(),
-
-    };
-    setIsModalVisible(false);
-    try {
-      if (await fakeRegester(trimmedFormData)) {
-        showToast("success", "Registration successful");
-
-        setFormData({
-          id_number: "",
-          rfid: "",
-          password: "",
-          confirm_password: "",
-          first_name: "",
-          middle_name: "",
-          last_name: "",
-          email: "",
-          course: "",
-          year: "",
-        });
-        // navigate("");
-      }
-    } catch (error) {
-      showToast("error", JSON.stringify(error));
-    }
-    setIsLoading(false);
+    setUseModal(true);  // Trigger the modal for confirmation
   };
 
 
@@ -211,7 +179,7 @@ const AddAttendeeForm = () => {
 
   <div className="container lg:w-8/12 lg:h-8/12 p-6 ">
     {loading ? (
-      <div className="flex justify-center items-center w-full h-full">
+      <div className="flex flex-row justify-center ">
         <InfinitySpin
           visible={true}
           width={200}
@@ -223,6 +191,7 @@ const AddAttendeeForm = () => {
           <motion.div
             className="flex flex-col justify-center p-2 gap-5"
           >
+            {/* Header */}
           <div className="flex w-full px-5 p-2">
             <h2 
             className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold "
@@ -230,12 +199,15 @@ const AddAttendeeForm = () => {
               Attendee Information
             </h2>
           </div>		
+
+          {/* Form */}
           <div className="border-black-10">
             <form
               className="flex flex-col w-full space-y-6 p-4  lg:p-5"
               onSubmit={showModal}
             >
               {/* Form inputs */}
+              {/* Id Num */}
               <div className="flex flex-col justify-center gap-6 sm:gap-4 md:gap-6">
                 <FormInput
                   label={"ID Number"}
@@ -247,6 +219,8 @@ const AddAttendeeForm = () => {
                   error={errors.id_number}
                   styles="w-full p-2 border border-gray-300 rounded"
                 />
+
+                {/* Student NAme */}
                 <div className="flex flex-col sm:flex-row space-y-6 sm:space-y-0 sm:space-x-4">
                   <FormInput
                     label={"First Name"}
@@ -280,9 +254,8 @@ const AddAttendeeForm = () => {
                     styles="w-full p-2 border border-gray-300 rounded"
                   />
                 </div>
-
-                <div className="flex flex-col gap-5 sm:flex-row ">
-                  <div className="flex flex-col justify-center sm:pt-5 pt-0 sm:w-8/12 w-full">
+                {/* Email Address */}
+                <div className="flex flex-col justify-center  w-full">
                     <FormInput
                     label={"Email Address"}
                     type="text"
@@ -293,19 +266,35 @@ const AddAttendeeForm = () => {
                     error={errors.email}
                     styles=" w-full p-2 border border-gray-300 rounded"
                     />
-                  </div>
-                  <div className="flex flex-col justify-center  sm:w-8/12 w-full">
-                    <FormSelect
-                      label="T-Shirt Size"
-                      name="shirt_size"
-                      value={formData.shirt_size}
-                      onChange={handleChange}
-                      options={sizeOptions}
-                      error={errors.shirt_size}
-                      styles="flex-1"
-                    />
+                </div>
+                <div className="flex flex-row items-center gap-5">
+                {/* T-Shirt Size Select */}
+                <div className="flex flex-col justify-center w-8/12 sm:w-full">
+                  <FormSelect
+                    label="T-Shirt Size"
+                    name="shirt_size"
+                    value={formData.shirt_size}
+                    onChange={handleChange}
+                    options={sizeOptions}
+                    error={errors.shirt_size}
+                    styles="flex-1"
+                  />
+                </div>
+
+                {/* Price Display */}
+                <div className="flex flex-col w-4/12 sm:w-4/12">
+                  <div className="relative ">
+                    <label className="block text-base text-[#374151]">Price:</label>
+                    <div className="block w-full h-auto p-2 border border-gray-300 rounded">
+                      <span className="text-base text-[#374151]">
+                        <i className="fas fa-peso-sign text-base text-[#374151]"></i>
+                        {` ${priceBySize}`}
+                        </span>
+                    </div>
                   </div>
                 </div>
+              </div>
+
 
                   {/* Attendee School Information Part */}
                 <div className="flex flex-col justify-between gap-5 sm:flex-row">
