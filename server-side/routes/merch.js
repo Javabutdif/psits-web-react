@@ -134,6 +134,23 @@ router.get("/retrieve", authenticateToken, async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+router.get("/retrieve/:id", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const merch = await Merch.findById(id);
+
+    if (!merch) {
+      return res.status(404).json({ message: "Merchandise not found" });
+    }
+
+    res.status(200).json(merch);
+  } catch (error) {
+    console.error("Error fetching merch:", error.message);
+    res.status(500).send(error.message);
+  }
+});
+
 router.get("/retrieve-admin", authenticateToken, async (req, res) => {
   try {
     const merches = await Merch.find({});
