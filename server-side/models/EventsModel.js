@@ -20,11 +20,15 @@ const eventSchema = new Schema({
     type: Date,
     required: true,
   },
+  eventDescription: {
+    type: String,
+    required: true,
+  },
   attendees: {
     type: [attendeeSchema],
     default: [],
   },
-  
+
   status: {
     type: String,
     required: true,
