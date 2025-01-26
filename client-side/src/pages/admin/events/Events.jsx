@@ -39,7 +39,7 @@ function Events() {
                 className="w-[80%] h-full"
               >
                 <button
-                  className="w-full h-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105 transition-transform duration-200"
+                  className="w-full h-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
                   tabIndex="0"
                 >
                   View
@@ -48,12 +48,12 @@ function Events() {
 
               <Link to="/admin/Statistics" className="h-full">
                 <button
-                  className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105 transition-transform duration-200"
+                  className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
                   tabIndex="1"
                 >
                   <MdOutlineQueryStats />
                 </button>
-              </Link> 
+              </Link>
 
               <Link to={`/admin/raffle`} className="h-full">
                 <button
