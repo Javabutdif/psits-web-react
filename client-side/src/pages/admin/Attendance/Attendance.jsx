@@ -26,8 +26,7 @@ const Attendance = (props) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [morning, setMorning] = useState(false);
-  const [afternoon, setAfternoon] = useState(false);
+  const [eventHasEnded, setEventHasEnded] = useState(false);
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -83,8 +82,8 @@ const Attendance = (props) => {
       ),
     },
     {
-      key: "student",
-      label: "Student",
+      key: "name",
+      label: "Name",
       sortable: true,
       selector: (row) => row.name, // Add selector for the student field
       cell: (row) => (
@@ -109,30 +108,28 @@ const Attendance = (props) => {
       cell: (row) => row.year,
     },
     {
-      key: "status",
+      key: "isAttended",
       label: "Status",
       sortable: true,
-      selector: (row) =>
-        row.morning && row.afternoon
-          ? "Complete"
-          : row.morning || row.afternoon
-          ? "Incomplete"
-          : "Pending", // Add selector for status field
+      selector: (row) => {
+        if (row.isAttended) return "Attended";
+        if (eventHasEnded && !row.isAttended) return "Absent";
+        return "Ongoing";
+      },
+
       cell: (row) => {
         const status =
-          row.morning && row.afternoon
-            ? "Complete"
-            : row.morning || row.afternoon
-            ? "Incomplete"
-            : "Pending";
+          row.isAttended ? "Attended"
+          : eventHasEnded && !row.isAttended ? "Absent"
+          : "Ongoing"; 
 
         return (
           <div className="text-left">
             <span
               className={`px-2 py-1 rounded text-xs ${
-                status === "Complete"
+                status === "Attended"
                   ? "bg-green-200 text-green-800"
-                  : status === "Incomplete"
+                  : status === "Absent"
                   ? "bg-red-200 text-gray-800"
                   : "bg-yellow-200 text-yellow-800"
               }`}
@@ -144,30 +141,22 @@ const Attendance = (props) => {
       },
     },
     {
-      key: "time",
-      label: "Confirmed Time",
+      key: "attendDate",
+      label: "Confirmed Date",
       sortable: true,
-      selector: (row) => row.time, // Add selector for time field
-      cell: (row) => new Date(row.time).toLocaleString(),
+      selector: (row) => row.attendDate, // Add selector for time field
+      cell: (row) => new Date(row.attendDate).toLocaleString(),
     },
     {
-      key: "confirmed",
+      key: "confirmedBy",
       label: "Confirmed By",
       sortable: true,
-      selector: (row) => row.confirmed, // Add selector for confirmed field
-      cell: (row) => row.confirmed,
+      selector: (row) => row.confirmedBy, // Add selector for confirmed field
+      cell: (row) => row.confirmedBy,
     },
     {
       key: "action",
       label: "Action",
-      // cell: (row) => (
-      // 	<button
-      // 		onClick={() => handleScanQRCode(row.id)}
-      // 		className="px-4 bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
-      // 	>
-      // 		View
-      // 	</button>
-      // ),
       cell: (row) => (
         <ButtonsComponent>
           <FormButton
