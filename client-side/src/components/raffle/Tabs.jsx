@@ -34,3 +34,4 @@ const Tabs = ({ onSelectCampus }) => {
 };
 
 export default Tabs
+    
