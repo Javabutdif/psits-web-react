@@ -2,17 +2,21 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
-import { Link } from "react-router-dom";
-import ConfirmationModal from "../../../components/common/modal/ConfirmationModal.jsx";
 import FormSelect from "../../../components/forms//FormSelect.jsx";
 import FormButton from "../../../components/forms/FormButton";
 import FormInput from "../../../components/forms/FormInput.jsx";
-import ViewStudentAttendance from "./ViewStudentAttendance.jsx";
+// import ViewStudentAttendance from "./ViewStudentAttendance.jsx";
+// import { AiOutlineClose } from "react-icons/ai";
+import { useNavigate } from "react-router-dom";
+import ConfirmAttendeeModal from "./ConfirmAttendeeModal.jsx";
+
+
 
 const AddAttendeeForm = () => {
   const [loading, setLoading] = useState(true); 
   const [errors, setErrors] = useState({});
   const [useModal, setUseModal] = useState(false);
+  const navigate = useNavigate();
 
 
 
@@ -112,9 +116,32 @@ const AddAttendeeForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setUseModal(true);  // Trigger the modal for confirmation
+    const validationErrors = validateInputs();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+    } else {
+      setErrors({});
+      setUseModal(true); // Show modal on successful validation
+    }
   };
 
+  const handleModalConfirm = () => {
+    setUseModal(false);
+    console.log("Form data submitted:", formData);
+    // Submit form data logic here
+    addAttendeeToList();
+  };
+  const addAttendeeToList = async () => {
+    try {
+      setLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate 2 seconds delay
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+      setLoading(false);
+    }
+    navigate("/admin/attendance/");
+  };
 
   const closeModal = () => {
     setUseModal(false);
@@ -204,7 +231,7 @@ const AddAttendeeForm = () => {
           <div className="border-black-10">
             <form
               className="flex flex-col w-full space-y-6 p-4  lg:p-5"
-              onSubmit={showModal}
+              onSubmit={handleSubmit}
             >
               {/* Form inputs */}
               {/* Id Num */}
@@ -328,22 +355,22 @@ const AddAttendeeForm = () => {
 
                 </div>
                 <div className="flex flex-row items-center gap-5 py-2 w-full">
-                  <Link to= "#">
+                  <div>
                     <FormButton
-                      type="submit"
-                      text="Add Attendee"
-                      styles="w-full hover:bg-[#046c42] bg-[#057a4c] text-white p-2 rounded"
-                      // onClick={showModal()}
-                    />
-                  </Link >
-                  <Link to= "#">
+                        type="submit"
+                        text="Add Attendee"
+                        styles="w-full hover:bg-[#046c42] bg-[#057a4c] text-white p-2 rounded"
+                        // onClick={showModal()}
+                      />
+                  </div>
+                  <div>
                     <FormButton
                       type="cancel"
                       text="Cancel"
                       styles="w-full hover:bg-[#b00000] bg-[#d00000] text-white p-2 rounded"
                       // onClick={closeModal()}
                     />
-                  </Link >
+                  </div>
                 </div>
               </div>
             </form>
@@ -356,16 +383,37 @@ const AddAttendeeForm = () => {
     )}
 
     {useModal && (
-      <ConfirmationModal/>
+        <ConfirmAttendeeModal
+          formData={formData}
+          onClose ={closeModal}
+          onConfirm={handleModalConfirm}
+
+        />
     )}
 
-    {useModal && (
-        <ViewStudentAttendance
-        isVisible={useModal}
-        onClose={setUseModal}
-        studentData={formData.applied}
-      />
-    )}
+    {/* {useModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ">
+      <div className=" bg-white rounded-lg shadow-lg w-full max-w-2xl  relative sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl max-h-screen overflow-auto">
+        <button
+          type="button"
+          onClick={closeModal}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+        >
+          <AiOutlineClose size={24} />
+        </button>
+        <div className=" p-5 w-full sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl max-h-screen overflow-auto">
+          <div className="flex flex-col justify-left gap-2 p-2 w-full sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl max-h-screen overflow-auto">
+            <h2 className="text-xl font-semibold ">Student Attendance</h2>
+              <div className="flex flex-col justify-center ml-3">
+                <p className="text-gray-800 text-md">Name: {studentData.student}</p>
+                <p className="text-gray-800 text-sm">ID: {studentData.id}</p>
+                <p className="text-gray-800 text-sm">Course: {studentData.course}</p>
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+    )} */}
 
   </div>
 

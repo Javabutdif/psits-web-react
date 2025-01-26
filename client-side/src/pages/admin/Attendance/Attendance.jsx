@@ -55,6 +55,7 @@ const Attendance = (props) => {
     setShowModal(false);
   };
   const handleViewBtn = (studentData) => {
+    console.log("Selected Data:", studentData); // Debugging
     setSelectedData(studentData);
     setShowModal(true);
   };
