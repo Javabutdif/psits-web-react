@@ -10,7 +10,6 @@ const attendeeSchema = new Schema({
   email: {
     type: String,
     required: true,
-    
   },
   name: {
     type: String,
@@ -34,11 +33,12 @@ const attendeeSchema = new Schema({
   },
   attendDate: {
     type: Date,
-    
   },
   confirmedBy: {
     type: String,
-   
+  },
+  shirtSize: {
+    type: String,
   },
 });
 
