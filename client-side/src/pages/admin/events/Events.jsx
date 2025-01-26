@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getEvents } from "../../api/event";
-import { MdOutlineQueryStats } from "react-icons/md";
-import Attendance from "./Attendance/Attendance";
+import { getEvents } from "../../../api/event";
+import { MdOutlineQueryStats, MdOutlineCardGiftcard } from "react-icons/md"; // Add the new icon import
+import Attendance from "../Attendance/Attendance";
 
 function Events() {
   const [events, setEvent] = useState([]);
@@ -52,6 +52,15 @@ function Events() {
                   tabIndex="1"
                 >
                   <MdOutlineQueryStats />
+                </button>
+              </Link>
+
+              <Link to={`/admin/raffle`} className="h-full">
+                <button
+                  className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105 transition-transform duration-200"
+                  tabIndex="2"
+                >
+                  <MdOutlineCardGiftcard />
                 </button>
               </Link>
             </div>
