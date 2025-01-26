@@ -27,6 +27,7 @@ import Reports from "./pages/admin/Reports";
 import Resources from "./pages/admin/Resources";
 import Students from "./pages/admin/Students";
 import Settings from "./pages/Settings";
+import Raffle from "./pages/admin/events/EventRaffle";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -53,7 +54,7 @@ import StudentOrders from "./pages/students/StudentOrders";
 // import QRCodePage from "./pages/students/QRCodePage";
 /// Events Attendace Tab - Not Final
 import AddAttendeeForm from "./pages/admin/Attendance/AddAttendeeForm";
-import AdminEvents from "./pages/admin/Events";
+import AdminEvents from "./pages/admin/events/Events";
 
 import Logs from "./pages/admin/Logs";
 import Community from "./pages/Community";
@@ -107,6 +108,10 @@ const App = () => {
             path="attendance/:eventId"
             element={<PrivateRouteAdmin element={Attendance} />}
           />
+           <Route
+              path="raffle" element={<PrivateRouteAdmin element={Raffle} />}
+              />
+        
           <Route
             path="statistics"
             element={<PrivateRouteAdmin element={Statistics} />}
