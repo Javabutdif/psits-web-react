@@ -1,8 +1,9 @@
 import React from 'react';
 import { Bar, Doughnut, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Link } from "react-router-dom";
 
-
+//
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
@@ -81,34 +82,47 @@ const Statistics = () => {
 
   return (
     <div>
-    <h1 className="text-3xl font-bold mb-8 text-center">Population Statistics</h1>
-    <div className="flex flex-wrap lg:flex-nowrap lg:gap-8 md:gap-8 items-center justify-center">
-      {/* Charts Section */}
-      <div className="flex flex-col gap-8 w-full lg:w-[50%]">
-        <div className="w-full h-[250px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-          <Doughnut data={studentYearsData} options={chartOption2} />
-        </div>
-        <div className="w-full h-[280px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg">
-          <Bar data={campusData} options={chartOption1} />
-        </div>
-        <div className="w-full h-[250px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg mb-3">
-          <Doughnut data={courseData} options={chartOption2} />
-        </div>
-      </div> 
-      {/* Total Number of Attendees Section */}
-        <div className="flex flex-col items-center w-full lg:w-[30%] gap-4 mt-8 lg:mt-0 justify-center">
-          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
-            <p>Total number of Attendees</p>
-            <h3>7000</h3>
+      <Link to="/admin/events">
+      <button className='lg:mt-5 sm:mt-3 ml-1 mb-2 text-[#002E48] hover:text-[#4398AC] transition duration-200 rounded-lg'>
+      <i class="fas fa-arrow-left lg:text-xl"></i>
+      </button>
+      </Link>
+      <h1 className="text-3xl font-bold mb-8 text-center ">Population Statistics</h1>
+      <div className="flex flex-wrap lg:flex-nowrap lg:gap-8 md:gap-8 items-center justify-center">
+        
+        {/* Charts Section */}
+        <div className="flex flex-col gap-8 w-full lg:w-[50%]">
+          <div className="w-full h-[250px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <Doughnut data={studentYearsData} options={chartOption2} />
           </div>
-          <div className="lg:w-[260px] bg-[#D9D9D9] mb-8 text-center p-5 rounded-lg">
-            <p>We value your feedback.</p>
-            <p>Please enter your evaluation below.</p>
-            <input 
-              type="text" 
-              className="w-full border rounded p-2"
-              placeholder="Enter your feedback" 
-            />
+          <div className="w-full h-[280px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+            <Bar data={campusData} options={chartOption1} />
+          </div>
+          <div className="w-full h-[250px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg mb-3">
+            <Doughnut data={courseData} options={chartOption2} />
+          </div>
+        </div> 
+        {/* Total Number of Attendees Section */}
+          <div className="flex flex-col items-center w-full lg:w-[30%] gap-4 mt-8 lg:mt-0 justify-center">
+            <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
+              <p className='mb-3'>Total number of Attendees</p>
+              <h3>7000</h3>
+            </div>
+            <div className="2xl:w-[350px] lg:w-[260px] bg-[#D9D9D9] mb-8 text-center p-5 rounded-lg">
+              <p>We value your feedback.</p>
+              <p>Please enter your evaluation below.</p>
+              <input 
+                type="text" 
+                className="w-full border rounded p-1 mt-2"
+                placeholder="Enter your feedback" 
+                
+              />
+              <button
+              type="submit"
+              className="text-sm relative top-3 mb-2 text-[#002E48] bg-white p-2 hover:text-black rounded-lg transition duration-200"
+              >
+              <i class="fas fa-paper-plane"></i> Submit  
+              </button>
           </div>
         </div>
     </div>

@@ -28,11 +28,12 @@ function Events() {
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="pr-4 pl-4 pb-4">
-            <h1 className="text-lg font-semibold text-gray-800 truncate mb-2">
+          <div className=" pr-4 pl-4 pb-4">
+            <h1 className="ml-3 text-lg font-semibold text-gray-800 truncate mb-2">
               {event.eventName}
             </h1>
-            <div className="flex gap-1 items-center">
+            <p className="mb-3 ml-3 text-[074873]">Coming Soon...</p>
+            <div className="flex gap-1 items-center justify-center">
               <Link
                 to={`/admin/attendance/${event.eventId}`}
                 className="w-[80%] h-full"
@@ -52,7 +53,7 @@ function Events() {
                 >
                   <MdOutlineQueryStats />
                 </button>
-              </Link>
+              </Link> 
             </div>
           </div>
         </div>
