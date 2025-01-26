@@ -30,7 +30,7 @@ const ViewStudentAttendance = ({ isVisible, onClose, studentData}) => {
             <div className="flex flex-col justify-center ml-3 gap-2">
               <p className="text-gray-800 text-sm"><strong>Name:</strong> {studentData.name}</p>
               <p className="text-gray-800 text-sm"><strong>ID:</strong> {studentData.id_number}</p>
-              <p className="text-gray-800 text-sm"><strong>Course:</strong> {studentData.course} Year: {studentData.year}</p>
+              <p className="text-gray-800 text-sm"><strong>Course:</strong> {studentData.course}</p>
               <p className="text-gray-800 text-sm"><strong>Year:</strong> {studentData.year}</p>
               <p className="text-gray-800 text-sm"><strong>Campus:</strong> {studentData.campus}</p>
               <p className="text-gray-800 text-sm"><strong>T-Shirt Size:</strong> {studentData.shirt_size}</p>

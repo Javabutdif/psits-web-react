@@ -7,9 +7,8 @@ import FormButton from "../../../components/forms/FormButton";
 import FormInput from "../../../components/forms/FormInput.jsx";
 // import ViewStudentAttendance from "./ViewStudentAttendance.jsx";
 // import { AiOutlineClose } from "react-icons/ai";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ConfirmAttendeeModal from "./ConfirmAttendeeModal.jsx";
-
 
 
 const AddAttendeeForm = () => {
@@ -357,21 +356,23 @@ const AddAttendeeForm = () => {
                 <div className="flex flex-row items-center gap-5 py-2 w-full">
                   <div>
                     <FormButton
-                        type="submit"
-                        text="Add Attendee"
-                        styles="w-full hover:bg-[#046c42] bg-[#057a4c] text-white p-2 rounded"
-                        // onClick={showModal()}
-                      />
-                  </div>
-                  <div>
-                    <FormButton
-                      type="cancel"
-                      text="Cancel"
-                      styles="w-full hover:bg-[#b00000] bg-[#d00000] text-white p-2 rounded"
-                      // onClick={closeModal()}
+                      type="submit"
+                      text="Add Attendee"
+                      styles="w-full hover:bg-[#046c42] bg-[#057a4c] text-white p-2 rounded transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 active:bg-[#045e3b]"
+                      // onClick={showModal()}
                     />
                   </div>
+                  <div>
+                    <Link to="/admin/dashboard">
+                      <button
+                        className="w-full hover:bg-[#b00000] bg-[#d00000] text-white p-2 rounded transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 active:bg-[#8f0000]"
+                      >
+                        Cancel
+                      </button>
+                    </Link>
+                  </div>
                 </div>
+
               </div>
             </form>
           </div>

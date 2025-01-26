@@ -213,26 +213,25 @@ const Attendance = (props) => {
         </div>
       ) : (
         <div className="flex flex-col gap-5 p-2 md:flex-col sm:flex-col">
-          <div className="md:overflow-x-auto shadow-sm rounded-sm border bg-white p-2 space-y-4">
+          <div className=" shadow-sm rounded-sm border bg-white p-2 space-y-4">
             <motion.div
-              className=" flex flex-row justify-between items-center product-detail  p-3 sm:p-2 mx-auto"
-              initial={{ opacity: 0 }}
-              z
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="ml-2">
-                <h2 className="text-3xl font-bold">{eventData.eventName}</h2>
-              </div>
+            className="flex flex-col sm:flex-row justify-between items-center product-detail p-3 sm:p-2 mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="ml-2 w-full">
+              <h2 className="text-3xl font-bold">{eventData.eventName}</h2>
+            </div>
 
-              <div className="w-full sm:w-auto flex justify-center sm:justify-end">
+            <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
               <ButtonsComponent>
                 <div className="py-2">
                   <Link to="/admin/addAttendee">
                     <motion.button
                       type="button"
                       text="Add Attendee"
-                      className="bg-gray-500 text-white hover:bg-gray-600 active:bg-gray-700 rounded-md px-6 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+                      className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
                       textClass="sm:block hidden text-white"
                       whileHover={{ scale: 1.01, opacity: 0.95 }}
                       whileTap={{ scale: 0.98, opacity: 0.9 }}
@@ -243,7 +242,9 @@ const Attendance = (props) => {
                 </div>
               </ButtonsComponent>
             </div>
-            </motion.div>
+          </motion.div>
+
+
 
             {/* Tabs and Table Container */}
           </div>
