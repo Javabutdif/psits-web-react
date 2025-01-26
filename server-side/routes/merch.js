@@ -90,6 +90,7 @@ router.post(
             eventName: name,
             eventImage: imageUrl,
             eventDate,
+            eventDescription: description,
             status: "Ongoing",
             attendees: [],
           });
