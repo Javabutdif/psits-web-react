@@ -1,12 +1,56 @@
-import React from "react";
-import { QRCode } from "react-qr-code"; // Import the QRCode component
+import React, { useState, useEffect } from "react";
+import { QRCode } from "react-qr-code";
 import { formatDate } from "../../utils/stringUtils";
+import { getInformationData } from "../../authentication/Authentication";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import backendConnection from "../../api/backendApi";
 
 const QRCodePage = ({ closeView, event }) => {
-  // Handle modal backdrop clicks
+  const [isAttendee, setIsAttendee] = useState(false);
+  const [studentId, setStudentId] = useState();
+  const navigate = useNavigate();
+
   const handleBackdropClick = (e) => {
     if (e.target.id === "modal-backdrop") {
       closeView();
+    }
+  };
+
+  const checkIfUserIsAttendee = () => {
+    const student = getInformationData();
+    setStudentId(student.id_number);
+
+    const isAttendee = event.attendees.some(
+      (attendee) => attendee.id_number === student.id_number
+    );
+
+    setIsAttendee(isAttendee);
+  };
+
+  useEffect(() => {
+    checkIfUserIsAttendee();
+  }, [event]);
+
+  const fetchMerchData = async () => {
+    try {
+      const token = sessionStorage.getItem("Token");
+
+      const response = await axios.get(
+        `${backendConnection()}/api/merch/retrieve/${event.eventId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = response.data;
+      navigate(`/student/merchandise/${event.eventId}`, {
+        state: data,
+      });
+    } catch (error) {
+      console.error("Error fetching merchandise data:", error);
     }
   };
 
@@ -58,16 +102,35 @@ const QRCodePage = ({ closeView, event }) => {
               <h2 className="text-lg font-semibold text-[#074873] mb-4">
                 QR Code for Attendance
               </h2>
-              <div className="flex justify-center">
-                <QRCode
-                  value="https://psits-web.vercel.app/"
-                  size={170}
-                  fgColor="#074873"
-                />
-              </div>
-              <p className="text-sm text-gray-500 mt-4">
-                Scan this code to confirm your attendance.
-              </p>
+              {isAttendee ? (
+                <>
+                  <div className="flex justify-center">
+                    <QRCode
+                      value={`${studentId}`}
+                      size={170}
+                      fgColor="#074873"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4">
+                    Scan this code to confirm your attendance.
+                  </p>
+                </>
+              ) : (
+                <div>
+                  <p className="text-sm text-gray-500 mt-4">
+                    You have not purchased a ticket for this event.{" "}
+                    <Link
+                      to="#"
+                      className="text-blue-600 cursor-pointer"
+                      onClick={fetchMerchData}
+                    >
+                      Click here
+                    </Link>{" "}
+                    to order. Pay in the PSITS Office afterwards to confirm
+                    purchase.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
