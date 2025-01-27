@@ -52,8 +52,27 @@ function Merchandise() {
     try {
       setLoading(true);
       const result = await merchandiseAdmin();
-      setData(result);
-      setFilteredData(result);
+
+      const sortedResult = result.sort((a, b) => {
+        const statusOrder = {
+          Publishing: 1,
+          Expired: 2,
+          Deleted: 3,
+          Pending: 4,
+        };
+
+        const statusA = getStatus(a);
+        const statusB = getStatus(b);
+
+        if (a.is_active !== b.is_active) {
+          return b.is_active - a.is_active;
+        }
+
+        return statusOrder[statusA] - statusOrder[statusB];
+      });
+
+      setData(sortedResult);
+      setFilteredData(sortedResult);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
@@ -132,6 +151,7 @@ function Merchandise() {
     if (await deleteMerchandise(merchToDelete)) {
       showToast("success", "Merchandise Deleted");
       setDeleteModalOpen(false);
+      fetchData();
     }
   };
   const publishMerchandiseApi = async () => {
@@ -145,7 +165,6 @@ function Merchandise() {
   const handleDeleteProductModal = (id) => {
     setMerchToDelete(id);
     setDeleteModalOpen(true);
-    fetchData();
   };
   const handlePublishProductModal = (id) => {
     setMerchToPublish(id);

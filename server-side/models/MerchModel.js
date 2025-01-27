@@ -88,6 +88,9 @@ const merchSchema = new Schema(
     selectedSizes: {
       type: Array,
     },
+    selectedAudience: {
+      type: String,
+    },
     control: {
       type: String,
       required: true,

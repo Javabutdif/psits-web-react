@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import FilterOptions from "./merchandise/FilterOptions";
 import { motion, AnimatePresence } from "framer-motion";
 import Pagination from "../../components/Custom/Pagination";
+import { getInformationData } from "../../authentication/Authentication";
 
 const StudentMerchandise = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,7 +25,8 @@ const StudentMerchandise = () => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Customize this value based on your design
+  const itemsPerPage = 5;
+  const userData = getInformationData();
 
   const buttonVariants = {
     initial: { scale: 1 },
@@ -114,7 +116,11 @@ const StudentMerchandise = () => {
         const startDate = new Date(item.start_date);
         const endDate = new Date(item.end_date);
 
-        return currentDate <= endDate;
+        return (
+          currentDate <= endDate &&
+          (item.selectedAudience.includes(userData.audience) ||
+            item.selectedAudience.includes("all"))
+        );
       });
 
       setProducts(filteredProducts);

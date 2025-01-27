@@ -92,6 +92,7 @@ router.post("/login", loginLimiter, async (req, res) => {
       course: users.course,
       year: users.year,
       position: role === "Admin" ? users.position : "Student",
+      role: users.role,
     };
 
     const token = jwt.sign({ user, role }, token_key, {

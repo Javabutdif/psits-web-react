@@ -21,7 +21,6 @@ const studentSchema = new Schema({
   },
   middle_name: {
     type: String,
-    
   },
   last_name: {
     type: String,
@@ -60,7 +59,10 @@ const studentSchema = new Schema({
   renewedOn: {
     type: String,
   },
-  cart: [CartItem.schema], 
+  role: {
+    type: String,
+  },
+  cart: [CartItem.schema],
 });
 
 const Student = mongoose.model("Student", studentSchema);
