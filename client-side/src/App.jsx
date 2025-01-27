@@ -62,6 +62,7 @@ import Events from "./pages/Events";
 import StudentPaidOrders from "./pages/students/orders/PaidOrders";
 import StudentPendingOrder from "./pages/students/orders/PendingOrders";
 import Resouces from "./pages/students/Resouces";
+import MarkAsPresent from "./pages/admin/MarkAsPresent";
 
 const App = () => {
   return (
@@ -108,10 +109,15 @@ const App = () => {
             path="attendance/:eventId"
             element={<PrivateRouteAdmin element={Attendance} />}
           />
-           <Route
-              path="raffle" element={<PrivateRouteAdmin element={Raffle} />}
-              />
-        
+          <Route
+            path="attendance/:eventId/markAsPresent/:attendeeId"
+            element={<PrivateRouteAdmin element={MarkAsPresent} />}
+          />
+          <Route
+            path="raffle"
+            element={<PrivateRouteAdmin element={Raffle} />}
+          />
+
           <Route
             path="statistics"
             element={<PrivateRouteAdmin element={Statistics} />}
