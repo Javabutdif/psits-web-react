@@ -266,6 +266,8 @@ const Attendance = (props) => {
           isVisible={showModal}
           onClose={handleCloseModal}
           studentData={selectedData}
+          eventId={eventId}
+          eventName={eventData.eventName}
         />
       )}
     </div>
