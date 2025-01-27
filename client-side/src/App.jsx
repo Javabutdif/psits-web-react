@@ -29,6 +29,9 @@ import Officers from "./pages/admin/Officers";
 import AllOfficers from "./pages/admin/officers/AllOfficers";
 import Suspend from "./pages/admin/officers/Suspend";
 import Request from "./pages/admin/officers/Request";
+import Developers from "./pages/admin/officers/Developers";
+import Media from "./pages/admin/officers/Media";
+import Volunteers from "./pages/admin/officers/Volunteers";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -88,6 +91,18 @@ const App = () => {
             <Route
               path="suspend"
               element={<PrivateRouteAdmin element={Suspend} />}
+            />
+            <Route
+              path="developers"
+              element={<PrivateRouteAdmin element={Developers} />}
+            />
+            <Route
+              path="media"
+              element={<PrivateRouteAdmin element={Media} />}
+            />
+            <Route
+              path="volunteers"
+              element={<PrivateRouteAdmin element={Volunteers} />}
             />
             <Route
               path="request"

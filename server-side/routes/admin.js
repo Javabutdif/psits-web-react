@@ -288,6 +288,7 @@ router.get("/get-order-date", authenticateToken, async (req, res) => {
   }
 });
 
+//get all officers
 router.get("/get-all-officers", async (req, res) => {
   try {
     const officers = await Admin.find({ status: "Active" });
@@ -299,6 +300,79 @@ router.get("/get-all-officers", async (req, res) => {
       course: officer.course,
       year: officer.year,
       position: officer.position,
+    }));
+
+    res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("Error fetching officers:", error);
+    res.status(500).json({ error: "Failed to fetch officers" });
+  }
+});
+//get all developers
+router.get("/get-all-developers", async (req, res) => {
+  try {
+    const developers = await Student.find({ role: "developer" });
+
+    const users = developers.map((developer) => ({
+      id_number: developer.id_number,
+      email: developer.email,
+      name:
+        developer.first_name +
+        " " +
+        developer.middle_name +
+        " " +
+        developer.last_name,
+      course: developer.course,
+      year: developer.year,
+      role: developer.role,
+      status: developer.status,
+    }));
+
+    res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("Error fetching officers:", error);
+    res.status(500).json({ error: "Failed to fetch officers" });
+  }
+});
+//get all media
+router.get("/get-all-media", async (req, res) => {
+  try {
+    const media = await Student.find({ role: "media" });
+
+    const users = media.map((med) => ({
+      id_number: med.id_number,
+      email: med.email,
+      name: med.first_name + " " + med.middle_name + " " + med.last_name,
+      course: med.course,
+      year: med.year,
+      role: med.role,
+      status: med.status,
+    }));
+
+    res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("Error fetching officers:", error);
+    res.status(500).json({ error: "Failed to fetch officers" });
+  }
+});
+//get all volunteers
+router.get("/get-all-volunteers", async (req, res) => {
+  try {
+    const volunteers = await Student.find({ role: "volunteer" });
+
+    const users = volunteers.map((volunteer) => ({
+      id_number: volunteer.id_number,
+      email: volunteer.email,
+      name:
+        volunteer.first_name +
+        " " +
+        volunteer.middle_name +
+        " " +
+        volunteer.last_name,
+      course: volunteer.course,
+      year: volunteer.year,
+      role: volunteer.role,
+      status: volunteer.status,
     }));
 
     res.status(200).json({ data: users });
@@ -434,6 +508,33 @@ router.put("/admin/suspend", authenticateToken, async (req, res) => {
     }
   } catch (error) {
     console.error("Error suspending admin:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred", error: error.message });
+  }
+});
+
+//TODO: REMOVE ROLE FROM ADMIN
+router.put("/admin/role-remove", authenticateToken, async (req, res) => {
+  const { id_number } = req.body;
+
+  try {
+    const updatedStudent = await Student.updateOne(
+      { id_number },
+      {
+        $set: {
+          role: "all",
+        },
+      }
+    );
+    console.log(updatedStudent);
+    if (updatedStudent.modifiedCount > 0) {
+      res.status(200).json({ message: "Role removed successfully" });
+    } else {
+      res.status(404).json({ message: "Student not found" });
+    }
+  } catch (error) {
+    console.error("Error removing role from admin:", error);
     res
       .status(500)
       .json({ message: "An error occurred", error: error.message });

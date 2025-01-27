@@ -104,7 +104,6 @@ const StudentMerchandise = () => {
   const toggleFilterOption = () => {
     setIsFilterOptionOpen((prevState) => !prevState);
   };
-
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -116,10 +115,17 @@ const StudentMerchandise = () => {
         const startDate = new Date(item.start_date);
         const endDate = new Date(item.end_date);
 
+ 
+        const selectedAudienceArray = item.selectedAudience.includes(",")
+          ? item.selectedAudience.split(",").map((aud) => aud.trim())
+          : [item.selectedAudience];
+
         return (
           currentDate <= endDate &&
-          (item.selectedAudience.includes(userData.audience) ||
-            item.selectedAudience.includes("all"))
+          (selectedAudienceArray.some((audience) =>
+            userData.audience.includes(audience)
+          ) ||
+            selectedAudienceArray.includes("all"))
         );
       });
 
