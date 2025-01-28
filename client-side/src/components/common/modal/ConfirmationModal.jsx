@@ -14,7 +14,8 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
     confirmType === ConfirmActionType.RENEWAL ||
     confirmType === ConfirmActionType.ORDER ||
     confirmType === ConfirmActionType.CANCEL ||
-    confirmType === ConfirmActionType.REMOVE
+    confirmType === ConfirmActionType.REMOVE ||
+    confirmType === ConfirmActionType.DECLINE
       ? "bg-[#991b1b] hover:bg-[#b92121]"
       : "bg-green-500 hover:bg-green-600";
 

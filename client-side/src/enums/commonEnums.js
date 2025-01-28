@@ -8,6 +8,7 @@ export const ConfirmActionType = Object.freeze({
   SUSPEND: "Suspend",
   REMOVE: "Remove",
   APPROVE: "Approve",
+  DECLINE: "Decline",
 });
 
 export const ConfirmActionWords = Object.freeze({
@@ -20,4 +21,5 @@ export const ConfirmActionWords = Object.freeze({
   Suspend: "suspend",
   Remove: "remove",
   Approve: "approve",
+  Decline: "decline",
 });

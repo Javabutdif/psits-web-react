@@ -35,7 +35,7 @@ const Volunteers = () => {
 
   const fetchData = async () => {
     try {
-      const result = await getAllMedia();
+      const result = await getAllVolunteers();
       setData(result ? result : []);
       setFilteredData(result ? result : []);
       setLoading(false);

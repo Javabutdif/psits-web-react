@@ -295,7 +295,7 @@ function Product({ handleCloseAddProduct }) {
     { value: "all", label: "All" },
     { value: "officers", label: "Officers" },
     {
-      value: "volunteers,media,developers",
+      value: "volunteer,media,developer",
       label: "Volunteers, Media and Developers",
     },
   ];

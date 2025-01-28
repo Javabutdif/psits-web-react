@@ -1,7 +1,7 @@
 import {
   fetchAllStudentRequestRole,
   approveRole,
-  roleRemove,
+  declineRole,
 } from "../../../api/admin";
 import ChangePassword from "../../../components/ChangePassword";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
@@ -14,8 +14,6 @@ import { showToast } from "../../../utils/alertHelper";
 import EditOfficer from "../EditOfficer";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
-import AddOfficer from "../AddOfficer";
-import SearchModal from "../../../components/common/modal/SearchModal";
 
 const Request = () => {
   const [data, setData] = useState([]);
@@ -33,6 +31,8 @@ const Request = () => {
   const [viewChange, setViewChange] = useState(false);
   const [approveModal, setApproveModal] = useState(false);
   const [approveId, setApproveId] = useState("");
+  const [declineModal, setDeclineModal] = useState(false);
+  const [declineId, setDeclineId] = useState("");
 
   const fetchData = async () => {
     try {
@@ -81,16 +81,6 @@ const Request = () => {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const showModal = (row) => {
-    setIsModalVisible(true);
-    setStudentIdToBeDeleted(row.id_number);
-  };
-
-  const hideModal = () => {
-    setIsModalVisible(false);
-    setStudentIdToBeDeleted("");
-  };
-
   const handleShowApproveModal = (row) => {
     setApproveModal(true);
     setApproveId(row.id_number);
@@ -100,7 +90,7 @@ const Request = () => {
     try {
       const id_number = approveId;
 
-      if ((await approveRole(id_number)) === 200) {
+      if (await approveRole(id_number)) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );
@@ -116,24 +106,27 @@ const Request = () => {
     setIsLoading(false);
   };
 
-  const handleConfirmRemoveRole = async () => {
+  const handleShowDeclineModal = (row) => {
+    setDeclineModal(true);
+    setDeclineId(row.id_number);
+  };
+  const handleDeclineRole = async () => {
     setIsLoading(true);
-
     try {
-      const id_number = studentIdToBeDeleted;
-      console.log(id_number);
-      if ((await roleRemove(id_number)) === 200) {
+      const id_number = declineId;
+
+      if (await declineRole(id_number)) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );
         setData(updatedData);
-        setIsModalVisible(false);
-        showToast("success", "Role Remove Successful!");
+        setDeclineModal(false);
+        showToast("success", "Role Declined Successful!");
       } else {
-        console.error("Failed to delete officer");
+        console.error("Failed to decline ");
       }
     } catch (error) {
-      console.error("Error deleting officer:", error);
+      console.error("Error declining officer:", error);
     }
     setIsLoading(false);
   };
@@ -246,7 +239,7 @@ const Request = () => {
           <FormButton
             type="button"
             text="Deny"
-            onClick={() => showModal(row)}
+            onClick={() => handleShowDeclineModal(row)}
             icon={<i className="fas fa-times-circle" />} // Deny icon
             styles="flex items-center space-x-2 bg-red-100 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-400"
             textClass="text-red-800 font-medium" // Red text for "Deny"
@@ -276,14 +269,14 @@ const Request = () => {
           onConfirm={handleApproveRole}
         />
       )}
-
-      {isModalVisible && (
+      {declineModal && (
         <ConfirmationModal
-          confirmType={ConfirmActionType.REMOVE}
-          onCancel={hideModal}
-          onConfirm={handleConfirmRemoveRole}
+          confirmType={ConfirmActionType.DECLINE}
+          onCancel={() => setDeclineModal(false)}
+          onConfirm={handleDeclineRole}
         />
       )}
+
       {viewChange && (
         <>
           <ChangePassword

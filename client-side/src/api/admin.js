@@ -966,3 +966,31 @@ export const approveRole = async (id_number) => {
     console.error("Error:", error);
   }
 };
+//Decline Role President
+export const declineRole = async (id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/decline-role`,
+      { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message);
+    }
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};

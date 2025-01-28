@@ -598,7 +598,7 @@ router.get(
     const { id_number } = req.params;
 
     try {
-      const student = await Student.findOne({ id_number });
+      const student = await Student.findOne({ id_number, isRequest: false });
       if (!student) {
         res.status(404).json({ message: "Student not found" });
       } else {
@@ -667,6 +667,33 @@ router.put("/admin/approve-role", authenticateToken, async (req, res) => {
       { id_number },
       {
         $set: {
+          isRequest: false,
+        },
+      }
+    );
+
+    if (updatedRole.modifiedCount > 0) {
+      res.status(200).json({ message: "Role approved successfully" });
+    } else {
+      res.status(404).json({ message: "Student not found" });
+    }
+  } catch (error) {
+    console.error("Error updating student role:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred", error: error.message });
+  }
+});
+
+router.put("/admin/decline-role", authenticateToken, async (req, res) => {
+  const { id_number } = req.body;
+
+  try {
+    const updatedRole = await Student.updateOne(
+      { id_number },
+      {
+        $set: {
+          role: "all",
           isRequest: false,
         },
       }
