@@ -227,6 +227,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
             : [];
           const merchId = new ObjectId(item.product_id);
 
+          // Update merchandise details
           await Merch.findByIdAndUpdate(item.product_id, {
             $push: {
               order_details: {
@@ -251,9 +252,10 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
               "sales_data.totalRevenue": item.sub_total,
             },
           });
+
+          // Update event attendees if applicable
           const merchToGet = await Merch.findById(item.product_id);
           if (merchToGet && merchToGet.category === "ict-congress") {
-            console.log(student.campus);
             await Event.findOneAndUpdate(
               { eventId: merchId },
               {
@@ -266,6 +268,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
                     year: successfulOrder.year,
                     campus: student.campus,
                     isAttended: false,
+                    shirtSize: sizes.length > 0 ? sizes[0] : null, // Use the first size if available
                   },
                 },
               }
@@ -275,9 +278,9 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
       );
     }
 
-    // Render the email template
+    // Render and send the email
     const emailTemplate = await ejs.renderFile(
-      path.join(__dirname, "../templates/appr-order-receipt.ejs"), // Path to the ejs file
+      path.join(__dirname, "../templates/appr-order-receipt.ejs"),
       {
         reference_code: successfulOrder.reference_code,
         transaction_date: format(
@@ -297,7 +300,6 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
       }
     );
 
-    // Send Email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -308,14 +310,14 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL,
-      to: student.email, // Use the student's email
+      to: student.email,
       subject: "Your Order Receipt from PSITS - UC Main",
       html: emailTemplate,
       attachments: [
         {
           filename: "psits.jpg",
           path: path.join(__dirname, "../src/psits.jpg"),
-          cid: "logo", // Same CID as used in the EJS template
+          cid: "logo",
         },
       ],
     };
@@ -331,7 +333,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Error occurred:", error); // Log the error details with context
+    console.error("Error occurred:", error);
     res.status(500).json({
       message: "An error occurred while approving the order",
       error: error.message,

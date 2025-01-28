@@ -3,8 +3,8 @@ import { CSVLink } from "react-csv";
 import { InfinitySpin } from "react-loader-spinner";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
-import ButtonsComponent from "../../components/Custom/ButtonsComponent";
-import TableComponent from "../../components/Custom/TableComponent";
+import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
+import TableComponent from "../../../components/Custom/TableComponent";
 
 
 

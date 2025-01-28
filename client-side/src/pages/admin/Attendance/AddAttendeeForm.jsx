@@ -2,18 +2,24 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
-import { Link } from "react-router-dom";
-import ConfirmationModal from "../../../components/common/modal/ConfirmationModal.jsx";
 import FormSelect from "../../../components/forms//FormSelect.jsx";
 import FormButton from "../../../components/forms/FormButton";
 import FormInput from "../../../components/forms/FormInput.jsx";
-import ViewStudentAttendance from "./ViewStudentAttendance.jsx";
+// import ViewStudentAttendance from "./ViewStudentAttendance.jsx";
+// import { AiOutlineClose } from "react-icons/ai";
+import { Link, useNavigate } from "react-router-dom";
+import ConfirmAttendeeModal from "./ConfirmAttendeeModal.jsx";
+
 
 const AddAttendeeForm = () => {
   const [loading, setLoading] = useState(true); 
   const [errors, setErrors] = useState({});
   const [useModal, setUseModal] = useState(false);
+  const navigate = useNavigate();
 
+
+
+  const priceBySize = 1000;
 // FormData
   const [formData, setFormData] = useState({
     id_number: "",
@@ -103,50 +109,38 @@ const AddAttendeeForm = () => {
 
   const fakeRegester = (passedFormData) =>{
 
-    console.log(passedFormData.first_name);
+    // console.log(passedFormData.first_name);
 
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    const trimmedFormData = {
-      id_number: formData.id_number?.trim(),
-      first_name: formData.first_name?.trim(),
-      middle_name: formData.middle_name?.trim(),
-      last_name: formData.last_name?.trim(),
-      email: formData.email?.trim(),
-      course: formData.course?.trim(),
-      year: formData.year?.trim(),
-      campus: formData.campus?.trim(),
-      shirt_size: formData.shirt_size?.trim(),
-
-    };
-    setIsModalVisible(false);
-    try {
-      if (await fakeRegester(trimmedFormData)) {
-        showToast("success", "Registration successful");
-
-        setFormData({
-          id_number: "",
-          rfid: "",
-          password: "",
-          confirm_password: "",
-          first_name: "",
-          middle_name: "",
-          last_name: "",
-          email: "",
-          course: "",
-          year: "",
-        });
-        // navigate("");
-      }
-    } catch (error) {
-      showToast("error", JSON.stringify(error));
+    const validationErrors = validateInputs();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+    } else {
+      setErrors({});
+      setUseModal(true); // Show modal on successful validation
     }
-    setIsLoading(false);
   };
 
+  const handleModalConfirm = () => {
+    setUseModal(false);
+    console.log("Form data submitted:", formData);
+    // Submit form data logic here
+    addAttendeeToList();
+  };
+  const addAttendeeToList = async () => {
+    try {
+      setLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate 2 seconds delay
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+      setLoading(false);
+    }
+    navigate("/admin/attendance/");
+  };
 
   const closeModal = () => {
     setUseModal(false);
@@ -211,7 +205,7 @@ const AddAttendeeForm = () => {
 
   <div className="container lg:w-8/12 lg:h-8/12 p-6 ">
     {loading ? (
-      <div className="flex justify-center items-center w-full h-full">
+      <div className="flex flex-row justify-center ">
         <InfinitySpin
           visible={true}
           width={200}
@@ -223,6 +217,7 @@ const AddAttendeeForm = () => {
           <motion.div
             className="flex flex-col justify-center p-2 gap-5"
           >
+            {/* Header */}
           <div className="flex w-full px-5 p-2">
             <h2 
             className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold "
@@ -230,12 +225,15 @@ const AddAttendeeForm = () => {
               Attendee Information
             </h2>
           </div>		
+
+          {/* Form */}
           <div className="border-black-10">
             <form
               className="flex flex-col w-full space-y-6 p-4  lg:p-5"
-              onSubmit={showModal}
+              onSubmit={handleSubmit}
             >
               {/* Form inputs */}
+              {/* Id Num */}
               <div className="flex flex-col justify-center gap-6 sm:gap-4 md:gap-6">
                 <FormInput
                   label={"ID Number"}
@@ -247,6 +245,8 @@ const AddAttendeeForm = () => {
                   error={errors.id_number}
                   styles="w-full p-2 border border-gray-300 rounded"
                 />
+
+                {/* Student NAme */}
                 <div className="flex flex-col sm:flex-row space-y-6 sm:space-y-0 sm:space-x-4">
                   <FormInput
                     label={"First Name"}
@@ -280,9 +280,8 @@ const AddAttendeeForm = () => {
                     styles="w-full p-2 border border-gray-300 rounded"
                   />
                 </div>
-
-                <div className="flex flex-col gap-5 sm:flex-row ">
-                  <div className="flex flex-col justify-center sm:pt-5 pt-0 sm:w-8/12 w-full">
+                {/* Email Address */}
+                <div className="flex flex-col justify-center  w-full">
                     <FormInput
                     label={"Email Address"}
                     type="text"
@@ -293,19 +292,35 @@ const AddAttendeeForm = () => {
                     error={errors.email}
                     styles=" w-full p-2 border border-gray-300 rounded"
                     />
-                  </div>
-                  <div className="flex flex-col justify-center  sm:w-8/12 w-full">
-                    <FormSelect
-                      label="T-Shirt Size"
-                      name="shirt_size"
-                      value={formData.shirt_size}
-                      onChange={handleChange}
-                      options={sizeOptions}
-                      error={errors.shirt_size}
-                      styles="flex-1"
-                    />
+                </div>
+                <div className="flex flex-row items-center gap-5">
+                {/* T-Shirt Size Select */}
+                <div className="flex flex-col justify-center w-8/12 sm:w-full">
+                  <FormSelect
+                    label="T-Shirt Size"
+                    name="shirt_size"
+                    value={formData.shirt_size}
+                    onChange={handleChange}
+                    options={sizeOptions}
+                    error={errors.shirt_size}
+                    styles="flex-1"
+                  />
+                </div>
+
+                {/* Price Display */}
+                <div className="flex flex-col w-4/12 sm:w-4/12">
+                  <div className="relative ">
+                    <label className="block text-base text-[#374151]">Price:</label>
+                    <div className="block w-full h-auto p-2 border border-gray-300 rounded">
+                      <span className="text-base text-[#374151]">
+                        <i className="fas fa-peso-sign text-base text-[#374151]"></i>
+                        {` ${priceBySize}`}
+                        </span>
+                    </div>
                   </div>
                 </div>
+              </div>
+
 
                   {/* Attendee School Information Part */}
                 <div className="flex flex-col justify-between gap-5 sm:flex-row">
@@ -339,23 +354,25 @@ const AddAttendeeForm = () => {
 
                 </div>
                 <div className="flex flex-row items-center gap-5 py-2 w-full">
-                  <Link to= "#">
+                  <div>
                     <FormButton
                       type="submit"
                       text="Add Attendee"
-                      styles="w-full hover:bg-[#046c42] bg-[#057a4c] text-white p-2 rounded"
+                      styles="w-full hover:bg-[#046c42] bg-[#057a4c] text-white p-2 rounded transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 active:bg-[#045e3b]"
                       // onClick={showModal()}
                     />
-                  </Link >
-                  <Link to= "#">
-                    <FormButton
-                      type="cancel"
-                      text="Cancel"
-                      styles="w-full hover:bg-[#b00000] bg-[#d00000] text-white p-2 rounded"
-                      // onClick={closeModal()}
-                    />
-                  </Link >
+                  </div>
+                  <div>
+                    <Link to="/admin/dashboard">
+                      <button
+                        className="w-full hover:bg-[#b00000] bg-[#d00000] text-white p-2 rounded transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 active:bg-[#8f0000]"
+                      >
+                        Cancel
+                      </button>
+                    </Link>
+                  </div>
                 </div>
+
               </div>
             </form>
           </div>
@@ -367,16 +384,37 @@ const AddAttendeeForm = () => {
     )}
 
     {useModal && (
-      <ConfirmationModal/>
+        <ConfirmAttendeeModal
+          formData={formData}
+          onClose ={closeModal}
+          onConfirm={handleModalConfirm}
+
+        />
     )}
 
-    {useModal && (
-        <ViewStudentAttendance
-        isVisible={useModal}
-        onClose={setUseModal}
-        studentData={formData.applied}
-      />
-    )}
+    {/* {useModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ">
+      <div className=" bg-white rounded-lg shadow-lg w-full max-w-2xl  relative sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl max-h-screen overflow-auto">
+        <button
+          type="button"
+          onClick={closeModal}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+        >
+          <AiOutlineClose size={24} />
+        </button>
+        <div className=" p-5 w-full sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl max-h-screen overflow-auto">
+          <div className="flex flex-col justify-left gap-2 p-2 w-full sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl max-h-screen overflow-auto">
+            <h2 className="text-xl font-semibold ">Student Attendance</h2>
+              <div className="flex flex-col justify-center ml-3">
+                <p className="text-gray-800 text-md">Name: {studentData.student}</p>
+                <p className="text-gray-800 text-sm">ID: {studentData.id}</p>
+                <p className="text-gray-800 text-sm">Course: {studentData.course}</p>
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+    )} */}
 
   </div>
 

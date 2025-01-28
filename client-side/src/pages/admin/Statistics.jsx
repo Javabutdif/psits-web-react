@@ -110,19 +110,9 @@ const Statistics = () => {
             </div>
             <div className="2xl:w-[350px] lg:w-[260px] bg-[#D9D9D9] mb-8 text-center p-5 rounded-lg">
               <p>We value your feedback.</p>
-              <p>Please enter your evaluation below.</p>
-              <input 
-                type="text" 
-                className="w-full border rounded p-1 mt-2"
-                placeholder="Enter your feedback" 
-                
-              />
-              <button
-              type="submit"
-              className="text-sm relative top-3 mb-2 text-[#002E48] bg-white p-2 hover:text-black rounded-lg transition duration-200"
-              >
-              <i class="fas fa-paper-plane"></i> Submit  
-              </button>
+              <p className='mb-3'>Please enter your evaluation below.</p>
+              <p>[LINK for evaluation]</p>
+           
           </div>
         </div>
     </div>
