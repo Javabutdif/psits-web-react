@@ -7,7 +7,7 @@ import {
 import BarGraph from "./dashboard/BarGraph";
 import DashboardCard from "./dashboard/DashboardCard";
 import DoughnutChart from "./dashboard/DoughnutChart";
-import PieChart from "./dashboard/PieChart";
+import BarChart from "./dashboard/BarChart";
 import {
   faBoxOpen,
   faUserGraduate,
@@ -139,7 +139,7 @@ const AdminDashboard = () => {
           <DoughnutChart className="w-64 h-64" />
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <PieChart className="w-64 h-64" />
+          <BarChart className="w-full h-96" />
         </div>
       </div>
     </div>

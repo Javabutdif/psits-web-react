@@ -17,23 +17,41 @@ const Officers = () => {
 
   const location = useLocation();
   const currentPath = location.pathname;
-
   const tabs = [
     {
       path: "/admin/officers",
-      text: `All Officers`,
+      text: `Admin Officers`,
       icon: "fas fa-users",
     },
-
+    {
+      path: "/admin/officers/student-account",
+      text: `Student Account (Officers)`,
+      icon: "fas fa-users",
+    },
+    {
+      path: "/admin/officers/developers",
+      text: `Developers`,
+      icon: "fas fa-code",
+    },
+    {
+      path: "/admin/officers/media",
+      text: `Media`,
+      icon: "fas fa-photo-video",
+    },
+    {
+      path: "/admin/officers/volunteers",
+      text: `Volunteers`,
+      icon: "fas fa-hands-helping",
+    },
     {
       path: "/admin/officers/suspend",
-      text: `Suspended `,
-      icon: "fas fa-hand-paper",
+      text: `Suspended`,
+      icon: "fas fa-ban",
     },
     {
       path: "/admin/officers/request",
-      text: `Request (Under Development)`,
-      icon: "fas fa-file-signature",
+      text: `Request `,
+      icon: "fas fa-envelope-open-text",
     },
   ];
 

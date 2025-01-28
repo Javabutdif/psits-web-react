@@ -62,6 +62,13 @@ const studentSchema = new Schema({
   renewedOn: {
     type: String,
   },
+  role: {
+    type: String,
+  },
+  isRequest: {
+    type: Boolean,
+  },
+
   cart: [CartItem.schema],
 });
 

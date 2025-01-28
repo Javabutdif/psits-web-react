@@ -13,7 +13,9 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
     confirmType === ConfirmActionType.SUSPEND ||
     confirmType === ConfirmActionType.RENEWAL ||
     confirmType === ConfirmActionType.ORDER ||
-    confirmType === ConfirmActionType.CANCEL
+    confirmType === ConfirmActionType.CANCEL ||
+    confirmType === ConfirmActionType.REMOVE ||
+    confirmType === ConfirmActionType.DECLINE
       ? "bg-[#991b1b] hover:bg-[#b92121]"
       : "bg-green-500 hover:bg-green-600";
 
@@ -56,6 +58,8 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
               ? ""
               : confirmTypeWord === "suspend"
               ? " this officer"
+              : confirmTypeWord === "remove"
+              ? " this role for this student"
               : " this student"}
             ?
           </p>

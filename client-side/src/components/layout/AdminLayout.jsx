@@ -34,8 +34,8 @@ const AdminLayout = () => {
   });
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
-    higherPosition() && {
-      text: "Officers",
+    {
+      text: "Members",
       icon: "fas fa-user-tie",
       path: "officers",
     },
