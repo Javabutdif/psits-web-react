@@ -9,6 +9,7 @@ import FormTextArea from "../../components/forms/FormTextArea";
 import ImageInput from "../../components/forms/ImageInput";
 import { format } from "date-fns";
 import { InfinitySpin } from "react-loader-spinner";
+import ToggleSwitch from "../../components/common/ToggleSwitch";
 
 function Product({ handleCloseAddProduct }) {
   const user = getInformationData();
@@ -63,6 +64,9 @@ function Product({ handleCloseAddProduct }) {
     selectedSizes: [],
     selectedVariations: [],
     selectedAudience: "",
+
+    eventDate: "",
+
   });
 
   const [errors, setErrors] = useState({
@@ -82,6 +86,12 @@ function Product({ handleCloseAddProduct }) {
   const [previewData, setPreviewData] = useState({});
   const [isShown, setIsShown] = useState(false);
   const [isVariation, setVariation] = useState(false);
+
+  const [isEventType, setIsEventType] = useState(false);
+
+  const toggleIsEventType = () => {
+    setIsEventType(!isEventType);
+  };
 
   useEffect(() => {
     if (
@@ -210,6 +220,8 @@ function Product({ handleCloseAddProduct }) {
       data.append(key, value);
     }
 
+    data.append("isEvent", isEventType);
+   
     try {
       if (await addMerchandise(data)) {
         showToast("success", "Merchandise Published");
@@ -530,6 +542,38 @@ function Product({ handleCloseAddProduct }) {
                 optionStyle="text-sm"
               />
             </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-row relative gap-4">
+                <label
+                  htmlFor="start_date"
+                  className="text-gray-500 mb-1 text-sm"
+                >
+                  Is Merch of Event type?
+                </label>
+                <ToggleSwitch
+                  isToggled={isEventType}
+                  onToggle={toggleIsEventType}
+                />
+              </div>
+            </div>
+            {isEventType && (
+              <div className="flex flex-col relative">
+                <label htmlFor="eventDate" className="text-gray-500 mb-1">
+                  Event Date
+                </label>
+                <FormInput
+                  label=""
+                  name="eventDate"
+                  type="date"
+                  value={formData.eventDate}
+                  onChange={handleChange}
+                  labelStyle="text-sm"
+                  inputStyle="text-sm"
+                  error={errors.eventDate}
+                  max={today}
+                />
+              </div>
+            )}
             <FormSelect
               name="control"
               label="Purchase Control"
@@ -595,34 +639,46 @@ function Product({ handleCloseAddProduct }) {
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
-              <FormInput
-                label="Start Date"
-                name="start_date"
-                type="date"
-                value={formData.start_date}
-                onChange={handleChange}
-                labelStyle="text-sm"
-                inputStyle="text-sm"
-                error={errors.start_date}
-                max={today}
-              />
-              <FormInput
-                label="End Date"
-                name="end_date"
-                type="date"
-                value={formData.end_date}
-                onChange={handleChange}
-                labelStyle="text-sm"
-                inputStyle="text-sm"
-                error={errors.end_date}
-                max={today}
-              />
+              <div className="flex flex-col relative">
+                <label htmlFor="start_date" className="text-gray-500 mb-1">
+                  Start Date
+                </label>
+                <FormInput
+                  label=""
+                  name="start_date"
+                  type="date"
+                  value={formData.start_date}
+                  onChange={handleChange}
+                  labelStyle="text-sm"
+                  inputStyle="text-sm"
+                  error={errors.start_date}
+                  max={today}
+                />
+              </div>
+              <div className="flex flex-col relative">
+                <label htmlFor="end_date" className="text-gray-500 mb-1">
+                  End Date
+                </label>
+                <FormInput
+                  label=""
+                  name="end_date"
+                  type="date"
+                  value={formData.end_date}
+                  onChange={handleChange}
+                  labelStyle="text-sm"
+                  inputStyle="text-sm"
+                  error={errors.end_date}
+                  max={today}
+                />
+              </div>
             </div>
+
             <FormButton
               type="button"
               text="Preview"
               onClick={handlePreview}
               styles="w-full bg-[#002E48] p-2 rounded text-white"
+              disabled={isLoading}
             />
           </form>
           {showPreview && (

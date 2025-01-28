@@ -4,6 +4,14 @@ import AsideBar from "../common/navbar/AsideBar";
 import ProfileHeader from "../ProfileHeader";
 import { higherPosition } from "../tools/clientTools";
 
+const formatLabel = (text) => {
+  if (!text) return "";
+  return text
+    .replace(/([A-Z])/g, " $1") // Add space before each uppercase letter
+    .replace(/^./, (str) => str.toUpperCase()) // Capitalize the first letter
+    .trim();
+};
+
 const AdminLayout = () => {
   const location = useLocation();
   const [label, setLabel] = useState("");
@@ -13,7 +21,9 @@ const AdminLayout = () => {
     const pathParts = location.pathname.split("/");
     const extractedLabel = pathParts[2];
     setLabel(
-      extractedLabel === "profile" ? "Account Settings" : extractedLabel
+      extractedLabel === "profile"
+        ? "Account Settings"
+        : formatLabel(extractedLabel)
     );
   }, [location]);
 

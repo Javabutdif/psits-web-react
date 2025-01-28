@@ -47,6 +47,9 @@ const studentSchema = new Schema({
   applied: {
     type: String,
   },
+  campus: {
+    type: String,
+  },
   deletedBy: {
     type: String,
   },
@@ -65,6 +68,7 @@ const studentSchema = new Schema({
   isRequest: {
     type: Boolean,
   },
+
   cart: [CartItem.schema],
 });
 

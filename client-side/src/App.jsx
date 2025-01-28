@@ -1,38 +1,37 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
-import LandingLayout from "./components/layout/LandingLayout";
 import AdminLayout from "./components/layout/AdminLayout";
+import LandingLayout from "./components/layout/LandingLayout";
 
-import Home from "./pages/Home";
 import Explore from "./pages/Explore";
-import Faculty from "./pages/Faculty";
-import Team from "./pages/Team";
+import Home from "./pages/Home";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRegister from "./pages/admin/AdminRegister";
-import Students from "./pages/admin/Students";
-import Merchandise from "./pages/admin/Merchandise";
-import Inventory from "./pages/admin/Inventory";
-import Orders from "./pages/admin/Orders";
-import Reports from "./pages/admin/Reports";
-import Resources from "./pages/admin/Resources";
-import Settings from "./pages/Settings";
-import MembershipRequest from "./pages/admin/MembershipRequest";
-import MembershipHistory from "./pages/admin/MembershipHistory";
+import Attendance from "./pages/admin/Attendance/Attendance";
 import Delete from "./pages/admin/Delete";
-import Renewal from "./pages/admin/Renewal";
-import Product from "./pages/admin/Product";
 import EditProduct from "./pages/admin/EditProduct";
-import EventsAdmin from "./pages/admin/Events";
+import Inventory from "./pages/admin/Inventory";
+import MembershipHistory from "./pages/admin/MembershipHistory";
+import MembershipRequest from "./pages/admin/MembershipRequest";
+import Merchandise from "./pages/admin/Merchandise";
 import Officers from "./pages/admin/Officers";
 import AllOfficers from "./pages/admin/officers/AllOfficers";
-import Suspend from "./pages/admin/officers/Suspend";
 import Request from "./pages/admin/officers/Request";
 import Developers from "./pages/admin/officers/Developers";
 import Media from "./pages/admin/officers/Media";
 import Volunteers from "./pages/admin/officers/Volunteers";
 import StudentOfficer from "./pages/admin/officers/StudentOfficer";
+
+import Suspend from "./pages/admin/officers/Suspend";
+import Orders from "./pages/admin/Orders";
+import Product from "./pages/admin/Product";
+import Renewal from "./pages/admin/Renewal";
+import Reports from "./pages/admin/Reports";
+import Resources from "./pages/admin/Resources";
+import Students from "./pages/admin/Students";
+import Settings from "./pages/Settings";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -41,26 +40,32 @@ import PrivateRouteAdmin from "./authentication/privateRouteAdmin";
 import NotFound from "./components/common/NotFound";
 import Profile from "./pages/admin/Profile";
 
-import ForgotPassword from "./pages/authentication/ForgotPassword";
+import PrivateRouteStudent from "./authentication/privateRouteStudent";
+import StudentLayout from "./components/layout/StudentLayout";
+import AllMembers from "./pages/admin/membership/AllMembers";
+import Statistics from "./pages/admin/Statistics";
 import EmailVerification from "./pages/authentication/EmailVerification";
+import ForgotPassword from "./pages/authentication/ForgotPassword";
 import OTPVerifier from "./pages/authentication/OtpVerifier";
 import ResetPassword from "./pages/authentication/ResetPassword";
-import StudentLayout from "./components/layout/StudentLayout";
+import ProductDetail from "./pages/students/ProductDetail";
+import StudentCart from "./pages/students/StudentCart";
 import StudentDashboard from "./pages/students/StudentDashboard";
+import StudentEvents from "./pages/students/StudentEvents";
 import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
-import ProductDetail from "./pages/students/ProductDetail";
-import PrivateRouteStudent from "./authentication/privateRouteStudent";
-import AllMembers from "./pages/admin/membership/AllMembers";
-import StudentCart from "./pages/students/StudentCart";
+// import QRCodePage from "./pages/students/QRCodePage";
+/// Events Attendace Tab - Not Final
+import AddAttendeeForm from "./pages/admin/Attendance/AddAttendeeForm";
+import AdminEvents from "./pages/admin/Events";
 
-import StudentPaidOrders from "./pages/students/orders/PaidOrders";
-import StudentPendingOrder from "./pages/students/orders/PendingOrders";
+import Logs from "./pages/admin/Logs";
 import Community from "./pages/Community";
 import Events from "./pages/Events";
+import StudentPaidOrders from "./pages/students/orders/PaidOrders";
+import StudentPendingOrder from "./pages/students/orders/PendingOrders";
 import Resouces from "./pages/students/Resouces";
-import Logs from "./pages/admin/Logs";
 
 const App = () => {
   return (
@@ -116,8 +121,20 @@ const App = () => {
           </Route>
 
           <Route
-            path="events"
-            element={<PrivateRouteAdmin element={EventsAdmin} />}
+            path="events/"
+            element={<PrivateRouteAdmin element={AdminEvents} />}
+          />
+          <Route
+            path="attendance/:eventId"
+            element={<PrivateRouteAdmin element={Attendance} />}
+          />
+          <Route
+            path="statistics"
+            element={<PrivateRouteAdmin element={Statistics} />}
+          />
+          <Route
+            path="addAttendee"
+            element={<PrivateRouteAdmin element={AddAttendeeForm} />}
           />
           <Route
             path="register"
@@ -199,6 +216,14 @@ const App = () => {
             path="cart"
             element={<PrivateRouteStudent element={StudentCart} />}
           />
+          <Route
+            path="events"
+            element={<PrivateRouteStudent element={StudentEvents} />}
+          />
+          {/* <Route
+            path="QR"
+            element={<PrivateRouteStudent element={QRCodePage} />}
+          /> */}
           <Route
             path="dashboard"
             element={<PrivateRouteStudent element={StudentDashboard} />}

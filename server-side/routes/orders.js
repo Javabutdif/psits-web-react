@@ -1,7 +1,6 @@
 const express = require("express");
-const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
-const Admin = require("../models/AdminModel");
+const Event = require("../models/EventsModel");
 const Cart = require("../models/CartModel");
 const Orders = require("../models/OrdersModel");
 const Merch = require("../models/MerchModel");
@@ -226,6 +225,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
           const variations = Array.isArray(item.variation)
             ? item.variation
             : [];
+          const merchId = new ObjectId(item.product_id);
 
           await Merch.findByIdAndUpdate(item.product_id, {
             $push: {
@@ -251,6 +251,26 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
               "sales_data.totalRevenue": item.sub_total,
             },
           });
+          const merchToGet = await Merch.findById(item.product_id);
+          if (merchToGet && merchToGet.category === "ict-congress") {
+            console.log(student.campus);
+            await Event.findOneAndUpdate(
+              { eventId: merchId },
+              {
+                $push: {
+                  attendees: {
+                    id_number: successfulOrder.id_number,
+                    name: successfulOrder.student_name,
+                    email: successfulOrder.email,
+                    course: successfulOrder.course,
+                    year: successfulOrder.year,
+                    campus: student.campus,
+                    isAttended: false,
+                  },
+                },
+              }
+            );
+          }
         })
       );
     }
