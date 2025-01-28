@@ -49,19 +49,18 @@ const BarGraph = () => {
 
     callTotal();
   }, []);
-
   const colors = [
-    "rgba(190, 213, 219, 0.7)", 
-    "rgba(156, 163, 175, 0.7)",
-    "rgba(107, 114, 128, 0.7)", 
-    "rgba(75, 85, 99, 0.7)", 
+    "rgba(54, 162, 235, 0.7)", // Freshmen
+    "rgba(255, 206, 86, 0.7)", // Sophomore
+    "rgba(75, 192, 192, 0.7)", // Junior
+    "rgba(153, 102, 255, 0.7)", // Senior
   ];
 
   const borderColors = [
-    "rgba(209, 213, 219, 1)", 
-    "rgba(156, 163, 175, 1)", 
-    "rgba(107, 114, 128, 1)", 
-    "rgba(75, 85, 99, 1)", 
+    "rgba(54, 162, 235, 1)",
+    "rgba(255, 206, 86, 1)",
+    "rgba(75, 192, 192, 1)",
+    "rgba(153, 102, 255, 1)",
   ];
 
   const data = {
@@ -69,7 +68,7 @@ const BarGraph = () => {
     datasets: [
       {
         label: "1",
-        data: [year.year1, 0, 0, 0], // Set only Year 1 data
+        data: [year.year1, 0, 0, 0],
         backgroundColor: colors[0],
         borderColor: borderColors[0],
         borderWidth: 1,

@@ -62,6 +62,9 @@ const studentSchema = new Schema({
   role: {
     type: String,
   },
+  isRequest: {
+    type: Boolean,
+  },
   cart: [CartItem.schema],
 });
 

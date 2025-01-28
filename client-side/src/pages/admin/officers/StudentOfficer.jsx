@@ -1,4 +1,8 @@
-import { getAllMedia, editOfficerApi, roleRemove } from "../../../api/admin";
+import {
+  getAllDevelopers,
+  editOfficerApi,
+  roleRemove,
+} from "../../../api/admin";
 import ChangePassword from "../../../components/ChangePassword";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
@@ -13,7 +17,7 @@ import React, { useState, useEffect } from "react";
 import AddOfficer from "../AddOfficer";
 import SearchModal from "../../../components/common/modal/SearchModal";
 
-const Media = () => {
+const StudentOfficer = () => {
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -31,7 +35,7 @@ const Media = () => {
 
   const fetchData = async () => {
     try {
-      const result = await getAllMedia();
+      const result = await getAllDevelopers();
       setData(result ? result : []);
       setFilteredData(result ? result : []);
       setLoading(false);
@@ -227,7 +231,7 @@ const Media = () => {
           onClick={() => setViewAdd(true)}
           className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
         >
-          Add Media Role
+          Add Officer Role
         </button>
       </div>
 
@@ -243,7 +247,7 @@ const Media = () => {
       {viewAdd && (
         <SearchModal
           isVisible={viewAdd}
-          position={"Media"}
+          position={"Officer"}
           onClose={() => setViewAdd(false)}
         />
       )}
@@ -268,4 +272,4 @@ const Media = () => {
   );
 };
 
-export default Media;
+export default StudentOfficer;

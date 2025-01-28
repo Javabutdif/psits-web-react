@@ -32,6 +32,7 @@ import Request from "./pages/admin/officers/Request";
 import Developers from "./pages/admin/officers/Developers";
 import Media from "./pages/admin/officers/Media";
 import Volunteers from "./pages/admin/officers/Volunteers";
+import StudentOfficer from "./pages/admin/officers/StudentOfficer";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -103,6 +104,10 @@ const App = () => {
             <Route
               path="volunteers"
               element={<PrivateRouteAdmin element={Volunteers} />}
+            />
+            <Route
+              path="student-account"
+              element={<PrivateRouteAdmin element={StudentOfficer} />}
             />
             <Route
               path="request"

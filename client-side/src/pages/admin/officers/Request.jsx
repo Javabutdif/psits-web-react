@@ -1,15 +1,21 @@
-import { officerRestore, getSuspendOfficers } from "../../../api/admin";
-
+import {
+  fetchAllStudentRequestRole,
+  approveRole,
+  roleRemove,
+} from "../../../api/admin";
+import ChangePassword from "../../../components/ChangePassword";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-
+import { higherPosition } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
-
+import EditOfficer from "../EditOfficer";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
+import AddOfficer from "../AddOfficer";
+import SearchModal from "../../../components/common/modal/SearchModal";
 
 const Request = () => {
   const [data, setData] = useState([]);
@@ -19,20 +25,46 @@ const Request = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [studentIdToBeDeleted, setStudentIdToBeDeleted] = useState("");
-
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [memberToEdit, setMemberToEdit] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [id, setId] = useState("");
+  const [viewChange, setViewChange] = useState(false);
+  const [approveModal, setApproveModal] = useState(false);
+  const [approveId, setApproveId] = useState("");
 
   const fetchData = async () => {
     try {
-      const result = await getSuspendOfficers();
-      setData(result);
-      setFilteredData(result);
+      const result = await fetchAllStudentRequestRole();
+      setData(result ? result : []);
+      setFilteredData(result ? result : []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
       setLoading(false);
     }
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalVisible(false);
+    setMemberToEdit(null);
+  };
+
+  const handleHideChangePassword = () => {
+    setViewChange(false);
+  };
+
+  const handleSaveEditedMember = async (updatedMember) => {
+    setIsLoading(true);
+    try {
+      editOfficerApi(updatedMember);
+    } catch (error) {
+      console.error("Error updating officer:", error);
+    }
+
+    fetchData();
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -59,25 +91,49 @@ const Request = () => {
     setStudentIdToBeDeleted("");
   };
 
-  const handleConfirmDeletion = async () => {
+  const handleShowApproveModal = (row) => {
+    setApproveModal(true);
+    setApproveId(row.id_number);
+  };
+  const handleApproveRole = async () => {
     setIsLoading(true);
     try {
-      const id_number = studentIdToBeDeleted;
+      const id_number = approveId;
 
-      if ((await officerRestore(id_number)) === 200) {
+      if ((await approveRole(id_number)) === 200) {
+        const updatedData = data.filter(
+          (student) => student.id_number !== id_number
+        );
+        setData(updatedData);
+        setApproveModal(false);
+        showToast("success", "Role Approved Successful!");
+      } else {
+        console.error("Failed to approve officer");
+      }
+    } catch (error) {
+      console.error("Error approving officer:", error);
+    }
+    setIsLoading(false);
+  };
+
+  const handleConfirmRemoveRole = async () => {
+    setIsLoading(true);
+
+    try {
+      const id_number = studentIdToBeDeleted;
+      console.log(id_number);
+      if ((await roleRemove(id_number)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );
         setData(updatedData);
         setIsModalVisible(false);
-        showToast("success", "Officer Restored Successful!");
+        showToast("success", "Role Remove Successful!");
       } else {
-        console.error("Failed to restore officer");
-        showToast("error", "Officer Restore Failed! Please try again.");
+        console.error("Failed to delete officer");
       }
     } catch (error) {
-      console.error("Error restoring officer:", error);
-      showToast("error", "Officer Restoring Failed! Please try again.");
+      console.error("Error deleting officer:", error);
     }
     setIsLoading(false);
   };
@@ -151,16 +207,25 @@ const Request = () => {
       ),
     },
     {
-      key: "email",
-      label: "Email Account",
-      selector: (row) => row.email,
+      key: "role",
+      label: "Requested Role",
+      selector: (row) => row.role,
       sortable: true,
     },
     {
-      key: "position",
-      label: "Position",
-      selector: (row) => row.position,
+      key: "status",
+      label: "Status",
+      selector: (row) => row.status,
       sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div
+            className={`${row.isRequest ? "text-orange-500" : "text-red-500"}`}
+          >
+            {row.isRequest ? "Pending" : "Denied"}
+          </div>
+        </div>
+      ),
     },
 
     {
@@ -170,11 +235,21 @@ const Request = () => {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text="Recover"
+            text="Approve"
+            onClick={() => handleShowApproveModal(row)}
+            icon={<i className="fas fa-check-circle" />} // Approve icon
+            styles="flex items-center space-x-2 bg-green-100 text-green-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-400"
+            textClass="text-green-800 font-medium" // Green text for "Approve"
+            whileHover={{ scale: 1.02, opacity: 0.95 }}
+            whileTap={{ scale: 0.98, opacity: 0.9 }}
+          />
+          <FormButton
+            type="button"
+            text="Deny"
             onClick={() => showModal(row)}
-            icon={<i className="fas fa-trash" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-green-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-            textClass="text-green-800" // Elegant text color
+            icon={<i className="fas fa-times-circle" />} // Deny icon
+            styles="flex items-center space-x-2 bg-red-100 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-400"
+            textClass="text-red-800 font-medium" // Red text for "Deny"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
           />
@@ -186,13 +261,38 @@ const Request = () => {
   return (
     <div className="">
       <TableComponent columns={columns} data={filteredData} />
+      {isEditModalVisible && (
+        <EditOfficer
+          isVisible={isEditModalVisible}
+          onClose={handleEditModalClose}
+          studentData={memberToEdit}
+          onSave={handleSaveEditedMember}
+        />
+      )}
+      {approveModal && (
+        <ConfirmationModal
+          confirmType={ConfirmActionType.APPROVE}
+          onCancel={() => setApproveModal(false)}
+          onConfirm={handleApproveRole}
+        />
+      )}
 
       {isModalVisible && (
         <ConfirmationModal
-          confirmType={ConfirmActionType.RESTORE}
+          confirmType={ConfirmActionType.REMOVE}
           onCancel={hideModal}
-          onConfirm={handleConfirmDeletion}
+          onConfirm={handleConfirmRemoveRole}
         />
+      )}
+      {viewChange && (
+        <>
+          <ChangePassword
+            id={id}
+            onCancel={handleHideChangePassword}
+            onSubmit={() => setViewChange(false)}
+            position="officer"
+          />
+        </>
       )}
     </div>
   );

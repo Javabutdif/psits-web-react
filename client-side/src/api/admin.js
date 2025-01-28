@@ -874,3 +874,95 @@ export const fetchAdminLogs = async () => {
     throw new Error("Unable to fetch admin logs");
   }
 };
+
+//fetch student name
+export const fetchStudentName = async (id_number) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/admin/search-student/${id_number}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching student:", error);
+  }
+};
+
+export const requestRoleAdmin = async (role, id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/request-role`,
+      { role, id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message);
+    }
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
+//fetch request students role
+export const fetchAllStudentRequestRole = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/admin/get-request-role`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
+        },
+      }
+    );
+
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching student:", error);
+  }
+};
+//Approve Role President
+export const approveRole = async (id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/approve-role`,
+      { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message);
+    }
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};

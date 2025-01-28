@@ -15,6 +15,7 @@ import EditOfficer from "../EditOfficer";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import AddOfficer from "../AddOfficer";
+import SearchModal from "../../../components/common/modal/SearchModal";
 
 const Developers = () => {
   const [data, setData] = useState([]);
@@ -228,10 +229,9 @@ const Developers = () => {
       <div className="py-4 ">
         <button
           onClick={() => setViewAdd(true)}
-          className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
-          disabled
+          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
         >
-          Disabled
+          Add Developer Role
         </button>
       </div>
 
@@ -245,7 +245,11 @@ const Developers = () => {
         />
       )}
       {viewAdd && (
-        <AddOfficer isVisible={viewAdd} onClose={() => setViewAdd(false)} />
+        <SearchModal
+          isVisible={viewAdd}
+          position={"Developer"}
+          onClose={() => setViewAdd(false)}
+        />
       )}
       {isModalVisible && (
         <ConfirmationModal

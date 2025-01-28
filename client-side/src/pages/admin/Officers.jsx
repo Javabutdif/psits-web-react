@@ -20,7 +20,12 @@ const Officers = () => {
   const tabs = [
     {
       path: "/admin/officers",
-      text: `All Officers`,
+      text: `Admin Officers`,
+      icon: "fas fa-users",
+    },
+    {
+      path: "/admin/officers/student-account",
+      text: `Student Account (Officers)`,
       icon: "fas fa-users",
     },
     {
@@ -45,7 +50,7 @@ const Officers = () => {
     },
     {
       path: "/admin/officers/request",
-      text: `Request (Under Development)`,
+      text: `Request `,
       icon: "fas fa-envelope-open-text",
     },
   ];
