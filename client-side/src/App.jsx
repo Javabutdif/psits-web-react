@@ -51,8 +51,6 @@ import StudentEvents from "./pages/students/StudentEvents";
 import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
-// import QRCodePage from "./pages/students/QRCodePage";
-/// Events Attendace Tab - Not Final
 import AddAttendeeForm from "./pages/admin/Attendance/AddAttendeeForm";
 import AdminEvents from "./pages/admin/events/Events";
 
@@ -110,7 +108,7 @@ const App = () => {
             element={<PrivateRouteAdmin element={Attendance} />}
           />
           <Route
-            path="attendance/:eventId/markAsPresent/:attendeeId"
+            path="attendance/:eventId/:eventName/markAsPresent/:attendeeId/:attendeeName"
             element={<PrivateRouteAdmin element={MarkAsPresent} />}
           />
           <Route
