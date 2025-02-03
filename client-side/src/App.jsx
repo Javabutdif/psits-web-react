@@ -61,6 +61,7 @@ import StudentPaidOrders from "./pages/students/orders/PaidOrders";
 import StudentPendingOrder from "./pages/students/orders/PendingOrders";
 import Resouces from "./pages/students/Resouces";
 import MarkAsPresent from "./pages/admin/MarkAsPresent";
+import { QRCodeScanner } from "./pages/admin/QRCodeScanner";
 
 const App = () => {
   return (
@@ -110,6 +111,10 @@ const App = () => {
           <Route
             path="attendance/:eventId/:eventName/markAsPresent/:attendeeId/:attendeeName"
             element={<PrivateRouteAdmin element={MarkAsPresent} />}
+          />
+          <Route
+            path="qrCodeScanner"
+            element={<PrivateRouteAdmin element={QRCodeScanner} />}
           />
           <Route
             path="raffle"
