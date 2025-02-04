@@ -64,9 +64,9 @@ function Product({ handleCloseAddProduct }) {
     selectedSizes: [],
     selectedVariations: [],
     selectedAudience: "",
-
     eventDate: "",
-
+    isPromo: false,
+    promoPrice: "",
   });
 
   const [errors, setErrors] = useState({
@@ -88,9 +88,14 @@ function Product({ handleCloseAddProduct }) {
   const [isVariation, setVariation] = useState(false);
 
   const [isEventType, setIsEventType] = useState(false);
+  const [isPromo, setIsPromo] = useState(false);
 
   const toggleIsEventType = () => {
     setIsEventType(!isEventType);
+  };
+
+  const toggleIsPromo = () => {
+    setIsPromo(!isPromo);
   };
 
   useEffect(() => {
@@ -221,7 +226,7 @@ function Product({ handleCloseAddProduct }) {
     }
 
     data.append("isEvent", isEventType);
-   
+
     try {
       if (await addMerchandise(data)) {
         showToast("success", "Merchandise Published");
@@ -592,6 +597,33 @@ function Product({ handleCloseAddProduct }) {
               labelStyle="text-sm"
               optionStyle="text-sm"
             />
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-row relative gap-4">
+                <label
+                  htmlFor="start_date"
+                  className="text-gray-500 mb-1 text-sm"
+                >
+                  Is Merch have Promo?
+                </label>
+                <ToggleSwitch isToggled={isPromo} onToggle={toggleIsPromo} />
+              </div>
+            </div>
+            {isPromo && (
+              <div className="flex flex-col relative">
+                <label htmlFor="promoPrice" className="text-gray-500 mb-1">
+                  Promo Price
+                </label>
+                <FormInput
+                  label=""
+                  name="promoPrice"
+                  type="number"
+                  value={formData.promoPrice}
+                  onChange={handleChange}
+                  labelStyle="text-sm"
+                  inputStyle="text-sm"
+                />
+              </div>
+            )}
 
             <div className="flex flex-col gap-4 text-sm">
               {isShown && (

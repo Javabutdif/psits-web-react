@@ -122,6 +122,10 @@ const merchSchema = new Schema(
     imageUrl: {
       type: Array,
     },
+    isPromo: {
+      type: Boolean,
+      default: false,
+    },
 
     sales_data: {
       type: salesDataSchema,
