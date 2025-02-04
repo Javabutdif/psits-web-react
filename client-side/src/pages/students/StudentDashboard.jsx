@@ -13,7 +13,7 @@ const Skeleton = ({ className }) => (
 const ads = [
 	{
 		imageUrl:
-			"https://psitsimagestorage.s3.ap-southeast-2.amazonaws.com/merchandise/1737705519302_image_2025-01-24_155728296.png",
+			"https://psitsimagestorage.s3.ap-southeast-2.amazonaws.com/merchandise/1726150336082_white.jpg",
 		title: "Special Discount!",
 		description: "Get 50% off on selected items!",
 	},
@@ -25,7 +25,7 @@ const ads = [
 	},
 	{
 		imageUrl:
-			"https://psitsimagestorage.s3.ap-southeast-2.amazonaws.com/merchandise/1737705519302_image_2025-01-24_155728296.png",
+			"https://scontent.fceb3-1.fna.fbcdn.net/v/t39.30808-6/473188419_122182051154248106_4535652441260155354_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHYFGQ-hqMsjsWtHJM-j3oq48EBYkR_P2jjwQFiRH8_aAn2UM0C97fep_xo4s15sVfL0-n_Uw5n1a1TikJ89ghE&_nc_ohc=5Rk390h0GDIQ7kNvgG7OcXL&_nc_oc=AdgfEz6VzAcSnDM-9LwRzPlA65vveN8UpGtrTZqMGadjCXsSdK0j2myV9zq1ll8-Ayk&_nc_zt=23&_nc_ht=scontent.fceb3-1.fna&_nc_gid=AcHGrKfiryMVlHFpk-Bic5f&oh=00_AYBG8CH_lc5muifTAYOEdbmcA2v1wcu_iMIA6jCFHt_sbQ&oe=67A802A3",
 		title: "Exclusive Deals",
 		description: "Shop now and save big!",
 	},
@@ -88,28 +88,35 @@ const DynamicAdCarousel = () => {
 
 const events = [
   {
-    date: "July 15",
+    date: "Feb. 14",
+    details: [
+      { name: "Love Month", time: "7:00 am - 8:00 am" },
+      { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
+    ],
+  },
+  {
+    date: "Feb. 17",
     details: [
       { name: "UC Days", time: "7:00 am - 8:00 am" },
       { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
     ],
   },
   {
-    date: "March 17",
+    date: "April 22",
     details: [
-      { name: "ICT Congress 2025", time: "7:00 am - 8:00 am" },
+      { name: "ICT Congress", time: "7:00 am - 8:00 am" },
       { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
     ],
   },
   {
-    date: "August 24",
+    date: "June 15",
     details: [
       { name: "Intrams", time: "7:00 am - 8:00 am" },
       { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
     ],
   },
   {
-    date: "July 15",
+    date: "Aug. 15",
     details: [
       { name: "Intrams", time: "7:00 am - 8:00 am" },
       { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
@@ -123,9 +130,10 @@ const EventDetails = () => {
   const [showBTN, setBTN] = useState(false);
 
   const visibleEvents = showAll ? events : events.slice(0, 3);
+  
 
   return (
-    <div className="max-w-xl mt-10 mx-auto p-6 bg-white border rounded-lg shadow-lg">
+    <div className="max-w-xl mt-7 mx-auto p-6 bg-white border rounded-lg shadow-lg">
       <h2 className="text-xl font-bold text-center text-[#074873] mb-4">Upcoming Events</h2>
       <div className="space-y-4">
         {visibleEvents.map((event, index) => (
@@ -142,9 +150,10 @@ const EventDetails = () => {
             <div className="pl-1">
               <div className="">
               {event.details.map((detail, idx) => (
-                <p key={idx} className="text-sm text-gray-700 ">
-                  <span className="font-semibold ">{detail.name}:</span> {detail.time}
-                </p>
+               <p key={idx} className="text-xs sm:text-sm text-gray-700 ">
+							 <span className="font-semibold">{detail.name}:</span> {detail.time}
+						 </p>
+						 
               ))}
               </div>
             </div>
@@ -158,7 +167,7 @@ const EventDetails = () => {
               setShowAll(true);
               setBTN(true);
             }}
-            className="px-4 py-2 bg-[#074873] text-white font-semibold rounded-lg shadow-md hover:bg-blue-800"
+            className="text-xs px-4 py-2 bg-[#074873] hover:bg-[#1E6F8C] text-white font-semibold rounded-lg shadow-md  transition-all duration-300 ease-in-out"
           >
             View All Events
           </button>
@@ -169,9 +178,9 @@ const EventDetails = () => {
               setShowAll(false);
               setBTN(false);
             }}
-            className="mt-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-lg shadow-md hover:bg-red-800"
+            className="mt-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-full shadow-md hover:bg-red-800  transition-all duration-300 ease-in-out"
           >
-            Close
+            <i class="fas fa-times" ></i>
           </button>
         )}
       </div>
@@ -215,7 +224,7 @@ const StudentDashboard = () => {
 	}, []);
 
 	return (
-		<div className="max-w-[1600px] mx-auto grid grid-cols-1 py-5 md:grid-cols-2 lg:grid-cols-7 lg:flex lg:flex-row-reverse gap-6">
+		<div className="max-w-[1600px] mx-auto grid grid-cols-1 py-5 md:grid-cols-2 lg:grid-cols-7 lg:flex gap-6">
 			{loading ? (
 				<>
 					<Skeleton className="h-[280px] md:col-span-2 lg:col-span-3 xl:col-span-2 lg:row-span-2" />
@@ -224,15 +233,17 @@ const StudentDashboard = () => {
 				</>
 			) : (
 				<>
-					<div className="lg lg:flex lg:flex-col gap-6">
+				
+					<div className="lg:order-last md:order-last">
+				
 						<OperationHours styles="self-start lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3 mb-3" />
 						<MembershipBanner styles="lg:row-start-3 lg:col-start-6 lg:col-end-8" />
-					</div>
-					<div className="lg:w-full ">
-						<DynamicAdCarousel />
-            <EventDetails />
 
 						{/* Dynamic Ad Carousel */}
+					</div>
+					<div className="  lg:w-full  ">
+					<DynamicAdCarousel />
+					<EventDetails />
 					</div>
          
 				</>
