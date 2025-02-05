@@ -56,8 +56,6 @@ import StudentEvents from "./pages/students/StudentEvents";
 import StudentHistory from "./pages/students/StudentHistory";
 import StudentMerchandise from "./pages/students/StudentMerchandise";
 import StudentOrders from "./pages/students/StudentOrders";
-// import QRCodePage from "./pages/students/QRCodePage";
-/// Events Attendace Tab - Not Final
 import AddAttendeeForm from "./pages/admin/Attendance/AddAttendeeForm";
 import AdminEvents from "./pages/admin/events/Events";
 
@@ -68,6 +66,7 @@ import StudentPaidOrders from "./pages/students/orders/PaidOrders";
 import StudentPendingOrder from "./pages/students/orders/PendingOrders";
 import Resouces from "./pages/students/Resouces";
 import MarkAsPresent from "./pages/admin/MarkAsPresent";
+import { QRCodeScanner } from "./pages/admin/QRCodeScanner";
 
 const App = () => {
   return (
@@ -131,8 +130,12 @@ const App = () => {
             element={<PrivateRouteAdmin element={Attendance} />}
           />
           <Route
-            path="attendance/:eventId/markAsPresent/:attendeeId"
+            path="attendance/:eventId/:eventName/markAsPresent/:attendeeId/:attendeeName"
             element={<PrivateRouteAdmin element={MarkAsPresent} />}
+          />
+          <Route
+            path="qrCodeScanner"
+            element={<PrivateRouteAdmin element={QRCodeScanner} />}
           />
           <Route
             path="raffle"
