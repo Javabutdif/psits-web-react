@@ -329,7 +329,6 @@ router.get("/get-suspend-officers", authenticateToken, async (req, res) => {
 });
 
 router.post("/editOfficer", authenticateToken, async (req, res) => {
-  // TODO: Log (Done)
   const { id_number, name, position, email, course, year } = req.body;
 
   try {
@@ -379,7 +378,6 @@ router.post(
   "/admin/change-password-officer",
   authenticateToken,
   async (req, res) => {
-    //TODO: Log (Done)
     try {
       const getAdmin = await Admin.findOne({
         id_number: req.body.id_number,
@@ -441,7 +439,6 @@ router.put("/admin/suspend", authenticateToken, async (req, res) => {
 });
 
 router.put("/admin/restore-officer", authenticateToken, async (req, res) => {
-  // TODO: Log
   const { id_number } = req.body;
   console.log(id_number);
   try {

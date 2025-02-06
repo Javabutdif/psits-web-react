@@ -20,7 +20,6 @@ const loginLimiter = rateLimit({
 });
 
 router.post("/login", loginLimiter, async (req, res) => {
-  //TODO: Log (Done)
   const { id_number, password } = req.body;
   const currentDate = new Date();
 

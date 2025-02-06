@@ -25,7 +25,6 @@ export const getInformationData = () => {
   };
 };
 export const removeAuthentication = () => {
-  //TODO: Log (Done)
   const userData = getInformationData(); // Use getInformationData to retrieve user information
 
   // Check if the user has the role of "Admin"
