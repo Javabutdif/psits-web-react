@@ -12,7 +12,10 @@ import {
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import TableComponent from "../../components/Custom/TableComponent";
 import FormButton from "../../components/forms/FormButton";
-import { conditionalPosition, formattedDate } from "../../components/tools/clientTools";
+import {
+  conditionalPosition,
+  formattedDate,
+} from "../../components/tools/clientTools";
 import { showToast } from "../../utils/alertHelper";
 import FilterOptions from "../students/merchandise/FilterOptions";
 import EditProduct from "./EditProduct";
@@ -394,7 +397,8 @@ function Merchandise() {
             color="#0d6efd"
             ariaLabel="infinity-spin-loading"
           />
-        </div>) : (
+        </div>
+      ) : (
         <>
           <div className=" flex flex-col gap-2 md:flex-row md:justify-between md:items-center p-2">
             <motion.h1
@@ -547,7 +551,12 @@ function Merchandise() {
                     ))}
                   </span>
                 </div>
-
+                <div className="flex items-center font-secondary justify-between gap-10">
+                  <span className="font-medium text-lg">Audience:</span>
+                  <span className="text-sm">
+                    {selectedItem?.selectedAudience}
+                  </span>
+                </div>
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Category:</span>
                   <span className="text-sm">{selectedItem?.category}</span>

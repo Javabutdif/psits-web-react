@@ -75,16 +75,6 @@ const EditOfficer = ({ isVisible, onClose, studentData, onSave }) => {
                   className="mt-1 block w-full rounded-md p-2 border-gray-300 shadow-sm"
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Position</label>
-                <input
-                  type="text"
-                  name="position"
-                  value={formData.position || ""}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md p-2 border-gray-300 shadow-sm"
-                />
-              </div>
             </div>
 
             <div>

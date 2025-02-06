@@ -75,6 +75,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
     control: "",
     selectedSizes: [],
     selectedVariations: [],
+    selectedAudience: "",
   });
 
   useEffect(() => {
@@ -281,6 +282,14 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
       { value: "Item", label: "Item" },
     ],
   };
+  const audience = [
+    { value: "all", label: "All" },
+    { value: "officers", label: "Officers" },
+    {
+      value: "volunteer,media,developer",
+      label: "Volunteers, Media and Developers",
+    },
+  ];
 
   const purchaseControlOptions = [
     { value: "limited-purchase", label: "Limited Purchase" },
@@ -355,6 +364,9 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
               </p>
               <p className="text-sm">
                 <strong>End Date:</strong> {data.end_date}
+              </p>
+              <p className="text-sm">
+                <strong>Audience:</strong> {data.selectedAudience}
               </p>
               <p className="text-sm">
                 <strong>Sizes:</strong> {data.selectedSizes.join(", ")}
@@ -480,6 +492,15 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
             labelStyle="text-sm"
             optionStyle="text-sm"
           />
+          <FormSelect
+            name="selectedAudience"
+            label="Select Audience"
+            options={audience}
+            value={formData.selectedAudience}
+            onChange={handleChange}
+            labelStyle="text-sm"
+            optionStyle="text-sm"
+          />
 
           <div className="flex flex-wrap gap-y-4 text-sm">
             {formData.type &&
@@ -560,6 +581,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
             text="Preview"
             onClick={handlePreview}
             styles="w-full bg-blue-500 text-white py-2 rounded"
+            disabled={isLoading}
           />
         </form>
         {showPreview && (

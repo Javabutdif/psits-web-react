@@ -1,5 +1,11 @@
 import React from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import {
+  presidentPosition,
+  headDevPosition,
+  higherPosition,
+  treasurerPosition,
+} from "./components/tools/clientTools";
 
 import AdminLayout from "./components/layout/AdminLayout";
 import LandingLayout from "./components/layout/LandingLayout";
@@ -115,10 +121,12 @@ const App = () => {
               path="student-account"
               element={<PrivateRouteAdmin element={StudentOfficer} />}
             />
-            <Route
-              path="request"
-              element={<PrivateRouteAdmin element={Request} />}
-            />
+            {(presidentPosition() || headDevPosition()) && (
+              <Route
+                path="request"
+                element={<PrivateRouteAdmin element={Request} />}
+              />
+            )}
           </Route>
 
           <Route
@@ -216,10 +224,9 @@ const App = () => {
             path="profile"
             element={<PrivateRouteAdmin element={Profile} />}
           ></Route>
-          <Route
-            path="logs"
-            element={<PrivateRouteAdmin element={Logs} />}
-          ></Route>
+          {(higherPosition() || treasurerPosition()) && (
+            <Route path="logs" element={<PrivateRouteAdmin element={Logs} />} />
+          )}
         </Route>
 
         <Route

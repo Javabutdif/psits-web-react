@@ -678,7 +678,7 @@ function Product({ handleCloseAddProduct }) {
               text="Preview"
               onClick={handlePreview}
               styles="w-full bg-[#002E48] p-2 rounded text-white"
-              disabled={isLoading}
+             
             />
           </form>
           {showPreview && (

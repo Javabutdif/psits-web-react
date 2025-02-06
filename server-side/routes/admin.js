@@ -312,7 +312,7 @@ router.get("/get-all-officers", async (req, res) => {
 router.get("/get-all-developers", async (req, res) => {
   try {
     const developers = await Student.find({
-      role: "developer",
+      role: "developers",
       isRequest: false,
     });
 
@@ -362,7 +362,7 @@ router.get("/get-all-media", async (req, res) => {
 router.get("/get-all-volunteers", async (req, res) => {
   try {
     const volunteers = await Student.find({
-      role: "volunteer",
+      role: "volunteers",
       isRequest: false,
     });
 
@@ -387,7 +387,35 @@ router.get("/get-all-volunteers", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch officers" });
   }
 });
+//get-all-student-officers
+router.get("/get-all-student-officers", async (req, res) => {
+  try {
+    const officer = await Student.find({
+      role: "officers",
+      isRequest: false,
+    });
 
+    const users = officer.map((officers) => ({
+      id_number: officers.id_number,
+      email: officers.email,
+      name:
+        officers.first_name +
+        " " +
+        officers.middle_name +
+        " " +
+        officers.last_name,
+      course: officers.course,
+      year: officers.year,
+      role: officers.role,
+      status: officers.status,
+    }));
+
+    res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("Error fetching officers:", error);
+    res.status(500).json({ error: "Failed to fetch officers" });
+  }
+});
 router.get("/get-suspend-officers", authenticateToken, async (req, res) => {
   try {
     const officers = await Admin.find({ status: "Suspend" });
@@ -590,7 +618,6 @@ router.put("/admin/restore-officer", authenticateToken, async (req, res) => {
       .json({ message: "An error occurred", error: error.message });
   }
 });
-
 router.get(
   "/admin/search-student/:id_number",
   authenticateToken,
@@ -598,14 +625,22 @@ router.get(
     const { id_number } = req.params;
 
     try {
-      const student = await Student.findOne({ id_number, isRequest: false });
+      const student = await Student.findOne({
+        id_number,
+        role: "all",
+      });
       if (!student) {
-        res.status(404).json({ message: "Student not found" });
+        res.status(404).json({
+          message: "Student not found or Student is already added a role",
+        });
       } else {
         res.status(200).json({ data: student });
       }
     } catch (error) {
       console.error(error);
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
     }
   }
 );
