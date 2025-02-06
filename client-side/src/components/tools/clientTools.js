@@ -27,11 +27,42 @@ export const higherPosition = () => {
     user.position === "Developer"
   );
 };
+export const mediaPosition = () => {
+  const user = getInformationData();
+
+  return user.position === "P.R.O";
+};
+export const volunteerPosition = () => {
+  const user = getInformationData();
+
+  return user.position === "Chief Volunteer";
+};
 
 export const headDevPosition = () => {
   const user = getInformationData();
 
   return user.position === "Head Developer";
+};
+export const presidentPosition = () => {
+  const user = getInformationData();
+
+  return user.position === "President";
+};
+export const treasurerPosition = () => {
+  const user = getInformationData();
+
+  return user.position === "Treasurer";
+};
+export const higherOfficers = () => {
+  const user = getInformationData();
+
+  return (
+    user.position === "President" ||
+    user.position === "Vice-President Internal" ||
+    user.position === "Vice-President External" ||
+    user.position === "Secretary" ||
+    user.position === "Head Developer"
+  );
 };
 
 export const deletePosition = () => {

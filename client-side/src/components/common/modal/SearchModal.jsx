@@ -4,6 +4,7 @@ import { fetchStudentName, requestRoleAdmin } from "../../../api/admin";
 function SearchModal({ position, onClose }) {
   const [number, setNumber] = useState("");
   const [result, setResult] = useState(null);
+  const [response, setResponse] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
@@ -15,10 +16,12 @@ function SearchModal({ position, onClose }) {
         setResult(
           `Result: ${response.data.first_name + " " + response.data.last_name}`
         );
+        setResponse(true);
         setLoading(false);
       } else {
-        setResult("No student found with that ID number");
+        setResult("No student found or it already added");
         setLoading(false);
+        setResponse(false);
       }
     }, 1000);
   };
@@ -33,29 +36,30 @@ function SearchModal({ position, onClose }) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/60">
-      <div className="bg-white p-6 rounded-2xl shadow-lg w-80 relative">
-        <div className="flex justify-between items-center mb-4">
-          <h1>Add {position} Role</h1>
+      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full relative">
+        <div className="flex justify-between items-center mb-5">
+          <h1 className="text-xl font-semibold">Add {position} Role</h1>
           <button
             onClick={onClose}
-            className="text-3xl text-gray-500 hover:text-gray-700"
+            className="text-3xl text-gray-500 hover:text-gray-700 transition"
           >
             &times;
           </button>
         </div>
 
-        <h2 className="text-lg font-medium mb-4">Enter ID Number</h2>
+        <h2 className="text-lg font-medium mb-3">Enter ID Number</h2>
         <input
           type="number"
           value={number}
           onChange={(e) => setNumber(e.target.value)}
-          placeholder="Enter a number"
-          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+          placeholder="Enter ID number"
+          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
+
         <button
           onClick={handleSearch}
           disabled={loading}
-          className={`mt-4 w-full p-2 rounded-lg text-white ${
+          className={`mt-4 w-full p-2 rounded-lg text-white transition ${
             loading
               ? "bg-blue-300 cursor-not-allowed"
               : "bg-blue-500 hover:bg-blue-600"
@@ -63,25 +67,27 @@ function SearchModal({ position, onClose }) {
         >
           {loading ? "Searching..." : "Search"}
         </button>
+
         {result && (
-          <div>
-            <div className="mt-4 text-sm text-gray-700 bg-gray-100 p-2 rounded-lg">
-              {result}
-            </div>
-            <div className="mt-4 flex justify-between">
-              <button
-                onClick={() => handleRequest()}
-                className="w-1/2 p-2 mr-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
-              >
-                Request
-              </button>
-              <button
-                onClick={onClose}
-                className="w-1/2 p-2 ml-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
-              >
-                Cancel
-              </button>
-            </div>
+          <div className="mt-4 text-sm text-gray-700 bg-gray-100 p-3 rounded-lg">
+            {result}
+          </div>
+        )}
+
+        {response && (
+          <div className="mt-5 flex gap-3">
+            <button
+              onClick={handleRequest}
+              className="flex-1 p-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition"
+            >
+              Request
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 p-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+            >
+              Cancel
+            </button>
           </div>
         )}
       </div>

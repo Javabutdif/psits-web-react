@@ -231,6 +231,7 @@ router.put(
       type,
       control,
       sales_data,
+      selectedAudience,
     } = req.body;
 
     const id = req.params._id;
@@ -262,6 +263,7 @@ router.put(
         type: type,
         control: control,
         imageUrl: imageUrl,
+        selectedAudience: selectedAudience,
       };
 
       if (sales_data) {

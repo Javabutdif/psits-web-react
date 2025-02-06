@@ -1,5 +1,5 @@
 import {
-  getAllDevelopers,
+  getAllStudentOfficers,
   editOfficerApi,
   roleRemove,
 } from "../../../api/admin";
@@ -8,13 +8,13 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import { higherPosition } from "../../../components/tools/clientTools";
+import { higherOfficers } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditOfficer from "../EditOfficer";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
-import AddOfficer from "../AddOfficer";
+
 import SearchModal from "../../../components/common/modal/SearchModal";
 
 const StudentOfficer = () => {
@@ -35,7 +35,7 @@ const StudentOfficer = () => {
 
   const fetchData = async () => {
     try {
-      const result = await getAllDevelopers();
+      const result = await getAllStudentOfficers();
       setData(result ? result : []);
       setFilteredData(result ? result : []);
       setLoading(false);
@@ -227,12 +227,23 @@ const StudentOfficer = () => {
   return (
     <div className="">
       <div className="py-4 ">
-        <button
-          onClick={() => setViewAdd(true)}
-          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
-        >
-          Add Officer Role
-        </button>
+        {higherOfficers() ? (
+          <>
+            <button
+              onClick={() => setViewAdd(true)}
+              className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
+            >
+              Add Officer Role
+            </button>
+          </>
+        ) : (
+          <button
+            className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
+            disabled
+          >
+            Not Authorized
+          </button>
+        )}
       </div>
 
       <TableComponent columns={columns} data={filteredData} />
@@ -247,7 +258,7 @@ const StudentOfficer = () => {
       {viewAdd && (
         <SearchModal
           isVisible={viewAdd}
-          position={"Officer"}
+          position={"Officers"}
           onClose={() => setViewAdd(false)}
         />
       )}
