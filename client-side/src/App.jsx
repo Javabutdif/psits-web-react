@@ -121,12 +121,12 @@ const App = () => {
               path="student-account"
               element={<PrivateRouteAdmin element={StudentOfficer} />}
             />
-            {(presidentPosition() || headDevPosition()) && (
+          
               <Route
                 path="request"
                 element={<PrivateRouteAdmin element={Request} />}
               />
-            )}
+           
           </Route>
 
           <Route
