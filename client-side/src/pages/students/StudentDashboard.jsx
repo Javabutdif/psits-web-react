@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getInformationData } from "../../authentication/Authentication";
 import { Link } from "react-router-dom";
+import { getEvents } from "../../api/event";
 
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-gray-200 ${className}`}></div>
@@ -16,47 +17,15 @@ const StudentDashboard = () => {
   const userData = getInformationData();
   const [isRequest, setIsRequest] = useState(false);
   const [products, setProducts] = useState([]);
-
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const events = [
-    {
-      date: "Feb. 14",
-      details: [
-        { name: "Love Month", time: "7:00 am - 8:00 am" },
-        { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
-      ],
-    },
-    {
-      date: "Feb. 17",
-      details: [
-        { name: "UC Days", time: "7:00 am - 8:00 am" },
-        { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
-      ],
-    },
-    {
-      date: "April 22",
-      details: [
-        { name: "ICT Congress", time: "7:00 am - 8:00 am" },
-        { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
-      ],
-    },
-    {
-      date: "June 15",
-      details: [
-        { name: "Intrams", time: "7:00 am - 8:00 am" },
-        { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
-      ],
-    },
-    {
-      date: "Aug. 15",
-      details: [
-        { name: "Intrams", time: "7:00 am - 8:00 am" },
-        { name: "Guest Lecture", time: "1:00 pm - 4:00 pm" },
-      ],
-    },
-    // Add more events
-  ];
+  const fetchAllEvents = async () => {
+    const result = await getEvents();
+    if (result) {
+      setEvents(result.data);
+    }
+  };
 
   const handleFetchSpecificStudent = async () => {
     try {
@@ -94,20 +63,12 @@ const StudentDashboard = () => {
     }
   };
 
-  const fetchEvents = async () => {
-    try {
-      const response = await backendConnection.get("/events");
-      setEvents(response.data);
-    } catch (error) {
-      console.error("Error fetching events:", error);
-    }
-  };
-
   useEffect(() => {
+    setLoading(true);
     const fetchData = async () => {
       await Promise.all([
         fetchMerchandise(),
-        fetchEvents(),
+        fetchAllEvents(),
         handleFetchSpecificStudent(),
       ]);
       setLoading(false);
@@ -142,7 +103,6 @@ const StudentDashboard = () => {
   );
 };
 
-// Fixing Dynamic Ad Carousel
 const DynamicAdCarousel = ({ products }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -207,9 +167,14 @@ const DynamicAdCarousel = ({ products }) => {
 };
 const EventDetails = ({ events }) => {
   const [showAll, setShowAll] = useState(false);
-  const [showBTN, setBTN] = useState(false);
+  const [showDescription, setShowDescription] = useState({});
 
-  const visibleEvents = showAll ? events : events.slice(0, 3);
+  const toggleDescription = (index) => {
+    setShowDescription((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
 
   return (
     <div className="max-w-xl mt-7 mx-auto p-6 bg-white border rounded-lg shadow-lg">
@@ -217,51 +182,55 @@ const EventDetails = ({ events }) => {
         Upcoming Events
       </h2>
       <div className="space-y-4">
-        {visibleEvents.map((event, index) => (
+        {events.slice(0, showAll ? events.length : 3).map((event, index) => (
           <div
             key={index}
-            className="items-center p-4 border border-blue-200 rounded-lg flex "
+            className="items-center p-4 border border-blue-200 rounded-lg flex flex-col"
           >
-            <div className="flex gap-2 text-[#074873] w-[150px] ">
+            <div className="flex gap-2 text-[#074873] w-full">
               <div className="w-10 h-10 flex items-center justify-center border border-[#074873] rounded-full">
-                <i class="far fa-calendar"></i>
+                <i className="far fa-calendar"></i>
               </div>
-              <p className="text-sm font-semibold mt-2">{event.date}</p>
+              <p className="text-sm font-semibold mt-2">{event.eventName}</p>
             </div>
-            <div className="pl-1">
-              <div className="">
-                {event.details.map((detail, idx) => (
-                  <p key={idx} className="text-xs sm:text-sm text-gray-700 ">
-                    <span className="font-semibold">{detail.name}:</span>{" "}
-                    {detail.time}
-                  </p>
-                ))}
-              </div>
+            <div className="pl-1 w-full">
+              <p className="text-xs sm:text-sm text-gray-700">
+                <span className="font-semibold">
+                  {showDescription[index]
+                    ? event.eventDescription
+                    : `${event.eventDescription.slice(0, 50)}...`}
+                </span>
+                {event.eventDescription.length > 50 && (
+                  <span
+                    className="text-blue-500 cursor-pointer ml-1"
+                    onClick={() => toggleDescription(index)}
+                  >
+                    {showDescription[index] ? " Show less" : " Read more"}
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {new Date(event.eventDate).toLocaleDateString()}
+              </p>
             </div>
           </div>
         ))}
       </div>
       <div className="mt-6 text-center">
-        {!showAll && (
+        {!showAll && events.length > 3 && (
           <button
-            onClick={() => {
-              setShowAll(true);
-              setBTN(true);
-            }}
-            className="text-xs px-4 py-2 bg-[#074873] hover:bg-[#1E6F8C] text-white font-semibold rounded-lg shadow-md  transition-all duration-300 ease-in-out"
+            onClick={() => setShowAll(true)}
+            className="text-xs px-4 py-2 bg-[#074873] hover:bg-[#1E6F8C] text-white font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out"
           >
             View All Events
           </button>
         )}
-        {showBTN && (
+        {showAll && (
           <button
-            onClick={() => {
-              setShowAll(false);
-              setBTN(false);
-            }}
-            className="mt-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-full shadow-md hover:bg-red-800  transition-all duration-300 ease-in-out"
+            onClick={() => setShowAll(false)}
+            className="mt-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-full shadow-md hover:bg-red-800 transition-all duration-300 ease-in-out"
           >
-            <i class="fas fa-times"></i>
+            <i className="fas fa-times"></i>
           </button>
         )}
       </div>
