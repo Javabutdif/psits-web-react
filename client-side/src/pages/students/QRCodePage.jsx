@@ -5,10 +5,13 @@ import { getInformationData } from "../../authentication/Authentication";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import backendConnection from "../../api/backendApi";
+import { InfinitySpin } from "react-loader-spinner";
 
 const QRCodePage = ({ closeView, event }) => {
   const [isAttendee, setIsAttendee] = useState(false);
   const [studentId, setStudentId] = useState();
+  const [studentName, setStudentName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   const handleBackdropClick = (e) => {
@@ -18,14 +21,22 @@ const QRCodePage = ({ closeView, event }) => {
   };
 
   const checkIfUserIsAttendee = () => {
+    setIsLoading(true);
     const student = getInformationData();
     setStudentId(student.id_number);
 
-    const isAttendee = event.attendees.some(
+    const attendee = event.attendees.find(
       (attendee) => attendee.id_number === student.id_number
     );
 
-    setIsAttendee(isAttendee);
+    if (attendee) {
+      setIsAttendee(true);
+      setStudentName(attendee.name);
+    } else {
+      setIsAttendee(false);
+      setStudentName("");
+    }
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -61,15 +72,12 @@ const QRCodePage = ({ closeView, event }) => {
       onClick={handleBackdropClick}
     >
       <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl max-h-screen overflow-auto">
-        {/* Close Icon */}
         <i
           className="fas fa-times absolute top-4 right-4 text-2xl text-gray-400 hover:text-red-600 transition duration-200 cursor-pointer"
           onClick={closeView}
         ></i>
 
-        {/* Content Wrapper */}
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Left Column */}
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-[#074873]">
               {event.eventName}
@@ -86,7 +94,6 @@ const QRCodePage = ({ closeView, event }) => {
             </div>
           </div>
 
-          {/* Right Column */}
           <div className="flex-1 space-y-6">
             <div>
               <h2 className="text-xl font-semibold text-[#074873]">
@@ -97,16 +104,17 @@ const QRCodePage = ({ closeView, event }) => {
               </p>
             </div>
 
-            {/* QR Code Section */}
             <div className="flex flex-col items-center text-center">
               <h2 className="text-lg font-semibold text-[#074873] mb-4">
                 QR Code for Attendance
               </h2>
-              {isAttendee ? (
+              {isLoading ? (
+                <InfinitySpin width="200" color="#074873" />
+              ) : isAttendee ? (
                 <>
                   <div className="flex justify-center">
                     <QRCode
-                      value={`${studentId}`}
+                      value={`${window.location.origin}/admin/attendance/${event.eventId}/${event.eventName}/markAsPresent/${studentId}/${studentName}`}
                       size={170}
                       fgColor="#074873"
                     />
