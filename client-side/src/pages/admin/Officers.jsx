@@ -40,11 +40,18 @@ const Officers = () => {
       text: `Suspended`,
       icon: "fas fa-ban",
     },
-    (presidentPosition() || headDevPosition()) && {
-      path: "/admin/officers/request",
-      text: `Request `,
-      icon: "fas fa-envelope-open-text",
-    },
+    presidentPosition() || headDevPosition()
+      ? {
+          path: "/admin/officers/request",
+          text: `Request `,
+          icon: "fas fa-envelope-open-text",
+        }
+      : {
+          path: "#",
+          text: `Disabled `,
+          icon: "fas fa-lock",
+          disabled: true,
+        },
   ];
 
   return (
