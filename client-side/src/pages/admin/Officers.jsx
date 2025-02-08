@@ -1,31 +1,23 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Tab from "../../components/Tab";
-
-import { InfinitySpin } from "react-loader-spinner";
+import {
+  presidentPosition,
+  headDevPosition,
+} from "../../components/tools/clientTools";
 
 const Officers = () => {
-  const [counts, setCounts] = useState({
-    allMembers: 0,
-    request: 0,
-    renewals: 0,
-    deleted: 0,
-    history: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
   const location = useLocation();
   const currentPath = location.pathname;
   const tabs = [
     {
       path: "/admin/officers",
-      text: `Admin Officers`,
+      text: `Admin Account`,
       icon: "fas fa-users",
     },
     {
       path: "/admin/officers/student-account",
-      text: `Student Account (Officers)`,
+      text: `Officers`,
       icon: "fas fa-users",
     },
     {
@@ -48,7 +40,7 @@ const Officers = () => {
       text: `Suspended`,
       icon: "fas fa-ban",
     },
-    {
+    (presidentPosition() || headDevPosition()) && {
       path: "/admin/officers/request",
       text: `Request `,
       icon: "fas fa-envelope-open-text",

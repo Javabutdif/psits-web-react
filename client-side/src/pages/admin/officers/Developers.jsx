@@ -8,13 +8,12 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import { higherPosition } from "../../../components/tools/clientTools";
+import { headDevPosition } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditOfficer from "../EditOfficer";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
-import AddOfficer from "../AddOfficer";
 import SearchModal from "../../../components/common/modal/SearchModal";
 
 const Developers = () => {
@@ -227,12 +226,23 @@ const Developers = () => {
   return (
     <div className="">
       <div className="py-4 ">
-        <button
-          onClick={() => setViewAdd(true)}
-          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
-        >
-          Add Developer Role
-        </button>
+        {headDevPosition() ? (
+          <>
+            <button
+              onClick={() => setViewAdd(true)}
+              className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
+            >
+              Add Developer Role
+            </button>
+          </>
+        ) : (
+          <button
+            className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
+            disabled
+          >
+            Not Authorized
+          </button>
+        )}
       </div>
 
       <TableComponent columns={columns} data={filteredData} />
@@ -247,7 +257,7 @@ const Developers = () => {
       {viewAdd && (
         <SearchModal
           isVisible={viewAdd}
-          position={"Developer"}
+          position={"Developers"}
           onClose={() => setViewAdd(false)}
         />
       )}
