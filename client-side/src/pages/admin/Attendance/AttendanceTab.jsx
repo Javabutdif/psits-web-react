@@ -4,26 +4,27 @@ import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";
+import { useNavigate } from "react-router-dom";
 
-
-
-
-
-
-const AttendanceTabs = ({ columns, filteredData, searchQuery, setSearchQuery, setIsFilterOpen, setShowModal }) => {
+const AttendanceTabs = ({
+  columns,
+  filteredData,
+  searchQuery,
+  setSearchQuery,
+  setIsFilterOpen,
+  setShowModal,
+}) => {
   const [activeTab, setActiveTab] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  // const [searchQuery, setSearchQuery] = useState("");
-  // List of branches
+  const navigate = useNavigate();
+
   const branches = ["All", "UC-Main", "UC-Banilad", "UC-LM", "UC-PT"];
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  
   const renderTabPanelContent = (branchName) => (
-    
     <div className="overflow-x-auto">
       <TableComponent
         columns={columns}
@@ -54,6 +55,9 @@ const AttendanceTabs = ({ columns, filteredData, searchQuery, setSearchQuery, se
                       type="button"
                       text="Scan QR"
                       icon={<i className="fas fa-qrcode text-base"></i>}
+                      onClick={() => {
+                        navigate("/admin/qrCodeScanner");
+                      }}
                       styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
                       textClass="sm:block hidden text-gray-800"
                       whileHover={{ scale: 1.01, opacity: 0.95 }}
@@ -102,11 +106,9 @@ const AttendanceTabs = ({ columns, filteredData, searchQuery, setSearchQuery, se
               </div>
             </div>
           </div>
-
         }
       />
     </div>
-
   );
 
   return (
@@ -117,9 +119,7 @@ const AttendanceTabs = ({ columns, filteredData, searchQuery, setSearchQuery, se
         ))}
       </TabList>
       {branches.map((branch) => (
-        <TabPanel key={branch}>
-          {renderTabPanelContent(branch)}
-        </TabPanel>
+        <TabPanel key={branch}>{renderTabPanelContent(branch)}</TabPanel>
       ))}
     </Tabs>
   );

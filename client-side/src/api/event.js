@@ -53,3 +53,45 @@ export const getAttendees = async (id) => {
     }
   }
 };
+
+export const markAsPresent = async (eventId, attendeeId, navigate) => {
+  try {
+    const url = `${backendConnection()}/api/events/attendance/${eventId}/${attendeeId}`;
+
+    const response = await axios.put(
+      url,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      showToast("success", "Attendance successfully recorded!");
+      navigate(`/admin/attendance/${eventId}`); // Navigate back after successful update
+    }
+  } catch (error) {
+    console.error("Error marking attendance:", error);
+
+    if (error.response) {
+      switch (error.response.status) {
+        case 403:
+          showToast("error", "Access denied. Admins only.");
+          break;
+        case 404:
+          showToast("error", "Event or attendee not found.");
+          break;
+        case 400:
+          showToast("error", "Attendance already recorded.");
+          break;
+        default:
+          showToast("error", "An error occurred while recording attendance.");
+      }
+    } else {
+      showToast("error", "An error occurred while recording attendance.");
+    }
+  }
+};

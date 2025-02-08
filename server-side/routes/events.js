@@ -5,8 +5,7 @@ const { ObjectId } = require("mongodb");
 
 const router = express.Router();
 
-//Events.js api
-
+// GET all events
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const events = await Events.find();
@@ -16,9 +15,8 @@ router.get("/", authenticateToken, async (req, res) => {
     console.error(error);
   }
 });
-//get all attendees
 
-//TODO
+// GET all events and attendees
 router.get("/attendees/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
 
@@ -35,17 +33,14 @@ router.get("/attendees/:id", authenticateToken, async (req, res) => {
   }
 });
 
-router.get(
+// UPDATE Attendee isAttended property
+router.put(
   "/attendance/:event_id/:id_number",
   authenticateToken,
   async (req, res) => {
     const { event_id, id_number } = req.params;
 
     try {
-      if (req.user?.role !== "Admin") {
-        return res.status(403).json({ message: "Access denied. Admins only." });
-      }
-
       const eventId = new ObjectId(event_id);
       const event = await Events.findOne({ eventId });
 
@@ -66,6 +61,8 @@ router.get(
       if (attendee.isAttended) {
         return res.status(400).json({ message: "Attendance already recorded" });
       }
+
+      // TODO: Raffle
 
       attendee.isAttended = true;
       attendee.attendDate = new Date();
