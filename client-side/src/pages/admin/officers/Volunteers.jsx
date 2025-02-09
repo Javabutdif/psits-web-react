@@ -71,9 +71,6 @@ const Volunteers = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
-
-  useEffect(() => {
     const filtered = data.filter((item) => {
       const searchLower = searchQuery.toLowerCase();
       return [item.name, item.id_number, item.email, item.position, item.course]

@@ -330,7 +330,7 @@ router.get("/get-all-developers", async (req, res) => {
       role: developer.role,
       status: developer.status,
     }));
-
+    console.log(users);
     res.status(200).json({ data: users });
   } catch (error) {
     console.error("Error fetching officers:", error);
@@ -746,7 +746,5 @@ router.put("/admin/decline-role", authenticateToken, async (req, res) => {
       .json({ message: "An error occurred", error: error.message });
   }
 });
-
-
 
 module.exports = router;
