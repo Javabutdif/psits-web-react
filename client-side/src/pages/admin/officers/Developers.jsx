@@ -67,7 +67,7 @@ const Developers = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [data]);
 
   useEffect(() => {
     const filtered = data.filter((item) => {
