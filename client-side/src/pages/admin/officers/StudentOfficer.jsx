@@ -66,9 +66,7 @@ const StudentOfficer = () => {
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+ 
 
   useEffect(() => {
     const filtered = data.filter((item) => {

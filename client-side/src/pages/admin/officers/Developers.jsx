@@ -67,9 +67,6 @@ const Developers = () => {
 
   useEffect(() => {
     fetchData();
-  }, [data]);
-
-  useEffect(() => {
     const filtered = data.filter((item) => {
       const searchLower = searchQuery.toLowerCase();
       return [item.name, item.id_number, item.email, item.position, item.course]
