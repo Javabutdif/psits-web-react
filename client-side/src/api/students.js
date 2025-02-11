@@ -154,3 +154,34 @@ export const deleteItem = async (data) => {
     console.error("Error:", error);
   }
 };
+
+///fetch-specific-student/:id_number
+
+export const fetchSpecificStudent = async (id_number) => {
+	try {
+		const response = await axios.get(
+			`${backendConnection()}/api/fetch-specific-student/${id_number}`,
+			{
+				
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+			}
+		);
+
+		if (response.status === 200) {
+			return response.data.data;
+		} else {
+			return null;
+		}
+	} catch (error) {
+		if (error.response && error.response.data) {
+			console.error("Error:", error);
+		} else {
+			console.error("Error:", error);
+		}
+		console.error("Error:", error);
+	}
+};
+

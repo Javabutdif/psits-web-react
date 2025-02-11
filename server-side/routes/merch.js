@@ -49,6 +49,7 @@ router.post(
       description,
       selectedVariations,
       selectedSizes,
+      selectedAudience,
       created_by,
       start_date,
       end_date,
@@ -71,6 +72,7 @@ router.post(
         description,
         selectedVariations: selectedVariations.split(","),
         selectedSizes: selectedSizes.split(","),
+        selectedAudience,
         created_by,
         start_date,
         end_date,
@@ -226,6 +228,7 @@ router.put(
       type,
       control,
       sales_data,
+      selectedAudience,
     } = req.body;
 
     const id = req.params._id;
@@ -257,6 +260,7 @@ router.put(
         type: type,
         control: control,
         imageUrl: imageUrl,
+        selectedAudience: selectedAudience,
       };
 
       if (sales_data) {

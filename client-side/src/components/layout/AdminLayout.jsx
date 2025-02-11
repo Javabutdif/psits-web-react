@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import AsideBar from "../common/navbar/AsideBar";
 import ProfileHeader from "../ProfileHeader";
-import { higherPosition } from "../tools/clientTools";
+import { higherPosition, treasurerPosition } from "../tools/clientTools";
 
 const formatLabel = (text) => {
   if (!text) return "";
@@ -34,13 +34,13 @@ const AdminLayout = () => {
   });
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
-    higherPosition() && {
-      text: "Officers",
+    {
+      text: "Members",
       icon: "fas fa-user-tie",
       path: "officers",
     },
     { text: "Students", icon: "fas fa-users", path: "students" },
-    higherPosition() && {
+    {
       text: "Events",
       icon: "fas fa-calendar-alt",
       path: "events",
@@ -49,7 +49,7 @@ const AdminLayout = () => {
     { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
     { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
     { text: "Reports", icon: "fas fa-chart-line", path: "reports" },
-    higherPosition() && {
+    (higherPosition() || treasurerPosition()) && {
       text: "Logs",
       icon: "fa-solid fa-book",
       path: "logs",

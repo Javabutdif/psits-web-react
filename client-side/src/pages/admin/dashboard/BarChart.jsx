@@ -1,9 +1,24 @@
 import { getOrderDate } from "../../../api/admin";
-import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from "chart.js";
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+} from "chart.js";
 import React, { useState, useEffect } from "react";
-import { Pie } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 
-ChartJS.register(Title, Tooltip, Legend, ArcElement);
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale
+);
 
 export const formatString = (str, abbreviate = true) => {
   if (!str || typeof str !== "string") {
@@ -25,7 +40,7 @@ export const formatString = (str, abbreviate = true) => {
   return formattedString;
 };
 
-const PieChart = () => {
+const BarChart = () => {
   const [data, setData] = useState({
     products: [],
     orders: [],
@@ -67,13 +82,6 @@ const PieChart = () => {
       {
         label: "Number of Orders by Product",
         data: data.orders,
-        backgroundColor: [
-          "rgba(209, 213, 219, 0.7)",
-          "rgba(156, 163, 175, 0.7)",
-          "rgba(107, 114, 128, 0.7)",
-          "rgba(75, 85, 99, 0.7)",
-          "rgba(55, 65, 81, 0.7)",
-        ],
         borderColor: [
           "rgba(209, 213, 219, 1)",
           "rgba(156, 163, 175, 1)",
@@ -81,7 +89,6 @@ const PieChart = () => {
           "rgba(75, 85, 99, 1)",
           "rgba(55, 65, 81, 1)",
         ],
-
         borderWidth: 1,
       },
     ],
@@ -105,6 +112,20 @@ const PieChart = () => {
         },
       },
     },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: "Products",
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: "Number of Orders",
+        },
+      },
+    },
   };
 
   return (
@@ -113,7 +134,7 @@ const PieChart = () => {
         Daily Sales Distribution
       </h2>
       {data.products.length > 0 ? (
-        <Pie data={chartData} options={options} />
+        <Bar data={chartData} options={options} />
       ) : (
         <p>No data available</p>
       )}
@@ -121,4 +142,4 @@ const PieChart = () => {
   );
 };
 
-export default PieChart;
+export default BarChart;

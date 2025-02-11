@@ -430,7 +430,7 @@ const Orders = () => {
                                 alt={item.product_name}
                               />
                               <div className="flex flex-col">
-                                <span className="font-medium">
+                                <span className="font-medium text-gray-500">
                                   {item.product_name}
                                 </span>
                                 <span className="text-xs text-gray-500">

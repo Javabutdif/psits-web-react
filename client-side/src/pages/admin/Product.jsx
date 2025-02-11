@@ -63,7 +63,10 @@ function Product({ handleCloseAddProduct }) {
     control: "",
     selectedSizes: [],
     selectedVariations: [],
+    selectedAudience: "",
+
     eventDate: "",
+
   });
 
   const [errors, setErrors] = useState({
@@ -299,6 +302,14 @@ function Product({ handleCloseAddProduct }) {
   const purchaseControlOptions = [
     { value: "limited-purchase", label: "Limited Purchase" },
     { value: "bulk-purchase", label: "Bulk Purchase" },
+  ];
+  const audience = [
+    { value: "all", label: "All" },
+    { value: "officers", label: "Officers" },
+    {
+      value: "volunteer,media,developer",
+      label: "Volunteers, Media and Developers",
+    },
   ];
 
   const getTypeOptions = (category) => {
@@ -572,6 +583,15 @@ function Product({ handleCloseAddProduct }) {
               labelStyle="text-sm"
               optionStyle="text-sm"
             />
+            <FormSelect
+              name="selectedAudience"
+              label="Select Audience"
+              options={audience}
+              value={formData.selectedAudience}
+              onChange={handleChange}
+              labelStyle="text-sm"
+              optionStyle="text-sm"
+            />
 
             <div className="flex flex-col gap-4 text-sm">
               {isShown && (
@@ -658,7 +678,7 @@ function Product({ handleCloseAddProduct }) {
               text="Preview"
               onClick={handlePreview}
               styles="w-full bg-[#002E48] p-2 rounded text-white"
-              disabled={isLoading}
+             
             />
           </form>
           {showPreview && (

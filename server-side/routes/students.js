@@ -352,4 +352,27 @@ router.post(
   }
 );
 
+router.get(
+	"/fetch-specific-student/:id_number",
+	authenticateToken,
+	async (req, res) => {
+		const { id_number } = req.params;
+
+		try {
+			const student = await Student.findOne({ id_number });
+			if (!student) {
+				res.status(404).json({ message: "Student not found" });
+			} else {
+				const user = {
+					isRequest: student.isRequest,
+					role: student.role,
+				};
+				res.status(200).json({ data: user });
+			}
+		} catch (error) {
+			console.error(error);
+		}
+	}
+);
+
 module.exports = router;

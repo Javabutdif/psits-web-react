@@ -619,6 +619,136 @@ export const getAllOfficers = async () => {
   }
 };
 
+export const getAllStudentOfficers = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-all-student-officers`,
+
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      console.log(response.data.data);
+      return response.data.data;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      //showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      //showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
+//TODO:
+//get-all-developers
+export const getAllDevelopers = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-all-developers`,
+
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      console.log(response.data.data);
+      return response.data.data;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+    }
+    console.error("Error:", error);
+  }
+};
+//TODO:
+//get-all-media
+export const getAllMedia = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-all-media`,
+
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      console.log(response.data.data);
+      return response.data.data;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      //showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      //showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+//TODO:
+//get-all-volunteers
+export const getAllVolunteers = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-all-volunteers`,
+
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      console.log(response.data.data);
+      return response.data.data;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      //showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      //showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+//TODO:remove role officer
+
+export const roleRemove = async (id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/role-remove`,
+      { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log(response.data.message);
+    return response.status;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
 export const getSuspendOfficers = async () => {
   try {
     const response = await axios.get(
@@ -768,5 +898,125 @@ export const fetchAdminLogs = async () => {
   } catch (error) {
     console.error("Error fetching admin logs:", error);
     throw new Error("Unable to fetch admin logs");
+  }
+};
+
+//fetch student name
+export const fetchStudentName = async (id_number) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/admin/search-student/${id_number}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching student:", error);
+  }
+};
+
+export const requestRoleAdmin = async (role, id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/request-role`,
+      { role, id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message);
+    }
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
+//fetch request students role
+export const fetchAllStudentRequestRole = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/admin/get-request-role`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
+        },
+      }
+    );
+
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching student:", error);
+  }
+};
+//Approve Role President
+export const approveRole = async (id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/approve-role`,
+      { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message);
+    }
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+//Decline Role President
+export const declineRole = async (id_number) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/decline-role`,
+      { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message);
+    }
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
   }
 };

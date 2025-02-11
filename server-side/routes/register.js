@@ -45,6 +45,9 @@ router.post("/register", async (req, res) => {
       status: "True",
       membership: "None",
       applied,
+      role: "all",
+      campus: "UCMN",
+      isRequest: false,
     });
     await newStudent.save();
 
