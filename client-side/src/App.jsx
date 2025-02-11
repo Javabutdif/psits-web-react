@@ -182,18 +182,8 @@ const App = () => {
 					<Route
 						path="profile"
 						element={<PrivateRouteAdmin element={Profile} />}></Route>
-					{higherPosition() || treasurerPosition() ? (
-						<Route path="logs" element={<PrivateRouteAdmin element={Logs} />} />
-					) : (
-						<Route
-							path="/admin/"
-							element={<PrivateRouteAdmin element={AdminLayout} />}>
-							<Route
-								path="dashboard"
-								element={<PrivateRouteAdmin element={AdminDashboard} />}
-							/>{" "}
-						</Route>
-					)}
+
+					<Route path="logs" element={<PrivateRouteAdmin element={Logs} />} />
 				</Route>
 
 				<Route
