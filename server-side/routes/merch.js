@@ -41,7 +41,6 @@ router.post(
   authenticateToken,
   upload.array("images", 3),
   async (req, res) => {
-    //TODO: Log (Done)
     const {
       name,
       price,
@@ -164,7 +163,6 @@ router.get("/retrieve-admin", authenticateToken, async (req, res) => {
 });
 
 router.delete("/delete-report", authenticateToken, async (req, res) => {
-  // TODO: Log (Done)
   const { id, merchName } = req.body;
 
   try {
@@ -216,7 +214,6 @@ router.put(
   authenticateToken,
   upload.array("images", 3),
   async (req, res) => {
-    //TODO: Log (Done)
     const {
       name,
       price,
@@ -354,7 +351,6 @@ router.put(
 
 // DELETE merch by id (soft)
 router.put("/delete-soft", authenticateToken, async (req, res) => {
-  // TODO: Log (Done)
   const { _id } = req.body;
 
   try {
@@ -397,7 +393,6 @@ router.put("/delete-soft", authenticateToken, async (req, res) => {
 
 // Publish merch
 router.put("/publish", authenticateToken, async (req, res) => {
-  // TODO: Log (Done)
   const { _id } = req.body;
 
   try {

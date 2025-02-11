@@ -527,7 +527,6 @@ const Reports = () => {
                   });
                 }}
               >
-                {/* TODO: Log (Done) */}
                 Export CSV
               </button>
             </CSVLink>
@@ -601,7 +600,6 @@ const Reports = () => {
                   });
                 }}
               >
-                {/* TODO: Log (Done) */}
                 Export CSV
               </button>
             </CSVLink>
