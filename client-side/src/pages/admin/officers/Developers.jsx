@@ -54,27 +54,29 @@ const Developers = () => {
   };
 
   const handleSaveEditedMember = async (updatedMember) => {
-    setIsLoading(true);
-    try {
-      editOfficerApi(updatedMember);
-    } catch (error) {
-      console.error("Error updating officer:", error);
-    }
+		setIsLoading(true);
+		try {
+			editOfficerApi(updatedMember);
+		} catch (error) {
+			console.error("Error updating officer:", error);
+		}
 
-    fetchData();
-    setIsLoading(false);
-  };
+		fetchData();
+		setIsLoading(false);
+	};
+	useEffect(() => {
+		fetchData();
+	}, []);
 
-  useEffect(() => {
-    fetchData();
-    const filtered = data.filter((item) => {
-      const searchLower = searchQuery.toLowerCase();
-      return [item.name, item.id_number, item.email, item.position, item.course]
-        .map((value) => (value ? value.toString().toLowerCase() : ""))
-        .some((value) => value.includes(searchLower));
-    });
-    setFilteredData(filtered);
-  }, [searchQuery, data]);
+	useEffect(() => {
+		const filtered = data.filter((item) => {
+			const searchLower = searchQuery.toLowerCase();
+			return [item.name, item.id_number, item.email, item.position, item.course]
+				.map((value) => (value ? value.toString().toLowerCase() : ""))
+				.some((value) => value.includes(searchLower));
+		});
+		setFilteredData(filtered);
+	}, [searchQuery,data]);
 
   const showModal = (row) => {
     setIsModalVisible(true);

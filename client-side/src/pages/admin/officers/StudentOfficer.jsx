@@ -65,6 +65,9 @@ const StudentOfficer = () => {
     fetchData();
     setIsLoading(false);
   };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
  
 
