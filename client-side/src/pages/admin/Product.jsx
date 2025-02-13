@@ -66,7 +66,6 @@ function Product({ handleCloseAddProduct }) {
     selectedAudience: "",
 
     eventDate: "",
-
   });
 
   const [errors, setErrors] = useState({
@@ -221,7 +220,7 @@ function Product({ handleCloseAddProduct }) {
     }
 
     data.append("isEvent", isEventType);
-   
+
     try {
       if (await addMerchandise(data)) {
         showToast("success", "Merchandise Published");
@@ -678,7 +677,6 @@ function Product({ handleCloseAddProduct }) {
               text="Preview"
               onClick={handlePreview}
               styles="w-full bg-[#002E48] p-2 rounded text-white"
-             
             />
           </form>
           {showPreview && (
