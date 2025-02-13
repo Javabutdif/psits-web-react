@@ -61,7 +61,14 @@ const PrivateRouteAdmin = ({ element: Component }) => {
       </div>
     );
   }
-  console.log("Check : " + unauthorized + " Other check: " + isAuthenticated);
+  console.log(
+    "Check : " +
+      Component.name +
+      ": " +
+      unauthorized +
+      " Other check: " +
+      isAuthenticated
+  );
   return unauthorized ? (
     <Navigate to="/admin/dashboard" replace />
   ) : isAuthenticated ? (
