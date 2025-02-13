@@ -29,9 +29,6 @@ const AdminLayout = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(true);
 
-  useEffect(() => {
-    console.log(isSidebarOpen);
-  });
   const navItems = [
     { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
     {
