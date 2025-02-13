@@ -4,6 +4,7 @@ import { FaUserCheck } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import FormButton from "../../../components/forms/FormButton";
 
+
 const ViewStudentAttendance = ({
   isVisible,
   onClose,
@@ -61,7 +62,9 @@ const ViewStudentAttendance = ({
         {/* Modal Content */}
         <div id="modal-description" className="space-y-4">
           {Object.entries(studentData || {})
-            // .filter(([key]) => key !== "_id" && key !== "isAttended") // Exclude specific keys
+
+            .filter(([key]) => key !== "_id" && key !== "isAttended") // Exclude specific keys
+
             .map(([key, value]) => (
               <div key={key} className="flex justify-between">
                 <span className="font-medium text-gray-700 capitalize">

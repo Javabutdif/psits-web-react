@@ -14,9 +14,11 @@ const ConfirmAttendeeModal = ({ formData, onClose, onConfirm }) => {
         >
           <AiOutlineClose size={24} />
         </button>
+
         <div className="p-5 w-full sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl max-h-screen ">
           <h3 className="text-xl font-bold mb-1 ">Confirm Information</h3>
           {/* <div className="bg-white p-6 rounded w-96">
+
             <div className="space-y-2">
               <p><strong>ID Number:</strong> {formData.id_number}</p>
               <p><strong>First Name:</strong> {formData.first_name}</p>
@@ -28,6 +30,7 @@ const ConfirmAttendeeModal = ({ formData, onClose, onConfirm }) => {
               <p><strong>Campus:</strong> {formData.campus}</p>
               <p><strong>T-Shirt Size:</strong> {formData.shirt_size}</p>
             </div>
+
           </div> */}
 
           <div id="modal-description" className="space-y-4 mt-5">
@@ -41,6 +44,7 @@ const ConfirmAttendeeModal = ({ formData, onClose, onConfirm }) => {
                 <span className="text-gray-900">{value}</span>
               </div>
             ))}
+
           </div>
           <div className="flex justify-end mt-4 space-x-2">
               <button

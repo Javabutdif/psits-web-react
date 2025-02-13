@@ -70,3 +70,7 @@ export const deletePosition = () => {
 
   return user.position === "Treasurer" || user.position === "Head Developer";
 };
+
+export const restrictedComponent = () => {
+  return ["Logs"];
+};
