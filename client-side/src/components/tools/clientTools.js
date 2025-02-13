@@ -72,5 +72,5 @@ export const deletePosition = () => {
 };
 
 export const restrictedComponent = () => {
-  return ["Logs"];
+  return ["logs"];
 };

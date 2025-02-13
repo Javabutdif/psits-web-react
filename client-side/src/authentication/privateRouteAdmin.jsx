@@ -3,7 +3,7 @@ import { setInformationData } from "./Authentication";
 import axios from "axios";
 import { React, useState, useEffect } from "react";
 import { InfinitySpin } from "react-loader-spinner";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import {
   presidentPosition,
   headDevPosition,
@@ -15,10 +15,13 @@ const PrivateRouteAdmin = ({ element: Component }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const token = sessionStorage.getItem("Token");
+  const location = useLocation();
+  const lastPart = location.pathname.split("/").pop();
+
   const unauthorized =
     !higherPosition() &&
     !treasurerPosition() &&
-    restrictedComponent().includes(Component.name);
+    restrictedComponent().includes(lastPart);
 
   const checkAuthentication = async () => {
     try {
@@ -61,14 +64,7 @@ const PrivateRouteAdmin = ({ element: Component }) => {
       </div>
     );
   }
-  console.log(
-    "Check : " +
-      Component.name +
-      ": " +
-      unauthorized +
-      " Other check: " +
-      isAuthenticated
-  );
+
   return unauthorized ? (
     <Navigate to="/admin/dashboard" replace />
   ) : isAuthenticated ? (
