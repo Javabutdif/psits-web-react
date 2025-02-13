@@ -62,8 +62,6 @@ router.put(
         return res.status(400).json({ message: "Attendance already recorded" });
       }
 
-      // TODO: Raffle
-
       attendee.isAttended = true;
       attendee.attendDate = new Date();
       attendee.confirmedBy = req.user?.name;

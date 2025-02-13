@@ -32,6 +32,9 @@ const AddAttendeeForm = () => {
     email: "",
     shirt_size: "",
 
+    shirt_price: "",
+
+
     applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
   });
 
@@ -139,7 +142,9 @@ const AddAttendeeForm = () => {
       console.error("Error fetching data: ", error);
       setLoading(false);
     }
+
     navigate("/admin/attendance/");
+
   };
 
   const closeModal = () => {

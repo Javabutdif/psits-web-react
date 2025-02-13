@@ -124,7 +124,6 @@ router.post("/student-order", authenticateToken, async (req, res) => {
 
 // Cancel Order
 router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
-  // TODO: Log (Done)
   const { product_id } = req.params;
 
   if (!product_id) {
