@@ -8,7 +8,7 @@ const Event = require("../models/EventsModel");
 const { default: mongoose } = require("mongoose");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
-const { S3Client } = require("@aws-sdk/client-s3");
+const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { ObjectId } = require("mongodb");
 require("dotenv").config();
 const authenticateToken = require("../middlewares/authenticateToken");
@@ -229,17 +229,54 @@ router.put(
       control,
       sales_data,
       selectedAudience,
+      removeImage,
     } = req.body;
-
-    const id = req.params._id;
-
-    let imageUrl = req.files.map((file) => file.location);
-
     try {
+      const id = req.params._id;
+
+      let imageUrl = req.files.map((file) => file.location);
+
+      const imagesToRemove = Array.isArray(removeImage)
+        ? removeImage
+        : removeImage
+        ? [removeImage]
+        : [];
+
+      // Append new uploaded images
+
+      const imageKeys = imagesToRemove.length
+        ? imagesToRemove.map((url) => url.replace(process.env.bucketUrl, ""))
+        : [];
+
+      await Promise.all(
+        imageKeys.map((imageKey) =>
+          s3Client.send(
+            new DeleteObjectCommand({
+              Bucket: process.env.AWS_BUCKET_NAME,
+              Key: imageKey,
+            })
+          )
+        )
+      );
       const existingMerch = await Merch.findById(id);
       if (!existingMerch) {
         console.error("Merch not found");
         return res.status(404).send("Merch not found");
+      }
+      let updatedImages = existingMerch.imageUrl.filter(
+        (img) => !imagesToRemove.includes(img)
+      );
+
+      updatedImages = [...updatedImages, ...imageUrl];
+      // Remove from MongoDB
+      const updatedResult = await Merch.updateOne(
+        { _id: id },
+        { imageUrl: imagesToRemove },
+        { $pull: { imageUrl: imagesToRemove } }
+      );
+      if (updatedResult.modifiedCount === 0) {
+        console.error("Failed to update merch images");
+        return res.status(500).send("Failed to update merch images");
       }
 
       if (imageUrl.length === 0) {
@@ -259,7 +296,7 @@ router.put(
         category: category,
         type: type,
         control: control,
-        imageUrl: imageUrl,
+        imageUrl: updatedImages,
         selectedAudience: selectedAudience,
       };
 
