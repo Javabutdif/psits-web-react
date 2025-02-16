@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { AiOutlineClose } from "react-icons/ai";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
+import { ConfirmActionType } from "../../enums/commonEnums";
+import { addOfficer } from "../../api/admin";
 
 const AddOfficer = ({ isVisible, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -14,12 +17,22 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
     year: "",
     position: "",
     status: "Request",
+    campus: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const toggleConfirmPasswordVisibility = () =>
     setShowConfirmPassword(!showConfirmPassword);
+  const [confirmModal, setConfirmModal] = useState(false);
+
+  const handleConfirmModal = (e) => {
+    e.preventDefault();
+    setConfirmModal(true);
+  };
+  const handleCloseModal = () => {
+    setConfirmModal(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,12 +43,13 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    handleCloseModal();
     if (formData.password === formData.confirm_password) {
       console.log(formData);
-      //onSave(formData);
-      onClose();
+      if (await addOfficer(formData)) {
+        onClose();
+      }
     } else {
       alert("Password is incorrect");
     }
@@ -56,7 +70,7 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
           <AiOutlineClose size={24} />
         </button>
 
-        <form onSubmit={handleSubmit}>
+        <form>
           <h2 className="text-xl font-semibold mb-4">Add Officer</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -189,7 +203,6 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
                   className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm"
                   id="course"
                   name="course"
-                  value={formData.course}
                   onChange={handleChange}
                   required
                 >
@@ -220,6 +233,25 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
                   <option value="4">4</option>
                 </select>
               </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Campus</label>
+                <select
+                  className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm"
+                  id="campus"
+                  name="campus"
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="none" selected disabled hidden>
+                    Select Campus
+                  </option>
+                  <option value="UCB">UC Banilad</option>
+                  <option value="UCLM">UC Lapu-Lapu Mandaue</option>
+                  <option value="UCPT">UC Pardo Talisay</option>
+                  <option value="UCMETC">UC METC</option>
+                  <option value="UCJ">UC Jones</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -232,14 +264,23 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
               Cancel
             </button>
             <button
-              type="submit"
               className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md"
+              onClick={handleConfirmModal}
             >
               Save
             </button>
           </div>
         </form>
       </div>
+      {confirmModal && (
+        <>
+          <ConfirmationModal
+            confirmType={ConfirmActionType.APPROVAL}
+            onConfirm={() => handleSubmit()}
+            onCancel={() => handleCloseModal()}
+          />
+        </>
+      )}
     </div>
   );
 };

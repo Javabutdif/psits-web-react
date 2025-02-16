@@ -1,9 +1,6 @@
 import { login } from "../../api/index";
-import christ from "../../assets/images/ch.png";
-import christmas from "../../assets/images/christmass.png";
-import halloween from "../../assets/images/haloween.png";
+import ai from "../../assets/images/AI.png";
 import logo from "../../assets/images/login.png";
-import pit from "../../assets/images/pit.png";
 import valen from "../../assets/images/valen.png";
 import {
   attemptAuthentication,
@@ -25,8 +22,8 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const [remainingTime, setRemainingTime] = useState();
   const currentDate = new Date();
-  const janStart = new Date(currentDate.getFullYear(), 0, 27);
-  const janEnd = new Date(currentDate.getFullYear(), 1, 30);
+  const janStart = new Date(currentDate.getFullYear(), 1, 10);
+  const janEnd = new Date(currentDate.getFullYear(), 5, 30);
 
   useEffect(() => {
     let interval;
@@ -167,9 +164,7 @@ const Login = () => {
             <IoArrowBack size={35} color="#074873" />
           </button>
           <img
-            src={
-              currentDate >= janStart && currentDate <= janEnd ? valen : logo
-            }
+            src={currentDate >= janStart && currentDate <= janEnd ? ai : logo}
             alt="Logo"
             className=""
           />

@@ -3,6 +3,7 @@ import {
   allMembers,
   merchCreated,
   placedOrders,
+  fetchAllPendingCounts,
 } from "../../api/admin";
 import BarGraph from "./dashboard/BarGraph";
 import DashboardCard from "./dashboard/DashboardCard";
@@ -13,6 +14,7 @@ import {
   faUserGraduate,
   faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
+import OrderTable from "./dashboard/OrderTable";
 import React, { useEffect, useState } from "react";
 
 const AdminDashboard = () => {
@@ -29,6 +31,7 @@ const AdminDashboard = () => {
     student: 0,
     order: 0,
   });
+  const [pendingData, setPendingData] = useState([]);
 
   const [finalCounts, setFinalCounts] = useState({
     merchandise: 0,
@@ -74,21 +77,36 @@ const AdminDashboard = () => {
       });
     }, 20);
   };
+  const dummyData = [
+    { name: "Order A", quantity: 5 },
+    { name: "Order B", quantity: 12 },
+    { name: "Order C", quantity: 7 },
+    { name: "Order D", quantity: 20 },
+    { name: "Order E", quantity: 3 },
+    { name: "Order F", quantity: 9 },
+    { name: "Order G", quantity: 15 },
+    { name: "Order H", quantity: 8 },
+    { name: "Order I", quantity: 6 },
+    { name: "Order J", quantity: 4 },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [studentRes, merchCreate, placedOrder] = await Promise.all([
-          allMembers(),
-          merchCreated(),
-          placedOrders(),
-        ]);
+        const [studentRes, merchCreate, placedOrder, pendingOrders] =
+          await Promise.all([
+            allMembers(),
+            merchCreated(),
+            placedOrders(),
+            fetchAllPendingCounts(),
+          ]);
 
         setFinalCounts({
           student: studentRes || 0,
           merchandise: merchCreate || 0,
           order: placedOrder || 0,
         });
+        setPendingData(pendingOrders || []);
         console.log(studentRes);
         animateCount();
       } catch (error) {
@@ -114,6 +132,7 @@ const AdminDashboard = () => {
             count={counts.merchandise}
           />
         </div>
+
         <div className="col-start-3 col-end-5 lg:flex-1 md:col-start-3 md:col-end-5">
           <DashboardCard
             icon={faUserGraduate}
@@ -128,6 +147,10 @@ const AdminDashboard = () => {
             count={counts.order}
           />
         </div>
+      </div>
+      <div className="justify-center items-center mt-8 pt-2 ">
+        <h4>Pending Orders</h4>
+        <OrderTable data={pendingData} />
       </div>
       <div className="flex flex-col xl:flex-row items-center mt-8 pt-2 gap-8">
         <div className="flex-1 flex items-center justify-center">

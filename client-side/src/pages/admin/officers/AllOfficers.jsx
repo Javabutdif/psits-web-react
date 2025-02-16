@@ -252,10 +252,9 @@ const AllOfficers = () => {
       <div className="py-4 ">
         <button
           onClick={() => setViewAdd(true)}
-          className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
-          disabled
+          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
         >
-          Disabled
+          Add Officers
         </button>
       </div>
 

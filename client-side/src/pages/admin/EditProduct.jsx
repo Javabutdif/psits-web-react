@@ -200,7 +200,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
     setPreviewData(formData);
     setShowPreview(true);
   };
-
+  console.log(formData);
   const handleConfirm = async () => {
     setIsLoading(true);
     const formDataToSend = new FormData();

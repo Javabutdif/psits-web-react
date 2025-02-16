@@ -744,4 +744,38 @@ router.put("/admin/decline-role", authenticateToken, async (req, res) => {
   }
 });
 
+router.post("/admin/add-officer", authenticateToken, async (req, res) => {
+  const {
+    id_number,
+    name,
+    password,
+    email,
+    position,
+    course,
+    year,
+    campus,
+    status,
+  } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newAdmin = new Admin({
+      id_number,
+      name,
+      password: hashedPassword,
+      email,
+      position,
+      course,
+      year,
+      campus,
+      status,
+    });
+    await newAdmin.save();
+
+    res.status(200).json({ message: "Account Creation successful" });
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 module.exports = router;
