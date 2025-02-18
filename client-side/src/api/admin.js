@@ -1020,3 +1020,52 @@ export const declineRole = async (id_number) => {
     console.error("Error:", error);
   }
 };
+
+//get-all-pending-counts
+export const fetchAllPendingCounts = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/orders/get-all-pending-counts`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
+        },
+      }
+    );
+    console.log(response.data.data);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching student:", error);
+  }
+};
+
+export const addOfficer = async (formData) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/admin/add-officer`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+      return true;
+    } else {
+      console.error(response.data.message);
+      showToast("error", response.data.message || "An error occurred");
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.error(error);
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      console.error(error);
+      showToast("error", "An error occurred");
+    }
+  }
+};

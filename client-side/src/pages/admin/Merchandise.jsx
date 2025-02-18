@@ -212,13 +212,13 @@ function Merchandise() {
       label: "Product",
       sortable: true,
       cell: (row) => (
-        <div className="flex items-center justify-center md:justify-start gap-2">
+        <div className="flex items-center justify-center md:justify-start gap-2 ">
           <img
             src={row.imageUrl[0]}
             alt={row.name}
             width="50"
             height="50"
-            className="rounded-md shadow-sm"
+            className="rounded-md shadow-sm object-cover"
           />
         </div>
       ),
@@ -537,18 +537,18 @@ function Merchandise() {
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Variation:</span>
                   <span className="text-sm">
-                    {selectedItem?.selectedVariations.map((item, index) => (
-                      <p key={index}> {item}</p>
-                    ))}
+                    {selectedItem?.selectedVariations
+                      .map((sizes) => sizes)
+                      .join(", ")}
                   </span>
                 </div>
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Sizes:</span>
                   <span className="text-sm">
                     {" "}
-                    {selectedItem?.selectedSizes.map((item, index) => (
-                      <p key={index}> {item}</p>
-                    ))}
+                    {selectedItem?.selectedSizes
+                      .map((sizes) => sizes)
+                      .join(", ")}
                   </span>
                 </div>
                 <div className="flex items-center font-secondary justify-between gap-10">

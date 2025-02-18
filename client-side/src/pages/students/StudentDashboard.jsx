@@ -102,7 +102,6 @@ const StudentDashboard = () => {
     </div>
   );
 };
-
 const DynamicAdCarousel = ({ products }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -127,11 +126,13 @@ const DynamicAdCarousel = ({ products }) => {
           transition={{ duration: 0.5 }}
           className="relative"
         >
-          <img
-            src={products[currentIndex]?.imageUrl[0]}
-            alt="Ad"
-            className="w-full h-auto object-cover"
-          />
+          <div className="w-full h-64">
+            <img
+              src={products[currentIndex]?.imageUrl[0]}
+              alt="Ad"
+              className="w-full h-full object-cover"
+            />
+          </div>
 
           <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-center items-center text-white p-4">
             <motion.h2
@@ -152,7 +153,7 @@ const DynamicAdCarousel = ({ products }) => {
             </motion.p>
             <Link to="/student/merchandise">
               <motion.button
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-all"
+                className="mt-4 px-4 py-2 bg-[#368ec9] text-white rounded-lg shadow-lg hover:bg-[#074873] transition-all"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >

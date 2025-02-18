@@ -233,7 +233,7 @@ router.put(
     } = req.body;
     try {
       const id = req.params._id;
-
+      console.log(removeImage);
       let imageUrl = req.files.map((file) => file.location);
 
       const imagesToRemove = Array.isArray(removeImage)
@@ -242,12 +242,10 @@ router.put(
         ? [removeImage]
         : [];
 
-      // Append new uploaded images
-
       const imageKeys = imagesToRemove.length
         ? imagesToRemove.map((url) => url.replace(process.env.bucketUrl, ""))
         : [];
-
+      console.log(imageKeys);
       await Promise.all(
         imageKeys.map((imageKey) =>
           s3Client.send(
@@ -268,7 +266,7 @@ router.put(
       );
 
       updatedImages = [...updatedImages, ...imageUrl];
-      // Remove from MongoDB
+
       const updatedResult = await Merch.updateOne(
         { _id: id },
         { imageUrl: imagesToRemove },

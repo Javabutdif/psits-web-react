@@ -340,4 +340,39 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
   }
 });
 
+router.get("/get-all-pending-counts", authenticateToken, async (req, res) => {
+  try {
+    const pendingOrders = await Orders.find({ order_status: "Pending" });
+    const productCounts = {};
+
+    pendingOrders.forEach((order) => {
+      order.items.forEach((item) => {
+        if (!productCounts[item.product_name]) {
+          productCounts[item.product_name] = {
+            total: 0,
+            yearCounts: [0, 0, 0, 0], 
+          };
+        }
+        productCounts[item.product_name].total += item.quantity;
+
+       
+        if (order.year >= 1 && order.year <= 4) {
+          productCounts[item.product_name].yearCounts[order.year - 1] += item.quantity;
+        }
+      });
+    });
+
+    const result = Object.keys(productCounts).map((productName) => ({
+      product_name: productName,
+      total: productCounts[productName].total,
+      yearCounts: productCounts[productName].yearCounts,
+    }));
+
+    res.status(200).json({ data: result });
+  } catch (error) {
+    console.error("Error fetching pending orders:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
 module.exports = router;
