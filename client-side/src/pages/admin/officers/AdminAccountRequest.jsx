@@ -1,25 +1,21 @@
 import {
-  getAllOfficers,
-  editOfficerApi,
-  officerSuspend,
+  getRequestAdminAccount,
+  declineAdminAccount,
+  approveAdminAccount,
 } from "../../../api/admin";
 import ChangePassword from "../../../components/ChangePassword";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import {
-  higherPosition,
-  higherOfficers,
-} from "../../../components/tools/clientTools";
+
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditOfficer from "../EditOfficer";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
-import AddOfficer from "../AddOfficer";
 
-const AllOfficers = () => {
+const AdminAccountRequest = () => {
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -33,11 +29,14 @@ const AllOfficers = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [id, setId] = useState("");
   const [viewChange, setViewChange] = useState(false);
-  const [viewAdd, setViewAdd] = useState(false);
+  const [approveModal, setApproveModal] = useState(false);
+  const [approveId, setApproveId] = useState("");
+  const [declineModal, setDeclineModal] = useState(false);
+  const [declineId, setDeclineId] = useState("");
 
   const fetchData = async () => {
     try {
-      const result = await getAllOfficers();
+      const result = await getRequestAdminAccount();
       setData(result ? result : []);
       setFilteredData(result ? result : []);
       setLoading(false);
@@ -47,20 +46,11 @@ const AllOfficers = () => {
     }
   };
 
-  const handleEditButtonClick = (row) => {
-    setMemberToEdit(row);
-    setIsEditModalVisible(true);
-  };
-
   const handleEditModalClose = () => {
     setIsEditModalVisible(false);
     setMemberToEdit(null);
   };
 
-  const handleChangePassword = (id) => {
-    setId(id);
-    setViewChange(true);
-  };
   const handleHideChangePassword = () => {
     setViewChange(false);
   };
@@ -91,36 +81,52 @@ const AllOfficers = () => {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const showModal = (row) => {
-    setIsModalVisible(true);
-    setStudentIdToBeDeleted(row.id_number);
+  const handleShowApproveModal = (row) => {
+    setApproveModal(true);
+    setApproveId(row.id_number);
   };
-
-  const hideModal = () => {
-    setIsModalVisible(false);
-    setStudentIdToBeDeleted("");
-  };
-
-  const handleConfirmDeletion = async () => {
+  const handleApproveRole = async () => {
     setIsLoading(true);
-    console.log(studentIdToBeDeleted);
     try {
-      const id_number = studentIdToBeDeleted;
+      const id_number = approveId;
 
-      if ((await officerSuspend(id_number)) === 200) {
+      if (await approveAdminAccount(id_number)) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
         );
         setData(updatedData);
-        setIsModalVisible(false);
-        showToast("success", "Officer Suspend Successful!");
+        setApproveModal(false);
+        showToast("success", "Admin Approved Successful!");
       } else {
-        console.error("Failed to delete officer");
-        showToast("error", "Officer Deletion Failed! Please try again.");
+        console.error("Failed to approve officer");
       }
     } catch (error) {
-      console.error("Error deleting officer:", error);
-      showToast("error", "Officer Deletion Failed! Please try again.");
+      console.error("Error approving officer:", error);
+    }
+    setIsLoading(false);
+  };
+
+  const handleShowDeclineModal = (row) => {
+    setDeclineModal(true);
+    setDeclineId(row.id_number);
+  };
+  const handleDeclineRole = async () => {
+    setIsLoading(true);
+    try {
+      const id_number = declineId;
+
+      if (await declineAdminAccount(id_number)) {
+        const updatedData = data.filter(
+          (student) => student.id_number !== id_number
+        );
+        setData(updatedData);
+        setDeclineModal(false);
+        showToast("success", "Role Declined Successful!");
+      } else {
+        console.error("Failed to decline ");
+      }
+    } catch (error) {
+      console.error("Error declining officer:", error);
     }
     setIsLoading(false);
   };
@@ -194,57 +200,51 @@ const AllOfficers = () => {
       ),
     },
     {
-      key: "email",
-      label: "Email Account",
-      selector: (row) => row.email,
+      key: "role",
+      label: "Requested Role",
+      selector: (row) => row.role,
       sortable: true,
     },
     {
-      key: "position",
-      label: "Position",
-      selector: (row) => row.position,
+      key: "status",
+      label: "Status",
+      selector: (row) => row.status,
       sortable: true,
-    },
-    {
-      key: "campus",
-      label: "Campus",
-      selector: (row) => row.campus,
-      sortable: true,
+      cell: (row) => (
+        <div className="text-xs">
+          <div
+            className={`${
+              row.status === "Request" ? "text-orange-500" : "text-red-500"
+            }`}
+          >
+            {row.status === "Request" ? "Pending" : "Denied"}
+          </div>
+        </div>
+      ),
     },
 
-    higherOfficers() && {
+    {
       key: "actions",
       label: "",
       cell: (row) => (
         <ButtonsComponent>
           <FormButton
             type="button"
-            text="Change"
-            onClick={() => handleChangePassword(row.id_number)}
-            icon={<i className="fas fa-key" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            textClass="text-gray-800"
-            whileHover={{ scale: 1.02, opacity: 0.95 }}
-            whileTap={{ scale: 0.98, opacity: 0.9 }}
-          />
-
-          <FormButton
-            type="button"
-            text="Edit"
-            onClick={() => handleEditButtonClick(row)}
-            icon={<i className="fas fa-edit" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            textClass="text-gray-800" // Elegant text color
+            text="Approve"
+            onClick={() => handleShowApproveModal(row)}
+            icon={<i className="fas fa-check-circle" />} // Approve icon
+            styles="flex items-center space-x-2 bg-green-100 text-green-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-400"
+            textClass="text-green-800 font-medium" // Green text for "Approve"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
           />
           <FormButton
             type="button"
-            text="Suspend"
-            onClick={() => showModal(row)}
-            icon={<i className="fas fa-trash" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-            textClass="text-red-800" // Elegant text color
+            text="Deny"
+            onClick={() => handleShowDeclineModal(row)}
+            icon={<i className="fas fa-times-circle" />} // Deny icon
+            styles="flex items-center space-x-2 bg-red-100 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-400"
+            textClass="text-red-800 font-medium" // Red text for "Deny"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
           />
@@ -255,15 +255,6 @@ const AllOfficers = () => {
 
   return (
     <div className="">
-      <div className="py-4 ">
-        <button
-          onClick={() => setViewAdd(true)}
-          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
-        >
-          Add Officers
-        </button>
-      </div>
-
       <TableComponent columns={columns} data={filteredData} />
       {isEditModalVisible && (
         <EditOfficer
@@ -273,16 +264,23 @@ const AllOfficers = () => {
           onSave={handleSaveEditedMember}
         />
       )}
-      {viewAdd && (
-        <AddOfficer isVisible={viewAdd} onClose={() => setViewAdd(false)} />
-      )}
-      {isModalVisible && (
+      {approveModal && (
         <ConfirmationModal
-          confirmType={ConfirmActionType.SUSPEND}
-          onCancel={hideModal}
-          onConfirm={handleConfirmDeletion}
+          confirmType={ConfirmActionType.APPROVE}
+          onCancel={() => setApproveModal(false)}
+          onConfirm={handleApproveRole}
+          type="officer"
         />
       )}
+      {declineModal && (
+        <ConfirmationModal
+          confirmType={ConfirmActionType.DECLINE}
+          onCancel={() => setDeclineModal(false)}
+          onConfirm={handleDeclineRole}
+          type="officer"
+        />
+      )}
+
       {viewChange && (
         <>
           <ChangePassword
@@ -297,4 +295,4 @@ const AllOfficers = () => {
   );
 };
 
-export default AllOfficers;
+export default AdminAccountRequest;

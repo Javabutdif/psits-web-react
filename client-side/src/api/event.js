@@ -68,7 +68,7 @@ export const markAsPresent = async (eventId, attendeeId, navigate) => {
         },
       }
     );
-
+    console.log("keypress");
     if (response.status === 200) {
       showToast("success", "Attendance successfully recorded!");
       navigate(`/admin/attendance/${eventId}`); // Navigate back after successful update

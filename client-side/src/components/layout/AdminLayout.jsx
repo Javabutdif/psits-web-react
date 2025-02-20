@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import AsideBar from "../common/navbar/AsideBar";
 import ProfileHeader from "../ProfileHeader";
 import { higherPosition, treasurerPosition } from "../tools/clientTools";
+import { getInformationData } from "../../authentication/Authentication";
 
 const formatLabel = (text) => {
   if (!text) return "";
@@ -16,6 +17,7 @@ const AdminLayout = () => {
   const location = useLocation();
   const [label, setLabel] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const user = getInformationData();
 
   useEffect(() => {
     const pathParts = location.pathname.split("/");
@@ -29,29 +31,27 @@ const AdminLayout = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(true);
 
-  const navItems = [
-    { text: "Dashboard", icon: "fas fa-tachometer-alt", path: "dashboard" },
-    {
-      text: "Members",
-      icon: "fas fa-user-tie",
-      path: "officers",
-    },
-    { text: "Students", icon: "fas fa-users", path: "students" },
-    {
-      text: "Events",
-      icon: "fas fa-calendar-alt",
-      path: "events",
-    },
-
-    { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
-    { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
-    { text: "Reports", icon: "fas fa-chart-line", path: "reports" },
-    (higherPosition() || treasurerPosition()) && {
-      text: "Logs",
-      icon: "fa-solid fa-book",
-      path: "logs",
-    },
-  ].filter(Boolean);
+  const navItems =
+    user.campus === "UC-Main"
+      ? [
+          {
+            text: "Dashboard",
+            icon: "fas fa-tachometer-alt",
+            path: "dashboard",
+          },
+          { text: "Members", icon: "fas fa-user-tie", path: "officers" },
+          { text: "Students", icon: "fas fa-users", path: "students" },
+          { text: "Events", icon: "fas fa-calendar-alt", path: "events" },
+          { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
+          { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
+          { text: "Reports", icon: "fas fa-chart-line", path: "reports" },
+          (higherPosition() || treasurerPosition()) && {
+            text: "Logs",
+            icon: "fa-solid fa-book",
+            path: "logs",
+          },
+        ].filter(Boolean)
+      : [{ text: "Events", icon: "fas fa-calendar-alt", path: "events" }];
 
   return (
     <div className="min-h-screen relative">

@@ -5,7 +5,7 @@ import {
 } from "../../../enums/commonEnums.js";
 import { capitalizeFirstLetter } from "../../../utils/stringUtils.js";
 
-function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
+function ConfirmationModal({ confirmType, onConfirm, onCancel, type }) {
   let confirmTypeWord = ConfirmActionWords[confirmType];
 
   const confirmButtonColor =
@@ -60,6 +60,8 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel }) {
               ? " this officer"
               : confirmTypeWord === "remove"
               ? " this role for this student"
+              : type === "officer"
+              ? " this officer"
               : " this student"}
             ?
           </p>

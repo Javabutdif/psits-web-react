@@ -252,7 +252,6 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
             },
           });
 
-          // Update event attendees if applicable
           const merchToGet = await Merch.findById(item.product_id);
           if (merchToGet && merchToGet.category === "ict-congress") {
             await Event.findOneAndUpdate(
@@ -267,7 +266,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
                     year: successfulOrder.year,
                     campus: student.campus,
                     isAttended: false,
-                    shirtSize: sizes.length > 0 ? sizes[0] : null, // Use the first size if available
+                    shirtSize: sizes.length > 0 ? sizes[0] : null,
                   },
                 },
               }
@@ -350,14 +349,14 @@ router.get("/get-all-pending-counts", authenticateToken, async (req, res) => {
         if (!productCounts[item.product_name]) {
           productCounts[item.product_name] = {
             total: 0,
-            yearCounts: [0, 0, 0, 0], 
+            yearCounts: [0, 0, 0, 0],
           };
         }
         productCounts[item.product_name].total += item.quantity;
 
-       
         if (order.year >= 1 && order.year <= 4) {
-          productCounts[item.product_name].yearCounts[order.year - 1] += item.quantity;
+          productCounts[item.product_name].yearCounts[order.year - 1] +=
+            item.quantity;
         }
       });
     });

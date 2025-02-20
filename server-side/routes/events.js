@@ -68,6 +68,19 @@ router.put(
 
       await event.save();
 
+      await Events.findOneAndUpdate(
+        { eventId },
+        {
+          $push: {
+            raffle: {
+              id_number: id_number,
+              name: attendee.name,
+              campus: attendee.campus,
+            },
+          },
+        }
+      );
+
       res.status(200).json({
         message: "Attendance successfully recorded",
         data: attendee,

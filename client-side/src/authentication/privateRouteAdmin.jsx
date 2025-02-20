@@ -1,5 +1,6 @@
 import backendConnection from "../api/backendApi";
 import { setInformationData } from "./Authentication";
+import { getInformationData } from "./Authentication";
 import axios from "axios";
 import { React, useState, useEffect } from "react";
 import { InfinitySpin } from "react-loader-spinner";
@@ -10,6 +11,7 @@ import {
   higherPosition,
   treasurerPosition,
   restrictedComponent,
+  restrictedComponentOtherCampus,
 } from "../components/tools/clientTools";
 const PrivateRouteAdmin = ({ element: Component }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -17,11 +19,20 @@ const PrivateRouteAdmin = ({ element: Component }) => {
   const token = sessionStorage.getItem("Token");
   const location = useLocation();
   const lastPart = location.pathname.split("/").pop();
+  const secondToTheLast = location.pathname.split("/").slice(-2, -1)[0];
+  const thirdToTheLast = location.pathname.split("/").slice(-3)[0];
+  const fifthToTheLast = location.pathname.split("/").slice(-6, -4)[0];
+  const user = getInformationData();
 
   const unauthorized =
     !higherPosition() &&
     !treasurerPosition() &&
     restrictedComponent().includes(lastPart);
+  const campus = user.campus === "UC-Main";
+  const other_campus_authorized =
+    restrictedComponentOtherCampus().includes(fifthToTheLast) ||
+    restrictedComponentOtherCampus().includes(secondToTheLast) ||
+    restrictedComponentOtherCampus().includes(lastPart);
 
   const checkAuthentication = async () => {
     try {
@@ -65,8 +76,10 @@ const PrivateRouteAdmin = ({ element: Component }) => {
     );
   }
 
-  return unauthorized ? (
+  return unauthorized && campus ? (
     <Navigate to="/admin/dashboard" replace />
+  ) : !campus && !other_campus_authorized ? (
+    <Navigate to="/admin/events" replace />
   ) : isAuthenticated ? (
     <Component />
   ) : (

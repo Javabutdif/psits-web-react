@@ -1,7 +1,6 @@
 import React from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
-
 import AdminLayout from "./components/layout/AdminLayout";
 import LandingLayout from "./components/layout/LandingLayout";
 
@@ -36,6 +35,7 @@ import Reports from "./pages/admin/Reports";
 import Resources from "./pages/admin/Resources";
 import Students from "./pages/admin/Students";
 import Settings from "./pages/Settings";
+import AdminAccountRequest from "./pages/admin/officers/AdminAccountRequest";
 
 import Login from "./pages/authentication/Login";
 import Register from "./pages/authentication/Register";
@@ -121,6 +121,10 @@ const App = () => {
             <Route
               path="request"
               element={<PrivateRouteAdmin element={Request} />}
+            />
+            <Route
+              path="admin-request"
+              element={<PrivateRouteAdmin element={AdminAccountRequest} />}
             />
           </Route>
           <Route

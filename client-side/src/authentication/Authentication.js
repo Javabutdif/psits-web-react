@@ -23,6 +23,7 @@ export const getInformationData = () => {
     role: storedRole || null,
     position: storedData?.position || null,
     audience: storedData?.role || null,
+    campus: storedData?.campus || null,
   };
 };
 export const removeAuthentication = () => {
