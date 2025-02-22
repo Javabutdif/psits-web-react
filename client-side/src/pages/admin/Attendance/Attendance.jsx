@@ -3,12 +3,14 @@ import React, { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "react-tabs/style/react-tabs.css";
-import { getAttendees } from "../../../api/event";
+import { getAttendees, getEventCheck } from "../../../api/event";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import FormButton from "../../../components/forms/FormButton";
 import AttendanceTab from "./AttendanceTab";
 import ViewStudentAttendance from "./ViewStudentAttendance";
 import { FaUserCheck } from "react-icons/fa";
+import AttendanceSettings from "./AttendanceSettings";
+import { getInformationData } from "../../../authentication/Authentication";
 
 const Attendance = (props) => {
   const navigate = useNavigate();
@@ -19,15 +21,15 @@ const Attendance = (props) => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
-  const [scanQRCode, handleScanQRCode] = useState();
-  const [currentEvent, setCurrentEvent] = useState("");
-  const [activeTab, setActiveTab] = useState(0);
   const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [eventHasEnded, setEventHasEnded] = useState(false);
+  const [viewSettings, setViewSettings] = useState(false);
+  const user = getInformationData();
+  const [isDisabled, setIsDisabled] = useState(false);
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -36,14 +38,36 @@ const Attendance = (props) => {
         : [...prevSelectedRows, id]
     );
   };
+  const handleSettingsView = () => {
+    setViewSettings(true);
+  };
+  const handleCloseSettingsView = () => {
+    setViewSettings(false);
+  };
+  const fetchEventLimit = async () => {
+    try {
+      const response = await getEventCheck(eventId);
+      const campusLimit = response.limit.find((l) => l.campus === user.campus);
+      console.log("Response: " + response);
+      console.log("campus Limit: " + campusLimit.limit);
+      if (!campusLimit) return;
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
+      const attendeeCount = response.attendees.filter(
+        (att) => att.campus === user.campus
+      ).length;
+
+      setIsDisabled(attendeeCount >= campusLimit.limit);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const getAllAttendees = async () => {
     return await getAttendees(eventId);
   };
+  useEffect(() => {
+    fetchEventLimit();
+  }, []);
   useEffect(() => {
     if (selectAll) {
       setSelectedRows(filteredData.map((item) => item.id_number));
@@ -180,7 +204,7 @@ const Attendance = (props) => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // TODO: Modify This to fetch Real Data (not dummy data)
+      // TODO:Done modify to get the real data
       const result = await getAllAttendees();
       setData(result.attendees);
       setFilteredData(result.attendees);
@@ -190,10 +214,6 @@ const Attendance = (props) => {
       console.error("Error fetching data: ", error);
       setLoading(false);
     }
-  };
-
-  const handleBackButton = () => {
-    navigate("/admin/dashboard");
   };
 
   useEffect(() => {
@@ -227,26 +247,62 @@ const Attendance = (props) => {
               </div>
 
               <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
-                <ButtonsComponent>
-                  <div className="py-2">
-                    <Link to="/admin/addAttendee">
+                {isDisabled ? (
+                  <ButtonsComponent>
+                    <div className="py-2">
                       <motion.button
                         type="button"
-                        text="Add Attendee"
-                        className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
+                        text="Limit Reached"
+                        className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
                         textClass="sm:block hidden text-white"
                         whileHover={{ scale: 1.01, opacity: 0.95 }}
                         whileTap={{ scale: 0.98, opacity: 0.9 }}
                       >
-                        <i className="fas fa-add"></i> Add Attendee
+                        <i className="fas fa-ban"></i> Limit Reached
                       </motion.button>
-                    </Link>
-                  </div>
-                </ButtonsComponent>
+                    </div>
+                  </ButtonsComponent>
+                ) : (
+                  <ButtonsComponent>
+                    <div className="py-2">
+                      <Link to="/admin/addAttendee">
+                        <motion.button
+                          type="button"
+                          text="Add Attendee"
+                          className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
+                          textClass="sm:block hidden text-white"
+                          whileHover={{ scale: 1.01, opacity: 0.95 }}
+                          whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        >
+                          <i className="fas fa-add"></i> Add Attendee
+                        </motion.button>
+                      </Link>
+                    </div>
+                  </ButtonsComponent>
+                )}
               </div>
             </motion.div>
-
-            {/* Tabs and Table Container */}
+          </div>
+          <div>
+            <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
+              {user.campus === "UC-Main" && (
+                <ButtonsComponent>
+                  <div className="py-2">
+                    <motion.button
+                      type="button"
+                      text="Settings"
+                      onClick={() => handleSettingsView()}
+                      className="bg-gray-500 text-white hover:bg-gray-600 active:bg-gray-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+                      textClass="sm:block hidden text-white"
+                      whileHover={{ scale: 1.01, opacity: 0.95 }}
+                      whileTap={{ scale: 0.98, opacity: 0.9 }}
+                    >
+                      <i className="fas fa-cog"></i> Settings
+                    </motion.button>
+                  </div>
+                </ButtonsComponent>
+              )}
+            </div>
           </div>
           <div className="md:overflow-x-auto shadow-sm rounded-sm space-y-4">
             <AttendanceTab
@@ -259,7 +315,13 @@ const Attendance = (props) => {
           </div>
         </div>
       )}
-
+      {viewSettings && (
+        <AttendanceSettings
+          showModal={viewSettings}
+          setShowModal={handleCloseSettingsView}
+          eventId={eventId}
+        />
+      )}
       {/* View Student Attendance Modal*/}
       {showModal && (
         <ViewStudentAttendance

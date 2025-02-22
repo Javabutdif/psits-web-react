@@ -58,29 +58,29 @@ const Volunteers = () => {
   };
 
   const handleSaveEditedMember = async (updatedMember) => {
-		setIsLoading(true);
-		try {
-			editOfficerApi(updatedMember);
-		} catch (error) {
-			console.error("Error updating officer:", error);
-		}
+    setIsLoading(true);
+    try {
+      editOfficerApi(updatedMember);
+    } catch (error) {
+      console.error("Error updating officer:", error);
+    }
 
-		fetchData();
-		setIsLoading(false);
-	};
-	useEffect(() => {
-		fetchData();
-	}, []);
+    fetchData();
+    setIsLoading(false);
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-	useEffect(() => {
-		const filtered = data.filter((item) => {
-			const searchLower = searchQuery.toLowerCase();
-			return [item.name, item.id_number, item.email, item.position, item.course]
-				.map((value) => (value ? value.toString().toLowerCase() : ""))
-				.some((value) => value.includes(searchLower));
-		});
-		setFilteredData(filtered);
-	}, [searchQuery, data]);
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const searchLower = searchQuery.toLowerCase();
+      return [item.name, item.id_number, item.email, item.position, item.course]
+        .map((value) => (value ? value.toString().toLowerCase() : ""))
+        .some((value) => value.includes(searchLower));
+    });
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
 
   const showModal = (row) => {
     setIsModalVisible(true);
@@ -211,16 +211,29 @@ const Volunteers = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
-          <FormButton
-            type="button"
-            text="Remove Role"
-            onClick={() => showModal(row)}
-            icon={<i className="fas fa-trash" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-            textClass="text-red-800" // Elegant text color
-            whileHover={{ scale: 1.02, opacity: 0.95 }}
-            whileTap={{ scale: 0.98, opacity: 0.9 }}
-          />
+          {higherPosition() || volunteerPosition() ? (
+            <FormButton
+              type="button"
+              text="Remove Role"
+              onClick={() => showModal(row)}
+              icon={<i className="fas fa-trash" />} // Simple icon
+              styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+              textClass="text-red-800" // Elegant text color
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+            />
+          ) : (
+            <FormButton
+              type="button"
+              text="Disabled"
+              icon={<i className="fas fa-ban" />} // Disabled icon
+              styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              textClass="text-gray-800" // Elegant text color
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+              disabled
+            />
+          )}
         </ButtonsComponent>
       ),
     },
