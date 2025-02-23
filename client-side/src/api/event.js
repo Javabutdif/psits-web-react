@@ -142,9 +142,11 @@ export const updateEventSettings = async (formData, eventId) => {
 
 export const raffleWinner = async (eventId, campus) => {
   try {
+    const data = campus ? { campus } : {}; // Only include campus if specified
+
     const response = await axios.post(
       `${backendConnection()}/api/events/raffle/${eventId}`,
-      { campus },
+      data,
       {
         headers: {
           "Content-Type": "application/json",
