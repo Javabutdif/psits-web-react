@@ -158,3 +158,22 @@ export const raffleWinner = async (eventId, campus) => {
     return false;
   }
 };
+
+export const removeRaffleAttendee = async (eventId, attendeeId) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/events/raffle/remove/${eventId}/${attendeeId}`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error removing attendee from raffle:", error);
+    return false;
+  }
+};
