@@ -69,19 +69,6 @@ router.put(
 
       await event.save();
 
-      await Events.findOneAndUpdate(
-        { eventId },
-        {
-          $push: {
-            raffle: {
-              id_number: id_number,
-              name: attendee.name,
-              campus: attendee.campus,
-            },
-          },
-        }
-      );
-
       res.status(200).json({
         message: "Attendance successfully recorded",
         data: attendee,
@@ -244,12 +231,10 @@ router.put(
       });
     } catch (error) {
       console.error("Error removing attendee from raffle:", error);
-      res
-        .status(500)
-        .json({
-          message:
-            "An error occurred while removing the attendee from the raffle",
-        });
+      res.status(500).json({
+        message:
+          "An error occurred while removing the attendee from the raffle",
+      });
     }
   }
 );

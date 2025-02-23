@@ -35,7 +35,6 @@ const attendeeSchema = new Schema({
   },
   shirtSize: {
     type: String,
-    required: true,
   },
   raffleIsRemoved: {
     type: Boolean,

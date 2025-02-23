@@ -157,7 +157,7 @@ export const raffleWinner = async (eventId, campus) => {
     return response.data;
   } catch (error) {
     console.error("Error selecting raffle winner:", error);
-    return false;
+    return error;
   }
 };
 
