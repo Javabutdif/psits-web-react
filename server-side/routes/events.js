@@ -203,4 +203,55 @@ router.post("/raffle/:eventId", authenticateToken, async (req, res) => {
   }
 });
 
+// Remove Attendee from Raffle
+router.put(
+  "/raffle/remove/:eventId/:attendeeId",
+  authenticateToken,
+  async (req, res) => {
+    const { eventId, attendeeId } = req.params;
+
+    try {
+      const event_id = new ObjectId(eventId);
+      const event = await Events.findOne({ eventId: event_id });
+
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      const attendee = event.attendees.find(
+        (att) => att.id_number === attendeeId
+      );
+
+      if (!attendee) {
+        return res
+          .status(404)
+          .json({ message: "Attendee not found in this event" });
+      }
+
+      // Update attendee raffle status
+      attendee.raffleIsWinner = false;
+      attendee.raffleIsRemoved = true;
+
+      await event.save();
+
+      res.status(200).json({
+        message: "Attendee removed from raffle successfully",
+        attendee: {
+          id_number: attendee.id_number,
+          name: attendee.name,
+          campus: attendee.campus,
+        },
+      });
+    } catch (error) {
+      console.error("Error removing attendee from raffle:", error);
+      res
+        .status(500)
+        .json({
+          message:
+            "An error occurred while removing the attendee from the raffle",
+        });
+    }
+  }
+);
+
 module.exports = router;
