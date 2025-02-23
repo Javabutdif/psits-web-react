@@ -149,4 +149,58 @@ router.post(
   }
 );
 
+// Event Raffle - Randomized Fetch for One Attendee and set raffleIsWinner = true
+router.post("/raffle/:eventId", authenticateToken, async (req, res) => {
+  const { eventId } = req.params;
+  const { campus } = req.body; // Accept campus filter from request body
+
+  try {
+    const event_id = new ObjectId(eventId);
+    const event = await Events.findOne({ eventId: event_id });
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Filter attendees based on campus if provided
+    let eligibleAttendees = event.attendees.filter(
+      (attendee) => !attendee.raffleIsRemoved && !attendee.raffleIsWinner
+    );
+
+    if (campus) {
+      eligibleAttendees = eligibleAttendees.filter(
+        (attendee) => attendee.campus === campus
+      );
+    }
+
+    if (eligibleAttendees.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No eligible attendees for raffle" });
+    }
+
+    // Randomly select one attendee
+    const winnerIndex = Math.floor(Math.random() * eligibleAttendees.length);
+    const winner = eligibleAttendees[winnerIndex];
+
+    // Update the winner's status
+    winner.raffleIsWinner = true;
+    await event.save();
+
+    res.status(200).json({
+      message: "Raffle winner selected successfully",
+      winner: {
+        id_number: winner.id_number,
+        name: winner.name,
+        campus: winner.campus,
+      },
+    });
+  } catch (error) {
+    console.error("Error selecting raffle winner:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while selecting a raffle winner" });
+  }
+});
+
 module.exports = router;
