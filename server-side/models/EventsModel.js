@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const attendeeSchema = require("./AttendeesModel");
-const raffleSchema = require("./RaffleModel");
 
 const Schema = mongoose.Schema;
 
@@ -27,10 +26,6 @@ const eventSchema = new Schema({
   },
   attendees: {
     type: [attendeeSchema],
-    default: [],
-  },
-  raffle: {
-    type: [raffleSchema],
     default: [],
   },
   status: {
