@@ -15,7 +15,7 @@ function StudentEvents() {
   };
 
   useEffect(() => {
-    handleGetEvents();
+    handleGetEvents();  
   }, []);
 
   const handleButtonClick = (event) => {
