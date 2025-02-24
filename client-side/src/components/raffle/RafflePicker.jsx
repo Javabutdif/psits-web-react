@@ -62,9 +62,9 @@ const RafflePicker = ({ participants }) => {
 					</motion.div>
 				)}
       </div>
-      		<div className="flex justify-between">
+      <div className="flex justify-center">
 
-			<div className=" justify-center items-center">
+			<div className="w-full justify-center items-center">
 			
 				{/* <div className='w-48 h-24 bg-white rounded-md shadow-lg flex items-center justify-center overflow-hidden'>
           <AnimatePresence>
@@ -82,7 +82,7 @@ const RafflePicker = ({ participants }) => {
             )}
           </AnimatePresence>
         </div> */}
-				<div className="w-96 mb-5 h-48 bg-white rounded-md shadow-lg flex items-center justify-center overflow-hidden">
+				<div className="mb-5 h-48 bg-white rounded-md shadow-lg flex items-center justify-center overflow-hidden">
 					<AnimatePresence>
 						{nextParticipant && (
 							<motion.div
@@ -119,18 +119,19 @@ const RafflePicker = ({ participants }) => {
 						{!isPicking && "Pick a Winner"}
 					</motion.button>
 				</div>
-			</div>
+			</div> 
+
+
 		
 			{remainingParticipants.length === 0 && (
 				<div className="mt-4 text-2xl font-semibold text-red-600">
 					No more participants left.
 				</div>
 			)}
-			<div className="w-48 ml-5 bg-white rounded-md shadow-lg text-center">
-				<h1>test</h1>
-				<h1>Winners</h1>
-				<div>{/*DATA FOR WINNERS, TO BE INSERTED*/}</div>
-        </div>
+					<div className="w-48 ml-5 bg-white rounded-md shadow-lg text-center">
+						<h1>Winners</h1>
+						<div>{/*DATA FOR WINNERS, TO BE INSERTED*/}</div>
+					</div>
         </div>
 		</div>
 	);

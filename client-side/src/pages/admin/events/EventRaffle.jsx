@@ -15,7 +15,7 @@ const EventRaffle = () => {
   const [selectedCampus, setSelectedCampus] = useState('All');
 
   return (
-    <div className='p-4 flex flex-col min-h-screen-half justify-center items-center'>
+    <div className='p-4 flex flex-col bg-black min-h-screen-half justify-center items-center'>
       <RafflePicker participants={participantsData[selectedCampus]} />
       <Tabs onSelectCampus={setSelectedCampus} />
     </div>
