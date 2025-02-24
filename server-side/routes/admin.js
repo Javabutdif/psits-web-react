@@ -438,7 +438,7 @@ router.get("/get-suspend-officers", authenticateToken, async (req, res) => {
 });
 
 router.post("/editOfficer", authenticateToken, async (req, res) => {
-  const { id_number, name, position, email, course, year } = req.body;
+  const { id_number, name, position, email, course, year, campus } = req.body;
 
   try {
     const getAdmin = await Admin.findOne({
@@ -451,7 +451,7 @@ router.post("/editOfficer", authenticateToken, async (req, res) => {
         $set: {
           name: name,
           position: position,
-
+          campus: campus,
           email: email,
           course: course,
           year: year,

@@ -36,6 +36,14 @@ const attendeeSchema = new Schema({
   shirtSize: {
     type: String,
   },
+  raffleIsRemoved: {
+    type: Boolean,
+    default: false,
+  },
+  raffleIsWinner: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = attendeeSchema;
