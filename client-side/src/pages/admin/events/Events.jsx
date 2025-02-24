@@ -9,6 +9,7 @@ function Events() {
 
   const handleGetEvents = async () => {
     const response = await getEvents();
+    console.log(response.data);
     setEvent(response.data);
   };
 

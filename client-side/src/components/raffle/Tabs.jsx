@@ -26,7 +26,7 @@ const Tabs = ({ onSelectCampus }) => {
           whileTap={{ scale: 0.95 }}
           onClick={() => handleSelectCampus(campus)}
         >
-          {campus}
+          {campus}  
         </motion.button>
       ))}
     </div>

@@ -69,7 +69,6 @@ const AllOfficers = () => {
     setIsLoading(true);
     try {
       editOfficerApi(updatedMember);
-      fetchData();
     } catch (error) {
       console.error("Error updating officer:", error);
     }
