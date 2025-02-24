@@ -30,6 +30,8 @@ const Attendance = (props) => {
   const [viewSettings, setViewSettings] = useState(false);
   const user = getInformationData();
   const [isDisabled, setIsDisabled] = useState(false);
+  const [eventDate, setEventDate] = useState("");
+  const currentDate = new Date();
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -47,9 +49,10 @@ const Attendance = (props) => {
   const fetchEventLimit = async () => {
     try {
       const response = await getEventCheck(eventId);
-      const campusLimit = response.limit.find((l) => l.campus === user.campus);
-      console.log("Response: " + response);
-      console.log("campus Limit: " + campusLimit.limit);
+      const campusLimit = response.limit.find((l) => l.campus === user.campus)
+        ? response.limit.find((l) => l.campus === user.campus)
+        : response.limit;
+
       if (!campusLimit) return;
 
       const attendeeCount = response.attendees.filter(
@@ -186,26 +189,42 @@ const Attendance = (props) => {
       label: "Action",
       cell: (row) => (
         <ButtonsComponent>
-          <FormButton
-            type="button"
-            text="Attendance"
-            onClick={() => handleViewBtn(row)}
-            icon={<FaUserCheck size={20} />} // Simple icon
-            styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
-            textClass="text-blue-100" // Elegant text color
-            whileHover={{ scale: 1.02, opacity: 0.95 }}
-            whileTap={{ scale: 0.98, opacity: 0.9 }}
-          />
+          {eventDate >= currentDate ? (
+            <FormButton
+              type="button"
+              text="Attendance"
+              onClick={() => handleViewBtn(row)}
+              icon={<FaUserCheck size={20} />} // Simple icon
+              styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
+              textClass="text-blue-100" // Elegant text color
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+            />
+          ) : (
+            <FormButton
+              type="button"
+              text="Disabled"
+              icon={<i className="fas fa-ban"></i>} // Disabled icon
+              styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
+              textClass="text-blue-100" // Elegant text color
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+              disabled
+            />
+          )}
         </ButtonsComponent>
       ),
     },
   ];
-
+  console.log("Event Date:" + eventDate);
+  console.log("Current Date:" + currentDate);
   const fetchData = async () => {
     try {
       setLoading(true);
       // TODO:Done modify to get the real data
       const result = await getAllAttendees();
+      console.log(result);
+      setEventDate(new Date(result.data.eventDate));
       setData(result.attendees);
       setFilteredData(result.attendees);
       setEventData(result.data);
