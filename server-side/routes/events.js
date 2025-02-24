@@ -282,6 +282,7 @@ router.post("/add-attendee", authenticateToken, async (req, res) => {
       campus,
       isAttended: false,
       shirtSize: shirt_size,
+      shirtPrice: shirt_price,
     });
 
     await event.save();
@@ -305,7 +306,7 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
     const attendees = event.attendees;
 
     const totalAttendees = attendees.length;
-    // Count students per year level
+
     const yearLevels = [1, 2, 3, 4].reduce((acc, year) => {
       const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
       acc[`${yearWord}`] = attendees.filter(
@@ -313,8 +314,6 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
       ).length;
       return acc;
     }, {});
-
-    // Count students per campus
 
     const campuses = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"].reduce(
       (acc, campus) => {
@@ -327,7 +326,6 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
       {}
     );
 
-    // Count students per course
     const courses = ["BSIT", "BSCS"].reduce((acc, course) => {
       acc[course] = attendees.filter(
         (attendee) => attendee.course === course
@@ -341,4 +339,43 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+router.post("/remove-attendance", authenticateToken, async (req, res) => {
+  try {
+    const { id_number, merchId } = req.body;
+
+    const event = await Events.findOne({ eventId: merchId });
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const attendeeIndex = event.attendees.findIndex(
+      (a) => a.id_number === id_number
+    );
+    if (attendeeIndex === -1) {
+      return res.status(404).json({ message: "Attendee not found" });
+    }
+
+    const { campus, shirtPrice } = event.attendees[attendeeIndex];
+
+    const campusData = event.sales_data.find((s) => s.campus === campus);
+    if (campusData) {
+      campusData.unitsSold -= 1;
+      campusData.totalRevenue -= Number.parseInt(shirtPrice);
+    }
+
+    event.totalUnitsSold -= 1;
+    event.totalRevenueAll -= Number.parseInt(shirtPrice);
+
+    event.attendees.splice(attendeeIndex, 1);
+
+    await event.save();
+
+    res.json({ message: "Attendee removed successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;

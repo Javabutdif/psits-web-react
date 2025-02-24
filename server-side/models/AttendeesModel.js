@@ -36,6 +36,9 @@ const attendeeSchema = new Schema({
   shirtSize: {
     type: String,
   },
+  shirtPrice: {
+    type: Number,
+  },
   raffleIsRemoved: {
     type: Boolean,
     default: false,

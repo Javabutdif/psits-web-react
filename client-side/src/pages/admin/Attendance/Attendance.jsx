@@ -3,7 +3,11 @@ import React, { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "react-tabs/style/react-tabs.css";
-import { getAttendees, getEventCheck } from "../../../api/event";
+import {
+  getAttendees,
+  getEventCheck,
+  removeAttendee,
+} from "../../../api/event";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import FormButton from "../../../components/forms/FormButton";
 import AttendanceTab from "./AttendanceTab";
@@ -11,6 +15,8 @@ import ViewStudentAttendance from "./ViewStudentAttendance";
 import { FaUserCheck } from "react-icons/fa";
 import AttendanceSettings from "./AttendanceSettings";
 import { getInformationData } from "../../../authentication/Authentication";
+import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
+import { ConfirmActionType } from "../../../enums/commonEnums";
 
 const Attendance = (props) => {
   const navigate = useNavigate();
@@ -32,6 +38,11 @@ const Attendance = (props) => {
   const [isDisabled, setIsDisabled] = useState(false);
   const [eventDate, setEventDate] = useState(new Date());
   const currentDate = new Date();
+  const [removeModal, setRemoveModal] = useState(false);
+  const [dataToRemove, setDataToRemove] = useState({
+    merchId: eventId,
+    id_number: "",
+  });
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -60,6 +71,24 @@ const Attendance = (props) => {
       ).length;
 
       setIsDisabled(attendeeCount >= campusLimit.limit);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleOpenRemoveModal = (data) => {
+    setRemoveModal(true);
+    setDataToRemove({
+      merchId: eventId,
+      id_number: data,
+    });
+  };
+  const handleRemoveApi = async () => {
+    try {
+      if (await removeAttendee(dataToRemove)) {
+        fetchData();
+        setRemoveModal(false);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -111,6 +140,17 @@ const Attendance = (props) => {
       ),
     },
     {
+      key: "id_number",
+      label: "ID",
+      sortable: true,
+      selector: (row) => row.id_number, // Add selector for the student field
+      cell: (row) => (
+        <div className="text-left">
+          <div className="text-xs text-gray-500">ID: {row.id_number}</div>
+        </div>
+      ),
+    },
+    {
       key: "name",
       label: "Name",
       sortable: true,
@@ -118,7 +158,6 @@ const Attendance = (props) => {
       cell: (row) => (
         <div className="text-left">
           <div className="font-semibold text-gray-900">{row.name}</div>
-          <div className="text-xs text-gray-500">ID: {row.id_number}</div>
         </div>
       ),
     },
@@ -201,16 +240,28 @@ const Attendance = (props) => {
               whileTap={{ scale: 0.98, opacity: 0.9 }}
             />
           ) : (
-            <FormButton
-              type="button"
-              text="Disabled"
-              icon={<i className="fas fa-ban"></i>} // Disabled icon
-              styles="px-4 bg-gray-500 text-[#DFF6FF] hover:bg-gray-600 active:bg-gray-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-              textClass="text-blue-100" // Elegant text color
-              whileHover={{ scale: 1.02, opacity: 0.95 }}
-              whileTap={{ scale: 0.98, opacity: 0.9 }}
-              disabled
-            />
+            <>
+              <FormButton
+                type="button"
+                text="Disabled"
+                icon={<i className="fas fa-ban"></i>} // Disabled icon
+                styles="px-4 bg-gray-500 text-[#DFF6FF] hover:bg-gray-600 active:bg-gray-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+                textClass="text-blue-100" // Elegant text color
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+                disabled
+              />
+              <FormButton
+                type="button"
+                text="Remove"
+                onClick={() => handleOpenRemoveModal(row.id_number)}
+                icon={<i className="fas fa-trash"></i>} // Disabled icon
+                styles="px-4 bg-red-500 text-[#DFF6FF] hover:bg-red-600 active:bg-red-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+                textClass="text-white" // Elegant text color
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+              />
+            </>
           )}
         </ButtonsComponent>
       ),
@@ -237,6 +288,24 @@ const Attendance = (props) => {
   useEffect(() => {
     fetchData();
   }, []);
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const searchLower = searchQuery.toLowerCase();
+      return [
+        item.id_number,
+        item.first_name,
+        item.middle_name,
+        item.last_name,
+        item.email,
+        item.type,
+        item.course,
+        item.rfid,
+      ]
+        .map((value) => (value ? value.toString().toLowerCase() : ""))
+        .some((value) => value.includes(searchLower));
+    });
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
 
   return (
     // Figuring out how to do Pagination..? Still Figuring Things Out
@@ -349,6 +418,16 @@ const Attendance = (props) => {
           eventId={eventId}
           eventName={eventData.eventName}
         />
+      )}
+      {removeModal && (
+        <>
+          <ConfirmationModal
+            confirmType={ConfirmActionType.REMOVE}
+            type="attendance"
+            onConfirm={() => handleRemoveApi()}
+            onCancel={() => setRemoveModal(false)}
+          />
+        </>
       )}
     </div>
   );

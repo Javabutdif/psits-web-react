@@ -228,3 +228,25 @@ export const getStatistic = async (eventId) => {
     }
   }
 };
+
+export const removeAttendee = async (formData) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/events/remove-attendance`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    showToast(
+      response.status === 200 ? "success" : "error",
+      response.data.message
+    );
+    return response.status === 200 ? true : false;
+  } catch (error) {
+    return error;
+  }
+};

@@ -78,7 +78,7 @@ export const restrictedComponent = () => {
 export const restrictedComponentOtherCampus = () => {
   return [
     "events",
-    "Statistics",
+    "statistics",
     "raffle",
     "attendance",
     "addAttendee",

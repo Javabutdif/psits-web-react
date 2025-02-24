@@ -286,6 +286,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
                     campus: student.campus,
                     isAttended: false,
                     shirtSize: sizes.length > 0 ? sizes[0] : null,
+                    shirtPrice: sub_total,
                   },
                 },
               }

@@ -58,6 +58,8 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel, type }) {
               ? ""
               : confirmTypeWord === "suspend"
               ? " this officer"
+              : confirmTypeWord === "remove" && type === "attendance"
+              ? " this  student"
               : confirmTypeWord === "remove"
               ? " this role for this student"
               : type === "officer"
