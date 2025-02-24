@@ -32,6 +32,7 @@ const PrivateRouteAdmin = ({ element: Component }) => {
   const other_campus_authorized =
     restrictedComponentOtherCampus().includes(fifthToTheLast) ||
     restrictedComponentOtherCampus().includes(secondToTheLast) ||
+    restrictedComponentOtherCampus().includes(thirdToTheLast) ||
     restrictedComponentOtherCampus().includes(lastPart);
 
   const checkAuthentication = async () => {

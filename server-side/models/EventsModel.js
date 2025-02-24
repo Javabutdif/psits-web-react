@@ -3,6 +3,22 @@ const attendeeSchema = require("./AttendeesModel");
 
 const Schema = mongoose.Schema;
 
+const salesDataSchema = new Schema({
+  campus: {
+    type: String,
+    enum: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"],
+    required: true,
+  },
+  unitsSold: {
+    type: Number,
+    default: 0,
+  },
+  totalRevenue: {
+    type: Number,
+    default: 0,
+  },
+});
+
 const eventSchema = new Schema({
   eventId: {
     type: Schema.Types.ObjectId,
@@ -52,6 +68,23 @@ const eventSchema = new Schema({
       { campus: "UC-LM", limit: 0 },
       { campus: "UC-PT", limit: 0 },
     ],
+  },
+  sales_data: {
+    type: [salesDataSchema],
+    default: [
+      { campus: "UC-Main", unitsSold: 0, totalRevenue: 0 },
+      { campus: "UC-Banilad", unitsSold: 0, totalRevenue: 0 },
+      { campus: "UC-LM", unitsSold: 0, totalRevenue: 0 },
+      { campus: "UC-PT", unitsSold: 0, totalRevenue: 0 },
+    ],
+  },
+  totalUnitsSold: {
+    type: Number,
+    default: 0, 
+  },
+  totalRevenueAll: {
+    type: Number,
+    default: 0, 
   },
 });
 

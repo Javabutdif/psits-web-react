@@ -30,7 +30,7 @@ const Attendance = (props) => {
   const [viewSettings, setViewSettings] = useState(false);
   const user = getInformationData();
   const [isDisabled, setIsDisabled] = useState(false);
-  const [eventDate, setEventDate] = useState("");
+  const [eventDate, setEventDate] = useState(new Date());
   const currentDate = new Date();
 
   const handleRowSelection = (id) => {
@@ -189,7 +189,7 @@ const Attendance = (props) => {
       label: "Action",
       cell: (row) => (
         <ButtonsComponent>
-          {eventDate >= currentDate ? (
+          {eventDate.toDateString() === currentDate.toDateString() ? (
             <FormButton
               type="button"
               text="Attendance"
@@ -205,7 +205,7 @@ const Attendance = (props) => {
               type="button"
               text="Disabled"
               icon={<i className="fas fa-ban"></i>} // Disabled icon
-              styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
+              styles="px-4 bg-gray-500 text-[#DFF6FF] hover:bg-gray-600 active:bg-gray-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
               textClass="text-blue-100" // Elegant text color
               whileHover={{ scale: 1.02, opacity: 0.95 }}
               whileTap={{ scale: 0.98, opacity: 0.9 }}
@@ -216,8 +216,7 @@ const Attendance = (props) => {
       ),
     },
   ];
-  console.log("Event Date:" + eventDate);
-  console.log("Current Date:" + currentDate);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -284,7 +283,7 @@ const Attendance = (props) => {
                 ) : (
                   <ButtonsComponent>
                     <div className="py-2">
-                      <Link to="/admin/addAttendee">
+                      <Link to={`/admin/addAttendee/${eventId}`}>
                         <motion.button
                           type="button"
                           text="Add Attendee"

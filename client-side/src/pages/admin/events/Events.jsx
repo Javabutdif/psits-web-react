@@ -45,7 +45,7 @@ function Events() {
                 </button>
               </Link>
 
-              <Link to="/admin/Statistics" className="h-full">
+              <Link to={`/admin/statistics/${event.eventId}`} className="h-full">
                 <button
                   className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
                   tabIndex="1"

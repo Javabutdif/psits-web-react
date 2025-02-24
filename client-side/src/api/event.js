@@ -38,6 +38,7 @@ export const getAttendees = async (id) => {
         },
       }
     );
+    console.log(response.data.data[0]);
     return {
       data: response.data.data[0],
       attendees: response.data.data[0].attendees,
@@ -105,6 +106,7 @@ export const getEventCheck = async (eventId) => {
         },
       }
     );
+    console.log(response.data.data.limit);
     return response.data.data;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -177,5 +179,52 @@ export const removeRaffleAttendee = async (eventId, attendeeId) => {
   } catch (error) {
     console.error("Error removing attendee from raffle:", error);
     return false;
+  }
+};
+
+//add-attendee
+export const addAttendee = async (formData) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/events/add-attendee`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    showToast(
+      response.status === 200 ? "success" : "error",
+      response.data.message
+    );
+    return response.status === 200 ? true : false;
+  } catch (error) {
+    console.error("Error selecting raffle winner:", error);
+    return error;
+  }
+};
+///get-statistics/:eventId
+export const getStatistic = async (eventId) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/events/get-statistics/${eventId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.status === 200 ? response.data : [];
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return false;
+    } else {
+      console.log("error", "An error occurred");
+      return false;
+    }
   }
 };

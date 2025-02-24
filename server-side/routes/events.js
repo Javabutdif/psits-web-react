@@ -10,7 +10,7 @@ const router = express.Router();
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const events = await Events.find();
-    console.log(events);
+
     return res.status(200).json({ data: events });
   } catch (error) {
     console.error(error);
@@ -25,6 +25,7 @@ router.get("/attendees/:id", authenticateToken, async (req, res) => {
     const eventId = new ObjectId(id);
     const attendees = await Events.find({ eventId });
     if (attendees) {
+      console.log(attendees);
       res.status(200).json({ data: attendees });
     } else {
       res.status(500).json({ message: "No attendees" });
@@ -84,7 +85,7 @@ router.put(
 
 router.get("/check-limit/:eventId", authenticateToken, async (req, res) => {
   const { eventId } = req.params;
-  console.log(eventId);
+
   const event_id = new ObjectId(eventId);
   try {
     const event = await Events.findOne({ eventId: event_id });
@@ -104,7 +105,7 @@ router.post(
   async (req, res) => {
     const { banilad, pt, lm } = req.body;
     const event_id = new ObjectId(req.params.eventId);
-    console.log("Already in the server");
+
     try {
       const response = await Events.findOneAndUpdate(
         { eventId: event_id },
@@ -239,4 +240,105 @@ router.put(
   }
 );
 
+router.post("/add-attendee", authenticateToken, async (req, res) => {
+  try {
+    const {
+      id_number,
+      first_name,
+      middle_name,
+      last_name,
+      course,
+      year,
+      campus,
+      email,
+      shirt_size,
+      shirt_price,
+      applied,
+      merchId,
+    } = req.body;
+
+    const event = await Events.findOne({ eventId: merchId });
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const campusData = event.sales_data.find((s) => s.campus === campus);
+    if (!campusData) {
+      return res.status(400).json({ message: "Invalid campus" });
+    }
+
+    campusData.unitsSold += 1;
+    campusData.totalRevenue += Number.parseInt(shirt_price);
+
+    event.totalUnitsSold += 1;
+    event.totalRevenueAll += Number.parseInt(shirt_price);
+
+    event.attendees.push({
+      id_number,
+      name: `${first_name} ${middle_name} ${last_name}`,
+      email,
+      course,
+      year,
+      campus,
+      isAttended: false,
+      shirtSize: shirt_size,
+    });
+
+    await event.save();
+
+    res.json({ message: "Attendee added successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const event_id = new ObjectId(eventId);
+    const event = await Events.findOne({ eventId: event_id });
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const attendees = event.attendees;
+
+    const totalAttendees = attendees.length;
+    // Count students per year level
+    const yearLevels = [1, 2, 3, 4].reduce((acc, year) => {
+      const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
+      acc[`${yearWord}`] = attendees.filter(
+        (attendee) => attendee.year === year
+      ).length;
+      return acc;
+    }, {});
+
+    // Count students per campus
+
+    const campuses = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"].reduce(
+      (acc, campus) => {
+        const campusWord = campus.split("-")[1];
+        acc[`${campusWord}`] = attendees.filter(
+          (attendee) => attendee.campus === campus
+        ).length;
+        return acc;
+      },
+      {}
+    );
+
+    // Count students per course
+    const courses = ["BSIT", "BSCS"].reduce((acc, course) => {
+      acc[course] = attendees.filter(
+        (attendee) => attendee.course === course
+      ).length;
+      return acc;
+    }, {});
+
+    res.status(200).json({ yearLevels, campuses, courses, totalAttendees });
+  } catch (error) {
+    console.error("Error fetching statistics:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 module.exports = router;

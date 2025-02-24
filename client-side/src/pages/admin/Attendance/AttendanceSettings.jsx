@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { updateEventSettings } from "../../../api/event";
+import React, { useEffect, useState } from "react";
+import { updateEventSettings, getEventCheck } from "../../../api/event";
 
 const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
   const [limits, setLimits] = useState({
@@ -10,6 +10,15 @@ const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
 
   const handleChange = (e) => {
     setLimits({ ...limits, [e.target.name]: e.target.value });
+  };
+  const fetchEventCheck = async () => {
+    const response = await getEventCheck(eventId);
+
+    setLimits({
+      banilad: response.limit.filter((i) => i.campus === "UC-Banilad")[0].limit,
+      pt: response.limit.filter((i) => i.campus === "UC-PT")[0].limit,
+      lm: response.limit.filter((i) => i.campus === "UC-LM")[0].limit,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -30,6 +39,9 @@ const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
       alert("Failed to update settings");
     }
   };
+  useEffect(() => {
+    fetchEventCheck();
+  }, []);
 
   if (!showModal) return null;
 

@@ -253,6 +253,25 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
           });
 
           const merchToGet = await Merch.findById(item.product_id);
+
+          const event = await Event.findOne({ eventId: merchId });
+          if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+          }
+
+          const campusData = event.sales_data.find(
+            (s) => s.campus === student.campus
+          );
+          if (!campusData) {
+            return res.status(400).json({ message: "Invalid campus" });
+          }
+
+          campusData.unitsSold += 1;
+          campusData.totalRevenue += Number.parseInt(item.sub_total);
+
+          event.totalUnitsSold += 1;
+          event.totalRevenueAll += Number.parseInt(item.sub_total);
+          event.save();
           if (merchToGet && merchToGet.category === "ict-congress") {
             await Event.findOneAndUpdate(
               { eventId: merchId },

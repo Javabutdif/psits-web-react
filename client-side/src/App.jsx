@@ -149,11 +149,11 @@ const App = () => {
           />
 
           <Route
-            path="statistics"
+            path="statistics/:eventId"
             element={<PrivateRouteAdmin element={Statistics} />}
           />
           <Route
-            path="addAttendee"
+            path="addAttendee/:eventId"
             element={<PrivateRouteAdmin element={AddAttendeeForm} />}
           />
 
