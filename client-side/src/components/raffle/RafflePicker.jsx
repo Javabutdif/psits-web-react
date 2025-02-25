@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+// import Confetti from "react-confetti";
 import { FaDice } from "react-icons/fa";
-import { ToastContainer, toast } from "react-toastify";
-import Confetti from "react-confetti";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import RaffleWinnerModal from "./RaflleWinnerModal";
+// import Confetti from "react-confetti";
+
 
 
 const RafflePicker = ({ participants }) => {
@@ -13,13 +16,28 @@ const RafflePicker = ({ participants }) => {
   const [remainingParticipants, setRemainingParticipants] = useState([]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [showConfetti, setShowConfetti] = useState(false); // Confetti state
+  const [showWinnerModal, setWinnerModal] = useState(false);
+  const [winnerList, addWinnerToList] = useState(false);
+  const [isDisplayingWinner, setIsDisplayingWinner] = useState(false);
+  const [raffleWinners, setRaffleWinners] = useState([]);
 
   const containerRef = useRef(null);
   const [divSize, setDivSize] = useState({ width: 0, height: 0 });
+  const handleShowWinnerModal = () =>{
+    console.log("True");
+    setWinnerModal(true);    
+  }
+  const handleCloseWinnerModal = () =>{
+    console.log("False");
+    setWinnerModal(false);    
+  }
+
 
   useEffect(() => {
+    
     setRemainingParticipants(participants);
     setWinner(null);
+    
     setDisplayedParticipant(null);
   }, [participants]);
 
@@ -35,6 +53,8 @@ const RafflePicker = ({ participants }) => {
   const pickWinner = () => {
     setIsPicking(true);
     setWinner(null);
+    setIsDisplayingWinner(false);
+    handleCloseWinnerModal();
     setShowConfetti(false); // Reset confetti before picking
 
     let iterations = 0;
@@ -52,7 +72,7 @@ const RafflePicker = ({ participants }) => {
       setDisplayedParticipant(currentParticipant);
       iterations++;
 
-      if (iterations > 80) {
+      if (iterations > 100) {
         clearInterval(interval);
         const finalIndex = Math.floor(Math.random() * remainingParticipants.length);
         const selectedWinner = remainingParticipants[finalIndex];
@@ -61,20 +81,23 @@ const RafflePicker = ({ participants }) => {
         setRemainingParticipants(remainingParticipants.filter((participant) => participant !== selectedWinner));
         setIsPicking(false);
         setShowConfetti(true); // 🎉 Trigger confetti!
+        setIsDisplayingWinner(true);
 
-        toast.success(`Winner: ${selectedWinner}`, {
-          position: "top-center",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        // toast.success(`Winner: ${selectedWinner}`, {
+        //   position: "top-left",
+        //   autoClose: 5000,
+        //   hideProgressBar: false,
+        //   closeOnClick: true,
+        //   pauseOnHover: true,
+        //   draggable: true,
+        // });
 
-        // Stop confetti after 5 seconds
         setTimeout(() => {
+          handleShowWinnerModal();
+          setIsDisplayingWinner(false);
           setShowConfetti(false);
-        }, 5000);
+        }, 1000 );
+        
       }
     }, 100);
   };
@@ -82,17 +105,17 @@ const RafflePicker = ({ participants }) => {
   return (
     <div className="w-full min-h-[70vh] flex flex-col items-center justify-center relative">
 			     {/* PAMPA DISPLAY CONFETTI */}
-					 {showConfetti && (
+			{/* {showConfetti && (
 				<Confetti
 					width={window.innerWidth}
 					height={window.innerHeight}
 					confettiSource={{ x: window.innerWidth * 0, y: -100, w: 1000, h: 200 }} // Moves it to the left
 				/>
-			)}
+			)} */}
 
       <ToastContainer />
  
-      {winner && !isPicking && (
+      {/* {winner && !isPicking && (
         <motion.div
           className="text-xl font-semibold text-green-600"
           initial={{ opacity: 0 }}
@@ -101,24 +124,24 @@ const RafflePicker = ({ participants }) => {
         >
           {`Winner: ${winner}`}
         </motion.div>
-      )}
+      )} */}
 
       <div
 			// KANI KAY ANG CIRCLE
         ref={containerRef}
-        className="relative w-[62vh] h-[62vh] mb-5 mx-auto rounded-full shadow-2xl border-[6px] border-white/30 bg-white/20 backdrop-blur-lg flex items-center justify-center overflow-hidden"
+        className="relative w-[55vh] h-[55vh] mb-5 mx-auto rounded-full shadow-2xl border-[6px] border-white/30 bg-white/20 backdrop-blur-lg flex items-center justify-center overflow-hidden"
         style={{
-          background: `radial-gradient(circle at 50% 25%, 
+          background: `radial-gradient(circle at 50% 50%, 
             rgba(173, 216, 230, 0.3) 40%, 
             rgba(30, 144, 255, 0.25) 60%, 
             rgba(0, 0, 128, 0.3) 80%, 
             rgba(0, 0, 51, 0.4) 100%)`,
-          boxShadow: `
-            inset 0 0 15px rgba(255, 255, 255, 0.5), 
+          boxShadow: 
+            `inset 0 0 15px rgba(255, 255, 255, 0.5), 
             inset 0 -10px 20px rgba(0, 0, 0, 0.3), 
             0 10px 30px rgba(0, 0, 0, 0.4), 
-            0 -10px 15px rgba(255, 255, 255, 0.2)
-          `,
+            0 -10px 15px rgba(255, 255, 255, 0.2)`
+          ,
         }}
       >
 				{/* KANI NGA PART KAY MAO NI ANG LOADING KATO MO TUYOK */}
@@ -153,13 +176,18 @@ const RafflePicker = ({ participants }) => {
       </div>
 
 {/* KANI KAY BUTTON SA PICK A WINNER */}
-      <motion.button
+
+    {/* {!isDisplayingWinner && (
+
+
+    )} */}
+    <motion.button
         className={`relative bg-navy text-white ${
-          isPicking ? "p-3 rounded-full opacity-50" : "px-6 py-3 rounded-md"
+          isPicking || isDisplayingWinner ? "p-3 rounded-full opacity-50" : "px-6 py-3 rounded-md"
         } shadow-lg hover:bg-primary transition duration-300 flex items-center justify-center mx-auto`}
         whileTap={{ scale: 0.95 }}
         onClick={pickWinner}
-        disabled={isPicking || remainingParticipants.length === 0}
+        disabled={isPicking || isDisplayingWinner|| remainingParticipants.length === 0}
       >
         <motion.div
           animate={isPicking ? { rotate: [0, 180, 360], scale: [1, 1.2, 1] } : {}}
@@ -169,14 +197,30 @@ const RafflePicker = ({ participants }) => {
         </motion.div>
         {!isPicking ? "Pick a Winner" : "Picking..."}
       </motion.button>
+      
 
       {remainingParticipants.length === 0 && (
         <div className="mt-4 text-2xl font-semibold text-red-600">
           No more participants left.
         </div>
       )}
+
+      {
+        showWinnerModal &&  !isPicking &&(
+          <RaffleWinnerModal
+          studentData ={winner}
+          handleCloseModal={handleCloseWinnerModal}
+          handleCloseConfetti={showConfetti}
+          autoClose={10000}
+          />
+        )
+      }
+
     </div>
+    
   );
+
+
 };
 
 export default RafflePicker;
