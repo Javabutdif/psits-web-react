@@ -303,6 +303,10 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
+    const salesData = event.sales_data;
+
+    const totalRevenue = event.totalRevenueAll;
+
     const attendees = event.attendees;
 
     const totalAttendees = attendees.length;
@@ -315,11 +319,45 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
       return acc;
     }, {});
 
+    const yearLevelsAttended = [1, 2, 3, 4].reduce((acc, year) => {
+      const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
+      acc[`${yearWord}`] = attendees.filter(
+        (attendee) => attendee.year === year && attendee.isAttended
+      ).length;
+      return acc;
+    }, {});
+
+    const yearLevelsByCampus = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"].map(
+      (campus) => {
+        const campusWord = campus.split("-")[1];
+        return {
+          campus: campusWord,
+          yearLevels: [1, 2, 3, 4].reduce((acc, year) => {
+            const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
+            acc[`${yearWord}`] = attendees.filter(
+              (attendee) => attendee.year === year && attendee.campus === campus
+            ).length;
+            return acc;
+          }, {}),
+        };
+      }
+    );
+
     const campuses = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"].reduce(
       (acc, campus) => {
         const campusWord = campus.split("-")[1];
         acc[`${campusWord}`] = attendees.filter(
           (attendee) => attendee.campus === campus
+        ).length;
+        return acc;
+      },
+      {}
+    );
+    const campusesAttended = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"].reduce(
+      (acc, campus) => {
+        const campusWord = campus.split("-")[1];
+        acc[`${campusWord}`] = attendees.filter(
+          (attendee) => attendee.campus === campus && attendee.isAttended
         ).length;
         return acc;
       },
@@ -333,7 +371,17 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
       return acc;
     }, {});
 
-    res.status(200).json({ yearLevels, campuses, courses, totalAttendees });
+    res.status(200).json({
+      yearLevels,
+      campuses,
+      courses,
+      totalAttendees,
+      yearLevelsByCampus,
+      yearLevelsAttended,
+      campusesAttended,
+      totalRevenue,
+      salesData,
+    });
   } catch (error) {
     console.error("Error fetching statistics:", error);
     res.status(500).json({ message: "Internal server error" });

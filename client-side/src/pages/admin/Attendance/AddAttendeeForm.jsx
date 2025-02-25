@@ -372,7 +372,7 @@ const AddAttendeeForm = (merchId) => {
                       />
                     </div>
                     <div>
-                      <Link to="/admin/dashboard">
+                      <Link to={`/admin/attendance/${eventId}`}>
                         <button className="w-full hover:bg-[#b00000] bg-[#d00000] text-white p-2 rounded transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 active:bg-[#8f0000]">
                           Cancel
                         </button>

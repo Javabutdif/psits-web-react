@@ -43,6 +43,7 @@ const Attendance = (props) => {
     merchId: eventId,
     id_number: "",
   });
+  const [displayLimit, setDisplayLimit] = useState("");
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -69,7 +70,7 @@ const Attendance = (props) => {
       const attendeeCount = response.attendees.filter(
         (att) => att.campus === user.campus
       ).length;
-
+      setDisplayLimit(campusLimit.limit);
       setIsDisabled(attendeeCount >= campusLimit.limit);
     } catch (error) {
       console.error(error);
@@ -330,7 +331,8 @@ const Attendance = (props) => {
               transition={{ duration: 0.3 }}
             >
               <div className="ml-2 w-full">
-                <h2 className="text-3xl font-bold">{eventData.eventName}</h2>
+                <h2 className="text-3xl font-bold">{eventData.eventName} </h2>
+                <p>Limit: {displayLimit}</p>
               </div>
 
               <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">

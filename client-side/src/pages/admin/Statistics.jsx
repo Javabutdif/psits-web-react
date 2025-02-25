@@ -29,7 +29,7 @@ const Statistics = () => {
   const [datas, setData] = useState([]);
   const handleFetchData = async () => {
     const response = await getStatistic(eventId);
-    //console.log(response.yearLevels.First);
+
     setData(response);
   };
   useEffect(() => {
@@ -61,7 +61,6 @@ const Statistics = () => {
       },
     ],
   };
-  console.log(datas);
 
   const campusData = {
     labels: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"],
@@ -94,7 +93,7 @@ const Statistics = () => {
 
   const chartOption1 = {
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: true,
     plugins: {
       legend: {
         position: "top",
@@ -104,51 +103,232 @@ const Statistics = () => {
   const chartOption2 = {
     maintainAspectRatio: false,
     responsive: true,
-    // Ensures the chart fills its container
+
     plugins: {
       legend: {
         position: "bottom",
       },
     },
   };
+  const campusAYearsData = {
+    labels: ["First Year", "Second Year", "Third Year", "Fourth Year"],
+    datasets: [
+      {
+        label: datas?.yearLevelsByCampus?.[0]?.campus,
+        data: [
+          datas?.yearLevelsByCampus?.[0]?.yearLevels?.First || 0,
+
+          datas?.yearLevelsByCampus?.[0]?.yearLevels?.Second || 0,
+          datas?.yearLevelsByCampus?.[0]?.yearLevels?.Third || 0,
+          datas?.yearLevelsByCampus?.[0]?.yearLevels?.Fourth || 0,
+        ],
+        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+      },
+    ],
+  };
+
+  const campusBYearsData = {
+    labels: ["First Year", "Second Year", "Third Year", "Fourth Year"],
+    datasets: [
+      {
+        label: datas?.yearLevelsByCampus?.[1]?.campus,
+        data: [
+          datas?.yearLevelsByCampus?.[1]?.yearLevels?.First || 0,
+
+          datas?.yearLevelsByCampus?.[1]?.yearLevels?.Second || 0,
+
+          datas?.yearLevelsByCampus?.[1]?.yearLevels?.Third || 0,
+
+          datas?.yearLevelsByCampus?.[1]?.yearLevels?.Fourth || 0,
+        ],
+        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+      },
+    ],
+  };
+
+  const campusCYearsData = {
+    labels: ["First Year", "Second Year", "Third Year", "Fourth Year"],
+    datasets: [
+      {
+        label: datas?.yearLevelsByCampus?.[2]?.campus,
+        data: [
+          datas?.yearLevelsByCampus?.[2]?.yearLevels?.First || 0,
+          datas?.yearLevelsByCampus?.[2]?.yearLevels?.Second || 0,
+          datas?.yearLevelsByCampus?.[2]?.yearLevels?.Third || 0,
+          datas?.yearLevelsByCampus?.[2]?.yearLevels?.Fourth || 0,
+        ],
+        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+      },
+    ],
+  };
+
+  const campusDYearsData = {
+    labels: ["First Year", "Second Year", "Third Year", "Fourth Year"],
+    datasets: [
+      {
+        label: datas?.yearLevelsByCampus?.[3]?.campus,
+        data: [
+          datas?.yearLevelsByCampus?.[3]?.yearLevels?.First || 0,
+          datas?.yearLevelsByCampus?.[3]?.yearLevels?.Second || 0,
+          datas?.yearLevelsByCampus?.[3]?.yearLevels?.Third || 0,
+          datas?.yearLevelsByCampus?.[3]?.yearLevels?.Fourth || 0,
+        ],
+        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+      },
+    ],
+  };
+
+  const attendedStudentYearsData = {
+    labels: ["First Year", "Second Year", "Third Year", "Fourth Year"],
+    datasets: [
+      {
+        label: "Attended Students",
+        data: [
+          datas?.yearLevelsAttended?.First,
+          datas?.yearLevelsAttended?.Second,
+          datas?.yearLevelsAttended?.Third,
+          datas?.yearLevelsAttended?.Fourth,
+        ],
+        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+      },
+    ],
+  };
+
+  const attendedCampusData = {
+    labels: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"],
+    datasets: [
+      {
+        label: "Total Attended Students [Campus] ",
+        data: [
+          datas?.campusesAttended?.Main,
+          datas?.campusesAttended?.Banilad,
+          datas?.campusesAttended?.LM,
+          datas?.campusesAttended?.PT,
+        ],
+        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+      },
+    ],
+  };
 
   return (
     <div>
       <Link to="/admin/events">
         <button className="lg:mt-5 sm:mt-3 ml-1 mb-2 text-[#002E48] hover:text-[#4398AC] transition duration-200 rounded-lg">
-          <i class="fas fa-arrow-left lg:text-xl"></i>
+          <i className="fas fa-arrow-left lg:text-xl"></i>
         </button>
       </Link>
-      <h1 className="text-3xl font-bold mb-8 text-center ">
+      <h1 className="text-3xl font-bold mb-8 text-center">
         Population Statistics
       </h1>
-      <div className="flex flex-wrap lg:flex-nowrap lg:gap-8 md:gap-8 items-center justify-center">
-        {/* Charts Section */}
+
+      {/* Charts Section */}
+      <div className="flex flex-wrap lg:flex-nowrap lg:gap-8 md:gap-8 items-start justify-center">
         <div className="flex flex-col gap-8 w-full lg:w-[50%]">
-          <div className="w-full h-[250px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+          {/* Student Year Distribution */}
+          <div className="w-full h-[250px] bg-[#F5F5F5] p-3 shadow-md rounded-lg">
             <Doughnut data={studentYearsData} options={chartOption2} />
           </div>
-          <div className="w-full h-[280px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+          {/* Campus-wise Distribution */}
+          <div className="w-full h-[280px] bg-[#F5F5F5] p-4 shadow-md rounded-lg">
             <Bar data={campusData} options={chartOption1} />
           </div>
-          <div className="w-full h-[250px] aspect-w-16 aspect-h-9 bg-[#F5F5F5] p-4 shadow-md rounded-lg mb-3">
+          {/* Course Distribution */}
+          <div className="w-full h-[250px] bg-[#F5F5F5] p-4 shadow-md rounded-lg mb-3">
             <Doughnut data={courseData} options={chartOption2} />
           </div>
         </div>
-        {/* Total Number of Attendees Section */}
-        <div className="flex flex-col items-center w-full lg:w-[30%] gap-4 mt-8 lg:mt-0 justify-center">
+
+        {/* Total Numbers Section */}
+        <div className="flex flex-col items-center w-full lg:w-[30%] gap-4 mt-8 lg:mt-0">
           <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
             <p className="mb-3">Total number of Attendees</p>
             <h3>{datas.totalAttendees}</h3>
           </div>
           <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
+            <p className="mb-3">{datas.salesData?.[0]?.campus}</p>
+            <h4>Unit Sold: {datas.salesData?.[0]?.unitsSold}</h4>
+            <h4>Total Revenue: {datas.salesData?.[0]?.totalRevenue}</h4>
+          </div>
+          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
+            <p className="mb-3">{datas.salesData?.[1]?.campus}</p>
+            <h4>Unit Sold: {datas.salesData?.[1]?.unitsSold}</h4>
+            <h4>Total Revenue: {datas.salesData?.[1]?.totalRevenue}</h4>
+          </div>
+          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
+            <p className="mb-3">{datas.salesData?.[2]?.campus}</p>
+            <h4>Unit Sold: {datas.salesData?.[2]?.unitsSold}</h4>
+            <h4>Total Revenue: {datas.salesData?.[2]?.totalRevenue}</h4>
+          </div>
+          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
+            <p className="mb-3">{datas.salesData?.[3]?.campus}</p>
+            <h4>Unit Sold: {datas.salesData?.[3]?.unitsSold}</h4>
+            <h4>Total Revenue: {datas.salesData?.[3]?.totalRevenue}</h4>
+          </div>
+          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
             <p className="mb-3">Total Revenue</p>
             <h3>{datas.totalRevenue}</h3>
           </div>
-          <div className="2xl:w-[350px] lg:w-[260px] bg-[#D9D9D9] mb-8 text-center p-5 rounded-lg">
+          <div className="2xl:w-[350px] lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
             <p>We value your feedback.</p>
             <p className="mb-3">Please enter your evaluation below.</p>
             <p>[LINK for evaluation]</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Campus-wise Breakdown for Years */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-center mb-4">
+          Yearly Distribution per Campus
+        </h2>
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-4">
+          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <h3 className="text-md font-semibold text-center mb-2">
+              {" "}
+              UC-{datas?.yearLevelsByCampus?.[0]?.campus}
+            </h3>
+            <Bar data={campusAYearsData} options={chartOption1} />
+          </div>
+          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <h3 className="text-md font-semibold text-center mb-2">
+              {" "}
+              UC-{datas?.yearLevelsByCampus?.[1]?.campus}
+            </h3>
+            <Bar data={campusBYearsData} options={chartOption1} />
+          </div>
+          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <h3 className="text-md font-semibold text-center mb-2">
+              {" "}
+              UC-{datas?.yearLevelsByCampus?.[2]?.campus}
+            </h3>
+            <Bar data={campusCYearsData} options={chartOption1} />
+          </div>
+          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <h3 className="text-md font-semibold text-center mb-2">
+              {" "}
+              UC-{datas?.yearLevelsByCampus?.[3]?.campus}
+            </h3>
+            <Bar data={campusDYearsData} options={chartOption1} />
+          </div>
+        </div>
+      </div>
+
+      {/* Attended Students Section */}
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold text-center mb-5">
+          Attended Students Breakdown
+        </h2>
+        <div className="flex flex-wrap lg:flex-nowrap gap-8 items-center justify-center">
+          <div className="flex flex-col gap-8 w-full lg:w-[50%]">
+            <div className="w-full h-[250px] bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+              <Doughnut
+                data={attendedStudentYearsData}
+                options={chartOption2}
+              />
+            </div>
+            <div className="w-full h-[280px] bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+              <Bar data={attendedCampusData} options={chartOption1} />
+            </div>
           </div>
         </div>
       </div>

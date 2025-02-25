@@ -38,7 +38,7 @@ export const getAttendees = async (id) => {
         },
       }
     );
-    console.log(response.data.data[0]);
+    
     return {
       data: response.data.data[0],
       attendees: response.data.data[0].attendees,
@@ -106,7 +106,7 @@ export const getEventCheck = async (eventId) => {
         },
       }
     );
-    console.log(response.data.data.limit);
+  
     return response.data.data;
   } catch (error) {
     if (error.response && error.response.data) {

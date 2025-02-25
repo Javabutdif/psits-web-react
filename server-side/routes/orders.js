@@ -226,7 +226,6 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
             : [];
           const merchId = new ObjectId(item.product_id);
 
-          // Update merchandise details
           await Merch.findByIdAndUpdate(item.product_id, {
             $push: {
               order_details: {
@@ -286,7 +285,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
                     campus: student.campus,
                     isAttended: false,
                     shirtSize: sizes.length > 0 ? sizes[0] : null,
-                    shirtPrice: sub_total,
+                    shirtPrice: item.sub_total,
                   },
                 },
               }
