@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 const campusList = [
   'Main',
   'Banilad',
-  'LLM',
+  'LM',
   'Pardo',
   'All'
 ];
@@ -18,7 +18,7 @@ const Tabs = ({ onSelectCampus }) => {
   };
 
   return (
-    <div className='flex gap-2 rounded-lg bg-primary text-white p-2 shadow-lg'>
+    <div className='mb-5 flex gap-2 justify-center items-center rounded-lg bg-primary text-white p-2 shadow-lg'>
       {campusList.map(campus => (
         <motion.button 
           key={campus} 

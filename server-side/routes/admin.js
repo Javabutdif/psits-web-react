@@ -300,6 +300,7 @@ router.get("/get-all-officers", async (req, res) => {
       course: officer.course,
       year: officer.year,
       position: officer.position,
+      campus: officer.campus,
     }));
 
     res.status(200).json({ data: users });
@@ -437,7 +438,7 @@ router.get("/get-suspend-officers", authenticateToken, async (req, res) => {
 });
 
 router.post("/editOfficer", authenticateToken, async (req, res) => {
-  const { id_number, name, position, email, course, year } = req.body;
+  const { id_number, name, position, email, course, year, campus } = req.body;
 
   try {
     const getAdmin = await Admin.findOne({
@@ -450,7 +451,7 @@ router.post("/editOfficer", authenticateToken, async (req, res) => {
         $set: {
           name: name,
           position: position,
-
+          campus: campus,
           email: email,
           course: course,
           year: year,
@@ -691,6 +692,25 @@ router.get("/admin/get-request-role", authenticateToken, async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
+
+router.get("/admin/get-request-admin", authenticateToken, async (req, res) => {
+  try {
+    const admin = await Admin.find({ status: "Request" });
+    const users = admin.map((admins) => ({
+      id_number: admins.id_number,
+      email: admins.email,
+      name: admins.name,
+      course: admins.course,
+      year: admins.year,
+      role: admins.position,
+      status: admins.status,
+    }));
+    res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("Error fetching admins:", error);
+    res.status(500).json("Internal Server Error");
+  }
+});
 router.put("/admin/approve-role", authenticateToken, async (req, res) => {
   const { id_number } = req.body;
 
@@ -777,5 +797,61 @@ router.post("/admin/add-officer", authenticateToken, async (req, res) => {
     console.error(error);
   }
 });
+
+//admin/approve-admin-account
+
+router.put(
+  "/admin/approve-admin-account",
+  authenticateToken,
+  async (req, res) => {
+    const { id_number } = req.body;
+
+    try {
+      const updatedRole = await Admin.updateOne(
+        { id_number },
+        {
+          $set: {
+            status: "Active",
+          },
+        }
+      );
+
+      if (updatedRole.modifiedCount > 0) {
+        res
+          .status(200)
+          .json({ message: "Admin Account approved successfully" });
+      } else {
+        res.status(404).json({ message: "Admin not found" });
+      }
+    } catch (error) {
+      console.error("Error updating admin account:", error);
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
+    }
+  }
+);
+router.put(
+  "/admin/decline-admin-account",
+  authenticateToken,
+  async (req, res) => {
+    const { id_number } = req.body;
+    console.log(id_number);
+    try {
+      const deletedAdmin = await Admin.deleteOne({ id_number });
+
+      if (deletedAdmin.deletedCount > 0) {
+        res.status(200).json({ message: "Admin account deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Admin not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting admin account:", error);
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
+    }
+  }
+);
 
 module.exports = router;

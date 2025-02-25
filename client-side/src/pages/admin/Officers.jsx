@@ -52,6 +52,18 @@ const Officers = () => {
           icon: "fas fa-lock",
           disabled: true,
         },
+    presidentPosition() || headDevPosition()
+      ? {
+          path: "/admin/officers/admin-request",
+          text: `Admin Request `,
+          icon: "fas fa-envelope",
+        }
+      : {
+          path: "#",
+          text: `Disabled `,
+          icon: "fas fa-lock",
+          disabled: true,
+        },
   ];
 
   return (

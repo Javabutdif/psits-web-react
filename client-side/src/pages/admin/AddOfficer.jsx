@@ -72,7 +72,6 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
 
         <form>
           <h2 className="text-xl font-semibold mb-4">Add Officer</h2>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="mb-4">
@@ -245,11 +244,11 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
                   <option value="none" selected disabled hidden>
                     Select Campus
                   </option>
-                  <option value="UCB">UC Banilad</option>
-                  <option value="UCLM">UC Lapu-Lapu Mandaue</option>
-                  <option value="UCPT">UC Pardo Talisay</option>
-                  <option value="UCMETC">UC METC</option>
-                  <option value="UCJ">UC Jones</option>
+                  <option value="UC-Banilad">UC Banilad</option>
+                  <option value="UC-LM">UC Lapu-Lapu Mandaue</option>
+                  <option value="UC-PT">UC Pardo Talisay</option>
+                  <option value="UC-METC">UC METC</option>
+                  <option value="UC-J">UC Jones</option>
                 </select>
               </div>
             </div>

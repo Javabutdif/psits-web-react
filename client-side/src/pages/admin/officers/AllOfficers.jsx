@@ -69,6 +69,7 @@ const AllOfficers = () => {
     setIsLoading(true);
     try {
       editOfficerApi(updatedMember);
+      fetchData();
     } catch (error) {
       console.error("Error updating officer:", error);
     }
@@ -203,6 +204,12 @@ const AllOfficers = () => {
       key: "position",
       label: "Position",
       selector: (row) => row.position,
+      sortable: true,
+    },
+    {
+      key: "campus",
+      label: "Campus",
+      selector: (row) => row.campus,
       sortable: true,
     },
 

@@ -28,6 +28,7 @@ router.post("/login", loginLimiter, async (req, res) => {
     let role;
     let admin = null;
     let student = null;
+    let campus;
 
     if (id_number.includes("-admin")) {
       admin = await Admin.findOne({ id_number });
@@ -92,8 +93,9 @@ router.post("/login", loginLimiter, async (req, res) => {
       year: users.year,
       position: role === "Admin" ? users.position : "Student",
       role: users.role,
+      campus: users.campus,
     };
-
+    campus = users.campus;
     const token = jwt.sign({ user, role }, token_key, {
       expiresIn: role === "Admin" ? "2h" : "10m",
     });
@@ -114,7 +116,7 @@ router.post("/login", loginLimiter, async (req, res) => {
       console.log("Admin login logged successfully!");
     }
 
-    return res.json({ message: "Signed in successfully", role, token });
+    return res.json({ message: "Signed in successfully", role, token, campus });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "An error occurred", error });

@@ -77,18 +77,7 @@ const AdminDashboard = () => {
       });
     }, 20);
   };
-  const dummyData = [
-    { name: "Order A", quantity: 5 },
-    { name: "Order B", quantity: 12 },
-    { name: "Order C", quantity: 7 },
-    { name: "Order D", quantity: 20 },
-    { name: "Order E", quantity: 3 },
-    { name: "Order F", quantity: 9 },
-    { name: "Order G", quantity: 15 },
-    { name: "Order H", quantity: 8 },
-    { name: "Order I", quantity: 6 },
-    { name: "Order J", quantity: 4 },
-  ];
+  
 
   useEffect(() => {
     const fetchData = async () => {

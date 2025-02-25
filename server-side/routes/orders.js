@@ -226,7 +226,6 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
             : [];
           const merchId = new ObjectId(item.product_id);
 
-          // Update merchandise details
           await Merch.findByIdAndUpdate(item.product_id, {
             $push: {
               order_details: {
@@ -252,8 +251,26 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
             },
           });
 
-          // Update event attendees if applicable
           const merchToGet = await Merch.findById(item.product_id);
+
+          const event = await Event.findOne({ eventId: merchId });
+          if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+          }
+
+          const campusData = event.sales_data.find(
+            (s) => s.campus === student.campus
+          );
+          if (!campusData) {
+            return res.status(400).json({ message: "Invalid campus" });
+          }
+
+          campusData.unitsSold += 1;
+          campusData.totalRevenue += Number.parseInt(item.sub_total);
+
+          event.totalUnitsSold += 1;
+          event.totalRevenueAll += Number.parseInt(item.sub_total);
+          event.save();
           if (merchToGet && merchToGet.category === "ict-congress") {
             await Event.findOneAndUpdate(
               { eventId: merchId },
@@ -267,7 +284,8 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
                     year: successfulOrder.year,
                     campus: student.campus,
                     isAttended: false,
-                    shirtSize: sizes.length > 0 ? sizes[0] : null, // Use the first size if available
+                    shirtSize: sizes.length > 0 ? sizes[0] : null,
+                    shirtPrice: item.sub_total,
                   },
                 },
               }
@@ -350,14 +368,14 @@ router.get("/get-all-pending-counts", authenticateToken, async (req, res) => {
         if (!productCounts[item.product_name]) {
           productCounts[item.product_name] = {
             total: 0,
-            yearCounts: [0, 0, 0, 0], 
+            yearCounts: [0, 0, 0, 0],
           };
         }
         productCounts[item.product_name].total += item.quantity;
 
-       
         if (order.year >= 1 && order.year <= 4) {
-          productCounts[item.product_name].yearCounts[order.year - 1] += item.quantity;
+          productCounts[item.product_name].yearCounts[order.year - 1] +=
+            item.quantity;
         }
       });
     });

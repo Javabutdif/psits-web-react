@@ -3,12 +3,20 @@ import React, { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "react-tabs/style/react-tabs.css";
-import { getAttendees } from "../../../api/event";
+import {
+  getAttendees,
+  getEventCheck,
+  removeAttendee,
+} from "../../../api/event";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import FormButton from "../../../components/forms/FormButton";
 import AttendanceTab from "./AttendanceTab";
 import ViewStudentAttendance from "./ViewStudentAttendance";
 import { FaUserCheck } from "react-icons/fa";
+import AttendanceSettings from "./AttendanceSettings";
+import { getInformationData } from "../../../authentication/Authentication";
+import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
+import { ConfirmActionType } from "../../../enums/commonEnums";
 
 const Attendance = (props) => {
   const navigate = useNavigate();
@@ -19,15 +27,23 @@ const Attendance = (props) => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
-  const [scanQRCode, handleScanQRCode] = useState();
-  const [currentEvent, setCurrentEvent] = useState("");
-  const [activeTab, setActiveTab] = useState(0);
   const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [eventHasEnded, setEventHasEnded] = useState(false);
+  const [viewSettings, setViewSettings] = useState(false);
+  const user = getInformationData();
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [eventDate, setEventDate] = useState(new Date());
+  const currentDate = new Date();
+  const [removeModal, setRemoveModal] = useState(false);
+  const [dataToRemove, setDataToRemove] = useState({
+    merchId: eventId,
+    id_number: "",
+  });
+  const [displayLimit, setDisplayLimit] = useState("");
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -36,14 +52,55 @@ const Attendance = (props) => {
         : [...prevSelectedRows, id]
     );
   };
+  const handleSettingsView = () => {
+    setViewSettings(true);
+  };
+  const handleCloseSettingsView = () => {
+    setViewSettings(false);
+  };
+  const fetchEventLimit = async () => {
+    try {
+      const response = await getEventCheck(eventId);
+      const campusLimit = response.limit.find((l) => l.campus === user.campus)
+        ? response.limit.find((l) => l.campus === user.campus)
+        : response.limit;
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
+      if (!campusLimit) return;
+
+      const attendeeCount = response.attendees.filter(
+        (att) => att.campus === user.campus
+      ).length;
+      setDisplayLimit(campusLimit.limit);
+      setIsDisabled(attendeeCount >= campusLimit.limit);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleOpenRemoveModal = (data) => {
+    setRemoveModal(true);
+    setDataToRemove({
+      merchId: eventId,
+      id_number: data,
+    });
+  };
+  const handleRemoveApi = async () => {
+    try {
+      if (await removeAttendee(dataToRemove)) {
+        fetchData();
+        setRemoveModal(false);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const getAllAttendees = async () => {
     return await getAttendees(eventId);
   };
+  useEffect(() => {
+    fetchEventLimit();
+  }, []);
   useEffect(() => {
     if (selectAll) {
       setSelectedRows(filteredData.map((item) => item.id_number));
@@ -84,6 +141,17 @@ const Attendance = (props) => {
       ),
     },
     {
+      key: "id_number",
+      label: "ID",
+      sortable: true,
+      selector: (row) => row.id_number, // Add selector for the student field
+      cell: (row) => (
+        <div className="text-left">
+          <div className="text-xs text-gray-500">ID: {row.id_number}</div>
+        </div>
+      ),
+    },
+    {
       key: "name",
       label: "Name",
       sortable: true,
@@ -91,7 +159,6 @@ const Attendance = (props) => {
       cell: (row) => (
         <div className="text-left">
           <div className="font-semibold text-gray-900">{row.name}</div>
-          <div className="text-xs text-gray-500">ID: {row.id_number}</div>
         </div>
       ),
     },
@@ -162,16 +229,41 @@ const Attendance = (props) => {
       label: "Action",
       cell: (row) => (
         <ButtonsComponent>
-          <FormButton
-            type="button"
-            text="Attendance"
-            onClick={() => handleViewBtn(row)}
-            icon={<FaUserCheck size={20} />} // Simple icon
-            styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
-            textClass="text-blue-100" // Elegant text color
-            whileHover={{ scale: 1.02, opacity: 0.95 }}
-            whileTap={{ scale: 0.98, opacity: 0.9 }}
-          />
+          {eventDate.toDateString() === currentDate.toDateString() ? (
+            <FormButton
+              type="button"
+              text="Attendance"
+              onClick={() => handleViewBtn(row)}
+              icon={<FaUserCheck size={20} />} // Simple icon
+              styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
+              textClass="text-blue-100" // Elegant text color
+              whileHover={{ scale: 1.02, opacity: 0.95 }}
+              whileTap={{ scale: 0.98, opacity: 0.9 }}
+            />
+          ) : (
+            <>
+              <FormButton
+                type="button"
+                text="Disabled"
+                icon={<i className="fas fa-ban"></i>} // Disabled icon
+                styles="px-4 bg-gray-500 text-[#DFF6FF] hover:bg-gray-600 active:bg-gray-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
+                textClass="text-blue-100" // Elegant text color
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+                disabled
+              />
+              <FormButton
+                type="button"
+                text="Remove"
+                onClick={() => handleOpenRemoveModal(row.id_number)}
+                icon={<i className="fas fa-trash"></i>} // Disabled icon
+                styles="px-4 bg-red-500 text-[#DFF6FF] hover:bg-red-600 active:bg-red-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+                textClass="text-white" // Elegant text color
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+              />
+            </>
+          )}
         </ButtonsComponent>
       ),
     },
@@ -180,8 +272,10 @@ const Attendance = (props) => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // TODO: Modify This to fetch Real Data (not dummy data)
+      // TODO:Done modify to get the real data
       const result = await getAllAttendees();
+      console.log(result);
+      setEventDate(new Date(result.data.eventDate));
       setData(result.attendees);
       setFilteredData(result.attendees);
       setEventData(result.data);
@@ -192,13 +286,27 @@ const Attendance = (props) => {
     }
   };
 
-  const handleBackButton = () => {
-    navigate("/admin/dashboard");
-  };
-
   useEffect(() => {
     fetchData();
   }, []);
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const searchLower = searchQuery.toLowerCase();
+      return [
+        item.id_number,
+        item.first_name,
+        item.middle_name,
+        item.last_name,
+        item.email,
+        item.type,
+        item.course,
+        item.rfid,
+      ]
+        .map((value) => (value ? value.toString().toLowerCase() : ""))
+        .some((value) => value.includes(searchLower));
+    });
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
 
   return (
     // Figuring out how to do Pagination..? Still Figuring Things Out
@@ -223,30 +331,67 @@ const Attendance = (props) => {
               transition={{ duration: 0.3 }}
             >
               <div className="ml-2 w-full">
-                <h2 className="text-3xl font-bold">{eventData.eventName}</h2>
+                <h2 className="text-3xl font-bold">{eventData.eventName} </h2>
+                <p>Limit: {displayLimit}</p>
               </div>
 
               <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
-                <ButtonsComponent>
-                  <div className="py-2">
-                    <Link to="/admin/addAttendee">
+                {isDisabled ? (
+                  <ButtonsComponent>
+                    <div className="py-2">
                       <motion.button
                         type="button"
-                        text="Add Attendee"
-                        className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
+                        text="Limit Reached"
+                        className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
                         textClass="sm:block hidden text-white"
                         whileHover={{ scale: 1.01, opacity: 0.95 }}
                         whileTap={{ scale: 0.98, opacity: 0.9 }}
                       >
-                        <i className="fas fa-add"></i> Add Attendee
+                        <i className="fas fa-ban"></i> Limit Reached
                       </motion.button>
-                    </Link>
-                  </div>
-                </ButtonsComponent>
+                    </div>
+                  </ButtonsComponent>
+                ) : (
+                  <ButtonsComponent>
+                    <div className="py-2">
+                      <Link to={`/admin/addAttendee/${eventId}`}>
+                        <motion.button
+                          type="button"
+                          text="Add Attendee"
+                          className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
+                          textClass="sm:block hidden text-white"
+                          whileHover={{ scale: 1.01, opacity: 0.95 }}
+                          whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        >
+                          <i className="fas fa-add"></i> Add Attendee
+                        </motion.button>
+                      </Link>
+                    </div>
+                  </ButtonsComponent>
+                )}
               </div>
             </motion.div>
-
-            {/* Tabs and Table Container */}
+          </div>
+          <div>
+            <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
+              {user.campus === "UC-Main" && (
+                <ButtonsComponent>
+                  <div className="py-2">
+                    <motion.button
+                      type="button"
+                      text="Settings"
+                      onClick={() => handleSettingsView()}
+                      className="bg-gray-500 text-white hover:bg-gray-600 active:bg-gray-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+                      textClass="sm:block hidden text-white"
+                      whileHover={{ scale: 1.01, opacity: 0.95 }}
+                      whileTap={{ scale: 0.98, opacity: 0.9 }}
+                    >
+                      <i className="fas fa-cog"></i> Settings
+                    </motion.button>
+                  </div>
+                </ButtonsComponent>
+              )}
+            </div>
           </div>
           <div className="md:overflow-x-auto shadow-sm rounded-sm space-y-4">
             <AttendanceTab
@@ -259,7 +404,13 @@ const Attendance = (props) => {
           </div>
         </div>
       )}
-
+      {viewSettings && (
+        <AttendanceSettings
+          showModal={viewSettings}
+          setShowModal={handleCloseSettingsView}
+          eventId={eventId}
+        />
+      )}
       {/* View Student Attendance Modal*/}
       {showModal && (
         <ViewStudentAttendance
@@ -269,6 +420,16 @@ const Attendance = (props) => {
           eventId={eventId}
           eventName={eventData.eventName}
         />
+      )}
+      {removeModal && (
+        <>
+          <ConfirmationModal
+            confirmType={ConfirmActionType.REMOVE}
+            type="attendance"
+            onConfirm={() => handleRemoveApi()}
+            onCancel={() => setRemoveModal(false)}
+          />
+        </>
       )}
     </div>
   );

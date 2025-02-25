@@ -74,3 +74,14 @@ export const deletePosition = () => {
 export const restrictedComponent = () => {
   return ["logs"];
 };
+
+export const restrictedComponentOtherCampus = () => {
+  return [
+    "events",
+    "statistics",
+    "raffle",
+    "attendance",
+    "addAttendee",
+    "qrCodeScanner",
+  ];
+};
