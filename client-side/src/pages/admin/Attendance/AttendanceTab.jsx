@@ -15,6 +15,8 @@ const AttendanceTabs = ({
   setSearchQuery,
   setIsFilterOpen,
   setShowModal,
+  fetchData,
+  loading,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,6 +41,7 @@ const AttendanceTabs = ({
       <div className="overflow-x-auto">
         <TableComponent
           columns={columns}
+          loading={loading}
           data={branchFilteredData} // Use filtered data
           customButtons={
             <div className="flex flex-col justify-between gap-5 container">
@@ -79,6 +82,9 @@ const AttendanceTabs = ({
                         textClass="sm:block hidden text-white"
                         whileHover={{ scale: 1.01, opacity: 0.95 }}
                         whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        onClick={() => {
+                          fetchData();
+                        }}
                       />
                     </div>
                   </ButtonsComponent>

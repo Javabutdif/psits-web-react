@@ -24,7 +24,7 @@ const Attendance = (props) => {
   const [attendees, setAttendees] = useState([]);
   const [eventData, setEventData] = useState([]);
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
   const [filteredData, setFilteredData] = useState([]);
@@ -312,98 +312,90 @@ const Attendance = (props) => {
     // Figuring out how to do Pagination..? Still Figuring Things Out
     //TODO: Figure out how to create the layout of the specific_event tab - done?
     <div className="container mx-auto p-4 ">
-      {loading ? (
-        <div className="flex justify-center items-center w-full h-full">
-          <InfinitySpin
-            visible={true}
-            width={200}
-            color="#0d6efd"
-            ariaLabel="infinity-spin-loading"
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-5 p-2 md:flex-col sm:flex-col">
-          <div className=" shadow-sm rounded-sm border bg-white p-2 space-y-4">
-            <motion.div
-              className="flex flex-col sm:flex-row justify-between items-center product-detail p-3 sm:p-2 mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="ml-2 w-full">
-                <h2 className="text-3xl font-bold">{eventData.eventName} </h2>
-                <p>Limit: {displayLimit}</p>
-              </div>
+      <div className="flex flex-col gap-5 p-2 md:flex-col sm:flex-col">
+        <div className=" shadow-sm rounded-sm border bg-white p-2 space-y-4">
+          <motion.div
+            className="flex flex-col sm:flex-row justify-between items-center product-detail p-3 sm:p-2 mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="ml-2 w-full">
+              <h2 className="text-3xl font-bold">{eventData.eventName} </h2>
+              <p>Limit: {displayLimit}</p>
+            </div>
 
-              <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
-                {isDisabled ? (
-                  <ButtonsComponent>
-                    <div className="py-2">
-                      <motion.button
-                        type="button"
-                        text="Limit Reached"
-                        className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
-                        textClass="sm:block hidden text-white"
-                        whileHover={{ scale: 1.01, opacity: 0.95 }}
-                        whileTap={{ scale: 0.98, opacity: 0.9 }}
-                      >
-                        <i className="fas fa-ban"></i> Limit Reached
-                      </motion.button>
-                    </div>
-                  </ButtonsComponent>
-                ) : (
-                  <ButtonsComponent>
-                    <div className="py-2">
-                      <Link to={`/admin/addAttendee/${eventId}`}>
-                        <motion.button
-                          type="button"
-                          text="Add Attendee"
-                          className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
-                          textClass="sm:block hidden text-white"
-                          whileHover={{ scale: 1.01, opacity: 0.95 }}
-                          whileTap={{ scale: 0.98, opacity: 0.9 }}
-                        >
-                          <i className="fas fa-add"></i> Add Attendee
-                        </motion.button>
-                      </Link>
-                    </div>
-                  </ButtonsComponent>
-                )}
-              </div>
-            </motion.div>
-          </div>
-          <div>
             <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
-              {user.campus === "UC-Main" && (
+              {isDisabled ? (
                 <ButtonsComponent>
                   <div className="py-2">
                     <motion.button
                       type="button"
-                      text="Settings"
-                      onClick={() => handleSettingsView()}
-                      className="bg-gray-500 text-white hover:bg-gray-600 active:bg-gray-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+                      text="Limit Reached"
+                      className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
                       textClass="sm:block hidden text-white"
                       whileHover={{ scale: 1.01, opacity: 0.95 }}
                       whileTap={{ scale: 0.98, opacity: 0.9 }}
                     >
-                      <i className="fas fa-cog"></i> Settings
+                      <i className="fas fa-ban"></i> Limit Reached
                     </motion.button>
+                  </div>
+                </ButtonsComponent>
+              ) : (
+                <ButtonsComponent>
+                  <div className="py-2">
+                    <Link to={`/admin/addAttendee/${eventId}`}>
+                      <motion.button
+                        type="button"
+                        text="Add Attendee"
+                        className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
+                        textClass="sm:block hidden text-white"
+                        whileHover={{ scale: 1.01, opacity: 0.95 }}
+                        whileTap={{ scale: 0.98, opacity: 0.9 }}
+                      >
+                        <i className="fas fa-add"></i> Add Attendee
+                      </motion.button>
+                    </Link>
                   </div>
                 </ButtonsComponent>
               )}
             </div>
-          </div>
-          <div className="md:overflow-x-auto shadow-sm rounded-sm space-y-4">
-            <AttendanceTab
-              columns={columns}
-              filteredData={filteredData}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              setIsFilterOpen={setIsFilterOpen}
-            />
+          </motion.div>
+        </div>
+        <div>
+          <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
+            {user.campus === "UC-Main" && (
+              <ButtonsComponent>
+                <div className="py-2">
+                  <motion.button
+                    type="button"
+                    text="Settings"
+                    onClick={() => handleSettingsView()}
+                    className="bg-gray-500 text-white hover:bg-gray-600 active:bg-gray-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+                    textClass="sm:block hidden text-white"
+                    whileHover={{ scale: 1.01, opacity: 0.95 }}
+                    whileTap={{ scale: 0.98, opacity: 0.9 }}
+                  >
+                    <i className="fas fa-cog"></i> Settings
+                  </motion.button>
+                </div>
+              </ButtonsComponent>
+            )}
           </div>
         </div>
-      )}
+        <div className="md:overflow-x-auto shadow-sm rounded-sm space-y-4">
+          <AttendanceTab
+            columns={columns}
+            filteredData={filteredData}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            setIsFilterOpen={setIsFilterOpen}
+            fetchData={fetchData}
+            loading={loading}
+          />
+        </div>
+      </div>
+
       {viewSettings && (
         <AttendanceSettings
           showModal={viewSettings}

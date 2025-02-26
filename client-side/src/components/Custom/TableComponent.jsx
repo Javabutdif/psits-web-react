@@ -12,6 +12,7 @@ const TableComponent = ({
   style,
   customSearch,
   customButtons,
+  loading,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -83,7 +84,6 @@ const TableComponent = ({
             handleSearchChange={handleSearchChange}
             placeholder="Search data..."
             className="w-full sm:max-w-xs bg-gray-50 border rounded-lg p-2 text-sm"
-
           />
         )}
         {customButtons || (
@@ -113,7 +113,7 @@ const TableComponent = ({
           <TableBody
             columns={columns}
             currentRows={currentRows}
-            loading={false}
+            loading={loading}
           />
         </motion.table>
       </motion.div>
