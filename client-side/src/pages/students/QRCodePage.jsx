@@ -114,7 +114,7 @@ const QRCodePage = ({ closeView, event }) => {
                 <>
                   <div className="flex justify-center">
                     <QRCode
-                      value={`${window.location.origin}/admin/attendance/${event.eventId}/${event.eventName}/markAsPresent/${studentId}/${studentName}`}
+                      value={`admin/attendance/${event.eventId}/${event.eventName}/markAsPresent/${studentId}/${studentName}`}
                       size={170}
                       fgColor="#074873"
                     />

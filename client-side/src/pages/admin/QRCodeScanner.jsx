@@ -6,20 +6,7 @@ export const QRCodeScanner = () => {
     if (detectedCodes.length > 0) {
       const scannedURL = detectedCodes[0].rawValue;
 
-      if (isValidURL(scannedURL)) {
-        window.location.href = scannedURL;
-      } else {
-        console.warn("Scanned data is not a valid URL:", scannedURL);
-      }
-    }
-  };
-
-  const isValidURL = (str) => {
-    try {
-      new URL(str);
-      return true;
-    } catch (error) {
-      return false;
+      window.location.href = window.location.origin + scannedURL;
     }
   };
 
