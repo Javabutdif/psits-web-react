@@ -1,16 +1,16 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 
 const campusList = [
-  'Main',
-  'Banilad',
-  'LM',
-  'Pardo',
+  'UC-Main',
+  'UC-Banilad',
+  'UC-LM',
+  'UC-Pardo',
   'All'
 ];
 
 const Tabs = ({ onSelectCampus }) => {
-  const [activeCampus, setActiveCampus] = useState('Main');
+  const [activeCampus, setActiveCampus] = useState('UC-Main');
 
   const handleSelectCampus = (campus) => {
     setActiveCampus(campus);
@@ -19,16 +19,21 @@ const Tabs = ({ onSelectCampus }) => {
 
   return (
     <div className='mb-5 flex gap-2 justify-center items-center rounded-lg bg-primary text-white p-2 shadow-lg'>
-      {campusList.map(campus => (
-        <motion.button 
-          key={campus} 
-          className={`px-4 py-2 rounded-full transition-transform duration-300 ease-in-out transform ${activeCampus === campus ? 'bg-navy scale-110 shadow-xl' : 'hover:scale-105'}`}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => handleSelectCampus(campus)}
-        >
-          {campus}
-        </motion.button>
-      ))}
+      {campusList.map(campus => {
+        // Remove 'UC-' from the campus name for display
+        const displayCampus = campus.replace('UC-', '');
+
+        return (
+          <motion.button 
+            key={campus} 
+            className={`px-4 py-2 rounded-full transition-transform duration-300 ease-in-out transform ${activeCampus === campus ? 'bg-navy scale-110 shadow-xl' : 'hover:scale-105'}`}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleSelectCampus(campus)}
+          >
+            {displayCampus} {/* Display the transformed campus name */}
+          </motion.button>
+        );
+      })}
     </div>
   );
 };

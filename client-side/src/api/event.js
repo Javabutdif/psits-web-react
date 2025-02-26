@@ -1,7 +1,7 @@
+import axios from "axios";
 import "../App.css";
 import { showToast } from "../utils/alertHelper";
 import backendConnection from "./backendApi";
-import axios from "axios";
 
 const token = sessionStorage.getItem("Token");
 
@@ -248,5 +248,29 @@ export const removeAttendee = async (formData) => {
     return response.status === 200 ? true : false;
   } catch (error) {
     return error;
+  }
+};
+
+
+export const getRaflleAttendees = async (id) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/events/raffle/get-all-attendees/${id}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log(response.data.data);
+    return response.status === 200 ? response.data.data : [];
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return false;
+    } else {
+      console.log("error", "An error occurred");
+      return false;
+    }
   }
 };

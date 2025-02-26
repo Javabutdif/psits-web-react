@@ -137,6 +137,30 @@ router.post(
   }
 );
 
+// Event Raffle - Get the Event Attendees only
+router.get("/raffle/get-all-attendees/:eventId", authenticateToken, async (req,res) => {
+  const { eventId } = req.params;
+
+  try{
+    const event_id = new ObjectId(eventId);
+    const event = await Events.findOne({ eventId: event_id });
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Filter attendees based on campus if provided
+    let eligibleAttendees = event.attendees.filter(
+      (attendee) => !attendee.raffleIsRemoved && !attendee.raffleIsWinner
+    );
+    res.status(200).json({data:eligibleAttendees});
+
+  }catch(error){
+    console.error(error);
+  }
+
+})
+
 // Event Raffle - Randomized Fetch for One Attendee and set raffleIsWinner = true
 router.post("/raffle/:eventId", authenticateToken, async (req, res) => {
   const { eventId } = req.params;
