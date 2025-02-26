@@ -27,25 +27,24 @@ const EventRaffle = () => {
 
 
 
-<div className="flex flex-col justify-center items-center min-h-screen p-4">
+<div className="flex flex-col items-center min-h-screen p-4">
   {/* Raffle and Extra Content */}
-  <div className="flex flex-col md:flex-row justify-center gap-4 w-full">
+  <div className="flex flex-col md:flex-row justify-center md:justify-around gap-6 w-full">
     {/* Raffle Picker */}
-    <div className="w-full md:w-1/2 p-4 flex flex-col min-h-[70vh] justify-center items-center">
+    <div className="w-full md:w-1/2 p-4 flex flex-col min-h-[60vh] md:min-h-[70vh] justify-center items-center">
       <RafflePicker participants={participantsData[selectedCampus]} />
     </div>
 
     {/* Extra Content */}
     <div className="w-full md:w-1/3 p-4 flex flex-col bg-white rounded-md shadow-lg justify-center items-center">
-      <div className="bg-white w-full md:w-full h-40 md:h-full">
+      <div className="bg-white w-full h-40 md:h-auto rounded-md flex items-center justify-center">
         {/* <h1>{displayedParticipant}</h1> */}
-
       </div>
     </div>
   </div>
 
   {/* Tabs Section */}
-  <div className="w-full md:w-1/3 flex justify-center mt-6">
+  <div className="w-full md:w-1/3 flex justify-center mt-8">
     <Tabs onSelectCampus={setSelectedCampus} />
   </div>
 </div>

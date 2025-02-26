@@ -128,22 +128,33 @@ const RafflePicker = ({ participants }) => {
 
       <div
 			// KANI KAY ANG CIRCLE
-        ref={containerRef}
-        className="relative w-[55vh] h-[55vh] mb-5 mx-auto rounded-full shadow-2xl border-[6px] border-white/30 bg-white/20 backdrop-blur-lg flex items-center justify-center overflow-hidden"
-        style={{
-          background: `radial-gradient(circle at 50% 50%, 
-            rgba(173, 216, 230, 0.3) 40%, 
-            rgba(30, 144, 255, 0.25) 60%, 
-            rgba(0, 0, 128, 0.3) 80%, 
-            rgba(0, 0, 51, 0.4) 100%)`,
-          boxShadow: 
-            `inset 0 0 15px rgba(255, 255, 255, 0.5), 
-            inset 0 -10px 20px rgba(0, 0, 0, 0.3), 
-            0 10px 30px rgba(0, 0, 0, 0.4), 
-            0 -10px 15px rgba(255, 255, 255, 0.2)`
-          ,
-        }}
+      ref={containerRef}
+      className="relative w-[70vh] h-[70vh] mb-5 mx-auto rounded-full border-white/30 bg-white/20 backdrop-blur-lg flex items-center justify-center overflow-hidden animate-spinGlow"
+      style={{
+        background: `radial-gradient(circle at 50% 50%, 
+          rgba(180, 230, 255, 0.3) 40%, 
+          rgba(80, 180, 255, 0.25) 60%, 
+          rgba(22, 130, 200, 0.3) 80%, 
+          rgba(10, 100, 160, 0.4) 100%)`
+      }}
       >
+   {/* <motion.div
+  className="absolute w-full h-full border-[10px] border-transparent  rounded-full"
+  animate={{ rotate: 360, boxShadow: [
+      "0 0 15px 5px rgba(0, 191, 255, 0.3), 0 0 30px 10px rgba(0, 191, 255, 0.15)",
+      "0 0 25px 10px rgba(0, 191, 255, 0.5), 0 0 40px 15px rgba(0, 191, 255, 0.3)",
+      "0 0 15px 5px rgba(0, 191, 255, 0.3), 0 0 30px 10px rgba(0, 191, 255, 0.15)",
+    ] }}
+  transition={{ 
+    rotate: { duration: 1, ease: "linear", repeat: Infinity },
+    boxShadow: { duration: 2, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }
+  }}
+  style={{ filter: "blur(3px)" }}
+/> */}
+
+
+
+  
 				{/* KANI NGA PART KAY MAO NI ANG LOADING KATO MO TUYOK */}
         {isPicking && (
           <motion.div
@@ -158,7 +169,7 @@ const RafflePicker = ({ participants }) => {
           {displayedParticipant && (
             <motion.div
               key={displayedParticipant}
-              className="absolute text-2xl md:text-2xl lg:text-2xl font-bold text-gray-900"
+              className="absolute text-2xl md:text-2xl lg:text-4xl font-bold text-gray-900"
               initial={{ scale: 0, opacity: 0, x: position.x, y: position.y }}
               animate={{
                 scale: [1, 1.3, 0.9, 1.1, 1],
