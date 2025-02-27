@@ -2,14 +2,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 // import Confetti from "react-confetti";
 import { FaDice } from "react-icons/fa";
+// import { useParams } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import RaffleWinnerModal from "./RaflleWinnerModal";
+import RaffleWinnerModal from "../raffle/RaflleWinnerModal";
 // import Confetti from "react-confetti";
 
 
 
-const RafflePicker = ({ participants }) => {
+const RafflePicker = ({ participants}) => {
+  // const {eventId} = useParams();
   const [winner, setWinner] = useState(null);
   const [isPicking, setIsPicking] = useState(false);
   const [displayedParticipant, setDisplayedParticipant] = useState(null);
@@ -32,10 +34,33 @@ const RafflePicker = ({ participants }) => {
     setWinnerModal(false);    
   }
 
+  // const setAttendeeWinnerStatus = async (eventId, attendeeId, campus) => {
+  //   try {
+  //     await raffleWinner(eventId, attendeeId, campus);
+  //   } catch (error) {
+  //     console.error("Error setting attendee winner status:", error);
+  //   }
+  // };
+
+  // const handleAddToWinnerList = async (participant) => {
+  //   if (!participant) return;
+  
+  //   try {
+  //     await setAttendeeWinnerStatus(eventId, participant.id_number, participant.campus); // API call
+  
+  //     setRaffleWinners(prevWinners => [...prevWinners, participant]); // Update state
+  //   } catch (error) {
+  //     console.error("Failed to add winner:", error);
+  //   }
+  // };
 
   useEffect(() => {
     
-    setRemainingParticipants(participants);
+    const filtered = participants
+    .filter(participant => !participant.raffleIsWinner) // Exclude past winners
+    .map(participant => participant.name); // Store only names
+
+    setRemainingParticipants(filtered);
     setWinner(null);
     
     setDisplayedParticipant(null);
@@ -51,6 +76,7 @@ const RafflePicker = ({ participants }) => {
   }, []);
 
   const pickWinner = () => {
+
     setIsPicking(true);
     setWinner(null);
     setIsDisplayingWinner(false);
@@ -60,7 +86,11 @@ const RafflePicker = ({ participants }) => {
     let iterations = 0;
     const interval = setInterval(() => {
       const currentIndex = iterations % remainingParticipants.length;
+      
       const currentParticipant = remainingParticipants[currentIndex];
+      // console.log("Remaining Participants: " + remainingParticipants);
+      // console.log("Current Participant: " + currentParticipant);
+
 
       const buffer = 80;
       const randomX =
@@ -73,15 +103,28 @@ const RafflePicker = ({ participants }) => {
       iterations++;
 
       if (iterations > 100) {
+
         clearInterval(interval);
         const finalIndex = Math.floor(Math.random() * remainingParticipants.length);
-        const selectedWinner = remainingParticipants[finalIndex];
-        setWinner(selectedWinner);
-        setDisplayedParticipant(selectedWinner);
-        setRemainingParticipants(remainingParticipants.filter((participant) => participant !== selectedWinner));
-        setIsPicking(false);
-        setShowConfetti(true); // 🎉 Trigger confetti!
-        setIsDisplayingWinner(true);
+        const selectedWinnerName = remainingParticipants[finalIndex];
+  
+        // Find the full participant object based on the selected winner's name
+       // Find full participant object
+       const selectedWinner = participants.find(participant => participant.name === selectedWinnerName);
+
+       if (selectedWinner) {
+         setWinner(selectedWinner);
+         setDisplayedParticipant(selectedWinner.name);
+        //  handleAddToWinnerList(selectedWinner); // Add winner to state & API
+        //  console.log(raffleWinners);
+       }
+ 
+       // Remove winner from remaining participants
+       setRemainingParticipants(remainingParticipants.filter(name => name !== selectedWinnerName));
+ 
+       setIsPicking(false);
+       setShowConfetti(true);
+       setIsDisplayingWinner(true);
 
         // toast.success(`Winner: ${selectedWinner}`, {
         //   position: "top-left",
@@ -221,7 +264,7 @@ const RafflePicker = ({ participants }) => {
           <RaffleWinnerModal
           studentData ={winner}
           handleCloseModal={handleCloseWinnerModal}
-          handleCloseConfetti={showConfetti}
+          handleConfetti={showConfetti}
           autoClose={10000}
           />
         )

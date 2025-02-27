@@ -34,7 +34,7 @@ const EventRaffle = () => {
         // Sort participants by campus and add them to the "All" campus as well
         result.forEach((participant) => {
           // Assuming each participant has a campus property
-          const campus = participant.campus || 'UC-Main'; // Default to 'Main' if no campus
+          const campus = participant.campus || 'All'; // Default to 'Main' if no campus
           if (campuses[campus]) {
             campuses[campus].push(participant);
           } else {
@@ -51,6 +51,7 @@ const EventRaffle = () => {
         });
   
         setParticipants(campuses); // Set the sorted campus data
+        // console.log(campuses);
       } else {
         console.error("No attendees found");
       }
@@ -67,28 +68,30 @@ const EventRaffle = () => {
 
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen p-4">
-      {/* Raffle and Extra Content */}
-      <div className="flex flex-col md:flex-row justify-center gap-4 w-full">
-        {/* Raffle Picker */}
-        <div className="w-full md:w-1/2 p-4 flex flex-col min-h-[70vh] justify-center items-center">
-          {/* Pass sorted participants for selected campus */}
-          <RafflePicker participants={participants[selectedCampus]?.map((participant) => participant.name) || []} />
-        </div>
-
-        {/* Extra Content */}
-        <div className="w-full md:w-1/3 p-4 flex flex-col bg-white rounded-md shadow-lg justify-center items-center">
-          <div className="bg-white w-full md:w-full h-40 md:h-full">
-            {/* Additional Content */}
-          </div>
-        </div>
+    <div className="flex flex-col items-center min-h-screen p-4">
+    {/* Raffle and Extra Content */}
+    <div className="flex flex-col sm:flex-col md:flex-row sm:flex-col justify-center  md:justify-around gap-6 w-full">
+      {/* Raffle Picker */}
+      <div className="w-full md:w-1/2 p-4 flex flex-col min-h-[60vh] md:min-h-[70vh] justify-center items-center">
+      <RafflePicker 
+      // participants={participants[selectedCampus]?.map((participant) => participant.name ) || []}
+      participants={participants[selectedCampus] || []}
+      />
       </div>
 
-      {/* Tabs Section */}
-      <div className="w-full md:w-1/3 flex justify-center mt-6">
-        <Tabs onSelectCampus={setSelectedCampus} />
+      {/* Extra Content */}
+      <div className="w-full sm:w-1/2  md:w-1/3 p-4 flex flex-col rounded-md shadow-lg justify-center items-center">
+        <div className="bg-white w-full h-40 md:h-auto rounded-md flex items-center justify-center">
+          {/* <h1>{displayedParticipant}</h1> */} <h2>jdsd</h2>
+        </div>
       </div>
     </div>
+
+    {/* Tabs Section */}
+    <div className="w-full md:w-1/3 flex justify-center mt-8">
+      <Tabs onSelectCampus={setSelectedCampus} />
+    </div>
+  </div>
   );
 };
 

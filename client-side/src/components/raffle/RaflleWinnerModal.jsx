@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Confetti from "react-confetti";
 import { AiOutlineClose } from "react-icons/ai";
 
-const RaffleWinnerModal = ({ studentData, handleCloseModal, handleCloseConfetti, autoClose }) => {
+const RaffleWinnerModal = ({ studentData, handleCloseModal, handleConfetti, handleRemoveAtendee, handleAddWinnerAttendee,autoClose }) => {
   const [timeLeft, setTimeLeft] = useState(autoClose / 1000); // Convert ms to seconds
   const [progress, setProgress] = useState(100); // Full progress bar
   const [isVisible, setIsVisible] = useState(false);
@@ -18,13 +18,15 @@ const RaffleWinnerModal = ({ studentData, handleCloseModal, handleCloseConfetti,
       setTimeLeft((prev) => Math.max(prev - 0.1, 0));
       setProgress((prev) => Math.max(prev - 100 / totalIntervals, 0));
     }, intervalTime);
+    
+
 
     const closeTimer = setTimeout(() => {
       setIsVisible(false);
       setShowConfetti(false);
       setTimeout(() => {
         handleCloseModal();
-        handleCloseConfetti();
+        handleConfetti();
       }, 300); // Delay to match fade-out animation
     }, autoClose);
 
@@ -64,7 +66,7 @@ const RaffleWinnerModal = ({ studentData, handleCloseModal, handleCloseConfetti,
         {/* Modal Content */}
         <h3 className="text-xl font-bold mb-3 text-center">🎉 Congratulations! 🎉</h3>
         <div className="flex justify-center border-2 p-3">
-          {studentData ? `${studentData.name} from ${studentData.school}` : "Winner details here"}
+          {studentData ? `${studentData.name} from ${studentData.campus}` : "Winner details here"}
         </div>
 
         {/* Action Button */}
