@@ -244,11 +244,10 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
                   <option value="none" selected disabled hidden>
                     Select Campus
                   </option>
+                  <option value="UC-Main">UC Main</option>
                   <option value="UC-Banilad">UC Banilad</option>
                   <option value="UC-LM">UC Lapu-Lapu Mandaue</option>
                   <option value="UC-PT">UC Pardo Talisay</option>
-                  <option value="UC-METC">UC METC</option>
-                  <option value="UC-J">UC Jones</option>
                 </select>
               </div>
             </div>
