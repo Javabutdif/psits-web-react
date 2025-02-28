@@ -1,280 +1,219 @@
-import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useRef, useState } from "react";
-// import Confetti from "react-confetti";
-import { FaDice } from "react-icons/fa";
-// import { useParams } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import RaffleWinnerModal from "../raffle/RaflleWinnerModal";
-// import Confetti from "react-confetti";
+import React, { useState, useRef } from "react";
+import { showToast } from "../../utils/alertHelper";
 
-
-
-const RafflePicker = ({ participants}) => {
-  // const {eventId} = useParams();
+const RafflePicker = ({
+  participants = [],
+  onPickWinner,
+  onRemoveAttendee,
+}) => {
+  const [isRaffling, setIsRaffling] = useState(false);
   const [winner, setWinner] = useState(null);
-  const [isPicking, setIsPicking] = useState(false);
-  const [displayedParticipant, setDisplayedParticipant] = useState(null);
-  const [remainingParticipants, setRemainingParticipants] = useState([]);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [showConfetti, setShowConfetti] = useState(false); // Confetti state
-  const [showWinnerModal, setWinnerModal] = useState(false);
-  const [winnerList, addWinnerToList] = useState(false);
-  const [isDisplayingWinner, setIsDisplayingWinner] = useState(false);
-  const [raffleWinners, setRaffleWinners] = useState([]);
+  const [displayedParticipants, setDisplayedParticipants] = useState([]);
+  const [countdown, setCountdown] = useState(null);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const spinnerRef = useRef(null);
 
-  const containerRef = useRef(null);
-  const [divSize, setDivSize] = useState({ width: 0, height: 0 });
-  const handleShowWinnerModal = () =>{
-    console.log("True");
-    setWinnerModal(true);    
-  }
-  const handleCloseWinnerModal = () =>{
-    console.log("False");
-    setWinnerModal(false);    
-  }
+  const selectRandomWinner = (participantArray) => {
+    if (!participantArray || participantArray.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * participantArray.length);
+    return participantArray[randomIndex];
+  };
 
-  // const setAttendeeWinnerStatus = async (eventId, attendeeId, campus) => {
-  //   try {
-  //     await raffleWinner(eventId, attendeeId, campus);
-  //   } catch (error) {
-  //     console.error("Error setting attendee winner status:", error);
-  //   }
-  // };
-
-  // const handleAddToWinnerList = async (participant) => {
-  //   if (!participant) return;
-  
-  //   try {
-  //     await setAttendeeWinnerStatus(eventId, participant.id_number, participant.campus); // API call
-  
-  //     setRaffleWinners(prevWinners => [...prevWinners, participant]); // Update state
-  //   } catch (error) {
-  //     console.error("Failed to add winner:", error);
-  //   }
-  // };
-
-  useEffect(() => {
-    
-    const filtered = participants
-    .filter(participant => !participant.raffleIsWinner) // Exclude past winners
-    .map(participant => participant.name); // Store only names
-
-    setRemainingParticipants(filtered);
-    setWinner(null);
-    
-    setDisplayedParticipant(null);
-  }, [participants]);
-
-  useEffect(() => {
-    if (containerRef.current) {
-      setDivSize({
-        width: containerRef.current.offsetWidth,
-        height: containerRef.current.offsetHeight,
-      });
+  // Starts raffle (animation and RNG)
+  const startRaffle = () => {
+    if (participants.length < 2) {
+      showToast(
+        "error",
+        "You need at least 2 participants to start the raffle!"
+      );
+      return;
     }
-  }, []);
 
-  const pickWinner = () => {
-
-    setIsPicking(true);
+    // Reset previous state
     setWinner(null);
-    setIsDisplayingWinner(false);
-    handleCloseWinnerModal();
-    setShowConfetti(false); // Reset confetti before picking
+    setIsRaffling(true);
+    setCountdown(5);
+    setShowWinnerModal(false);
 
-    let iterations = 0;
-    const interval = setInterval(() => {
-      const currentIndex = iterations % remainingParticipants.length;
-      
-      const currentParticipant = remainingParticipants[currentIndex];
-      // console.log("Remaining Participants: " + remainingParticipants);
-      // console.log("Current Participant: " + currentParticipant);
-
-
-      const buffer = 80;
-      const randomX =
-        Math.random() * (divSize.width - buffer * 2) - (divSize.width / 2 - buffer);
-      const randomY =
-        Math.random() * (divSize.height - buffer * 2) - (divSize.height / 2 - buffer);
-
-      setPosition({ x: randomX, y: randomY });
-      setDisplayedParticipant(currentParticipant);
-      iterations++;
-
-      if (iterations > 100) {
-
-        clearInterval(interval);
-        const finalIndex = Math.floor(Math.random() * remainingParticipants.length);
-        const selectedWinnerName = remainingParticipants[finalIndex];
-  
-        // Find the full participant object based on the selected winner's name
-       // Find full participant object
-       const selectedWinner = participants.find(participant => participant.name === selectedWinnerName);
-
-       if (selectedWinner) {
-         setWinner(selectedWinner);
-         setDisplayedParticipant(selectedWinner.name);
-        //  handleAddToWinnerList(selectedWinner); // Add winner to state & API
-        //  console.log(raffleWinners);
-       }
- 
-       // Remove winner from remaining participants
-       setRemainingParticipants(remainingParticipants.filter(name => name !== selectedWinnerName));
- 
-       setIsPicking(false);
-       setShowConfetti(true);
-       setIsDisplayingWinner(true);
-
-        // toast.success(`Winner: ${selectedWinner}`, {
-        //   position: "top-left",
-        //   autoClose: 5000,
-        //   hideProgressBar: false,
-        //   closeOnClick: true,
-        //   pauseOnHover: true,
-        //   draggable: true,
-        // });
-
-        setTimeout(() => {
-          handleShowWinnerModal();
-          setIsDisplayingWinner(false);
-          setShowConfetti(false);
-        }, 1000 );
-        
+    // Start with showing random participants during countdown
+    const shuffleInterval = setInterval(() => {
+      // Show random participants from the list during animation
+      const randomSelection = [];
+      for (let i = 0; i < 10; i++) {
+        const randomIndex = Math.floor(Math.random() * participants.length);
+        randomSelection.push(participants[randomIndex]);
       }
-    }, 100);
+      setDisplayedParticipants(randomSelection);
+    }, 150);
+
+    // Handle countdown
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    setTimeout(() => {
+      clearInterval(shuffleInterval);
+
+      // Get the true random winner
+      const selectedWinner = selectRandomWinner(participants);
+
+      // Show final animation with the winner
+      const finalDisplayed = [];
+      for (let i = 0; i < 9; i++) {
+        const randomIndex = Math.floor(Math.random() * participants.length);
+        finalDisplayed.push(participants[randomIndex]);
+      }
+      // Put the winner in the center
+      finalDisplayed.splice(4, 0, selectedWinner);
+      setDisplayedParticipants(finalDisplayed);
+
+      // Set the winner state
+      setWinner(selectedWinner);
+      setIsRaffling(false);
+
+      // Apply highlight animation to the winner
+      if (spinnerRef.current) {
+        const items = spinnerRef.current.querySelectorAll(".participant-item");
+        items[4].classList.add("winner-glow");
+      }
+
+      // Show winner modal after a short delay
+      setTimeout(() => {
+        setShowWinnerModal(true);
+      }, 1000);
+    }, 6000); // Extended animation time to match 5 second countdown
+  };
+
+  // Modal close function
+  const closeWinnerModal = () => {
+    setShowWinnerModal(false);
   };
 
   return (
-    <div className="w-full min-h-[70vh] flex flex-col items-center justify-center relative">
-			     {/* PAMPA DISPLAY CONFETTI */}
-			{/* {showConfetti && (
-				<Confetti
-					width={window.innerWidth}
-					height={window.innerHeight}
-					confettiSource={{ x: window.innerWidth * 0, y: -100, w: 1000, h: 200 }} // Moves it to the left
-				/>
-			)} */}
+    <div className="w-full flex flex-col items-center">
+      <h2 className="text-2xl font-bold mb-6 text-center">Raffle Draw</h2>
 
-      <ToastContainer />
- 
-      {/* {winner && !isPicking && (
-        <motion.div
-          className="text-xl font-semibold text-green-600"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          {`Winner: ${winner}`}
-        </motion.div>
-      )} */}
-
-      <div
-			// KANI KAY ANG CIRCLE
-      ref={containerRef}
-      className="relative w-[70vh] h-[70vh] mb-5 mx-auto rounded-full border-white/30 bg-white/20 backdrop-blur-lg flex items-center justify-center overflow-hidden animate-spinGlow"
-      style={{
-        background: `radial-gradient(circle at 50% 50%, 
-          rgba(180, 230, 255, 0.3) 40%, 
-          rgba(80, 180, 255, 0.25) 60%, 
-          rgba(22, 130, 200, 0.3) 80%, 
-          rgba(10, 100, 160, 0.4) 100%)`
-      }}
-      >
-   {/* <motion.div
-  className="absolute w-full h-full border-[10px] border-transparent  rounded-full"
-  animate={{ rotate: 360, boxShadow: [
-      "0 0 15px 5px rgba(0, 191, 255, 0.3), 0 0 30px 10px rgba(0, 191, 255, 0.15)",
-      "0 0 25px 10px rgba(0, 191, 255, 0.5), 0 0 40px 15px rgba(0, 191, 255, 0.3)",
-      "0 0 15px 5px rgba(0, 191, 255, 0.3), 0 0 30px 10px rgba(0, 191, 255, 0.15)",
-    ] }}
-  transition={{ 
-    rotate: { duration: 1, ease: "linear", repeat: Infinity },
-    boxShadow: { duration: 2, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }
-  }}
-  style={{ filter: "blur(3px)" }}
-/> */}
-
-
-
-  
-				{/* KANI NGA PART KAY MAO NI ANG LOADING KATO MO TUYOK */}
-        {isPicking && (
-          <motion.div
-            className="absolute w-full h-full border-[10px] border-transparent border-t-primary border-r-navy rounded-full"
-            animate={{ rotate: 360, borderWidth: [4] }}
-            transition={{ duration: 0.5, ease: "linear", repeat: Infinity }}
-          />
+      {/* Raffle visualization */}
+      <div className="w-full max-w-xl relative">
+        {/* Countdown overlay */}
+        {countdown !== null && (
+          <div className="absolute inset-0 flex items-center justify-center z-20 text-6xl font-bold text-white">
+            {countdown}
+          </div>
         )}
 
-				{/* KANI KAY MAO NING ANIMATION WHILE PICKING INSIDE SA CIRCLE */}
-        <AnimatePresence>
-          {displayedParticipant && (
-            <motion.div
-              key={displayedParticipant}
-              className="absolute text-2xl md:text-2xl lg:text-4xl font-bold text-gray-900"
-              initial={{ scale: 0, opacity: 0, x: position.x, y: position.y }}
-              animate={{
-                scale: [1, 1.3, 0.9, 1.1, 1],
-                opacity: 1,
-                x: winner ? 0 : position.x,
-                y: winner ? 0 : position.y,
-              }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+        {/* Raffle spinner */}
+        <div
+          ref={spinnerRef}
+          className="grid grid-cols-3 md:grid-cols-5 gap-2 relative z-10"
+        >
+          {displayedParticipants.map((participant, index) => (
+            <div
+              key={index}
+              className={`participant-item bg-gradient-to-br ${
+                winner && participant === winner
+                  ? "from-yellow-600 to-amber-900"
+                  : index % 2 === 0
+                  ? "from-blue-800 to-blue-900"
+                  : "from-indigo-800 to-purple-900"
+              } rounded-lg p-3 aspect-square flex flex-col items-center justify-center text-white shadow-lg transition-all duration-300 ${
+                isRaffling ? "animate-pulse" : ""
+              }`}
             >
-              {displayedParticipant}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <div className="font-medium text-sm text-center truncate w-full">
+                {participant?.name || "Participant"}
+              </div>
+              {participant?.campus && (
+                <div className="text-xs opacity-80 mt-1 text-center truncate w-full">
+                  {participant.campus}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-{/* KANI KAY BUTTON SA PICK A WINNER */}
-
-    {/* {!isDisplayingWinner && (
-
-
-    )} */}
-    <motion.button
-        className={`relative bg-navy text-white ${
-          isPicking || isDisplayingWinner ? "p-3 rounded-full opacity-50" : "px-6 py-3 rounded-md"
-        } shadow-lg hover:bg-primary transition duration-300 flex items-center justify-center mx-auto`}
-        whileTap={{ scale: 0.95 }}
-        onClick={pickWinner}
-        disabled={isPicking || isDisplayingWinner|| remainingParticipants.length === 0}
+      {/* Controls */}
+      <button
+        onClick={startRaffle}
+        disabled={isRaffling}
+        className={`mt-6 px-6 py-3 text-lg font-bold rounded-md shadow-lg transition-all ${
+          isRaffling
+            ? "bg-gray-600 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700 active:transform active:scale-95"
+        } text-white`}
       >
-        <motion.div
-          animate={isPicking ? { rotate: [0, 180, 360], scale: [1, 1.2, 1] } : {}}
-          transition={isPicking ? { repeat: Infinity, duration: 0.4, ease: "linear" } : {}}
-        >
-          <FaDice className={`${isPicking ? "" : "mr-2"}`} />
-        </motion.div>
-        {!isPicking ? "Pick a Winner" : "Picking..."}
-      </motion.button>
-      
+        {isRaffling ? "Selecting..." : "Draw Winner"}
+      </button>
 
-      {remainingParticipants.length === 0 && (
-        <div className="mt-4 text-2xl font-semibold text-red-600">
-          No more participants left.
+      {/* Participant counter */}
+      <div className="mt-4 text-sm text-gray-400">
+        {participants.length} participants in this raffle
+      </div>
+
+      {/* Winner Modal */}
+      {showWinnerModal && winner && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl shadow-2xl max-w-md w-full border border-gray-700 winner-modal-animation">
+            <div className="p-5 border-b border-gray-700">
+              <h3 className="text-2xl font-bold text-center text-white">
+                Winner Announced!
+              </h3>
+            </div>
+
+            <div className="p-6 flex flex-col items-center">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-r from-yellow-500 to-amber-600 flex items-center justify-center mb-4">
+                <span className="text-4xl">🏆</span>
+              </div>
+              <h4 className="text-3xl font-bold text-yellow-400 text-center mb-1">
+                {winner.name || "Unknown Participant"}
+              </h4>
+              {winner.campus && (
+                <p className="text-gray-400 text-center mb-4">
+                  {winner.campus}
+                </p>
+              )}
+              <div className="w-full bg-gray-700 h-px my-4"></div>
+              <p className="text-gray-300 text-center mb-6">
+                What would you like to do with this winner?
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
+                  onClick={() => {
+                    onPickWinner(winner.id_number);
+                    closeWinnerModal();
+                    showToast(
+                      "success",
+                      `${winner.name} added to winners list!`
+                    );
+                  }}
+                >
+                  Add to Winners
+                </button>
+                <button
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
+                  onClick={() => {
+                    onRemoveAttendee(winner.id_number);
+                    closeWinnerModal();
+                    showToast("info", `${winner.name} removed from raffle!`);
+                  }}
+                >
+                  Remove from Raffle
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
-
-      {
-        showWinnerModal &&  !isPicking &&(
-          <RaffleWinnerModal
-          studentData ={winner}
-          handleCloseModal={handleCloseWinnerModal}
-          handleConfetti={showConfetti}
-          autoClose={10000}
-          />
-        )
-      }
-
     </div>
-    
   );
-
-
 };
 
 export default RafflePicker;
