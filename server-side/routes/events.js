@@ -137,34 +137,9 @@ router.post(
   }
 );
 
-// Event Raffle - Get the Event Attendees only
-router.get("/raffle/get-all-attendees/:eventId", authenticateToken, async (req,res) => {
+// Get Eligible Attendees for Raffle
+router.get("/raffle/:eventId", authenticateToken, async (req, res) => {
   const { eventId } = req.params;
-
-  try{
-    const event_id = new ObjectId(eventId);
-    const event = await Events.findOne({ eventId: event_id });
-
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
-    }
-
-    // Filter attendees based on campus if provided
-    let eligibleAttendees = event.attendees.filter(
-      (attendee) => !attendee.raffleIsRemoved && !attendee.raffleIsWinner
-    );
-    res.status(200).json({data:eligibleAttendees});
-
-  }catch(error){
-    console.error(error);
-  }
-
-})
-
-// Event Raffle - Randomized Fetch for One Attendee and set raffleIsWinner = true
-router.post("/raffle/:eventId", authenticateToken, async (req, res) => {
-  const { eventId } = req.params;
-  const { campus } = req.body; // Accept campus filter from request body
 
   try {
     const event_id = new ObjectId(eventId);
@@ -174,46 +149,77 @@ router.post("/raffle/:eventId", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    // Filter attendees based on campus if provided
-    let eligibleAttendees = event.attendees.filter(
-      (attendee) => !attendee.raffleIsRemoved && !attendee.raffleIsWinner
+    // Filter eligible attendees
+    const eligibleAttendees = event.attendees.filter(
+      (attendee) =>
+        !attendee.raffleIsWinner &&
+        !attendee.raffleIsRemoved &&
+        attendee.isAttended
     );
 
-    if (campus) {
-      eligibleAttendees = eligibleAttendees.filter(
-        (attendee) => attendee.campus === campus
-      );
-    }
+    const winners = event.attendees.filter(
+      (attendee) => attendee.raffleIsWinner
+    );
 
-    if (eligibleAttendees.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "No eligible attendees for raffle" });
-    }
-
-    // Randomly select one attendee
-    const winnerIndex = Math.floor(Math.random() * eligibleAttendees.length);
-    const winner = eligibleAttendees[winnerIndex];
-
-    // Update the winner's status
-    winner.raffleIsWinner = true;
-    await event.save();
-
-    res.status(200).json({
-      message: "Raffle winner selected successfully",
-      winner: {
-        id_number: winner.id_number,
-        name: winner.name,
-        campus: winner.campus,
-      },
-    });
+    res.status(200).json({ attendees: eligibleAttendees, winners: winners });
   } catch (error) {
-    console.error("Error selecting raffle winner:", error);
+    console.error("Error fetching eligible attendees:", error);
     res
       .status(500)
-      .json({ message: "An error occurred while selecting a raffle winner" });
+      .json({ message: "An error occurred while fetching attendees" });
   }
 });
+
+// Mark Attendee as Raffle Winner
+router.post(
+  "/raffle/winner/:eventId/:attendeeId",
+  authenticateToken,
+  async (req, res) => {
+    const { eventId, attendeeId } = req.params;
+
+    try {
+      const event_id = new ObjectId(eventId);
+      const event = await Events.findOne({ eventId: event_id });
+
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      const attendee = event.attendees.find(
+        (att) => att.id_number === attendeeId
+      );
+
+      if (!attendee) {
+        return res
+          .status(404)
+          .json({ message: "Attendee not found in this event" });
+      }
+
+      if (attendee.raffleIsWinner) {
+        return res
+          .status(400)
+          .json({ message: "Attendee is already a winner" });
+      }
+
+      attendee.raffleIsWinner = true;
+      await event.save();
+
+      res.status(200).json({
+        message: "Attendee marked as raffle winner successfully",
+        attendee: {
+          id_number: attendee.id_number,
+          name: attendee.name,
+          campus: attendee.campus,
+        },
+      });
+    } catch (error) {
+      console.error("Error marking attendee as raffle winner:", error);
+      res.status(500).json({
+        message: "An error occurred while marking the attendee as winner",
+      });
+    }
+  }
+);
 
 // Remove Attendee from Raffle
 router.put(
