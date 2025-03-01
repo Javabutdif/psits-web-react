@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { showToast } from "../../utils/alertHelper";
 
 const RafflePicker = ({
@@ -19,6 +19,45 @@ const RafflePicker = ({
     return participantArray[randomIndex];
   };
 
+  // Function to trigger confetti
+  const triggerConfetti = () => {
+    const confettiSettings = {
+      particleCount: 150,
+      spread: 180,
+      origin: { y: 0.6 },
+      colors: [
+        "#FFD700",
+        "#FFA500",
+        "#ff0000",
+        "#00ff00",
+        "#0000ff",
+        "#800080",
+      ],
+    };
+
+    if (typeof window.confetti === "function") {
+      // kanan
+      window.confetti({
+        ...confettiSettings,
+        origin: { x: 0.2, y: 0.5 },
+      });
+
+      // kaliwa
+      window.confetti({
+        ...confettiSettings,
+        origin: { x: 0.8, y: 0.5 },
+      });
+
+      // centerrr
+      setTimeout(() => {
+        window.confetti({
+          ...confettiSettings,
+          origin: { x: 0.5, y: 0.5 },
+        });
+      }, 500);
+    }
+  };
+
   // Starts raffle (animation and RNG)
   const startRaffle = () => {
     if (participants.length < 2) {
@@ -29,7 +68,6 @@ const RafflePicker = ({
       return;
     }
 
-    // Reset previous state
     setWinner(null);
     setIsRaffling(true);
     setCountdown(5);
@@ -86,6 +124,8 @@ const RafflePicker = ({
       // Show winner modal after a short delay
       setTimeout(() => {
         setShowWinnerModal(true);
+        // Trigger confetti when winner is displayed
+        triggerConfetti();
       }, 1000);
     }, 6000); // Extended animation time to match 5 second countdown
   };
@@ -94,6 +134,23 @@ const RafflePicker = ({
   const closeWinnerModal = () => {
     setShowWinnerModal(false);
   };
+
+  // Load confetti library
+  useEffect(() => {
+    // Checks if we have con petty loaded already
+    if (typeof window.confetti !== "function") {
+      const script = document.createElement("script");
+      script.src =
+        "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
+      script.async = true;
+
+      document.body.appendChild(script);
+
+      return () => {
+        document.body.removeChild(script);
+      };
+    }
+  }, []);
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -161,10 +218,30 @@ const RafflePicker = ({
       {showWinnerModal && winner && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-xl shadow-2xl max-w-md w-full border border-gray-700 winner-modal-animation">
-            <div className="p-5 border-b border-gray-700">
-              <h3 className="text-2xl font-bold text-center text-white">
+            {/* Modal header with close button */}
+            <div className="p-5 border-b border-gray-700 flex justify-between items-center">
+              <h3 className="text-2xl font-bold text-white">
                 Winner Announced!
               </h3>
+              <button
+                onClick={closeWinnerModal}
+                className="text-gray-400 hover:text-white transition-colors focus:outline-none"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
 
             <div className="p-6 flex flex-col items-center">
@@ -208,6 +285,14 @@ const RafflePicker = ({
                   Remove from Raffle
                 </button>
               </div>
+
+              {/* Close button at the bottom */}
+              <button
+                className="mt-4 w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-md font-medium transition-colors"
+                onClick={closeWinnerModal}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
