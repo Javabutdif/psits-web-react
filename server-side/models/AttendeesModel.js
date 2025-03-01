@@ -6,6 +6,7 @@ const attendeeSchema = new Schema({
   id_number: {
     type: String,
     required: true,
+    unique: true, // does not work since attendee is not of top-level collection
   },
   name: {
     type: String,

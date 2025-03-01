@@ -211,16 +211,19 @@ export const addAttendee = async (formData) => {
         },
       }
     );
+
     showToast(
       response.status === 200 ? "success" : "error",
       response.data.message
     );
-    return response.status === 200 ? true : false;
+    return response.status === 200;
   } catch (error) {
-    console.error("Error selecting raffle winner:", error);
-    return error;
+    console.error("Error adding attendee:", error);
+    showToast("error", error.response?.data?.message || "Something went wrong");
+    return false;
   }
 };
+
 ///get-statistics/:eventId
 export const getStatistic = async (eventId) => {
   try {

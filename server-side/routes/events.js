@@ -297,6 +297,14 @@ router.post("/add-attendee", authenticateToken, async (req, res) => {
       return res.status(400).json({ message: "Invalid campus" });
     }
 
+    // Check if id_number already exists
+    const existingAttendee = event.attendees.find(
+      (attendee) => attendee.id_number === id_number
+    );
+    if (existingAttendee) {
+      return res.status(400).json({ message: "Attendee already registered" });
+    }
+
     campusData.unitsSold += 1;
     campusData.totalRevenue += Number.parseInt(shirt_price);
 
