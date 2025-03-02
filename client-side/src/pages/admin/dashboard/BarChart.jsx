@@ -114,7 +114,7 @@ const BarChart = () => {
     },
     scales: {
       x: {
-        title: {
+        title: { 
           display: true,
           text: "Products",
         },
@@ -130,7 +130,7 @@ const BarChart = () => {
 
   return (
     <div className="text-center">
-      <h2 className="text-sm sm:text-xl text-gray-600">
+      <h2 className="text-sm sm:text-xl text-[#074873]">
         Daily Sales Distribution
       </h2>
       {data.products.length > 0 ? (

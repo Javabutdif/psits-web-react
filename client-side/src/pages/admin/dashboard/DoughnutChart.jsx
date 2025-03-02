@@ -55,7 +55,7 @@ const DoughnutChart = () => {
         callbacks: {
           label: function (context) {
             let label = context.label || "";
-            if (context.parsed) {
+            if (context.parsed) { 
               label += `: ${context.parsed}`;
             }
             return label;
@@ -67,7 +67,7 @@ const DoughnutChart = () => {
 
   return (
     <div className="text-center">
-      <h2 className="text-xl sm:text-xl text-gray-600">
+      <h2 className="text-xl sm:text-xl text-[#074873]">
         Student Count per Course
       </h2>
       <Doughnut data={chartData} options={options} />
