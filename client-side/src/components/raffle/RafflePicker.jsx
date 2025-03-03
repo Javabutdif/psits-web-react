@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { showToast } from "../../utils/alertHelper";
+import React, { useEffect, useRef, useState } from "react";
 
 const RafflePicker = ({
   participants = [],
@@ -11,7 +12,10 @@ const RafflePicker = ({
   const [displayedParticipants, setDisplayedParticipants] = useState([]);
   const [countdown, setCountdown] = useState(null);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [divSize, setDivSize] = useState({ width: 0, height: 0 });
   const spinnerRef = useRef(null);
+  
 
   const selectRandomWinner = (participantArray) => {
     if (!participantArray || participantArray.length === 0) return null;
@@ -60,30 +64,71 @@ const RafflePicker = ({
 
   // Starts raffle (animation and RNG)
   const startRaffle = () => {
-    if (participants.length < 2) {
-      showToast(
-        "error",
-        "You need at least 2 participants to start the raffle!"
-      );
-      return;
-    }
-
-    setWinner(null);
+        if (participants.length < 2) {
+          showToast(
+            "error",
+            "You need at least 2 participants to start the raffle!"
+          );
+          return;
+        }
     setIsRaffling(true);
-    setCountdown(5);
+    setWinner(null);
     setShowWinnerModal(false);
-
-    // Start with showing random participants during countdown
+    // setShowConfetti(false); // Reset confetti before picking
+  
+    let iterations = 0;
+  
+    // Function to get unique random participants
+    const getUniqueRandomParticipants = (count, exclude = null) => {
+      const availableParticipants = participants.filter(p => p !== exclude);
+      const shuffled = [...availableParticipants].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    };
+  
+    // Start shuffling participants with random movement
     const shuffleInterval = setInterval(() => {
-      // Show random participants from the list during animation
-      const randomSelection = [];
-      for (let i = 0; i < 10; i++) {
-        const randomIndex = Math.floor(Math.random() * participants.length);
-        randomSelection.push(participants[randomIndex]);
+      const buffer = 80;
+      const randomX =
+        Math.random() * (divSize.width - buffer * 2) - (divSize.width / 2 - buffer);
+      const randomY =
+        Math.random() * (divSize.height - buffer * 3) - (divSize.height / 2 - buffer);
+  
+      setPosition({ x: randomX, y: randomY });
+      setDisplayedParticipants(getUniqueRandomParticipants(1));
+  
+      iterations++;
+  
+      // Stop after 100 iterations (like pickWinner)
+      if (iterations > 100) {
+        clearInterval(shuffleInterval);
+  
+        // Select a true random winner
+        const selectedWinner = selectRandomWinner(participants);
+  
+        // Get 9 unique random participants excluding the winner
+        let finalDisplayed = getUniqueRandomParticipants(0, selectedWinner);
+  
+        // Insert the winner in the center (index 4)
+        finalDisplayed.splice(4, 0, selectedWinner);
+        setDisplayedParticipants(finalDisplayed);
+        setWinner(selectedWinner);
+        setIsRaffling(false);
+        // setShowConfetti(true); // 🎉 Trigger confetti!
+  
+        // Apply highlight animation to the winner
+        if (spinnerRef.current) {
+          const items = spinnerRef.current.querySelectorAll(".participant-item");
+          if (items[4]) items[4].classList.add("winner-glow");
+        }
+  
+        // Show winner modal after a short delay
+        setTimeout(() => {
+          setShowWinnerModal(true);
+          triggerConfetti();
+        }, 1000);
       }
-      setDisplayedParticipants(randomSelection);
-    }, 150);
-
+    }, 90); // Faster shuffle speed for smoother effect
+  
     // Handle countdown
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
@@ -94,42 +139,8 @@ const RafflePicker = ({
         return prev - 1;
       });
     }, 1000);
-
-    setTimeout(() => {
-      clearInterval(shuffleInterval);
-
-      // Get the true random winner
-      const selectedWinner = selectRandomWinner(participants);
-
-      // Show final animation with the winner
-      const finalDisplayed = [];
-      for (let i = 0; i < 9; i++) {
-        const randomIndex = Math.floor(Math.random() * participants.length);
-        finalDisplayed.push(participants[randomIndex]);
-      }
-      // Put the winner in the center
-      finalDisplayed.splice(4, 0, selectedWinner);
-      setDisplayedParticipants(finalDisplayed);
-
-      // Set the winner state
-      setWinner(selectedWinner);
-      setIsRaffling(false);
-
-      // Apply highlight animation to the winner
-      if (spinnerRef.current) {
-        const items = spinnerRef.current.querySelectorAll(".participant-item");
-        items[4].classList.add("winner-glow");
-      }
-
-      // Show winner modal after a short delay
-      setTimeout(() => {
-        setShowWinnerModal(true);
-        // Trigger confetti when winner is displayed
-        triggerConfetti();
-      }, 1000);
-    }, 6000); // Extended animation time to match 5 second countdown
   };
-
+  
   // Modal close function
   const closeWinnerModal = () => {
     setShowWinnerModal(false);
@@ -154,10 +165,10 @@ const RafflePicker = ({
 
   return (
     <div className="w-full flex flex-col items-center">
-      <h2 className="text-2xl font-bold mb-6 text-center">Raffle Draw</h2>
+      {/* <h2 className="text-2xl font-bold mb-6 text-center">Raffle Draw</h2> */}
 
       {/* Raffle visualization */}
-      <div className="w-full max-w-xl relative">
+      <div className="w-full  relative ">
         {/* Countdown overlay */}
         {countdown !== null && (
           <div className="absolute inset-0 flex items-center justify-center z-20 text-6xl font-bold text-white">
@@ -168,52 +179,72 @@ const RafflePicker = ({
         {/* Raffle spinner */}
         <div
           ref={spinnerRef}
-          className="grid grid-cols-3 md:grid-cols-5 gap-2 relative z-10"
+          className="relative w-[80vw] h-[80vw] sm:w-[60vw] sm:h-[60vw] md:w-[50vw] md:h-[50vw] lg:w-[35vw] lg:h-[35vw] xl:w-[35vw] xl:h-[35vw]  mb-5 mx-auto rounded-full border-white/30 backdrop-blur-lg flex items-center justify-center overflow-hidden animate-spinGlow"
+          style={{
+            background: `radial-gradient(circle at 50% 50%, 
+              rgba(180, 230, 255, 0.3) 40%, 
+              rgba(80, 180, 255, 0.25) 60%, 
+              rgba(22, 130, 200, 0.3) 80%, 
+              rgba(10, 100, 160, 0.4) 100%)`
+          }}
         >
-          {displayedParticipants.map((participant, index) => (
-            <div
-              key={index}
-              className={`participant-item bg-gradient-to-br ${
-                winner && participant === winner
-                  ? "from-yellow-600 to-amber-900"
-                  : index % 2 === 0
-                  ? "from-blue-800 to-blue-900"
-                  : "from-indigo-800 to-purple-900"
-              } rounded-lg p-3 aspect-square flex flex-col items-center justify-center text-white shadow-lg transition-all duration-300 ${
-                isRaffling ? "animate-pulse" : ""
-              }`}
-            >
-              <div className="font-medium text-sm text-center truncate w-full">
-                {participant?.name || "Participant"}
-              </div>
-              {participant?.campus && (
-                <div className="text-xs opacity-80 mt-1 text-center truncate w-full">
-                  {participant.campus}
-                </div>
-              )}
-            </div>
-          ))}
+          {/* line moving in the circle */}
+            {isRaffling && (
+          <motion.div
+            className="absolute w-full h-full border-[10px] border-transparent border-t-primary border-r-navy rounded-full"
+            animate={{ rotate: 360, borderWidth: [4] }}
+            transition={{ duration: 0.5, ease: "linear", repeat: Infinity }}
+          />
+        )}
+
+
+ 				{/* KANI KAY MAO NING ANIMATION WHILE PICKING INSIDE SA CIRCLE */}
+         <AnimatePresence>
+          {displayedParticipants && displayedParticipants.length > 0 && (
+            displayedParticipants.map((participant, index) => (
+              <motion.div
+                key={participant.name} // Unique key
+                className="absolute text-2xl md:text-2xl lg:text-4xl font-bold text-gray-900"
+                initial={{ scale: 0, opacity: 0, x: participant.x, y: participant.y }}
+                animate={{
+                  scale: [1, 1.3, 0.9, 1.1, 1],
+                  opacity: 1,
+                  x: winner ? 0 : position.x,
+                  y: winner ? 0 : position.y,
+                }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              >
+                {participant.name} {/* Display each participant's name */}
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
+
+
         </div>
       </div>
 
       {/* Controls */}
-      <button
-        onClick={startRaffle}
-        disabled={isRaffling}
-        className={`mt-6 px-6 py-3 text-lg font-bold rounded-md shadow-lg transition-all ${
-          isRaffling
-            ? "bg-gray-600 cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700 active:transform active:scale-95"
-        } text-white`}
-      >
-        {isRaffling ? "Selecting..." : "Draw Winner"}
-      </button>
-
-      {/* Participant counter */}
-      <div className="mt-4 text-sm text-gray-400">
-        {participants.length} participants in this raffle
+      <div className="flex flex-col justify-center items-center ">
+          <div className="flex justify-center items-center ">
+          <button
+            onClick={startRaffle}
+            disabled={isRaffling}
+            className={`mt-6 px-6 py-3 text-lg font-bold  rounded-md shadow-lg transition-all ${
+              isRaffling
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700 active:transform active:scale-95"
+            } text-white`}
+          >
+            {isRaffling ? "Selecting..." : "Draw Winner"}
+          </button>
+          </div>
+          {/* Participant counter */}
+          <div className="mt-4 text-sm text-gray-400  text-center">
+            {participants.length} participants in this raffle
+          </div>
       </div>
-
       {/* Winner Modal */}
       {showWinnerModal && winner && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
@@ -233,7 +264,7 @@ const RafflePicker = ({
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                >
+                > 
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -297,8 +328,10 @@ const RafflePicker = ({
           </div>
         </div>
       )}
+
     </div>
+   
   );
 };
-
+ 
 export default RafflePicker;

@@ -17,7 +17,7 @@ const EventRaffle = () => {
   const [currentParticipants, setCurrentParticipants] = useState([]); // participants based on selectedCampus
   const [winners, setWinners] = useState([]); // all winners
   const [currentWinners, setCurrentWinners] = useState([]); // winners based on selectedCampus
-
+ 
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -102,7 +102,7 @@ const EventRaffle = () => {
   }, [selectedCampus, winners]);
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-4">
+    <div className="flex flex-col items-center min-h-screen ">
       {/* Raffle and Extra Content */}
       <div className="flex flex-col sm:flex-col md:flex-row justify-center md:justify-around gap-6 w-full">
         {/* Raffle Picker */}
@@ -115,10 +115,13 @@ const EventRaffle = () => {
         </div>
 
         {/* Winners Content */}
-        <div className="w-full sm:w-1/2 md:w-1/3 p-4 flex flex-col rounded-md shadow-lg justify-center items-center">
-          <div className="w-full h-40 md:h-auto rounded-md flex flex-col gap-1 items-center justify-center overflow-y-auto max-h-64">
+        <div className="w-full bg-[#074873] h-[70vh] sm:w-full md:w-1/3 p-4 flex flex-col rounded-md shadow-lg mt-5 items-center">
+        <div>
+          <h1 className="text-[#FFD700] text-2xl mb-5 text-center">RAFFLE WINNERS</h1>
+        </div>
+          <div className="w-full md:h-auto rounded-md flex flex-col items-center justify-center overflow-y-scroll max-h-[60vh]">
             {currentWinners.map((winner, index) => (
-              <div key={index} className="text-center p-2 bg-white w-full">
+              <div key={index}  className="text-center text-white p-2 font-bold w-full rounded-md text-sm sm:text-sm md:text-md lg:text-lg">
                 {winner.name}
               </div>
             ))}
@@ -127,7 +130,7 @@ const EventRaffle = () => {
       </div>
 
       {/* Tabs Section */}
-      <div className="w-full md:w-1/3 flex justify-center mt-8">
+      <div className="w-full  md:w-1/3 flex justify-center mt-8">
         <Tabs
           selectedCampus={selectedCampus}
           setSelectedCampus={setSelectedCampus}

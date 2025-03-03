@@ -9,12 +9,12 @@ const Tabs = ({ selectedCampus, setSelectedCampus }) => {
   };
 
   return (
-    <div className="mb-5 flex gap-2 justify-center items-center rounded-lg bg-primary text-white p-2 shadow-lg">
+    <div className="mb-5 flex gap-2 justify-center items-center rounded-lg bg-primary 2xl:fixed 2xl:bottom-0 text-white p-2 shadow-lg">
       {campusList.map((campus) => {
         // Remove 'UC-' from the campus name for display
         const displayCampus = campus.replace("UC-", "");
 
-        return (
+        return ( 
           <motion.button
             key={campus}
             className={`px-4 py-2 rounded-full transition-transform duration-300 ease-in-out transform ${
