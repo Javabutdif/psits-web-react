@@ -51,32 +51,27 @@ function Events() {
                 </button>
               </Link>
 
-              {admin.campus === "UC-Main" && (
-                <>
-                  <Link
-                    to={`/admin/statistics/${event.eventId}`}
-                    className="h-full"
-                  >
-                    <button
-                      className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
-                      tabIndex="1"
-                    >
-                      <MdOutlineQueryStats />
-                    </button>
-                  </Link>
+              <Link
+                to={`/admin/statistics/${event.eventId}`}
+                className="h-full"
+              >
+                <button
+                  className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
+                  tabIndex="1"
+                >
+                  <MdOutlineQueryStats />
+                </button>
+              </Link>
 
-                  <Link
-                    to={`/admin/raffle/${event.eventId}`}
-                    className="h-full"
+              {admin.campus === "UC-Main" && (
+                <Link to={`/admin/raffle/${event.eventId}`} className="h-full">
+                  <button
+                    className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
+                    tabIndex="2"
                   >
-                    <button
-                      className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
-                      tabIndex="2"
-                    >
-                      <MdOutlineCardGiftcard />
-                    </button>
-                  </Link>
-                </>
+                    <MdOutlineCardGiftcard />
+                  </button>
+                </Link>
               )}
             </div>
           </div>
