@@ -94,14 +94,12 @@ const Login = () => {
       if (getAttemptAuthentication() < 3 && getTimeout() === null) {
         const data = await login(formData);
 
-        if (data.role === "Admin" || data.role === "Student") {
+        if (data.role === "Admin" || data.role === "Student" ) {
           resetAttemptAuthentication();
           if (data.campus !== "UC-Main" && data.role === "Admin") {
             navigate(`/${data.role.toLowerCase()}/events`);
-            window.location.reload();
           } else {
             navigate(`/${data.role.toLowerCase()}/dashboard`);
-            window.location.reload();
           }
         } else {
           attemptAuthentication();

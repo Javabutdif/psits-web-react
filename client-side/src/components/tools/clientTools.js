@@ -57,11 +57,12 @@ export const higherOfficers = () => {
   const user = getInformationData();
 
   return (
-    user.position === "President" ||
-    user.position === "Vice-President Internal" ||
-    user.position === "Vice-President External" ||
-    user.position === "Secretary" ||
-    user.position === "Head Developer"
+    (user.position === "President" ||
+      user.position === "Vice-President Internal" ||
+      user.position === "Vice-President External" ||
+      user.position === "Secretary" ||
+      user.position === "Head Developer") &&
+    user.campus === "UC-Main"
   );
 };
 
@@ -83,5 +84,6 @@ export const restrictedComponentOtherCampus = () => {
     "attendance",
     "addAttendee",
     "qrCodeScanner",
+    "profile",
   ];
 };

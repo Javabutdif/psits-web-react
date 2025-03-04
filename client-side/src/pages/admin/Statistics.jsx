@@ -27,6 +27,21 @@ ChartJS.register(
 const Statistics = () => {
   const { eventId } = useParams();
   const [datas, setData] = useState([]);
+
+  const chartColors = {
+    backgroundColor: [
+      "rgba(0, 35, 102, 0.5)", // UC-Main - Royal Blue
+      "rgba(128, 0, 128, 0.5)", // UC-LM - Purple
+      "rgba(0, 128, 0, 0.5)", // UC-Banilad - Green
+      "rgba(255, 215, 0, 0.5)", // UC-PT - Golden Yellow
+    ],
+    borderColor: [
+      "rgba(0, 35, 102, 1)", // UC-Main - Royal Blue
+      "rgba(128, 0, 128, 1)", // UC-LM - Purple
+      "rgba(0, 128, 0, 1)", // UC-Banilad - Green
+      "rgba(255, 215, 0, 1)", // UC-PT - Golden Yellow
+    ],
+  };
   const handleFetchData = async () => {
     const response = await getStatistic(eventId);
 
@@ -61,7 +76,6 @@ const Statistics = () => {
       },
     ],
   };
-
   const campusData = {
     labels: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"],
     datasets: [
@@ -73,7 +87,18 @@ const Statistics = () => {
           datas.campuses?.LM || 0,
           datas.campuses?.PT || 0,
         ],
-        backgroundColor: "rgba(137, 121, 255, 1)",
+        backgroundColor: [
+          chartColors.backgroundColor[0],
+          chartColors.backgroundColor[2],
+          chartColors.backgroundColor[1],
+          chartColors.backgroundColor[3],
+        ],
+        borderColor: [
+          chartColors.borderColor[0],
+          chartColors.borderColor[2],
+          chartColors.borderColor[1],
+          chartColors.borderColor[3],
+        ],
         borderWidth: 1,
       },
     ],
@@ -83,7 +108,7 @@ const Statistics = () => {
     labels: ["IT Students", "CS Students"],
     datasets: [
       {
-        data: [datas.courses?.BSITS || 0, datas.courses?.BSCS || 0],
+        data: [datas.courses?.BSIT || 0, datas.courses?.BSCS || 0],
         backgroundColor: ["rgba(137, 121, 255, 1)", "rgba(255, 146, 138, 1)"],
         borderColor: ["rgb(255, 255, 255)", "rgb(255, 255, 255)"],
         borderWidth: 1,
@@ -205,7 +230,13 @@ const Statistics = () => {
           datas?.campusesAttended?.LM,
           datas?.campusesAttended?.PT,
         ],
-        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+        backgroundColor: [
+          chartColors.backgroundColor[0],
+
+          chartColors.backgroundColor[2],
+          chartColors.backgroundColor[1],
+          chartColors.backgroundColor[3],
+        ],
       },
     ],
   };
@@ -218,57 +249,97 @@ const Statistics = () => {
         </button>
       </Link> */}
       <h1 className="h-auto text-3xl font-bold mb-2 text-center">
-        Population Statistics
+        Students Registered
       </h1>
 
-          {/* DISTRIBUTION */}
+      {/* DISTRIBUTION */}
       <div className="mt-5 mb-5 flex flex-col lg:flex-row gap-8 items-center justify-between">
         {/* Student Year Distribution */}
         <div className="w-full lg:w-1/2 min-h-[25vh] bg-[#F5F5F5] p-4 shadow-md rounded-lg">
           <Doughnut data={studentYearsData} options={chartOption2} />
         </div>
-        
+
         {/* Course Distribution */}
         <div className="w-full lg:w-1/2 min-h-[25vh] bg-[#F5F5F5] p-4 shadow-md rounded-lg">
           <Doughnut data={courseData} options={chartOption2} />
         </div>
       </div>
 
-
-        <div className="h-[30vh] flex mt-10 justify-center items-center">
-            {/* Campus-wise Distribution */}
-            <div className="flex w-full h-[30vh] justify-center items-center bg-[#F5F5F5] p-4 shadow-md rounded-lg">
-            <Bar data={campusData} options={chartOption1} />
-          </div> 
+      <div className="h-[30vh] flex mt-10 justify-center items-center">
+        {/* Campus-wise Distribution */}
+        <div className="flex w-full h-[30vh] justify-center items-center bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+          <Bar data={campusData} options={chartOption1} />
         </div>
+      </div>
 
       {/* Charts Section */}
-      <div className="bg-white p-5 mt-20 flex-wrap lg:flex-nowrap border-2 border-[rgba(7,72,115,0.1)] lg:gap-8 md:gap-8 items-start rounded-lg justify-center">     
-      {/* Total Numbers Section */}
-        <h2 className="text-xl font-bold text-center mb-4">Campus Revenue & Sales</h2>
+      <div className="bg-white p-5 mt-20 flex-wrap lg:flex-nowrap border-2 border-[rgba(7,72,115,0.1)] lg:gap-8 md:gap-8 items-start rounded-lg justify-center">
+        {/* Total Numbers Section */}
+        <h2 className="text-xl font-bold text-center mb-4">
+          Campus Revenue & Sales
+        </h2>
         <div className="flex flex-wrap lg:flex-nowrap justify-between gap-5 items-center w-full mt-8 mb-10">
-          <div className="lg:w-[260px] w-full bg-white border rounded-lg shadow-lg text-center p-5">
-            <h2 className="mb-3 text-[#074873]">{datas.salesData?.[0]?.campus}</h2>
-            <p>Unit Sold: <span className="font-bold">{datas.salesData?.[0]?.unitsSold}</span></p>
-            <p>Total Revenue: <span className="font-bold">{datas.salesData?.[0]?.totalRevenue}</span></p>
+          <div className="lg:w-[260px] w-full bg-[#002366] text-white border rounded-lg shadow-lg text-center p-5 hover:bg-[#001a4d] transition-colors duration-300">
+            <h2 className="mb-3 ">{datas.salesData?.[0]?.campus}</h2>
+            <p>
+              Unit Sold:{" "}
+              <span className="font-bold">
+                {datas.salesData?.[0]?.unitsSold}
+              </span>
+            </p>
+            <p>
+              Total Revenue:{" "}
+              <span className="font-bold">
+                {datas.salesData?.[0]?.totalRevenue}
+              </span>
+            </p>
           </div>
-          <div className="lg:w-[260px] w-full bg-white border rounded-lg shadow-lg text-center p-5">
-            <h2 className="mb-3 text-[#074873]">{datas.salesData?.[1]?.campus}</h2>
-            <p>Unit Sold: <span className="font-bold">{datas.salesData?.[1]?.unitsSold}</span></p>
-            <p>Total Revenue: <span className="font-bold">{datas.salesData?.[1]?.totalRevenue}</span></p>
+          <div className="lg:w-[260px] w-full bg-[#008000] text-white border rounded-lg shadow-lg text-center p-5 hover:bg-[#006400] transition-colors duration-300">
+            <h2 className="mb-3 ">{datas.salesData?.[1]?.campus}</h2>
+            <p>
+              Unit Sold:{" "}
+              <span className="font-bold">
+                {datas.salesData?.[1]?.unitsSold}
+              </span>
+            </p>
+            <p>
+              Total Revenue:{" "}
+              <span className="font-bold">
+                {datas.salesData?.[1]?.totalRevenue}
+              </span>
+            </p>
           </div>
-          <div className="lg:w-[260px] w-full bg-white border rounded-lg shadow-lg text-center p-5">
-            <h2 className="mb-3 text-[#074873]">{datas.salesData?.[2]?.campus}</h2>
-            <p>Unit Sold: <span className="font-bold">{datas.salesData?.[2]?.unitsSold}</span></p>
-            <p>Total Revenue: <span className="font-bold">{datas.salesData?.[2]?.totalRevenue}</span></p>
+          <div className="lg:w-[260px] w-full bg-[#800080] text-white border rounded-lg shadow-lg text-center p-5 hover:bg-[#660066] transition-colors duration-300">
+            <h2 className="mb-3 ">{datas.salesData?.[2]?.campus}</h2>
+            <p>
+              Unit Sold:{" "}
+              <span className="font-bold">
+                {datas.salesData?.[2]?.unitsSold}
+              </span>
+            </p>
+            <p>
+              Total Revenue:{" "}
+              <span className="font-bold">
+                {datas.salesData?.[2]?.totalRevenue}
+              </span>
+            </p>
           </div>
-          <div className="lg:w-[260px] w-full bg-white border rounded-lg shadow-lg text-center p-5">
-            <h2 className="mb-3 text-[#074873]">{datas.salesData?.[3]?.campus}</h2>
-            <p>Unit Sold: <span className="font-bold">{datas.salesData?.[3]?.unitsSold}</span></p>
-            <p>Total Revenue: <span className="font-bold">{datas.salesData?.[3]?.totalRevenue}</span></p>
+          <div className="lg:w-[260px] w-full bg-[#FFD700] text-white border rounded-lg shadow-lg text-center p-5 hover:bg-[#c2a505] transition-colors duration-300">
+            <h2 className="mb-3 ">{datas.salesData?.[3]?.campus}</h2>
+            <p>
+              Unit Sold:{" "}
+              <span className="font-bold">
+                {datas.salesData?.[3]?.unitsSold}
+              </span>
+            </p>
+            <p>
+              Total Revenue:{" "}
+              <span className="font-bold">
+                {datas.salesData?.[3]?.totalRevenue}
+              </span>
+            </p>
           </div>
         </div>
-
         {/* TOTAL REVENUE, TOTAL ATTENDEES */}
         <div className="mt-5 flex flex-row items-center w-full lg:w-full justify-center gap-5 lg:mt-0">
           <div className="w-[260px] bg-white border rounded-lg shadow-lg text-center p-5">
@@ -276,51 +347,48 @@ const Statistics = () => {
             <h3>{datas.totalRevenue}</h3>
           </div>
           <div className="w-[260px] bg-white border rounded-lg shadow-lg text-center p-5">
-             <h2 className="mb-3 text-[#074873]">Total of Attendees</h2>
+            <h2 className="mb-3 text-[#074873]">Total of Attendees</h2>
             <h3>{datas.totalAttendees}</h3>
           </div>
         </div>
-
       </div>
-      
 
       {/* Campus-wise Breakdown for Years */}
-    <div className="mt-20">
-      <h1 className="text-xl font-bold text-center mb-4">
-        Annual Student Distribution by Campus
-      </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-        {/* UC Campus A */}
-        <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-          <h3 className="text-md font-semibold text-center mb-2">
-            UC-{datas?.yearLevelsByCampus?.[0]?.campus}
-          </h3>
-          <Bar data={campusAYearsData} options={chartOption1} />
+      <div className="mt-20">
+        <h1 className="text-xl font-bold text-center mb-4">
+          Student Attended by Campus
+        </h1>
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+          {/* UC Campus A */}
+          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <h3 className="text-md font-semibold text-center mb-2">
+              UC-{datas?.yearLevelsByCampus?.[0]?.campus}
+            </h3>
+            <Bar data={campusAYearsData} options={chartOption1} />
+          </div>
+          {/* UC Campus B */}
+          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <h3 className="text-md font-semibold text-center mb-2">
+              UC-{datas?.yearLevelsByCampus?.[1]?.campus}
+            </h3>
+            <Bar data={campusBYearsData} options={chartOption1} />
+          </div>
+          {/* UC Campus C */}
+          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <h3 className="text-md font-semibold text-center mb-2">
+              UC-{datas?.yearLevelsByCampus?.[2]?.campus}
+            </h3>
+            <Bar data={campusCYearsData} options={chartOption1} />
+          </div>
+          {/* UC Campus D */}
+          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+            <h3 className="text-md font-semibold text-center mb-2">
+              UC-{datas?.yearLevelsByCampus?.[3]?.campus}
+            </h3>
+            <Bar data={campusDYearsData} options={chartOption1} />
+          </div>
         </div>
-        {/* UC Campus B */} 
-        <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-          <h3 className="text-md font-semibold text-center mb-2">
-            UC-{datas?.yearLevelsByCampus?.[1]?.campus}
-          </h3>
-          <Bar data={campusBYearsData} options={chartOption1} />
-        </div>
-        {/* UC Campus C */}
-        <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-          <h3 className="text-md font-semibold text-center mb-2">
-            UC-{datas?.yearLevelsByCampus?.[2]?.campus}
-          </h3>
-          <Bar data={campusCYearsData} options={chartOption1} />
-        </div>
-        {/* UC Campus D */}
-        <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-          <h3 className="text-md font-semibold text-center mb-2">
-            UC-{datas?.yearLevelsByCampus?.[3]?.campus}
-          </h3>
-          <Bar data={campusDYearsData} options={chartOption1} />
       </div>
-    </div>
-  </div>
-
 
       {/* Attended Students Section */}
       <div className="mt-20 mb-5">

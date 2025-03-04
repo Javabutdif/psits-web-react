@@ -337,11 +337,15 @@ const AddAttendeeForm = (merchId) => {
                     <FormSelect
                       label="Campus"
                       name="campus"
-                      value={user.campus}
+                      value={
+                        user.campus !== "UC-Main"
+                          ? user.campus
+                          : formData.campus
+                      }
                       onChange={handleChange}
                       options={campusOptions}
                       styles="flex-1"
-                      disabled
+                      disabled={user.campus !== "UC-Main"}
                     />
                     <FormSelect
                       label="Course"
