@@ -98,8 +98,10 @@ const Login = () => {
           resetAttemptAuthentication();
           if (data.campus !== "UC-Main" && data.role === "Admin") {
             navigate(`/${data.role.toLowerCase()}/events`);
+            window.location.reload();
           } else {
             navigate(`/${data.role.toLowerCase()}/dashboard`);
+            window.location.reload();
           }
         } else {
           attemptAuthentication();

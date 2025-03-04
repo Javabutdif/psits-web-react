@@ -16,9 +16,11 @@ export const login = async (formData) => {
     );
 
     showToast("success", response.data.message);
-
+    console.log(response.data);
     sessionStorage.setItem("Token", response.data.token);
-    return sessionStorage.getItem("Token") !== "" ? { role: response.data.role, campus: response.data.campus } : null;
+    return sessionStorage.getItem("Token") !== ""
+      ? { role: response.data.role, campus: response.data.campus }
+      : null;
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");

@@ -100,10 +100,6 @@ router.post("/login", loginLimiter, async (req, res) => {
       expiresIn: role === "Admin" ? "2h" : "10m",
     });
 
-    console.log(
-      `${id_number} - ${user.name} signed in successfully on ${currentDate}`
-    );
-
     // Create a log only if the user is an Admin
     if (role === "Admin") {
       const log = new Log({
@@ -113,7 +109,6 @@ router.post("/login", loginLimiter, async (req, res) => {
       });
 
       await log.save();
-      console.log("Admin login logged successfully!");
     }
 
     return res.json({ message: "Signed in successfully", role, token, campus });

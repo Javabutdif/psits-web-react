@@ -17,7 +17,6 @@ export const membership = async () => {
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
-      window.location.reload();
       return false;
     } else {
       console.log("error", "An error occurred");
@@ -140,7 +139,6 @@ export const allMembers = async () => {
   } catch (error) {
     if (error.response && error.response.data) {
       console.log("error", error.response.data.message || "An error occurred");
-      window.location.reload();
     } else {
       console.log("error", "An error occurred");
     }
