@@ -17,6 +17,7 @@ import AttendanceSettings from "./AttendanceSettings";
 import { getInformationData } from "../../../authentication/Authentication";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../../enums/commonEnums";
+import { IoArrowBack } from "react-icons/io5";
 
 const Attendance = (props) => {
   const navigate = useNavigate();
@@ -229,7 +230,7 @@ const Attendance = (props) => {
       label: "Action",
       cell: (row) => (
         <ButtonsComponent>
-          {eventDate.toDateString() === currentDate.toDateString() ? (
+          {eventDate.toDateString() <= currentDate.toDateString() ? (
             <FormButton
               type="button"
               text="Attendance"
@@ -242,16 +243,6 @@ const Attendance = (props) => {
             />
           ) : (
             <>
-              <FormButton
-                type="button"
-                text="Disabled"
-                icon={<i className="fas fa-ban"></i>} // Disabled icon
-                styles="px-4 bg-gray-500 text-[#DFF6FF] hover:bg-gray-600 active:bg-gray-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center gap-2"
-                textClass="text-blue-100" // Elegant text color
-                whileHover={{ scale: 1.02, opacity: 0.95 }}
-                whileTap={{ scale: 0.98, opacity: 0.9 }}
-                disabled
-              />
               <FormButton
                 type="button"
                 text="Remove"
@@ -307,12 +298,24 @@ const Attendance = (props) => {
     });
     setFilteredData(filtered);
   }, [searchQuery, data]);
+  const handleNavigate = (pageRoute) => () => {
+    navigate(pageRoute);
+  };
 
   return (
     // Figuring out how to do Pagination..? Still Figuring Things Out
     //TODO: Figure out how to create the layout of the specific_event tab - done?
     <div className="container mx-auto p-4 ">
       <div className="flex flex-col gap-5 p-2 md:flex-col sm:flex-col">
+        <div className="flex justify-start">
+          <button
+            onClick={handleNavigate(-1)}
+            className="flex items-center gap-2"
+          >
+            <IoArrowBack size={20} />
+            Back
+          </button>
+        </div>
         <div className=" shadow-sm rounded-sm border bg-white p-2 space-y-4">
           <motion.div
             className="flex flex-col sm:flex-row justify-between items-center product-detail p-3 sm:p-2 mx-auto"

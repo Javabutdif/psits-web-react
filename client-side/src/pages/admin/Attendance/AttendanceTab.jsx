@@ -60,20 +60,21 @@ const AttendanceTabs = ({
               </div>
 
               <div className="flex flex-row justify-between items-center gap-2 container">
-                {/* Left Section */}
                 <div>
                   <ButtonsComponent>
                     <div className="flex flex-row items-center gap-2">
-                      <FormButton
-                        type="button"
-                        text="Scan QR"
-                        icon={<i className="fas fa-qrcode text-base"></i>}
-                        onClick={() => navigate("/admin/qrCodeScanner")}
-                        styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
-                        textClass="sm:block hidden text-gray-800"
-                        whileHover={{ scale: 1.01, opacity: 0.95 }}
-                        whileTap={{ scale: 0.98, opacity: 0.9 }}
-                      />
+                      {user.campus === "UC-Main" && (
+                        <FormButton
+                          type="button"
+                          text="Scan QR"
+                          icon={<i className="fas fa-qrcode text-base"></i>}
+                          onClick={() => navigate("/admin/qrCodeScanner")}
+                          styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
+                          textClass="sm:block hidden text-gray-800"
+                          whileHover={{ scale: 1.01, opacity: 0.95 }}
+                          whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        />
+                      )}
                       <FormButton
                         type="button"
                         text="Refresh"
