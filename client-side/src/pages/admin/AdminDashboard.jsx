@@ -16,7 +16,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import OrderTable from "./dashboard/OrderTable";
 import React, { useEffect, useState } from "react";
-import { useQueries } from "@tanstack/react-query";
 
 const AdminDashboard = () => {
   const [counts, setCounts] = useState({
@@ -71,36 +70,38 @@ const AdminDashboard = () => {
     }, 20);
   };
 
-  const queries = useQueries({
-    queries: [
-      { queryKey: ["students"], queryFn: allMembers },
-      { queryKey: ["merchCreated"], queryFn: merchCreated },
-      { queryKey: ["placedOrders"], queryFn: placedOrders },
-      { queryKey: ["pendingOrders"], queryFn: fetchAllPendingCounts },
-    ],
-  });
-
-  // Extracting data and states
-  const studentRes = queries[0].data || 0;
-  const merchCreate = queries[1].data || 0;
-  const placedOrder = queries[2].data || 0;
-  const pendingOrders = queries[3].data || [];
-
-  const isLoading = queries.some((query) => query.isLoading);
-  const isError = queries.some((query) => query.isError);
-
   useEffect(() => {
-    if (!isLoading) {
-      setFinalCounts({
-        student: studentRes,
-        merchandise: merchCreate,
-        order: placedOrder,
-      });
-      setPendingData(pendingOrders);
-      animateCount();
-    }
-  }, [studentRes, merchCreate, placedOrder, pendingOrders, isLoading]);
+    const fetchData = async () => {
+      try {
+        const [studentRes, merchCreate, placedOrder, pendingOrders] =
+          await Promise.all([
+            allMembers(),
+            merchCreated(),
+            placedOrders(),
+            fetchAllPendingCounts(),
+          ]);
 
+        setFinalCounts({
+          student: studentRes || 0,
+          merchandise: merchCreate || 0,
+          order: placedOrder || 0,
+        });
+        setPendingData(pendingOrders || []);
+        console.log(studentRes);
+        animateCount();
+      } catch (error) {
+        setError("Error fetching dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const delayFetch = setInterval(() => {
+      fetchData();
+    }, 1000);
+
+    return () => clearInterval(delayFetch);
+  }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
   return (
     <div className="pt-4 md:pt-8">
       <div className="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-8 text-center lg:flex lg:justify-between">
