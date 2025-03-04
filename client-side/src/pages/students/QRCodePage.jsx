@@ -12,6 +12,7 @@ const QRCodePage = ({ closeView, event }) => {
   const [studentId, setStudentId] = useState();
   const [studentName, setStudentName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [attendanceStatus, setAttendanceStatus] = useState();
   const navigate = useNavigate();
 
   const handleBackdropClick = (e) => {
@@ -32,6 +33,7 @@ const QRCodePage = ({ closeView, event }) => {
     if (attendee) {
       setIsAttendee(true);
       setStudentName(attendee.name);
+      setAttendanceStatus(attendee.isAttended);
     } else {
       setIsAttendee(false);
       setStudentName("");
@@ -63,6 +65,30 @@ const QRCodePage = ({ closeView, event }) => {
     } catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
+  };
+
+  const renderStatusBadge = () => {
+    let bgColor = "bg-gray-200";
+    let textColor = "text-gray-700";
+    let statusText = "Unknown";
+
+    if (attendanceStatus === true) {
+      bgColor = "bg-green-100";
+      textColor = "text-green-800";
+      statusText = "Present";
+    } else if (attendanceStatus === false) {
+      bgColor = "bg-red-100";
+      textColor = "text-red-800";
+      statusText = "Not Recorded / Absent";
+    }
+
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bgColor} ${textColor}`}
+      >
+        {statusText}
+      </span>
+    );
   };
 
   return (
@@ -112,12 +138,18 @@ const QRCodePage = ({ closeView, event }) => {
                 <InfinitySpin width="200" color="#074873" />
               ) : isAttendee ? (
                 <>
-                  <div className="flex justify-center">
+                  <div className="flex flex-col items-center">
                     <QRCode
-                      value={`${window.location.origin}/admin/attendance/${event.eventId}/${event.eventName}/markAsPresent/${studentId}/${studentName}`}
+                      value={`admin/attendance/${event.eventId}/${event.eventName}/markAsPresent/${studentId}/${studentName}`}
                       size={170}
                       fgColor="#074873"
                     />
+                    <div className="mt-4 flex flex-col items-center">
+                      <div className="text-sm text-gray-700 font-medium mb-1">
+                        Attendance Status:
+                      </div>
+                      {renderStatusBadge()}
+                    </div>
                   </div>
                   <p className="text-sm text-gray-500 mt-4">
                     Scan this code to confirm your attendance.

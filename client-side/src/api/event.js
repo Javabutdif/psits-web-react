@@ -1,7 +1,7 @@
+import axios from "axios";
 import "../App.css";
 import { showToast } from "../utils/alertHelper";
 import backendConnection from "./backendApi";
-import axios from "axios";
 
 const token = sessionStorage.getItem("Token");
 
@@ -38,7 +38,7 @@ export const getAttendees = async (id) => {
         },
       }
     );
-    
+
     return {
       data: response.data.data[0],
       attendees: response.data.data[0].attendees,
@@ -106,7 +106,7 @@ export const getEventCheck = async (eventId) => {
         },
       }
     );
-  
+
     return response.data.data;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -142,13 +142,10 @@ export const updateEventSettings = async (formData, eventId) => {
   }
 };
 
-export const raffleWinner = async (eventId, campus) => {
+export const getEligibleRaffleAttendees = async (eventId) => {
   try {
-    const data = campus ? { campus } : {}; // Only include campus if specified
-
-    const response = await axios.post(
+    const response = await axios.get(
       `${backendConnection()}/api/events/raffle/${eventId}`,
-      data,
       {
         headers: {
           "Content-Type": "application/json",
@@ -158,7 +155,26 @@ export const raffleWinner = async (eventId, campus) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error selecting raffle winner:", error);
+    console.error("Error fetching eligible attendees:", error);
+    return error;
+  }
+};
+
+export const raffleWinner = async (eventId, attendeeId) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/events/raffle/winner/${eventId}/${attendeeId}`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error marking attendee as raffle winner:", error);
     return error;
   }
 };
@@ -195,16 +211,19 @@ export const addAttendee = async (formData) => {
         },
       }
     );
+
     showToast(
       response.status === 200 ? "success" : "error",
       response.data.message
     );
-    return response.status === 200 ? true : false;
+    return response.status === 200;
   } catch (error) {
-    console.error("Error selecting raffle winner:", error);
-    return error;
+    console.error("Error adding attendee:", error);
+    showToast("error", error.response?.data?.message || "Something went wrong");
+    return false;
   }
 };
+
 ///get-statistics/:eventId
 export const getStatistic = async (eventId) => {
   try {

@@ -144,7 +144,7 @@ const App = () => {
             element={<PrivateRouteAdmin element={QRCodeScanner} />}
           />
           <Route
-            path="raffle"
+            path="raffle/:eventId"
             element={<PrivateRouteAdmin element={Raffle} />}
           />
 

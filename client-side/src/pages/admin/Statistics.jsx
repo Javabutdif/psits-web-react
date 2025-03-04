@@ -211,122 +211,131 @@ const Statistics = () => {
   };
 
   return (
-    <div>
-      <Link to="/admin/events">
+    <div className="">
+      {/* <Link to="/admin/events">
         <button className="lg:mt-5 sm:mt-3 ml-1 mb-2 text-[#002E48] hover:text-[#4398AC] transition duration-200 rounded-lg">
           <i className="fas fa-arrow-left lg:text-xl"></i>
         </button>
-      </Link>
-      <h1 className="text-3xl font-bold mb-8 text-center">
+      </Link> */}
+      <h1 className="h-auto text-3xl font-bold mb-2 text-center">
         Population Statistics
       </h1>
 
-      {/* Charts Section */}
-      <div className="flex flex-wrap lg:flex-nowrap lg:gap-8 md:gap-8 items-start justify-center">
-        <div className="flex flex-col gap-8 w-full lg:w-[50%]">
-          {/* Student Year Distribution */}
-          <div className="w-full h-[250px] bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-            <Doughnut data={studentYearsData} options={chartOption2} />
-          </div>
-          {/* Campus-wise Distribution */}
-          <div className="w-full h-[280px] bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+          {/* DISTRIBUTION */}
+      <div className="mt-5 mb-5 flex flex-col lg:flex-row gap-8 items-center justify-between">
+        {/* Student Year Distribution */}
+        <div className="w-full lg:w-1/2 min-h-[25vh] bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+          <Doughnut data={studentYearsData} options={chartOption2} />
+        </div>
+        
+        {/* Course Distribution */}
+        <div className="w-full lg:w-1/2 min-h-[25vh] bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+          <Doughnut data={courseData} options={chartOption2} />
+        </div>
+      </div>
+
+
+        <div className="h-[30vh] flex mt-10 justify-center items-center">
+            {/* Campus-wise Distribution */}
+            <div className="flex w-full h-[30vh] justify-center items-center bg-[#F5F5F5] p-4 shadow-md rounded-lg">
             <Bar data={campusData} options={chartOption1} />
+          </div> 
+        </div>
+
+      {/* Charts Section */}
+      <div className="bg-white p-5 mt-20 flex-wrap lg:flex-nowrap border-2 border-[rgba(7,72,115,0.1)] lg:gap-8 md:gap-8 items-start rounded-lg justify-center">     
+      {/* Total Numbers Section */}
+        <h2 className="text-xl font-bold text-center mb-4">Campus Revenue & Sales</h2>
+        <div className="flex flex-wrap lg:flex-nowrap justify-between gap-5 items-center w-full mt-8 mb-10">
+          <div className="lg:w-[260px] w-full bg-white border rounded-lg shadow-lg text-center p-5">
+            <h2 className="mb-3 text-[#074873]">{datas.salesData?.[0]?.campus}</h2>
+            <p>Unit Sold: <span className="font-bold">{datas.salesData?.[0]?.unitsSold}</span></p>
+            <p>Total Revenue: <span className="font-bold">{datas.salesData?.[0]?.totalRevenue}</span></p>
           </div>
-          {/* Course Distribution */}
-          <div className="w-full h-[250px] bg-[#F5F5F5] p-4 shadow-md rounded-lg mb-3">
-            <Doughnut data={courseData} options={chartOption2} />
+          <div className="lg:w-[260px] w-full bg-white border rounded-lg shadow-lg text-center p-5">
+            <h2 className="mb-3 text-[#074873]">{datas.salesData?.[1]?.campus}</h2>
+            <p>Unit Sold: <span className="font-bold">{datas.salesData?.[1]?.unitsSold}</span></p>
+            <p>Total Revenue: <span className="font-bold">{datas.salesData?.[1]?.totalRevenue}</span></p>
+          </div>
+          <div className="lg:w-[260px] w-full bg-white border rounded-lg shadow-lg text-center p-5">
+            <h2 className="mb-3 text-[#074873]">{datas.salesData?.[2]?.campus}</h2>
+            <p>Unit Sold: <span className="font-bold">{datas.salesData?.[2]?.unitsSold}</span></p>
+            <p>Total Revenue: <span className="font-bold">{datas.salesData?.[2]?.totalRevenue}</span></p>
+          </div>
+          <div className="lg:w-[260px] w-full bg-white border rounded-lg shadow-lg text-center p-5">
+            <h2 className="mb-3 text-[#074873]">{datas.salesData?.[3]?.campus}</h2>
+            <p>Unit Sold: <span className="font-bold">{datas.salesData?.[3]?.unitsSold}</span></p>
+            <p>Total Revenue: <span className="font-bold">{datas.salesData?.[3]?.totalRevenue}</span></p>
           </div>
         </div>
 
-        {/* Total Numbers Section */}
-        <div className="flex flex-col items-center w-full lg:w-[30%] gap-4 mt-8 lg:mt-0">
-          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
-            <p className="mb-3">Total number of Attendees</p>
-            <h3>{datas.totalAttendees}</h3>
-          </div>
-          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
-            <p className="mb-3">{datas.salesData?.[0]?.campus}</p>
-            <h4>Unit Sold: {datas.salesData?.[0]?.unitsSold}</h4>
-            <h4>Total Revenue: {datas.salesData?.[0]?.totalRevenue}</h4>
-          </div>
-          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
-            <p className="mb-3">{datas.salesData?.[1]?.campus}</p>
-            <h4>Unit Sold: {datas.salesData?.[1]?.unitsSold}</h4>
-            <h4>Total Revenue: {datas.salesData?.[1]?.totalRevenue}</h4>
-          </div>
-          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
-            <p className="mb-3">{datas.salesData?.[2]?.campus}</p>
-            <h4>Unit Sold: {datas.salesData?.[2]?.unitsSold}</h4>
-            <h4>Total Revenue: {datas.salesData?.[2]?.totalRevenue}</h4>
-          </div>
-          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
-            <p className="mb-3">{datas.salesData?.[3]?.campus}</p>
-            <h4>Unit Sold: {datas.salesData?.[3]?.unitsSold}</h4>
-            <h4>Total Revenue: {datas.salesData?.[3]?.totalRevenue}</h4>
-          </div>
-          <div className="lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
-            <p className="mb-3">Total Revenue</p>
+        {/* TOTAL REVENUE, TOTAL ATTENDEES */}
+        <div className="mt-5 flex flex-row items-center w-full lg:w-full justify-center gap-5 lg:mt-0">
+          <div className="w-[260px] bg-white border rounded-lg shadow-lg text-center p-5">
+            <h2 className="mb-3 text-[#074873]">Total Revenue</h2>
             <h3>{datas.totalRevenue}</h3>
           </div>
-          <div className="2xl:w-[350px] lg:w-[260px] bg-[#D9D9D9] text-center p-5 rounded-lg">
-            <p>We value your feedback.</p>
-            <p className="mb-3">Please enter your evaluation below.</p>
-            <p>[LINK for evaluation]</p>
+          <div className="w-[260px] bg-white border rounded-lg shadow-lg text-center p-5">
+             <h2 className="mb-3 text-[#074873]">Total of Attendees</h2>
+            <h3>{datas.totalAttendees}</h3>
           </div>
         </div>
+
       </div>
+      
 
       {/* Campus-wise Breakdown for Years */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold text-center mb-4">
-          Yearly Distribution per Campus
-        </h2>
-        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-4">
-          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-            <h3 className="text-md font-semibold text-center mb-2">
-              {" "}
-              UC-{datas?.yearLevelsByCampus?.[0]?.campus}
-            </h3>
-            <Bar data={campusAYearsData} options={chartOption1} />
-          </div>
-          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-            <h3 className="text-md font-semibold text-center mb-2">
-              {" "}
-              UC-{datas?.yearLevelsByCampus?.[1]?.campus}
-            </h3>
-            <Bar data={campusBYearsData} options={chartOption1} />
-          </div>
-          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-            <h3 className="text-md font-semibold text-center mb-2">
-              {" "}
-              UC-{datas?.yearLevelsByCampus?.[2]?.campus}
-            </h3>
-            <Bar data={campusCYearsData} options={chartOption1} />
-          </div>
-          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
-            <h3 className="text-md font-semibold text-center mb-2">
-              {" "}
-              UC-{datas?.yearLevelsByCampus?.[3]?.campus}
-            </h3>
-            <Bar data={campusDYearsData} options={chartOption1} />
-          </div>
+    <div className="mt-20">
+      <h1 className="text-xl font-bold text-center mb-4">
+        Annual Student Distribution by Campus
+      </h1>
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        {/* UC Campus A */}
+        <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+          <h3 className="text-md font-semibold text-center mb-2">
+            UC-{datas?.yearLevelsByCampus?.[0]?.campus}
+          </h3>
+          <Bar data={campusAYearsData} options={chartOption1} />
         </div>
+        {/* UC Campus B */} 
+        <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+          <h3 className="text-md font-semibold text-center mb-2">
+            UC-{datas?.yearLevelsByCampus?.[1]?.campus}
+          </h3>
+          <Bar data={campusBYearsData} options={chartOption1} />
+        </div>
+        {/* UC Campus C */}
+        <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+          <h3 className="text-md font-semibold text-center mb-2">
+            UC-{datas?.yearLevelsByCampus?.[2]?.campus}
+          </h3>
+          <Bar data={campusCYearsData} options={chartOption1} />
+        </div>
+        {/* UC Campus D */}
+        <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+          <h3 className="text-md font-semibold text-center mb-2">
+            UC-{datas?.yearLevelsByCampus?.[3]?.campus}
+          </h3>
+          <Bar data={campusDYearsData} options={chartOption1} />
       </div>
+    </div>
+  </div>
+
 
       {/* Attended Students Section */}
-      <div className="mt-10">
+      <div className="mt-20 mb-5">
         <h2 className="text-2xl font-bold text-center mb-5">
           Attended Students Breakdown
         </h2>
         <div className="flex flex-wrap lg:flex-nowrap gap-8 items-center justify-center">
-          <div className="flex flex-col gap-8 w-full lg:w-[50%]">
+          <div className="flex flex-col gap-8 justify-center items-center w-full lg:w-[50%]">
             <div className="w-full h-[250px] bg-[#F5F5F5] p-3 shadow-md rounded-lg">
               <Doughnut
                 data={attendedStudentYearsData}
                 options={chartOption2}
               />
             </div>
-            <div className="w-full h-[280px] bg-[#F5F5F5] p-4 shadow-md rounded-lg">
+            <div className="w-full flex h-[280px] bg-[#F5F5F5] p-4 shadow-md justify-center items-center rounded-lg">
               <Bar data={attendedCampusData} options={chartOption1} />
             </div>
           </div>

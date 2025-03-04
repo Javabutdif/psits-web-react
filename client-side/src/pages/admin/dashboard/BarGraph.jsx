@@ -130,17 +130,17 @@ const BarGraph = () => {
   };
 
   return (
-    <div className="w-full h-96 p-4">
+    <div className="w-full  p-4">
       {" "}
       {/* Ensure full width and height, with padding */}
-      <h2 className="text-xl sm:text-2xl text-gray-600 mb-4">Year Level</h2>
-      <div className="w-full h-60">
-        {" "}
-        {/* Container for the chart */}
-        <Bar data={data} options={options} />
-      </div>
+      <h2 className="text-xl sm:text-2xl text-[#074873] mb-4">Year Level</h2>
+      <div className="w-full max-w-[90vw] sm:max-w-[80vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] mx-auto">
+  {/* Container for the chart */}
+  <Bar data={data} options={options} />
+</div>
+
     </div>
-  );
+  ); 
 };
 
 export default BarGraph;
