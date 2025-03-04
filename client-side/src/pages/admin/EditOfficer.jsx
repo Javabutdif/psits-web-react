@@ -92,8 +92,6 @@ const EditOfficer = ({ isVisible, onClose, studentData, onSave }) => {
                   <option value="UC-Banilad">UC Banilad</option>
                   <option value="UC-LM">UC Lapu-Lapu Mandaue</option>
                   <option value="UC-PT">UC Pardo Talisay</option>
-                  <option value="UC-METC">UC METC</option>
-                  <option value="UC-J">UC Jones</option>
                 </select>
               </div>
             </div>

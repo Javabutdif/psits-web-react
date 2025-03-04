@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getEvents } from "../../../api/event";
 import { MdOutlineQueryStats, MdOutlineCardGiftcard } from "react-icons/md"; // Add the new icon import
-import Attendance from "../Attendance/Attendance";
+import { getInformationData } from "../../../authentication/Authentication";
+import { formatDate } from "../../../utils/stringUtils";
 
 function Events() {
   const [events, setEvent] = useState([]);
+  const admin = getInformationData();
 
   const handleGetEvents = async () => {
     const response = await getEvents();
@@ -28,14 +30,18 @@ function Events() {
             />
           </div>
           <div className=" pr-4 pl-4 pb-4">
-            <h1 className="ml-3 text-lg font-semibold text-gray-800 truncate mb-2">
+            <h1 className=" text-lg font-semibold text-gray-800 truncate">
               {event.eventName}
             </h1>
-            <p className="mb-3 ml-3 text-[074873]">Coming Soon...</p>
+            <p className="mb-3 text-[074873]">{formatDate(event.eventDate)}</p>
             <div className="flex gap-1 items-center justify-center">
               <Link
                 to={`/admin/attendance/${event.eventId}`}
-                className="w-[80%] h-full"
+                className={
+                  admin.campus === "UC-Main"
+                    ? "w-[80%] h-full"
+                    : "w-full h-full"
+                }
               >
                 <button
                   className="w-full h-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
@@ -45,7 +51,10 @@ function Events() {
                 </button>
               </Link>
 
-              <Link to={`/admin/statistics/${event.eventId}`} className="h-full">
+              <Link
+                to={`/admin/statistics/${event.eventId}`}
+                className="h-full"
+              >
                 <button
                   className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
                   tabIndex="1"
@@ -54,14 +63,16 @@ function Events() {
                 </button>
               </Link>
 
-              <Link to={`/admin/raffle/${event.eventId}`} className="h-full">
-                <button
-                  className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105 transition-transform duration-200"
-                  tabIndex="2"
-                >
-                  <MdOutlineCardGiftcard />
-                </button>
-              </Link>
+              {admin.campus === "UC-Main" && (
+                <Link to={`/admin/raffle/${event.eventId}`} className="h-full">
+                  <button
+                    className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
+                    tabIndex="2"
+                  >
+                    <MdOutlineCardGiftcard />
+                  </button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
