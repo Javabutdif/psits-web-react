@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "react-tabs/style/react-tabs.css";
@@ -59,7 +59,7 @@ const Attendance = (props) => {
   const handleCloseSettingsView = () => {
     setViewSettings(false);
   };
-  const fetchEventLimit = async () => {
+  const fetchEventLimit = useCallback(async () => {
     try {
       const response = await getEventCheck(eventId);
       const campusLimit = response.limit.find((l) => l.campus === user.campus)
@@ -76,7 +76,7 @@ const Attendance = (props) => {
     } catch (error) {
       console.error(error);
     }
-  };
+  });
 
   const handleOpenRemoveModal = (data) => {
     setRemoveModal(true);
@@ -89,6 +89,7 @@ const Attendance = (props) => {
     try {
       if (await removeAttendee(dataToRemove)) {
         fetchData();
+        fetchEventLimit();
         setRemoveModal(false);
       }
     } catch (error) {
@@ -114,7 +115,6 @@ const Attendance = (props) => {
     setShowModal(false);
   };
   const handleViewBtn = (studentData) => {
-    console.log("Selected Data:", studentData); // Debugging
     setSelectedData(studentData);
     setShowModal(true);
   };
@@ -215,8 +215,11 @@ const Attendance = (props) => {
       key: "attendDate",
       label: "Confirmed Date",
       sortable: true,
-      selector: (row) => row.attendDate, // Add selector for time field
-      cell: (row) => new Date(row.attendDate).toLocaleString(),
+      selector: (row) => row.attendDate,
+      cell: (row) =>
+        row.attendDate && !isNaN(new Date(row.attendDate))
+          ? new Date(row.attendDate).toLocaleString()
+          : "TBA",
     },
     {
       key: "confirmedBy",
@@ -230,7 +233,7 @@ const Attendance = (props) => {
       label: "Action",
       cell: (row) => (
         <ButtonsComponent>
-          {eventDate.toDateString() <= currentDate.toDateString() ? (
+          {eventDate.toDateString() === currentDate.toDateString() ? (
             <FormButton
               type="button"
               text="Attendance"
@@ -265,11 +268,13 @@ const Attendance = (props) => {
       setLoading(true);
       // TODO:Done modify to get the real data
       const result = await getAllAttendees();
-      console.log(result);
-      setEventDate(new Date(result.data.eventDate));
-      setData(result.attendees);
-      setFilteredData(result.attendees);
-      setEventData(result.data);
+
+      setEventDate(
+        new Date(result.data.eventDate ? result.data.eventDate : "")
+      );
+      setData(result.attendees ? result.attendees : []);
+      setFilteredData(result.attendees ? result.attendees : []);
+      setEventData(result.data ? result.data : []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);

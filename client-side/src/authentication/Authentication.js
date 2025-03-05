@@ -27,9 +27,7 @@ export const getInformationData = () => {
   };
 };
 export const removeAuthentication = () => {
-  const userData = getInformationData(); // Use getInformationData to retrieve user information
-
-  // Check if the user has the role of "Admin"
+  const userData = getInformationData();
   if (userData.role === "Admin") {
     const logData = {
       admin: userData.name || "Unknown Admin",
@@ -56,6 +54,7 @@ export const removeAuthentication = () => {
   sessionStorage.removeItem("Token");
   sessionStorage.removeItem("Data");
   sessionStorage.removeItem("hasReloaded");
+  localStorage.removeItem("delayed_render");
   storedData = null;
   storedRole = null;
 };
@@ -98,6 +97,7 @@ export const getTimeout = () => {
   if (now.getTime() > time) {
     localStorage.removeItem("timeout");
     localStorage.removeItem("attempt");
+
     return null;
   }
 

@@ -84,10 +84,6 @@ const Students = () => {
             ariaLabel="infinity-spin-loading"
           />
         </div>
-      ) : error ? (
-        <div className="flex justify-center items-center w-full h-full">
-          <p className="text-red-600">{error}</p>
-        </div>
       ) : (
         <div className="flex flex-col py-4 space-y-4">
           <div className="w-full flex flex-col">
