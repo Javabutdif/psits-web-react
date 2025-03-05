@@ -8,8 +8,8 @@ import { getInformationData } from "../../authentication/Authentication";
 const formatLabel = (text) => {
   if (!text) return "";
   return text
-    .replace(/([A-Z])/g, " $1") // Add space before each uppercase letter
-    .replace(/^./, (str) => str.toUpperCase()) // Capitalize the first letter
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (str) => str.toUpperCase())
     .trim();
 };
 
@@ -18,6 +18,22 @@ const AdminLayout = () => {
   const [label, setLabel] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const user = getInformationData();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const hasRenderedBefore = localStorage.getItem("delayed_render");
+
+    if (hasRenderedBefore) {
+      setShow(true);
+    } else {
+      const timer = setTimeout(() => {
+        setShow(true);
+        localStorage.setItem("delayed_render", "true"); 
+      }, 3000); 
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
     const pathParts = location.pathname.split("/");
@@ -55,15 +71,19 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen relative">
-      <AsideBar
-        navItems={navItems}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-      />
-      <ProfileHeader label={label} toggleSidebar={toggleSidebar} />
-      <main className="lg:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
-        <Outlet />
-      </main>
+      {show && (
+        <>
+          <AsideBar
+            navItems={navItems}
+            isSidebarOpen={isSidebarOpen}
+            setIsSidebarOpen={setIsSidebarOpen}
+          />
+          <ProfileHeader label={label} toggleSidebar={toggleSidebar} />
+          <main className="lg:ml-[15rem] min-h-main-md px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+            <Outlet />
+          </main>
+        </>
+      )}
     </div>
   );
 };

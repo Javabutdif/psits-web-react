@@ -40,7 +40,7 @@ const Membership = () => {
   const fetchData = async () => {
     try {
       const result = await membership();
-      setData(result);
+      setData(result ? result : []);
       setFilteredData(result);
       setLoading(false);
     } catch (error) {
