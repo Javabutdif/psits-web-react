@@ -104,7 +104,7 @@ const AdminDashboard = () => {
     return () => clearInterval(delayFetch);
   }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
   return (
-    <div className="relative min-h-screen flex justify-center items-center bg-gray-100 px-4">
+    <div className="pt-4 md:pt-8">
       {loading ? (
         <div className="flex justify-center items-center h-60vh">
           <InfinitySpin

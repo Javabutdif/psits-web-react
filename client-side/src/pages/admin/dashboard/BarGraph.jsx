@@ -135,12 +135,11 @@ const BarGraph = () => {
       {/* Ensure full width and height, with padding */}
       <h2 className="text-xl sm:text-2xl text-[#074873] mb-4">Year Level</h2>
       <div className="w-full max-w-[90vw] sm:max-w-[80vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] mx-auto">
-  {/* Container for the chart */}
-  <Bar data={data} options={options} />
-</div>
-
+        {/* Container for the chart */}
+        <Bar data={data} options={options} />
+      </div>
     </div>
-  ); 
+  );
 };
 
 export default BarGraph;

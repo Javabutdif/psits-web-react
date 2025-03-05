@@ -93,8 +93,10 @@ const Login = () => {
     try {
       if (getAttemptAuthentication() < 3 && getTimeout() === null) {
         const data = await login(formData);
-
-        if (data.role === "Admin" || data.role === "Student" ) {
+        if (sessionStorage.getItem("Token") === null) {
+          sessionStorage.setItem("Token", data.token);
+        }
+        if (data.role === "Admin" || data.role === "Student") {
           resetAttemptAuthentication();
           if (data.campus !== "UC-Main" && data.role === "Admin") {
             navigate(`/${data.role.toLowerCase()}/events`);
