@@ -1,6 +1,6 @@
 import {
   membership,
-  allMembers,
+  getCountStudent,
   merchCreated,
   placedOrders,
   fetchAllPendingCounts,
@@ -8,14 +8,14 @@ import {
 import BarGraph from "./dashboard/BarGraph";
 import DashboardCard from "./dashboard/DashboardCard";
 import DoughnutChart from "./dashboard/DoughnutChart";
-import BarChart from "./dashboard/BarChart";
+import PieChart from "./dashboard/PieChart";
 import {
   faBoxOpen,
   faUserGraduate,
   faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
 import OrderTable from "./dashboard/OrderTable";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 
 const AdminDashboard = () => {
@@ -70,33 +70,31 @@ const AdminDashboard = () => {
       });
     }, 20);
   };
+  const fetchData = useCallback(async () => {
+    try {
+      const [studentRes, merchCreate, placedOrder, pendingOrders] =
+        await Promise.all([
+          getCountStudent(),
+          merchCreated(),
+          placedOrders(),
+          fetchAllPendingCounts(),
+        ]);
 
+      setFinalCounts({
+        student: studentRes.all || 0,
+        merchandise: merchCreate || 0,
+        order: placedOrder || 0,
+      });
+      setPendingData(pendingOrders || []);
+      console.log(studentRes);
+      animateCount();
+    } catch (error) {
+      setError("Error fetching dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  });
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [studentRes, merchCreate, placedOrder, pendingOrders] =
-          await Promise.all([
-            allMembers(),
-            merchCreated(),
-            placedOrders(),
-            fetchAllPendingCounts(),
-          ]);
-
-        setFinalCounts({
-          student: studentRes || 0,
-          merchandise: merchCreate || 0,
-          order: placedOrder || 0,
-        });
-        setPendingData(pendingOrders || []);
-        console.log(studentRes);
-        animateCount();
-      } catch (error) {
-        setError("Error fetching dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     const delayFetch = setInterval(() => {
       fetchData();
     }, 1000);
@@ -154,7 +152,7 @@ const AdminDashboard = () => {
               <DoughnutChart className="w-64 h-64" />
             </div>
             <div className="flex-1 flex items-center justify-center">
-              <BarChart className="w-full h-96" />
+              <PieChart className="w-full h-96" />
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@ import {
   formattedDate,
 } from "../../components/tools/clientTools";
 import { ConfirmActionType } from "../../enums/commonEnums";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactToPrint from "react-to-print";
 
 const Orders = () => {
@@ -29,29 +29,29 @@ const Orders = () => {
   const [error, setError] = useState(null);
   const componentRef = useRef();
   const printRef = useRef();
-  console.log(filteredOrders);
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const data = await getAllOrders();
 
-        if (data === 0 || data.length === 0) {
-          setOrders([]);
-          setFilteredOrders([]);
-          setError("No orders found.");
-        } else {
-          setOrders(data);
-          setFilteredOrders(data);
-          setError(null);
-        }
-      } catch (err) {
+  const fetchOrders = useCallback(async () => {
+    try {
+      const data = await getAllOrders();
+
+      if (data === 0 || data.length === 0) {
         setOrders([]);
         setFilteredOrders([]);
-        setError("Failed to fetch orders. Please try again later.");
-        console.error("Error fetching orders:", err);
+        setError("No orders found.");
+      } else {
+        setOrders(data);
+        setFilteredOrders(data);
+        setError(null);
       }
-    };
-
+    } catch (err) {
+      setOrders([]);
+      setFilteredOrders([]);
+      setError("Failed to fetch orders. Please try again later.");
+      console.error("Error fetching orders:", err);
+    }
+  });
+  
+  useEffect(() => {
     fetchOrders();
   }, []);
   useEffect(() => {
@@ -136,8 +136,8 @@ const Orders = () => {
   };
 
   const handleApproveConfirm = () => {
-    window.location.reload();
     handleModalClose();
+    fetchOrders();
   };
 
   const toggleDropdown = (id) => {

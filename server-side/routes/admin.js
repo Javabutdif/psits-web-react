@@ -171,34 +171,31 @@ router.get("/membershipRequest", authenticateToken, async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-router.get("/all-members", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({
-    status: "True",
-    $or: [
-      { renew: "Accepted" },
-      { renew: { $exists: false } },
-      { renew: "" },
-      { renew: "Pending" },
-    ],
-  });
-  return res.json({ message: count });
+
+router.get("/get-students-count", authenticateToken, async (req, res) => {
+  try {
+    const [all, request, renew, deleted, history] = await Promise.all([
+      Student.countDocuments({
+        status: "True",
+        $or: [
+          { renew: "Accepted" },
+          { renew: { $exists: false } },
+          { renew: "" },
+          { renew: "Pending" },
+        ],
+      }),
+      Student.countDocuments({ membership: "Pending" }),
+      Student.countDocuments({ renew: "Pending" }),
+      Student.countDocuments({ status: "False" }),
+      MembershipHistory.countDocuments(),
+    ]);
+
+    res.status(200).json({ all, request, renew, deleted, history });
+  } catch (error) {
+    console.error(error);
+  }
 });
-router.get("/request-members", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ membership: "Pending" });
-  return res.json({ message: count });
-});
-router.get("/renewal-members", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ renew: "Pending" });
-  return res.json({ message: count });
-});
-router.get("/deleted-members", authenticateToken, async (req, res) => {
-  const count = await Student.countDocuments({ status: "False" });
-  return res.json({ message: count });
-});
-router.get("/history-members", authenticateToken, async (req, res) => {
-  const count = await MembershipHistory.countDocuments();
-  return res.json({ message: count });
-});
+
 router.get("/merchandise-created", authenticateToken, async (req, res) => {
   const count = await Merch.countDocuments();
   return res.json({ message: count });

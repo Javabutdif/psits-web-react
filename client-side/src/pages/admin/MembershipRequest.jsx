@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { showToast } from "../../utils/alertHelper";
 import { membershipRequest, requestDeletion } from "../../api/admin";
-import MembershipHeader from "../../components/admin/MembershipHeader";
 import TableComponent from "../../components/Custom/TableComponent";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
