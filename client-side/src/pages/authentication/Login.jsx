@@ -99,9 +99,14 @@ const Login = () => {
         if (data.role === "Admin" || data.role === "Student") {
           resetAttemptAuthentication();
           if (data.campus !== "UC-Main" && data.role === "Admin") {
+            setTimeout(()=> {
             navigate(`/${data.role.toLowerCase()}/events`);
+            },500);
           } else {
+             setTimeout(()=> {
             navigate(`/${data.role.toLowerCase()}/dashboard`);
+            },500);
+               
           }
         } else {
           attemptAuthentication();
