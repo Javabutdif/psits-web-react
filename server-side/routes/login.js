@@ -50,16 +50,7 @@ router.post("/login", loginLimiter, async (req, res) => {
         users = student;
         role = "Student";
       } else {
-        console.log(
-          `Invalid password from ${id_number} - ${
-            student.first_name +
-            " " +
-            student.middle_name +
-            " " +
-            student.last_name
-          } on ${currentDate}`
-        );
-
+       
         return res
           .status(400)
           .json({ message: "Invalid ID number or password" });

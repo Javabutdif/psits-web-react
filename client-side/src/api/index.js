@@ -15,15 +15,17 @@ export const login = async (formData) => {
       }
     );
 
-    showToast("success", response.data.message);
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+      sessionStorage.setItem("Token", response.data.token);
+    }
 
-    sessionStorage.setItem("Token", response.data.token);
     return sessionStorage.getItem("Token") !== "" ||
       sessionStorage.getItem("Token") !== null
       ? {
-          role: response.data.role,
-          campus: response.data.campus,
-          token: response.data.token,
+          role: response.data?.role,
+          campus: response.data?.campus,
+          token: response.data?.token,
         }
       : null;
   } catch (error) {

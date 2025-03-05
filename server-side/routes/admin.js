@@ -328,7 +328,7 @@ router.get("/get-all-developers", async (req, res) => {
       role: developer.role,
       status: developer.status,
     }));
-    console.log(users);
+
     res.status(200).json({ data: users });
   } catch (error) {
     console.error("Error fetching officers:", error);
@@ -468,7 +468,6 @@ router.post("/editOfficer", authenticateToken, async (req, res) => {
       });
 
       await log.save();
-      console.log("Action logged successfully.");
 
       res.status(200).json({ message: "Officer updated successfully" });
     } else {
@@ -508,7 +507,6 @@ router.post(
       });
 
       await log.save();
-      console.log("Action logged successfully.");
 
       res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
@@ -557,7 +555,7 @@ router.put("/admin/role-remove", authenticateToken, async (req, res) => {
         },
       }
     );
-    console.log(updatedStudent);
+
     if (updatedStudent.modifiedCount > 0) {
       res.status(200).json({ message: "Role removed successfully" });
     } else {
@@ -573,7 +571,7 @@ router.put("/admin/role-remove", authenticateToken, async (req, res) => {
 
 router.put("/admin/restore-officer", authenticateToken, async (req, res) => {
   const { id_number } = req.body;
-  console.log(id_number);
+
   try {
     const getAdmin = await Admin.findOne({
       id_number: req.body.id_number,
@@ -600,7 +598,6 @@ router.put("/admin/restore-officer", authenticateToken, async (req, res) => {
       });
 
       await log.save();
-      console.log("Action logged successfully.");
 
       res.status(200).json({ message: "Admin status updated to Active" });
     } else {
@@ -640,18 +637,27 @@ router.get(
   }
 );
 router.put("/admin/request-role", authenticateToken, async (req, res) => {
-  const { id_number, role } = req.body;
-  console.log(role, id_number);
+  const { id_number, role, admin } = req.body;
+
   try {
+    const student = await Student.findOne({ id_number: id_number });
     const updatedRole = await Student.updateOne(
       { id_number },
       {
         $set: {
           role: role,
           isRequest: true,
+          adminRequest: admin,
         },
       }
     );
+    await new Log({
+      admin: admin,
+      action:
+        "Request Role for " + student.first_name + " " + student.last_name,
+      target: role + " request",
+      target_model: "Student",
+    }).save();
 
     if (updatedRole.modifiedCount > 0) {
       res.status(200).json({ message: "Role updated successfully" });
@@ -682,6 +688,7 @@ router.get("/admin/get-request-role", authenticateToken, async (req, res) => {
       year: student.year,
       role: student.role,
       isRequest: student.isRequest,
+      adminRequest: student.adminRequest,
     }));
     res.status(200).json({ data: users });
   } catch (error) {
@@ -833,7 +840,7 @@ router.put(
   authenticateToken,
   async (req, res) => {
     const { id_number } = req.body;
-    console.log(id_number);
+
     try {
       const deletedAdmin = await Admin.deleteOne({ id_number });
 

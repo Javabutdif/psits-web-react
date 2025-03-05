@@ -8,7 +8,10 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import { headDevPosition } from "../../../components/tools/clientTools";
+import {
+  headDevPosition,
+  higherPosition,
+} from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditOfficer from "../EditOfficer";
@@ -93,7 +96,7 @@ const Developers = () => {
 
     try {
       const id_number = studentIdToBeDeleted;
-      console.log(id_number);
+
       if ((await roleRemove(id_number)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number
@@ -207,7 +210,7 @@ const Developers = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
-          {headDevPosition() ? (
+          {headDevPosition() || higherPosition() ? (
             <FormButton
               type="button"
               text="Remove Role"
@@ -238,7 +241,7 @@ const Developers = () => {
   return (
     <div className="">
       <div className="py-4 ">
-        {headDevPosition() ? (
+        {headDevPosition() || higherPosition() ? (
           <>
             <button
               onClick={() => setViewAdd(true)}

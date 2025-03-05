@@ -171,7 +171,7 @@ router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
       });
 
       await log.save();
-      console.log("Action logged successfully.");
+      //console.log("Action logged successfully.");
     }
 
     res.status(200).json({ message: "Order canceled successfully" });
@@ -347,7 +347,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
       if (error) {
         return res.status(500).json({ message: "Error sending email", error });
       } else {
-        console.log("Email sent: " + info.response);
+        //console.log("Email sent: " + info.response);
         return res
           .status(200)
           .json({ message: "Order approved and email sent" });

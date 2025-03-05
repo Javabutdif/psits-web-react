@@ -836,11 +836,11 @@ export const fetchStudentName = async (id_number) => {
   }
 };
 
-export const requestRoleAdmin = async (role, id_number) => {
+export const requestRoleAdmin = async (role, id_number, admin) => {
   try {
     const response = await axios.put(
       `${backendConnection()}/api/admin/request-role`,
-      { role, id_number },
+      { role, id_number, admin },
       {
         headers: {
           "Content-Type": "application/json",

@@ -25,7 +25,7 @@ router.get("/attendees/:id", authenticateToken, async (req, res) => {
     const eventId = new ObjectId(id);
     const attendees = await Events.find({ eventId });
     if (attendees) {
-      console.log(attendees);
+    
       res.status(200).json({ data: attendees });
     } else {
       res.status(500).json({ message: "No attendees" });

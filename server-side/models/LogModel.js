@@ -14,7 +14,7 @@ const logSchema = new Schema({
   admin_id: {
     type: Schema.Types.ObjectId,
     ref: "Admin",
-    required: true,
+    required: false,
   },
   action: {
     type: String,
@@ -22,10 +22,10 @@ const logSchema = new Schema({
   },
   target: {
     type: String,
-    required: false, 
+    required: false,
   },
   target_id: {
-    type: Schema.Types.ObjectId, 
+    type: Schema.Types.ObjectId,
     required: false,
   },
   target_model: {

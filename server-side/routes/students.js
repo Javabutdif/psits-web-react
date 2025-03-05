@@ -247,7 +247,7 @@ router.post("/editedStudent", authenticateToken, async (req, res) => {
     });
 
     await log.save();
-    console.log("Action logged successfully.");
+    //console.log("Action logged successfully.");
 
     res
       .status(200)
@@ -340,7 +340,7 @@ router.post(
       });
 
       await log.save();
-      console.log("Action logged successfully.");
+      //console.log("Action logged successfully.");
 
       res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {

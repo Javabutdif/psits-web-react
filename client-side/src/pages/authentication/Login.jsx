@@ -96,22 +96,23 @@ const Login = () => {
         if (sessionStorage.getItem("Token") === null) {
           sessionStorage.setItem("Token", data.token);
         }
-        if (data.role === "Admin" || data.role === "Student") {
-          resetAttemptAuthentication();
-          if (data.campus !== "UC-Main" && data.role === "Admin") {
-            setTimeout(()=> {
-            navigate(`/${data.role.toLowerCase()}/events`);
-            },500);
+        setTimeout(() => {
+          if (
+            ((data.role === "Admin" || data.role === "Student") &&
+              sessionStorage.getItem("Token") !== null) ||
+            sessionStorage.getItem("Token") !== ""
+          ) {
+            resetAttemptAuthentication();
+            if (data.campus !== "UC-Main" && data.role === "Admin") {
+              navigate(`/${data.role.toLowerCase()}/events`);
+            } else {
+              navigate(`/${data.role.toLowerCase()}/dashboard`);
+            }
           } else {
-             setTimeout(()=> {
-            navigate(`/${data.role.toLowerCase()}/dashboard`);
-            },500);
-               
+            attemptAuthentication();
+            setRemainingTime(60);
           }
-        } else {
-          attemptAuthentication();
-          setRemainingTime(60);
-        }
+        }, 500);
       } else {
         showToast(
           "error",

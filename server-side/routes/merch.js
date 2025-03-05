@@ -114,7 +114,7 @@ router.post(
       });
 
       await log.save();
-      console.log("Admin action logged: Merchandise added");
+     
 
       res.status(201).json("Merch Addition Successful");
     } catch (error) {
@@ -172,7 +172,7 @@ router.delete("/delete-report", authenticateToken, async (req, res) => {
     }
 
     const objectId = new mongoose.Types.ObjectId(id);
-    console.log(`ObjectId: ${objectId}, MerchName: ${merchName}`);
+   
 
     const result = await Merch.findOneAndUpdate(
       { name: merchName },
@@ -181,7 +181,7 @@ router.delete("/delete-report", authenticateToken, async (req, res) => {
     );
 
     if (!result) {
-      console.log("Merch item not found or update failed.");
+     
       return res
         .status(404)
         .json({ message: "Merch item not found or update failed." });
@@ -198,7 +198,7 @@ router.delete("/delete-report", authenticateToken, async (req, res) => {
     });
 
     await log.save();
-    console.log("Action logged successfully.");
+    ////console.log("Action logged successfully.");
 
     res.status(200).json({
       message: "Success deleting student in reports",
@@ -233,7 +233,7 @@ router.put(
     } = req.body;
     try {
       const id = req.params._id;
-      console.log(removeImage);
+      //console.log(removeImage);
       let imageUrl = req.files.map((file) => file.location);
 
       const imagesToRemove = Array.isArray(removeImage)
@@ -245,7 +245,7 @@ router.put(
       const imageKeys = imagesToRemove.length
         ? imagesToRemove.map((url) => url.replace(process.env.bucketUrl, ""))
         : [];
-      console.log(imageKeys);
+      //console.log(imageKeys);
       await Promise.all(
         imageKeys.map((imageKey) =>
           s3Client.send(
@@ -374,7 +374,7 @@ router.put(
       });
 
       await log.save();
-      console.log("Action logged successfully.");
+      //console.log("Action logged successfully.");
 
       res.status(200).send("Merch, carts, and orders updated successfully");
     } catch (error) {
@@ -417,7 +417,7 @@ router.put("/delete-soft", authenticateToken, async (req, res) => {
     });
 
     await log.save();
-    console.log("Action logged successfully.");
+    //console.log("Action logged successfully.");
 
     res.status(200).json({ message: "Merch deleted successfully" });
   } catch (error) {
@@ -459,7 +459,7 @@ router.put("/publish", authenticateToken, async (req, res) => {
     });
 
     await log.save();
-    console.log("Action logged successfully.");
+    //console.log("Action logged successfully.");
 
     res.status(200).json({ message: "Merch published successfully" });
   } catch (error) {
@@ -490,7 +490,7 @@ router.put(
 
       // Check if the merch_id already exists in the cart
       if (student.cart.includes(merchObjectId)) {
-        console.log("Merch already in cart");
+        //console.log("Merch already in cart");
         return res.status(400).json({ message: "Merch already in cart!" });
       }
 
@@ -498,7 +498,7 @@ router.put(
       student.cart.push(merchObjectId);
       await student.save();
 
-      console.log("Merch added to cart");
+      //console.log("Merch added to cart");
       return res.status(200).json({ message: "Merch added to cart" });
     } catch (error) {
       console.error("Error adding merch to cart:", error.message);
@@ -563,7 +563,7 @@ router.delete(
       student.cart.splice(index, 1);
       await student.save();
 
-      console.log("Merch removed from cart.");
+      //console.log("Merch removed from cart.");
       return res.status(200).json({ message: "Merch removed from cart." });
     } catch (error) {
       console.error("Error removing merch from cart:", error.message);

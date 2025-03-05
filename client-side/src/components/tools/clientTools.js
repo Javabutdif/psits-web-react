@@ -24,18 +24,18 @@ export const higherPosition = () => {
   return (
     user.position === "President" ||
     user.position === "Head Developer" ||
-    user.position === "Developer"
+    (user.position === "Developer" && user.campus === "UC-Main")
   );
 };
 export const mediaPosition = () => {
   const user = getInformationData();
 
-  return user.position === "P.R.O";
+  return user.position === "P.R.O" && user.campus === "UC-Main";
 };
 export const volunteerPosition = () => {
   const user = getInformationData();
 
-  return user.position === "Chief Volunteer";
+  return user.position === "Chief Volunteer" && user.campus === "UC-Main";
 };
 
 export const headDevPosition = () => {
@@ -46,12 +46,12 @@ export const headDevPosition = () => {
 export const presidentPosition = () => {
   const user = getInformationData();
 
-  return user.position === "President";
+  return user.position === "President" && user.campus === "UC-Main";
 };
 export const treasurerPosition = () => {
   const user = getInformationData();
 
-  return user.position === "Treasurer";
+  return user.position === "Treasurer" && user.campus === "UC-Main";
 };
 export const higherOfficers = () => {
   const user = getInformationData();

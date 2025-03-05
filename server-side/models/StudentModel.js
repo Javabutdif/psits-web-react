@@ -68,6 +68,9 @@ const studentSchema = new Schema({
   isRequest: {
     type: Boolean,
   },
+  adminRequest: {
+    type: String,
+  },
 
   cart: [CartItem.schema],
 });
