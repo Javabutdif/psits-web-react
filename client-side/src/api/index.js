@@ -18,8 +18,13 @@ export const login = async (formData) => {
     showToast("success", response.data.message);
 
     sessionStorage.setItem("Token", response.data.token);
-    return sessionStorage.getItem("Token") !== ""
-      ? { role: response.data.role, campus: response.data.campus }
+    return sessionStorage.getItem("Token") !== "" ||
+      sessionStorage.getItem("Token") !== null
+      ? {
+          role: response.data.role,
+          campus: response.data.campus,
+          token: response.data.token,
+        }
       : null;
   } catch (error) {
     if (error.response && error.response.data) {
