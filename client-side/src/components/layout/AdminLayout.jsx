@@ -28,8 +28,8 @@ const AdminLayout = () => {
     } else {
       const timer = setTimeout(() => {
         setShow(true);
-        localStorage.setItem("delayed_render", "true"); 
-      }, 3000); 
+        localStorage.setItem("delayed_render", "true");
+      }, 1);
 
       return () => clearTimeout(timer);
     }
