@@ -46,6 +46,32 @@ export const deletedStudent = async () => {
     console.error("Error:", error);
   }
 };
+
+//Student tab admin count
+
+export const getCountStudent = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-students-count`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return false;
+    } else {
+      console.log("error", "An error occurred");
+      return false;
+    }
+  }
+};
+
 export const membershipRequest = async () => {
   try {
     const response = await axios.get(
@@ -122,113 +148,6 @@ export const approveMembership = async (formData) => {
     } else {
       console.error(error);
       showToast("error", "An error occurred");
-    }
-  }
-};
-//Total Numbers of All Members
-export const allMembers = async () => {
-  try {
-    const response = await axios.get(`${backendConnection()}/api/all-members`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-//Total Numbers of all request
-export const totalRequest = async () => {
-  try {
-    const response = await axios.get(
-      `${backendConnection()}/api/request-members`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-//Total Numbers of all Renewal
-export const totalRenewal = async () => {
-  try {
-    const response = await axios.get(
-      `${backendConnection()}/api/renewal-members`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-//Total Numbers of all Deleted
-export const totalDeleted = async () => {
-  try {
-    const response = await axios.get(
-      `${backendConnection()}/api/deleted-members`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
-    }
-  }
-};
-//History Total
-export const totalHistory = async () => {
-  try {
-    const response = await axios.get(
-      `${backendConnection()}/api/history-members`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    return response.data.message;
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log("error", error.response.data.message || "An error occurred");
-    } else {
-      console.log("error", "An error occurred");
     }
   }
 };
