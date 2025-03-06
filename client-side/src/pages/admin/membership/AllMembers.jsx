@@ -1,6 +1,6 @@
 import axios from "axios";
 import { motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   membership,
   renewAllStudent,
@@ -37,17 +37,17 @@ const Membership = () => {
 
   const user = getInformationData();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const result = await membership();
       setData(result ? result : []);
-      setFilteredData(result);
+      setFilteredData(result ? result : []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
       setLoading(false);
     }
-  };
+  });
 
   const handleRenewStudent = () => {
     if (renewAllStudent()) {

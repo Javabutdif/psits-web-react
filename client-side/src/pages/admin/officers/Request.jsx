@@ -206,6 +206,12 @@ const Request = () => {
       sortable: true,
     },
     {
+      key: "adminRequest",
+      label: "Requested By",
+      selector: (row) => row.adminRequest,
+      sortable: true,
+    },
+    {
       key: "status",
       label: "Status",
       selector: (row) => row.status,

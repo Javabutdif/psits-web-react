@@ -27,15 +27,30 @@ const AttendanceTabs = ({
     ? ["All", "UC-Main", "UC-Banilad", "UC-LM", "UC-PT"]
     : [user.campus];
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
+  const branchFilteredData = (branch) => {
+    return branch === "All"
+      ? filteredData
+      : filteredData.filter((item) => item.campus === branch);
   };
+
   const renderTabPanelContent = (branchName) => {
-    // Apply filtering if branch is not "All"
     const branchFilteredData =
       branchName === "All"
         ? filteredData
         : filteredData.filter((item) => item.campus === branchName);
+
+    const export_filtered_data = branchFilteredData.map((item) => {
+      return {
+        "Student ID": item.id_number,
+        Name: item.name,
+        Course: item.course,
+        "Year Level": item.year,
+        Campus: item.campus,
+        Attendance: item.isAttended ? "Present" : "Absent",
+        "Shirt Size": item.shirtSize,
+        "Shirt Price": item.shirtPrice,
+      };
+    });
 
     return (
       <div className="overflow-x-auto">
@@ -97,7 +112,7 @@ const AttendanceTabs = ({
                     <div className="flex flex-row justify-right gap-2">
                       <CSVLink
                         data={
-                          branchFilteredData.length ? branchFilteredData : []
+                          branchFilteredData.length ? export_filtered_data : []
                         }
                         filename={`attendance-${branchName}.csv`}
                       >
@@ -126,11 +141,13 @@ const AttendanceTabs = ({
     <Tabs selectedIndex={activeTab} onSelect={(index) => setActiveTab(index)}>
       <TabList>
         {branches.map((branch) => (
-          <Tab key={branch}>{branch}</Tab>
+          <Tab key={branch}>
+            {branch} [ {branchFilteredData(branch).length} ]
+          </Tab>
         ))}
       </TabList>
       {branches.map((branch) => (
-        <TabPanel key={branch}>{renderTabPanelContent(branch)}</TabPanel>
+        <TabPanel key={branch}>{renderTabPanelContent(branch)} </TabPanel>
       ))}
     </Tabs>
   );

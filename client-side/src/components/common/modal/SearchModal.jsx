@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { fetchStudentName, requestRoleAdmin } from "../../../api/admin";
+import { getInformationData } from "../../../authentication/Authentication";
 
 function SearchModal({ position, onClose }) {
   const [number, setNumber] = useState("");
   const [result, setResult] = useState(null);
   const [response, setResponse] = useState(false);
   const [loading, setLoading] = useState(false);
+  const user = getInformationData();
 
   const handleSearch = async () => {
     setLoading(true);
@@ -29,7 +31,7 @@ function SearchModal({ position, onClose }) {
   const handleRequest = async () => {
     const lowerCase = position.toLowerCase();
 
-    if (await requestRoleAdmin(lowerCase, number)) {
+    if (await requestRoleAdmin(lowerCase, number, user?.name)) {
       onClose();
     }
   };

@@ -53,7 +53,7 @@ const PrivateRouteAdmin = ({ element: Component }) => {
       }
     } catch (error) {
       console.error("Not authorized:");
-      window.location.reload();
+      //window.location.reload();
       setIsAuthenticated(false);
     } finally {
       setLoading(false);
