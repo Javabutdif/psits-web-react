@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getInformationData } from "../../authentication/Authentication";
 import { Link } from "react-router-dom";
 import { getEvents } from "../../api/event";
+import ads from "../../assets/images/ads.png";
 
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-gray-200 ${className}`}></div>
@@ -19,6 +20,8 @@ const StudentDashboard = () => {
   const [products, setProducts] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const currentDate = new Date();
+  const end = new Date(currentDate.getFullYear(), 3, 30);
 
   const fetchAllEvents = async () => {
     const result = await getEvents();
@@ -90,6 +93,11 @@ const StudentDashboard = () => {
           <div className="lg:order-last md:order-last">
             <OperationHours styles="self-start lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3 mb-3" />
             <MembershipBanner styles="lg:row-start-3 lg:col-start-6 lg:col-end-8" />
+            {currentDate <= end && (
+              <div className="lg:row-start-3 lg:col-start-6 lg:col-end-8 mt-2 rounded-lg overflow-hidden shadow-lg">
+                <img src={ads} alt="ads" className="w-full h-40 object-cover" />
+              </div>
+            )}
           </div>
 
           {/* Left Section (Carousel & Events) */}
