@@ -14,27 +14,29 @@ export const login = async (formData) => {
         },
       }
     );
-
     if (response.status === 200) {
       showToast("success", response.data.message);
-      sessionStorage.setItem("Token", response.data.token);
-    }
-
-    return sessionStorage.getItem("Token") !== "" ||
-      sessionStorage.getItem("Token") !== null
-      ? {
-          role: response.data?.role,
-          campus: response.data?.campus,
-          token: response.data?.token,
+      sessionStorage.setItem(
+        "Token",
+        response.status === 200 ? response.data.token : ""
+      );
+      return (
+        (sessionStorage.getItem("Token") !== "" ||
+          sessionStorage.getItem("Token")) !== null && {
+          role: response.data.role,
+          campus: response.data.campus,
+          token: response.data.token,
         }
-      : null;
+      );
+    } else {
+      showToast("error", response.data.message);
+    }
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
     } else {
       showToast("error", "An error occurred");
     }
-    console.error("Error:", error);
   }
 };
 
