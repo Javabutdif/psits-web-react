@@ -230,7 +230,7 @@ const AddAttendeeForm = (merchId) => {
     try {
       setLoading(true);
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate 2 seconds delay
-      console.log("Data fetched successfully!");
+      // console.log("Data fetched successfully!");
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);

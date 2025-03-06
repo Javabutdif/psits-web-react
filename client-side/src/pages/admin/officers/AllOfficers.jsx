@@ -104,7 +104,7 @@ const AllOfficers = () => {
 
   const handleConfirmDeletion = async () => {
     setIsLoading(true);
-    console.log(studentIdToBeDeleted);
+    // console.log(studentIdToBeDeleted);
     try {
       const id_number = studentIdToBeDeleted;
 

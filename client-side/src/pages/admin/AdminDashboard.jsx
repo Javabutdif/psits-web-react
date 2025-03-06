@@ -86,7 +86,7 @@ const AdminDashboard = () => {
         order: placedOrder || 0,
       });
       setPendingData(pendingOrders || []);
-      console.log(studentRes);
+      // console.log(studentRes);
       animateCount();
     } catch (error) {
       setError("Error fetching dashboard data");

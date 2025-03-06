@@ -94,7 +94,7 @@ const StudentOfficer = () => {
 
     try {
       const id_number = studentIdToBeDeleted;
-      console.log(id_number);
+      // console.log(id_number);
       if ((await roleRemove(id_number)) === 200) {
         const updatedData = data.filter(
           (student) => student.id_number !== id_number

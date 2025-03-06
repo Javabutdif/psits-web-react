@@ -12,7 +12,7 @@ function Logs() {
       try {
         const result = await fetchAdminLogs();
         setData(result);
-        console.log("Fetched data:", result);
+        // console.log("Fetched data:", result);
       } catch (error) {
         console.error("Error fetching data: ", error);
       } finally {

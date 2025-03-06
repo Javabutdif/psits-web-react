@@ -54,7 +54,7 @@ export const register = async (formData) => {
     } else {
       showToast("error", response.data.message);
     }
-    console.log(response.data.message);
+    // console.log(response.data.message);
   } catch (error) {
     console.error("Error:", error.response.data.message);
     showToast("error", error.response.data.message);
@@ -81,7 +81,7 @@ export const handleLogouts = async () => {
       showToast("error", response.data.message);
     }
 
-    console.log(response.data.message);
+    // console.log(response.data.message);
   } catch (error) {
     console.error(
       "Error:",

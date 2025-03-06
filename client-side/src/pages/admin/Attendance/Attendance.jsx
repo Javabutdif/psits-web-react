@@ -276,10 +276,10 @@ const Attendance = (props) => {
       setEventDate(
         new Date(result.data.eventDate ? result.data.eventDate : "")
       );
-      console.log(
-        eventDateToCondition.toLocaleDateString() <
-          currentDate.toLocaleDateString()
-      );
+      // console.log(
+      //   eventDateToCondition.toLocaleDateString() <
+      //     currentDate.toLocaleDateString()
+      // );
       setData(result.attendees ? result.attendees : []);
       setFilteredData(result.attendees ? result.attendees : []);
       setEventData(result.data ? result.data : []);

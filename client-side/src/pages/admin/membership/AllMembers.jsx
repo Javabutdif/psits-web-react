@@ -85,7 +85,7 @@ const Membership = () => {
           },
         }
       );
-      console.log(response.data.message);
+      // console.log(response.data.message);
       showToast("success", "Student updated successfully!");
     } catch (error) {
       console.error("Error updating student:", error);

@@ -17,7 +17,7 @@ const ViewStudentAttendance = ({
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Modal Data:", studentData);
+    // console.log("Modal Data:", studentData);
   }, [studentData]);
 
   const markAsPresent = () => {
