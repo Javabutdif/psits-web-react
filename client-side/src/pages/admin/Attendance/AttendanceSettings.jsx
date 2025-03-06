@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { updateEventSettings, getEventCheck } from "../../../api/event";
+import { showToast } from "../../../utils/alertHelper";
 
 const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
   const [limits, setLimits] = useState({
@@ -31,7 +32,7 @@ const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
 
     try {
       if (await updateEventSettings(formData, eventId)) {
-        alert("Settings updated successfully");
+        showToast("success", "Settings updated successfully");
         setShowModal(false);
       }
     } catch (error) {

@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import FormSelect from "../../../components/forms//FormSelect.jsx";
 import FormButton from "../../../components/forms/FormButton";
@@ -11,7 +11,7 @@ import { Link, useNavigate } from "react-router-dom";
 import ConfirmAttendeeModal from "./ConfirmAttendeeModal.jsx";
 import { getInformationData } from "../../../authentication/Authentication.js";
 import { useParams } from "react-router-dom";
-import { addAttendee } from "../../../api/event.js";
+import { addAttendee, getEventCheck } from "../../../api/event.js";
 
 const AddAttendeeForm = (merchId) => {
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,7 @@ const AddAttendeeForm = (merchId) => {
   const navigate = useNavigate();
   const user = getInformationData();
   const { eventId } = useParams();
+  const [isDisabled, setIsDisabled] = useState(false);
 
   const priceBySize = 1000;
   // FormData
@@ -37,6 +38,31 @@ const AddAttendeeForm = (merchId) => {
     shirt_price: "",
 
     applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+  });
+
+  const fetchEventLimit = useCallback(async () => {
+    try {
+      const response = await getEventCheck(eventId);
+      const campusLimit = response.limit.find((l) => l.campus === user.campus)
+        ? response.limit.find((l) => l.campus === user.campus)
+        : response.limit;
+
+      if (!campusLimit) return;
+
+      const attendeeCount = response.attendees.filter(
+        (att) => att.campus === user.campus
+      ).length;
+
+      return attendeeCount >= campusLimit.limit;
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+  const checkLimit = useCallback(async () => {
+    if (await fetchEventLimit()) {
+      navigate("/admin/attendance/" + eventId);
+    }
   });
 
   const validateInputs = () => {
@@ -108,10 +134,6 @@ const AddAttendeeForm = (merchId) => {
     }));
   };
 
-  const fakeRegester = (passedFormData) => {
-    // console.log(passedFormData.first_name);
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     const validationErrors = validateInputs();
@@ -120,7 +142,7 @@ const AddAttendeeForm = (merchId) => {
     } else {
       setErrors({});
 
-      setUseModal(true); // Show modal on successful validation
+      setUseModal(true);
     }
   };
 
@@ -147,6 +169,8 @@ const AddAttendeeForm = (merchId) => {
         merchId: eventId,
         shirt_price: "",
       });
+      checkLimit();
+      fetchData();
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
@@ -207,6 +231,7 @@ const AddAttendeeForm = (merchId) => {
 
   useEffect(() => {
     fetchData();
+    checkLimit();
   }, []);
 
   return (
@@ -296,10 +321,7 @@ const AddAttendeeForm = (merchId) => {
                       error={errors.email}
                       styles=" w-full p-2 border border-gray-300 rounded"
                     />
-                  </div>
-                  <div className="flex flex-row items-center gap-5">
-                    {/* T-Shirt Size Select */}
-                    <div className="flex flex-col justify-center w-8/12 sm:w-full">
+                    <div className="flex-1">
                       <FormSelect
                         label="T-Shirt Size"
                         name="shirt_size"
@@ -307,28 +329,27 @@ const AddAttendeeForm = (merchId) => {
                         onChange={handleChange}
                         options={sizeOptions}
                         error={errors.shirt_size}
-                        styles="flex-1"
                       />
                     </div>
+                  </div>
+                  <div className="flex flex-row items-center gap-5 w-full">
+                    {/* T-Shirt Size Select */}
 
                     {/* Price Display */}
-                    <div className="flex flex-row items-center gap-5">
-                      <div className="flex flex-col justify-center w-8/12 sm:w-full">
-                        <FormInput
-                          label={
-                            <>
-                              <i className="fas fa-peso-sign text-base text-[#374151]"></i>{" "}
-                              Price
-                            </>
-                          }
-                          name="shirt_price"
-                          value={formData.shirt_price}
-                          onChange={handleChange}
-                          type="text"
-                          error={errors.shirt_price}
-                          styles="flex-1"
-                        />
-                      </div>
+                    <div className="flex-1">
+                      <FormInput
+                        label={
+                          <>
+                            <i className="fas fa-peso-sign text-base text-[#374151]"></i>{" "}
+                            Price
+                          </>
+                        }
+                        name="shirt_price"
+                        value={formData.shirt_price}
+                        onChange={handleChange}
+                        type="text"
+                        error={errors.shirt_price}
+                      />
                     </div>
                   </div>
 

@@ -20,7 +20,7 @@ function Events() {
 
   return (
     <div className="mt-5 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2x1:grid-cols-6  ">
-      {events.map((event) => (
+      { events && events.map((event) => (
         <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ">
           <div className="relative w-full h-48 mb-3">
             <img

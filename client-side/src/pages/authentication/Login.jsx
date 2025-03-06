@@ -93,26 +93,22 @@ const Login = () => {
     try {
       if (getAttemptAuthentication() < 3 && getTimeout() === null) {
         const data = await login(formData);
-        if (sessionStorage.getItem("Token") === null) {
-          sessionStorage.setItem("Token", data.token);
-        }
-        setTimeout(() => {
-          if (
-            ((data.role === "Admin" || data.role === "Student") &&
-              sessionStorage.getItem("Token") !== null) ||
-            sessionStorage.getItem("Token") !== ""
-          ) {
-            resetAttemptAuthentication();
+
+        if (data.role === "Admin" || data.role === "Student") {
+          resetAttemptAuthentication();
+          setTimeout(() => {
             if (data.campus !== "UC-Main" && data.role === "Admin") {
               navigate(`/${data.role.toLowerCase()}/events`);
+              window.location.reload();
             } else {
               navigate(`/${data.role.toLowerCase()}/dashboard`);
+              window.location.reload();
             }
-          } else {
-            attemptAuthentication();
-            setRemainingTime(60);
-          }
-        }, 500);
+          }, 1000);
+        } else {
+          attemptAuthentication();
+          setRemainingTime(60);
+        }
       } else {
         showToast(
           "error",
