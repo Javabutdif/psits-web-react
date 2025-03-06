@@ -140,7 +140,7 @@ const QRCodePage = ({ closeView, event }) => {
                 <>
                   <div className="flex flex-col items-center">
                     <QRCode
-                      value={`admin/attendance/${event.eventId}/${event.eventName}/markAsPresent/${studentId}/${studentName}`}
+                      value={`/admin/attendance/${event.eventId}/${event.eventName}/markAsPresent/${studentId}/${studentName}`}
                       size={170}
                       fgColor="#074873"
                     />
