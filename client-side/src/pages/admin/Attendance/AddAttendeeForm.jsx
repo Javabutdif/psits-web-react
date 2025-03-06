@@ -24,7 +24,6 @@ const AddAttendeeForm = (merchId) => {
   const navigate = useNavigate();
   const user = getInformationData();
   const { eventId } = useParams();
-  const [eventDateData, setEventDateData] = useState(new Date());
   const currentDate = new Date();
   // FormData
   const [formData, setFormData] = useState({
@@ -49,9 +48,6 @@ const AddAttendeeForm = (merchId) => {
       const response = await getEventCheck(eventId);
       const result = await getAttendees(eventId);
 
-      setEventDateData(
-        result.data.eventDate ? result.data.eventDate : new Date()
-      );
       const campusLimit = response.limit.find((l) => l.campus === user.campus)
         ? response.limit.find((l) => l.campus === user.campus)
         : response.limit;
