@@ -11,7 +11,11 @@ import { Link, useNavigate } from "react-router-dom";
 import ConfirmAttendeeModal from "./ConfirmAttendeeModal.jsx";
 import { getInformationData } from "../../../authentication/Authentication.js";
 import { useParams } from "react-router-dom";
-import { addAttendee, getEventCheck } from "../../../api/event.js";
+import {
+  addAttendee,
+  getEventCheck,
+  getAttendees,
+} from "../../../api/event.js";
 
 const AddAttendeeForm = (merchId) => {
   const [loading, setLoading] = useState(true);
@@ -20,9 +24,8 @@ const AddAttendeeForm = (merchId) => {
   const navigate = useNavigate();
   const user = getInformationData();
   const { eventId } = useParams();
-  const [isDisabled, setIsDisabled] = useState(false);
-
-  const priceBySize = 1000;
+  const [eventDateData, setEventDateData] = useState(new Date());
+  const currentDate = new Date();
   // FormData
   const [formData, setFormData] = useState({
     id_number: "",
@@ -36,6 +39,7 @@ const AddAttendeeForm = (merchId) => {
     shirt_size: "",
     merchId: eventId,
     shirt_price: "",
+    admin: user.name,
 
     applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
   });
@@ -43,6 +47,11 @@ const AddAttendeeForm = (merchId) => {
   const fetchEventLimit = useCallback(async () => {
     try {
       const response = await getEventCheck(eventId);
+      const result = await getAttendees(eventId);
+
+      setEventDateData(
+        result.data.eventDate ? result.data.eventDate : new Date()
+      );
       const campusLimit = response.limit.find((l) => l.campus === user.campus)
         ? response.limit.find((l) => l.campus === user.campus)
         : response.limit;
@@ -53,7 +62,11 @@ const AddAttendeeForm = (merchId) => {
         (att) => att.campus === user.campus
       ).length;
 
-      return attendeeCount >= campusLimit.limit;
+      return (
+        attendeeCount >= campusLimit.limit ||
+        new Date(result.data.eventDate).toDateString() <
+          currentDate.toDateString()
+      );
     } catch (error) {
       console.error(error);
     }

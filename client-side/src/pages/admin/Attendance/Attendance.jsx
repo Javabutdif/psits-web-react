@@ -45,6 +45,7 @@ const Attendance = (props) => {
     id_number: "",
   });
   const [displayLimit, setDisplayLimit] = useState("");
+  const [eventDateToCondition, setEventDateToCondition] = useState(new Date());
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -269,8 +270,15 @@ const Attendance = (props) => {
       // TODO:Done modify to get the real data
       const result = await getAllAttendees();
 
+      setEventDateToCondition(
+        new Date(result.data.eventDate ? result.data.eventDate : "")
+      );
       setEventDate(
         new Date(result.data.eventDate ? result.data.eventDate : "")
+      );
+      console.log(
+        eventDateToCondition.toLocaleDateString() <
+          currentDate.toLocaleDateString()
       );
       setData(result.attendees ? result.attendees : []);
       setFilteredData(result.attendees ? result.attendees : []);
@@ -334,7 +342,23 @@ const Attendance = (props) => {
             </div>
 
             <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
-              {isDisabled ? (
+              {eventDateToCondition.toDateString() <
+              currentDate.toDateString() ? (
+                <ButtonsComponent>
+                  <div className="py-2">
+                    <motion.button
+                      type="button"
+                      text=" Ended"
+                      className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
+                      textClass="sm:block hidden text-white"
+                      whileHover={{ scale: 1.01, opacity: 0.95 }}
+                      whileTap={{ scale: 0.98, opacity: 0.9 }}
+                    >
+                      <i className="fas fa-ban"></i>Registration Ended
+                    </motion.button>
+                  </div>
+                </ButtonsComponent>
+              ) : isDisabled ? (
                 <ButtonsComponent>
                   <div className="py-2">
                     <motion.button

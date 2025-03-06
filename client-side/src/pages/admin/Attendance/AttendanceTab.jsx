@@ -47,6 +47,9 @@ const AttendanceTabs = ({
         "Year Level": item.year,
         Campus: item.campus,
         Attendance: item.isAttended ? "Present" : "Absent",
+        Confirm_Attendance_By: item.isAttended ? item.confirmedBy : "N/A",
+        Processed_By: item.transactBy,
+        Processed_Date: item.transactDate,
         "Shirt Size": item.shirtSize,
         "Shirt Price": item.shirtPrice,
       };

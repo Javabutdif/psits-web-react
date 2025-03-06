@@ -48,6 +48,12 @@ const attendeeSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  transactBy: {
+    type: String,
+  },
+  transactDate: {
+    type: Date,
+  },
 });
 
 module.exports = attendeeSchema;
