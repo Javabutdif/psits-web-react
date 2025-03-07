@@ -90,7 +90,7 @@ router.post(
             eventId: newMerchId,
             eventName: name,
             eventImage: imageUrl,
-            eventDate,
+            eventDate: eventDate,
             eventDescription: description,
             status: "Ongoing",
             attendees: [],
@@ -114,7 +114,6 @@ router.post(
       });
 
       await log.save();
-     
 
       res.status(201).json("Merch Addition Successful");
     } catch (error) {
@@ -172,7 +171,6 @@ router.delete("/delete-report", authenticateToken, async (req, res) => {
     }
 
     const objectId = new mongoose.Types.ObjectId(id);
-   
 
     const result = await Merch.findOneAndUpdate(
       { name: merchName },
@@ -181,7 +179,6 @@ router.delete("/delete-report", authenticateToken, async (req, res) => {
     );
 
     if (!result) {
-     
       return res
         .status(404)
         .json({ message: "Merch item not found or update failed." });
