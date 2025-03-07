@@ -152,7 +152,7 @@ const Reports = () => {
       setFilteredMerchandiseData(filteredOrderDetails);
       setProductNames(data);
       setSalesData(allSalesData);
-      console.log(allOrderDetails);
+      // console.log(allOrderDetails);
     } catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
@@ -235,7 +235,7 @@ const Reports = () => {
               new Date(formattedDate(filterDateTo))
         );
 
-        console.log(filteredData);
+        // console.log(filteredData);
       }
 
       if (filterBatch) {
@@ -274,7 +274,7 @@ const Reports = () => {
       setSalesData({});
     }
   };
-  console.log("This is filter batch" + filterBatch);
+  // console.log("This is filter batch" + filterBatch);
   const handleFilter = () => {
     if (activeTab === 0) {
       applyFilter(membershipData, setFilteredMembershipData);
@@ -527,7 +527,6 @@ const Reports = () => {
                   });
                 }}
               >
-                {/* TODO: Log (Done) */}
                 Export CSV
               </button>
             </CSVLink>
@@ -601,7 +600,6 @@ const Reports = () => {
                   });
                 }}
               >
-                {/* TODO: Log (Done) */}
                 Export CSV
               </button>
             </CSVLink>

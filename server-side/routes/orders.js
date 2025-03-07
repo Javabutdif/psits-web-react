@@ -1,7 +1,6 @@
 const express = require("express");
-const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
-const Admin = require("../models/AdminModel");
+const Event = require("../models/EventsModel");
 const Cart = require("../models/CartModel");
 const Orders = require("../models/OrdersModel");
 const Merch = require("../models/MerchModel");
@@ -118,14 +117,13 @@ router.post("/student-order", authenticateToken, async (req, res) => {
 
     res.status(200).json({ message: "Order Placed Successfully" });
   } catch (error) {
-    console.error(error); // Log error for debugging
+    console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
 // Cancel Order
 router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
-  // TODO: Log (Done)
   const { product_id } = req.params;
 
   if (!product_id) {
@@ -173,7 +171,7 @@ router.put("/cancel/:product_id", authenticateToken, async (req, res) => {
       });
 
       await log.save();
-      console.log("Action logged successfully.");
+      //console.log("Action logged successfully.");
     }
 
     res.status(200).json({ message: "Order canceled successfully" });
@@ -226,6 +224,7 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
           const variations = Array.isArray(item.variation)
             ? item.variation
             : [];
+          const merchId = new ObjectId(item.product_id);
 
           await Merch.findByIdAndUpdate(item.product_id, {
             $push: {
@@ -251,13 +250,58 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
               "sales_data.totalRevenue": item.sub_total,
             },
           });
+
+          const merchToGet = await Merch.findById(item.product_id);
+
+          const event = await Event.findOne({ eventId: merchId });
+
+          if (event) {
+            const campusData = event.sales_data.find(
+              (s) => s.campus === student.campus
+            );
+            if (!campusData) {
+              return res.status(400).json({ message: "Invalid campus" });
+            }
+  
+            campusData.unitsSold += 1;
+            campusData.totalRevenue += Number.parseInt(item.sub_total);
+  
+            event.totalUnitsSold += 1;
+            event.totalRevenueAll += Number.parseInt(item.sub_total);
+            event.save();
+          }
+          // else{
+          //   return res.status(404).json({ message: "Event not found" });
+          // }
+
+
+          if (merchToGet && merchToGet.category === "ict-congress") {
+            await Event.findOneAndUpdate(
+              { eventId: merchId },
+              {
+                $push: {
+                  attendees: {
+                    id_number: successfulOrder.id_number,
+                    name: successfulOrder.student_name,
+                    email: successfulOrder.email,
+                    course: successfulOrder.course,
+                    year: successfulOrder.year,
+                    campus: student.campus,
+                    isAttended: false,
+                    shirtSize: sizes.length > 0 ? sizes[0] : null,
+                    shirtPrice: item.sub_total,
+                  },
+                },
+              }
+            );
+          }
         })
       );
     }
 
-    // Render the email template
+    // Render and send the email
     const emailTemplate = await ejs.renderFile(
-      path.join(__dirname, "../templates/appr-order-receipt.ejs"), // Path to the ejs file
+      path.join(__dirname, "../templates/appr-order-receipt.ejs"),
       {
         reference_code: successfulOrder.reference_code,
         transaction_date: format(
@@ -277,7 +321,6 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
       }
     );
 
-    // Send Email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -288,14 +331,14 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL,
-      to: student.email, // Use the student's email
+      to: student.email,
       subject: "Your Order Receipt from PSITS - UC Main",
       html: emailTemplate,
       attachments: [
         {
           filename: "psits.jpg",
           path: path.join(__dirname, "../src/psits.jpg"),
-          cid: "logo", // Same CID as used in the EJS template
+          cid: "logo",
         },
       ],
     };
@@ -304,18 +347,53 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
       if (error) {
         return res.status(500).json({ message: "Error sending email", error });
       } else {
-        console.log("Email sent: " + info.response);
+        //console.log("Email sent: " + info.response);
         return res
           .status(200)
           .json({ message: "Order approved and email sent" });
       }
     });
   } catch (error) {
-    console.error("Error occurred:", error); // Log the error details with context
+    console.error("Error occurred:", error);
     res.status(500).json({
       message: "An error occurred while approving the order",
       error: error.message,
     });
+  }
+});
+
+router.get("/get-all-pending-counts", authenticateToken, async (req, res) => {
+  try {
+    const pendingOrders = await Orders.find({ order_status: "Pending" });
+    const productCounts = {};
+
+    pendingOrders.forEach((order) => {
+      order.items.forEach((item) => {
+        if (!productCounts[item.product_name]) {
+          productCounts[item.product_name] = {
+            total: 0,
+            yearCounts: [0, 0, 0, 0],
+          };
+        }
+        productCounts[item.product_name].total += item.quantity;
+
+        if (order.year >= 1 && order.year <= 4) {
+          productCounts[item.product_name].yearCounts[order.year - 1] +=
+            item.quantity;
+        }
+      });
+    });
+
+    const result = Object.keys(productCounts).map((productName) => ({
+      product_name: productName,
+      total: productCounts[productName].total,
+      yearCounts: productCounts[productName].yearCounts,
+    }));
+
+    res.status(200).json({ data: result });
+  } catch (error) {
+    console.error("Error fetching pending orders:", error);
+    res.status(500).json("Internal Server Error");
   }
 });
 
