@@ -97,7 +97,7 @@ const Orders = () => {
   }, [rowData]);
 
   const handlePrintComplete = () => {
-    console.log("Print Completed");
+    // console.log("Print Completed");
     setPrintData(null);
     setShouldPrint(false);
   };

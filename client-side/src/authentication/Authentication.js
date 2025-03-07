@@ -43,7 +43,7 @@ export const removeAuthentication = () => {
         },
       })
       .then(() => {
-        console.log("Logout action logged successfully.");
+        // console.log("Logout action logged successfully.");
       })
       .catch((error) => {
         console.error("Error logging logout action:", error);

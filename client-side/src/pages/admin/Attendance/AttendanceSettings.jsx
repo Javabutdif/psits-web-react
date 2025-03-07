@@ -49,9 +49,9 @@ const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-xl font-semibold mb-4">Attendance Settings</h2>
+        <h2 className="text-xl font-semibold mb-4">Attendees Settings</h2>
         <p className="text-gray-600">
-          Set the maximum limit for attendance per location.
+          Set the maximum limit for attendees per location.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-2">

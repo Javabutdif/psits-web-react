@@ -46,7 +46,7 @@ const AddOfficer = ({ isVisible, onClose, onSave }) => {
   const handleSubmit = async () => {
     handleCloseModal();
     if (formData.password === formData.confirm_password) {
-      console.log(formData);
+      // console.log(formData);
       if (await addOfficer(formData)) {
         onClose();
       }

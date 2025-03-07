@@ -89,7 +89,7 @@ function Product({ handleCloseAddProduct }) {
   const [isEventType, setIsEventType] = useState(false);
 
   const toggleIsEventType = () => {
-    setIsEventType(!isEventType);
+    setIsEventType((prev) => !prev);
   };
 
   useEffect(() => {
@@ -455,8 +455,13 @@ function Product({ handleCloseAddProduct }) {
   };
 
   return (
-    <div>
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      {isLoading ? (
+        <div className="flex items-center justify-center">
+          <div className="loader"></div>
+          <p className="ml-4 text-white">Uploading product, please wait...</p>
+        </div>
+      ) : (
         <div className="relative h-[90%] max-w-md w-full mx-4 md:mx-8 p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
           <button
             onClick={handleCloseAddProduct}
@@ -685,10 +690,11 @@ function Product({ handleCloseAddProduct }) {
               images={images}
               onClose={() => setShowPreview(false)}
               onConfirm={handleConfirm}
+              isLoading={isLoading}
             />
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

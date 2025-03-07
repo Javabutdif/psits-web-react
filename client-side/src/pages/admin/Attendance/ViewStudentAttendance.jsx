@@ -4,7 +4,6 @@ import { FaUserCheck } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import FormButton from "../../../components/forms/FormButton";
 
-
 const ViewStudentAttendance = ({
   isVisible,
   onClose,
@@ -17,7 +16,7 @@ const ViewStudentAttendance = ({
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Modal Data:", studentData);
+    // console.log("Modal Data:", studentData);
   }, [studentData]);
 
   const markAsPresent = () => {
@@ -68,7 +67,13 @@ const ViewStudentAttendance = ({
             .map(([key, value]) => (
               <div key={key} className="flex justify-between">
                 <span className="font-medium text-gray-700 capitalize">
-                  {key.replace(/_/g, " ")}:
+                  {
+                    key
+                      .replace(/_/g, " ") // Snake case to space
+                      .replace(/([a-z])([A-Z])/g, "$1 $2") // PascalCase or camelCase to space
+                      .replace(/\b\w/g, (char) => char.toUpperCase()) // Capitalize each word
+                  }
+                  :
                 </span>
                 <span className="text-gray-900">{value}</span>
               </div>

@@ -523,7 +523,7 @@ export const getAllOfficers = async () => {
       }
     );
     if (response.status === 200) {
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
     }
   } catch (error) {
@@ -549,7 +549,7 @@ export const getAllStudentOfficers = async () => {
       }
     );
     if (response.status === 200) {
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
     }
   } catch (error) {
@@ -577,7 +577,7 @@ export const getAllDevelopers = async () => {
       }
     );
     if (response.status === 200) {
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
     }
   } catch (error) {
@@ -601,7 +601,7 @@ export const getAllMedia = async () => {
       }
     );
     if (response.status === 200) {
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
     }
   } catch (error) {
@@ -628,7 +628,7 @@ export const getAllVolunteers = async () => {
       }
     );
     if (response.status === 200) {
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
     }
   } catch (error) {
@@ -654,7 +654,7 @@ export const roleRemove = async (id_number) => {
         },
       }
     );
-    console.log(response.data.message);
+    // console.log(response.data.message);
     return response.status;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -679,7 +679,7 @@ export const getSuspendOfficers = async () => {
       }
     );
     if (response.status === 200) {
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
     }
   } catch (error) {
@@ -731,7 +731,7 @@ export const officerSuspend = async (id_number) => {
         },
       }
     );
-    console.log(response.data.message);
+    // console.log(response.data.message);
     return response.status;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -794,7 +794,7 @@ export const logAdminAction = async ({
       }
     );
 
-    console.log("Action logged successfully:", response.data.message);
+    // console.log("Action logged successfully:", response.data.message);
   } catch (error) {
     console.error(
       "Error logging admin action:",
@@ -949,7 +949,7 @@ export const fetchAllPendingCounts = async () => {
         },
       }
     );
-    console.log(response.data.data);
+    // console.log(response.data.data);
     return response.data.data;
   } catch (error) {
     console.error("Error fetching student:", error);
@@ -1002,7 +1002,7 @@ export const getRequestAdminAccount = async () => {
       }
     );
     if (response.status === 200) {
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
     }
   } catch (error) {
