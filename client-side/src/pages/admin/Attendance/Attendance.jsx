@@ -329,71 +329,73 @@ const Attendance = (props) => {
             Back
           </button>
         </div>
-        <div className=" shadow-sm rounded-sm border bg-white p-2 space-y-4">
-          <motion.div
-            className="flex flex-col sm:flex-row justify-between items-center product-detail p-3 sm:p-2 mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="ml-2 w-full">
-              <h2 className="text-3xl font-bold">{eventData.eventName} </h2>
-              <p>Limit: {displayLimit}</p>
-            </div>
+        {user.campus !== "UC-Main" && (
+          <div className=" shadow-sm rounded-sm border bg-white p-2 space-y-4">
+            <motion.div
+              className="flex flex-col sm:flex-row justify-between items-center product-detail p-3 sm:p-2 mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="ml-2 w-full">
+                <h2 className="text-3xl font-bold">{eventData.eventName} </h2>
+                <p>Limit: {displayLimit}</p>
+              </div>
 
-            <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
-              {eventDateToCondition.toDateString() <
-              currentDate.toDateString() ? (
-                <ButtonsComponent>
-                  <div className="py-2">
-                    <motion.button
-                      type="button"
-                      text=" Ended"
-                      className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
-                      textClass="sm:block hidden text-white"
-                      whileHover={{ scale: 1.01, opacity: 0.95 }}
-                      whileTap={{ scale: 0.98, opacity: 0.9 }}
-                    >
-                      <i className="fas fa-ban"></i>Registration Ended
-                    </motion.button>
-                  </div>
-                </ButtonsComponent>
-              ) : isDisabled ? (
-                <ButtonsComponent>
-                  <div className="py-2">
-                    <motion.button
-                      type="button"
-                      text="Limit Reached"
-                      className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
-                      textClass="sm:block hidden text-white"
-                      whileHover={{ scale: 1.01, opacity: 0.95 }}
-                      whileTap={{ scale: 0.98, opacity: 0.9 }}
-                    >
-                      <i className="fas fa-ban"></i> Limit Reached
-                    </motion.button>
-                  </div>
-                </ButtonsComponent>
-              ) : (
-                <ButtonsComponent>
-                  <div className="py-2">
-                    <Link to={`/admin/addAttendee/${eventId}`}>
+              <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
+                {eventDateToCondition.toDateString() <
+                currentDate.toDateString() ? (
+                  <ButtonsComponent>
+                    <div className="py-2">
                       <motion.button
                         type="button"
-                        text="Add Attendee"
-                        className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
+                        text=" Ended"
+                        className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
                         textClass="sm:block hidden text-white"
                         whileHover={{ scale: 1.01, opacity: 0.95 }}
                         whileTap={{ scale: 0.98, opacity: 0.9 }}
                       >
-                        <i className="fas fa-add"></i> Add Attendee
+                        <i className="fas fa-ban"></i>Registration Ended
                       </motion.button>
-                    </Link>
-                  </div>
-                </ButtonsComponent>
-              )}
-            </div>
-          </motion.div>
-        </div>
+                    </div>
+                  </ButtonsComponent>
+                ) : isDisabled ? (
+                  <ButtonsComponent>
+                    <div className="py-2">
+                      <motion.button
+                        type="button"
+                        text="Limit Reached"
+                        className="bg-red-500 text-white hover:bg-red-600 active:bg-red-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center justify-center gap-2"
+                        textClass="sm:block hidden text-white"
+                        whileHover={{ scale: 1.01, opacity: 0.95 }}
+                        whileTap={{ scale: 0.98, opacity: 0.9 }}
+                      >
+                        <i className="fas fa-ban"></i> Limit Reached
+                      </motion.button>
+                    </div>
+                  </ButtonsComponent>
+                ) : (
+                  <ButtonsComponent>
+                    <div className="py-2">
+                      <Link to={`/admin/addAttendee/${eventId}`}>
+                        <motion.button
+                          type="button"
+                          text="Add Attendee"
+                          className="bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center gap-2"
+                          textClass="sm:block hidden text-white"
+                          whileHover={{ scale: 1.01, opacity: 0.95 }}
+                          whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        >
+                          <i className="fas fa-add"></i> Add Attendee
+                        </motion.button>
+                      </Link>
+                    </div>
+                  </ButtonsComponent>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
         <div>
           <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
             {user.campus === "UC-Main" && (
