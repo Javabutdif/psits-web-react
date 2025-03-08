@@ -226,74 +226,79 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
             : [];
           const merchId = new ObjectId(item.product_id);
 
-          await Merch.findByIdAndUpdate(item.product_id, {
-            $push: {
-              order_details: {
-                reference_code: reference_code,
-                product_name: item.product_name,
-                id_number: successfulOrder.id_number,
-                student_name: successfulOrder.student_name,
-                rfid: successfulOrder.rfid,
-                course: successfulOrder.course,
-                year: successfulOrder.year,
-                batch: item.batch,
-                size: { $each: sizes },
-                variation: { $each: variations },
-                quantity: item.quantity,
-                total: item.sub_total,
-                order_date: successfulOrder.order_date,
-                transaction_date: successfulOrder.transaction_date,
-              },
-            },
-            $inc: {
-              "sales_data.unitsSold": item.quantity,
-              "sales_data.totalRevenue": item.sub_total,
-            },
+          const existMerch = await Merch.findOne({
+            _id: item.product_id,
+            "order_details.reference_code": reference_code,
           });
+          console.log(existMerch);
+         
 
-          const merchToGet = await Merch.findById(item.product_id);
-
-          const event = await Event.findOne({ eventId: merchId });
-
-          if (event) {
-            const campusData = event.sales_data.find(
-              (s) => s.campus === student.campus
-            );
-            if (!campusData) {
-              return res.status(400).json({ message: "Invalid campus" });
-            }
-  
-            campusData.unitsSold += 1;
-            campusData.totalRevenue += Number.parseInt(item.sub_total);
-  
-            event.totalUnitsSold += 1;
-            event.totalRevenueAll += Number.parseInt(item.sub_total);
-            event.save();
-          }
-          // else{
-          //   return res.status(404).json({ message: "Event not found" });
-          // }
-
-
-          if (merchToGet && merchToGet.category === "ict-congress") {
-            await Event.findOneAndUpdate(
-              { eventId: merchId },
-              {
-                $push: {
-                  attendees: {
-                    id_number: successfulOrder.id_number,
-                    name: successfulOrder.student_name,
-                    email: successfulOrder.email,
-                    course: successfulOrder.course,
-                    year: successfulOrder.year,
-                    campus: student.campus,
-                    isAttended: false,
-                    shirtSize: sizes.length > 0 ? sizes[0] : null,
-                    shirtPrice: item.sub_total,
-                  },
+          if (!existMerch) {
+            await Merch.findByIdAndUpdate(item.product_id, {
+              $push: {
+                order_details: {
+                  reference_code: reference_code,
+                  product_name: item.product_name,
+                  id_number: successfulOrder.id_number,
+                  student_name: successfulOrder.student_name,
+                  rfid: successfulOrder.rfid,
+                  course: successfulOrder.course,
+                  year: successfulOrder.year,
+                  batch: item.batch,
+                  size: { $each: sizes },
+                  variation: { $each: variations },
+                  quantity: item.quantity,
+                  total: item.sub_total,
+                  order_date: successfulOrder.order_date,
+                  transaction_date: successfulOrder.transaction_date,
                 },
+              },
+              $inc: {
+                "sales_data.unitsSold": item.quantity,
+                "sales_data.totalRevenue": item.sub_total,
+              },
+            });
+
+            const merchToGet = await Merch.findById(item.product_id);
+
+            const event = await Event.findOne({ eventId: merchId });
+
+            if (event) {
+              const campusData = event.sales_data.find(
+                (s) => s.campus === student.campus
+              );
+              if (!campusData) {
+                return res.status(400).json({ message: "Invalid campus" });
               }
-            );
+
+              campusData.unitsSold += 1;
+              campusData.totalRevenue += Number.parseInt(item.sub_total);
+
+              event.totalUnitsSold += 1;
+              event.totalRevenueAll += Number.parseInt(item.sub_total);
+              event.save();
+            }
+
+            if (merchToGet && merchToGet.category === "ict-congress") {
+              await Event.findOneAndUpdate(
+                { eventId: merchId },
+                {
+                  $addToSet: {
+                    attendees: {
+                      id_number: successfulOrder.id_number,
+                      name: successfulOrder.student_name,
+                      email: successfulOrder.email,
+                      course: successfulOrder.course,
+                      year: successfulOrder.year,
+                      campus: student.campus,
+                      isAttended: false,
+                      shirtSize: sizes.length > 0 ? sizes[0] : null,
+                      shirtPrice: item.sub_total,
+                    },
+                  },
+                }
+              );
+            }
           }
         })
       );
