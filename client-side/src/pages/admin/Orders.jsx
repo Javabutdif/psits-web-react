@@ -54,10 +54,10 @@ const Orders = () => {
   useEffect(() => {
 		const delayFetch = setTimeout(() => {
 			fetchOrders();
-		}, 2000); // 2 seconds delay
+		}, 2000);
 
-		return () => clearTimeout(delayFetch); // Cleanup timeout on unmount
-	});
+		return () => clearTimeout(delayFetch); 
+	},[]);
 	useEffect(() => {
 		const filtered = orders.filter((order) => {
 			const matchesStatus = order.order_status === selectedTab;
