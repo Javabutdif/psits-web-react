@@ -52,80 +52,84 @@ const Orders = () => {
   });
   
   useEffect(() => {
-    fetchOrders();
-  }, []);
-  useEffect(() => {
-    const filtered = orders.filter((order) => {
-      const matchesStatus = order.order_status === selectedTab;
+		const delayFetch = setTimeout(() => {
+			fetchOrders();
+		}, 2000); // 2 seconds delay
 
-      const searchTermLower = searchTerm?.toLowerCase() || "";
-      const matchesSearch =
-        order.student_name?.toLowerCase().includes(searchTermLower) ||
-        order.id_number?.toLowerCase().includes(searchTermLower) ||
-        order.rfid?.toLowerCase().includes(searchTermLower) ||
-        order.items?.some((item) =>
-          item.product_name?.toLowerCase().includes(searchTermLower)
-        ) ||
-        (order.reference_code &&
-          order.reference_code.toString().includes(searchTerm));
+		return () => clearTimeout(delayFetch); // Cleanup timeout on unmount
+	});
+	useEffect(() => {
+		const filtered = orders.filter((order) => {
+			const matchesStatus = order.order_status === selectedTab;
 
-      return matchesStatus && (searchTerm === "" || matchesSearch);
-    });
+			const searchTermLower = searchTerm?.toLowerCase() || "";
+			const matchesSearch =
+				order.student_name?.toLowerCase().includes(searchTermLower) ||
+				order.id_number?.toLowerCase().includes(searchTermLower) ||
+				order.rfid?.toLowerCase().includes(searchTermLower) ||
+				order.items?.some((item) =>
+					item.product_name?.toLowerCase().includes(searchTermLower)
+				) ||
+				(order.reference_code &&
+					order.reference_code.toString().includes(searchTerm));
 
-    setFilteredOrders(filtered);
-    setCurrentPage(1); // Reset to first page when filter changes
-  }, [orders, selectedTab, searchTerm]);
+			return matchesStatus && (searchTerm === "" || matchesSearch);
+		});
 
-  const handlePrintData = (row) => {
-    setPrintData(row);
-    setShouldPrint(true);
-    const name = row.student_name;
-    const words = name.split(" ");
-    let fullName = "";
+		setFilteredOrders(filtered);
+		setCurrentPage(1); // Reset to first page when filter changes
+	}, [orders, selectedTab, searchTerm]);
 
-    for (let i = 0; i < words.length - 1; i++) {
-      fullName += words[i].charAt(0) + ".";
-    }
-    fullName += " " + words[words.length - 1];
+	const handlePrintData = (row) => {
+		setPrintData(row);
+		setShouldPrint(true);
+		const name = row.student_name;
+		const words = name.split(" ");
+		let fullName = "";
 
-    setSelectedStudentName(fullName);
-  };
-  useEffect(() => {
-    if (rowData) {
-      printRef.current.click();
-    }
-  }, [rowData]);
+		for (let i = 0; i < words.length - 1; i++) {
+			fullName += words[i].charAt(0) + ".";
+		}
+		fullName += " " + words[words.length - 1];
 
-  const handlePrintComplete = () => {
-    // console.log("Print Completed");
-    setPrintData(null);
-    setShouldPrint(false);
-  };
+		setSelectedStudentName(fullName);
+	};
+	useEffect(() => {
+		if (rowData) {
+			printRef.current.click();
+		}
+	}, [rowData]);
 
-  const handleApproveClick = (order) => {
-    setSelectedOrder(order);
-    const name = order.student_name;
-    const words = name.split(" ");
-    let fullName = "";
+	const handlePrintComplete = () => {
+		// console.log("Print Completed");
+		setPrintData(null);
+		setShouldPrint(false);
+	};
 
-    for (let i = 0; i < words.length - 1; i++) {
-      fullName += words[i].charAt(0) + ".";
-    }
-    fullName += " " + words[words.length - 1];
+	const handleApproveClick = (order) => {
+		setSelectedOrder(order);
+		const name = order.student_name;
+		const words = name.split(" ");
+		let fullName = "";
 
-    setSelectedStudentName(fullName);
-    setIsModalOpen(true);
-  };
-  const handleCancelClick = (order) => {
-    setSelectedOrder(order);
-    setDelModal(true);
-  };
-  const handleConfirmDeletion = async () => {
-    await cancelOrder(selectedOrder._id);
+		for (let i = 0; i < words.length - 1; i++) {
+			fullName += words[i].charAt(0) + ".";
+		}
+		fullName += " " + words[words.length - 1];
 
-    handleDeleteModal();
-    window.location.reload();
-  };
+		setSelectedStudentName(fullName);
+		setIsModalOpen(true);
+	};
+	const handleCancelClick = (order) => {
+		setSelectedOrder(order);
+		setDelModal(true);
+	};
+	const handleConfirmDeletion = async () => {
+		await cancelOrder(selectedOrder._id);
+
+		handleDeleteModal();
+		fetchOrders();
+	};
   const handleDeleteModal = () => {
     setDelModal(false);
   };

@@ -102,7 +102,7 @@ router.post(
   "/update-settings/:eventId",
   authenticateToken,
   async (req, res) => {
-    const { banilad, pt, lm } = req.body;
+    const { banilad, pt, lm , cs } = req.body;
     const event_id = new ObjectId(req.params.eventId);
 
     try {
@@ -114,6 +114,7 @@ router.post(
               { campus: "UC-Banilad", limit: banilad },
               { campus: "UC-PT", limit: pt },
               { campus: "UC-LM", limit: lm },
+              { campus: "UC-CS", limit: cs },
             ],
           },
         },
@@ -367,33 +368,40 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
       return acc;
     }, {});
 
-    const yearLevelsByCampus = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"].map(
-      (campus) => {
-        const campusWord = campus.split("-")[1];
-        return {
-          campus: campusWord,
-          yearLevels: [1, 2, 3, 4].reduce((acc, year) => {
-            const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
-            acc[`${yearWord}`] = attendees.filter(
-              (attendee) => attendee.year === year && attendee.campus === campus
-            ).length;
-            return acc;
-          }, {}),
-        };
-      }
-    );
+    const yearLevelsByCampus = [
+			"UC-Main",
+			"UC-Banilad",
+			"UC-LM",
+			"UC-PT",
+			"UC-CS",
+		].map((campus) => {
+			const campusWord = campus.split("-")[1];
+			return {
+				campus: campusWord,
+				yearLevels: [1, 2, 3, 4].reduce((acc, year) => {
+					const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
+					acc[`${yearWord}`] = attendees.filter(
+						(attendee) => attendee.year === year && attendee.campus === campus
+					).length;
+					return acc;
+				}, {}),
+			};
+		});
 
-    const campuses = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"].reduce(
-      (acc, campus) => {
-        const campusWord = campus.split("-")[1];
-        acc[`${campusWord}`] = attendees.filter(
-          (attendee) => attendee.campus === campus
-        ).length;
-        return acc;
-      },
-      {}
-    );
-    const campusesAttended = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"].reduce(
+    const campuses = [
+			"UC-Main",
+			"UC-Banilad",
+			"UC-LM",
+			"UC-PT",
+			"UC-CS",
+		].reduce((acc, campus) => {
+			const campusWord = campus.split("-")[1];
+			acc[`${campusWord}`] = attendees.filter(
+				(attendee) => attendee.campus === campus
+			).length;
+			return acc;
+		}, {});
+    const campusesAttended = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"].reduce(
       (acc, campus) => {
         const campusWord = campus.split("-")[1];
         acc[`${campusWord}`] = attendees.filter(
