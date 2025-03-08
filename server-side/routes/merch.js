@@ -87,7 +87,7 @@ router.post(
       if (isEvent) {
         try {
           const newEvent = new Event({
-            eventId: newMerchId,
+            eventId: newMerchId._id,
             eventName: name,
             eventImage: imageUrl,
             eventDate: eventDate,

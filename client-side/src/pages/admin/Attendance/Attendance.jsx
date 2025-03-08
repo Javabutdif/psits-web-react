@@ -322,7 +322,7 @@ const Attendance = (props) => {
       <div className="flex flex-col gap-5 p-2 md:flex-col sm:flex-col">
         <div className="flex justify-start">
           <button
-            onClick={handleNavigate(-1)}
+            onClick={handleNavigate("/admin/events")}
             className="flex items-center gap-2"
           >
             <IoArrowBack size={20} />
