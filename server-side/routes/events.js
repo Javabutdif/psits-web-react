@@ -1,5 +1,6 @@
 const express = require("express");
 const Events = require("../models/EventsModel");
+const Merch = require("../models/MerchModel");
 const authenticateToken = require("../middlewares/authenticateToken");
 const { ObjectId } = require("mongodb");
 const { default: mongoose } = require("mongoose");
@@ -23,9 +24,10 @@ router.get("/attendees/:id", authenticateToken, async (req, res) => {
 
   try {
     const eventId = new ObjectId(id);
+    const merchData = await Merch.findById({ _id: eventId });
     const attendees = await Events.find({ eventId });
-    if (attendees) {
-      res.status(200).json({ data: attendees });
+    if (attendees && merchData) {
+      res.status(200).json({ data: attendees, merch_data: merchData });
     } else {
       res.status(500).json({ message: "No attendees" });
     }
@@ -102,7 +104,7 @@ router.post(
   "/update-settings/:eventId",
   authenticateToken,
   async (req, res) => {
-    const { banilad, pt, lm , cs } = req.body;
+    const { banilad, pt, lm, cs } = req.body;
     const event_id = new ObjectId(req.params.eventId);
 
     try {
@@ -369,48 +371,51 @@ router.get("/get-statistics/:eventId", authenticateToken, async (req, res) => {
     }, {});
 
     const yearLevelsByCampus = [
-			"UC-Main",
-			"UC-Banilad",
-			"UC-LM",
-			"UC-PT",
-			"UC-CS",
-		].map((campus) => {
-			const campusWord = campus.split("-")[1];
-			return {
-				campus: campusWord,
-				yearLevels: [1, 2, 3, 4].reduce((acc, year) => {
-					const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
-					acc[`${yearWord}`] = attendees.filter(
-						(attendee) => attendee.year === year && attendee.campus === campus
-					).length;
-					return acc;
-				}, {}),
-			};
-		});
+      "UC-Main",
+      "UC-Banilad",
+      "UC-LM",
+      "UC-PT",
+      "UC-CS",
+    ].map((campus) => {
+      const campusWord = campus.split("-")[1];
+      return {
+        campus: campusWord,
+        yearLevels: [1, 2, 3, 4].reduce((acc, year) => {
+          const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
+          acc[`${yearWord}`] = attendees.filter(
+            (attendee) => attendee.year === year && attendee.campus === campus
+          ).length;
+          return acc;
+        }, {}),
+      };
+    });
 
     const campuses = [
-			"UC-Main",
-			"UC-Banilad",
-			"UC-LM",
-			"UC-PT",
-			"UC-CS",
-		].reduce((acc, campus) => {
-			const campusWord = campus.split("-")[1];
-			acc[`${campusWord}`] = attendees.filter(
-				(attendee) => attendee.campus === campus
-			).length;
-			return acc;
-		}, {});
-    const campusesAttended = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"].reduce(
-      (acc, campus) => {
-        const campusWord = campus.split("-")[1];
-        acc[`${campusWord}`] = attendees.filter(
-          (attendee) => attendee.campus === campus && attendee.isAttended
-        ).length;
-        return acc;
-      },
-      {}
-    );
+      "UC-Main",
+      "UC-Banilad",
+      "UC-LM",
+      "UC-PT",
+      "UC-CS",
+    ].reduce((acc, campus) => {
+      const campusWord = campus.split("-")[1];
+      acc[`${campusWord}`] = attendees.filter(
+        (attendee) => attendee.campus === campus
+      ).length;
+      return acc;
+    }, {});
+    const campusesAttended = [
+      "UC-Main",
+      "UC-Banilad",
+      "UC-LM",
+      "UC-PT",
+      "UC-CS",
+    ].reduce((acc, campus) => {
+      const campusWord = campus.split("-")[1];
+      acc[`${campusWord}`] = attendees.filter(
+        (attendee) => attendee.campus === campus && attendee.isAttended
+      ).length;
+      return acc;
+    }, {});
 
     const courses = ["BSIT", "BSCS"].reduce((acc, course) => {
       acc[course] = attendees.filter(

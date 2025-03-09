@@ -46,6 +46,8 @@ const Attendance = (props) => {
   });
   const [displayLimit, setDisplayLimit] = useState("");
   const [eventDateToCondition, setEventDateToCondition] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -276,6 +278,12 @@ const Attendance = (props) => {
       setEventDate(
         new Date(result.data.eventDate ? result.data.eventDate : "")
       );
+      setStartDate(
+        new Date(result.merch.start_date ? result.merch.start_date : "")
+      );
+      setEndDate(new Date(result.merch.end_date ? result.merch.end_date : ""));
+
+      //console.log(result);
       // console.log(
       //   eventDateToCondition.toLocaleDateString() <
       //     currentDate.toLocaleDateString()
@@ -343,8 +351,7 @@ const Attendance = (props) => {
               </div>
 
               <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
-                {eventDateToCondition.toDateString() <
-                currentDate.toDateString() ? (
+                {endDate.getTime() <= currentDate.getTime() ? (
                   <ButtonsComponent>
                     <div className="py-2">
                       <motion.button
@@ -356,6 +363,22 @@ const Attendance = (props) => {
                         whileTap={{ scale: 0.98, opacity: 0.9 }}
                       >
                         <i className="fas fa-ban"></i>Registration Ended
+                      </motion.button>
+                    </div>
+                  </ButtonsComponent>
+                ) : startDate.getTime() >= currentDate.getTime() ? (
+                  <ButtonsComponent>
+                    <div className="py-2">
+                      <motion.button
+                        type="button"
+                        text="Coming soon..."
+                        className="bg-gray-500 text-white hover:bg-gray-600 active:bg-gray-700 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+                        textClass="sm:block hidden text-white"
+                        whileHover={{ scale: 1.01, opacity: 0.95 }}
+                        whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        disabled
+                      >
+                        <i className="fas fa-add"></i> Coming soon...
                       </motion.button>
                     </div>
                   </ButtonsComponent>
