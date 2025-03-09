@@ -211,6 +211,7 @@ const AddAttendeeForm = (merchId) => {
     { value: "UC-Banilad", label: "UC-BANILAD" },
     { value: "UC-LM", label: "UC-LM" },
     { value: "UC-PT", label: "UC-PT" },
+     { value: "UC-CS", label: "UC-CS" },
   ];
 
   const sizeOptions = [

@@ -24,7 +24,7 @@ const AttendanceTabs = ({
   const user = getInformationData();
 
   const branches = higherOfficers()
-    ? ["All", "UC-Main", "UC-Banilad", "UC-LM", "UC-PT"]
+    ? ["All", "UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"]
     : [user.campus];
 
   const branchFilteredData = (branch) => {

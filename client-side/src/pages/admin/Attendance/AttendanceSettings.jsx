@@ -4,23 +4,25 @@ import { showToast } from "../../../utils/alertHelper";
 
 const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
   const [limits, setLimits] = useState({
-    banilad: "",
-    pt: "",
-    lm: "",
-  });
+		banilad: "",
+		pt: "",
+		lm: "",
+		cs: "",
+	});
 
-  const handleChange = (e) => {
-    setLimits({ ...limits, [e.target.name]: e.target.value });
-  };
-  const fetchEventCheck = async () => {
-    const response = await getEventCheck(eventId);
+	const handleChange = (e) => {
+		setLimits({ ...limits, [e.target.name]: e.target.value });
+	};
+	const fetchEventCheck = async () => {
+		const response = await getEventCheck(eventId);
 
-    setLimits({
-      banilad: response.limit.filter((i) => i.campus === "UC-Banilad")[0].limit,
-      pt: response.limit.filter((i) => i.campus === "UC-PT")[0].limit,
-      lm: response.limit.filter((i) => i.campus === "UC-LM")[0].limit,
-    });
-  };
+		setLimits({
+			banilad: response.limit.filter((i) => i.campus === "UC-Banilad")[0].limit,
+			pt: response.limit.filter((i) => i.campus === "UC-PT")[0].limit,
+			lm: response.limit.filter((i) => i.campus === "UC-LM")[0].limit,
+			cs: response.limit.filter((i) => i.campus === "UC-CS")[0].limit,
+		});
+	};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +31,7 @@ const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
     formData.append("banilad", limits.banilad);
     formData.append("pt", limits.pt);
     formData.append("lm", limits.lm);
+    formData.append("cs", limits.cs);
 
     try {
       if (await updateEventSettings(formData, eventId)) {
@@ -81,6 +84,16 @@ const AttendanceSettings = ({ showModal, setShowModal, eventId }) => {
               type="number"
               name="lm"
               value={limits.lm}
+              onChange={handleChange}
+              className="border rounded-lg p-1 w-20 text-center"
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <label className="text-gray-700">UC Main CS:</label>
+            <input
+              type="number"
+              name="cs"
+              value={limits.cs}
               onChange={handleChange}
               className="border rounded-lg p-1 w-20 text-center"
             />

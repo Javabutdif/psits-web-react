@@ -38,10 +38,11 @@ export const getAttendees = async (id) => {
         },
       }
     );
-
+    //console.log(response.data);
     return {
       data: response.data.data[0],
       attendees: response.data.data[0].attendees,
+      merch: response.data.merch_data,
     };
   } catch (error) {
     if (error.response && error.response.data) {

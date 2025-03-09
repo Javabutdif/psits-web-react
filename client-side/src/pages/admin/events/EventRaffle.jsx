@@ -17,7 +17,7 @@ const EventRaffle = () => {
   const [currentParticipants, setCurrentParticipants] = useState([]); // participants based on selectedCampus
   const [winners, setWinners] = useState([]); // all winners
   const [currentWinners, setCurrentWinners] = useState([]); // winners based on selectedCampus
- 
+
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -42,8 +42,13 @@ const EventRaffle = () => {
       setCurrentParticipants(participants);
     } else {
       const filtered = participants.filter(
-        (participant) => participant.campus === selectedCampus
+        (participant) =>
+          (selectedCampus === "UC-Main" &&
+            (participant.campus === "UC-Main" ||
+              participant.campus === "UC-CS")) ||
+          participant.campus === selectedCampus
       );
+
       setCurrentParticipants(filtered);
     }
   };
@@ -116,12 +121,17 @@ const EventRaffle = () => {
 
         {/* Winners Content */}
         <div className="w-full bg-[#074873] h-[70vh] sm:w-full md:w-1/3 p-4 flex flex-col rounded-md shadow-lg mt-5 items-center">
-        <div>
-          <h1 className="text-[#FFD700] text-2xl mb-5 text-center">RAFFLE WINNERS</h1>
-        </div>
+          <div>
+            <h1 className="text-[#FFD700] text-2xl mb-5 text-center">
+              RAFFLE WINNERS
+            </h1>
+          </div>
           <div className="w-full md:h-auto rounded-md flex flex-col items-center justify-center overflow-y-scroll max-h-[60vh]">
             {currentWinners.map((winner, index) => (
-              <div key={index}  className="text-center text-white p-2 font-bold w-full rounded-md text-sm sm:text-sm md:text-md lg:text-lg">
+              <div
+                key={index}
+                className="text-center text-white p-2 font-bold w-full rounded-md text-sm sm:text-sm md:text-md lg:text-lg"
+              >
                 {winner.name}
               </div>
             ))}
