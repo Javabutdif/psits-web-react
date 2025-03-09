@@ -304,7 +304,10 @@ router.put(
       }
 
       const result = await Merch.updateOne({ _id: id }, { $set: updateFields });
-
+      const event_result = await Event.updateOne(
+        { eventId: id },
+        { $set: { eventName: name, eventDescription: description } }
+      );
       if (result.matchedCount === 0) {
         console.error("Merch not found");
         return res.status(404).send("Merch not found");
