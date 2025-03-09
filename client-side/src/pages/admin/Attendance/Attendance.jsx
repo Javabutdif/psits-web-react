@@ -48,6 +48,7 @@ const Attendance = (props) => {
   const [eventDateToCondition, setEventDateToCondition] = useState(new Date());
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
+  const [merchData, setMerchData] = useState("");
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -236,7 +237,7 @@ const Attendance = (props) => {
       label: "Action",
       cell: (row) => (
         <ButtonsComponent>
-          {eventDate.toDateString() === currentDate.toDateString() ? (
+          {eventDate.getTime() >= currentDate.getTime() ? (
             <FormButton
               type="button"
               text="Attendance"
@@ -266,37 +267,35 @@ const Attendance = (props) => {
     },
   ];
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       // TODO:Done modify to get the real data
       const result = await getAllAttendees();
 
       setEventDateToCondition(
-        new Date(result.data.eventDate ? result.data.eventDate : "")
+        new Date(result.data.eventDate ? result.data.eventDate : new Date())
       );
       setEventDate(
-        new Date(result.data.eventDate ? result.data.eventDate : "")
+        new Date(result.data.eventDate ? result.data.eventDate : new Date())
       );
       setStartDate(
-        new Date(result.merch.start_date ? result.merch.start_date : "")
+        new Date(result.merch.start_date ? result.merch.start_date : new Date())
       );
-      setEndDate(new Date(result.merch.end_date ? result.merch.end_date : ""));
+      setEndDate(
+        new Date(result.merch.end_date ? result.merch.end_date : new Date())
+      );
 
-      //console.log(result);
-      // console.log(
-      //   eventDateToCondition.toLocaleDateString() <
-      //     currentDate.toLocaleDateString()
-      // );
       setData(result.attendees ? result.attendees : []);
       setFilteredData(result.attendees ? result.attendees : []);
       setEventData(result.data ? result.data : []);
+      setMerchData(result.merch ? result.merch : "");
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
       setLoading(false);
     }
-  };
+  });
 
   useEffect(() => {
     fetchData();
@@ -337,19 +336,19 @@ const Attendance = (props) => {
             Back
           </button>
         </div>
-        {user.campus !== "UC-Main" && (
-          <div className=" shadow-sm rounded-sm border bg-white p-2 space-y-4">
-            <motion.div
-              className="flex flex-col sm:flex-row justify-between items-center product-detail p-3 sm:p-2 mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="ml-2 w-full">
-                <h2 className="text-3xl font-bold">{eventData.eventName} </h2>
-                <p>Limit: {displayLimit}</p>
-              </div>
 
+        <div className=" shadow-sm rounded-sm border bg-white p-2 space-y-4">
+          <motion.div
+            className="flex flex-col sm:flex-row justify-between items-center product-detail p-3 sm:p-2 mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="ml-2 w-full">
+              <h2 className="text-3xl font-bold">{eventData.eventName} </h2>
+              {user.campus !== "UC-Main" && <p>Limit: {displayLimit}</p>}
+            </div>
+            {user.campus !== "UC-Main" && (
               <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
                 {endDate.getTime() <= currentDate.getTime() ? (
                   <ButtonsComponent>
@@ -416,9 +415,10 @@ const Attendance = (props) => {
                   </ButtonsComponent>
                 )}
               </div>
-            </motion.div>
-          </div>
-        )}
+            )}
+          </motion.div>
+        </div>
+
         <div>
           <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
             {user.campus === "UC-Main" && (
