@@ -237,7 +237,7 @@ const Attendance = (props) => {
       label: "Action",
       cell: (row) => (
         <ButtonsComponent>
-          {eventDate.getTime() >= currentDate.getTime() ? (
+          {eventDate.getTime() <= currentDate.getTime() ? (
             <FormButton
               type="button"
               text="Attendance"
