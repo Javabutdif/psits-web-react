@@ -279,31 +279,28 @@ router.put("/approve-order", authenticateToken, async (req, res) => {
 						}
 
 						if (merchToGet && merchToGet.category === "ict-congress") {
-							const exist_attendee = await Event.findOne({
-								eventId: merchId,
-								"attendees.id_number": successfulOrder.id_number,
-							});
-
-							if (!exist_attendee) {
-								await Event.findOneAndUpdate(
-									{ eventId: merchId },
-									{
-										$addToSet: {
-											attendees: {
-												id_number: successfulOrder.id_number,
-												name: successfulOrder.student_name,
-												email: successfulOrder.email,
-												course: successfulOrder.course,
-												year: successfulOrder.year,
-												campus: student.campus,
-												isAttended: false,
-												shirtSize: sizes.length > 0 ? sizes[0] : null,
-												shirtPrice: item.sub_total,
-											},
+							await Event.findOneAndUpdate(
+								{
+									eventId: merchId,
+									"attendees.id_number": { $ne: successfulOrder.id_number },
+								},
+								{
+									$push: {
+										attendees: {
+											id_number: successfulOrder.id_number,
+											name: successfulOrder.student_name,
+											email: successfulOrder.email,
+											course: successfulOrder.course,
+											year: successfulOrder.year,
+											campus: student.campus,
+											isAttended: false,
+											shirtSize: sizes.length > 0 ? sizes[0] : null,
+											shirtPrice: merchToGet.price,
 										},
-									}
-								);
-							}
+									},
+								},
+								{ upsert: true }
+							);
 						}
 					}
 				})
