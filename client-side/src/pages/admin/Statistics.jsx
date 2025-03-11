@@ -362,7 +362,11 @@ const Statistics = () => {
 						</p>
 					</div>
 					<div className="lg:w-[260px] w-full bg-[#FFA500] text-white border rounded-lg shadow-lg text-center p-5 hover:bg-[#c2a505] transition-colors duration-300">
-						<h2 className="mb-3 ">{datas.salesData?.[4]?.campus}</h2>
+						<h2 className="mb-3 ">
+							{datas.salesData?.[4]?.campus === "UC-CS"
+								? "UC-Main CS"
+								: datas.salesData?.[4]?.campus}
+						</h2>
 						<p>
 							Unit Sold:{" "}
 							<span className="font-bold">
@@ -377,7 +381,7 @@ const Statistics = () => {
 						</p>
 					</div>
 				</div>
-        
+
 				{/* TOTAL REVENUE, TOTAL ATTENDEES */}
 				<div className="mt-5 flex flex-row items-center w-full lg:w-full justify-center gap-5 lg:mt-0">
 					<div className="w-[260px] bg-white border rounded-lg shadow-lg text-center p-5">
@@ -394,7 +398,7 @@ const Statistics = () => {
 			{/* Campus-wise Breakdown for Years */}
 			<div className="mt-20">
 				<h1 className="text-xl font-bold text-center mb-4">
-					Student Attended by Campus
+					Student Registered by Campus
 				</h1>
 				<div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
 					{/* UC Campus A */}
@@ -424,10 +428,10 @@ const Statistics = () => {
 							UC-{datas?.yearLevelsByCampus?.[3]?.campus}
 						</h3>
 						<Bar data={campusDYearsData} options={chartOption1} />
-          </div>
-          <div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
+					</div>
+					<div className="bg-[#F5F5F5] p-3 shadow-md rounded-lg">
 						<h3 className="text-md font-semibold text-center mb-2">
-							UC-{datas?.yearLevelsByCampus?.[4]?.campus}
+							UC-Main {datas?.yearLevelsByCampus?.[4]?.campus}
 						</h3>
 						<Bar data={campusEYearsData} options={chartOption1} />
 					</div>
