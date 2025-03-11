@@ -25,54 +25,54 @@ const AddAttendeeForm = (merchId) => {
   const user = getInformationData();
   const { eventId } = useParams();
   const currentDate = new Date();
-  // FormData
-  const [formData, setFormData] = useState({
-    id_number: "",
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    course: "",
-    year: "",
-    campus: user.campus,
-    email: "",
-    shirt_size: "",
-    merchId: eventId,
-    shirt_price: "",
-    admin: user.name,
+  const [endDate, setEndDate] = useState(new Date());
+	// FormData
+	const [formData, setFormData] = useState({
+		id_number: "",
+		first_name: "",
+		middle_name: "",
+		last_name: "",
+		course: "",
+		year: "",
+		campus: user.campus,
+		email: "",
+		shirt_size: "",
+		merchId: eventId,
+		shirt_price: "",
+		admin: user.name,
 
-    applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
-  });
+		applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+	});
 
-  const fetchEventLimit = useCallback(async () => {
-    try {
-      const response = await getEventCheck(eventId);
-      const result = await getAttendees(eventId);
+	const fetchEventLimit = useCallback(async () => {
+		try {
+			const response = await getEventCheck(eventId);
+			const result = await getAttendees(eventId);
 
-      const campusLimit = response.limit.find((l) => l.campus === user.campus)
-        ? response.limit.find((l) => l.campus === user.campus)
-        : response.limit;
+			const campusLimit = response.limit.find((l) => l.campus === user.campus)
+				? response.limit.find((l) => l.campus === user.campus)
+				: response.limit;
 
-      if (!campusLimit) return;
+			if (!campusLimit) return;
 
-      const attendeeCount = response.attendees.filter(
-        (att) => att.campus === user.campus
-      ).length;
+			const attendeeCount = response.attendees.filter(
+				(att) => att.campus === user.campus
+			).length;
 
-      return (
-        attendeeCount >= campusLimit.limit ||
-        new Date(result.data.eventDate).toDateString() <
-          currentDate.toDateString()
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  });
+			return (
+				attendeeCount >= campusLimit.limit ||
+				new Date(result.merch.end_date).getTime() >= currentDate.getTime()
+			);
+		} catch (error) {
+			console.error(error);
+		}
+	});
 
-  const checkLimit = useCallback(async () => {
-    if (await fetchEventLimit()) {
-      navigate("/admin/attendance/" + eventId);
-    }
-  });
+	const checkLimit = useCallback(async () => {
+		if (await fetchEventLimit()) {
+			navigate("/admin/attendance/" + eventId);
+		}
+	});
 
   const validateInputs = () => {
     const newErrors = {};
