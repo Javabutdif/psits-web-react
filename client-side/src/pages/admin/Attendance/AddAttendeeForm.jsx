@@ -61,7 +61,7 @@ const AddAttendeeForm = (merchId) => {
 
 			return (
 				attendeeCount >= campusLimit.limit ||
-				new Date(result.merch.end_date).getTime() >= currentDate.getTime()
+				new Date(result.merch.end_date).getTime() <= currentDate.getTime()
 			);
 		} catch (error) {
 			console.error(error);
