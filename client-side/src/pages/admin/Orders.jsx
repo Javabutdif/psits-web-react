@@ -42,6 +42,7 @@ const Orders = () => {
 	};
 
 	const fetchPendingOrders = async () => {
+		setIsLoading(true);
 		try {
 			const data = await getAllPendingOrders();
 
@@ -64,8 +65,8 @@ const Orders = () => {
 		}
 	};
 
-  const fetchPaidOrders = async () => {
-    setIsLoading(true);
+	const fetchPaidOrders = async () => {
+		setIsLoading(true);
 		try {
 			const data = await getAllPaidOrders();
 
