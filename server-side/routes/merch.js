@@ -312,56 +312,75 @@ router.put(
         console.error("Merch not found");
         return res.status(404).send("Merch not found");
       }
+      const selectedAudienceArray = selectedAudience.includes(",")
+				? selectedAudience.split(",").map((aud) => aud.trim())
+				: [selectedAudience];
+      
+		const query = selectedAudienceArray.includes("all")
+			? { "cart.product_id": id }
+			: { "cart.product_id": id, role: { $in: selectedAudienceArray } };
 
-      const students = await Student.find({ "cart.product_id": id });
+			const students = await Student.find(query);
 
-      for (const student of students) {
-        for (let item of student.cart) {
-          if (item.product_id.toString() === id) {
-            item.product_name = name;
-            item.price = price;
-            item.sub_total = price * item.quantity;
-            item.imageUrl1 = imageUrl[0];
-            item.start_date = start_date;
-            item.end_date = end_date;
-            item.category = category;
-            item.batch = batch;
-            item.limited = control === "limited-purchase" ? true : false;
-            item.quantity = control === "limited-purchase" ? 1 : item.quantity;
-          }
-        }
+		
+			if (students) {
+				for (const student of students) {
+					for (let item of student.cart) {
+						if (item.product_id.toString() === id) {
+							item.product_name = name;
+							item.price = price;
+							item.sub_total = price * item.quantity;
+							item.imageUrl1 = imageUrl[0];
+							item.start_date = start_date;
+							item.end_date = end_date;
+							item.category = category;
+							item.batch = batch;
+							item.limited = control === "limited-purchase" ? true : false;
+							item.quantity =
+								control === "limited-purchase" ? 1 : item.quantity;
+						}
+					}
 
-        await student.save();
-      }
-      const orders = await Orders.find({
-        "items.product_id": id,
-        order_status: "Pending",
-      });
+					await student.save();
+				}
+			}
+			const queryOrders = selectedAudienceArray.includes("all")
+				? { "items.product_id": id, order_status: "Pending" }
+				: {
+						"items.product_id": id,
+						order_status: "Pending",
+						role: { $in: selectedAudienceArray },
+				  };
 
-      for (const order of orders) {
-        let newTotal = 0;
+			const orders = await Orders.find(queryOrders);
+			
+			if (orders) {
+				for (const order of orders) {
+					let newTotal = 0;
 
-        for (let item of order.items) {
-          if (item.product_id.toString() === id) {
-            item.product_name = name;
-            item.price = price;
+					for (let item of order.items) {
+						if (item.product_id.toString() === id) {
+							item.product_name = name;
+							item.price = price;
 
-            item.imageUrl1 = imageUrl[0];
+							item.imageUrl1 = imageUrl[0];
 
-            item.category = category;
-            item.batch = batch;
-            item.limited = control === "limited-purchase" ? true : false;
-            item.quantity = control === "limited-purchase" ? 1 : item.quantity;
-            item.sub_total = price * item.quantity;
-          }
+							item.category = category;
+							item.batch = batch;
+							item.limited = control === "limited-purchase" ? true : false;
+							item.quantity =
+								control === "limited-purchase" ? 1 : item.quantity;
+							item.sub_total = price * item.quantity;
+						}
 
-          newTotal += item.sub_total;
-        }
+						newTotal += item.sub_total;
+					}
 
-        order.total = newTotal;
+					order.total = newTotal;
 
-        await order.save();
-      }
+					await order.save();
+				}
+			}
 
       // Log the edit merch action
       const log = new Log({
@@ -378,6 +397,7 @@ router.put(
 
       res.status(200).send("Merch, carts, and orders updated successfully");
     } catch (error) {
+      console.error(error);
       console.error("Error updating merch, carts, and orders:", error.message);
       res.status(500).send(error.message);
     }

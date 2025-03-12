@@ -272,7 +272,7 @@ const Developers = () => {
       {viewAdd && (
         <SearchModal
           isVisible={viewAdd}
-          position={"Developers"}
+          position={"Developer"}
           onClose={() => setViewAdd(false)}
         />
       )}
