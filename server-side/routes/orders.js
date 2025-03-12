@@ -61,6 +61,9 @@ router.post("/student-order", authenticateToken, async (req, res) => {
   } = req.body;
   const itemsArray = Array.isArray(items) ? items : [items];
 
+
+  const student = await Student.findOne({ id_number: id_number });
+
   try {
     const newOrder = new Orders({
       id_number,
@@ -74,6 +77,7 @@ router.post("/student-order", authenticateToken, async (req, res) => {
       total,
       order_date,
       order_status,
+      role: student.role,
     });
 
     await newOrder.save();
