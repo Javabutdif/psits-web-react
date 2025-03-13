@@ -222,6 +222,9 @@ const AddAttendeeForm = (merchId) => {
     { value: "XL", label: "XL" },
     { value: "2XL", label: "2XL" },
     { value: "3XL", label: "3XL" },
+    { value: "4XL", label: "4XL" },
+    { value: "5XL", label: "5XL" },
+    { value: "6XL", label: "6XL" },
   ];
 
   // const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
