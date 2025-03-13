@@ -45,6 +45,40 @@ router.get("/get-all-orders", authenticateToken, async (req, res) => {
   }
 });
 
+//orders/get-all-paid-orders
+//get all pending orders
+router.get("/get-all-pending-orders", authenticateToken, async (req, res) => {
+	try {
+    const orders = await Orders.find({order_status: "Pending"}).sort({ order_date: -1 });
+   
+		if (orders.length > 0) {
+			res.status(200).json(orders);
+		} else {
+			res.status(400).json({ message: "No Records" });
+    }
+	} catch (error) {
+		console.error("Error fetching orders:", error);
+		res.status(500).json("Internal Server Error");
+	}
+});
+//Get all paid orders
+router.get("/get-all-paid-orders", authenticateToken, async (req, res) => {
+	try {
+    const orders = await Orders.find({ order_status: "Paid" }).sort({
+			order_date: -1
+		});
+		if (orders.length > 0) {
+			res.status(200).json(orders);
+		} else {
+			res.status(400).json({ message: "No Records" });
+		}
+	} catch (error) {
+		console.error("Error fetching orders:", error);
+		res.status(500).json("Internal Server Error");
+	}
+});
+
+
 router.post("/student-order", authenticateToken, async (req, res) => {
   const {
     id_number,
