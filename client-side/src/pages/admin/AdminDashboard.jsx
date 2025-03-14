@@ -90,6 +90,7 @@ const AdminDashboard = () => {
       animateCount();
     } catch (error) {
       setError("Error fetching dashboard data");
+      
     } finally {
       setLoading(false);
     }

@@ -99,14 +99,10 @@ const Login = () => {
            
               if (data.campus !== "UC-Main" && data.role === "Admin") {
 								navigate(`/${data.role.toLowerCase()}/events`);
-								setTimeout(() => {
-									window.location.reload();
-								}, 1000);
+								
 							} else {
 								navigate(`/${data.role.toLowerCase()}/dashboard`);
-								setTimeout(() => {
-									window.location.reload();
-								}, 1000);
+								
 							}
             
           } else {
