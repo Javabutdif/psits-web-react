@@ -96,15 +96,19 @@ const Login = () => {
         if (data) {
           if (data.role === "Admin" || data.role === "Student") {
             resetAttemptAuthentication();
-            setTimeout(() => {
+           
               if (data.campus !== "UC-Main" && data.role === "Admin") {
-                navigate(`/${data.role.toLowerCase()}/events`);
-                window.location.reload();
-              } else {
-                navigate(`/${data.role.toLowerCase()}/dashboard`);
-                window.location.reload();
-              }
-            }, 1000);
+								navigate(`/${data.role.toLowerCase()}/events`);
+								setTimeout(() => {
+									window.location.reload();
+								}, 1000);
+							} else {
+								navigate(`/${data.role.toLowerCase()}/dashboard`);
+								setTimeout(() => {
+									window.location.reload();
+								}, 1000);
+							}
+            
           } else {
             attemptAuthentication();
             setRemainingTime(60);

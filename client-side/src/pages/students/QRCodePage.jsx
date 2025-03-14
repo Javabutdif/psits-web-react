@@ -47,22 +47,23 @@ const QRCodePage = ({ closeView, event }) => {
 
   const fetchMerchData = async () => {
     try {
-      const token = sessionStorage.getItem("Token");
+			const token = sessionStorage.getItem("Token");
 
-      const response = await axios.get(
-        `${backendConnection()}/api/merch/retrieve/${event.eventId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = response.data;
-      navigate(`/student/merchandise/${event.eventId}`, {
-        state: data,
-      });
-    } catch (error) {
+			const response = await axios.get(
+				`${backendConnection()}/api/merch/retrieve/${event.eventId}`,
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+			const data = response.data;
+
+			navigate(`/student/merchandise/${event.eventId}`, {
+				state: data,
+			});
+		} catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
   };
