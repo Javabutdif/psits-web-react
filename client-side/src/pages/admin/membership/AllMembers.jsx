@@ -45,6 +45,7 @@ const Membership = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
+      window.location.reload();
       setLoading(false);
     }
   });
