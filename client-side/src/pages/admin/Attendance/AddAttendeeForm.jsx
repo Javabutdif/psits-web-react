@@ -215,6 +215,7 @@ const AddAttendeeForm = (merchId) => {
   ];
 
   const sizeOptions = [
+    { value: "XXS", label: "XXS" },
     { value: "XS", label: "XS" },
     { value: "S", label: "S" },
     { value: "M", label: "M" },
