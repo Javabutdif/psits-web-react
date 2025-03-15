@@ -26,53 +26,53 @@ const AddAttendeeForm = (merchId) => {
   const { eventId } = useParams();
   const currentDate = new Date();
   const [endDate, setEndDate] = useState(new Date());
-	// FormData
-	const [formData, setFormData] = useState({
-		id_number: "",
-		first_name: "",
-		middle_name: "",
-		last_name: "",
-		course: "",
-		year: "",
-		campus: user.campus,
-		email: "",
-		shirt_size: "",
-		merchId: eventId,
-		shirt_price: "",
-		admin: user.name,
+  // FormData
+  const [formData, setFormData] = useState({
+    id_number: "",
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+    course: "",
+    year: "",
+    campus: user.campus,
+    email: "",
+    shirt_size: "",
+    merchId: eventId,
+    shirt_price: "",
+    admin: user.name,
 
-		applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
-	});
+    applied: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
+  });
 
-	const fetchEventLimit = useCallback(async () => {
-		try {
-			const response = await getEventCheck(eventId);
-			const result = await getAttendees(eventId);
+  const fetchEventLimit = useCallback(async () => {
+    try {
+      const response = await getEventCheck(eventId);
+      const result = await getAttendees(eventId);
 
-			const campusLimit = response.limit.find((l) => l.campus === user.campus)
-				? response.limit.find((l) => l.campus === user.campus)
-				: response.limit;
+      const campusLimit = response.limit.find((l) => l.campus === user.campus)
+        ? response.limit.find((l) => l.campus === user.campus)
+        : response.limit;
 
-			if (!campusLimit) return;
+      if (!campusLimit) return;
 
-			const attendeeCount = response.attendees.filter(
-				(att) => att.campus === user.campus
-			).length;
+      const attendeeCount = response.attendees.filter(
+        (att) => att.campus === user.campus
+      ).length;
 
-			return (
-				attendeeCount >= campusLimit.limit ||
-				new Date(result.merch.end_date).getTime() <= currentDate.getTime()
-			);
-		} catch (error) {
-			console.error(error);
-		}
-	});
+      return (
+        attendeeCount >= campusLimit.limit ||
+        new Date(result.merch.end_date).getTime() <= currentDate.getTime()
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  });
 
-	const checkLimit = useCallback(async () => {
-		if (await fetchEventLimit()) {
-			navigate("/admin/attendance/" + eventId);
-		}
-	});
+  const checkLimit = useCallback(async () => {
+    if (await fetchEventLimit()) {
+      navigate("/admin/attendance/" + eventId);
+    }
+  });
 
   const validateInputs = () => {
     const newErrors = {};
@@ -98,13 +98,15 @@ const AddAttendeeForm = (merchId) => {
 
     if (!trimmedFormData.first_name) {
       newErrors.first_name = "First Name is required.";
-    } else if (!/^[A-Za-z]+( [A-Za-z]+)*$/.test(trimmedFormData.first_name)) {
+    } else if (
+      !/^[A-Za-zÑñ]+( [A-Za-zÑñ]+)*$/.test(trimmedFormData.first_name)
+    ) {
       newErrors.first_name = "Invalid First Name.";
     }
 
     if (!trimmedFormData.last_name) {
       newErrors.last_name = "Last Name is required.";
-    } else if (!/^[A-Za-z]+$/.test(trimmedFormData.last_name)) {
+    } else if (!/^[A-Za-zÑñ]+$/.test(trimmedFormData.last_name)) {
       newErrors.last_name = "Invalid Last Name.";
     }
 
@@ -211,7 +213,7 @@ const AddAttendeeForm = (merchId) => {
     { value: "UC-Banilad", label: "UC-BANILAD" },
     { value: "UC-LM", label: "UC-LM" },
     { value: "UC-PT", label: "UC-PT" },
-     { value: "UC-CS", label: "UC-CS" },
+    { value: "UC-CS", label: "UC-CS" },
   ];
 
   const sizeOptions = [
