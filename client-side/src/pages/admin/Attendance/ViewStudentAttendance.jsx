@@ -15,10 +15,6 @@ const ViewStudentAttendance = ({
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // console.log("Modal Data:", studentData);
-  }, [studentData]);
-
   const markAsPresent = () => {
     navigate(
       `/admin/attendance/${eventId}/${eventName}/markAsPresent/${studentData.id_number}/${studentData.name}`
@@ -62,7 +58,13 @@ const ViewStudentAttendance = ({
         <div id="modal-description" className="space-y-4">
           {Object.entries(studentData || {})
 
-            .filter(([key]) => key !== "_id" && key !== "isAttended") // Exclude specific keys
+            .filter(
+              ([key]) =>
+                key !== "_id" &&
+                key !== "isAttended" &&
+                key !== "raffleIsRemoved" &&
+                key !== "raffleIsWinner"
+            ) // Exclude specific keys
 
             .map(([key, value]) => (
               <div key={key} className="flex justify-between">
