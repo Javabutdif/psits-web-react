@@ -162,18 +162,18 @@ router.get("/retrieve-admin", authenticateToken, async (req, res) => {
 });
 
 router.delete("/delete-report", authenticateToken, async (req, res) => {
-  const { id, merchName } = req.body;
+  const { product_id, id, merchName } = req.body;
 
   try {
     // Ensure the request comes from an admin
     if (req.role !== "Admin") {
       return res.status(403).json({ message: "Forbidden: Admin access only." });
     }
-
+    const productId = new mongoose.Types.ObjectId(product_id);
     const objectId = new mongoose.Types.ObjectId(id);
 
     const result = await Merch.findOneAndUpdate(
-      { name: merchName },
+      { _id: productId },
       { $pull: { order_details: { _id: objectId } } },
       { new: true }
     );
@@ -313,74 +313,73 @@ router.put(
         return res.status(404).send("Merch not found");
       }
       const selectedAudienceArray = selectedAudience.includes(",")
-				? selectedAudience.split(",").map((aud) => aud.trim())
-				: [selectedAudience];
-      
-		const query = selectedAudienceArray.includes("all")
-			? { "cart.product_id": id }
-			: { "cart.product_id": id, role: { $in: selectedAudienceArray } };
+        ? selectedAudience.split(",").map((aud) => aud.trim())
+        : [selectedAudience];
 
-			const students = await Student.find(query);
+      const query = selectedAudienceArray.includes("all")
+        ? { "cart.product_id": id }
+        : { "cart.product_id": id, role: { $in: selectedAudienceArray } };
 
-		
-			if (students) {
-				for (const student of students) {
-					for (let item of student.cart) {
-						if (item.product_id.toString() === id) {
-							item.product_name = name;
-							item.price = price;
-							item.sub_total = price * item.quantity;
-							item.imageUrl1 = imageUrl[0];
-							item.start_date = start_date;
-							item.end_date = end_date;
-							item.category = category;
-							item.batch = batch;
-							item.limited = control === "limited-purchase" ? true : false;
-							item.quantity =
-								control === "limited-purchase" ? 1 : item.quantity;
-						}
-					}
+      const students = await Student.find(query);
 
-					await student.save();
-				}
-			}
-			const queryOrders = selectedAudienceArray.includes("all")
-				? { "items.product_id": id, order_status: "Pending" }
-				: {
-						"items.product_id": id,
-						order_status: "Pending",
-						role: { $in: selectedAudienceArray },
-				  };
+      if (students) {
+        for (const student of students) {
+          for (let item of student.cart) {
+            if (item.product_id.toString() === id) {
+              item.product_name = name;
+              item.price = price;
+              item.sub_total = price * item.quantity;
+              item.imageUrl1 = imageUrl[0];
+              item.start_date = start_date;
+              item.end_date = end_date;
+              item.category = category;
+              item.batch = batch;
+              item.limited = control === "limited-purchase" ? true : false;
+              item.quantity =
+                control === "limited-purchase" ? 1 : item.quantity;
+            }
+          }
 
-			const orders = await Orders.find(queryOrders);
-			
-			if (orders) {
-				for (const order of orders) {
-					let newTotal = 0;
+          await student.save();
+        }
+      }
+      const queryOrders = selectedAudienceArray.includes("all")
+        ? { "items.product_id": id, order_status: "Pending" }
+        : {
+            "items.product_id": id,
+            order_status: "Pending",
+            role: { $in: selectedAudienceArray },
+          };
 
-					for (let item of order.items) {
-						if (item.product_id.toString() === id) {
-							item.product_name = name;
-							item.price = price;
+      const orders = await Orders.find(queryOrders);
 
-							item.imageUrl1 = imageUrl[0];
+      if (orders) {
+        for (const order of orders) {
+          let newTotal = 0;
 
-							item.category = category;
-							item.batch = batch;
-							item.limited = control === "limited-purchase" ? true : false;
-							item.quantity =
-								control === "limited-purchase" ? 1 : item.quantity;
-							item.sub_total = price * item.quantity;
-						}
+          for (let item of order.items) {
+            if (item.product_id.toString() === id) {
+              item.product_name = name;
+              item.price = price;
 
-						newTotal += item.sub_total;
-					}
+              item.imageUrl1 = imageUrl[0];
 
-					order.total = newTotal;
+              item.category = category;
+              item.batch = batch;
+              item.limited = control === "limited-purchase" ? true : false;
+              item.quantity =
+                control === "limited-purchase" ? 1 : item.quantity;
+              item.sub_total = price * item.quantity;
+            }
 
-					await order.save();
-				}
-			}
+            newTotal += item.sub_total;
+          }
+
+          order.total = newTotal;
+
+          await order.save();
+        }
+      }
 
       // Log the edit merch action
       const log = new Log({
