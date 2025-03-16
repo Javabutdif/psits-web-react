@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import React from "react";
 
-const campusList = ["UC-Main", "UC-Banilad", "UC-LM", "UC-Pardo", "All"];
+const campusList = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "All"];
 
 const Tabs = ({ selectedCampus, setSelectedCampus }) => {
   const handleSelectCampus = (campus) => {
@@ -14,7 +14,7 @@ const Tabs = ({ selectedCampus, setSelectedCampus }) => {
         // Remove 'UC-' from the campus name for display
         const displayCampus = campus.replace("UC-", "");
 
-        return ( 
+        return (
           <motion.button
             key={campus}
             className={`px-4 py-2 rounded-full transition-transform duration-300 ease-in-out transform ${
