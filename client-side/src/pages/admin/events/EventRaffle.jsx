@@ -7,6 +7,7 @@ import {
 } from "../../../api/event";
 import RafflePicker from "../../../components/raffle/RafflePicker";
 import Tabs from "../../../components/raffle/Tabs";
+import { InfinitySpin } from "react-loader-spinner";
 
 const EventRaffle = () => {
   const { eventId } = useParams();
@@ -111,13 +112,27 @@ const EventRaffle = () => {
       {/* Raffle and Extra Content */}
       <div className="flex flex-col sm:flex-col md:flex-row justify-center md:justify-around gap-6 w-full">
         {/* Raffle Picker */}
+
         <div className="w-full md:w-1/2 p-4 flex flex-col min-h-[60vh] md:min-h-[70vh] justify-center items-center">
-          <RafflePicker
-            participants={currentParticipants}
-            onPickWinner={handleRaffleWinner}
-            onRemoveAttendee={handleRemoveAttendee}
-          />
+          {!isLoading ? (
+            <RafflePicker
+              participants={currentParticipants}
+              onPickWinner={handleRaffleWinner}
+              onRemoveAttendee={handleRemoveAttendee}
+            />
+          ) : (
+            <>
+              <InfinitySpin
+                visible={true}
+                width={200}
+                color="#0d6efd"
+                ariaLabel="infinity-spin-loading"
+              />
+              <p>Fetching participants...</p>
+            </>
+          )}
         </div>
+
         <div className="relative w-full bg-[#074873] h-[70vh] sm:w-full md:w-1/3 p-4 flex flex-col rounded-md shadow-lg mt-5 items-center">
           <h1 className="absolute left-0 top-0 w-full bg-[#074873] p-2 text-[#FFD700] text-2xl mb-5 text-center">
             RAFFLE WINNERS
