@@ -134,8 +134,9 @@ const EventRaffle = () => {
         </div>
 
         <div className="relative w-full bg-[#074873] h-[70vh] sm:w-full md:w-1/3 p-4 flex flex-col rounded-md shadow-lg mt-5 items-center">
-          <h1 className="absolute left-0 top-0 w-full bg-[#074873] p-2 text-[#FFD700] text-2xl mb-5 text-center">
-            RAFFLE WINNERS
+          <h1 className="absolute left-0 top-0 w-full bg-[#074873] p-2 text-[#FFD700] text-2xl leading-none mb-5 text-center">
+            {selectedCampus}
+            <br></br>RAFFLE WINNERS
           </h1>
           <div className="pt-[48px] overflow-y-scroll">
             <div className="w-full rounded-md flex flex-col items-center justify-center">
