@@ -124,149 +124,157 @@ const Attendance = (props) => {
   };
 
   const columns = [
-		{
-			key: "select",
-			label: (
-				<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-					<input
-						type="checkbox"
-						checked={selectAll}
-						onChange={() => setSelectAll(!selectAll)}
-					/>
-				</motion.div>
-			),
-			cell: (row) => (
-				<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-					<input
-						type="checkbox"
-						checked={selectedRows.includes(row.id_number)}
-						onChange={() => handleRowSelection(row.id_number)}
-					/>
-				</motion.div>
-			),
-		},
-		{
-			key: "id_number",
-			label: "ID",
-			sortable: true,
-			selector: (row) => row.id_number, // Add selector for the student field
-			cell: (row) => (
-				<div className="text-left">
-					<div className="text-xs text-gray-500">ID: {row.id_number}</div>
-				</div>
-			),
-		},
-		{
-			key: "name",
-			label: "Name",
-			sortable: true,
-			selector: (row) => row.name, // Add selector for the student field
-			cell: (row) => (
-				<div className="text-left">
-					<div className="font-semibold text-gray-900">{row.name}</div>
-				</div>
-			),
-		},
-		{
-			key: "course",
-			label: "Course",
-			sortable: true,
-			selector: (row) => row.course, // Add selector for course field
-			cell: (row) => row.course,
-		},
-		{
-			key: "year",
-			label: "Year",
-			sortable: true,
-			selector: (row) => row.year, // Add selector for year field
-			cell: (row) => row.year,
-		},
-		{
-			key: "isAttended",
-			label: "Status",
-			sortable: true,
-			selector: (row) => {
-				if (row.isAttended) return "Attended";
-				if (eventHasEnded && !row.isAttended) return "Absent";
-				return "Ongoing";
-			},
+    {
+      key: "select",
+      label: (
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={() => setSelectAll(!selectAll)}
+          />
+        </motion.div>
+      ),
+      cell: (row) => (
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <input
+            type="checkbox"
+            checked={selectedRows.includes(row.id_number)}
+            onChange={() => handleRowSelection(row.id_number)}
+          />
+        </motion.div>
+      ),
+    },
+    {
+      key: "id_number",
+      label: "ID",
+      sortable: true,
+      selector: (row) => row.id_number, // Add selector for the student field
+      cell: (row) => (
+        <div className="text-left">
+          <div className="text-xs text-gray-500">ID: {row.id_number}</div>
+        </div>
+      ),
+    },
+    {
+      key: "name",
+      label: "Name",
+      sortable: true,
+      selector: (row) => row.name, // Add selector for the student field
+      cell: (row) => (
+        <div className="text-left">
+          <div className="font-semibold text-gray-900">{row.name}</div>
+        </div>
+      ),
+    },
+    {
+      key: "course",
+      label: "Course",
+      sortable: true,
+      selector: (row) => row.course, // Add selector for course field
+      cell: (row) => row.course,
+    },
+    {
+      key: "year",
+      label: "Year",
+      sortable: true,
+      selector: (row) => row.year, // Add selector for year field
+      cell: (row) => row.year,
+    },
+    {
+      key: "isAttended",
+      label: "Status",
+      sortable: true,
+      selector: (row) => {
+        if (row.isAttended) return "Attended";
+        if (eventHasEnded && !row.isAttended) return "Absent";
+        return "Ongoing";
+      },
 
-			cell: (row) => {
-				const status = row.isAttended
-					? "Attended"
-					: eventHasEnded && !row.isAttended
-					? "Absent"
-					: "Ongoing";
+      cell: (row) => {
+        const status = row.isAttended
+          ? "Attended"
+          : eventHasEnded && !row.isAttended
+          ? "Absent"
+          : "Ongoing";
 
-				return (
-					<div className="text-left">
-						<span
-							className={`px-2 py-1 rounded text-xs ${
-								status === "Attended"
-									? "bg-green-200 text-green-800"
-									: status === "Absent"
-									? "bg-red-200 text-gray-800"
-									: "bg-yellow-200 text-yellow-800"
-							}`}>
-							{status}
-						</span>
-					</div>
-				);
-			},
-		},
-		{
-			key: "attendDate",
-			label: "Confirmed Date",
-			sortable: true,
-			selector: (row) => row.attendDate,
-			cell: (row) =>
-				row.attendDate && !isNaN(new Date(row.attendDate))
-					? new Date(row.attendDate).toLocaleString()
-					: "TBA",
-		},
-		{
-			key: "confirmedBy",
-			label: "Confirmed By",
-			sortable: true,
-			selector: (row) => row.confirmedBy, // Add selector for confirmed field
-			cell: (row) => row.confirmedBy,
-		},
-		{
-			key: "action",
-			label: "Action",
-			cell: (row) => (
-				<ButtonsComponent>
-					{eventDate.getTime() === currentDate.getTime() ? (
-						<FormButton
-							type="button"
-							text="Attendance"
-							onClick={() => handleViewBtn(row)}
-							icon={<FaUserCheck size={20} />} // Simple icon
-							styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
-							textClass="text-blue-100" // Elegant text color
-							whileHover={{ scale: 1.02, opacity: 0.95 }}
-							whileTap={{ scale: 0.98, opacity: 0.9 }}
-						/>
-					) : eventDate.getTime() < currentDate.getTime() ? (
-						<></>
-					) : (
-						<>
-							<FormButton
-								type="button"
-								text="Remove"
-								onClick={() => handleOpenRemoveModal(row.id_number)}
-								icon={<i className="fas fa-trash"></i>} // Disabled icon
-								styles="px-4 bg-red-500 text-[#DFF6FF] hover:bg-red-600 active:bg-red-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-								textClass="text-white" // Elegant text color
-								whileHover={{ scale: 1.02, opacity: 0.95 }}
-								whileTap={{ scale: 0.98, opacity: 0.9 }}
-							/>
-						</>
-					)}
-				</ButtonsComponent>
-			),
-		},
-	];
+        return (
+          <div className="text-left">
+            <span
+              className={`px-2 py-1 rounded text-xs ${
+                status === "Attended"
+                  ? "bg-green-200 text-green-800"
+                  : status === "Absent"
+                  ? "bg-red-200 text-gray-800"
+                  : "bg-yellow-200 text-yellow-800"
+              }`}
+            >
+              {status}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "attendDate",
+      label: "Confirmed Date",
+      sortable: true,
+      selector: (row) => row.attendDate,
+      cell: (row) =>
+        row.attendDate && !isNaN(new Date(row.attendDate))
+          ? new Date(row.attendDate).toLocaleString()
+          : "TBA",
+    },
+    {
+      key: "confirmedBy",
+      label: "Confirmed By",
+      sortable: true,
+      selector: (row) => row.confirmedBy, // Add selector for confirmed field
+      cell: (row) => row.confirmedBy,
+    },
+    {
+      key: "action",
+      label: "Action",
+      cell: (row) => {
+        const isSameDate =
+          eventDate.getFullYear() === currentDate.getFullYear() &&
+          eventDate.getMonth() === currentDate.getMonth() &&
+          eventDate.getDate() === currentDate.getDate();
+
+        const isPastEvent = eventDate < currentDate && !isSameDate;
+
+        return (
+          <ButtonsComponent>
+            {isSameDate ? (
+              <FormButton
+                type="button"
+                text="Attendance"
+                onClick={() => handleViewBtn(row)}
+                icon={<FaUserCheck size={20} />}
+                styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
+                textClass="text-blue-100"
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+              />
+            ) : isPastEvent ? (
+              <></>
+            ) : (
+              <FormButton
+                type="button"
+                text="Remove"
+                onClick={() => handleOpenRemoveModal(row.id_number)}
+                icon={<i className="fas fa-trash"></i>}
+                styles="px-4 bg-red-500 text-[#DFF6FF] hover:bg-red-600 active:bg-red-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+                textClass="text-white"
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+              />
+            )}
+          </ButtonsComponent>
+        );
+      },
+    },
+  ];
 
   const fetchData = useCallback(async () => {
     try {
