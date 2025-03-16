@@ -39,7 +39,7 @@ export const getAttendees = async (id) => {
         },
       }
     );
-    //console.log(response.data);
+    console.log(response.data);
     return {
       data: response.data.data[0],
       attendees: response.data.data[0].attendees,
