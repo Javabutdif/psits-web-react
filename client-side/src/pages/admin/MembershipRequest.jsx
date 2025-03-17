@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import { showToast } from "../../utils/alertHelper";
 import { membershipRequest, requestDeletion } from "../../api/admin";
 import TableComponent from "../../components/Custom/TableComponent";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 
 import { ConfirmActionType } from "../../enums/commonEnums";
@@ -251,15 +250,7 @@ function MembershipRequest() {
     setFilteredData(filtered);
   }, [searchQuery, data]);
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    autoTable(doc, {
-      html: "#my-table",
-      styles: { cellWidth: "wrap" },
-      margin: { top: 20 },
-    });
-    doc.save("table.pdf");
-  };
+ 
 
   const handleConfirmDeletion = async () => {
     try {
