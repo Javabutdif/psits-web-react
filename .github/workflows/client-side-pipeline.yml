@@ -55,8 +55,8 @@ jobs:
       - name: List directory contents
         run: ls -R
 
-      #- name: Deploy Project Artifacts to Vercel
-      #  run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --cwd client-side
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --cwd client-side
 
   Deploy-Production:
     name: Deploy Production
