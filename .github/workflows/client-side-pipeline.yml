@@ -31,10 +31,14 @@ jobs:
         working-directory: client-side
 
       - name: Install Vercel CLI
+        working-directory: client-side
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
+        working-directory: client-side
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
       - name: Build Project Artifacts
+        working-directory: client-side
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
+        working-directory: client-side
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
