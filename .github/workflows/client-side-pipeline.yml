@@ -30,6 +30,11 @@ jobs:
       - run: npm run build
         working-directory: client-side
 
+  Deploy-Preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
       - name: Install Vercel CLI
         working-directory: client-side
         run: npm install --global vercel@latest
