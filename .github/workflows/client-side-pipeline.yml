@@ -30,7 +30,7 @@ jobs:
       - run: npm run build
         working-directory: client-side
 
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel | Web
         working-directory: client-side
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} # Pulls Vercel token from GitHub secrets
