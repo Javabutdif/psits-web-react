@@ -17,10 +17,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Locate Client side directory
-        working-directory: client-side
-        run: |
-          ls -la
+      - name: Locate Client-side Directory
+        run: ls -la client-side
 
       - name: Setup Node and Build Project
         uses: actions/setup-node@v4
@@ -28,42 +26,55 @@ jobs:
           node-version: 20
           cache: "npm"
           cache-dependency-path: client-side/package-lock.json
-      - run: npm install
+
+      - name: Install Dependencies
+        run: npm install
         working-directory: client-side
-      - run: npm run build
+
+      - name: Build Project
+        run: npm run build
         working-directory: client-side
 
   Deploy-Preview:
     name: Deploy Preview
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Install Vercel CLI
-        working-directory: client-side
         run: npm install --global vercel@latest
+
       - name: Pull Vercel Environment Information
-        working-directory: client-side
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: client-side
+
       - name: Build Project Artifacts
-        working-directory: client-side
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy Project Artifacts to Vercel
         working-directory: client-side
+
+      - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: client-side
 
   Deploy-Production:
     name: Deploy Production
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Install Vercel CLI
-        working-directory: client-side
         run: npm install --global vercel@latest
+
       - name: Pull Vercel Environment Information
-        working-directory: client-side
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Build Project Artifacts
         working-directory: client-side
+
+      - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: client-side
+
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: client-side
