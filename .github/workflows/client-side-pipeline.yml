@@ -50,8 +50,7 @@ jobs:
         working-directory: client-side
 
       - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: client-side
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }} --cwd client-side
 
       - name: List directory contents
         run: ls -R
@@ -74,8 +73,7 @@ jobs:
         working-directory: client-side
 
       - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: client-side
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }} --cwd client-side
 
       - name: List directory contents
         run: ls -R
