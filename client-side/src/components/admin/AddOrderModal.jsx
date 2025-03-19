@@ -39,12 +39,10 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
     const fetchStudentOptions = async () => {
       try {
         const result = await membership();
-        const options = result
-          .filter((student) => student.membership === "None")
-          .map((student) => ({
-            label: `${student.id_number} - ${student.first_name} ${student.last_name}`,
-            value: student,
-          }));
+        const options = result.map((student) => ({
+          label: `${student.id_number} - ${student.first_name} ${student.last_name}`,
+          value: student,
+        }));
         setStudentOptions(options);
       } catch (error) {
         console.error("Error fetching data:", error);
