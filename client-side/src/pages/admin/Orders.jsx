@@ -14,61 +14,36 @@ import {
 	formattedDate,
 } from "../../components/tools/clientTools";
 import { ConfirmActionType } from "../../enums/commonEnums";
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import ReactToPrint from "react-to-print";
-import { InfinitySpin } from "react-loader-spinner";
+import React, { useState, useEffect, useRef } from "react";
+import ReactToPrint from "react-to-print"
+import Button from "../../components/common/Button"
+import AddOrderModal from "../../components/admin/AddOrderModal";
 
 const Orders = () => {
-	const [orders, setOrders] = useState([]);
-	const [filteredOrders, setFilteredOrders] = useState([]);
-	const [selectedTab, setSelectedTab] = useState("Pending");
-	const [rowData, setPrintData] = useState(null);
-	const [selectedStudent, setSelectedStudentName] = useState("");
-	const [searchTerm, setSearchTerm] = useState("");
-	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage] = useState(10);
-	const [shouldPrint, setShouldPrint] = useState(false);
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [delModal, setDelModal] = useState(false);
-	const [selectedOrder, setSelectedOrder] = useState(null);
-	const [openDropdown, setOpenDropdown] = useState(null);
-	const [error, setError] = useState(null);
-	const componentRef = useRef();
-	const printRef = useRef();
-	const [isLoading, setIsLoading] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [selectedTab, setSelectedTab] = useState("Pending");
+  const [rowData, setPrintData] = useState(null);
+  const [selectedStudent, setSelectedStudentName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [shouldPrint, setShouldPrint] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [delModal, setDelModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [error, setError] = useState(null);
+  const componentRef = useRef();
+  const printRef = useRef();
 
-	const fetchOrders = async () => {
-		selectedTab === "Pending" ? fetchPendingOrders() : fetchPaidOrders();
-	};
+  /* Add Order Modal */
+  const [isAddOrderModalShown, showAddOrderModal] = useState(false);
 
-	const fetchPendingOrders = async () => {
-		setIsLoading(true);
-		try {
-			const data = await getAllPendingOrders();
-
-			if (data === 0 || data.length === 0) {
-				setOrders([]);
-				setFilteredOrders([]);
-				setError("No orders found.");
-			} else {
-				setOrders(data);
-				setFilteredOrders(data);
-				setError(null);
-				setIsLoading(false);
-			}
-		} catch (err) {
-			setOrders([]);
-			setFilteredOrders([]);
-			setError("Failed to fetch orders. Please try again later.");
-			console.error("Error fetching orders:", err);
-			setIsLoading(false);
-		}
-	};
-
-	const fetchPaidOrders = async () => {
-		setIsLoading(true);
-		try {
-			const data = await getAllPaidOrders();
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await getAllOrders();
 
 			if (data === 0 || data.length === 0) {
 				setOrders([]);
@@ -182,28 +157,55 @@ const Orders = () => {
 		setOpenDropdown(openDropdown === id ? null : id);
 	};
 
-	const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-	const currentOrders = filteredOrders.slice(
-		(currentPage - 1) * itemsPerPage,
-		currentPage * itemsPerPage
-	);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const currentOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-	const handleSelectedTab = (select) => {
-		setSelectedTab(select);
-		select === "Pending" ? fetchPendingOrders() : fetchPaidOrders();
-	};
+  /* Manual Order here */
+  const openAddModalHandler = async () => {
+    showAddOrderModal(true);
+  }
 
-	return (
-		<div className="p-4 pt-20">
-			<div className="mb-4">
-				<input
-					type="text"
-					placeholder="Search..."
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-					className="px-4 py-2 border border-gray-300 rounded-md w-full"
-				/>
-			</div>
+  const closeAddOrderModal = () => {
+    showAddOrderModal(false);
+  }
+
+  // create order button
+  const createOrderHandler = (formData) => {
+    console.log(formData);
+
+    // close modals
+    showAddOrderModal(false);
+  }
+
+  return (
+    <div className="p-4 pt-20">
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md w-full"
+        />
+      </div>
+
+      <Button
+        onClick={openAddModalHandler}
+      >
+        Add Order
+      </Button>
+
+      {
+        isAddOrderModalShown && (
+          <AddOrderModal 
+            handleClose={closeAddOrderModal}
+            onCreateOrder={createOrderHandler}
+          />
+        )
+      }
 
 			{/* Tabs */}
 			<div className="flex flex-wrap justify-around bg-gray-100 p-2 rounded">
