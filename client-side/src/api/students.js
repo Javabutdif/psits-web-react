@@ -116,7 +116,7 @@ export const viewCart = async (id_number) => {
     }
   } catch (error) {
     console.error("Error:", error);
-    window.location.reload();
+    
   }
 };
 
