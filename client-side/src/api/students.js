@@ -58,15 +58,13 @@ export const getMembershipStatusStudents = async (id_number) => {
     if (error.response && error.response.data) {
       console.log(error.response.data.message);
 
-       window.location.reload();
+      window.location.reload();
     } else {
       console.log(error.response.data.message);
-       window.location.reload();
+      window.location.reload();
     }
     console.error("Error:", error);
-     window.location.reload();
-   
-
+    window.location.reload();
   }
 };
 
@@ -117,12 +115,8 @@ export const viewCart = async (id_number) => {
       return null;
     }
   } catch (error) {
-    if (error.response && error.response.data) {
-      console.error("Error:", error);
-    } else {
-      console.error("Error:", error);
-    }
     console.error("Error:", error);
+    window.location.reload();
   }
 };
 
@@ -158,30 +152,28 @@ export const deleteItem = async (data) => {
 ///fetch-specific-student/:id_number
 
 export const fetchSpecificStudent = async (id_number) => {
-	try {
-		const response = await axios.get(
-			`${backendConnection()}/api/fetch-specific-student/${id_number}`,
-			{
-				
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/fetch-specific-student/${id_number}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-		if (response.status === 200) {
-			return response.data.data;
-		} else {
-			return null;
-		}
-	} catch (error) {
-		if (error.response && error.response.data) {
-			console.error("Error:", error);
-		} else {
-			console.error("Error:", error);
-		}
-		console.error("Error:", error);
-	}
+    if (response.status === 200) {
+      return response.data.data;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.error("Error:", error);
+    } else {
+      console.error("Error:", error);
+    }
+    console.error("Error:", error);
+  }
 };
-
