@@ -168,7 +168,7 @@ router.delete("/delete-report", admin_authenticate, async (req, res) => {
 
   try {
     // Ensure the request comes from an admin
-    if (req.role !== "Admin") {
+    if (req.user.role !== "Admin") {
       return res.status(403).json({ message: "Forbidden: Admin access only." });
     }
     const productId = new mongoose.Types.ObjectId(product_id);
