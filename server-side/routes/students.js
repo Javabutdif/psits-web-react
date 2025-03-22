@@ -85,12 +85,12 @@ router.get(
 );
 
 router.get(
-  "/students/get-membership-status",
+  "/students/get-membership-status/:id",
   student_authenticate,
   async (req, res) => {
-    const { id_number } = req.query;
+    const { id } = req.params;
     try {
-      const student = await Student.findOne({ id_number });
+      const student = await Student.findOne({ id_number: id });
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
       }
