@@ -306,7 +306,7 @@ router.post("/add-attendee", admin_authenticate, async (req, res) => {
 
     // Check if id_number already exists
     const existingAttendee = event.attendees.find(
-      (attendee) => attendee.id_number === id_number
+      (attendee) => attendee.id_number === id_number && attendee.campus === campus
     );
     if (existingAttendee) {
       return res.status(400).json({ message: "Attendee already registered" });
