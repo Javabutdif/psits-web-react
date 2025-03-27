@@ -39,7 +39,7 @@ export const getAttendees = async (id) => {
         },
       }
     );
-    console.log(response.data);
+   
     return {
       data: response.data.data[0],
       attendees: response.data.data[0].attendees,
@@ -55,13 +55,22 @@ export const getAttendees = async (id) => {
   }
 };
 
-export const markAsPresent = async (eventId, attendeeId, navigate) => {
+export const markAsPresent = async (
+  eventId,
+  attendeeId,
+  campus,
+  attendeeName,
+  navigate
+) => {
   try {
     const url = `${backendConnection()}/api/events/attendance/${eventId}/${attendeeId}`;
 
     const response = await axios.put(
       url,
-      {},
+      {
+        campus,
+        attendeeName,
+      },
       {
         headers: {
           "Content-Type": "application/json",
