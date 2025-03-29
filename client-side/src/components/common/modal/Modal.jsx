@@ -35,7 +35,7 @@ const Modal = ({
         className={`
           ${className}
           bg-white rounded-xl shadow-xl 
-          min-w-96 md:min-w-[450px] w-fit z-10 h-full
+          min-w-96 md:min-w-[450px] w-fit z-10 h-full overflow-y-auto max-h-[80vh]
           overflow-hidden 
           transform transition-transform duration-300
         `}
