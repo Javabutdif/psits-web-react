@@ -46,6 +46,7 @@ router.put(
   admin_authenticate,
   async (req, res) => {
     const { event_id, id_number } = req.params;
+    const { campus, attendeeName } = req.body;
 
     try {
       const eventId = new ObjectId(event_id);
@@ -56,7 +57,10 @@ router.put(
       }
 
       const attendee = event.attendees.find(
-        (attendee) => attendee.id_number === id_number
+        (attendee) =>
+          attendee.id_number === id_number &&
+          attendee.name === attendeeName &&
+          (attendee.campus === campus || campus === "UC-Main")
       );
 
       if (!attendee) {
@@ -182,6 +186,7 @@ router.post(
   admin_authenticate,
   async (req, res) => {
     const { eventId, attendeeId } = req.params;
+    const { attendeeName } = req.body;
 
     try {
       const event_id = new ObjectId(eventId);
@@ -192,7 +197,7 @@ router.post(
       }
 
       const attendee = event.attendees.find(
-        (att) => att.id_number === attendeeId
+        (att) => att.id_number === attendeeId && att.name === attendeeName
       );
 
       if (!attendee) {
@@ -233,6 +238,7 @@ router.put(
   admin_authenticate,
   async (req, res) => {
     const { eventId, attendeeId } = req.params;
+    const { attendeeName } = req.body;
 
     try {
       const event_id = new ObjectId(eventId);
@@ -243,7 +249,7 @@ router.put(
       }
 
       const attendee = event.attendees.find(
-        (att) => att.id_number === attendeeId
+        (att) => att.id_number === attendeeId && att.name === attendeeName
       );
 
       if (!attendee) {
@@ -306,7 +312,8 @@ router.post("/add-attendee", admin_authenticate, async (req, res) => {
 
     // Check if id_number already exists
     const existingAttendee = event.attendees.find(
-      (attendee) => attendee.id_number === id_number && attendee.campus === campus
+      (attendee) =>
+        attendee.id_number === id_number && attendee.campus === campus
     );
     if (existingAttendee) {
       return res.status(400).json({ message: "Attendee already registered" });

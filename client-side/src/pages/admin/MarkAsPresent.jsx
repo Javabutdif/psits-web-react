@@ -1,10 +1,13 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { markAsPresent } from "../../api/event"; // Import markAsPresent
+import { getInformationData } from "../../authentication/Authentication";
 
 const MarkAsPresent = () => {
   const { eventId, eventName, attendeeId, attendeeName } = useParams();
   const navigate = useNavigate();
+  const user = getInformationData();
+
 
   return (
     <div className="flex justify-center items-center h-[80vh]">
@@ -23,7 +26,7 @@ const MarkAsPresent = () => {
           </button>
           <button
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-            onClick={() => markAsPresent(eventId, attendeeId, navigate)} // Pass navigate
+            onClick={() => markAsPresent(eventId, attendeeId, user.campus, attendeeName, navigate)} // Pass navigate
           >
             Mark As Present
           </button>

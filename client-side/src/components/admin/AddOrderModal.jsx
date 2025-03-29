@@ -63,6 +63,10 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
     if (!item) tempErrors.item = "Item is required.";
     if (!quantity || quantity <= 0)
       tempErrors.quantity = "Quantity must be greater than 0.";
+    if (item.selectedVariations.length > 0 && variation.length === 0)
+      tempErrors.variation = "Variation is required.";
+    if (item.selectedSizes.length > 0 && size.length === 0)
+      tempErrors.size = "Size is required.";
 
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0; // Returns true if no errors
@@ -106,7 +110,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
 
   return (
     <Modal onClose={handleClose}>
-      <div className="flex flex-col gap-2 p-4 h-full">
+      <div className="flex flex-col gap-2 p-4 h-full overflow-y-auto">
         <h1 className="text-2xl font-semibold"> Add Order </h1>
 
         <SearchDropdown
@@ -153,7 +157,6 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
           type="number"
           value={amount}
           placeholder="Price"
-          disabled
         />
 
         {item &&
@@ -178,7 +181,9 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
                 </button>
               ))}
             </div>
-
+            {errors.size && (
+              <p className="text-red-500 text-sm">{errors.size}</p>
+            )}
             <p className="font-semibold">Variations:</p>
             <div className="flex gap-2 flex-wrap text-sm">
               {item.selectedVariations.map((v) => (
@@ -196,6 +201,9 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
                 </button>
               ))}
             </div>
+            {errors.variation && (
+              <p className="text-red-500 text-sm">{errors.variation}</p>
+            )}
           </div>
         ) : null}
 
@@ -203,6 +211,11 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
           size="full"
           onClick={createOrderHandler}
           disabled={isLoading || !student || !item || quantity <= 0}
+          className={`${
+            isLoading || !student || !item || quantity <= 0
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-500 hover:bg-blue-700"
+          }`}
         >
           {isLoading ? (
             <div className="flex items-center justify-center">
@@ -228,6 +241,8 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
               </svg>
               Loading...
             </div>
+          ) : !student || !item || quantity <= 0 ? (
+            "Disabled"
           ) : (
             "Create Order"
           )}

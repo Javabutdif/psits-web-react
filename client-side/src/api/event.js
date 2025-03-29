@@ -39,7 +39,7 @@ export const getAttendees = async (id) => {
         },
       }
     );
-    console.log(response.data);
+
     return {
       data: response.data.data[0],
       attendees: response.data.data[0].attendees,
@@ -55,13 +55,22 @@ export const getAttendees = async (id) => {
   }
 };
 
-export const markAsPresent = async (eventId, attendeeId, navigate) => {
+export const markAsPresent = async (
+  eventId,
+  attendeeId,
+  campus,
+  attendeeName,
+  navigate
+) => {
   try {
     const url = `${backendConnection()}/api/events/attendance/${eventId}/${attendeeId}`;
 
     const response = await axios.put(
       url,
-      {},
+      {
+        campus,
+        attendeeName,
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -162,11 +171,11 @@ export const getEligibleRaffleAttendees = async (eventId) => {
   }
 };
 
-export const raffleWinner = async (eventId, attendeeId) => {
+export const raffleWinner = async (eventId, attendeeId, attendeeName) => {
   try {
     const response = await axios.post(
       `${backendConnection()}/api/events/raffle/winner/${eventId}/${attendeeId}`,
-      {},
+      { attendeeName },
       {
         headers: {
           "Content-Type": "application/json",
@@ -181,11 +190,11 @@ export const raffleWinner = async (eventId, attendeeId) => {
   }
 };
 
-export const removeRaffleAttendee = async (eventId, attendeeId) => {
+export const removeRaffleAttendee = async (eventId, attendeeId,attendeeName) => {
   try {
     const response = await axios.put(
       `${backendConnection()}/api/events/raffle/remove/${eventId}/${attendeeId}`,
-      {},
+      { attendeeName },
       {
         headers: {
           "Content-Type": "application/json",
