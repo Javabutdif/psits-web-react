@@ -43,7 +43,9 @@ const AttendanceTabs = ({
   // Filter handlers
   const handleCourseChange = (course) => {
     setSelectedCourses((prev) =>
-      prev.includes(course) ? prev.filter((c) => c !== course ) : [...prev, course]
+      prev.includes(course)
+        ? prev.filter((c) => c !== course)
+        : [...prev, course]
     );
   };
 
@@ -55,7 +57,9 @@ const AttendanceTabs = ({
 
   const handleSchoolChange = (school) => {
     setSelectedSchools((prev) =>
-      prev.includes(school) ? prev.filter((s) => s !== school)  : [...prev, school]
+      prev.includes(school)
+        ? prev.filter((s) => s !== school)
+        : [...prev, school]
     );
   };
 
@@ -67,7 +71,9 @@ const AttendanceTabs = ({
 
   const handleStatusChange = (status) => {
     setSelectedStatus((prev) =>
-      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
     );
   };
 
@@ -107,7 +113,9 @@ const AttendanceTabs = ({
     // Filter by selected years
     if (selectedYears.length > 0) {
       // Convert selected year options to their corresponding numeric values
-      const selectedYearNumbers = selectedYears.map((year) => yearOptionsMap[year]);
+      const selectedYearNumbers = selectedYears.map(
+        (year) => yearOptionsMap[year]
+      );
       result = result.filter((item) => selectedYearNumbers.includes(item.year));
     }
 
@@ -153,6 +161,11 @@ const AttendanceTabs = ({
       Processed_Date: item.transactDate,
       "Shirt Size": item.shirtSize,
       "Shirt Price": item.shirtPrice,
+      "Raffle Status": item.raffleIsRemoved
+        ? "Removed"
+        : item.raffleIsWinner
+        ? "Winner"
+        : "Null",
     }));
 
     return (
@@ -230,7 +243,10 @@ const AttendanceTabs = ({
                 <div>
                   <ButtonsComponent>
                     <div className="flex flex-row justify-right gap-2">
-                      <CSVLink data={exportData} filename={`attendance-${branchName}.csv`}>
+                      <CSVLink
+                        data={exportData}
+                        filename={`attendance-${branchName}.csv`}
+                      >
                         <FormButton
                           type="button"
                           text="Export CSV"

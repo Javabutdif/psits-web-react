@@ -65,16 +65,20 @@ const EventRaffle = () => {
     }
   };
 
-  const handleRaffleWinner = async (attendeeId) => {
+  const handleRaffleWinner = async (attendeeId, attendeeName) => {
     try {
-      const result = await raffleWinner(eventId, attendeeId);
+      const result = await raffleWinner(eventId, attendeeId, attendeeName);
       if (result) {
         const winner = currentParticipants.find(
-          (p) => p.id_number === attendeeId
+          (p) => p.id_number === attendeeId && p.name === attendeeName
         );
+
         setParticipants((prev) =>
-          prev.filter((p) => p.id_number !== attendeeId)
+          prev.filter(
+            (p) => !(p.id_number === attendeeId && p.name === attendeeName)
+          )
         );
+
         setWinners((prev) => [...prev, winner]);
       }
     } catch (error) {
@@ -82,12 +86,18 @@ const EventRaffle = () => {
     }
   };
 
-  const handleRemoveAttendee = async (attendeeId) => {
+  const handleRemoveAttendee = async (attendeeId, attendeeName) => {
     try {
-      const result = await removeRaffleAttendee(eventId, attendeeId);
+      const result = await removeRaffleAttendee(
+        eventId,
+        attendeeId,
+        attendeeName
+      );
       if (result) {
         setParticipants((prev) =>
-          prev.filter((p) => p.id_number !== attendeeId)
+          prev.filter(
+            (p) => !(p.id_number === attendeeId && p.name === attendeeName)
+          )
         );
       }
     } catch (error) {
