@@ -55,14 +55,14 @@ router.put(
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
-      
+
       const attendee = event.attendees.find(
         (attendee) =>
           attendee.id_number === id_number &&
           attendee.name === attendeeName &&
           (attendee.campus === campus || campus === "UC-Main")
       );
-     
+
       if (!attendee) {
         return res
           .status(404)
@@ -186,6 +186,7 @@ router.post(
   admin_authenticate,
   async (req, res) => {
     const { eventId, attendeeId } = req.params;
+    const { attendeeName } = req.body;
 
     try {
       const event_id = new ObjectId(eventId);
@@ -196,7 +197,7 @@ router.post(
       }
 
       const attendee = event.attendees.find(
-        (att) => att.id_number === attendeeId
+        (att) => att.id_number === attendeeId && att.name === attendeeName
       );
 
       if (!attendee) {
@@ -237,6 +238,7 @@ router.put(
   admin_authenticate,
   async (req, res) => {
     const { eventId, attendeeId } = req.params;
+    const { attendeeName } = req.body;
 
     try {
       const event_id = new ObjectId(eventId);
@@ -247,7 +249,7 @@ router.put(
       }
 
       const attendee = event.attendees.find(
-        (att) => att.id_number === attendeeId
+        (att) => att.id_number === attendeeId && att.name === attendeeName
       );
 
       if (!attendee) {

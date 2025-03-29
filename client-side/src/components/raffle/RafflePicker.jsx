@@ -295,7 +295,7 @@ const RafflePicker = ({
                 <button
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
                   onClick={() => {
-                    onPickWinner(winner.id_number);
+                    onPickWinner(winner.id_number, winner.name);
                     closeWinnerModal();
                     showToast(
                       "success",
@@ -308,7 +308,7 @@ const RafflePicker = ({
                 <button
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
                   onClick={() => {
-                    onRemoveAttendee(winner.id_number);
+                    onRemoveAttendee(winner.id_number, winner.name);
                     closeWinnerModal();
                     showToast("info", `${winner.name} removed from raffle!`);
                   }}
