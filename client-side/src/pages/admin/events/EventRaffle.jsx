@@ -72,9 +72,13 @@ const EventRaffle = () => {
         const winner = currentParticipants.find(
           (p) => p.id_number === attendeeId && p.name === attendeeName
         );
+
         setParticipants((prev) =>
-          prev.filter((p) => p.id_number !== attendeeId && p.name !== attendeeName)
+          prev.filter(
+            (p) => !(p.id_number === attendeeId && p.name === attendeeName)
+          )
         );
+
         setWinners((prev) => [...prev, winner]);
       }
     } catch (error) {
@@ -91,7 +95,9 @@ const EventRaffle = () => {
       );
       if (result) {
         setParticipants((prev) =>
-          prev.filter((p) => p.id_number !== attendeeId && p.name !== attendeeName)
+          prev.filter(
+            (p) => !(p.id_number === attendeeId && p.name === attendeeName)
+          )
         );
       }
     } catch (error) {
