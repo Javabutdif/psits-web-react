@@ -652,13 +652,13 @@ function Product({ handleCloseAddProduct }) {
                     {size.map((s) => (
                       <div
                         key={s}
-                        className="grid grid-cols-3 items-center gap-4"
+                        className="grid grid-cols-[auto_auto_1fr] items-center gap-4"
                       >
                         {/* Button for Size Selection */}
                         <button
                           type="button"
                           onClick={() => handleSizeClick(s)}
-                          className={`p-2 w-16 text-center border rounded ${
+                          className={`p-2 w-14 text-center border rounded ${
                             formData.selectedSizes[s]
                               ? "bg-blue-500 text-white"
                               : "bg-white text-gray-800"
@@ -669,7 +669,7 @@ function Product({ handleCloseAddProduct }) {
 
                         {/* Checkbox for Custom Price */}
                         {formData.selectedSizes[s] !== undefined && (
-                          <label className="flex items-center gap-2 text-sm pe-5">
+                          <label className="flex items-center gap-2 text-sm">
                             <FormInput
                               type="checkbox"
                               checked={
@@ -686,11 +686,11 @@ function Product({ handleCloseAddProduct }) {
                           <FormInput
                             type="number"
                             placeholder="Enter price"
-                            value={formData.selectedSizes[s]?.price}
+                            value={formData.selectedSizes[s]?.price ? formData.selectedSizes[s]?.price : formData.price  }
                             onChange={(e) =>
                               handlePriceChange(s, e.target.value)
                             }
-                            className="border p-1 rounded w-24"
+                            className="border p-1 rounded w-full max-w-32"
                           />
                         )}
                       </div>
