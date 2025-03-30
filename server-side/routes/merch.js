@@ -61,10 +61,21 @@ router.post(
       type,
       control,
     } = req.body;
+    console.log(req.body);
+
+    let parsedSelectedSizes;
+    if (typeof selectedSizes === "string") {
+      try {
+        parsedSelectedSizes = JSON.parse(selectedSizes); // ✅ Parse the JSON string
+      } catch (error) {
+        console.error("Invalid JSON format for selectedSizes:", selectedSizes);
+        return res.status(400).json({ error: "Invalid selectedSizes format" });
+      }
+    }
 
     // Get the URLs of the uploaded images
     const imageUrl = req.files.map((file) => file.location);
-
+    console.log(parsedSelectedSizes);
     try {
       const newMerch = new Merch({
         name,
@@ -73,7 +84,7 @@ router.post(
         batch,
         description,
         selectedVariations: selectedVariations.split(","),
-        selectedSizes: selectedSizes.split(","),
+        selectedSizes: parsedSelectedSizes,
         selectedAudience,
         created_by,
         start_date,
@@ -117,7 +128,7 @@ router.post(
 
       await log.save();
 
-      res.status(201).json("Merch Addition Successful");
+      res.status(200).json("Merch Addition Successful");
     } catch (error) {
       console.error("Error saving new merch:", error.message);
       res.status(500).send(error.message);

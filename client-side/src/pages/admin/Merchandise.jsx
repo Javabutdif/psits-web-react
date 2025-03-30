@@ -547,8 +547,13 @@ function Merchandise() {
                   <span className="text-sm">
                     {" "}
                     {selectedItem?.selectedSizes
-                      .map((sizes) => sizes)
-                      .join(", ")}
+                      ? selectedItem.selectedSizes.map((sizes, index) => (
+                          <p key={sizes.size || index}>
+                            {sizes.size} - Price: {sizes.price} -{" "}
+                            {sizes.custom ? "Custom" : "Standard"}
+                          </p>
+                        ))
+                      : null}
                   </span>
                 </div>
                 <div className="flex items-center font-secondary justify-between gap-10">

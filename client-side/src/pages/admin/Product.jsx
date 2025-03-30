@@ -214,9 +214,18 @@ function Product({ handleCloseAddProduct }) {
 
     for (const key in formData) {
       let value = formData[key];
-      if (Array.isArray(value) && !value.selectedSizes) {
-        value = value.join(",");
+
+      if (key === "selectedSizes") {
+        try {
+          value = JSON.stringify(value); // ✅ Ensure it's properly stringified
+        } catch (error) {
+          console.error("Error stringifying selectedSizes:", value);
+          return;
+        }
+      } else if (Array.isArray(value)) {
+        value = value.join(","); // ✅ Convert other arrays to strings
       }
+
       data.append(key, value);
     }
 
@@ -231,6 +240,7 @@ function Product({ handleCloseAddProduct }) {
       }
     } catch (error) {
       showToast("error", error.message);
+      setShowPreview(false);
       setIsLoading(false);
     }
   };
@@ -686,7 +696,11 @@ function Product({ handleCloseAddProduct }) {
                           <FormInput
                             type="number"
                             placeholder="Enter price"
-                            value={formData.selectedSizes[s]?.price ? formData.selectedSizes[s]?.price : formData.price  }
+                            value={
+                              formData.selectedSizes[s]?.price
+                                ? formData.selectedSizes[s]?.price
+                                : formData.price
+                            }
                             onChange={(e) =>
                               handlePriceChange(s, e.target.value)
                             }

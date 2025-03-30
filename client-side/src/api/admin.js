@@ -424,7 +424,7 @@ export const addMerchandise = async (formData) => {
         },
       }
     );
-    if (response.status === 201) {
+    if (response.status === 200) {
       return true;
     } else {
       return false;
@@ -432,8 +432,10 @@ export const addMerchandise = async (formData) => {
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
+      return false;
     } else {
       showToast("error", "An error occurred");
+      return false;
     }
     console.error("Error:", error);
   }
