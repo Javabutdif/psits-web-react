@@ -109,13 +109,14 @@ const AddAttendeeForm = (merchId) => {
     } else if (!/^[A-Za-zÑñ]+$/.test(trimmedFormData.last_name)) {
       newErrors.last_name = "Invalid Last Name.";
     }
-
-    if (!trimmedFormData.email) {
-      newErrors.email = "Email is required.";
-    } else if (
-      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(trimmedFormData.email)
-    ) {
-      newErrors.email = "Invalid Email.";
+    if (user.campus !== "UC-Main") {
+      if (!trimmedFormData.email) {
+        newErrors.email = "Email is required.";
+      } else if (
+        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(trimmedFormData.email)
+      ) {
+        newErrors.email = "Invalid Email.";
+      }
     }
 
     if (!trimmedFormData.course) {
@@ -326,17 +327,20 @@ const AddAttendeeForm = (merchId) => {
                     />
                   </div>
                   {/* Email Address */}
+
                   <div className="flex flex-col justify-center  w-full">
-                    <FormInput
-                      label={"Email Address"}
-                      type="text"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      error={errors.email}
-                      styles=" w-full p-2 border border-gray-300 rounded"
-                    />
+                    {user.campus !== "UC-Main" && (
+                      <FormInput
+                        label={"Email Address"}
+                        type="text"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        error={errors.email}
+                        styles=" w-full p-2 border border-gray-300 rounded"
+                      />
+                    )}
                     <div className="flex-1">
                       <FormSelect
                         label="T-Shirt Size"

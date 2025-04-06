@@ -318,13 +318,13 @@ router.post("/add-attendee", admin_authenticate, async (req, res) => {
     if (existingAttendee) {
       return res.status(400).json({ message: "Attendee already registered" });
     }
+    if (shirt_price !== "0") {
+      campusData.unitsSold += 1;
+      campusData.totalRevenue += Number.parseInt(shirt_price);
 
-    campusData.unitsSold += 1;
-    campusData.totalRevenue += Number.parseInt(shirt_price);
-
-    event.totalUnitsSold += 1;
-    event.totalRevenueAll += Number.parseInt(shirt_price);
-
+      event.totalUnitsSold += 1;
+      event.totalRevenueAll += Number.parseInt(shirt_price);
+    }
     event.attendees.push({
       id_number,
       name: `${first_name} ${middle_name} ${last_name}`,
@@ -363,12 +363,14 @@ router.get("/get-statistics/:eventId", admin_authenticate, async (req, res) => {
 
     const attendees = event.attendees;
 
-    const totalAttendees = attendees.length;
+    const totalAttendees = attendees.filter(
+      (attendee) => attendee.shirtPrice !== 0
+    ).length;
 
     const yearLevels = [1, 2, 3, 4].reduce((acc, year) => {
       const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
       acc[`${yearWord}`] = attendees.filter(
-        (attendee) => attendee.year === year
+        (attendee) => attendee.year === year && attendee.shirtPrice !== "0"
       ).length;
       return acc;
     }, {});
@@ -376,7 +378,10 @@ router.get("/get-statistics/:eventId", admin_authenticate, async (req, res) => {
     const yearLevelsAttended = [1, 2, 3, 4].reduce((acc, year) => {
       const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
       acc[`${yearWord}`] = attendees.filter(
-        (attendee) => attendee.year === year && attendee.isAttended
+        (attendee) =>
+          attendee.year === year &&
+          attendee.isAttended &&
+          attendee.shirtPrice !== "0"
       ).length;
       return acc;
     }, {});
@@ -394,7 +399,10 @@ router.get("/get-statistics/:eventId", admin_authenticate, async (req, res) => {
         yearLevels: [1, 2, 3, 4].reduce((acc, year) => {
           const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
           acc[`${yearWord}`] = attendees.filter(
-            (attendee) => attendee.year === year && attendee.campus === campus
+            (attendee) =>
+              attendee.year === year &&
+              attendee.campus === campus &&
+              attendee.shirtPrice !== "0"
           ).length;
           return acc;
         }, {}),
@@ -410,7 +418,7 @@ router.get("/get-statistics/:eventId", admin_authenticate, async (req, res) => {
     ].reduce((acc, campus) => {
       const campusWord = campus.split("-")[1];
       acc[`${campusWord}`] = attendees.filter(
-        (attendee) => attendee.campus === campus
+        (attendee) => attendee.campus === campus && attendee.shirtPrice !== "0"
       ).length;
       return acc;
     }, {});
@@ -423,14 +431,17 @@ router.get("/get-statistics/:eventId", admin_authenticate, async (req, res) => {
     ].reduce((acc, campus) => {
       const campusWord = campus.split("-")[1];
       acc[`${campusWord}`] = attendees.filter(
-        (attendee) => attendee.campus === campus && attendee.isAttended
+        (attendee) =>
+          attendee.campus === campus &&
+          attendee.isAttended &&
+          attendee.shirtPrice !== "0"
       ).length;
       return acc;
     }, {});
 
     const courses = ["BSIT", "BSCS"].reduce((acc, course) => {
       acc[course] = attendees.filter(
-        (attendee) => attendee.course === course
+        (attendee) => attendee.course === course && attendee.shirtPrice !== "0"
       ).length;
       return acc;
     }, {});
@@ -470,17 +481,17 @@ router.post("/remove-attendance", admin_authenticate, async (req, res) => {
 
     const { campus, shirtPrice } = event.attendees[attendeeIndex];
 
-    const campusData = event.sales_data.find((s) => s.campus === campus);
-    if (campusData) {
-      campusData.unitsSold -= 1;
-      campusData.totalRevenue -= Number.parseInt(shirtPrice);
+    if (Number.parseInt(shirtPrice) !== 0) {
+      const campusData = event.sales_data.find((s) => s.campus === campus);
+
+      if (campusData) {
+        campusData.unitsSold -= 1;
+        campusData.totalRevenue -= Number.parseInt(shirtPrice);
+        event.totalUnitsSold -= 1;
+        event.totalRevenueAll -= Number.parseInt(shirtPrice);
+        event.attendees.splice(attendeeIndex, 1);
+      }
     }
-
-    event.totalUnitsSold -= 1;
-    event.totalRevenueAll -= Number.parseInt(shirtPrice);
-
-    event.attendees.splice(attendeeIndex, 1);
-
     await event.save();
 
     res.json({ message: "Attendee removed successfully" });
