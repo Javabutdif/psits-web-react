@@ -66,6 +66,11 @@ const AdminLayout = () => {
             icon: "fa-solid fa-book",
             path: "logs",
           },
+          {
+            text: "Settings",
+            icon: "fas fa-cog",
+            path: "settings",
+          },
         ].filter(Boolean)
       : [{ text: "Events", icon: "fas fa-calendar-alt", path: "events" }];
 
