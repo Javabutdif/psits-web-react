@@ -14,7 +14,7 @@ const {
 const router = express.Router();
 
 // GET list of accepted students
-router.get("/students", both_authenticate, async (req, res) => {
+router.get("/students", admin_authenticate, async (req, res) => {
   try {
     const students = await Student.find({
       status: "True",

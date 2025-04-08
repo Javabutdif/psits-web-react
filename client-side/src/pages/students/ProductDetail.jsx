@@ -110,7 +110,11 @@ const ProductDetail = () => {
   const validate = () => {
     let errors = {};
 
-    if (selectedSizes[0] !== "" && selectedSize === null) {
+    if (
+      selectedSizes[0] !== "" && selectedSize === null && selectedSize
+        ? selectedSize.length > 0
+        : false
+    ) {
       errors.name = "Select size!.";
       showToast("error", "You need to select a size");
     }
@@ -456,9 +460,8 @@ const ProductDetail = () => {
               </div>
             )}
 
-
             {/* Buy Now Pop Up Details Modal */}
-            
+
             <div className="flex gap-2">
               {!cartLimited && orderId !== _id && (
                 <button
