@@ -1,16 +1,29 @@
 import { useState } from "react";
 
 const Settings = () => {
-  const [users, setUsers] = useState([
-    { id: 1, name: "John Doe", access: "basic" },
-    { id: 2, name: "Jane Smith", access: "admin" },
-    { id: 3, name: "Bob Johnson", access: "basic" },
-    { id: 4, name: "Alice Williams", access: "moderator" },
-  ]);
+  const accessLevels = ["standard", "finance", "executive", "admin"];
+  const enums = {
+    standard: "Basic/Standard Access",
+    finance: "Finance Access",
+    executive: "Executive Access",
+    admin: "Admin Access",
+  };
 
-  const accessLevels = ["basic", "moderator", "admin", "superadmin"];
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [bulkAccessLevel, setBulkAccessLevel] = useState("basic");
+  const [bulkAccessLevel, setBulkAccessLevel] = useState(accessLevels[0]);
+  const [users, setUsers] = useState([
+    { id: 1, name: "John Doe", access: accessLevels[0] },
+
+    { id: 2, name: "Jane Smith", access: accessLevels[1] },
+    { id: 3, name: "Bob Johnson", access: accessLevels[2] },
+    { id: 4, name: "Alice Williams", access: accessLevels[3] },
+    { id: 5, name: "Charlie Brown", access: accessLevels[0] },
+    { id: 6, name: "Dave Wilson", access: accessLevels[1] },
+    { id: 7, name: "Eve Davis", access: accessLevels[2] },
+    { id: 8, name: "Frank Miller", access: accessLevels[3] },
+    { id: 9, name: "Grace Lee", access: accessLevels[0] },
+    { id: 10, name: "Hank Taylor", access: accessLevels[1] },
+  ]);
 
   const handleUserSelect = (userId, isSelected) => {
     if (isSelected) {
@@ -84,7 +97,7 @@ const Settings = () => {
         {/* User List */}
         <div>
           <h3 className="text-lg font-medium mb-2">All Users</h3>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-96">
             <table className="min-w-full text-sm border rounded-md">
               <thead className="bg-gray-100 text-left">
                 <tr>
@@ -108,7 +121,7 @@ const Settings = () => {
                       />
                     </td>
                     <td className="p-3">{user.name}</td>
-                    <td className="p-3 capitalize">{user.access}</td>
+                    <td className="p-3 capitalize">{enums[user.access]}</td>
                     <td className="p-3">
                       <select
                         value={user.access}

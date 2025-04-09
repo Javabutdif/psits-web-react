@@ -36,6 +36,10 @@ const adminSchema = new Schema({
   campus: {
     type: String,
   },
+  access: {
+    type: String,
+    default: "admin",
+  }
 });
 
 const Admin = mongoose.model("admin", adminSchema);
