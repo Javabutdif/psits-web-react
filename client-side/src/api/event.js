@@ -80,7 +80,7 @@ export const markAsPresent = async (
     );
     if (response.status === 200) {
       showToast("success", "Attendance successfully recorded!");
-      navigate(`/admin/attendance/${eventId}`); // Navigate back after successful update
+      return true;
     }
   } catch (error) {
     console.error("Error marking attendance:", error);
