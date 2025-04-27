@@ -81,8 +81,8 @@ router.post("/login", loginLimiter, async (req, res) => {
     };
     campus = users.campus;
     const token = jwt.sign({ user }, token_key, {
-      expiresIn: role === "Admin" ? "2h" : "10m",
-    });
+			expiresIn: role === "Admin" ? "4h" : "10m",
+		});
 
     // Create a log only if the user is an Admin
     if (role === "Admin") {

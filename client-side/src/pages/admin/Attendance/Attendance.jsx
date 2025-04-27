@@ -244,34 +244,47 @@ const Attendance = (props) => {
         const isPastEvent = eventDate < currentDate && !isSameDate;
 
         return (
-          <ButtonsComponent>
-            {isSameDate ? (
-              <FormButton
-                type="button"
-                text="Attendance"
-                onClick={() => handleViewBtn(row)}
-                icon={<FaUserCheck size={20} />}
-                styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
-                textClass="text-blue-100"
-                whileHover={{ scale: 1.02, opacity: 0.95 }}
-                whileTap={{ scale: 0.98, opacity: 0.9 }}
-              />
-            ) : isPastEvent ? (
-              <></>
-            ) : (
-              <FormButton
-                type="button"
-                text="Remove"
-                onClick={() => handleOpenRemoveModal(row.id_number)}
-                icon={<i className="fas fa-trash"></i>}
-                styles="px-4 bg-red-500 text-[#DFF6FF] hover:bg-red-600 active:bg-red-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-                textClass="text-white"
-                whileHover={{ scale: 1.02, opacity: 0.95 }}
-                whileTap={{ scale: 0.98, opacity: 0.9 }}
-              />
-            )}
-          </ButtonsComponent>
-        );
+					<ButtonsComponent>
+						{isSameDate && !row.isAttended ? (
+							<FormButton
+								type="button"
+								text="Attendance"
+								onClick={() => handleViewBtn(row)}
+								icon={<FaUserCheck size={20} />}
+								styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
+								textClass="text-blue-100"
+								whileHover={{ scale: 1.02, opacity: 0.95 }}
+								whileTap={{ scale: 0.98, opacity: 0.9 }}
+							/>
+						) : isPastEvent ? (
+							<></>
+						) : row.isAttended ? (
+							<>
+								<FormButton
+									type="button"
+									text="Attended"
+									icon={<FaUserCheck size={20} />}
+									styles="px-4 bg-green-600 text-[#DFF6FF] hover:bg-green-500  rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2  flex items-center gap-2"
+									textClass="text-blue-100"
+									whileHover={{ scale: 1.02, opacity: 0.95 }}
+									whileTap={{ scale: 0.98, opacity: 0.9 }}
+									disabled
+								/>
+							</>
+						) : (
+							<FormButton
+								type="button"
+								text="Remove"
+								onClick={() => handleOpenRemoveModal(row.id_number)}
+								icon={<i className="fas fa-trash"></i>}
+								styles="px-4 bg-red-500 text-[#DFF6FF] hover:bg-red-600 active:bg-red-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+								textClass="text-white"
+								whileHover={{ scale: 1.02, opacity: 0.95 }}
+								whileTap={{ scale: 0.98, opacity: 0.9 }}
+							/>
+						)}
+					</ButtonsComponent>
+				);
       },
     },
   ];
