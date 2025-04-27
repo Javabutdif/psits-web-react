@@ -623,7 +623,7 @@ const NihonggoMessage = () => {
           style={{ top: "60%", left: "80%" }}
         ></div>
         <h2 className="text-2xl md:text-3xl font-semibold mb-4 md:mb-6">
-          Nihingo Culminating
+          Nihonggo Culminating
         </h2>
         <p className="text-base md:text-lg mb-4">
           <p>
