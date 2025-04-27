@@ -878,5 +878,41 @@ router.put(
     }
   }
 );
+//update-admin-access
+router.put(
+  "/admin/update-admin-access",
+  admin_authenticate,
+  async (req, res) => {
+    const { id_number, newAccess } = req.body;
+
+    if (!id_number || !newAccess) {
+      return res
+        .status(400)
+        .json({ message: "id_number and newAccess are required" });
+    }
+
+    try {
+      const updateRole = await Admin.updateOne(
+        { id_number },
+        {
+          $set: {
+            access: newAccess,
+          },
+        }
+      );
+
+      if (updateRole.modifiedCount > 0) {
+        res.status(200).json({ message: "Access updated successfully" });
+      } else {
+        res.status(404).json({ message: "Admin not found" });
+      }
+    } catch (error) {
+      console.error("Error updating access account:", error);
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
+    }
+  }
+);
 
 module.exports = router;

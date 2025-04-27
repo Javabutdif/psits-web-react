@@ -1077,3 +1077,31 @@ export const declineAdminAccount = async (id_number) => {
     console.error("Error:", error);
   }
 };
+//Update Individual Role
+export const editAdminAccess = async (id_number, newAccess) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/update-admin-access`,
+      { id_number, newAccess },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message);
+    }
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};

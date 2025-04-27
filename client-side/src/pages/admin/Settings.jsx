@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getAllOfficers, editAdminAccess } from "../../api/admin"; // Adjust the import path as necessary
 
 const Settings = () => {
-  const accessLevels = ["standard", "finance", "executive", "admin"];
+  const accessLevels = ["none", "standard", "finance", "executive", "admin"];
   const enums = {
+    none: "None UC-Main Campus",
     standard: "Basic/Standard Access",
     finance: "Finance Access",
     executive: "Executive Access",
@@ -11,19 +13,22 @@ const Settings = () => {
 
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [bulkAccessLevel, setBulkAccessLevel] = useState(accessLevels[0]);
-  const [users, setUsers] = useState([
-    { id: 1, name: "John Doe", access: accessLevels[0] },
+  const [users, setUsers] = useState([]);
 
-    { id: 2, name: "Jane Smith", access: accessLevels[1] },
-    { id: 3, name: "Bob Johnson", access: accessLevels[2] },
-    { id: 4, name: "Alice Williams", access: accessLevels[3] },
-    { id: 5, name: "Charlie Brown", access: accessLevels[0] },
-    { id: 6, name: "Dave Wilson", access: accessLevels[1] },
-    { id: 7, name: "Eve Davis", access: accessLevels[2] },
-    { id: 8, name: "Frank Miller", access: accessLevels[3] },
-    { id: 9, name: "Grace Lee", access: accessLevels[0] },
-    { id: 10, name: "Hank Taylor", access: accessLevels[1] },
-  ]);
+  const fetchUsers = async () => {
+    try {
+      const response = await getAllOfficers();
+
+      setUsers(response ? response : []);
+      setSelectedUsers([]);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleUserSelect = (userId, isSelected) => {
     if (isSelected) {
@@ -46,11 +51,21 @@ const Settings = () => {
     setSelectedUsers([]);
   };
 
-  const handleIndividualAccessChange = (userId, newAccess) => {
+  const handleIndividualAccessChange = async (id_number, newAccess) => {
     const updatedUsers = users.map((user) =>
-      user.id === userId ? { ...user, access: newAccess } : user
+      user.id_number === id_number ? { ...user, access: newAccess } : user
     );
-    setUsers(updatedUsers);
+    //this is the async function that updates the access level of the user
+    try {
+      const response = await editAdminAccess(id_number, newAccess);
+      if (response) {
+        setUsers(updatedUsers);
+      } else {
+        console.error("Error updating access:", response);
+      }
+    } catch (error) {
+      console.error("Error updating access:", error);
+    }
   };
 
   const handleRenewMembership = () => {
@@ -102,18 +117,19 @@ const Settings = () => {
               <thead className="bg-gray-100 text-left">
                 <tr>
                   <th className="p-3">Select</th>
-                  <th className="p-3">User Name</th>
+                  <th className="p-3">Officer Name</th>
+                  <th className="p-3">Position</th>
                   <th className="p-3">Current Access</th>
                   <th className="p-3">Change Access</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-t">
+                  <tr key={user.id_number} className="border-t">
                     <td className="p-3">
                       <input
                         type="checkbox"
-                        checked={selectedUsers.includes(user.id)}
+                        checked={selectedUsers.includes(user.id_number)}
                         onChange={(e) =>
                           handleUserSelect(user.id, e.target.checked)
                         }
@@ -121,12 +137,16 @@ const Settings = () => {
                       />
                     </td>
                     <td className="p-3">{user.name}</td>
+                    <td className="p-3">{user.position}</td>
                     <td className="p-3 capitalize">{enums[user.access]}</td>
                     <td className="p-3">
                       <select
                         value={user.access}
                         onChange={(e) =>
-                          handleIndividualAccessChange(user.id, e.target.value)
+                          handleIndividualAccessChange(
+                            user.id_number,
+                            e.target.value
+                          )
                         }
                         className="px-2 py-1 border rounded-md text-sm"
                       >

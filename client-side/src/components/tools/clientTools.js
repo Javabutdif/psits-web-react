@@ -10,11 +10,9 @@ export const conditionalPosition = () => {
   const user = getInformationData();
 
   return (
-    user.position === "Treasurer" ||
-    user.position === "Assistant Treasurer" ||
-    user.position === "Auditor" ||
-    user.position === "Head Developer" ||
-    user.position === "President"
+    user.access === "finance" ||
+    user.access === "executive" ||
+    user.access === "admin"
   );
 };
 

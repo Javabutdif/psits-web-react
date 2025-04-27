@@ -8,6 +8,7 @@ const admin_model = (admin) => {
     role: "Admin",
     position: admin.position,
     campus: admin.campus,
+    access: admin.access,
   };
 };
 const user_model = (user) => {
