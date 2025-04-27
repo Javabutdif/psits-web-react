@@ -300,6 +300,7 @@ router.get("/get-all-officers", async (req, res) => {
       year: officer.year,
       position: officer.position,
       campus: officer.campus,
+      access: officer.access,
     }));
 
     res.status(200).json({ data: users });

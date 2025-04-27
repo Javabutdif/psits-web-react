@@ -187,27 +187,26 @@ const Attendance = (props) => {
       sortable: true,
       selector: (row) => {
         if (row.isAttended) return "Attended";
-        if (eventHasEnded && !row.isAttended) return "Absent";
+        if (!row.isAttended && row.eventDate < currentDate) return "Absent";
         return "Ongoing";
       },
-
       cell: (row) => {
         const status = row.isAttended
           ? "Attended"
-          : eventHasEnded && !row.isAttended
+          : eventDate.getDate() < currentDate.getDate()
           ? "Absent"
           : "Ongoing";
+
+        const statusClasses = {
+          Attended: "bg-green-200 text-green-800",
+          Absent: "bg-red-600 text-white",
+          Ongoing: "bg-yellow-200 text-yellow-800",
+        };
 
         return (
           <div className="text-left">
             <span
-              className={`px-2 py-1 rounded text-xs ${
-                status === "Attended"
-                  ? "bg-green-200 text-green-800"
-                  : status === "Absent"
-                  ? "bg-red-200 text-gray-800"
-                  : "bg-yellow-200 text-yellow-800"
-              }`}
+              className={`px-2 py-1 rounded text-xs ${statusClasses[status]}`}
             >
               {status}
             </span>
@@ -229,8 +228,8 @@ const Attendance = (props) => {
       key: "confirmedBy",
       label: "Confirmed By",
       sortable: true,
-      selector: (row) => row.confirmedBy, // Add selector for confirmed field
-      cell: (row) => row.confirmedBy,
+      selector: (row) => row.confirmedBy,
+      cell: (row) => (row.confirmedBy ? row.confirmedBy : "None"),
     },
     {
       key: "action",
@@ -383,7 +382,7 @@ const Attendance = (props) => {
                       whileHover={{ scale: 1.01, opacity: 0.95 }}
                       whileTap={{ scale: 0.98, opacity: 0.9 }}
                     >
-                      <i className="fas fa-ban"></i>Registration Ended
+                      <i className="fas fa-ban"></i>Event Ended
                     </motion.button>
                   </div>
                 </ButtonsComponent>

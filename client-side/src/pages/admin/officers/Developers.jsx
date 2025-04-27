@@ -8,10 +8,7 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import {
-  headDevPosition,
-  higherPosition,
-} from "../../../components/tools/clientTools";
+import { executiveAndAdminConditionalAccess } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditOfficer from "../EditOfficer";
@@ -210,7 +207,7 @@ const Developers = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
-          {headDevPosition() || higherPosition() ? (
+          {executiveAndAdminConditionalAccess() ? (
             <FormButton
               type="button"
               text="Remove Role"
@@ -241,7 +238,7 @@ const Developers = () => {
   return (
     <div className="">
       <div className="py-4 ">
-        {headDevPosition() || higherPosition() ? (
+        {executiveAndAdminConditionalAccess() ? (
           <>
             <button
               onClick={() => setViewAdd(true)}

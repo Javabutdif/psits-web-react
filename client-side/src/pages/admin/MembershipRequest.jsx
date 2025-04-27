@@ -8,7 +8,7 @@ import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 
 import { ConfirmActionType } from "../../enums/commonEnums";
 import ApproveModal from "../../components/admin/ApproveModal";
-import { conditionalPosition } from "../../components/tools/clientTools";
+import { financeAndAdminConditionalAccess } from "../../components/tools/clientTools";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 
@@ -27,7 +27,6 @@ function MembershipRequest() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  
   const columns = [
     {
       key: "select",
@@ -129,54 +128,57 @@ function MembershipRequest() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={conditionalPosition() ? "Approve" : "Not Authorized"}
+            text={
+              financeAndAdminConditionalAccess() ? "Approve" : "Not Authorized"
+            }
             onClick={() => {
-              if (conditionalPosition()) {
+              if (financeAndAdminConditionalAccess()) {
                 handleOpenModal(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  !conditionalPosition() ? "fa-lock" : "fa-check"
+                  !financeAndAdminConditionalAccess() ? "fa-lock" : "fa-check"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              conditionalPosition()
-              ? "bg-[#002E48]"
+              financeAndAdminConditionalAccess()
+                ? "bg-[#002E48]"
                 : "bg-gray-500 cursor-not-allowed"
-                
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={!conditionalPosition()}
+            disabled={!financeAndAdminConditionalAccess()}
           />
           <FormButton
             type="button"
-            text={!conditionalPosition() ? "Not Authorized" : "Cancel"}
+            text={
+              !financeAndAdminConditionalAccess() ? "Not Authorized" : "Cancel"
+            }
             onClick={() => {
-              if (conditionalPosition()) {
+              if (financeAndAdminConditionalAccess()) {
                 showModal(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  !conditionalPosition() ? "fa-lock" : "fa-trash"
+                  !financeAndAdminConditionalAccess() ? "fa-lock" : "fa-trash"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              !conditionalPosition()
+              !financeAndAdminConditionalAccess()
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[#4398AC]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={!conditionalPosition}
+            disabled={!financeAndAdminConditionalAccess}
           />
         </ButtonsComponent>
       ),
@@ -249,8 +251,6 @@ function MembershipRequest() {
 
     setFilteredData(filtered);
   }, [searchQuery, data]);
-
- 
 
   const handleConfirmDeletion = async () => {
     try {

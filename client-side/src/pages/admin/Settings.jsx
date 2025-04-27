@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { getAllOfficers, editAdminAccess } from "../../api/admin"; // Adjust the import path as necessary
+import { getAllOfficers, editAdminAccess } from "../../api/admin";
+import { getInformationData } from "../../authentication/Authentication";
 
 const Settings = () => {
   const accessLevels = ["none", "standard", "finance", "executive", "admin"];
@@ -14,6 +15,7 @@ const Settings = () => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [bulkAccessLevel, setBulkAccessLevel] = useState(accessLevels[0]);
   const [users, setUsers] = useState([]);
+  const data = getInformationData();
 
   const fetchUsers = async () => {
     try {
@@ -55,11 +57,15 @@ const Settings = () => {
     const updatedUsers = users.map((user) =>
       user.id_number === id_number ? { ...user, access: newAccess } : user
     );
-    //this is the async function that updates the access level of the user
+
     try {
       const response = await editAdminAccess(id_number, newAccess);
       if (response) {
         setUsers(updatedUsers);
+        fetchUsers();
+        if (id_number === data.id_number) {
+          window.location.reload();
+        }
       } else {
         console.error("Error updating access:", response);
       }
@@ -118,6 +124,7 @@ const Settings = () => {
                 <tr>
                   <th className="p-3">Select</th>
                   <th className="p-3">Officer Name</th>
+                  <th className="p-3">Campus</th>
                   <th className="p-3">Position</th>
                   <th className="p-3">Current Access</th>
                   <th className="p-3">Change Access</th>
@@ -137,6 +144,7 @@ const Settings = () => {
                       />
                     </td>
                     <td className="p-3">{user.name}</td>
+                    <td className="p-3">{user.campus}</td>
                     <td className="p-3">{user.position}</td>
                     <td className="p-3 capitalize">{enums[user.access]}</td>
                     <td className="p-3">
@@ -148,7 +156,12 @@ const Settings = () => {
                             e.target.value
                           )
                         }
-                        className="px-2 py-1 border rounded-md text-sm"
+                        disabled={data.access === "standard"}
+                        className={`px-2 py-1 border rounded-md text-sm ${
+                          data.access === "standard"
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
                         {accessLevels.map((level) => (
                           <option key={level} value={level}>

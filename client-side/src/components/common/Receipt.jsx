@@ -2,8 +2,7 @@ import React, { forwardRef } from "react";
 import logo from "../../assets/images/psits-logo.png";
 import "../../App.css";
 import { format } from "date-fns";
-import QRCode from "react-qr-code";
-import { headDevPosition } from "../tools/clientTools";
+
 
 export const formatString = (str, abbreviate = true) => {
   if (!str || typeof str !== "string") {

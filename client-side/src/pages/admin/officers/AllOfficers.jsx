@@ -9,8 +9,8 @@ import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
 import {
-  higherPosition,
-  higherOfficers,
+  executiveAndAdminConditionalAccess,
+
 } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
@@ -213,7 +213,7 @@ const AllOfficers = () => {
       sortable: true,
     },
 
-    higherOfficers() && {
+    executiveAndAdminConditionalAccess() && {
       key: "actions",
       label: "",
       cell: (row) => (

@@ -7,7 +7,7 @@ import { getInformationData } from "../../../authentication/Authentication";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";
-import { higherOfficers } from "../../../components/tools/clientTools";
+import { executiveAndAdminConditionalAccess } from "../../../components/tools/clientTools";
 import FilterAttendees from "./FilterAttendees";
 
 const AttendanceTabs = ({
@@ -87,7 +87,7 @@ const AttendanceTabs = ({
   };
 
   // Branch options
-  const branches = higherOfficers()
+  const branches = executiveAndAdminConditionalAccess()
     ? ["All", "UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"]
     : [user.campus];
 

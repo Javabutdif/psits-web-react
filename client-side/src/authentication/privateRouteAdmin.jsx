@@ -6,10 +6,8 @@ import { React, useState, useEffect } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Navigate, useLocation } from "react-router-dom";
 import {
-  presidentPosition,
-  headDevPosition,
-  higherPosition,
-  treasurerPosition,
+  executiveAndAdminConditionalAccess,
+  financeConditionalAccess,
   restrictedComponent,
   restrictedComponentOtherCampus,
 } from "../components/tools/clientTools";
@@ -25,8 +23,8 @@ const PrivateRouteAdmin = ({ element: Component }) => {
   const user = getInformationData();
 
   const unauthorized =
-    !higherPosition() &&
-    !treasurerPosition() &&
+    !executiveAndAdminConditionalAccess() &&
+    !financeConditionalAccess() &&
     restrictedComponent().includes(lastPart);
   const campus = user.campus === "UC-Main";
   const other_campus_authorized =

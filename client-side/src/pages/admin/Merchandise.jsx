@@ -13,8 +13,9 @@ import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import TableComponent from "../../components/Custom/TableComponent";
 import FormButton from "../../components/forms/FormButton";
 import {
-  conditionalPosition,
+  financeAndAdminConditionalAccess,
   formattedDate,
+  
 } from "../../components/tools/clientTools";
 import { showToast } from "../../utils/alertHelper";
 import FilterOptions from "../students/merchandise/FilterOptions";
@@ -282,7 +283,7 @@ function Merchandise() {
             textClass="ml-2 md:inline"
             iconClass="text-sm text-base"
           />
-          {conditionalPosition() && (
+          {financeAndAdminConditionalAccess() && (
             <>
               <FormButton
                 type="button"
@@ -413,7 +414,7 @@ function Merchandise() {
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
               customButtons={
-                conditionalPosition() && (
+                financeAndAdminConditionalAccess() && (
                   <ButtonsComponent>
                     {/* Filters Button */}
 
