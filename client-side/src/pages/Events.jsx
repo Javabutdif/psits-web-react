@@ -402,7 +402,7 @@ const IntramsMessage = () => {
         </p>
       </div>
       <Carousel imageArray={intramsImageArray} />
-      <Video src="/intramurals/Intrams.mp4" />
+      <Video src="/intramurals/intrams.mp4" />
     </>
   );
 };
