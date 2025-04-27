@@ -1,5 +1,4 @@
 import { getInformationData } from "../../authentication/Authentication";
-const data = getInformationData();
 
 export const formattedDate = (date) => {
   const dates = new Date(date);
@@ -14,18 +13,23 @@ export const formattedDate = (date) => {
 //Admin have access to all (Head Developer)
 
 export const noneConditionalAccess = () => {
+  const data = getInformationData();
   return data.access === "none";
 };
 export const standardConditionalAccess = () => {
+  const data = getInformationData();
   return data.access === "standard" && data.campus === "UC-Main";
 };
 export const financeConditionalAccess = () => {
+  const data = getInformationData();
   return data.access === "finance" && data.campus === "UC-Main";
 };
 export const executiveConditionalAccess = () => {
+  const data = getInformationData();
   return data.access === "executive" && data.campus === "UC-Main";
 };
 export const adminConditionalAccess = () => {
+  const data = getInformationData();
   return data.access === "admin" && data.campus === "UC-Main";
 };
 
@@ -46,7 +50,7 @@ export const settingsAccess = () => {
 };
 
 export const restrictedComponent = () => {
-  return ["logs", "settings", "memberships", "officers", "members"];
+  return ["logs", "settings"];
 };
 
 export const restrictedComponentOtherCampus = () => {

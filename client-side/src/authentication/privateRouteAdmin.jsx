@@ -10,6 +10,7 @@ import {
   financeConditionalAccess,
   restrictedComponent,
   restrictedComponentOtherCampus,
+  noneConditionalAccess,
 } from "../components/tools/clientTools";
 const PrivateRouteAdmin = ({ element: Component }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -77,11 +78,11 @@ const PrivateRouteAdmin = ({ element: Component }) => {
     );
   }
 
-  return unauthorized && campus ? (
+  return unauthorized && campus && !noneConditionalAccess() ? (
     <Navigate to="/admin/dashboard" replace />
-  ) : !campus && !other_campus_authorized ? (
+  ) : !campus && !other_campus_authorized && !noneConditionalAccess() ? (
     <Navigate to="/admin/events" replace />
-  ) : isAuthenticated ? (
+  ) : isAuthenticated && !noneConditionalAccess() ? (
     <Component />
   ) : (
     <Navigate to="/" replace />

@@ -815,6 +815,7 @@ router.post("/admin/add-officer", admin_authenticate, async (req, res) => {
       year,
       campus,
       status,
+      access: "standard",
     });
     await newAdmin.save();
 

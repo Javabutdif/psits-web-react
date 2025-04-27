@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { getAllOfficers, editAdminAccess } from "../../api/admin";
 import { getInformationData } from "../../authentication/Authentication";
-
+import {
+  financeConditionalAccess,
+  executiveConditionalAccess,
+  adminConditionalAccess,
+} from "../../components/tools/clientTools";
+import { FaLock } from "react-icons/fa";
 const Settings = () => {
   const accessLevels = ["none", "standard", "finance", "executive", "admin"];
   const enums = {
@@ -87,33 +92,6 @@ const Settings = () => {
         </h2>
 
         {/* Bulk Access Control */}
-        <div>
-          <h3 className="text-lg font-medium mb-2">Bulk Access Update</h3>
-          <div className="flex items-center gap-4">
-            <select
-              value={bulkAccessLevel}
-              onChange={(e) => setBulkAccessLevel(e.target.value)}
-              className="px-3 py-2 border rounded-md text-sm"
-            >
-              {accessLevels.map((level) => (
-                <option key={level} value={level}>
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleBulkAccessChange}
-              disabled={selectedUsers.length === 0}
-              className={`px-4 py-2 rounded-md text-white font-medium ${
-                selectedUsers.length === 0
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-500 hover:bg-green-600"
-              }`}
-            >
-              Update Selected Users
-            </button>
-          </div>
-        </div>
 
         {/* User List */}
         <div>
@@ -123,6 +101,7 @@ const Settings = () => {
               <thead className="bg-gray-100 text-left">
                 <tr>
                   <th className="p-3">Select</th>
+                  <th className="p-3">ID</th>
                   <th className="p-3">Officer Name</th>
                   <th className="p-3">Campus</th>
                   <th className="p-3">Position</th>
@@ -143,6 +122,7 @@ const Settings = () => {
                         className="w-4 h-4"
                       />
                     </td>
+                    <td className="p-3">{user.id_number}</td>
                     <td className="p-3">{user.name}</td>
                     <td className="p-3">{user.campus}</td>
                     <td className="p-3">{user.position}</td>
@@ -156,7 +136,13 @@ const Settings = () => {
                             e.target.value
                           )
                         }
-                        disabled={data.access === "standard"}
+                        disabled={
+                          (financeConditionalAccess() &&
+                            (user.access === "executive" ||
+                              user.access === "admin")) ||
+                          (executiveConditionalAccess() &&
+                            user.access === "admin")
+                        }
                         className={`px-2 py-1 border rounded-md text-sm ${
                           data.access === "standard"
                             ? "bg-gray-200 text-gray-500 cursor-not-allowed"
@@ -164,7 +150,25 @@ const Settings = () => {
                         }`}
                       >
                         {accessLevels.map((level) => (
-                          <option key={level} value={level}>
+                          <option
+                            key={level}
+                            value={level}
+                            disabled={
+                              (financeConditionalAccess() &&
+                                (level === "executive" || level === "admin")) ||
+                              (executiveConditionalAccess() &&
+                                level === "admin")
+                            }
+                            className={`${
+                              financeConditionalAccess() &&
+                              (level === "executive" || level === "admin")
+                                ? "text-gray-400"
+                                : executiveConditionalAccess() &&
+                                  level === "admin"
+                                ? "text-gray-400"
+                                : ""
+                            }`}
+                          >
                             {level.charAt(0).toUpperCase() + level.slice(1)}
                           </option>
                         ))}
