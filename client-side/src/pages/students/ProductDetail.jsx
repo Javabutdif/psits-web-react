@@ -15,27 +15,52 @@ import { showToast } from "../../utils/alertHelper";
 
 import ImageGallery from "../../components/Image/ImageGallery";
 
+const isObject = (param) => {
+  return param !== null && typeof param === "object" && !Array.isArray(param);
+};
+
 const ButtonGroup = ({ items, selectedItem, onSelect, label, disabled }) => (
   <div className="mb-2 flex-1">
     <span className="block text-xs md:text-base font-medium text-gray-700">
       {label}
     </span>
     <div className="flex flex-wrap gap-2 mt-1">
-      {items.length > 0 ? (
-        items.map((item) => (
+      {isObject(items) && Object.keys(items).length > 0 ? (
+        Object.entries(items).map(([sizeName]) => (
           <button
-            key={item}
-            className={`text-xs sm:text-sm   md:text-md border rounded-full px-3 py-1 md:px-4 md:py-2 focus:outline-none ${
-              selectedItem === item
+            key={sizeName}
+            className={`text-xs sm:text-sm md:text-md border rounded-full px-3 py-1 md:px-4 md:py-2 focus:outline-none ${
+              selectedItem === sizeName
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 text-gray-700"
             }`}
-            onClick={() => onSelect(item)}
+            onClick={() => onSelect(sizeName)}
             disabled={disabled}
           >
-            {item}
+            {sizeName}
           </button>
         ))
+      ) : items ? (
+        <>
+          {items.length > 0 ? (
+            items.map((item) => (
+              <button
+                key={item}
+                className={`text-xs sm:text-sm   md:text-md border rounded-full px-3 py-1 md:px-4 md:py-2 focus:outline-none ${
+                  selectedItem === item
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+                onClick={() => onSelect(item)}
+                disabled={disabled}
+              >
+                {item}
+              </button>
+            ))
+          ) : (
+            <span className="text-gray-500">No {label}</span>
+          )}
+        </>
       ) : (
         <span className="text-gray-500">No {label}</span>
       )}
@@ -65,12 +90,13 @@ const ProductDetail = () => {
   const [cartLimited, setCartLimited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const user = getInformationData();
+  const [price, setPrice] = useState(product.price || 0);
   const {
     _id = "",
     imageUrl = [],
     name = "",
     description = "",
-    price = 0,
+
     stocks = 0,
     selectedSizes = [],
     selectedVariations = [],
@@ -148,6 +174,11 @@ const ProductDetail = () => {
   const calculateDiscount = () => {
     return price * quantity;
   };
+  useEffect(() => {
+    setPrice(
+      Number.parseInt(selectedSizes[selectedSize]?.price || product.price || 0)
+    );
+  }, [selectedSize]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -387,7 +418,7 @@ const ProductDetail = () => {
               {description}
             </p>
             <p className="text-md md:text-lg font-semibold text-gray-900 mb-3">
-              ₱ {price.toFixed(2)}
+              ₱ {price ? price.toFixed(2) : 0}
             </p>
 
             <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
