@@ -86,7 +86,7 @@ const merchSchema = new Schema(
       type: Array,
     },
     selectedSizes: {
-      type: Map, // Ensures it's stored as an object
+      type: Map, 
       of: new mongoose.Schema({
         custom: Boolean,
         price: String,

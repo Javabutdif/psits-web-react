@@ -6,6 +6,10 @@ export const formattedDate = (date) => {
   return dates.toLocaleDateString();
 };
 
+export const capitalizeWord = (word) => {
+  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+};
+
 //None dont have access
 //Standard have access to all except finance, executive and admin (PRO, PIO, Chief Volunteer, REPs)
 //Finance have access to all except executive and admin (Treasurer, Assitant Treasurer, Auditor)
