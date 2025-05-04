@@ -217,13 +217,13 @@ function Product({ handleCloseAddProduct }) {
 
       if (key === "selectedSizes") {
         try {
-          value = JSON.stringify(value); // ✅ Ensure it's properly stringified
+          value = JSON.stringify(value); 
         } catch (error) {
           console.error("Error stringifying selectedSizes:", value);
           return;
         }
       } else if (Array.isArray(value)) {
-        value = value.join(","); // ✅ Convert other arrays to strings
+        value = value.join(","); 
       }
 
       data.append(key, value);
@@ -527,20 +527,7 @@ function Product({ handleCloseAddProduct }) {
             <i className="fas fa-times"></i>
           </button>
           <h2 className="text-2xl font-semibold mb-4">Add Product</h2>
-          <div className="flex items-center gap-4 mb-4">
-            <label htmlFor="packageMode" className="text-gray-500 text-sm">
-              Package mode?
-            </label>
-            <ToggleSwitch
-              isToggled={formData.packageMode || false}
-              onToggle={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  packageMode: !prev.packageMode,
-                }))
-              }
-            />
-          </div>
+         
           <form onSubmit={handlePreview} className="space-y-6">
             <ImageInput
               label={"Product Image"}

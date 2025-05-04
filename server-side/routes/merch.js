@@ -66,7 +66,7 @@ router.post(
     let parsedSelectedSizes;
     if (typeof selectedSizes === "string") {
       try {
-        parsedSelectedSizes = JSON.parse(selectedSizes); // ✅ Parse the JSON string
+        parsedSelectedSizes = JSON.parse(selectedSizes);
       } catch (error) {
         console.error("Invalid JSON format for selectedSizes:", selectedSizes);
         return res.status(400).json({ error: "Invalid selectedSizes format" });
@@ -245,6 +245,20 @@ router.put(
       const id = req.params._id;
       //console.log(removeImage);
       let imageUrl = req.files.map((file) => file.location);
+      let parsedSelectedSizes;
+      if (typeof selectedSizes === "string") {
+        try {
+          parsedSelectedSizes = JSON.parse(selectedSizes);
+        } catch (error) {
+          console.error(
+            "Invalid JSON format for selectedSizes:",
+            selectedSizes
+          );
+          return res
+            .status(400)
+            .json({ error: "Invalid selectedSizes format" });
+        }
+      }
 
       const imagesToRemove = Array.isArray(removeImage)
         ? removeImage
@@ -298,7 +312,7 @@ router.put(
         batch: batch,
         description: description,
         selectedVariations: selectedVariations.split(","),
-        selectedSizes: selectedSizes.split(","),
+        selectedSizes: parsedSelectedSizes,
         start_date: start_date,
         end_date: end_date,
         category: category,

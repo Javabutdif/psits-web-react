@@ -15,7 +15,6 @@ import FormButton from "../../components/forms/FormButton";
 import {
   financeAndAdminConditionalAccess,
   formattedDate,
-  
 } from "../../components/tools/clientTools";
 import { showToast } from "../../utils/alertHelper";
 import FilterOptions from "../students/merchandise/FilterOptions";
@@ -546,15 +545,18 @@ function Merchandise() {
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Sizes:</span>
                   <span className="text-sm">
-                    {" "}
-                    {selectedItem?.selectedSizes
-                      ? selectedItem.selectedSizes.map((sizes, index) => (
-                          <p key={sizes.size || index}>
-                            {sizes.size} - Price: {sizes.price} -{" "}
-                            {sizes.custom ? "Custom" : "Standard"}
+                    {selectedItem?.selectedSizes &&
+                    Object.entries(selectedItem.selectedSizes).length > 0 ? (
+                      Object.entries(selectedItem.selectedSizes).map(
+                        ([sizeName, sizeDetails], index) => (
+                          <p key={sizeName || index}>
+                            Size: {sizeName} - Price: {sizeDetails.price}
                           </p>
-                        ))
-                      : null}
+                        )
+                      )
+                    ) : (
+                      <p>No sizes available</p>
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center font-secondary justify-between gap-10">
