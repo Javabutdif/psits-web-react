@@ -1,4 +1,4 @@
-import React from "react";
+import { React, useState } from "react";
 import {
   ConfirmActionType,
   ConfirmActionWords,
@@ -7,6 +7,19 @@ import { capitalizeFirstLetter } from "../../../utils/stringUtils.js";
 
 function ConfirmationModal({ confirmType, onConfirm, onCancel, type }) {
   let confirmTypeWord = ConfirmActionWords[confirmType];
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const capitalizeFirstLetter = (string) =>
+    string.charAt(0).toUpperCase() + string.slice(1);
 
   const confirmButtonColor =
     confirmType === ConfirmActionType.DELETION ||
@@ -80,12 +93,22 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel, type }) {
           </button>
           <button
             type="button"
-            className={`ml-3 px-6 py-2 text-white rounded ${confirmButtonColor}`}
-            onClick={onConfirm}
+            className={`ml-3 px-6 py-2 text-white rounded ${confirmButtonColor} ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            onClick={handleClick}
+            disabled={isLoading}
           >
-            {confirmTypeWord !== "cancel"
-              ? capitalizeFirstLetter(confirmTypeWord)
-              : "Yes"}
+            {isLoading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Loading...</span>
+              </div>
+            ) : confirmTypeWord !== "cancel" ? (
+              capitalizeFirstLetter(confirmTypeWord)
+            ) : (
+              "Yes"
+            )}
           </button>
         </div>
       </div>

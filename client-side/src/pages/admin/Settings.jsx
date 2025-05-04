@@ -6,7 +6,10 @@ import {
   executiveConditionalAccess,
   adminConditionalAccess,
 } from "../../components/tools/clientTools";
-import { FaLock } from "react-icons/fa";
+import { renewAllStudent } from "../../api/admin";
+import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
+import { ConfirmActionType } from "../../enums/commonEnums";
+
 const Settings = () => {
   const accessLevels = ["none", "standard", "finance", "executive", "admin"];
   const enums = {
@@ -16,9 +19,9 @@ const Settings = () => {
     executive: "Executive Access",
     admin: "Admin Access",
   };
+  const [renewStudentStatus, setRenewStudentStatus] = useState(false);
 
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [bulkAccessLevel, setBulkAccessLevel] = useState(accessLevels[0]);
   const [users, setUsers] = useState([]);
   const data = getInformationData();
 
@@ -45,17 +48,14 @@ const Settings = () => {
     }
   };
 
-  const handleBulkAccessChange = () => {
-    if (selectedUsers.length === 0) return;
-
-    const updatedUsers = users.map((user) =>
-      selectedUsers.includes(user.id)
-        ? { ...user, access: bulkAccessLevel }
-        : user
-    );
-
-    setUsers(updatedUsers);
-    setSelectedUsers([]);
+  const handleShowModalRenewStudent = async () => {
+    setRenewStudentStatus(true);
+  };
+  const handleRenewStudent = async () => {
+    if (await renewAllStudent()) {
+      setRenewStudentStatus(false);
+      fetchUsers();
+    }
   };
 
   const handleIndividualAccessChange = async (id_number, newAccess) => {
@@ -79,10 +79,6 @@ const Settings = () => {
     }
   };
 
-  const handleRenewMembership = () => {
-    alert("Membership renewal process initiated. Redirecting to payment...");
-  };
-
   return (
     <div className="max-w-full mx-auto p-6 space-y-10 text-gray-800">
       {/* User Access Section */}
@@ -90,7 +86,13 @@ const Settings = () => {
         <h2 className="text-xl font-medium border-b pb-2">
           User Access Management
         </h2>
-
+        {renewStudentStatus && (
+          <ConfirmationModal
+            confirmType={ConfirmActionType.RENEWAL}
+            onConfirm={() => handleRenewStudent()}
+            onCancel={() => setRenewStudentStatus(false)}
+          />
+        )}
         {/* Bulk Access Control */}
 
         {/* User List */}
@@ -188,8 +190,8 @@ const Settings = () => {
         <div className="space-y-2">
           <p>Renew all active membership.</p>
           <button
-            onClick={handleRenewMembership}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium"
+            onClick={() => handleShowModalRenewStudent()}
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium"
           >
             Renew Membership
           </button>
