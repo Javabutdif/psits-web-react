@@ -76,6 +76,29 @@ export const getCountStudent = async () => {
   }
 };
 
+export const getCountActiveMemberships = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-active-membership-count`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return false;
+    } else {
+      console.log("error", "An error occurred");
+      return false;
+    }
+  }
+};
+
 export const membershipRequest = async () => {
   try {
     const response = await axios.get(
@@ -714,6 +737,7 @@ export const editOfficerApi = async (updatedMember) => {
 
     if (response.status === 200) {
       showToast("success", response.data.message);
+      return true;
     } else {
       console.error(response.data.message);
     }

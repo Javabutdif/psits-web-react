@@ -197,6 +197,23 @@ router.get("/get-students-count", admin_authenticate, async (req, res) => {
     console.error(error);
   }
 });
+//get-active-membership-count
+router.get(
+  "/get-active-membership-count",
+  admin_authenticate,
+  async (req, res) => {
+    try {
+      const count = await Student.countDocuments({
+        status: "True",
+        $or: [{ membership: "Accepted", renew: null }, { renew: "Accepted" }],
+      });
+      res.status(200).json({ message: count });
+    } catch (error) {
+      console.error("Error fetching active membership count:", error);
+      res.status(500).json({ error: "Failed to fetch count" });
+    }
+  }
+);
 
 router.get("/merchandise-created", admin_authenticate, async (req, res) => {
   const count = await Merch.countDocuments();

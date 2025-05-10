@@ -40,6 +40,8 @@ function Membership({ styles }) {
   const request = async () => {
     try {
       await requestMembership(user.id_number);
+      toggleModal();
+      fetchStatus();
     } catch (error) {
       console.error("Error requesting membership:", error);
     }

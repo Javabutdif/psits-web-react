@@ -191,7 +191,12 @@ const Settings = () => {
           <p>Renew all active membership.</p>
           <button
             onClick={() => handleShowModalRenewStudent()}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium"
+            className={
+              adminConditionalAccess()
+                ? "px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium"
+                : "px-4 py-2 bg-gray-300 text-gray-500 rounded-md font-medium cursor-not-allowed"
+            }
+            disabled={!adminConditionalAccess()}
           >
             Renew Membership
           </button>
