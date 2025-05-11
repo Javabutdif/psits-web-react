@@ -88,7 +88,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
               />
             ) : (
               <img
-                src="https://via.placeholder.com/80"
+                src="/empty.webp"
                 alt="Product"
                 className="w-16 h-16 object-cover rounded-md border border-neutral-medium"
               />

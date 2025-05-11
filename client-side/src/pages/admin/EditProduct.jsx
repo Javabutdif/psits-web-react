@@ -96,7 +96,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
         ...merchData,
         start_date: merchData.start_date.split("T")[0],
         end_date: merchData.end_date.split("T")[0],
-        selectedSizes: merchData.selectedSizes,
+        selectedSizes: merchData.selectedSizes ? merchData.selectedSizes : [],
         selectedVariations: Array.isArray(merchData.selectedVariations)
           ? merchData.selectedVariations
           : merchData.selectedVariations.split(","),
@@ -115,7 +115,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
       removeImage: [
         ...(prev.removeImage && Array.isArray(prev.removeImage)
           ? prev.removeImage
-          : []), // ✅ Ensure it's always an array
+          : []),
         ...(typeof image === "string" && image.startsWith("https://")
           ? [image]
           : []),
@@ -408,7 +408,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
                 "Purchase Control": data.control,
                 "Start Date": data.start_date,
                 "End Date": data.end_date,
-                Sizes: Object.entries(data.selectedSizes), // Keep it as an array
+                Sizes: Object.entries(data.selectedSizes),
                 Variations: data.selectedVariations,
               }).map(([label, value]) => (
                 <div
@@ -418,21 +418,27 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
                   <span className="font-medium text-md">{label}:</span>
 
                   {/* Handle array values separately */}
-                  {Array.isArray(value) ? (
+                  {Array.isArray(value) && value.length > 0 ? (
                     <div className="flex gap-2 flex-wrap">
-                      {value.map(([size, details]) => (
-                        <div
-                          key={size}
-                          className="flex items-center gap-1 border p-1 rounded"
-                        >
-                          <span>{size}</span>
-                          {details.custom && (
-                            <span className="text-sm text-gray-500">
-                              ₱{details.price}
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                      {value.map(([size, details]) => {
+                        // Fallbacks to prevent errors
+                        const isCustom = details?.custom;
+                        const price = details?.price;
+
+                        return (
+                          <div
+                            key={size}
+                            className="flex items-center gap-1 border p-1 rounded"
+                          >
+                            <span>{size}</span>
+                            {isCustom ? (
+                              <span className="text-sm text-gray-500">
+                                ₱{price}
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <span className="text-md">{value}</span>
@@ -610,7 +616,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
             />
 
             <div className="flex flex-col gap-4 text-sm">
-              {isShown && (
+              {isShown && formData.type === "Tshirt" && (
                 <div>
                   <p className="font-semibold">Sizes:</p>
                   <div className="flex flex-col gap-2">

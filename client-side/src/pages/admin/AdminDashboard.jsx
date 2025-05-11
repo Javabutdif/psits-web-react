@@ -103,7 +103,7 @@ const AdminDashboard = () => {
         activeMemberships: activeMemberships || 0,
       });
       setPendingData(pendingOrders || []);
-      console.log(counts);
+
       animateCount();
     } catch (error) {
       setError("Error fetching dashboard data");
