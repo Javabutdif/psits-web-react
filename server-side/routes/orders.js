@@ -24,7 +24,7 @@ router.get("/", both_authenticate, async (req, res) => {
   try {
     const orders = await Orders.find({
       id_number: id_number,
-    });
+    }).sort({ transaction_date: -1 });
     if (orders.length > 0) {
       res.status(200).json(orders);
     } else {

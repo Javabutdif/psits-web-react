@@ -103,6 +103,7 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
                 <h6 className="text-sm font-medium text-gray-800">
                   {item.product_name}
                 </h6>
+
                 <span className="absolute right-3 top-5 text-xs text-neutral-dark">
                   Qty: {item.quantity}
                 </span>
@@ -125,12 +126,9 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
                 >
                   {order.order_status}
                 </p>
-                {order.order_status !== "Pending" && (
-                  <p className="text-xs text-neutral-dark">
-                    REF: {order.reference_code}
-                  </p>
-                )}
-                {order.order_status === "Pending" && (
+
+                {(order.order_status === "Pending" ||
+                  order.order_status === "Paid") && (
                   <div className="flex gap-2 mt-2">
                     <motion.button
                       onClick={handleViewModal}
@@ -141,15 +139,17 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
                     >
                       View
                     </motion.button>
-                    <motion.button
-                      onClick={handleCancel}
-                      className="bg-secondary py-1 px-3 text-white text-xs rounded-md font-medium hover:bg-gray-600 transition"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      Cancel
-                    </motion.button>
+                    {order.order_status === "Pending" && (
+                      <motion.button
+                        onClick={handleCancel}
+                        className="bg-secondary py-1 px-3 text-white text-xs rounded-md font-medium hover:bg-gray-600 transition"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        Cancel
+                      </motion.button>
+                    )}
                   </div>
                 )}
               </div>
@@ -169,6 +169,13 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
             <h2 className="text-md font-medium mb-2">
               {formattedDate(order.order_date)}
             </h2>
+            {order.order_status === "Paid" && (
+              <p className="mb-2 text-xs">
+                <strong className="font-medium">Reference Code:</strong>{" "}
+                <strong>{order.reference_code}</strong>
+              </p>
+            )}
+
             <p className="mb-2 text-xs">
               <strong className="font-medium">Student:</strong>{" "}
               {order.student_name}

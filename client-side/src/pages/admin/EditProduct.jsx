@@ -261,24 +261,26 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
     }
   };
 
-  function handleSizeClick(size) {
+  const handleSizeClick = (size) => {
     setFormData((prevState) => {
-      // Ensure selectedSizes is treated as an array
-      const selectedSizesArray = Array.isArray(prevState.selectedSizes)
-        ? prevState.selectedSizes
-        : prevState.selectedSizes.split(",");
+      const selectedSizes = prevState.selectedSizes || {};
 
-      const isSelected = selectedSizesArray.includes(size);
-      const newSelectedSizes = isSelected
-        ? selectedSizesArray.filter((s) => s !== size)
-        : [...selectedSizesArray, size];
+      // Toggle size selection
+      if (selectedSizes.hasOwnProperty(size)) {
+        const updatedSizes = { ...selectedSizes };
+        delete updatedSizes[size];
+        return { ...prevState, selectedSizes: updatedSizes };
+      }
 
       return {
         ...prevState,
-        selectedSizes: newSelectedSizes,
+        selectedSizes: {
+          ...selectedSizes,
+          [size]: { custom: false, price: formData.price },
+        },
       };
     });
-  }
+  };
 
   const handleVariationClick = (variation) => {
     setFormData((prevState) => {
