@@ -263,7 +263,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
 
   const handleSizeClick = (size) => {
     setFormData((prevState) => {
-      const selectedSizes = prevState.selectedSizes || {};
+      const selectedSizes = prevState.selectedSizes;
 
       // Toggle size selection
       if (selectedSizes.hasOwnProperty(size)) {

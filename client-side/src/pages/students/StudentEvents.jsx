@@ -39,7 +39,7 @@ function StudentEvents() {
           >
             <div className="relative w-full h-48 mb-3">
               <img
-                src={event.eventImage[0]}
+                src={event.eventImage[0] ? event.eventImage[0] : "/empty.webp"}
                 alt={event.eventName}
                 className="w-full h-full object-cover"
               />
