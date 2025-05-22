@@ -339,7 +339,7 @@ const Membership = () => {
                 whileTap={{ scale: 0.98, opacity: 0.9 }}
                 disabled={
                   (row.membership === "Accepted" && row.renew === "Pending") ||
-                   (row.membership === "Accepted" && row.renew === "None") ||
+                   row.membership === "Accepted" ||
                   row.renew === "Accepted" ||
                   row.membership === "Pending" ||
                   (row.membership === "Accepted" && row.renew === "Accepted")
