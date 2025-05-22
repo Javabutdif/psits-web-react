@@ -322,8 +322,9 @@ const Membership = () => {
                 icon={<i className="fas fa-paper-plane" />}
                 styles={`flex items-center space-x-2 rounded-md px-3 py-1.5 transition duration-150 focus:outline-none ${
                   (row.membership === "Accepted" && row.renew === "Pending") ||
+                   row.membership === "Accepted" ||
                   row.renew === "Accepted" ||
-                  row.membership === "Pending"
+                  row.membership === "Pending" ||  (row.membership === "Accepted" && row.renew === "Accepted")
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-2 focus:ring-gray-400"
                 }`}
