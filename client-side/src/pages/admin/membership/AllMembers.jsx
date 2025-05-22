@@ -5,6 +5,7 @@ import {
   membership,
   renewAllStudent,
   studentDeletion,
+  approveMembership,
 } from "../../../api/admin";
 import backendConnection from "../../../api/backendApi";
 import { getInformationData } from "../../../authentication/Authentication";
@@ -13,10 +14,11 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-
+import { getMembershipStatusStudents } from "../../../api/students";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditMember from "./EditMember";
+import { financeAndAdminConditionalAccess } from "../../../components/tools/clientTools";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -33,6 +35,12 @@ const Membership = () => {
   const [id, setId] = useState("");
   const [viewChange, setViewChange] = useState(false);
   const [renewStudent, setRenewStudent] = useState(false);
+  const [requestModal, setRequestModal] = useState(false);
+  const [requestId, setRequestId] = useState("");
+  const [formData, setFormData] = useState({
+    type: "Membership",
+    id_number: requestId,
+  });
   const token = sessionStorage.getItem("Token");
 
   const user = getInformationData();
@@ -100,6 +108,45 @@ const Membership = () => {
 
     fetchData();
     setIsLoading(false);
+  };
+
+  const handleRequestMembershipModal = async (row) => {
+    try {
+      const response = await getMembershipStatusStudents(row.id_number);
+      if (response) {
+        const updatedFormData = {
+          type: response.membership === "Accepted" ? "Renewal" : "Membership",
+          id_number: row.id_number,
+          reference_code:
+            Math.floor(Math.random() * (999999999 - 111111111)) + 111111111,
+        };
+
+        setFormData(updatedFormData);
+        setRequestId(row.id_number);
+        setRequestModal(true);
+        console.log(formData);
+      }
+    } catch (error) {
+      console.error("Error fetching membership status:", error);
+      showToast("error", "Failed to fetch membership status.");
+    }
+  };
+
+  const handleRequestMembership = async () => {
+    try {
+      const result = await approveMembership(formData);
+      if (result) {
+        setRequestModal(false);
+        fetchData();
+        setFormData({
+          type: "Membership",
+          id_number: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending membership request:", error);
+      showToast("error", "Failed to send membership request.");
+    }
   };
 
   useEffect(() => {
@@ -266,6 +313,40 @@ const Membership = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
+          {financeAndAdminConditionalAccess() && (
+            <>
+              <FormButton
+                type="button"
+                text="Request"
+                onClick={() => handleRequestMembershipModal(row)}
+                icon={<i className="fas fa-paper-plane" />}
+                styles={`flex items-center space-x-2 rounded-md px-3 py-1.5 transition duration-150 focus:outline-none ${
+                  (row.membership === "Accepted" && row.renew === "Pending") ||
+                  row.renew === "Accepted" ||
+                  row.membership === "Pending"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-2 focus:ring-gray-400"
+                }`}
+                textClass={`${
+                  row.membership === "Accepted" ||
+                  row.renew === "Accepted" ||
+                  row.membership === "Pending" ||
+                  row.renew === "Pending"
+                    ? "text-gray-500"
+                    : "text-gray-800"
+                }`}
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+                disabled={
+                  (row.membership === "Accepted" && row.renew === "Pending") ||
+                  row.renew === "Accepted" ||
+                  row.membership === "Pending" ||
+                  (row.membership === "Accepted" && row.renew === "Accepted")
+                }
+              />
+            </>
+          )}
+
           <FormButton
             type="button"
             text="Change"
@@ -304,8 +385,6 @@ const Membership = () => {
 
   return (
     <div className="">
-      
-
       <TableComponent columns={columns} data={filteredData} />
       {isEditModalVisible && (
         <EditMember
@@ -339,6 +418,13 @@ const Membership = () => {
             onConfirm={handleRenewStudent}
           />
         </>
+      )}
+      {requestModal && (
+        <ConfirmationModal
+          confirmType={ConfirmActionType.REQUEST}
+          onCancel={() => setRequestModal(false)}
+          onConfirm={handleRequestMembership}
+        />
       )}
     </div>
   );

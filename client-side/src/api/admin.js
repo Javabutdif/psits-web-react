@@ -163,6 +163,7 @@ export const approveMembership = async (formData) => {
     );
 
     if (response.status === 200) {
+      showToast("success", "Membership Approved");
       return true;
     } else {
       console.error(response.data.message);
