@@ -86,7 +86,7 @@ router.get(
 
 router.get(
   "/students/get-membership-status/:id",
-  student_authenticate,
+  both_authenticate,
   async (req, res) => {
     const { id } = req.params;
     try {

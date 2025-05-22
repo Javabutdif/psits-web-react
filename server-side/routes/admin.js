@@ -36,8 +36,8 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
       name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
       year: student.year,
       course: student.course,
-      date,
-      admin,
+      date: new Date(),
+      admin: admin ? admin : req.user.name,
     });
 
     const savedHistory = await history.save();
@@ -73,12 +73,12 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
       {
         name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
         reference_code,
-        cash,
-        total,
+        cash: cash ? cash : 50,
+        total: cash ? cash : 50,
         course: student.course,
         year: student.year,
-        admin,
-        date: format(new Date(date), "MMMM d, yyyy"),
+        admin: admin ? admin : req.user.name,
+        date: format(new Date(), "MMMM d, yyyy"),
         change: cash - total,
       }
     );
@@ -917,11 +917,9 @@ router.put(
         return res.status(404).json({ message: "Admin not found" });
       }
 
-    
       adminToUpdate.access = newAccess;
       await adminToUpdate.save();
 
-     
       await new Log({
         admin: req.user.name,
         action: `Change Access for ${adminToUpdate.name} to ${newAccess}`,
@@ -938,4 +936,5 @@ router.put(
     }
   }
 );
+
 module.exports = router;

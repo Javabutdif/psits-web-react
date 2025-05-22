@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
 const FormButton = ({
   type,
@@ -13,6 +13,7 @@ const FormButton = ({
   whileTap,
   icon,
   textClass, // Add this prop
+  disabled,
 }) => {
   return (
     <motion.button
@@ -24,6 +25,7 @@ const FormButton = ({
       animate={animate}
       whileHover={whileHover}
       whileTap={whileTap}
+      disabled={disabled}
     >
       {icon}
       <span className={textClass}>{text}</span> {/* Apply textClass here */}

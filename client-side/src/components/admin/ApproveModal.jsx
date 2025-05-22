@@ -72,7 +72,7 @@ function ApproveModal({
       } else {
         if (type === "Membership" || type === "Renewal") {
           if (await approveMembership(formData)) {
-            showToast("success", "Student Approved");
+            //showToast("success", "Student Approved");
             setShouldPrint(true);
           } else {
             showToast("error", "Internal Server Error!");

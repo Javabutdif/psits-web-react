@@ -66,6 +66,9 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel, type }) {
             Are you sure you want to {confirmTypeWord === "renewal" && "do "}
             {confirmTypeWord}
             {confirmTypeWord === "cancel" ? " the membership request of " : " "}
+            {confirmTypeWord === "request"
+              ? " membership for this student, and that the payment will be charged automatically "
+              : " "}
             {confirmTypeWord === "cancel this order" ||
             confirmTypeWord === "renewal"
               ? ""
@@ -77,6 +80,8 @@ function ConfirmationModal({ confirmType, onConfirm, onCancel, type }) {
               ? " this role for this student"
               : type === "officer"
               ? " this officer"
+              : confirmTypeWord === "request"
+              ? ""
               : " this student"}
             ?
           </p>
