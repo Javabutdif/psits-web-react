@@ -205,39 +205,45 @@ const EventDetails = ({ events }) => {
         Upcoming Events
       </h2>
       <div className="space-y-4">
-        {events.slice(0, showAll ? events.length : 3).map((event, index) => (
-          <div
-            key={index}
-            className="items-center p-4 border border-blue-200 rounded-lg flex flex-col"
-          >
-            <div className="flex gap-2 text-[#074873] w-full">
-              <div className="w-10 h-10 flex items-center justify-center border border-[#074873] rounded-full">
-                <i className="far fa-calendar"></i>
+        {events.length > 0 ? (
+          events.slice(0, showAll ? events.length : 3).map((event, index) => (
+            <div
+              key={index}
+              className="items-center p-4 border border-blue-200 rounded-lg flex flex-col"
+            >
+              <div className="flex gap-2 text-[#074873] w-full">
+                <div className="w-10 h-10 flex items-center justify-center border border-[#074873] rounded-full">
+                  <i className="far fa-calendar"></i>
+                </div>
+                <p className="text-sm font-semibold mt-2">{event.eventName}</p>
               </div>
-              <p className="text-sm font-semibold mt-2">{event.eventName}</p>
-            </div>
-            <div className="pl-1 w-full">
-              <p className="text-xs sm:text-sm text-gray-700">
-                <span className="font-semibold">
-                  {showDescription[index]
-                    ? event.eventDescription
-                    : `${event.eventDescription.slice(0, 50)}...`}
-                </span>
-                {event.eventDescription.length > 50 && (
-                  <span
-                    className="text-blue-500 cursor-pointer ml-1"
-                    onClick={() => toggleDescription(index)}
-                  >
-                    {showDescription[index] ? " Show less" : " Read more"}
+              <div className="pl-1 w-full">
+                <p className="text-xs sm:text-sm text-gray-700">
+                  <span className="font-semibold">
+                    {showDescription[index]
+                      ? event.eventDescription
+                      : `${event.eventDescription.slice(0, 50)}...`}
                   </span>
-                )}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {new Date(event.eventDate).toLocaleDateString()}
-              </p>
+                  {event.eventDescription.length > 50 && (
+                    <span
+                      className="text-blue-500 cursor-pointer ml-1"
+                      onClick={() => toggleDescription(index)}
+                    >
+                      {showDescription[index] ? " Show less" : " Read more"}
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {new Date(event.eventDate).toLocaleDateString()}
+                </p>
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p>No events available...</p>
           </div>
-        ))}
+        )}
       </div>
       <div className="mt-6 text-center">
         {!showAll && events.length > 3 && (
