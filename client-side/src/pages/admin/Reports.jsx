@@ -255,7 +255,7 @@ const Reports = () => {
       }
       if (filterSize) {
         filteredData = filteredData.filter((item) =>
-          item.size?.[0]?.$each?.[0]?.includes(filterSize)
+          item.size?.[0]?.$each?.some((size) => size === filterSize)
         );
       }
       if (filterColor) {
