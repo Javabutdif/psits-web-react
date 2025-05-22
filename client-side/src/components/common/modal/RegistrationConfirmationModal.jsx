@@ -3,6 +3,7 @@ import { LiaIdCard } from "react-icons/lia";
 import { CgProfile } from "react-icons/cg";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { IoSchoolOutline } from "react-icons/io5";
+import { capitalizeWord } from "../../../components/tools/clientTools";
 
 function RegistrationConfirmationModal({ formData, onSubmit, onCancel }) {
   return (
@@ -51,7 +52,9 @@ function RegistrationConfirmationModal({ formData, onSubmit, onCancel }) {
               </span>
             </div>
             <span className="pt-1 text-gray-900 font-secondary text-lg">
-              {`${formData.first_name} ${formData.middle_name} ${formData.last_name}`}
+              {` ${capitalizeWord(formData.first_name)} ${capitalizeWord(
+                formData.middle_name
+              )} ${capitalizeWord(formData.last_name)}`}
             </span>
           </div>
 

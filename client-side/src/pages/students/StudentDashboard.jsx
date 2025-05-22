@@ -25,9 +25,20 @@ const StudentDashboard = () => {
   const token = sessionStorage.getItem("Token");
 
   const fetchAllEvents = async () => {
+    const currentDate = new Date();
     const result = await getEvents();
-    if (result) {
-      setEvents(result.data);
+
+    if (result && result.data) {
+      const upcomingEvents = result.data.filter((event) => {
+        const eventDate = new Date(event.eventDate);
+        // Set time to 00:00:00 for comparison if you're only comparing date
+        eventDate.setHours(0, 0, 0, 0);
+        currentDate.setHours(0, 0, 0, 0);
+        return eventDate >= currentDate;
+      });
+
+      console.log("Upcoming Events:", upcomingEvents);
+      setEvents(upcomingEvents);
     }
   };
 

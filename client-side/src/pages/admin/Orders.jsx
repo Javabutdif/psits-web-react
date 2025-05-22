@@ -11,7 +11,7 @@ import Receipt from "../../components/common/Receipt";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import FormButton from "../../components/forms/FormButton";
 import {
-  conditionalPosition,
+  financeAndAdminConditionalAccess,
   formattedDate,
 } from "../../components/tools/clientTools";
 import { ConfirmActionType } from "../../enums/commonEnums";
@@ -402,66 +402,66 @@ const Orders = () => {
                               <FormButton
                                 type="button"
                                 text={
-                                  !conditionalPosition()
+                                  !financeAndAdminConditionalAccess()
                                     ? "Not Authorized"
                                     : "Approve"
                                 }
                                 onClick={() => {
-                                  if (conditionalPosition()) {
+                                  if (financeAndAdminConditionalAccess()) {
                                     handleApproveClick(order);
                                   }
                                 }}
                                 icon={
                                   <i
                                     className={`fa ${
-                                      !conditionalPosition()
+                                      !financeAndAdminConditionalAccess()
                                         ? "fa-lock"
                                         : "fa-check"
                                     }`}
                                   ></i>
                                 }
                                 styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
-                                  !conditionalPosition()
+                                  !financeAndAdminConditionalAccess()
                                     ? "bg-gray-500 cursor-not-allowed"
                                     : "bg-[#002E48]"
                                 }`}
                                 textClass="text-white text-sm"
                                 whileHover={{ scale: 1.02, opacity: 0.95 }}
                                 whileTap={{ scale: 0.98, opacity: 0.9 }}
-                                disabled={!conditionalPosition()}
+                                disabled={!financeAndAdminConditionalAccess()}
                               />
                             </ButtonsComponent>
                             <ButtonsComponent>
                               <FormButton
                                 type="button"
                                 text={
-                                  !conditionalPosition()
+                                  !financeAndAdminConditionalAccess()
                                     ? "Not Authorized"
                                     : "Cancel"
                                 }
                                 onClick={() => {
-                                  if (conditionalPosition()) {
+                                  if (financeAndAdminConditionalAccess()) {
                                     handleCancelClick(order);
                                   }
                                 }}
                                 icon={
                                   <i
                                     className={`fa ${
-                                      !conditionalPosition()
+                                      !financeAndAdminConditionalAccess()
                                         ? "fa-lock"
                                         : "fa-times"
                                     }`}
                                   ></i>
                                 }
                                 styles={`relative flex items-center justify-center space-x-2 px-3 py-2 rounded text-white ${
-                                  !conditionalPosition()
+                                  !financeAndAdminConditionalAccess()
                                     ? "bg-gray-500 cursor-not-allowed"
                                     : "bg-[#4398AC]"
                                 }`}
                                 textClass="text-white text-sm" // Ensure the text size is consistent
                                 whileHover={{ scale: 1.02, opacity: 0.95 }}
                                 whileTap={{ scale: 0.98, opacity: 0.9 }}
-                                disabled={!conditionalPosition()}
+                                disabled={!financeAndAdminConditionalAccess()}
                               />
                             </ButtonsComponent>
                           </td>
@@ -473,33 +473,33 @@ const Orders = () => {
                               <FormButton
                                 type="button"
                                 text={
-                                  !conditionalPosition()
+                                  !financeAndAdminConditionalAccess()
                                     ? "Not Authorized"
                                     : "Print"
                                 }
                                 onClick={() => {
-                                  if (conditionalPosition()) {
+                                  if (financeAndAdminConditionalAccess()) {
                                     handlePrintData(order);
                                   }
                                 }}
                                 icon={
                                   <i
                                     className={
-                                      !conditionalPosition()
+                                      !financeAndAdminConditionalAccess()
                                         ? "fa fa-lock"
                                         : "fa fa-print"
                                     }
                                   ></i>
                                 }
                                 styles={`relative flex items-center space-x-2 px-4 py-2 rounded  text-white ${
-                                  !conditionalPosition()
+                                  !financeAndAdminConditionalAccess()
                                     ? "bg-gray-500 cursor-not-allowed"
                                     : "bg-[#002E48]"
                                 }`}
                                 textClass="text-white"
                                 whileHover={{ scale: 1.02, opacity: 0.95 }}
                                 whileTap={{ scale: 0.98, opacity: 0.9 }}
-                                disabled={!conditionalPosition()}
+                                disabled={!financeAndAdminConditionalAccess()}
                               />
                             </ButtonsComponent>
                           </td>

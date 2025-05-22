@@ -34,7 +34,7 @@ import Renewal from "./pages/admin/Renewal";
 import Reports from "./pages/admin/Reports";
 import Resources from "./pages/admin/Resources";
 import Students from "./pages/admin/Students";
-import Settings from "./pages/Settings";
+import Settings from "./pages/admin/Settings";
 import AdminAccountRequest from "./pages/admin/officers/AdminAccountRequest";
 
 import Login from "./pages/authentication/Login";

@@ -13,7 +13,7 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import { higherPosition } from "../../../components/tools/clientTools";
+
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditMember from "./EditMember";
@@ -304,17 +304,7 @@ const Membership = () => {
 
   return (
     <div className="">
-      {higherPosition() && (
-        <div className="my-2 py-2">
-          <button
-            className="text-white bg-red-500 hover:bg-red-400 p-2 rounded-sm text-sm"
-            onClick={() => setRenewStudent(true)}
-            disabled
-          >
-            Renew All Student
-          </button>
-        </div>
-      )}
+      
 
       <TableComponent columns={columns} data={filteredData} />
       {isEditModalVisible && (

@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Tab from "../../components/Tab";
-import {
-  presidentPosition,
-  headDevPosition,
-} from "../../components/tools/clientTools";
+import { executiveAndAdminConditionalAccess } from "../../components/tools/clientTools";
 
 const Officers = () => {
   const location = useLocation();
@@ -40,7 +37,7 @@ const Officers = () => {
       text: `Suspended`,
       icon: "fas fa-ban",
     },
-    presidentPosition() || headDevPosition()
+    executiveAndAdminConditionalAccess()
       ? {
           path: "/admin/officers/request",
           text: `Request `,
@@ -52,7 +49,7 @@ const Officers = () => {
           icon: "fas fa-lock",
           disabled: true,
         },
-    presidentPosition() || headDevPosition()
+    executiveAndAdminConditionalAccess()
       ? {
           path: "/admin/officers/admin-request",
           text: `Admin Request `,

@@ -6,12 +6,11 @@ import { React, useState, useEffect } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Navigate, useLocation } from "react-router-dom";
 import {
-  presidentPosition,
-  headDevPosition,
-  higherPosition,
-  treasurerPosition,
+  executiveAndAdminConditionalAccess,
+  financeConditionalAccess,
   restrictedComponent,
   restrictedComponentOtherCampus,
+  noneConditionalAccess,
 } from "../components/tools/clientTools";
 const PrivateRouteAdmin = ({ element: Component }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,8 +24,8 @@ const PrivateRouteAdmin = ({ element: Component }) => {
   const user = getInformationData();
 
   const unauthorized =
-    !higherPosition() &&
-    !treasurerPosition() &&
+    !executiveAndAdminConditionalAccess() &&
+    !financeConditionalAccess() &&
     restrictedComponent().includes(lastPart);
   const campus = user.campus === "UC-Main";
   const other_campus_authorized =
@@ -79,11 +78,11 @@ const PrivateRouteAdmin = ({ element: Component }) => {
     );
   }
 
-  return unauthorized && campus ? (
+  return unauthorized && campus && !noneConditionalAccess() ? (
     <Navigate to="/admin/dashboard" replace />
-  ) : !campus && !other_campus_authorized ? (
+  ) : !campus && !other_campus_authorized && !noneConditionalAccess() ? (
     <Navigate to="/admin/events" replace />
-  ) : isAuthenticated ? (
+  ) : isAuthenticated && !noneConditionalAccess() ? (
     <Component />
   ) : (
     <Navigate to="/" replace />

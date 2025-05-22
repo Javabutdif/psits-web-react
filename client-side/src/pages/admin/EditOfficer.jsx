@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { AiOutlineClose } from "react-icons/ai";
+import {
+  executiveAndAdminConditionalAccess,
+  adminConditionalAccess,
+} from "../../components/tools/clientTools";
 
 const EditOfficer = ({ isVisible, onClose, studentData, onSave }) => {
   const [formData, setFormData] = useState({});
@@ -94,6 +98,61 @@ const EditOfficer = ({ isVisible, onClose, studentData, onSave }) => {
                   <option value="UC-PT">UC Pardo Talisay</option>
                 </select>
               </div>
+              {executiveAndAdminConditionalAccess() && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium">
+                      Position
+                    </label>
+                    <select
+                      className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm"
+                      id="position"
+                      name="position"
+                      onChange={handleChange}
+                      value={formData.position || ""}
+                      required
+                    >
+                      <option value="none" selected disabled hidden>
+                        Select Position
+                      </option>
+                      <option value="President">President</option>
+                      <option value="Vice-President Internal">
+                        Vice-President Internal
+                      </option>
+                      <option value="Vice-President External">
+                        Vice-President External
+                      </option>
+                      <option value="Secretary">Secretary</option>
+                      <option value="Treasurer">Treasurer</option>
+                      <option value="Assistant Treasurer">
+                        Assistant Treasurer
+                      </option>
+                      <option value="Auditor">Auditor</option>
+                      <option value="P.I.O">P.I.O</option>
+                      <option value="P.R.O">P.R.O</option>
+                      <option value="Chief Volunteer">Chief Volunteer</option>
+                      <option value="1st Year Representative">
+                        1st Year Representative
+                      </option>
+                      <option value="2nd Year Representative">
+                        2nd Year Representative
+                      </option>
+                      <option value="3rd Year Representative">
+                        3rd Year Representative
+                      </option>
+                      <option value="4th Year Representative">
+                        4th Year Representative
+                      </option>
+                      {adminConditionalAccess() && (
+                        <>
+                          <option value="Developer">Developer</option>
+                          <option value="Head Developer">Head Developer</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
 
             <div>

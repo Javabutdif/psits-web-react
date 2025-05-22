@@ -23,6 +23,7 @@ const PaidOrders = () => {
     setError(null);
     try {
       const ordersData = await getOrder(user.id_number);
+      
       setOrders(ordersData || []);
     } catch (error) {
       setError("Failed to fetch orders");

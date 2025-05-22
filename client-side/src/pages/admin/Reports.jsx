@@ -12,7 +12,7 @@ import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import FormButton from "../../components/forms/FormButton";
 import { formattedDate } from "../../components/tools/clientTools";
-import { deletePosition } from "../../components/tools/clientTools";
+import { financeAndAdminConditionalAccess } from "../../components/tools/clientTools";
 import { ConfirmActionType } from "../../enums/commonEnums";
 import { CSVLink } from "react-csv";
 import { getInformationData } from "../../authentication/Authentication";
@@ -93,7 +93,7 @@ const Reports = () => {
 
   const handleDeleteReport = async () => {
     //logic
-    if (await deleteReports(productDeleteId,deleteId, deleteName)) {
+    if (await deleteReports(productDeleteId, deleteId, deleteName)) {
       handleHideConfirmModal();
       fetchMerchandiseData();
     }
@@ -410,7 +410,7 @@ const Reports = () => {
       selector: (row) => formattedDate(row.transaction_date),
       sortable: true,
     },
-    ...(deletePosition()
+    ...(financeAndAdminConditionalAccess()
       ? [
           {
             name: "Action",

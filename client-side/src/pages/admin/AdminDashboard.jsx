@@ -4,6 +4,7 @@ import {
   merchCreated,
   placedOrders,
   fetchAllPendingCounts,
+  getCountActiveMemberships,
 } from "../../api/admin";
 import BarGraph from "./dashboard/BarGraph";
 import DashboardCard from "./dashboard/DashboardCard";
@@ -13,9 +14,10 @@ import {
   faBoxOpen,
   faUserGraduate,
   faShoppingCart,
+  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import OrderTable from "./dashboard/OrderTable";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 
 const AdminDashboard = () => {
@@ -23,6 +25,7 @@ const AdminDashboard = () => {
     merchandise: 0,
     student: 0,
     order: 0,
+    activeMemberships: 0,
   });
   const [pendingData, setPendingData] = useState([]);
 
@@ -30,6 +33,7 @@ const AdminDashboard = () => {
     merchandise: 0,
     student: 0,
     order: 0,
+    activeMemberships: 0,
   });
 
   const [loading, setLoading] = useState(true);
@@ -41,7 +45,8 @@ const AdminDashboard = () => {
       Math.max(
         finalCounts.student,
         finalCounts.merchandise,
-        finalCounts.order
+        finalCounts.order,
+        finalCounts.activeMemberships
       ) / 100
     );
 
@@ -57,6 +62,10 @@ const AdminDashboard = () => {
             finalCounts.merchandise
           ),
           order: Math.min(prevCounts.order + increment, finalCounts.order),
+          activeMemberships: Math.min(
+            prevCounts.activeMemberships + increment,
+            finalCounts.activeMemberships
+          ),
         };
 
         if (
@@ -73,21 +82,28 @@ const AdminDashboard = () => {
   };
   const fetchData = async () => {
     try {
-      const [studentRes, merchCreate, placedOrder, pendingOrders] =
-        await Promise.all([
-          getCountStudent(),
-          merchCreated(),
-          placedOrders(),
-          fetchAllPendingCounts(),
-        ]);
+      const [
+        studentRes,
+        merchCreate,
+        placedOrder,
+        pendingOrders,
+        activeMemberships,
+      ] = await Promise.all([
+        getCountStudent(),
+        merchCreated(),
+        placedOrders(),
+        fetchAllPendingCounts(),
+        getCountActiveMemberships(),
+      ]);
 
       setFinalCounts({
         student: studentRes.all || 0,
         merchandise: merchCreate || 0,
         order: placedOrder || 0,
+        activeMemberships: activeMemberships || 0,
       });
       setPendingData(pendingOrders || []);
-      // console.log(studentRes);
+
       animateCount();
     } catch (error) {
       setError("Error fetching dashboard data");
@@ -102,7 +118,12 @@ const AdminDashboard = () => {
     }, 1000);
 
     return () => clearInterval(delayFetch);
-  }, [finalCounts.student, finalCounts.merchandise, finalCounts.order]);
+  }, [
+    finalCounts.student,
+    finalCounts.merchandise,
+    finalCounts.order,
+    finalCounts.activeMemberships,
+  ]);
   return (
     <div className="pt-4 md:pt-8">
       {loading ? (
@@ -137,6 +158,13 @@ const AdminDashboard = () => {
                 icon={faShoppingCart}
                 title="Orders"
                 count={counts.order}
+              />
+            </div>
+            <div className="row-start-2 col-span-full md:row-start-1 md:col-start-5 lg:flex-1">
+              <DashboardCard
+                icon={faUsers}
+                title="Active Memberships"
+                count={counts.activeMemberships}
               />
             </div>
           </div>

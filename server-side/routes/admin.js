@@ -197,6 +197,23 @@ router.get("/get-students-count", admin_authenticate, async (req, res) => {
     console.error(error);
   }
 });
+//get-active-membership-count
+router.get(
+  "/get-active-membership-count",
+  admin_authenticate,
+  async (req, res) => {
+    try {
+      const count = await Student.countDocuments({
+        status: "True",
+        $or: [{ membership: "Accepted", renew: null }, { renew: "Accepted" }],
+      });
+      res.status(200).json({ message: count });
+    } catch (error) {
+      console.error("Error fetching active membership count:", error);
+      res.status(500).json({ error: "Failed to fetch count" });
+    }
+  }
+);
 
 router.get("/merchandise-created", admin_authenticate, async (req, res) => {
   const count = await Merch.countDocuments();
@@ -300,6 +317,7 @@ router.get("/get-all-officers", async (req, res) => {
       year: officer.year,
       position: officer.position,
       campus: officer.campus,
+      access: officer.access,
     }));
 
     res.status(200).json({ data: users });
@@ -814,6 +832,7 @@ router.post("/admin/add-officer", admin_authenticate, async (req, res) => {
       year,
       campus,
       status,
+      access: "standard",
     });
     await newAdmin.save();
 
@@ -872,6 +891,42 @@ router.put(
       }
     } catch (error) {
       console.error("Error deleting admin account:", error);
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
+    }
+  }
+);
+//update-admin-access
+router.put(
+  "/admin/update-admin-access",
+  admin_authenticate,
+  async (req, res) => {
+    const { id_number, newAccess } = req.body;
+
+    if (!id_number || !newAccess) {
+      return res
+        .status(400)
+        .json({ message: "id_number and newAccess are required" });
+    }
+
+    try {
+      const updateRole = await Admin.updateOne(
+        { id_number },
+        {
+          $set: {
+            access: newAccess,
+          },
+        }
+      );
+
+      if (updateRole.modifiedCount > 0) {
+        res.status(200).json({ message: "Access updated successfully" });
+      } else {
+        res.status(404).json({ message: "Admin not found" });
+      }
+    } catch (error) {
+      console.error("Error updating access account:", error);
       res
         .status(500)
         .json({ message: "An error occurred", error: error.message });

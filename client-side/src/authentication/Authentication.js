@@ -24,6 +24,7 @@ export const getInformationData = () => {
     position: storedData?.position || null,
     audience: storedData?.role || null,
     campus: storedData?.campus || null,
+    access: storedData?.access || null,
   };
 };
 export const removeAuthentication = () => {

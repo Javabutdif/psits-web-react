@@ -76,6 +76,29 @@ export const getCountStudent = async () => {
   }
 };
 
+export const getCountActiveMemberships = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-active-membership-count`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data.message;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return false;
+    } else {
+      console.log("error", "An error occurred");
+      return false;
+    }
+  }
+};
+
 export const membershipRequest = async () => {
   try {
     const response = await axios.get(
@@ -424,7 +447,7 @@ export const addMerchandise = async (formData) => {
         },
       }
     );
-    if (response.status === 201) {
+    if (response.status === 200) {
       return true;
     } else {
       return false;
@@ -432,8 +455,10 @@ export const addMerchandise = async (formData) => {
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
+      return false;
     } else {
       showToast("error", "An error occurred");
+      return false;
     }
     console.error("Error:", error);
   }
@@ -712,6 +737,7 @@ export const editOfficerApi = async (updatedMember) => {
 
     if (response.status === 200) {
       showToast("success", response.data.message);
+      return true;
     } else {
       console.error(response.data.message);
     }
@@ -1053,6 +1079,34 @@ export const declineAdminAccount = async (id_number) => {
     const response = await axios.put(
       `${backendConnection()}/api/admin/decline-admin-account`,
       { id_number },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message);
+    }
+    return response.status === 200;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+//Update Individual Role
+export const editAdminAccess = async (id_number, newAccess) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/update-admin-access`,
+      { id_number, newAccess },
       {
         headers: {
           "Content-Type": "application/json",

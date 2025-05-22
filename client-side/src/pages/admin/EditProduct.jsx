@@ -9,11 +9,14 @@ import ImageInput from "../../components/forms/ImageInput";
 import backendConnection from "../../api/backendApi";
 import axios from "axios";
 const token = sessionStorage.getItem("Token");
+import ToggleSwitch from "../../components/common/ToggleSwitch";
 
 function EditProduct({ handleCloseEditProduct, merchData }) {
   const user = getInformationData();
   const today = new Date().toISOString().split("T")[0];
   const [isLoading, setIsLoading] = useState(false);
+  const [isShown, setIsShown] = useState(false);
+  const [isVariation, setVariation] = useState(false);
   const variation = [
     "White",
     "Purple",
@@ -63,6 +66,11 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
   const [newImages, setNewImages] = useState([]); // New local images
   const [removedImages, setRemovedImages] = useState([]); // AWS images to delete
   const [imagePreviews, setImagePreviews] = useState([]); // For UI
+  const [isEventType, setIsEventType] = useState(false);
+
+  const toggleIsEventType = () => {
+    setIsEventType((prev) => !prev);
+  };
 
   const [formData, setFormData] = useState({
     name: "",
@@ -88,9 +96,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
         ...merchData,
         start_date: merchData.start_date.split("T")[0],
         end_date: merchData.end_date.split("T")[0],
-        selectedSizes: Array.isArray(merchData.selectedSizes)
-          ? merchData.selectedSizes
-          : merchData.selectedSizes.split(","),
+        selectedSizes: merchData.selectedSizes ? merchData.selectedSizes : [],
         selectedVariations: Array.isArray(merchData.selectedVariations)
           ? merchData.selectedVariations
           : merchData.selectedVariations.split(","),
@@ -99,6 +105,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
       if (merchData.imageUrl && merchData.imageUrl.length > 0) {
         setImagePreviews(merchData.imageUrl);
       }
+      setIsShown(true);
     }
   }, [merchData]);
 
@@ -108,7 +115,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
       removeImage: [
         ...(prev.removeImage && Array.isArray(prev.removeImage)
           ? prev.removeImage
-          : []), // ✅ Ensure it's always an array
+          : []),
         ...(typeof image === "string" && image.startsWith("https://")
           ? [image]
           : []),
@@ -201,33 +208,38 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
     setShowPreview(true);
   };
   // console.log(formData);
+
   const handleConfirm = async () => {
     setIsLoading(true);
-    const formDataToSend = new FormData();
+    const data = new FormData();
 
-    if (images.length > 0) {
-      images.forEach((image) => formDataToSend.append("images", image));
-    } else {
-      merchData.imageUrl.forEach((url) =>
-        formDataToSend.append("imageUrl", url)
-      );
+    if (images) {
+      images.forEach((image) => data.append("images", image));
     }
 
     for (const key in formData) {
       let value = formData[key];
 
-      // Ensure arrays are converted to strings before appending to FormData
-      if (Array.isArray(value)) {
+      if (key === "selectedSizes") {
+        try {
+          value = JSON.stringify(value);
+        } catch (error) {
+          console.error("Error stringifying selectedSizes:", value);
+          return;
+        }
+      } else if (Array.isArray(value)) {
         value = value.join(",");
       }
 
-      formDataToSend.append(key, value);
+      data.append(key, value);
     }
+
+    data.append("isEvent", isEventType);
 
     try {
       const response = await axios.put(
         `${backendConnection()}/api/merch/update/${merchData._id}`,
-        formDataToSend,
+        data,
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -249,24 +261,26 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
     }
   };
 
-  function handleSizeClick(size) {
+  const handleSizeClick = (size) => {
     setFormData((prevState) => {
-      // Ensure selectedSizes is treated as an array
-      const selectedSizesArray = Array.isArray(prevState.selectedSizes)
-        ? prevState.selectedSizes
-        : prevState.selectedSizes.split(",");
+      const selectedSizes = prevState.selectedSizes;
 
-      const isSelected = selectedSizesArray.includes(size);
-      const newSelectedSizes = isSelected
-        ? selectedSizesArray.filter((s) => s !== size)
-        : [...selectedSizesArray, size];
+      // Toggle size selection
+      if (selectedSizes.hasOwnProperty(size)) {
+        const updatedSizes = { ...selectedSizes };
+        delete updatedSizes[size];
+        return { ...prevState, selectedSizes: updatedSizes };
+      }
 
       return {
         ...prevState,
-        selectedSizes: newSelectedSizes,
+        selectedSizes: {
+          ...selectedSizes,
+          [size]: { custom: false, price: formData.price },
+        },
       };
     });
-  }
+  };
 
   const handleVariationClick = (variation) => {
     setFormData((prevState) => {
@@ -324,6 +338,30 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
     return typeOptions[category] || [];
   };
 
+  const handleCustomPriceToggle = (size) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      selectedSizes: {
+        ...prevState.selectedSizes,
+        [size]: {
+          ...prevState.selectedSizes[size],
+          custom: !prevState.selectedSizes[size].custom,
+          price: !prevState.selectedSizes[size].custom ? "" : formData.price, // Reset price if unchecked
+        },
+      },
+    }));
+  };
+
+  const handlePriceChange = (size, value) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      selectedSizes: {
+        ...prevState.selectedSizes,
+        [size]: { ...prevState.selectedSizes[size], price: value },
+      },
+    }));
+  };
+
   const PreviewModal = ({ data, images, onClose, onConfirm }) => {
     // Show up to 3 images in the preview
     const imagesToShow = images.slice(0, 3);
@@ -359,46 +397,54 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
               </div>
             )}
             <div className="text-gray-700 space-y-1">
-              <p className="text-sm">
-                <strong>Product Name:</strong> {data.name}
-              </p>
-              <p className="text-sm">
-                <strong>Price:</strong> ₱{data.price}
-              </p>
-              <p className="text-sm">
-                <strong>Stocks:</strong> {data.stocks}
-              </p>
-              <p className="text-sm">
-                <strong>Batch:</strong> {data.batch}
-              </p>
-              <p className="text-sm">
-                <strong>Category:</strong> {data.category}
-              </p>
-              <p className="text-sm">
-                <strong>Type:</strong> {data.type}
-              </p>
-              <p className="text-sm">
-                <strong>Description:</strong> {data.description}
-              </p>
-              <p className="text-sm">
-                <strong>Purchase Control:</strong> {data.control}
-              </p>
-              <p className="text-sm">
-                <strong>Start Date:</strong> {data.start_date}
-              </p>
-              <p className="text-sm">
-                <strong>End Date:</strong> {data.end_date}
-              </p>
-              <p className="text-sm">
-                <strong>Audience:</strong> {data.selectedAudience}
-              </p>
-              <p className="text-sm">
-                <strong>Sizes:</strong> {data.selectedSizes.join(", ")}
-              </p>
-              <p className="text-sm">
-                <strong>Variations:</strong>{" "}
-                {data.selectedVariations.join(", ")}
-              </p>
+              {Object.entries({
+                "Product Name": data.name,
+                Price: `₱${data.price}`,
+                Stocks: data.stocks,
+                Batch: data.batch,
+                Category: data.category,
+                Type: data.type,
+                Description: data.description,
+                "Purchase Control": data.control,
+                "Start Date": data.start_date,
+                "End Date": data.end_date,
+                Sizes: Object.entries(data.selectedSizes),
+                Variations: data.selectedVariations,
+              }).map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between gap-10"
+                >
+                  <span className="font-medium text-md">{label}:</span>
+
+                  {/* Handle array values separately */}
+                  {Array.isArray(value) && value.length > 0 ? (
+                    <div className="flex gap-2 flex-wrap">
+                      {value.map(([size, details]) => {
+                        // Fallbacks to prevent errors
+                        const isCustom = details?.custom;
+                        const price = details?.price;
+
+                        return (
+                          <div
+                            key={size}
+                            className="flex items-center gap-1 border p-1 rounded"
+                          >
+                            <span>{size}</span>
+                            {isCustom ? (
+                              <span className="text-sm text-gray-500">
+                                ₱{price}
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-md">{value}</span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
           <div className="mt-6 flex justify-end space-x-3">
@@ -518,6 +564,38 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
                 optionStyle="text-sm"
               />
             </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-row relative gap-4">
+                <label
+                  htmlFor="start_date"
+                  className="text-gray-500 mb-1 text-sm"
+                >
+                  Is Merch of Event type?
+                </label>
+                <ToggleSwitch
+                  isToggled={isEventType}
+                  onToggle={toggleIsEventType}
+                />
+              </div>
+            </div>
+            {isEventType && (
+              <div className="flex flex-col relative">
+                <label htmlFor="eventDate" className="text-gray-500 mb-1">
+                  Event Date
+                </label>
+                <FormInput
+                  label=""
+                  name="eventDate"
+                  type="date"
+                  value={formData.eventDate}
+                  onChange={handleChange}
+                  labelStyle="text-sm"
+                  inputStyle="text-sm"
+                  error={errors.eventDate}
+                  max={today}
+                />
+              </div>
+            )}
             <FormSelect
               name="control"
               label="Purchase Control"
@@ -537,54 +615,83 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
               optionStyle="text-sm"
             />
 
-            <div className="flex flex-wrap gap-y-4 text-sm">
-              {formData.type &&
-                (formData.type.split(" ").includes("Uniform") ||
-                  formData.type.includes("Tshirt")) && (
-                  <div>
-                    <p className="font-semibold">Sizes:</p>
-                    <div className="flex gap-2">
-                      {size.map((s) => (
+            <div className="flex flex-col gap-4 text-sm">
+              {isShown && formData.type === "Tshirt" && (
+                <div>
+                  <p className="font-semibold">Sizes:</p>
+                  <div className="flex flex-col gap-2">
+                    {size.map((s) => (
+                      <div
+                        key={s}
+                        className="grid grid-cols-[auto_auto_1fr] items-center gap-4"
+                      >
+                        {/* Button for Size Selection */}
                         <button
-                          key={s}
                           type="button"
                           onClick={() => handleSizeClick(s)}
-                          className={`p-2 border rounded ${
-                            formData.selectedSizes.includes(s)
+                          className={`p-2 w-14 text-center border rounded ${
+                            formData.selectedSizes[s]
                               ? "bg-blue-500 text-white"
                               : "bg-white text-gray-800"
                           }`}
                         >
                           {s}
                         </button>
-                      ))}
-                    </div>
+
+                        {/* Checkbox for Custom Price */}
+                        {formData.selectedSizes[s] !== undefined && (
+                          <label className="flex items-center gap-2 text-sm">
+                            <FormInput
+                              type="checkbox"
+                              checked={formData.selectedSizes[s]?.custom}
+                              onChange={() => handleCustomPriceToggle(s)}
+                            />
+                            Custom Price
+                          </label>
+                        )}
+
+                        {/* Input for Custom Price */}
+                        {formData.selectedSizes[s]?.custom && (
+                          <FormInput
+                            type="number"
+                            placeholder="Enter price"
+                            value={
+                              formData.selectedSizes[s]?.price
+                                ? formData.selectedSizes[s]?.price
+                                : formData.price
+                            }
+                            onChange={(e) =>
+                              handlePriceChange(s, e.target.value)
+                            }
+                            className="border p-1 rounded w-full max-w-32"
+                          />
+                        )}
+                      </div>
+                    ))}
                   </div>
-                )}
-              {formData.type &&
-                (formData.type.split(" ").includes("Uniform") ||
-                  formData.type.includes("Tshirt") ||
-                  formData.type.includes("Item")) && (
-                  <div>
-                    <p className="font-semibold">Variations:</p>
-                    <div className="flex gap-2 flex-wrap text-sm">
-                      {variation.map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => handleVariationClick(v)}
-                          className={`p-2 border rounded ${
-                            formData.selectedVariations.includes(v)
-                              ? "bg-blue-500 text-white"
-                              : "bg-white text-gray-800"
-                          }`}
-                        >
-                          {v}
-                        </button>
-                      ))}
-                    </div>
+                </div>
+              )}
+              {(isShown || isVariation) && (
+                <div>
+                  <p className="font-semibold">Variations:</p>
+                  <div className="flex gap-2 flex-wrap text-sm">
+                    {variation.map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => handleVariationClick(v)}
+                        className={`p-2 border rounded ${
+                          formData.selectedVariations.includes(v)
+                            ? "bg-blue-500 text-white"
+                            : "bg-white text-gray-800"
+                        }`}
+                      >
+                        {v}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">

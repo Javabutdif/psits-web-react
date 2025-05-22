@@ -61,10 +61,21 @@ router.post(
       type,
       control,
     } = req.body;
+    console.log(req.body);
+
+    let parsedSelectedSizes;
+    if (typeof selectedSizes === "string") {
+      try {
+        parsedSelectedSizes = JSON.parse(selectedSizes);
+      } catch (error) {
+        console.error("Invalid JSON format for selectedSizes:", selectedSizes);
+        return res.status(400).json({ error: "Invalid selectedSizes format" });
+      }
+    }
 
     // Get the URLs of the uploaded images
     const imageUrl = req.files.map((file) => file.location);
-
+    console.log(parsedSelectedSizes);
     try {
       const newMerch = new Merch({
         name,
@@ -73,7 +84,7 @@ router.post(
         batch,
         description,
         selectedVariations: selectedVariations.split(","),
-        selectedSizes: selectedSizes.split(","),
+        selectedSizes: parsedSelectedSizes,
         selectedAudience,
         created_by,
         start_date,
@@ -117,7 +128,7 @@ router.post(
 
       await log.save();
 
-      res.status(201).json("Merch Addition Successful");
+      res.status(200).json("Merch Addition Successful");
     } catch (error) {
       console.error("Error saving new merch:", error.message);
       res.status(500).send(error.message);
@@ -234,6 +245,20 @@ router.put(
       const id = req.params._id;
       //console.log(removeImage);
       let imageUrl = req.files.map((file) => file.location);
+      let parsedSelectedSizes;
+      if (typeof selectedSizes === "string") {
+        try {
+          parsedSelectedSizes = JSON.parse(selectedSizes);
+        } catch (error) {
+          console.error(
+            "Invalid JSON format for selectedSizes:",
+            selectedSizes
+          );
+          return res
+            .status(400)
+            .json({ error: "Invalid selectedSizes format" });
+        }
+      }
 
       const imagesToRemove = Array.isArray(removeImage)
         ? removeImage
@@ -287,7 +312,7 @@ router.put(
         batch: batch,
         description: description,
         selectedVariations: selectedVariations.split(","),
-        selectedSizes: selectedSizes.split(","),
+        selectedSizes: parsedSelectedSizes,
         start_date: start_date,
         end_date: end_date,
         category: category,

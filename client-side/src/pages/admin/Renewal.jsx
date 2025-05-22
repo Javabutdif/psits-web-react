@@ -8,7 +8,7 @@ import TableComponent from "../../components/Custom/TableComponent";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 import {
-  conditionalPosition,
+  financeAndAdminConditionalAccess,
   formattedDate,
 } from "../../components/tools/clientTools";
 
@@ -185,30 +185,30 @@ function MembershipRequest() {
         <ButtonsComponent>
           <FormButton
             type="button"
-            text={!conditionalPosition() ? "Not Authorized" : "Approve"}
+            text={!financeAndAdminConditionalAccess() ? "Not Authorized" : "Approve"}
             onClick={() => {
-              if (conditionalPosition()) {
+              if (financeAndAdminConditionalAccess()) {
                 handleOpenModal(row);
               }
             }}
             icon={
               <i
                 className={`fa ${
-                  !conditionalPosition() ? "fa-lock" : "fa-check"
+                  !financeAndAdminConditionalAccess() ? "fa-lock" : "fa-check"
                 }`}
               ></i>
             }
             styles={`relative flex items-center space-x-2 px-4 py-2 rounded text-white ${
-              !conditionalPosition()
+              !financeAndAdminConditionalAccess()
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[#002E48]"
             }`}
             textClass="text-white"
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
-            disabled={!conditionalPosition()}
+            disabled={!financeAndAdminConditionalAccess()}
           />
-          {!conditionalPosition() && <c visible={true}></c>}
+          {!financeAndAdminConditionalAccess() && <c visible={true}></c>}
         </ButtonsComponent>
       ),
     },

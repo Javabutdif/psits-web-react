@@ -196,6 +196,7 @@ function Product({ handleCloseAddProduct }) {
   };
 
   const handlePreview = (e) => {
+    console.log(formData);
     e.preventDefault();
     if (validate()) {
       setPreviewData(formData);
@@ -213,9 +214,18 @@ function Product({ handleCloseAddProduct }) {
 
     for (const key in formData) {
       let value = formData[key];
-      if (Array.isArray(value)) {
-        value = value.join(",");
+
+      if (key === "selectedSizes") {
+        try {
+          value = JSON.stringify(value); 
+        } catch (error) {
+          console.error("Error stringifying selectedSizes:", value);
+          return;
+        }
+      } else if (Array.isArray(value)) {
+        value = value.join(","); 
       }
+
       data.append(key, value);
     }
 
@@ -230,26 +240,53 @@ function Product({ handleCloseAddProduct }) {
       }
     } catch (error) {
       showToast("error", error.message);
+      setShowPreview(false);
       setIsLoading(false);
     }
   };
-
   const handleSizeClick = (size) => {
     setFormData((prevState) => {
-      const selectedSizesArray = Array.isArray(prevState.selectedSizes)
-        ? prevState.selectedSizes
-        : prevState.selectedSizes.split(",");
+      const selectedSizes = prevState.selectedSizes || {};
 
-      const isSelected = selectedSizesArray.includes(size);
-      const newSelectedSizes = isSelected
-        ? selectedSizesArray.filter((s) => s !== size)
-        : [...selectedSizesArray, size];
+      // Toggle size selection
+      if (selectedSizes.hasOwnProperty(size)) {
+        const updatedSizes = { ...selectedSizes };
+        delete updatedSizes[size];
+        return { ...prevState, selectedSizes: updatedSizes };
+      }
 
       return {
         ...prevState,
-        selectedSizes: newSelectedSizes,
+        selectedSizes: {
+          ...selectedSizes,
+          [size]: { custom: false, price: formData.price },
+        },
       };
     });
+  };
+
+  const handleCustomPriceToggle = (size) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      selectedSizes: {
+        ...prevState.selectedSizes,
+        [size]: {
+          ...prevState.selectedSizes[size],
+          custom: !prevState.selectedSizes[size].custom,
+          price: !prevState.selectedSizes[size].custom ? "" : formData.price, // Reset price if unchecked
+        },
+      },
+    }));
+  };
+
+  const handlePriceChange = (size, value) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      selectedSizes: {
+        ...prevState.selectedSizes,
+        [size]: { ...prevState.selectedSizes[size], price: value },
+      },
+    }));
   };
 
   const handleVariationClick = (variation) => {
@@ -376,15 +413,35 @@ function Product({ handleCloseAddProduct }) {
                   "Purchase Control": data.control,
                   "Start Date": data.start_date,
                   "End Date": data.end_date,
-                  Sizes: data.selectedSizes.join(", "),
-                  Variations: data.selectedVariations.join(", "),
+                  Sizes: Object.entries(data.selectedSizes), // Keep it as an array
+                  Variations: data.selectedVariations,
                 }).map(([label, value]) => (
                   <div
                     key={label}
                     className="flex items-center justify-between gap-10"
                   >
                     <span className="font-medium text-md">{label}:</span>
-                    <span className="text-md">{value}</span>
+
+                    {/* Handle array values separately */}
+                    {Array.isArray(value) ? (
+                      <div className="flex gap-2 flex-wrap">
+                        {value.map(([size, details]) => (
+                          <div
+                            key={size}
+                            className="flex items-center gap-1 border p-1 rounded"
+                          >
+                            <span>{size}</span>
+                            {details.custom && (
+                              <span className="text-sm text-gray-500">
+                                ₱{details.price}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-md">{value}</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -470,6 +527,7 @@ function Product({ handleCloseAddProduct }) {
             <i className="fas fa-times"></i>
           </button>
           <h2 className="text-2xl font-semibold mb-4">Add Product</h2>
+         
           <form onSubmit={handlePreview} className="space-y-6">
             <ImageInput
               label={"Product Image"}
@@ -601,20 +659,56 @@ function Product({ handleCloseAddProduct }) {
               {isShown && (
                 <div>
                   <p className="font-semibold">Sizes:</p>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex flex-col gap-2">
                     {size.map((s) => (
-                      <button
+                      <div
                         key={s}
-                        type="button"
-                        onClick={() => handleSizeClick(s)}
-                        className={`p-2 border rounded ${
-                          formData.selectedSizes.includes(s)
-                            ? "bg-blue-500 text-white"
-                            : "bg-white text-gray-800"
-                        }`}
+                        className="grid grid-cols-[auto_auto_1fr] items-center gap-4"
                       >
-                        {s}
-                      </button>
+                        {/* Button for Size Selection */}
+                        <button
+                          type="button"
+                          onClick={() => handleSizeClick(s)}
+                          className={`p-2 w-14 text-center border rounded ${
+                            formData.selectedSizes[s]
+                              ? "bg-blue-500 text-white"
+                              : "bg-white text-gray-800"
+                          }`}
+                        >
+                          {s}
+                        </button>
+
+                        {/* Checkbox for Custom Price */}
+                        {formData.selectedSizes[s] !== undefined && (
+                          <label className="flex items-center gap-2 text-sm">
+                            <FormInput
+                              type="checkbox"
+                              checked={
+                                formData.selectedSizes[s]?.custom || false
+                              }
+                              onChange={() => handleCustomPriceToggle(s)}
+                            />
+                            Custom Price
+                          </label>
+                        )}
+
+                        {/* Input for Custom Price */}
+                        {formData.selectedSizes[s]?.custom && (
+                          <FormInput
+                            type="number"
+                            placeholder="Enter price"
+                            value={
+                              formData.selectedSizes[s]?.price
+                                ? formData.selectedSizes[s]?.price
+                                : formData.price
+                            }
+                            onChange={(e) =>
+                              handlePriceChange(s, e.target.value)
+                            }
+                            className="border p-1 rounded w-full max-w-32"
+                          />
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>

@@ -13,6 +13,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import { IoArrowBack } from "react-icons/io5";
 import { InfinitySpin } from "react-loader-spinner";
+import { capitalizeWord } from "../../components/tools/clientTools.js";
 
 function Register() {
   const [startDate, setStartDate] = useState(new Date());
@@ -144,9 +145,9 @@ function Register() {
     setIsLoading(true);
     const trimmedFormData = {
       id_number: formData.id_number?.trim(),
-      first_name: formData.first_name?.trim(),
-      middle_name: formData.middle_name?.trim(),
-      last_name: formData.last_name?.trim(),
+      first_name: capitalizeWord(formData.first_name?.trim()),
+      middle_name: capitalizeWord(formData.middle_name?.trim()),
+      last_name: capitalizeWord(formData.last_name?.trim()),
       email: formData.email?.trim(),
       course: formData.course?.trim(),
       year: formData.year?.trim(),

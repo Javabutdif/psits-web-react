@@ -13,7 +13,7 @@ import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import TableComponent from "../../components/Custom/TableComponent";
 import FormButton from "../../components/forms/FormButton";
 import {
-  conditionalPosition,
+  financeAndAdminConditionalAccess,
   formattedDate,
 } from "../../components/tools/clientTools";
 import { showToast } from "../../utils/alertHelper";
@@ -282,7 +282,7 @@ function Merchandise() {
             textClass="ml-2 md:inline"
             iconClass="text-sm text-base"
           />
-          {conditionalPosition() && (
+          {financeAndAdminConditionalAccess() && (
             <>
               <FormButton
                 type="button"
@@ -413,7 +413,7 @@ function Merchandise() {
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
               customButtons={
-                conditionalPosition() && (
+                financeAndAdminConditionalAccess() && (
                   <ButtonsComponent>
                     {/* Filters Button */}
 
@@ -545,10 +545,18 @@ function Merchandise() {
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Sizes:</span>
                   <span className="text-sm">
-                    {" "}
-                    {selectedItem?.selectedSizes
-                      .map((sizes) => sizes)
-                      .join(", ")}
+                    {selectedItem?.selectedSizes &&
+                    Object.entries(selectedItem.selectedSizes).length > 0 ? (
+                      Object.entries(selectedItem.selectedSizes).map(
+                        ([sizeName, sizeDetails], index) => (
+                          <p key={sizeName || index}>
+                            Size: {sizeName} - Price: {sizeDetails.price}
+                          </p>
+                        )
+                      )
+                    ) : (
+                      <p>No sizes available</p>
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center font-secondary justify-between gap-10">

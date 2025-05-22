@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import AsideBar from "../common/navbar/AsideBar";
 import ProfileHeader from "../ProfileHeader";
-import { higherPosition, treasurerPosition } from "../tools/clientTools";
+import { logsAccess, settingsAccess } from "../tools/clientTools";
 import { getInformationData } from "../../authentication/Authentication";
 
 const formatLabel = (text) => {
@@ -61,10 +61,15 @@ const AdminLayout = () => {
           { text: "Merchandise", icon: "fas fa-boxes", path: "merchandise" },
           { text: "Orders", icon: "fas fa-shopping-cart", path: "orders" },
           { text: "Reports", icon: "fas fa-chart-line", path: "reports" },
-          (higherPosition() || treasurerPosition()) && {
+          logsAccess() && {
             text: "Logs",
             icon: "fa-solid fa-book",
             path: "logs",
+          },
+          settingsAccess() && {
+            text: "Settings",
+            icon: "fas fa-cog",
+            path: "settings",
           },
         ].filter(Boolean)
       : [{ text: "Events", icon: "fas fa-calendar-alt", path: "events" }];

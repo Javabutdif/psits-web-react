@@ -200,6 +200,7 @@ const CartItem = ({
     limited,
     sizes,
     variation,
+    batch,
   } = product;
   const [isModalOpen, setModalOpen] = useState(false);
   const user = getInformationData();
@@ -258,6 +259,9 @@ const CartItem = ({
         <h4 className="text-base sm:text-lg font-semibold text-gray-800">
           {product_name}
         </h4>
+        <p className="text-sm sm:text-base font-medium text-gray-700">
+          Batch: {batch}
+        </p>
         {sizes && sizes.length > 0 && (
           <p className="text-sm sm:text-base font-medium text-gray-700">
             Size: {sizes.join(", ")}

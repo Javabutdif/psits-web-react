@@ -8,10 +8,7 @@ import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import FormButton from "../../../components/forms/FormButton";
-import {
-  higherPosition,
-  higherOfficers,
-} from "../../../components/tools/clientTools";
+import { executiveAndAdminConditionalAccess } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditOfficer from "../EditOfficer";
@@ -68,8 +65,9 @@ const AllOfficers = () => {
   const handleSaveEditedMember = async (updatedMember) => {
     setIsLoading(true);
     try {
-      editOfficerApi(updatedMember);
-      fetchData();
+      if (editOfficerApi(updatedMember)) {
+        fetchData();
+      }
     } catch (error) {
       console.error("Error updating officer:", error);
     }
@@ -213,7 +211,7 @@ const AllOfficers = () => {
       sortable: true,
     },
 
-    higherOfficers() && {
+    executiveAndAdminConditionalAccess() && {
       key: "actions",
       label: "",
       cell: (row) => (
