@@ -616,7 +616,7 @@ function EditProduct({ handleCloseEditProduct, merchData }) {
             />
 
             <div className="flex flex-col gap-4 text-sm">
-              {((isShown && formData.type === "Tshirt") ||
+              {(isShown && (formData.type === "Tshirt") ||
                 formData.category === "uniform") && (
                 <div>
                   <p className="font-semibold">Sizes:</p>
