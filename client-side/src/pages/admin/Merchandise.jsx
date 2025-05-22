@@ -572,12 +572,16 @@ function Merchandise() {
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">Start Date:</span>
-                  <span className="text-sm">{selectedItem?.start_date}</span>
+                  <span className="text-sm">
+                    {formattedDate(selectedItem?.start_date)}
+                  </span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">
                   <span className="font-medium text-lg">End Date:</span>
-                  <span className="text-sm">{selectedItem?.end_date}</span>
+                  <span className="text-sm">
+                    {formattedDate(selectedItem?.end_date)}
+                  </span>
                 </div>
 
                 <div className="flex items-center font-secondary justify-between gap-10">

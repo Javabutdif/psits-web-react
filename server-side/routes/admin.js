@@ -911,20 +911,25 @@ router.put(
     }
 
     try {
-      const updateRole = await Admin.updateOne(
-        { id_number },
-        {
-          $set: {
-            access: newAccess,
-          },
-        }
-      );
+      const adminToUpdate = await Admin.findOne({ id_number });
 
-      if (updateRole.modifiedCount > 0) {
-        res.status(200).json({ message: "Access updated successfully" });
-      } else {
-        res.status(404).json({ message: "Admin not found" });
+      if (!adminToUpdate) {
+        return res.status(404).json({ message: "Admin not found" });
       }
+
+    
+      adminToUpdate.access = newAccess;
+      await adminToUpdate.save();
+
+     
+      await new Log({
+        admin: req.user.name,
+        action: `Change Access for ${adminToUpdate.name} to ${newAccess}`,
+        target: "Change Access",
+        target_model: "Admin",
+      }).save();
+
+      res.status(200).json({ message: "Access updated successfully" });
     } catch (error) {
       console.error("Error updating access account:", error);
       res
@@ -933,5 +938,4 @@ router.put(
     }
   }
 );
-
 module.exports = router;
