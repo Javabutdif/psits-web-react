@@ -18,6 +18,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [finalPrice, setFinalPrice] = useState(0);
   const user = getInformationData();
 
   useEffect(() => {
@@ -52,10 +53,14 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
   }, []);
 
   useEffect(() => {
-    if (item?.price) {
-      setAmount((item.price * quantity).toFixed(2));
+    if (item?.selectedSizes && size && quantity) {
+      const selected = item.selectedSizes[size];
+      if (selected && selected.price) {
+        setAmount((selected.price * quantity).toFixed(2));
+        setFinalPrice(selected.price);
+      }
     }
-  }, [item, quantity]);
+  }, [item, size, quantity]);
 
   const validateForm = () => {
     let tempErrors = {};
@@ -82,7 +87,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
       imageUrl1: item.imageUrl[0],
       product_name: item.name,
       limited: item.control === "limited-purchase",
-      price: item.price,
+      price: finalPrice ? finalPrice : item.price,
       quantity,
       sub_total: amount,
       variation: item.category === "uniform" ? variation : "",
