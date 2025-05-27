@@ -14,6 +14,7 @@ const facebookRoutes = require("./routes/facebook");
 const cartRoutes = require("./routes/cart");
 const logRoutes = require("./routes/logs");
 const eventRoutes = require("./routes/events");
+const privateRoutes = require("./routes/private");
 require("dotenv").config();
 
 app.use(
@@ -43,6 +44,7 @@ app.use("/api/facebook", facebookRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/logs", logRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api", privateRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server started, listening at port ${PORT}`);
