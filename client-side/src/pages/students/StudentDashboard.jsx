@@ -153,6 +153,7 @@ const DynamicAdCarousel = ({ products }) => {
               src={products[currentIndex]?.imageUrl[0]}
               alt="Ad"
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
 
