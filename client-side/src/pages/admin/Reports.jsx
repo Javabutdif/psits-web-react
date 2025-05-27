@@ -11,7 +11,10 @@ import {
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import FormButton from "../../components/forms/FormButton";
-import { formattedDate } from "../../components/tools/clientTools";
+import {
+  formattedDate,
+  formattedLastName,
+} from "../../components/tools/clientTools";
 import { financeAndAdminConditionalAccess } from "../../components/tools/clientTools";
 import { ConfirmActionType } from "../../enums/commonEnums";
 import { CSVLink } from "react-csv";
@@ -466,7 +469,6 @@ const Reports = () => {
       return { membershipCount: 0, renewalCount: 0 };
     }
   };
-
   const { membershipCount, renewalCount } = getMembershipCounts(membershipData);
 
   const membershipRevenue = membershipCount * 50;
@@ -480,6 +482,33 @@ const Reports = () => {
   const uniqueProductNames = Array.from(
     new Set(productNames.map((detail) => detail.product_name))
   );
+
+  const exportDataMembershipData = filteredMembershipData.map((item) => ({
+    "Reference Code": item.reference_code,
+    "Student ID": item.id_number,
+    Name: formattedLastName(item.name),
+    Course: item.course,
+    "Year Level": item.year,
+    Type: item.type,
+    Date: item.date,
+    "Approved By": item.admin,
+  }));
+
+  const exportDataMerchandiseData = formattedMerchandiseData.map((item) => ({
+    "Reference Code": item.reference_code,
+    Merchandise: item.product_name,
+    "Student ID": item.id_number,
+    Name: formattedLastName(item.student_name),
+    Course: item.course,
+    "Year Level": item.year,
+    Batch: item.batch,
+    Size: item.size,
+    Variation: item.variation,
+    Qty: item.quantity,
+    Total: item.total,
+    "Transaction Date": formattedDate(item.transaction_date),
+  }));
+
   return (
     <div className="container mx-auto p-4">
       <Tabs selectedIndex={activeTab} onSelect={(index) => setActiveTab(index)}>
@@ -531,7 +560,9 @@ const Reports = () => {
               Filter
             </button>
             <CSVLink
-              data={filteredMembershipData.length ? filteredMembershipData : []}
+              data={
+                exportDataMembershipData.length ? exportDataMembershipData : []
+              }
               filename="membership-data.csv"
             >
               <button
@@ -603,7 +634,9 @@ const Reports = () => {
 
             <CSVLink
               data={
-                formattedMerchandiseData.length ? formattedMerchandiseData : []
+                exportDataMerchandiseData.length
+                  ? exportDataMerchandiseData
+                  : []
               }
               filename="merchandise-data.csv"
             >
