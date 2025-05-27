@@ -78,7 +78,7 @@ router.post("/login", loginLimiter, async (req, res) => {
       expiresIn: role === "Admin" ? "4h" : "10m",
     });
 
-    // Create a log only if the user is an Admin
+ 
     if (role === "Admin") {
       const log = new Log({
         admin: users.name,

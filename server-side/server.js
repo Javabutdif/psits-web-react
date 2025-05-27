@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 5000;
 const registerRoutes = require("./routes/register");
 const loginRoutes = require("./routes/login");
 const adminRoutes = require("./routes/admin");
-const studentApproveRoutes = require("./routes/students");
+const studentRoutes = require("./routes/students");
 const merchRoutes = require("./routes/merch");
 const orderRoutes = require("./routes/orders");
 const facebookRoutes = require("./routes/facebook");
@@ -36,7 +36,7 @@ mongoose
 //Routes
 app.use("/api", registerRoutes);
 app.use("/api", loginRoutes);
-app.use("/api", studentApproveRoutes);
+app.use("/api", studentRoutes);
 app.use("/api", adminRoutes);
 app.use("/api/merch", merchRoutes);
 app.use("/api/orders", orderRoutes);
