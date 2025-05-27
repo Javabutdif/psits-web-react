@@ -154,15 +154,12 @@ const Reports = () => {
       const allSalesData = data
         ? data.flatMap((sales) => sales.sales_data || [])
         : [];
-      // console.dir(data, { depth: null }); // This will properly display the full object structure
-      // console.dir(allOrderDetails, { depth: null });
-      // console.dir(filteredOrderDetails, { depth: null });
+
       setGetData(data);
       setMerchandiseData(filteredOrderDetails);
       setFilteredMerchandiseData(filteredOrderDetails);
       setProductNames(filteredOrderDetails);
       setSalesData(allSalesData);
-      // console.log(allOrderDetails);
     } catch (error) {
       console.error("Error fetching merchandise data:", error);
     }
@@ -200,6 +197,15 @@ const Reports = () => {
       if (filterYear) {
         filteredData = filteredData.filter((item) =>
           item.year?.includes(filterYear)
+        );
+      }
+      if (filterDateFrom && filterDateTo) {
+        filteredData = filteredData.filter(
+          (item) =>
+            new Date(formattedDate(item.date)) >=
+              new Date(formattedDate(filterDateFrom)) &&
+            new Date(formattedDate(item.date)) <=
+              new Date(formattedDate(filterDateTo))
         );
       }
     } else {
@@ -244,8 +250,6 @@ const Reports = () => {
             new Date(formattedDate(item.transaction_date)) <=
               new Date(formattedDate(filterDateTo))
         );
-
-        // console.log(filteredData);
       }
 
       if (filterBatch) {
