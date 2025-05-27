@@ -638,7 +638,13 @@ const Reports = () => {
                   ? exportDataMerchandiseData
                   : []
               }
-              filename="merchandise-data.csv"
+              filename={
+                filterProductName !== ""
+                  ? `${filterProductName}${
+                      "-" + formattedDate(new Date())
+                    }${"-data.csv"}`
+                  : "merchandise-data.csv"
+              }
             >
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded"
