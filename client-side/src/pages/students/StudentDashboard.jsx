@@ -37,7 +37,7 @@ const StudentDashboard = () => {
         return eventDate >= currentDate;
       });
 
-      console.log("Upcoming Events:", upcomingEvents);
+     
       setEvents(upcomingEvents);
     }
   };

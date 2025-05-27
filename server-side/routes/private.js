@@ -11,7 +11,7 @@ router.get("/protected-route-admin", admin_authenticate, async (req, res) => {
   try {
     if (req.user.role === "Admin") {
       return res.status(200).json({
-        user: admin_model(req.user),
+        user: req.user,
         role: req.user.role,
       });
     } else return res.status(400).json({ message: "Access Denied" });
@@ -27,7 +27,7 @@ router.get(
     try {
       if (req.user.role === "Student") {
         return res.status(200).json({
-          user: user_model(req.user),
+          user: req.user,
           role: req.user.role,
         });
       } else return res.status(400).json({ message: "Access Denied" });
