@@ -30,13 +30,13 @@ const AdminDashboard = () => {
   });
 
   // Pending orders table states
-  const [pendingOrder, setPendingOrder] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [limit, setLimit] = useState(10);
-  const [totalOrderPages, setTotalOrderPages] = useState(1);
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState([]);
+  const [pendingOrder, setPendingOrder] = useState([]); // changed pendingData to pendingOrder for readability
+  const [currentPage, setCurrentPage] = useState(1);  // indicates current page sa pending order pagination
+  const [totalOrders, setTotalOrders] = useState(0);  // total order count
+  const [limit, setLimit] = useState(10); // limit of pending orders per page (pagination)
+  const [totalOrderPages, setTotalOrderPages] = useState(1);  // murag way gamit actually HAHAHA
+  const [search, setSearch] = useState(""); // search functionality pendingorders
+  const [sort, setSort] = useState([]); // sort functionality pendingorders (can sort by multiple columns, asc and desc)
 
   // Pending orders table loading
   const [orderLoading, setOrderLoading] = useState(false);
