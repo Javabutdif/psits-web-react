@@ -971,7 +971,12 @@ export const declineRole = async (id_number) => {
 };
 
 //get-all-pending-counts
-export const fetchAllPendingCounts = async () => {
+export const fetchAllPendingCounts = async ({
+  limit = 10,
+  page = 1,
+  sort = [{ field: 'product_name', direction: 'asc' }],
+  search = ''
+} = {}) => {
   try {
     const response = await axios.get(
       `${backendConnection()}/api/orders/get-all-pending-counts`,
@@ -979,12 +984,29 @@ export const fetchAllPendingCounts = async () => {
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
         },
+        params: {
+          page, limit, sort, search,
+        }
       }
     );
-    // console.log(response.data.data);
-    return response.data.data;
+
+    // console.log('pending counts: ', response.data);
+
+    return {
+      data: response.data.data || [],
+      total: response.data.total || 0,
+      page: response.data.page || 1,
+      totalPages: response.data.totalPages || 1,
+      limit: response.data.limit || limit
+    };
   } catch (error) {
     console.error("Error fetching student:", error);
+    return {
+      data: [],
+      page: 1,
+      total: 0,
+      totalPages: 0
+    }
   }
 };
 

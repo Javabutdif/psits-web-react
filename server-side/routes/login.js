@@ -102,6 +102,7 @@ router.post("/login", loginLimiter, async (req, res) => {
   }
 });
 
+// disregard kay mao ang una
 router.get("/protected-route", authenticateToken, (req, res) => {
   return res.json({
     message: "Access granted",
