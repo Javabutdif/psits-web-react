@@ -12,6 +12,7 @@ import {
   restrictedComponentOtherCampus,
   noneConditionalAccess,
 } from "../components/tools/clientTools";
+
 const PrivateRouteAdmin = ({ element: Component }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);

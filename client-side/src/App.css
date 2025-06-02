@@ -45,3 +45,19 @@
 .font-color {
   color: #002e48;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure table structure remains stable during animations */
+table {
+  border-collapse: collapse;
+}
+
+/* Fix for Firefox animation glitches */
+@-moz-document url-prefix() {
+  tbody {
+    display: table-row-group;
+  }
+}
