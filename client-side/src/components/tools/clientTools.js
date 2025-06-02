@@ -10,11 +10,15 @@ export const capitalizeWord = (word) => {
   return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 };
 
-//None dont have access
-//Standard have access to all except finance, executive and admin (PRO, PIO, Chief Volunteer, REPs)
-//Finance have access to all except executive and admin (Treasurer, Assitant Treasurer, Auditor)
-//Executive have access to all except admin (President, Vice-President Internal, Vice-President External, Secretary)
-//Admin have access to all (Head Developer)
+export const formattedLastName = (name) => {
+  const names = name.trim().split(/\s+/); 
+  if (names.length < 2) return name;
+  const lastName = names.pop(); 
+  const firstNames = names.join(" "); 
+  return `${lastName}, ${firstNames}`;
+};
+
+
 
 export const noneConditionalAccess = () => {
   const data = getInformationData();
