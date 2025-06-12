@@ -16,6 +16,8 @@ const {
   admin_authenticate,
   both_authenticate,
 } = require("../middlewares/custom_authenticate_token");
+const orderSearch = require('../utils/searchPendingOrders')
+const orderSort = require('../utils/sortPendingOrders')
 
 const router = express.Router();
 router.get("/", both_authenticate, async (req, res) => {
@@ -67,6 +69,7 @@ router.get("/get-all-pending-orders", admin_authenticate, async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
+
 //Get all paid orders
 router.get("/get-all-paid-orders", admin_authenticate, async (req, res) => {
   try {
@@ -424,11 +427,30 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
   }
 });
 
+// orders.js (backend api)
 router.get("/get-all-pending-counts", admin_authenticate, async (req, res) => {
   try {
-    const pendingOrders = await Orders.find({ order_status: "Pending" });
-    const productCounts = {};
+    const { 
+      page = 1, 
+      limit = 10, 
+      search = '', 
+      sort = [{ field:'product_name', direction: 'asc'}], 
+    } = req.query;
 
+    // Base query for pending orders
+    let query = { order_status: "Pending" };
+
+    // Fetch all pending orders
+    let pendingOrders = await Orders.find(query);
+
+    // Apply search if present
+    if (search) {
+      pendingOrders = orderSearch(pendingOrders, search);
+    }
+
+    // Process the orders to get product counts
+    const productCounts = {};
+    
     pendingOrders.forEach((order) => {
       order.items.forEach((item) => {
         if (!productCounts[item.product_name]) {
@@ -440,23 +462,39 @@ router.get("/get-all-pending-counts", admin_authenticate, async (req, res) => {
         productCounts[item.product_name].total += item.quantity;
 
         if (order.year >= 1 && order.year <= 4) {
-          productCounts[item.product_name].yearCounts[order.year - 1] +=
-            item.quantity;
+          productCounts[item.product_name].yearCounts[order.year - 1] += item.quantity;
         }
       });
     });
 
-    const result = Object.keys(productCounts).map((productName) => ({
+    // Convert products to array
+    let result = Object.keys(productCounts).map((productName) => ({
       product_name: productName,
       total: productCounts[productName].total,
       yearCounts: productCounts[productName].yearCounts,
     }));
 
-    res.status(200).json({ data: result });
+    // Apply sorting if present
+    if (sort) {
+      result = orderSort(result, sort);
+    }
+
+    // Pagination logic
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const paginatedResult = result.slice(startIndex, endIndex);
+
+    res.status(200).json({ 
+      data: paginatedResult,
+      total: result.length,
+      page: parseInt(page),
+      totalPages: Math.ceil(result.length / limit)
+    });
   } catch (error) {
     console.error("Error fetching pending orders:", error);
-    res.status(500).json("Internal Server Error");
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 module.exports = router;
