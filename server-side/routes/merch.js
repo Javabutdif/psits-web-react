@@ -5,7 +5,7 @@ const Orders = require("../models/OrdersModel");
 const Admin = require("../models/AdminModel");
 const Log = require("../models/LogModel");
 const Event = require("../models/EventsModel");
-const { default: mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
@@ -43,6 +43,7 @@ router.post(
   admin_authenticate,
   upload.array("images", 3),
   async (req, res) => {
+ 
     const {
       name,
       price,

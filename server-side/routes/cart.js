@@ -2,13 +2,16 @@ const express = require("express");
 const Cart = require("../models/CartModel");
 const Student = require("../models/StudentModel");
 const { ObjectId } = require("mongodb");
-const authenticateToken = require("../middlewares/authenticateToken");
+const mongoose = require("mongoose");
 const router = express.Router();
 const {
   student_authenticate,
 } = require("../middlewares/custom_authenticate_token");
 
 router.post("/add-cart", student_authenticate, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   const {
     id_number,
     product_id,
@@ -27,14 +30,16 @@ router.post("/add-cart", student_authenticate, async (req, res) => {
   } = req.body;
 
   try {
-    const student = await Student.findOne({ id_number });
+    const student = await Student.findOne({ id_number }).session(session);
 
     const productExists = student.cart.find(
       (item) => item.product_id.toString() === product_id
     );
 
     if (productExists) {
-      const existingCart = await Cart.findOne({ _id: productExists._id });
+      const existingCart = await Cart.findOne({
+        _id: productExists._id,
+      }).session(session);
 
       if (existingCart) {
         await Cart.updateOne(
@@ -44,7 +49,7 @@ router.post("/add-cart", student_authenticate, async (req, res) => {
               quantity: existingCart.quantity + quantity,
             },
           }
-        );
+        ).session(session);
 
         const itemIndex = student.cart.findIndex(
           (item) => item.product_id.toString() === product_id
@@ -53,6 +58,8 @@ router.post("/add-cart", student_authenticate, async (req, res) => {
         if (itemIndex > -1) {
           student.cart[itemIndex].quantity = existingCart.quantity + quantity;
           await student.save();
+          await session.commitTransaction();
+          session.endSession();
 
           res
             .status(200)
@@ -83,12 +90,16 @@ router.post("/add-cart", student_authenticate, async (req, res) => {
 
       student.cart.push(newCart);
       await student.save();
+      await session.commitTransaction();
+      session.endSession();
 
       res
         .status(200)
         .json({ message: "Added Item into the cart successfully" });
     }
   } catch (error) {
+    session.abortTransaction();
+    session.endSession();
     if (error.code === 11000) {
       res.status(400).json({ message: "Cannot add item in cart" });
     } else {
@@ -117,6 +128,9 @@ router.get("/view-cart", student_authenticate, async (req, res) => {
 });
 
 router.put("/delete-item-cart", student_authenticate, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   const { id_number, cart_id } = req.body;
 
   try {
@@ -124,17 +138,21 @@ router.put("/delete-item-cart", student_authenticate, async (req, res) => {
       { id_number: id_number },
       { $pull: { cart: { _id: cart_id } } },
       { new: true, useFindAndModify: false }
-    );
+    ).session(session);
 
     const cartId = new ObjectId(cart_id);
 
-    const cartResult = await Cart.findByIdAndDelete(cartId);
+    const cartResult = await Cart.findByIdAndDelete(cartId).session(session);
 
     if (!result && !cartResult) {
+      await session.abortTransaction();
+      session.endSession();
       res
         .status(400)
         .json({ message: "Student not found or cart item not found." });
     } else {
+      await session.commitTransaction();
+      session.endSession();
       res.status(200).json({ message: "Cart item deleted successfully." });
     }
   } catch (error) {

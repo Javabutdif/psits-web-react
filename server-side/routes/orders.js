@@ -16,8 +16,9 @@ const {
   admin_authenticate,
   both_authenticate,
 } = require("../middlewares/custom_authenticate_token");
-const orderSearch = require('../utils/searchPendingOrders')
-const orderSort = require('../utils/sortPendingOrders')
+const orderSearch = require("../utils/searchPendingOrders");
+const orderSort = require("../utils/sortPendingOrders");
+const mongoose = require("mongoose");
 
 const router = express.Router();
 router.get("/", both_authenticate, async (req, res) => {
@@ -88,6 +89,9 @@ router.get("/get-all-paid-orders", admin_authenticate, async (req, res) => {
 });
 
 router.post("/student-order", both_authenticate, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   const {
     id_number,
     rfid,
@@ -115,7 +119,9 @@ router.post("/student-order", both_authenticate, async (req, res) => {
     }).save();
   }
 
-  const student = await Student.findOne({ id_number: id_number });
+  const student = await Student.findOne({ id_number: id_number }).session(
+    session
+  );
 
   try {
     const newOrder = new Orders({
@@ -135,7 +141,7 @@ router.post("/student-order", both_authenticate, async (req, res) => {
 
     await newOrder.save();
 
-    const findCart = await Student.findOne({ id_number });
+    const findCart = await Student.findOne({ id_number }).session(session);
 
     if (!findCart) {
       return res.status(404).json({ message: "Student not found" });
@@ -144,7 +150,9 @@ router.post("/student-order", both_authenticate, async (req, res) => {
     for (let item of itemsArray) {
       const productId = new ObjectId(item.product_id);
 
-      const findMerch = await Merch.findOne({ _id: productId });
+      const findMerch = await Merch.findOne({ _id: productId }).session(
+        session
+      );
 
       if (!findMerch) {
         console.warn(`Merchandise with ID ${productId} not found`);
@@ -156,9 +164,11 @@ router.post("/student-order", both_authenticate, async (req, res) => {
       const merchStocks = await Merch.updateOne(
         { _id: productId },
         { $set: { stocks: newStocks } }
-      );
+      ).session(session);
 
       if (merchStocks.modifiedCount === 0) {
+        await session.abortTransaction();
+        session.endSession();
         console.error(
           `Could not deduct the stocks for product ID ${productId}`
         );
@@ -167,13 +177,16 @@ router.post("/student-order", both_authenticate, async (req, res) => {
       await Student.updateOne(
         { id_number },
         { $pull: { cart: { product_id: productId } } }
-      );
+      ).session(session);
 
-      await Cart.findByIdAndDelete(item._id);
+      await Cart.findByIdAndDelete(item._id).session(session);
     }
-
+    await session.commitTransaction();
+    session.endSession();
     res.status(200).json({ message: "Order Placed Successfully" });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -181,6 +194,8 @@ router.post("/student-order", both_authenticate, async (req, res) => {
 
 // Cancel Order
 router.put("/cancel/:product_id", both_authenticate, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   const { product_id } = req.params;
 
   if (!product_id) {
@@ -190,7 +205,7 @@ router.put("/cancel/:product_id", both_authenticate, async (req, res) => {
   const productId = new ObjectId(product_id);
 
   try {
-    const order = await Orders.findById(productId);
+    const order = await Orders.findById(productId).session(session);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -202,7 +217,7 @@ router.put("/cancel/:product_id", both_authenticate, async (req, res) => {
     // Iterate through each item in the order
     for (const item of order.items) {
       const merchId = new ObjectId(item.product_id);
-      const merch = await Merch.findOne({ _id: merchId });
+      const merch = await Merch.findOne({ _id: merchId }).session(session);
 
       if (!merch) {
         return res.status(404).json({ message: "Merchandise not found" });
@@ -214,7 +229,7 @@ router.put("/cancel/:product_id", both_authenticate, async (req, res) => {
     }
 
     // Delete the order after updating stock
-    await Orders.findByIdAndDelete(productId);
+    await Orders.findByIdAndDelete(productId).session(session);
 
     if (req.user.role === "Admin") {
       // Log the cancellation action
@@ -230,15 +245,20 @@ router.put("/cancel/:product_id", both_authenticate, async (req, res) => {
       await log.save();
       //console.log("Action logged successfully.");
     }
-
+    await session.commitTransaction();
+    session.endSession();
     res.status(200).json({ message: "Order canceled successfully" });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error canceling order:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
 router.put("/approve-order", admin_authenticate, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   const { transaction_date, reference_code, order_id, admin, cash } = req.body;
 
   try {
@@ -258,7 +278,7 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
         },
       },
       { new: true }
-    );
+    ).session(session);
 
     if (!successfulOrder) {
       return res.status(404).json({ message: "Order not found" });
@@ -266,7 +286,7 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
 
     const student = await Student.findOne({
       id_number: successfulOrder.id_number,
-    });
+    }).session(session);
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
@@ -313,11 +333,15 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
                 "sales_data.unitsSold": item.quantity,
                 "sales_data.totalRevenue": item.sub_total,
               },
-            });
+            }).session(session);
 
-            const merchToGet = await Merch.findById(item.product_id);
+            const merchToGet = await Merch.findById(item.product_id).session(
+              session
+            );
 
-            const event = await Event.findOne({ eventId: merchId });
+            const event = await Event.findOne({ eventId: merchId }).session(
+              session
+            );
 
             if (event) {
               const campusData = event.sales_data.find(
@@ -332,7 +356,7 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
 
               event.totalUnitsSold += 1;
               event.totalRevenueAll += Number.parseInt(item.sub_total);
-              event.save();
+              event.save().session(session);
             }
 
             if (merchToGet && merchToGet.category === "ict-congress") {
@@ -357,7 +381,7 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
                   },
                 },
                 { upsert: true }
-              );
+              ).session(session);
             }
           }
         })
@@ -418,7 +442,11 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
           .json({ message: "Order approved and email sent" });
       }
     });
+    await session.commitTransaction();
+    session.endSession();
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error occurred:", error);
     res.status(500).json({
       message: "An error occurred while approving the order",
@@ -430,11 +458,11 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
 // orders.js (backend api)
 router.get("/get-all-pending-counts", admin_authenticate, async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      search = '', 
-      sort = [{ field:'product_name', direction: 'asc'}], 
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      sort = [{ field: "product_name", direction: "asc" }],
     } = req.query;
 
     // Base query for pending orders
@@ -450,7 +478,7 @@ router.get("/get-all-pending-counts", admin_authenticate, async (req, res) => {
 
     // Process the orders to get product counts
     const productCounts = {};
-    
+
     pendingOrders.forEach((order) => {
       order.items.forEach((item) => {
         if (!productCounts[item.product_name]) {
@@ -462,7 +490,8 @@ router.get("/get-all-pending-counts", admin_authenticate, async (req, res) => {
         productCounts[item.product_name].total += item.quantity;
 
         if (order.year >= 1 && order.year <= 4) {
-          productCounts[item.product_name].yearCounts[order.year - 1] += item.quantity;
+          productCounts[item.product_name].yearCounts[order.year - 1] +=
+            item.quantity;
         }
       });
     });
@@ -484,17 +513,16 @@ router.get("/get-all-pending-counts", admin_authenticate, async (req, res) => {
     const endIndex = page * limit;
     const paginatedResult = result.slice(startIndex, endIndex);
 
-    res.status(200).json({ 
+    res.status(200).json({
       data: paginatedResult,
       total: result.length,
       page: parseInt(page),
-      totalPages: Math.ceil(result.length / limit)
+      totalPages: Math.ceil(result.length / limit),
     });
   } catch (error) {
     console.error("Error fetching pending orders:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 module.exports = router;
