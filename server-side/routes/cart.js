@@ -37,7 +37,9 @@ router.post("/add-cart", student_authenticate, async (req, res) => {
     );
 
     if (productExists) {
-      const existingCart = await Cart.findOne({ _id: productExists._id });
+      const existingCart = await Cart.findOne({
+        _id: productExists._id,
+      }).session(session);
 
       if (existingCart) {
         await Cart.updateOne(
@@ -55,7 +57,7 @@ router.post("/add-cart", student_authenticate, async (req, res) => {
 
         if (itemIndex > -1) {
           student.cart[itemIndex].quantity = existingCart.quantity + quantity;
-          await student.save().session(session);
+          await student.save();
           await session.commitTransaction();
           session.endSession();
 
@@ -80,14 +82,14 @@ router.post("/add-cart", student_authenticate, async (req, res) => {
         batch,
         imageUrl1,
       });
-      await newCart.save().session(session);
+      await newCart.save();
 
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      student.cart.push(newCart).session(session);
-      await student.save().session(session);
+      student.cart.push(newCart);
+      await student.save();
       await session.commitTransaction();
       session.endSession();
 

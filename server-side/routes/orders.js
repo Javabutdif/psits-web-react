@@ -109,18 +109,14 @@ router.post("/student-order", both_authenticate, async (req, res) => {
   const itemsArray = Array.isArray(items) ? items : [items];
 
   if (admin) {
-    const findAdmin = await Admin.findOne({ id_number: admin }).session(
-      session
-    );
+    const findAdmin = await Admin.findOne({ id_number: admin });
 
     await new Log({
       admin: findAdmin.name,
       admin_id: findAdmin._id,
       action: "Make manual Order for [" + student_name + "]",
       target: "Manual Order [" + student_name + "]",
-    })
-      .save()
-      .session(session);
+    }).save();
   }
 
   const student = await Student.findOne({ id_number: id_number }).session(
@@ -143,7 +139,7 @@ router.post("/student-order", both_authenticate, async (req, res) => {
       role: student.role,
     });
 
-    await newOrder.save().session(session);
+    await newOrder.save();
 
     const findCart = await Student.findOne({ id_number }).session(session);
 
@@ -246,7 +242,7 @@ router.put("/cancel/:product_id", both_authenticate, async (req, res) => {
         target_model: "Order",
       });
 
-      await log.save().session(session);
+      await log.save();
       //console.log("Action logged successfully.");
     }
     await session.commitTransaction();

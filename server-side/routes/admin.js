@@ -44,7 +44,7 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
       admin: admin ? admin : req.user.name,
     });
 
-    const savedHistory = await history.save().session(session);
+    const savedHistory = await history.save();
 
     if (!savedHistory) {
       console.error("Failed to save membership history.");
@@ -109,6 +109,7 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending email:", error);
+
         return res
           .status(500)
           .json({ message: "Error sending email", error: error.message });
