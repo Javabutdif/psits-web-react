@@ -11,6 +11,7 @@ const {
   student_authenticate,
   both_authenticate,
 } = require("../middlewares/custom_authenticate_token");
+const mongoose = require("mongoose");
 const router = express.Router();
 
 // GET list of accepted students
@@ -34,10 +35,15 @@ router.get("/students", admin_authenticate, async (req, res) => {
 });
 
 router.put("/students/request", student_authenticate, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id_number } = req.body;
 
-    const studentFind = await Student.findOne({ id_number: id_number });
+    const studentFind = await Student.findOne({ id_number: id_number }).session(
+      session
+    );
 
     if (studentFind.renew === "None") {
       await Student.updateOne(
@@ -48,7 +54,7 @@ router.put("/students/request", student_authenticate, async (req, res) => {
             renewedOn: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
           },
         }
-      );
+      ).session(session);
     } else {
       await Student.updateOne(
         { id_number: id_number },
@@ -57,11 +63,14 @@ router.put("/students/request", student_authenticate, async (req, res) => {
             membership: "Pending",
           },
         }
-      );
+      ).session(session);
     }
-
+    await session.commitTransaction();
+    session.endSession();
     res.status(200).json({ message: "Request submitted successfully" });
   } catch (error) {
+    session.abortTransaction();
+    session.endSession();
     res
       .status(500)
       .json({ message: "Error submitting request", error: error.message });

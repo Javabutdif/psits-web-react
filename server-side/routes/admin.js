@@ -13,6 +13,7 @@ const path = require("path");
 const {
   admin_authenticate,
 } = require("../middlewares/custom_authenticate_token");
+const mongoose = require("mongoose");
 
 const router = express.Router();
 
@@ -20,8 +21,11 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
   const { reference_code, id_number, type, admin, rfid, date, cash, total } =
     req.body;
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const student = await Student.findOne({ id_number });
+    const student = await Student.findOne({ id_number }).session(session);
 
     if (!student) {
       console.error(`Student with id_number ${id_number} not found.`);
@@ -40,10 +44,12 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
       admin: admin ? admin : req.user.name,
     });
 
-    const savedHistory = await history.save();
+    const savedHistory = await history.save().session(session);
 
     if (!savedHistory) {
       console.error("Failed to save membership history.");
+      session.abortTransaction();
+      session.endSession();
       return res
         .status(500)
         .json({ message: "Failed to save membership history" });
@@ -58,7 +64,9 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
       };
     }
 
-    await Student.updateOne({ id_number }, { $set: updateQuery });
+    await Student.updateOne({ id_number }, { $set: updateQuery }).session(
+      session
+    );
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -105,6 +113,8 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
           .status(500)
           .json({ message: "Error sending email", error: error.message });
       } else {
+        session.commitTransaction();
+        session.endSession();
         return res
           .status(200)
           .json({ message: "Approve student successful and email sent" });
@@ -112,6 +122,8 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error("Internal server error:", error);
+    session.abortTransaction();
+    session.endSession();
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });

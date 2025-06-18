@@ -1,9 +1,7 @@
 const express = require("express");
 const Events = require("../models/EventsModel");
 const Merch = require("../models/MerchModel");
-const authenticateToken = require("../middlewares/authenticateToken");
 const { ObjectId } = require("mongodb");
-const { default: mongoose } = require("mongoose");
 const {
   admin_authenticate,
   both_authenticate,
