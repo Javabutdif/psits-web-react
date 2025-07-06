@@ -226,34 +226,40 @@ const AdminDashboard = () => {
         </div>
       ) : (
         <div className="pt-4 md:pt-8">
-          <div className="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-8 text-center lg:flex lg:justify-between">
-            <div className="col-start-1 col-end-3 lg:flex-1 md:col-start-1 md:col-end-3">
+         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="min-w-0 text-center"> {/* Add min-w-0 to prevent text overflow */}
               <DashboardCard
                 icon={faBoxOpen}
                 title="Merchandise Created"
                 count={counts.merchandise}
+                className="text-sm sm:text-base" // Consistent text sizing
               />
             </div>
 
-            <div className="col-start-3 col-end-5 lg:flex-1 md:col-start-3 md:col-end-5">
+            <div className="min-w-0 text-center">
               <DashboardCard
                 icon={faUserGraduate}
                 title="Students"
                 count={counts.student}
+                className="text-sm sm:text-base"
               />
             </div>
-            <div className="row-start-2 col-span-full md:row-start-1 md:col-start-5 lg:flex-1">
+
+            <div className="min-w-0 text-center">
               <DashboardCard
                 icon={faShoppingCart}
                 title="Orders"
                 count={counts.order}
+                className="text-sm sm:text-base"
               />
             </div>
-            <div className="row-start-2 col-span-full md:row-start-1 md:col-start-5 lg:flex-1">
+
+            <div className="min-w-0 text-center">
               <DashboardCard
                 icon={faUsers}
                 title="Active Memberships"
                 count={counts.activeMemberships}
+                className="text-sm sm:text-base"
               />
             </div>
           </div>
@@ -274,8 +280,8 @@ const AdminDashboard = () => {
                 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <div className="w-full max-w-6xl flex items-center justify-center">
-                  <BarGraph className="w-full h-96" />
+                <div className="">
+                  <BarGraph className="" />
                 </div>
               </motion.div>
 
@@ -289,7 +295,9 @@ const AdminDashboard = () => {
                 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <DoughnutChart className="w-64 h-64" />
+                <div>
+                  <DoughnutChart className="" />
+                </div>
               </motion.div>
 
               {/* Pie Chart */}

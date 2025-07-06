@@ -14,8 +14,8 @@ ChartJS.register(
 
 const DoughnutChart = () => {
   const [data, setData] = useState({
-    BSIT: 0,
-    BSCS: 0,
+    BSIT: 5,
+    BSCS: 5,
   });
   const [loading, setLoading] = useState(true);
 
@@ -128,13 +128,13 @@ const DoughnutChart = () => {
       <h2 className="text-xl sm:text-2xl text-[#074873] font-bold mb-4">
         Student Count per Course
       </h2>
-      <div className="relative h-80">
+      <div className="relative h-80 max-lg:w-full max-md:w-full max-sm:w-72 ">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <InfinitySpin width="200" color="#3B82F6" />
           </div>
         ) : (
-          <Doughnut 
+            <Doughnut 
             data={chartData} 
             options={options}
             plugins={[{
