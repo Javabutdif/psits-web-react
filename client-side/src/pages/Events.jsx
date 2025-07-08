@@ -24,8 +24,8 @@ import Banner from "../components/sections/events/Banner";
 import { motion, useAnimation } from "framer-motion";
 import React, { useState, useEffect, useRef } from "react";
 
-const akweImageArray = [
-  akwe1,
+export const akweImageArray = [
+  akwe9,
   akwe2,
   akwe3,
   akwe4,
@@ -33,7 +33,7 @@ const akweImageArray = [
   akwe6,
   akwe7,
   akwe8,
-  akwe9,
+  akwe1,
   akwe10,
   akwe11,
   akwe12,
@@ -48,7 +48,7 @@ const akweImageArray = [
   akwe21,
   akwe22,
 ];
-const intramsImageArray = [
+export const intramsImageArray = [
   "/intramurals/1.jpg",
   "/intramurals/2.jpg",
   "/intramurals/3.jpg",
@@ -130,7 +130,7 @@ const cbcImageArray = [
   "/cbc/28.jpg",
 ];
 
-const Carousel = ({ imageArray }) => {
+export const Carousel = ({ imageArray }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const controls = useAnimation();
   const intervalRef = useRef(null);
@@ -247,7 +247,7 @@ const Carousel = ({ imageArray }) => {
   );
 };
 
-const Video = ({ src }) => {
+export const Video = ({ src }) => {
   return (
     <>
       <div className="flex justify-center items-center mt-10 mb-10 min-w-full">
@@ -267,7 +267,7 @@ const Video = ({ src }) => {
   );
 };
 
-const AkweMessage = () => {
+export const AkweMessage = () => {
   const [showMore, setShowMore] = useState(false);
 
   const toggleShowMore = () => {
@@ -811,7 +811,7 @@ const Awarding = () => {
   );
 };
 
-const IctMessage = () => {
+export const IctMessage = () => {
   const [showMore, setShowMore] = useState(false);
 
   const toggleShowMore = () => {

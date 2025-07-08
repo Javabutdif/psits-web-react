@@ -24,10 +24,10 @@ ChartJS.register(
 
 const BarGraph = () => {
   const [year, setYear] = useState({
-    year1: 0,
-    year2: 0,
-    year3: 0,
-    year4: 0,
+    year1: 3,
+    year2: 4,
+    year3: 5,
+    year4: 2,
   });
   const [loading, setLoading] = useState(true);
 
@@ -217,16 +217,16 @@ const BarGraph = () => {
 
   return (
     <div className="w-full">
-      <h2 className="text-xl sm:text-2xl text-[#074873] font-bold mb-4">
+      <h2 className="text-xl text-center sm:text-2xl text-[#074873] font-bold mb-4">
         Student Count by Year Level
       </h2>
-      <div className="relative h-80 w-full">
+      <div className="relative h-80 max-lg:w-full max-md:w-full max-sm:w-72 ">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <Bar 
+            <Bar 
             data={data} 
             options={options}
             plugins={[{
