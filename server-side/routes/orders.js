@@ -339,9 +339,7 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
               session
             );
 
-            const event = await Event.findOne({ eventId: merchId }).session(
-              session
-            );
+            const event = await Event.findOne({ eventId: merchId });
 
             if (event) {
               const campusData = event.sales_data.find(
@@ -356,7 +354,7 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
 
               event.totalUnitsSold += 1;
               event.totalRevenueAll += Number.parseInt(item.sub_total);
-              event.save().session(session);
+              event.save();
             }
 
             if (merchToGet && merchToGet.category === "ict-congress") {
