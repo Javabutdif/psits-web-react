@@ -14,8 +14,8 @@ ChartJS.register(
 
 const DoughnutChart = () => {
   const [data, setData] = useState({
-    BSIT: 5,
-    BSCS: 5,
+    BSIT: 0,
+    BSCS: 0,
   });
   const [loading, setLoading] = useState(true);
 

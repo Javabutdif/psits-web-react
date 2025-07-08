@@ -24,10 +24,10 @@ ChartJS.register(
 
 const BarGraph = () => {
   const [year, setYear] = useState({
-    year1: 3,
-    year2: 4,
-    year3: 5,
-    year4: 2,
+    year1: 0,
+    year2: 0,
+    year3: 0,
+    year4: 0,
   });
   const [loading, setLoading] = useState(true);
 
