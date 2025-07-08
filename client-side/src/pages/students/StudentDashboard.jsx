@@ -235,39 +235,8 @@ const StudentDashboard = () => {
                   fontborderRadius={0.05}  
                 /> 
             </div>
-        
             <div>
                 <AkweMessage/>
-            </div>
-       
-            <h2 className="text-xl font-bold text-center text-[#074873] mt-10">Students Overview</h2>
-            <div className="grid grid-cols-1 xl:grid-cols-2 lg:grid-cols-1 md:grid-cols-1 gap-6 mt-5 mb-3">
-                  <motion.div
-                    className="flex-1 flex items-center justify-center bg-white rounded-lg shadow-sm p-6 max-lg:w-full w-full"
-                    variants={itemVariants}
-                    whileHover={{
-                      scale: 1.02,
-                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                    }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <div className="">
-                      <BarGraph className="" />
-                    </div>
-                  </motion.div>
-                  <motion.div
-                    className="flex-1 flex items-center justify-center bg-white rounded-lg shadow-sm p-6 max-lg:w-full w-full"
-                    variants={itemVariants}
-                    whileHover={{
-                      scale: 1.02,
-                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                    }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <div>
-                      <DoughnutChart className="" />
-                    </div>
-                  </motion.div>  
             </div>
           </div>
         </>
