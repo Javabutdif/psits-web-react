@@ -58,6 +58,7 @@ const FormInput = ({
         aria-describedby={`${id}-error`}
         min={max}
         placeholder={placeholder}
+        onWheel={type === "number" ? (e) => e.target.blur() : undefined}
       />
 
       {type === "password" && (
