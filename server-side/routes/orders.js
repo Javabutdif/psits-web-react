@@ -385,7 +385,8 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
         })
       );
     }
-
+    await session.commitTransaction();
+    session.endSession();
     // Render and send the email
     const emailTemplate = await ejs.renderFile(
       path.join(__dirname, "../templates/appr-order-receipt.ejs"),
@@ -432,16 +433,15 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        return res.status(500).json({ message: "Error sending email", error });
+        console.error("Error sending email:", error);
+      
       } else {
-        //console.log("Email sent: " + info.response);
-        return res
-          .status(200)
-          .json({ message: "Order approved and email sent" });
+        console.log("Email sent: " + info.response);
       }
     });
-    await session.commitTransaction();
-    session.endSession();
+    return res.status(200).json({
+      message: "Order approved. Email may have failed.",
+    });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
