@@ -166,13 +166,7 @@ const QRCodePage = ({ closeView, event }) => {
             <p className="text-gray-500 mb-4 text-sm">
               {formatDate(event.eventDate)}
             </p>
-            <div className="w-full overflow-hidden rounded-xl">
-              <img
-                src={event.eventImage[0]}
-                alt={event.eventName}
-                className="w-full h-[300px] object-cover"
-              />
-            </div>
+            
           </div>
 
           <div className="flex-1 space-y-6">

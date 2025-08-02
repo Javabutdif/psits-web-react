@@ -86,7 +86,10 @@ const ProductDetail = () => {
   const [error, setError] = useState(null);
   const [formError, setFormError] = useState("");
   const [cartIndicator, setCartIndicator] = useState(false);
-  const [status, setStatus] = useState({ membership: "", renew: "" });
+  const [status, setStatus] = useState({
+    status: "",
+    isFirstApplication: true,
+  });
   const [cartLimited, setCartLimited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const user = getInformationData();
@@ -106,18 +109,17 @@ const ProductDetail = () => {
     type = "",
   } = product;
 
-  if (user.position === "Student") {
-    useEffect(() => {
-      const fetchStatus = async () => {
-        const membershipStatus = await getMembershipStatusStudents(
-          user.id_number
-        );
-
-        setStatus(membershipStatus);
-      };
-      fetchStatus();
-    });
-  }
+  useEffect(() => {
+    const fetchStatus = async () => {
+      const status = await getMembershipStatusStudents(user.id_number);
+     
+      setStatus({
+        status: status.status,
+        isFirstApplication: status.isFirstApplication,
+      });
+    };
+    fetchStatus();
+  }, []);
 
   const [errors, setErrors] = useState({
     selectedSize: "",
@@ -125,10 +127,7 @@ const ProductDetail = () => {
   });
   const statusVerify = () => {
     return (
-      (status.renew === "Accepted" ||
-        (status.membership === "Accepted" &&
-          status.renew !== "None" &&
-          status.renew !== "Pending")) &&
+      (status.status === "ACTIVE" || status.status === "RENEWED") &&
       category === "merchandise"
     );
   };
@@ -157,15 +156,7 @@ const ProductDetail = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const discount =
-    (status.renew === "Accepted" ||
-      (status.membership === "Accepted" &&
-        status.renew !== "None" &&
-        status.renew !== "Pending")) &&
-    category === "merchandise" &&
-    category !== "uniform"
-      ? price - price * 0.05
-      : price;
+  const discount = statusVerify() ? price - price * 0.05 : price;
 
   const calculateTotal = () => {
     return discount * quantity;
@@ -417,12 +408,20 @@ const ProductDetail = () => {
             <p className="text-xs text-gray-700 md:text-sm mb-3">
               {description}
             </p>
-            <p className="text-md md:text-lg font-semibold text-gray-900 mb-3">
-              ₱ {price ? price.toFixed(2) : 0}
+            <p className="text-md md:text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+              {statusVerify() && (
+                <span className="text-red-600 line-through underline underline-offset-4 decoration-red-600">
+                  ₱ {price ? price.toFixed(2) : 0}
+                </span>
+              )}
+              <span>₱ {discount ? discount.toFixed(2) : 0}</span>
             </p>
 
             <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
               {batch !== "" ? "Batch: " : ""} {batch}
+            </p>
+            <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
+              {category !== "" ? "Category: " : ""} {category}
             </p>
 
             <p className="text-xs md:text-sm text-gray-500  mb-2 md:mb-4">
@@ -443,16 +442,17 @@ const ProductDetail = () => {
                 type.includes("Item")) && (
                 <div>
                   <ButtonGroup
-                    items={selectedVariations}
+                    items={
+                      selectedVariations[0] === "" ? [] : selectedVariations
+                    }
                     selectedItem={selectedColor}
                     onSelect={setSelectedColor}
                     label="Color"
                     disabled={category === "uniform"}
                   />
                   <p className="text-xs text-red-500">
-                    {type.includes("Uniform")
-                      ? "Color set to White and Purple"
-                      : ""}
+                    {type.includes("Uniform") &&
+                      "Color set to White and Purple"}
                   </p>
                 </div>
               )}

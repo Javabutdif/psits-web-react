@@ -98,26 +98,15 @@ function MembershipRequest() {
     },
     {
       key: "status",
-      label: "Status",
-      selector: (row) => row.status,
+      label: "Type",
+      selector: (row) => row.membershipStatus,
       sortable: true,
       cell: (row) => (
         <div className="text-center">
-          <span
-            className={`flex items-center gap-2 ${
-              row.status === "False"
-                ? "bg-green-200 text-green-800"
-                : "bg-red-200 text-red-800"
-            } px-2 py-1 rounded text-xs`}
-          >
-            <i
-              className={`fa ${
-                row.status === "False" ? "fa-check-circle" : "fa-times-circle"
-              } mr-1 ${
-                row.status === "False" ? "text-green-500" : "text-red-500"
-              }`}
-            ></i>
-            {row.status === "False" ? "Paid" : "Unpaid"}
+          <span className="text-xs font-semibold text-start">
+            {row.membershipStatus === "PENDING" && row.isFirstApplication
+              ? "Membership"
+              : "Renewal"}
           </span>
         </div>
       ),
@@ -254,8 +243,9 @@ function MembershipRequest() {
 
   const handleConfirmDeletion = async () => {
     try {
-      await requestDeletion(studentIdToBeDeleted);
-      showToast("Student has been deleted successfully.", "success");
+      if (await requestDeletion(studentIdToBeDeleted)) {
+        showToast("Cancellation Success.", "success");
+      }
     } catch (error) {
       console.error("Error deleting student: ", error);
       showToast("Error deleting student.", "error");
@@ -320,7 +310,7 @@ function MembershipRequest() {
         <ConfirmationModal
           confirmType={ConfirmActionType.CANCEL}
           onCancel={hideModal}
-          onConfirm={handleConfirmDeletion}
+          onConfirm={() => handleConfirmDeletion()}
         />
       )}
       {isModalOpen && (

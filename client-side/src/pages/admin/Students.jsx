@@ -56,11 +56,7 @@ const Students = () => {
       text: `Request ${counts.request}`,
       icon: "fas fa-hand-paper",
     },
-    {
-      path: "/admin/students/renewal",
-      text: `Renewals ${counts.renewals}`,
-      icon: "fas fa-refresh",
-    },
+
     {
       path: "/admin/students/delete",
       text: `Deleted ${counts.deleted}`,

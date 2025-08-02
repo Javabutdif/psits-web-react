@@ -19,13 +19,6 @@ router.get("/students", admin_authenticate, async (req, res) => {
   try {
     const students = await Student.find({
       status: "True",
-      $or: [
-        { renew: "Accepted" },
-        { renew: "Pending" },
-        { renew: "None" },
-        { renew: { $exists: false } },
-        { renew: "" },
-      ],
     });
     res.status(200).json(students);
   } catch (error) {
@@ -45,26 +38,27 @@ router.put("/students/request", student_authenticate, async (req, res) => {
       session
     );
 
-    if (studentFind.renew === "None") {
-      await Student.updateOne(
-        { id_number: id_number },
-        {
-          $set: {
-            renew: "Pending",
-            renewedOn: format(new Date(), "MMMM d, yyyy h:mm:ss a"),
-          },
-        }
-      ).session(session);
-    } else {
-      await Student.updateOne(
-        { id_number: id_number },
-        {
-          $set: {
-            membership: "Pending",
-          },
-        }
-      ).session(session);
+    if (studentFind.membershipStatus !== "NOT_APPLIED") {
+      return res
+        .status(400)
+        .json({ message: "You already have a pending request." });
     }
+
+    await Student.updateOne({ id_number: id_number }, [
+      {
+        $set: {
+          membershipStatus: "PENDING",
+          isFirstApplication: {
+            $cond: {
+              if: { $eq: ["$isFirstApplication", true] },
+              then: false,
+              else: "$isFirstApplication",
+            },
+          },
+        },
+      },
+    ]).session(session);
+
     await session.commitTransaction();
     session.endSession();
     res.status(200).json({ message: "Request submitted successfully" });
@@ -104,12 +98,10 @@ router.get(
         return res.status(404).json({ message: "Student not found" });
       }
 
-      const studentStatus = {
-        membership: student.membership,
-        renew: student.renew,
-      };
-
-      res.status(200).json(studentStatus);
+      res.status(200).json({
+        status: student.membershipStatus,
+        isFirstApplication: student.isFirstApplication,
+      });
     } catch (error) {
       console.error("Error fetching student:", error);
       res.status(500).json({ message: "Internal Server Error" });
@@ -162,26 +154,25 @@ router.put("/students/restore", admin_authenticate, async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    res.status(200).json({ message: "Student deleted successfully" });
+    res.status(200).json({ message: "Student retore successfully" });
   } catch (error) {
     console.error("Error deleting student:", error);
     res.status(500).json("Internal Server Error");
   }
 });
-
-// HARD DELETE student by id_number
+//TODO: Bug for this route
 router.put(
   "/students/cancel/:id_number",
   admin_authenticate,
   async (req, res) => {
-    const id_number = req.params.id_number;
+    const { id_number } = req.params;
 
     try {
       const cancel = await Student.updateOne(
         { id_number: id_number },
         {
           $set: {
-            membership: "None",
+            membershipStatus: "NOT_APPLIED",
           },
         }
       );

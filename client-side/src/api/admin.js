@@ -365,6 +365,7 @@ export const publishMerchandise = async (_id) => {
 };
 //Hard Delete
 export const requestDeletion = async (id_number) => {
+  
   try {
     const response = await axios.put(
       `${backendConnection()}/api/students/cancel/${id_number}`,
@@ -376,7 +377,12 @@ export const requestDeletion = async (id_number) => {
       }
     );
 
-    return response.status;
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+      return true;
+    } else {
+      return false;
+    }
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
@@ -974,8 +980,8 @@ export const declineRole = async (id_number) => {
 export const fetchAllPendingCounts = async ({
   limit = 10,
   page = 1,
-  sort = [{ field: 'product_name', direction: 'asc' }],
-  search = ''
+  sort = [{ field: "product_name", direction: "asc" }],
+  search = "",
 } = {}) => {
   try {
     const response = await axios.get(
@@ -985,8 +991,11 @@ export const fetchAllPendingCounts = async ({
           Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
         },
         params: {
-          page, limit, sort, search,
-        }
+          page,
+          limit,
+          sort,
+          search,
+        },
       }
     );
 
@@ -997,7 +1006,7 @@ export const fetchAllPendingCounts = async ({
       total: response.data.total || 0,
       page: response.data.page || 1,
       totalPages: response.data.totalPages || 1,
-      limit: response.data.limit || limit
+      limit: response.data.limit || limit,
     };
   } catch (error) {
     console.error("Error fetching student:", error);
@@ -1005,8 +1014,8 @@ export const fetchAllPendingCounts = async ({
       data: [],
       page: 1,
       total: 0,
-      totalPages: 0
-    }
+      totalPages: 0,
+    };
   }
 };
 

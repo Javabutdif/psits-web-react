@@ -354,7 +354,7 @@ const StudentCart = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [status, setStatus] = useState({ membership: "", renew: "" });
+  const [status, setStatus] = useState({ status: "", isFirstApplication: true });
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({});
   const user = getInformationData();
@@ -388,7 +388,10 @@ const StudentCart = () => {
       const membershipStatus = await getMembershipStatusStudents(
         user.id_number
       );
-      setStatus(membershipStatus);
+      setStatus({
+        status: membershipStatus.status,
+        isFirstApplication: membershipStatus.isFirstApplication,
+      });
     } catch (error) {
       setError(error.message || "Failed to fetch membership status");
     }
@@ -400,12 +403,11 @@ const StudentCart = () => {
 
   const statusVerify = () => {
     return (
-      (status.membership === "Accepted" && status.renew === "None") ||
-      status.renew === "Accepted" ||
-      (status.membership === "Accepted" && status.renew !== "Pending")
+      status.status === "ACTIVE" ||
+      status.status === "RENEWED"
     );
   };
-
+    
   const handleQuantityChange = (id, newQuantity) => {
     setProducts((prevProducts) =>
       prevProducts.map((product) =>

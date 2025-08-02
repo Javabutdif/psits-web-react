@@ -6,7 +6,8 @@ const Student = require("../models/StudentModel");
 const { admin_model, user_model } = require("../model_template/model_data");
 
 const admin_authenticate = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
+  const authHeader =
+    req.headers["authorization"] || req.headers["Authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {

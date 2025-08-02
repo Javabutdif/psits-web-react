@@ -27,7 +27,7 @@ router.get("/", both_authenticate, async (req, res) => {
   try {
     const orders = await Orders.find({
       id_number: id_number,
-    }).sort({ transaction_date: -1 });
+    }).sort({ order_date: -1 });
     if (orders.length > 0) {
       res.status(200).json(orders);
     } else {
@@ -434,7 +434,6 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending email:", error);
-      
       } else {
         console.log("Email sent: " + info.response);
       }

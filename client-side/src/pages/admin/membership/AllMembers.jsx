@@ -18,7 +18,8 @@ import { getMembershipStatusStudents } from "../../../api/students";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditMember from "./EditMember";
-import { financeAndAdminConditionalAccess } from "../../../components/tools/clientTools";
+
+import OptionModal from "../../../components/common/modal/OptionModal";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -42,6 +43,8 @@ const Membership = () => {
     id_number: requestId,
   });
   const token = sessionStorage.getItem("Token");
+  const [isOptionModalVisible, setIsOptionModalVisible] = useState(false);
+  const [studentInformation, setStudentInformation] = useState({});
 
   const user = getInformationData();
 
@@ -62,6 +65,12 @@ const Membership = () => {
     if (renewAllStudent()) {
       setRenewStudent(false);
     }
+  };
+
+  const handleOptionModal = (row) => {
+    setStudentInformation(row);
+   
+    setIsOptionModalVisible(!isOptionModalVisible);
   };
 
   const handleEditButtonClick = (row) => {
@@ -115,7 +124,10 @@ const Membership = () => {
       const response = await getMembershipStatusStudents(row.id_number);
       if (response) {
         const updatedFormData = {
-          type: response.membership === "Accepted" ? "Renewal" : "Membership",
+          type:
+            response.status === "NOT_APPLIED" && response.isFirstApplication
+              ? "Membership"
+              : "Renewal",
           id_number: row.id_number,
           reference_code:
             Math.floor(Math.random() * (999999999 - 111111111)) + 111111111,
@@ -180,6 +192,27 @@ const Membership = () => {
   const hideModal = () => {
     setIsModalVisible(false);
     setStudentIdToBeDeleted("");
+  };
+
+  const printAction = (action) => {
+    
+    switch (action.toLowerCase()) {
+      case "edit":
+        handleEditButtonClick(studentInformation);
+        break;
+      case "delete":
+        showModal(studentInformation);
+        break;
+      case "request":
+        handleRequestMembershipModal(studentInformation);
+        break;
+      case "renew":
+        handleRequestMembershipModal(studentInformation);
+        break;
+      case "change":
+        handleChangePassword(studentInformation.id_number);
+        break;
+    }
   };
 
   const handleConfirmDeletion = async () => {
@@ -284,26 +317,28 @@ const Membership = () => {
     {
       key: "membership",
       label: "Membership",
-      selector: (row) => row.membership,
+      selector: (row) => row.membershipStatus,
       sortable: true,
       cell: (row) => (
         <div className="text-center">
           <span
             className={`px-2 py-1 rounded text-xs ${
-              row.membership === "None" || row.renew === "None"
+              row.membershipStatus === "NOT_APPLIED"
                 ? "bg-gray-200 text-gray-800"
-                : row.membership === "Pending" || row.renew === "Pending"
+                : row.membershipStatus === "PENDING"
                 ? "bg-yellow-200 text-yellow-800"
                 : "bg-green-200 text-green-800"
             }`}
           >
-            {row.membership === "None" || row.renew === "None"
-              ? "None"
-              : row.membership === "Pending" || row.renew === "Pending"
-              ? row.renew === "Pending"
-                ? "Renewal"
-                : "Pending"
-              : "Active"}
+            {row.membershipStatus === "NOT_APPLIED"
+              ? "Not Applied"
+              : row.membershipStatus === "PENDING"
+              ? "Pending"
+              : row.membershipStatus === "RENEWED"
+              ? "Renewed"
+              : row.membershipStatus === "ACTIVE"
+              ? "Active"
+              : "Unknown Status"}
           </span>
         </div>
       ),
@@ -313,70 +348,13 @@ const Membership = () => {
       label: "",
       cell: (row) => (
         <ButtonsComponent>
-          {financeAndAdminConditionalAccess() && (
-            <>
-              <FormButton
-                type="button"
-                text="Request"
-                onClick={() => handleRequestMembershipModal(row)}
-                icon={<i className="fas fa-paper-plane" />}
-                styles={`flex items-center space-x-2 rounded-md px-3 py-1.5 transition duration-150 focus:outline-none ${
-                  (row.membership === "Accepted" && row.renew === "Pending") ||
-                   row.membership === "Accepted" ||
-                  row.renew === "Accepted" ||
-                  row.membership === "Pending" ||  (row.membership === "Accepted" && row.renew === "Accepted")
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-2 focus:ring-gray-400"
-                }`}
-                textClass={`${
-                  row.membership === "Accepted" ||
-                  row.renew === "Accepted" ||
-                  row.membership === "Pending" ||
-                  row.renew === "Pending"
-                    ? "text-gray-500"
-                    : "text-gray-800"
-                }`}
-                whileHover={{ scale: 1.02, opacity: 0.95 }}
-                whileTap={{ scale: 0.98, opacity: 0.9 }}
-                disabled={
-                  (row.membership === "Accepted" && row.renew === "Pending") ||
-                   row.membership === "Accepted" ||
-                  row.renew === "Accepted" ||
-                  row.membership === "Pending" ||
-                  (row.membership === "Accepted" && row.renew === "Accepted")
-                }
-              />
-            </>
-          )}
-
           <FormButton
+            text="More"
             type="button"
-            text="Change"
-            onClick={() => handleChangePassword(row.id_number)}
-            icon={<i className="fas fa-key" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            textClass="text-gray-800"
-            whileHover={{ scale: 1.02, opacity: 0.95 }}
-            whileTap={{ scale: 0.98, opacity: 0.9 }}
-          />
-
-          <FormButton
-            type="button"
-            text="Edit"
-            onClick={() => handleEditButtonClick(row)}
-            icon={<i className="fas fa-edit" />} // Simple icon
+            onClick={() => handleOptionModal(row)}
+            icon={<i className="fas fa-cog" />}
             styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
             textClass="text-gray-800" // Elegant text color
-            whileHover={{ scale: 1.02, opacity: 0.95 }}
-            whileTap={{ scale: 0.98, opacity: 0.9 }}
-          />
-          <FormButton
-            type="button"
-            text="Delete"
-            onClick={() => showModal(row)}
-            icon={<i className="fas fa-trash" />} // Simple icon
-            styles="flex items-center space-x-2 bg-gray-200 text-red-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-            textClass="text-red-800" // Elegant text color
             whileHover={{ scale: 1.02, opacity: 0.95 }}
             whileTap={{ scale: 0.98, opacity: 0.9 }}
           />
@@ -426,6 +404,25 @@ const Membership = () => {
           confirmType={ConfirmActionType.REQUEST}
           onCancel={() => setRequestModal(false)}
           onConfirm={handleRequestMembership}
+        />
+      )}
+      {isOptionModalVisible && (
+        <OptionModal
+          onClose={handleOptionModal}
+          onAction={{
+            label: [
+              "Edit",
+              "Delete",
+              studentInformation.isFirstApplication === true
+                ? "Request_Membership"
+                : "Renew_Membership",
+              "Change_Password",
+            ],
+          }}
+          actionKey={(action) => {
+            printAction(action);
+          }}
+          information={studentInformation}
         />
       )}
     </div>
