@@ -8,6 +8,7 @@ const actionTypes = Object.freeze({
   Request_Membership: "REQUEST",
   Renew_Membership: "RENEW",
   Change_Password: "CHANGE",
+  Membership_History: "HISTORY",
 });
 
 const labelToAction = Object.freeze({
@@ -16,6 +17,7 @@ const labelToAction = Object.freeze({
   Request_Membership: "Request Membership",
   Renew_Membership: "Renew Membership",
   Change_Password: "Change Password",
+  Membership_History: "Membership History",
 });
 
 const iconsStyle = (type) => {
@@ -30,6 +32,8 @@ const iconsStyle = (type) => {
       return <i className="fas fa-paper-plane" />;
     case "change_password":
       return <i className="fas fa-key" />;
+    case "membership_history":
+      return <i className="fas fa-info-circle" />;
     default:
       return null;
   }

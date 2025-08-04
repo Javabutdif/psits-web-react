@@ -4,6 +4,7 @@ const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
 const Orders = require("../models/OrdersModel");
 const Log = require("../models/LogModel");
+const MembershipHistory = require("../models/MembershipHistory");
 const { format } = require("date-fns");
 
 const {
@@ -160,7 +161,7 @@ router.put("/students/restore", admin_authenticate, async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-//TODO: Bug for this route
+
 router.put(
   "/students/cancel-membership",
   admin_authenticate,
@@ -375,6 +376,25 @@ router.get(
       }
     } catch (error) {
       console.error(error);
+    }
+  }
+);
+
+router.get(
+  "/students/student-membership-history/:id_number",
+  admin_authenticate,
+  async (req, res) => {
+    const { id_number } = req.params;
+
+    try {
+      const membershipHistory = await MembershipHistory.find({
+        id_number: id_number,
+      });
+
+      res.status(200).json({ data: membershipHistory });
+    } catch (error) {
+      console.error("Error fetching student membership history:", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   }
 );

@@ -468,7 +468,6 @@ export const addMerchandise = async (formData) => {
       showToast("error", "An error occurred");
       return false;
     }
-    console.error("Error:", error);
   }
 };
 
@@ -1160,5 +1159,27 @@ export const editAdminAccess = async (id_number, newAccess) => {
       showToast("error", "An error occurred");
     }
     console.error("Error:", error);
+  }
+};
+
+export const getStudentMembershipHistory = async (studentId) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/students/student-membership-history/${studentId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log("response", response.data);
+    return response.data.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
   }
 };

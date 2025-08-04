@@ -18,7 +18,7 @@ import { getMembershipStatusStudents } from "../../../api/students";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import { showToast } from "../../../utils/alertHelper";
 import EditMember from "./EditMember";
-
+import StudentMembershipHistory from "./StudentMembershipHistory";
 import OptionModal from "../../../components/common/modal/OptionModal";
 
 const Membership = () => {
@@ -42,6 +42,7 @@ const Membership = () => {
     type: "Membership",
     id_number: requestId,
   });
+  const [isDetailsView, setIsDetailsView] = useState(false);
   const token = sessionStorage.getItem("Token");
   const [isOptionModalVisible, setIsOptionModalVisible] = useState(false);
   const [studentInformation, setStudentInformation] = useState({});
@@ -66,10 +67,14 @@ const Membership = () => {
       setRenewStudent(false);
     }
   };
+  const handleViewDetails = (row) => {
+    setId(row.id_number);
+    setIsDetailsView(true);
+  };
 
   const handleOptionModal = (row) => {
     setStudentInformation(row);
-   
+
     setIsOptionModalVisible(!isOptionModalVisible);
   };
 
@@ -195,7 +200,6 @@ const Membership = () => {
   };
 
   const printAction = (action) => {
-    
     switch (action.toLowerCase()) {
       case "edit":
         handleEditButtonClick(studentInformation);
@@ -211,6 +215,10 @@ const Membership = () => {
         break;
       case "change":
         handleChangePassword(studentInformation.id_number);
+        break;
+      case "history":
+        handleViewDetails(studentInformation);
+
         break;
     }
   };
@@ -374,6 +382,12 @@ const Membership = () => {
           onSave={handleSaveEditedMember}
         />
       )}
+      {isDetailsView && (
+        <StudentMembershipHistory
+          studentId={id}
+          onClose={() => setIsDetailsView(false)}
+        />
+      )}
       {isModalVisible && (
         <ConfirmationModal
           confirmType={ConfirmActionType.DELETION}
@@ -417,6 +431,7 @@ const Membership = () => {
                 ? "Request_Membership"
                 : "Renew_Membership",
               "Change_Password",
+              "Membership_History",
             ],
           }}
           actionKey={(action) => {
