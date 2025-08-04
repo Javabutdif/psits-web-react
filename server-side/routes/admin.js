@@ -72,6 +72,7 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
     }
     await session.commitTransaction();
     session.endSession();
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -113,16 +114,13 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending email:", error);
-
-        return res
-          .status(500)
-          .json({ message: "Error sending email", error: error.message });
       } else {
-        return res
-          .status(200)
-          .json({ message: "Approve student successful and email sent" });
+        console.log("Email sent: " + info.response);
       }
     });
+    return res
+      .status(200)
+      .json({ message: "Membership approved successfully" });
   } catch (error) {
     console.error("Internal server error:", error);
     await session.abortTransaction();

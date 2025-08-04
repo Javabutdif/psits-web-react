@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { showToast } from "../../utils/alertHelper";
-import { membershipRequest, requestDeletion } from "../../api/admin";
+import { membershipRequest, cancelMembership } from "../../api/admin";
 import TableComponent from "../../components/Custom/TableComponent";
 
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
@@ -243,9 +243,7 @@ function MembershipRequest() {
 
   const handleConfirmDeletion = async () => {
     try {
-      if (await requestDeletion(studentIdToBeDeleted)) {
-        showToast("Cancellation Success.", "success");
-      }
+      await cancelMembership(studentIdToBeDeleted);
     } catch (error) {
       console.error("Error deleting student: ", error);
       showToast("Error deleting student.", "error");
@@ -310,7 +308,7 @@ function MembershipRequest() {
         <ConfirmationModal
           confirmType={ConfirmActionType.CANCEL}
           onCancel={hideModal}
-          onConfirm={() => handleConfirmDeletion()}
+          onConfirm={handleConfirmDeletion}
         />
       )}
       {isModalOpen && (

@@ -162,10 +162,10 @@ router.put("/students/restore", admin_authenticate, async (req, res) => {
 });
 //TODO: Bug for this route
 router.put(
-  "/students/cancel/:id_number",
+  "/students/cancel-membership",
   admin_authenticate,
   async (req, res) => {
-    const { id_number } = req.params;
+    const { id_number } = req.body;
 
     try {
       const cancel = await Student.updateOne(

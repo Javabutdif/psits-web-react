@@ -364,11 +364,13 @@ export const publishMerchandise = async (_id) => {
   }
 };
 //Hard Delete
-export const requestDeletion = async (id_number) => {
-  
+export const cancelMembership = async (id_number) => {
   try {
     const response = await axios.put(
-      `${backendConnection()}/api/students/cancel/${id_number}`,
+      `${backendConnection()}/api/students/cancel-membership`,
+      {
+        id_number,
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -379,9 +381,8 @@ export const requestDeletion = async (id_number) => {
 
     if (response.status === 200) {
       showToast("success", response.data.message);
-      return true;
     } else {
-      return false;
+      showToast("error", response.data.message || "An error occurred");
     }
   } catch (error) {
     if (error.response && error.response.data) {

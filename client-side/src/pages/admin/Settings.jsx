@@ -188,7 +188,7 @@ const Settings = () => {
       <section className="bg-white rounded-2xl shadow p-6 space-y-4">
         <h2 className="text-xl font-medium border-b pb-2">Membership</h2>
         <div className="space-y-2">
-          <p>Renew all active membership.</p>
+          <p>Reset all active membership.</p>
           <button
             onClick={() => handleShowModalRenewStudent()}
             className={
@@ -198,7 +198,7 @@ const Settings = () => {
             }
             disabled={!adminConditionalAccess()}
           >
-            Renew Membership
+            Reset Membership
           </button>
         </div>
       </section>
