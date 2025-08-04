@@ -9,6 +9,7 @@ import {
 import { renewAllStudent } from "../../api/admin";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 import { ConfirmActionType } from "../../enums/commonEnums";
+import FormInput from "../../components/forms/FormInput";
 
 const Settings = () => {
   const accessLevels = ["none", "standard", "finance", "executive", "admin"];
@@ -187,6 +188,23 @@ const Settings = () => {
       {/* Membership Renewal Section */}
       <section className="bg-white rounded-2xl shadow p-6 space-y-4">
         <h2 className="text-xl font-medium border-b pb-2">Membership</h2>
+        <div className=" pt-2 flex flex-row items-center justify-between space-x-3">
+          <FormInput label="Change Membership Fee" type="number" />
+          <FormInput label="Change Renewal Fee" type="number" />
+        </div>
+        <div>
+          <button
+            onClick={() => handleShowModalRenewStudent()}
+            className={
+              adminConditionalAccess()
+                ? "px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium"
+                : "px-4 py-2 bg-gray-300 text-gray-500 rounded-md font-medium cursor-not-allowed"
+            }
+            disabled={!adminConditionalAccess()}
+          >
+            Change Fee
+          </button>
+        </div>
         <div className="space-y-2">
           <p>Reset all active membership.</p>
           <button

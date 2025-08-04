@@ -5,6 +5,7 @@ import {
   financeAndAdminConditionalAccess,
 } from "../../../components/tools/clientTools";
 import FormButton from "../../../components/forms/FormButton";
+import ReactToPrint from "react-to-print";
 
 const StudentMembershipHistory = ({ onClose, studentId }) => {
   const [data, setData] = React.useState([]);
@@ -46,7 +47,7 @@ const StudentMembershipHistory = ({ onClose, studentId }) => {
             <span className="font-medium">Admin</span>
             <span className="font-medium">Action</span>
           </li>
-          {data &&
+          {data && data.length > 0 ? (
             data.map((item) => (
               <li
                 key={item._id}
@@ -81,7 +82,12 @@ const StudentMembershipHistory = ({ onClose, studentId }) => {
                   />
                 </span>
               </li>
-            ))}
+            ))
+          ) : (
+            <li className="text-center text-gray-500">
+              No membership history found.
+            </li>
+          )}
         </ul>
       </div>
     </div>
