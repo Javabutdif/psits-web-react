@@ -2,6 +2,7 @@ import { login } from "../../api/index";
 import ai from "../../assets/images/AI.png";
 import logo from "../../assets/images/login.png";
 import valen from "../../assets/images/valen.png";
+import arbin from "../../assets/images/arbin.png";
 import {
   attemptAuthentication,
   resetAttemptAuthentication,
@@ -24,6 +25,12 @@ const Login = () => {
   const currentDate = new Date();
   const janStart = new Date(currentDate.getFullYear(), 1, 10);
   const janEnd = new Date(currentDate.getFullYear(), 11, 30);
+  const arbinStart = new Date(currentDate.getFullYear(), 7, 1);
+  const arbinEnd = new Date(currentDate.getFullYear(), 8, 31);
+
+  const randomBooleanPop = () => {
+    return Math.random() < 0.5;
+  };
 
   useEffect(() => {
     let interval;
@@ -170,7 +177,15 @@ const Login = () => {
             <IoArrowBack size={35} color="#074873" />
           </button>
           <img
-            src={currentDate >= janStart && currentDate <= janEnd ? ai : logo}
+            src={
+              arbinStart <= currentDate &&
+              currentDate <= arbinEnd &&
+              randomBooleanPop()
+                ? arbin
+                : currentDate >= janStart && currentDate <= janEnd
+                ? ai
+                : logo
+            }
             alt="Logo"
             className=""
           />
