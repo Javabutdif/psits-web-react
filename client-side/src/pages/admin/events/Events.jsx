@@ -3,7 +3,7 @@ import { InfinitySpin } from "react-loader-spinner";
 import { Link } from "react-router-dom";
 import { getEvents } from "../../../api/event";
 import { getInformationData } from "../../../authentication/Authentication";
-import { formatDate } from "../../../utils/stringUtils";
+import { formattedDate } from "../../../components/tools/clientTools";
 import AddEvent from "./AddEvent";
 
 function Events() {
@@ -65,9 +65,7 @@ function Events() {
               Add Event
             </span>
           </button>
-            {isAddEventModalOpen && (
-              <AddEvent handleClose={closeModal} />
-            )}
+          {isAddEventModalOpen && <AddEvent handleClose={closeModal} />}
           {events &&
             events.map((event) => (
               <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ">
@@ -83,7 +81,7 @@ function Events() {
                     {event.eventName}
                   </h1>
                   <p className="mb-3 text-[074873]">
-                    {formatDate(event.eventDate)}
+                    {formattedDate(event.eventDate)}
                   </p>
                   <div className="flex gap-1 items-center justify-center">
                     <Link

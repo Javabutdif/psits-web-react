@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import QRCodePage from "./QRCodePage";
 import { getEvents } from "../../api/event";
-import { MdOutlineQueryStats } from "react-icons/md";
-import { formatDate } from "../../utils/stringUtils";
+
+import { formattedDate } from "../../components/tools/clientTools";
 
 function StudentEvents() {
   const [showView, setShowView] = useState(false); // State to manage popup visibility
@@ -49,7 +49,7 @@ function StudentEvents() {
                 {event.eventName}
               </h1>
               <p className="mb-3 text-[074873] text-sm">
-                {formatDate(event.eventDate)}
+                {formattedDate(event.eventDate)}
               </p>
               <div className="flex gap-1 items-center justify-center">
                 <button

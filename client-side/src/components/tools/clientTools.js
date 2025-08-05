@@ -2,8 +2,11 @@ import { getInformationData } from "../../authentication/Authentication";
 
 export const formattedDate = (date) => {
   const dates = new Date(date);
-
-  return dates.toLocaleDateString();
+  if (isNaN(dates.getTime())) {
+    return "Invalid Date";
+  } else {
+    return dates.toLocaleDateString();
+  }
 };
 
 export const capitalizeWord = (word) => {
@@ -11,14 +14,12 @@ export const capitalizeWord = (word) => {
 };
 
 export const formattedLastName = (name) => {
-  const names = name.trim().split(/\s+/); 
+  const names = name.trim().split(/\s+/);
   if (names.length < 2) return name;
-  const lastName = names.pop(); 
-  const firstNames = names.join(" "); 
+  const lastName = names.pop();
+  const firstNames = names.join(" ");
   return `${lastName}, ${firstNames}`;
 };
-
-
 
 export const noneConditionalAccess = () => {
   const data = getInformationData();

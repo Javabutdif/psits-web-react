@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { QRCode } from "react-qr-code";
-import { formatDate } from "../../utils/stringUtils";
 import { getInformationData } from "../../authentication/Authentication";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import backendConnection from "../../api/backendApi";
 import { InfinitySpin } from "react-loader-spinner";
+import {formattedDate} from "../../components/tools/clientTools";
 
 const QRCodePage = ({ closeView, event }) => {
   const [isAttendee, setIsAttendee] = useState(false);
@@ -164,9 +164,8 @@ const QRCodePage = ({ closeView, event }) => {
               {event.eventName}
             </h1>
             <p className="text-gray-500 mb-4 text-sm">
-              {formatDate(event.eventDate)}
+              {formattedDate(event.eventDate)}
             </p>
-            
           </div>
 
           <div className="flex-1 space-y-6">
