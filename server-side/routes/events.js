@@ -2,12 +2,125 @@ const express = require("express");
 const Events = require("../models/EventsModel");
 const Merch = require("../models/MerchModel");
 const { ObjectId } = require("mongodb");
+const mongoose = require("mongoose");
 const {
   admin_authenticate,
   both_authenticate,
 } = require("../middlewares/custom_authenticate_token");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const { S3Client } = require("@aws-sdk/client-s3");
+require("dotenv").config();
 
 const router = express.Router();
+
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+const upload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: process.env.AWS_BUCKET_NAME,
+    metadata: (req, file, cb) => {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: (req, file, cb) => {
+      cb(null, `event/${Date.now()}_${file.originalname}`);
+    },
+  }),
+});
+
+// POST: Create a new Event
+router.post(
+  "/",
+  admin_authenticate,
+  upload.array("images", 3),
+  async (req, res) => {
+    try {
+      const { name, eventDate, description, sessionConfig } = req.body;
+
+      const imageUrl = req.files ? req.files.map((file) => file.location) : [];
+
+      let parsedSessionConfig;
+      try {
+        parsedSessionConfig =
+          typeof sessionConfig === "string"
+            ? JSON.parse(sessionConfig)
+            : sessionConfig || {};
+      } catch (error) {
+        console.error("Error parsing sessionConfig:", error);
+        return res.status(400).json({
+          message: "Invalid session configuration format",
+          error: error.message,
+        });
+      }
+
+      const {
+        isMorningEnabled = true,
+        morningTime = "",
+        isAfternoonEnabled = false,
+        afternoonTime = "",
+        isEveningEnabled = false,
+        eveningTime = "",
+      } = parsedSessionConfig;
+
+      const hasValidSession =
+        (isMorningEnabled && morningTime) ||
+        (isAfternoonEnabled && afternoonTime) ||
+        (isEveningEnabled && eveningTime);
+
+      if (!hasValidSession) {
+        return res.status(400).json({
+          message: "At least one session must be enabled with a time range",
+        });
+      }
+
+      const newEvent = new Events({
+        eventId: new mongoose.Types.ObjectId(),
+        eventName: name, // Use 'name' from frontend
+        eventImage: imageUrl,
+        eventDate: eventDate,
+        eventDescription: description,
+        status: "Ongoing",
+        attendanceType: "open",
+        sessionConfig: {
+          morning: {
+            enabled: isMorningEnabled,
+            timeRange: morningTime,
+          },
+          afternoon: {
+            enabled: isAfternoonEnabled,
+            timeRange: afternoonTime,
+          },
+          evening: {
+            enabled: isEveningEnabled,
+            timeRange: eveningTime,
+          },
+        },
+        attendees: [],
+        createdBy: req.user.name,
+      });
+
+      await newEvent.save();
+
+      res.status(201).json({
+        message: "Event created successfully",
+        event: newEvent,
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+      res.status(500).json({
+        message: "Failed to create event",
+        error: error.message,
+      });
+    }
+  }
+);
 
 // GET all events
 router.get("/", both_authenticate, async (req, res) => {
