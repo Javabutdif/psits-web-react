@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import QRCodePage from "./QRCodePage";
 import { getEvents } from "../../api/event";
-
+import { MdOutlineQueryStats } from "react-icons/md";
+import { formatDate } from "../../utils/stringUtils";
+import { motion } from "framer-motion";
 import { formattedDate } from "../../components/tools/clientTools";
 
 function StudentEvents() {
@@ -32,9 +34,26 @@ function StudentEvents() {
     <>
       <hr />
       <div className="mt-5 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2x1:grid-cols-6">
+            {/* <motion.button
+            onClick={handleViewDetails}
+            className="w-full bg-[#002E48] text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-[#013e61] transition-colors duration-200"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            View
+          </motion.button> */}
         {events.map((event) => (
-          <div
+
+          <motion.div
             key={event.id}
+            whileHover={{ 
+                  y: -4, // Moves up 4 pixels
+                  transition: { 
+                    type: "spring", 
+                    damping: 10, 
+                    stiffness: 300 
+                  }
+                }}
             className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 "
           >
             <div className="relative w-full h-48 mb-3">
@@ -49,7 +68,7 @@ function StudentEvents() {
                 {event.eventName}
               </h1>
               <p className="mb-3 text-[074873] text-sm">
-                {formattedDate(event.eventDate)}
+                  {formattedDate(event.eventDate)}             
               </p>
               <div className="flex gap-1 items-center justify-center">
                 <button
@@ -61,7 +80,7 @@ function StudentEvents() {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
