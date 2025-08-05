@@ -6,9 +6,18 @@ import {
 } from "../../../components/tools/clientTools";
 import FormButton from "../../../components/forms/FormButton";
 import ReactToPrint from "react-to-print";
+import { handlePrintDataPos } from "../../../components/tools/clientTools";
+import Receipt from "../../../components/common/Receipt";
 
 const StudentMembershipHistory = ({ onClose, studentId }) => {
   const [data, setData] = React.useState([]);
+  const [shouldPrint, setShouldPrint] = React.useState(false);
+  const [selectedStudent, setSelectedStudentName] = React.useState("");
+
+  const [rowData, setPrintData] = React.useState("");
+
+  const componentRef = React.useRef();
+  const printRef = React.useRef();
 
   const fetchMembershipHistory = async () => {
     try {
@@ -22,6 +31,23 @@ const StudentMembershipHistory = ({ onClose, studentId }) => {
   if (data.length === 0) {
     fetchMembershipHistory();
   }
+
+  const handlePrintData = (row) => {
+    setPrintData(row);
+    setShouldPrint(true);
+
+    setSelectedStudentName(handlePrintDataPos(row));
+  };
+
+  React.useEffect(() => {
+    if (rowData) {
+      printRef.current.click();
+    }
+  }, [rowData]);
+
+  const handlePrintComplete = () => {
+    setPrintData("");
+  };
 
   return (
     <div
@@ -62,6 +88,11 @@ const StudentMembershipHistory = ({ onClose, studentId }) => {
                   <FormButton
                     type="button"
                     text="Print"
+                    onClick={() => {
+                      if (financeAndAdminConditionalAccess()) {
+                        handlePrintData(item);
+                      }
+                    }}
                     icon={
                       <i
                         className={`fa ${
@@ -89,6 +120,39 @@ const StudentMembershipHistory = ({ onClose, studentId }) => {
             </li>
           )}
         </ul>
+      </div>
+      <div style={{ display: "none" }}>
+        {shouldPrint && rowData && (
+          <ReactToPrint
+            trigger={() => (
+              <button ref={printRef} style={{ display: "none" }}>
+                Print
+              </button>
+            )}
+            content={() => componentRef.current}
+            onAfterPrint={handlePrintComplete}
+          />
+        )}
+        {shouldPrint && rowData && (
+          <Receipt
+            ref={componentRef}
+            reference_code={rowData.reference_code}
+            course={rowData.course}
+            product_name={rowData.product_name}
+            batch={rowData.batch}
+            size={rowData.size}
+            variation={rowData.variation}
+            total={50}
+            cash={rowData.cash}
+            year={rowData.year}
+            name={selectedStudent}
+            type={rowData.type}
+            admin={rowData.admin}
+            reprint={true}
+            qty={1}
+            itemTotal={50}
+          />
+        )}
       </div>
     </div>
   );

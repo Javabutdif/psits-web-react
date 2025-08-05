@@ -9,6 +9,19 @@ export const formattedDate = (date) => {
   }
 };
 
+export const handlePrintDataPos = (row) => {
+  const name = row.name;
+  const words = name.split(" ");
+  let fullName = "";
+
+  for (let i = 0; i < words.length - 1; i++) {
+    fullName += words[i].charAt(0) + ".";
+  }
+  fullName += " " + words[words.length - 1];
+
+  return fullName;
+};
+
 export const capitalizeWord = (word) => {
   return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 };
