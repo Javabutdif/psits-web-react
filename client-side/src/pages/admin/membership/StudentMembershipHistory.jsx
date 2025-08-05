@@ -36,7 +36,7 @@ const StudentMembershipHistory = ({ onClose, studentId }) => {
     setPrintData(row);
     setShouldPrint(true);
 
-    setSelectedStudentName(handlePrintDataPos(row));
+    setSelectedStudentName(handlePrintDataPos(row.name));
   };
 
   React.useEffect(() => {
@@ -70,7 +70,7 @@ const StudentMembershipHistory = ({ onClose, studentId }) => {
             <span className="font-medium">Reference Code</span>
             <span className="font-medium">Date</span>
             <span className="font-medium">Type</span>
-            <span className="font-medium">Admin</span>
+            <span className="font-medium">Manage</span>
             <span className="font-medium">Action</span>
           </li>
           {data && data.length > 0 ? (

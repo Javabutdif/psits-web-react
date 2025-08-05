@@ -20,6 +20,7 @@ import { showToast } from "../../../utils/alertHelper";
 import EditMember from "./EditMember";
 import StudentMembershipHistory from "./StudentMembershipHistory";
 import OptionModal from "../../../components/common/modal/OptionModal";
+import { generateReferenceCode } from "../../../components/tools/clientTools";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -134,14 +135,12 @@ const Membership = () => {
               ? "Membership"
               : "Renewal",
           id_number: row.id_number,
-          reference_code:
-            Math.floor(Math.random() * (999999999 - 111111111)) + 111111111,
+          reference_code: generateReferenceCode(),
         };
 
         setFormData(updatedFormData);
         setRequestId(row.id_number);
         setRequestModal(true);
-        console.log(formData);
       }
     } catch (error) {
       console.error("Error fetching membership status:", error);

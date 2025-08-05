@@ -389,7 +389,7 @@ router.get(
     try {
       const membershipHistory = await MembershipHistory.find({
         id_number: id_number,
-      });
+      }).sort({ date: -1 });
 
       res.status(200).json({ data: membershipHistory });
     } catch (error) {

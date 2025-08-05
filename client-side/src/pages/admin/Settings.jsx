@@ -89,7 +89,7 @@ const Settings = () => {
         </h2>
         {renewStudentStatus && (
           <ConfirmationModal
-            confirmType={ConfirmActionType.RENEWAL}
+            confirmType={ConfirmActionType.RESET}
             onConfirm={() => handleRenewStudent()}
             onCancel={() => setRenewStudentStatus(false)}
           />

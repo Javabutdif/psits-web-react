@@ -9,8 +9,7 @@ export const formattedDate = (date) => {
   }
 };
 
-export const handlePrintDataPos = (row) => {
-  const name = row.name;
+export const handlePrintDataPos = (name) => {
   const words = name.split(" ");
   let fullName = "";
 
@@ -20,6 +19,16 @@ export const handlePrintDataPos = (row) => {
   fullName += " " + words[words.length - 1];
 
   return fullName;
+};
+
+export const generateReferenceCode = () => {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let referenceCode = "";
+  for (let i = 0; i < 11; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    referenceCode += characters[randomIndex];
+  }
+  return referenceCode;
 };
 
 export const capitalizeWord = (word) => {

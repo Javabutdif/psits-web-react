@@ -8,7 +8,11 @@ import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 
 import { ConfirmActionType } from "../../enums/commonEnums";
 import ApproveModal from "../../components/admin/ApproveModal";
-import { financeAndAdminConditionalAccess } from "../../components/tools/clientTools";
+import {
+  financeAndAdminConditionalAccess,
+  generateReferenceCode,
+  handlePrintDataPos,
+} from "../../components/tools/clientTools";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 
@@ -180,15 +184,8 @@ function MembershipRequest() {
     setSelectedStudentCourse(row.course);
     setSelectedStudentYear(row.year);
     const name = row.first_name + " " + row.middle_name + " " + row.last_name;
-    const words = name.split(" ");
-    let fullName = "";
 
-    for (let i = 0; i < words.length - 1; i++) {
-      fullName += words[i].charAt(0) + ".";
-    }
-    fullName += " " + words[words.length - 1];
-
-    setSelectedStudentName(fullName);
+    setSelectedStudentName(handlePrintDataPos(name));
   };
 
   const handleCloseModal = () => {
@@ -313,9 +310,7 @@ function MembershipRequest() {
       )}
       {isModalOpen && (
         <ApproveModal
-          reference_code={
-            Math.floor(Math.random() * (999999999 - 111111111)) + 111111111
-          }
+          reference_code={generateReferenceCode()}
           id_number={selectedStudentId}
           course={selectedStudentCourse}
           year={selectedStudentYear}
