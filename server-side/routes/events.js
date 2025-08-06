@@ -80,6 +80,64 @@ router.post(
         });
       }
 
+      // Helper: parse "HH:MM - HH:MM" into { start: Date, end: Date }
+      const parseRange = (rangeStr, baseDate, sessionName) => {
+        const [startStr, endStr] = rangeStr.split(" - ");
+        const [sh, sm] = startStr.split(":").map(Number);
+        const [eh, em] = endStr.split(":").map(Number);
+
+        const start = new Date(baseDate);
+        start.setHours(sh, sm, 0, 0);
+
+        const end = new Date(baseDate);
+        end.setHours(eh, em, 0, 0);
+
+        if (end <= start) {
+          return res.status(400).json({
+            message: `Invalid time range for ${sessionName} session: "To" time must be later than "From" time.`,
+          });
+        }
+
+        return { start, end };
+      };
+
+      const enabledSessions = [];
+
+      if (isMorningEnabled && morningTime) {
+        enabledSessions.push({
+          name: "morning",
+          ...parseRange(morningTime, eventDate, "morning"),
+        });
+      }
+      if (isAfternoonEnabled && afternoonTime) {
+        enabledSessions.push({
+          name: "afternoon",
+          ...parseRange(afternoonTime, eventDate, "afternoon"),
+        });
+      }
+      if (isEveningEnabled && eveningTime) {
+        enabledSessions.push({
+          name: "evening",
+          ...parseRange(eveningTime, eventDate, "evening"),
+        });
+      }
+
+      // Check for time overlaps
+      for (let i = 0; i < enabledSessions.length; i++) {
+        for (let j = i + 1; j < enabledSessions.length; j++) {
+          const a = enabledSessions[i];
+          const b = enabledSessions[j];
+
+          if (a.start < b.end && b.start < a.end) {
+            res.status(400).json({
+              message: `Session time ranges overlap between ${a.name} and ${b.name}. Please fix them.`,
+            });
+
+            return;
+          }
+        }
+      }
+
       const newEvent = new Events({
         eventId: new mongoose.Types.ObjectId(),
         eventName: name, // Use 'name' from frontend
@@ -151,54 +209,146 @@ router.get("/attendees/:id", admin_authenticate, async (req, res) => {
   }
 });
 
-// UPDATE Attendee isAttended property
+// UPDATE Attendee attendance per session
 router.put(
   "/attendance/:event_id/:id_number",
   admin_authenticate,
   async (req, res) => {
     const { event_id, id_number } = req.params;
-    const { campus, attendeeName } = req.body;
+    const { campus, attendeeName, course, year } = req.body;
 
     try {
-      const eventId = new ObjectId(event_id);
-      const event = await Events.findOne({ eventId });
+      const event = await Events.findOne({ eventId: event_id });
 
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
 
-      const attendee = event.attendees.find(
-        (attendee) =>
-          attendee.id_number === id_number &&
-          attendee.name === attendeeName &&
-          (attendee.campus === campus || campus === "UC-Main")
-      );
+      const now = new Date();
+      const matchedSessions = [];
 
-      if (!attendee) {
+      for (const session of ["morning", "afternoon", "evening"]) {
+        const config = event.sessionConfig?.[session];
+
+        if (!config?.enabled || !config.timeRange) continue;
+
+        const [startStr, endStr] = config.timeRange.split(" - ");
+        const [sh, sm] = startStr.split(":").map(Number);
+        const [eh, em] = endStr.split(":").map(Number);
+
+        const eventDate = new Date(event.eventDate);
+        const today = new Date();
+
+        if (today.toDateString() !== eventDate.toDateString()) {
+          return res.status(400).json({
+            message: "Attendance can only be recorded on the event date.",
+          });
+        }
+
+        const sessionStart = new Date(event.eventDate);
+        sessionStart.setHours(sh, sm, 0, 0);
+
+        const sessionEnd = new Date(event.eventDate);
+        sessionEnd.setHours(eh, em, 0, 0);
+
+        if (now >= sessionStart && now <= sessionEnd) {
+          matchedSessions.push(session);
+        }
+      }
+
+      if (matchedSessions.length === 0) {
+        return res.status(400).json({
+          message: "Current time does not fall within any active session.",
+        });
+      }
+
+      if (matchedSessions.length > 1) {
+        return res.status(400).json({
+          message: `Ambiguous session time: current time matches multiple sessions (${matchedSessions.join(
+            ", "
+          )})`,
+        });
+      }
+
+      const session = matchedSessions[0];
+      let attendee;
+
+      if (event.attendanceType === "open") {
+        attendee = event.attendees.find(
+          (existingAttendee) => existingAttendee.id_number === id_number
+        );
+
+        if (!attendee) {
+          const newAttendee = {
+            id_number,
+            name: attendeeName,
+            course: course || "Unknown",
+            year: year || 1,
+            campus,
+            attendance: {
+              morning: { attended: false },
+              afternoon: { attended: false },
+              evening: { attended: false },
+            },
+          };
+          attendee = newAttendee;
+        }
+      } else {
+        attendee = event.attendees.find(
+          (existingAttendee) =>
+            existingAttendee.id_number === id_number &&
+            existingAttendee.name === attendeeName &&
+            (existingAttendee.campus === campus || campus === "UC-Main")
+        );
+
+        if (!attendee) {
+          return res
+            .status(404)
+            .json({ message: "Attendee not found in this event" });
+        }
+      }
+
+      const currentSession = attendee.attendance?.[session];
+
+      if (currentSession?.attended) {
         return res
-          .status(404)
-          .json({ message: "Attendee not found in this event" });
+          .status(400)
+          .json({ message: `Attendance already recorded for ${session}` });
       }
 
-      if (attendee.isAttended) {
-        return res.status(400).json({ message: "Attendance already recorded" });
+      if (!attendee.attendance) {
+        attendee.attendance = {
+          morning: { attended: false },
+          afternoon: { attended: false },
+          evening: { attended: false },
+        };
       }
 
-      attendee.isAttended = true;
-      attendee.attendDate = new Date();
+      if (!attendee.attendance[session]) {
+        attendee.attendance[session] = { attended: false };
+      }
+
+      attendee.attendance[session] = {
+        attended: true,
+        timestamp: new Date(),
+      };
+
+      event.markModified("attendees");
       attendee.confirmedBy = req.user?.name;
-
+      event.attendees.push(attendee);
       await event.save();
 
       res.status(200).json({
-        message: "Attendance successfully recorded",
+        message: `Attendance for ${session} successfully recorded`,
+        session,
         data: attendee,
       });
     } catch (error) {
       console.error("Error marking attendance:", error);
-      res
-        .status(500)
-        .json({ message: "An error occurred while recording attendance" });
+      res.status(500).json({
+        message: "An error occurred while recording attendance",
+        error: error.message,
+      });
     }
   }
 );
