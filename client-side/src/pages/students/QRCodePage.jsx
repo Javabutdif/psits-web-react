@@ -6,12 +6,16 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import backendConnection from "../../api/backendApi";
 import { InfinitySpin } from "react-loader-spinner";
+import { motion } from "framer-motion";
+import { formattedDate } from "../../components/tools/clientTools";
+
 
 const QRCodePage = ({ closeView, event }) => {
   const [isAttendee, setIsAttendee] = useState(false);
   const [studentId, setStudentId] = useState();
   const [studentName, setStudentName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isFree, setIsFree] = useState(false);
   const [attendanceStatus, setAttendanceStatus] = useState();
   const [merchData, setMerchData] = useState([]);
   const navigate = useNavigate();
@@ -24,6 +28,7 @@ const QRCodePage = ({ closeView, event }) => {
   };
 
   const checkIfUserIsAttendee = () => {
+    setIsFree(true);
     setIsLoading(true);
 
     setStudentId(student.id_number);
@@ -127,7 +132,7 @@ const QRCodePage = ({ closeView, event }) => {
     let textColor = "text-gray-700";
     let statusText = "Unknown";
 
-    if (attendanceStatus === true) {
+    if (attendanceStatus === true ) {
       bgColor = "bg-green-100";
       textColor = "text-green-800";
       statusText = "Present";
@@ -164,9 +169,15 @@ const QRCodePage = ({ closeView, event }) => {
               {event.eventName}
             </h1>
             <p className="text-gray-500 mb-4 text-sm">
-              {formatDate(event.eventDate)}
+                  {formattedDate(event.eventDate)}             
             </p>
-            
+            <div className="w-full overflow-hidden rounded-xl">
+              <img
+                src={event.eventImage[0]}
+                alt={event.eventName}
+                className="w-full h-[300px] object-cover"
+              />
+            </div>
           </div>
 
           <div className="flex-1 space-y-6">
@@ -204,6 +215,38 @@ const QRCodePage = ({ closeView, event }) => {
                     Scan this code to confirm your attendance.
                   </p>
                 </>
+              ) : isFree? (
+                <div>
+                  <div className="flex flex-col items-center">
+                    <QRCode
+                      value={`/admin/attendance/${event.eventId}/${event.eventName}/markAsPresent/${studentId}/${studentName}`}
+                      size={170}
+                      fgColor="#074873"
+                    />  
+                    <div className="mt-4 flex flex-col items-center justify-center ">
+                      <div className="text-sm text-gray-700 font-medium mb-1">
+                        Attendance Status:
+                      </div>
+                      <div class="flex items-center gap-3 ">
+                        <div class="text-center">
+                          <div class="text-sm text-gray-700 font-semibold mb-2">Morning</div>
+                          <div class="text-sm text-gray-700 font-medium mb-1">{renderStatusBadge()}</div>
+                        </div>
+                        
+                        <div class="h-16 w-px bg-gray-300 relative justify-center flex">
+                        </div>
+                        
+                        <div class="">
+                          <div class="text-sm text-gray-700 font-semibold mb-2">Afternoon</div>
+                          <div class="text-sm text-gray-700 font-medium mb-1">{renderStatusBadge()}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4">
+                    Scan this code to confirm your attendance.
+                  </p>
+                </div>
               ) : merchData.length > 0 && merchData ? (
                 <div>
                   <p className="text-sm text-gray-500 mt-4">

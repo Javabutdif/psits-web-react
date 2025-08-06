@@ -19,6 +19,14 @@ const salesDataSchema = new Schema({
   },
 });
 
+const sessionConfigTypeSchema = new Schema(
+  {
+    enabled: { type: Boolean },
+    timeRange: { type: String },
+  },
+  { _id: false }
+);
+
 const eventSchema = new Schema({
   eventId: {
     type: Schema.Types.ObjectId,
@@ -39,6 +47,27 @@ const eventSchema = new Schema({
     type: String,
     required: true,
   },
+  attendanceType: {
+    type: String,
+    enum: ["ticketed", "open"],
+    default: "ticketed",
+  },
+  sessionConfig: {
+    type: new Schema(
+      {
+        morning: { type: sessionConfigTypeSchema, required: true },
+        afternoon: { type: sessionConfigTypeSchema, required: true },
+        evening: { type: sessionConfigTypeSchema, required: true },
+      },
+      { _id: false }
+    ),
+    default: {
+      morning: { enabled: true, timeRange: "" },
+      afternoon: { enabled: false, timeRange: "" },
+      evening: { enabled: false, timeRange: "" },
+    },
+  },
+  createdBy: { type: String, required: true },
   attendees: {
     type: [attendeeSchema],
     default: [],

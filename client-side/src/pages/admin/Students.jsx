@@ -62,11 +62,6 @@ const Students = () => {
       text: `Deleted ${counts.deleted}`,
       icon: "fas fa-trash-alt",
     },
-    {
-      path: "/admin/students/history",
-      text: `History ${counts.history}`,
-      icon: "fas fa-history",
-    },
   ];
 
   return (

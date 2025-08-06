@@ -75,30 +75,33 @@ const OptionModal = ({ onClose, information, onAction, actionKey }) => {
                   financeAndAdminConditionalAccess() ||
                   action !== "Request_Membership"
               )
-              .map((action, index) => (
-                <FormButton
-                  type="button"
-                  disabled={
-                    isActive &&
-                    (action === "Request_Membership" ||
-                      action === "Renew_Membership")
-                  }
-                  text={
-                    isActive &&
-                    (action === "Request_Membership" ||
-                      action === "Renew_Membership")
-                      ? "Already Active"
-                      : labelToAction[action]
-                  }
-                  key={index}
-                  onClick={() => handlePickAction(actionTypes[action])}
-                  icon={iconsStyle(action)}
-                  styles="flex items-center space-x-2 bg-gray-200 text-gray-800 rounded-md px-3 py-1.5 transition duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                  textClass="text-gray-800" // Elegant text color
-                  whileHover={{ scale: 1.02, opacity: 0.95 }}
-                  whileTap={{ scale: 0.98, opacity: 0.9 }}
-                />
-              ))}
+              .map((action, index) => {
+                const isActionActive =
+                  isActive &&
+                  (action === "Request_Membership" ||
+                    action === "Renew_Membership");
+
+                return (
+                  <FormButton
+                    type="button"
+                    disabled={isActionActive}
+                    text={
+                      isActionActive ? "Already Active" : labelToAction[action]
+                    }
+                    key={index}
+                    onClick={() => handlePickAction(actionTypes[action])}
+                    icon={iconsStyle(action)}
+                    styles={`flex items-center space-x-2 rounded-md px-3 py-1.5 transition duration-150 focus:outline-none focus:ring-2 ${
+                      isActionActive
+                        ? "bg-red-500 text-white hover:bg-red-600 focus:ring-red-400"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400"
+                    }`}
+                    textClass={isActionActive ? "text-white" : "text-gray-800"}
+                    whileHover={{ scale: 1.02, opacity: 0.95 }}
+                    whileTap={{ scale: 0.98, opacity: 0.9 }}
+                  />
+                );
+              })}
         </div>
       </div>
     </div>

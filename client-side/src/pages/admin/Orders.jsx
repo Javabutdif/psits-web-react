@@ -21,6 +21,10 @@ import { InfinitySpin } from "react-loader-spinner";
 import Button from "../../components/common/Button";
 import AddOrderModal from "../../components/admin/AddOrderModal";
 import { showToast } from "../../utils/alertHelper";
+import {
+  handlePrintDataPos,
+  generateReferenceCode,
+} from "../../components/tools/clientTools";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -141,16 +145,8 @@ const Orders = () => {
   const handlePrintData = (row) => {
     setPrintData(row);
     setShouldPrint(true);
-    const name = row.student_name;
-    const words = name.split(" ");
-    let fullName = "";
 
-    for (let i = 0; i < words.length - 1; i++) {
-      fullName += words[i].charAt(0) + ".";
-    }
-    fullName += " " + words[words.length - 1];
-
-    setSelectedStudentName(fullName);
+    setSelectedStudentName(handlePrintDataPos(row.student_name));
   };
   useEffect(() => {
     if (rowData) {
@@ -166,16 +162,8 @@ const Orders = () => {
 
   const handleApproveClick = (order) => {
     setSelectedOrder(order);
-    const name = order.student_name;
-    const words = name.split(" ");
-    let fullName = "";
 
-    for (let i = 0; i < words.length - 1; i++) {
-      fullName += words[i].charAt(0) + ".";
-    }
-    fullName += " " + words[words.length - 1];
-
-    setSelectedStudentName(fullName);
+    setSelectedStudentName(handlePrintDataPos(order.student_name));
     setIsModalOpen(true);
   };
   const handleCancelClick = (order) => {
@@ -589,9 +577,7 @@ const Orders = () => {
 
       {isModalOpen && selectedOrder && (
         <ApproveModal
-          reference_code={
-            Math.floor(Math.random() * (999999999 - 111111111)) + 111111111
-          }
+          reference_code={generateReferenceCode()}
           order_id={selectedOrder._id}
           id_number={selectedOrder.id_number}
           course={selectedOrder.course}

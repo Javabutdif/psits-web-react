@@ -3,8 +3,10 @@ import { InfinitySpin } from "react-loader-spinner";
 import { Link } from "react-router-dom";
 import { getEvents } from "../../../api/event";
 import { getInformationData } from "../../../authentication/Authentication";
-import { formatDate } from "../../../utils/stringUtils";
+import { formattedDate } from "../../../components/tools/clientTools";
 import AddEvent from "./AddEvent";
+import { motion } from "framer-motion";
+
 
 function Events() {
   const [events, setEvent] = useState([]);
@@ -65,12 +67,19 @@ function Events() {
               Add Event
             </span>
           </button>
-            {isAddEventModalOpen && (
-              <AddEvent handleClose={closeModal} />
-            )}
+          {isAddEventModalOpen && <AddEvent handleClose={closeModal} />}
           {events &&
             events.map((event) => (
-              <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ">
+              <motion.div 
+              className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 "
+               whileHover={{ 
+                  y: -4, // Moves up 4 pixels
+                  transition: { 
+                    type: "spring", 
+                    damping: 10, 
+                    stiffness: 300 
+                  }
+                }}>
                 <div className="relative w-full h-48 mb-3">
                   <img
                     src={event.eventImage[0]}
@@ -83,9 +92,9 @@ function Events() {
                     {event.eventName}
                   </h1>
                   <p className="mb-3 text-[074873]">
-                    {formatDate(event.eventDate)}
+                    {formattedDate(event.eventDate)}
                   </p>
-                  <div className="flex gap-1 items-center justify-center">
+                  <div className="flex gap-1 p-3 items-center justify-center">
                     <Link
                       to={`/admin/attendance/${event.eventId}`}
                       className={
@@ -129,7 +138,7 @@ function Events() {
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
         </div>
       )}
