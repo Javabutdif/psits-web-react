@@ -43,7 +43,6 @@ router.post(
   admin_authenticate,
   upload.array("images", 3),
   async (req, res) => {
- 
     const {
       name,
       price,
@@ -108,6 +107,7 @@ router.post(
             eventDescription: description,
             status: "Ongoing",
             attendees: [],
+            createdBy: req.user.name,
           });
 
           await newEvent.save();
