@@ -59,6 +59,8 @@ export const markAsPresent = async (
   eventId,
   attendeeId,
   campus,
+  course,
+  year,
   attendeeName,
   navigate
 ) => {
@@ -70,6 +72,8 @@ export const markAsPresent = async (
       {
         campus,
         attendeeName,
+        course,
+        year,
       },
       {
         headers: {
@@ -86,19 +90,7 @@ export const markAsPresent = async (
     console.error("Error marking attendance:", error);
 
     if (error.response) {
-      switch (error.response.status) {
-        case 403:
-          showToast("error", "Access denied. Admins only.");
-          break;
-        case 404:
-          showToast("error", "Event or attendee not found.");
-          break;
-        case 400:
-          showToast("error", "Attendance already recorded.");
-          break;
-        default:
-          showToast("error", "An error occurred while recording attendance.");
-      }
+      showToast("error", error.response.data.message || "An error occured");
     } else {
       showToast("error", "An error occurred while recording attendance.");
     }
@@ -190,7 +182,11 @@ export const raffleWinner = async (eventId, attendeeId, attendeeName) => {
   }
 };
 
-export const removeRaffleAttendee = async (eventId, attendeeId,attendeeName) => {
+export const removeRaffleAttendee = async (
+  eventId,
+  attendeeId,
+  attendeeName
+) => {
   try {
     const response = await axios.put(
       `${backendConnection()}/api/events/raffle/remove/${eventId}/${attendeeId}`,

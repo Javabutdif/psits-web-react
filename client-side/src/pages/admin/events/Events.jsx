@@ -7,7 +7,6 @@ import { formattedDate } from "../../../components/tools/clientTools";
 import AddEvent from "./AddEvent";
 import { motion } from "framer-motion";
 
-
 function Events() {
   const [events, setEvent] = useState([]);
   const admin = getInformationData();
@@ -70,16 +69,18 @@ function Events() {
           {isAddEventModalOpen && <AddEvent handleClose={closeModal} />}
           {events &&
             events.map((event) => (
-              <motion.div 
-              className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 "
-               whileHover={{ 
+              <motion.div
+                className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 "
+                key={event._id}
+                whileHover={{
                   y: -4, // Moves up 4 pixels
-                  transition: { 
-                    type: "spring", 
-                    damping: 10, 
-                    stiffness: 300 
-                  }
-                }}>
+                  transition: {
+                    type: "spring",
+                    damping: 10,
+                    stiffness: 300,
+                  },
+                }}
+              >
                 <div className="relative w-full h-48 mb-3">
                   <img
                     src={event.eventImage[0]}
