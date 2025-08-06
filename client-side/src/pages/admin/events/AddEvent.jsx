@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import backendConnection from "../../../api/backendApi";
-import showToast from "../../../utils/alertHelper";
+import { showToast } from "../../../utils/alertHelper.js";
 function AddEvent({ handleClose }) {
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
