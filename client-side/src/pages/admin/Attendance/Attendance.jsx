@@ -476,6 +476,8 @@ const Attendance = (props) => {
             setIsFilterOpen={setIsFilterOpen}
             fetchData={fetchData}
             loading={loading}
+            eventId={eventId}
+            eventName={eventData.eventName}
           />
         </div>
       </div>
