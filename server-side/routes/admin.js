@@ -17,6 +17,37 @@ const mongoose = require("mongoose");
 
 const router = express.Router();
 
+//Search student by ID
+router.get(
+  "/admin/student_search/:id_number",
+  admin_authenticate,
+  async (req, res) => {
+    const { id_number } = req.params;
+
+    console.log(id_number);
+
+    try {
+      const student = await Student.findOne({
+        id_number,
+      });
+
+      console.log(student);
+      if (!student) {
+        res.status(404).json({
+          message: "Student not found!",
+        });
+      } else {
+        res.status(200).json({ data: student });
+      }
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
+    }
+  }
+);
+
 router.post("/approve-membership", admin_authenticate, async (req, res) => {
   const { reference_code, id_number, type, admin, rfid, date, cash, total } =
     req.body;

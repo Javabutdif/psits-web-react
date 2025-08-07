@@ -198,9 +198,16 @@ router.get("/attendees/:id", admin_authenticate, async (req, res) => {
   try {
     const eventId = new ObjectId(id);
     const merchData = await Merch.findById({ _id: eventId });
+    // TODO(Adriane): Refactor, why using attendees when we return event data
     const attendees = await Events.find({ eventId });
-    if (attendees && merchData) {
-      res.status(200).json({ data: attendees, merch_data: merchData });
+    // I replaced "attendees && merchData" with this since
+    // we don't really need merch data,
+    // Its use case was only for merch.start_date & .end_date
+    // but for now we can really just use the events eventDate field
+    if (attendees) {
+      res
+        .status(200)
+        .json({ data: attendees, merch_data: merchData ? merchData : {} });
     } else {
       res.status(500).json({ message: "No attendees" });
     }
@@ -272,6 +279,7 @@ router.put(
 
       const session = matchedSessions[0];
       let attendee;
+      let isNewAttendee = false;
 
       if (event.attendanceType === "open") {
         attendee = event.attendees.find(
@@ -292,6 +300,7 @@ router.put(
             },
           };
           attendee = newAttendee;
+          isNewAttendee = true;
         }
       } else {
         attendee = event.attendees.find(
@@ -333,9 +342,12 @@ router.put(
         timestamp: new Date(),
       };
 
-      event.markModified("attendees");
       attendee.confirmedBy = req.user?.name;
-      event.attendees.push(attendee);
+      if (isNewAttendee) {
+        event.attendees.push(attendee);
+      }
+
+      event.markModified("attendees");
       await event.save();
 
       res.status(200).json({
@@ -352,7 +364,6 @@ router.put(
     }
   }
 );
-
 router.get("/check-limit/:eventId", admin_authenticate, async (req, res) => {
   const { eventId } = req.params;
 
