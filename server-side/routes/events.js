@@ -279,6 +279,7 @@ router.put(
 
       const session = matchedSessions[0];
       let attendee;
+      let isNewAttendee = false;
 
       if (event.attendanceType === "open") {
         attendee = event.attendees.find(
@@ -299,6 +300,7 @@ router.put(
             },
           };
           attendee = newAttendee;
+          isNewAttendee = true;
         }
       } else {
         attendee = event.attendees.find(
@@ -340,9 +342,12 @@ router.put(
         timestamp: new Date(),
       };
 
-      event.markModified("attendees");
       attendee.confirmedBy = req.user?.name;
-      event.attendees.push(attendee);
+      if (isNewAttendee) {
+        event.attendees.push(attendee);
+      }
+
+      event.markModified("attendees");
       await event.save();
 
       res.status(200).json({
@@ -359,7 +364,6 @@ router.put(
     }
   }
 );
-
 router.get("/check-limit/:eventId", admin_authenticate, async (req, res) => {
   const { eventId } = req.params;
 
