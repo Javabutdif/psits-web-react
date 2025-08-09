@@ -32,18 +32,27 @@ const QRCodePage = ({ closeView, event }) => {
 
     setStudentId(student.id_number);
 
-    const attendee = event.attendees.find(
-      (attendee) => attendee.id_number === student.id_number
-    );
+    // If ticketed, check if user is attendee, else, bypass
+    // TODO: currently, this handles attendee.isAttended, modify to handle the new attendee attendance model
+    if (event.attendanceType === "ticketed") {
+      const attendee = event.attendees.find(
+        (attendee) => attendee.id_number === student.id_number
+      );
 
-    if (attendee) {
-      setIsAttendee(true);
-      setStudentName(attendee.name);
-      setAttendanceStatus(attendee.isAttended);
+      if (attendee) {
+        setIsAttendee(true);
+        setStudentName(attendee.name);
+        setAttendanceStatus(attendee.isAttended);
+      } else {
+        setIsAttendee(false);
+        setStudentName("");
+      }
     } else {
-      setIsAttendee(false);
-      setStudentName("");
+      setIsAttendee(true);
+      setStudentName(student.name);
+      setAttendanceStatus(false);
     }
+
     setIsLoading(false);
   };
 
