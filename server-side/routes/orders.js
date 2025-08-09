@@ -307,7 +307,6 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
             _id: item.product_id,
             "order_details.reference_code": reference_code,
           });
-          //console.log(existMerch);
 
           if (!existMerch) {
             await Merch.findByIdAndUpdate(item.product_id, {
@@ -355,38 +354,43 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
               event.totalUnitsSold += 1;
               event.totalRevenueAll += Number.parseInt(item.sub_total);
               event.save();
-            }
 
-            if (merchToGet && merchToGet.category === "ict-congress") {
-              await Event.findOneAndUpdate(
-                {
-                  eventId: merchId,
-                  "attendees.id_number": { $ne: successfulOrder.id_number },
-                },
-                {
-                  $push: {
-                    attendees: {
-                      id_number: successfulOrder.id_number,
-                      name: successfulOrder.student_name,
-                      email: successfulOrder.email,
-                      course: successfulOrder.course,
-                      year: successfulOrder.year,
-                      campus: student.campus,
-                      isAttended: false,
-                      shirtSize: sizes.length > 0 ? sizes[0] : null,
-                      shirtPrice: merchToGet.price,
+              if (merchToGet) {
+                await Event.findOneAndUpdate(
+                  {
+                    eventId: merchId,
+                    "attendees.id_number": { $ne: successfulOrder.id_number },
+                  },
+                  {
+                    $push: {
+                      attendees: {
+                        id_number: successfulOrder.id_number,
+                        name: successfulOrder.student_name,
+                        course: successfulOrder.course,
+                        year: successfulOrder.year,
+                        campus: student.campus,
+                        attendance: {
+                          morning: { attended: false, timestamp: "" },
+                          afternoon: { attended: false, timestamp: "" },
+                          evening: { attended: false, timestamp: "" },
+                        },
+                        shirtSize: sizes.length > 0 ? sizes[0] : null,
+                        shirtPrice: merchToGet?.price || null,
+                      },
                     },
                   },
-                },
-                { upsert: true }
-              ).session(session);
+                  { upsert: true }
+                ).session(session);
+              }
             }
           }
         })
       );
     }
+
     await session.commitTransaction();
     session.endSession();
+
     // Render and send the email
     const emailTemplate = await ejs.renderFile(
       path.join(__dirname, "../templates/appr-order-receipt.ejs"),
@@ -438,6 +442,7 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
         console.log("Email sent: " + info.response);
       }
     });
+
     return res.status(200).json({
       message: "Order approved. Email may have failed.",
     });
