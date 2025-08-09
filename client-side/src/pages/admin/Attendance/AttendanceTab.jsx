@@ -163,24 +163,51 @@ const AttendanceTabs = ({
     // Apply all filters to the data
     const filteredDataForTable = applyAllFilters(filteredData, branchName);
 
-    const exportData = filteredDataForTable.map((item) => ({
-      "Student ID": item.id_number,
-      Name: item.name,
-      Course: item.course,
-      "Year Level": item.year,
-      Campus: item.campus,
-      Attendance: item.isAttended ? "Present" : "Absent",
-      Confirm_Attendance_By: item.isAttended ? item.confirmedBy : "N/A",
-      Processed_By: item.transactBy,
-      Processed_Date: item.transactDate,
-      "Shirt Size": item.shirtSize,
-      "Shirt Price": item.shirtPrice,
-      "Raffle Status": item.raffleIsRemoved
-        ? "Removed"
-        : item.raffleIsWinner
-        ? "Winner"
-        : "Null",
-    }));
+    const exportData = filteredDataForTable.map((item) => {
+      const getAttendanceStatus = (attendance) => {
+        if (!attendance) return "Absent";
+
+        const sessions = ["morning", "afternoon", "evening"];
+        const attendedSessions = sessions.filter(
+          (session) => attendance[session] && attendance[session].attended
+        );
+
+        if (attendedSessions.length === 0) return "Absent";
+        if (attendedSessions.length === sessions.length)
+          return "Present (All Sessions)";
+        return `Present (${attendedSessions
+          .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+          .join(", ")})`;
+      };
+
+      const hasAttendedAnySession = (attendance) => {
+        if (!attendance) return false;
+        return ["morning", "afternoon", "evening"].some(
+          (session) => attendance[session] && attendance[session].attended
+        );
+      };
+
+      const isAttended = hasAttendedAnySession(item.attendance);
+
+      return {
+        "Student ID": item.id_number,
+        Name: item.name,
+        Course: item.course,
+        "Year Level": item.year,
+        Campus: item.campus,
+        Attendance: getAttendanceStatus(item.attendance),
+        Confirm_Attendance_By: isAttended ? item.confirmedBy : "N/A",
+        Processed_By: item.transactBy,
+        Processed_Date: item.transactDate,
+        "Shirt Size": item.shirtSize,
+        "Shirt Price": item.shirtPrice,
+        "Raffle Status": item.raffleIsRemoved
+          ? "Removed"
+          : item.raffleIsWinner
+          ? "Winner"
+          : "Null",
+      };
+    });
 
     const searchStudentById = async (id_number) => {
       try {
