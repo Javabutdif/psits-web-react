@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { QRCode } from "react-qr-code";
-import { formatDate } from "../../utils/stringUtils";
-import { getInformationData } from "../../authentication/Authentication";
-import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import backendConnection from "../../api/backendApi";
+import { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
-import { motion } from "framer-motion";
+import { QRCode } from "react-qr-code";
+import { Link, useNavigate } from "react-router-dom";
+import backendConnection from "../../api/backendApi";
+import { getInformationData } from "../../authentication/Authentication";
 import { formattedDate } from "../../components/tools/clientTools";
 
 const QRCodePage = ({ closeView, event }) => {
@@ -14,8 +12,10 @@ const QRCodePage = ({ closeView, event }) => {
   const [studentId, setStudentId] = useState();
   const [studentName, setStudentName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isFree, setIsFree] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [studentAttendee, setStudentAttendee] = useState(null);
   const [attendanceStatus, setAttendanceStatus] = useState();
+  
   const [merchData, setMerchData] = useState([]);
   const navigate = useNavigate();
   const student = getInformationData();
@@ -27,18 +27,18 @@ const QRCodePage = ({ closeView, event }) => {
   };
 
   const checkIfUserIsAttendee = () => {
-    setIsFree(merchData.attendanceType === "open");
+    setIsOpen(merchData.attendanceType === "open");
     setIsLoading(true);
-
     setStudentId(student.id_number);
-
+    const attendee = event.attendees.find(
+      (attendee) => attendee.id_number === student.id_number
+    );
+    setStudentAttendee(attendee);
     // If ticketed, check if user is attendee, else, bypass
     // TODO: currently, this handles attendee.isAttended, modify to handle the new attendee attendance model
     if (event.attendanceType === "ticketed") {
-      const attendee = event.attendees.find(
-        (attendee) => attendee.id_number === student.id_number
-      );
 
+      console.log("Checking attendee status:", attendee);
       if (attendee) {
         setIsAttendee(true);
         setStudentName(attendee.name);
@@ -48,14 +48,13 @@ const QRCodePage = ({ closeView, event }) => {
         setStudentName("");
       }
     } else {
+      setIsOpen(true);
       setIsAttendee(true);
       setStudentName(student.name);
       setAttendanceStatus(false);
     }
-
     setIsLoading(false);
   };
-
   useEffect(() => {
     checkIfUserIsAttendee();
   }, [event]);
@@ -126,21 +125,20 @@ const QRCodePage = ({ closeView, event }) => {
       console.error("Error fetching merchandise data:", error);
     }
   };
-
   useEffect(() => {
     fetchMerch();
   }, []);
 
-  const renderStatusBadge = () => {
+  const renderStatusBadge = (status) => {
     let bgColor = "bg-gray-200";
     let textColor = "text-gray-700";
     let statusText = "Unknown";
 
-    if (attendanceStatus === true) {
+    if (status === true) {
       bgColor = "bg-green-100";
       textColor = "text-green-800";
       statusText = "Present";
-    } else if (attendanceStatus === false) {
+    } else if (status === false) {
       bgColor = "bg-red-100";
       textColor = "text-red-800";
       statusText = "Not Recorded / Absent";
@@ -200,7 +198,7 @@ const QRCodePage = ({ closeView, event }) => {
               </h2>
               {isLoading ? (
                 <InfinitySpin width="200" color="#074873" />
-              ) : isAttendee ? (
+              ) : (isAttendee && event.attendanceType === "ticketed") ? (
                 <>
                   <div className="flex flex-col items-center">
                     <QRCode
@@ -219,7 +217,7 @@ const QRCodePage = ({ closeView, event }) => {
                     Scan this code to confirm your attendance.
                   </p>
                 </>
-              ) : isFree ? (
+              ) : isOpen ? (
                 <div>
                   <div className="flex flex-col items-center">
                     <QRCode
@@ -231,26 +229,33 @@ const QRCodePage = ({ closeView, event }) => {
                       <div className="text-sm text-gray-700 font-medium mb-1">
                         Attendance Status:
                       </div>
-                      <div className="flex items-center gap-3 ">
-                        <div className="text-center">
-                          <div className="text-sm text-gray-700 font-semibold mb-2">
-                            Morning
-                          </div>
-                          <div className="text-sm text-gray-700 font-medium mb-1">
-                            {renderStatusBadge()}
-                          </div>
-                        </div>
-
-                        <div className="h-16 w-px bg-gray-300 relative justify-center flex"></div>
-
-                        <div className="">
-                          <div className="text-sm text-gray-700 font-semibold mb-2">
-                            Afternoon
-                          </div>
-                          <div className="text-sm text-gray-700 font-medium mb-1">
-                            {renderStatusBadge()}
-                          </div>
-                        </div>
+                      <div className="flex items-center">
+                        {event.sessionConfig &&
+                          (() => {
+                            // Filter out only enabled sessions
+                            const enabledSessions = Object.entries(event.sessionConfig).filter(
+                              ([, sessionData]) => sessionData.enabled
+                            );
+                            return enabledSessions.map(([sessionName], index) => (
+                              <div key={sessionName} className="flex items-center">
+                                {/* Session Content */}
+                                <div className="text-center">
+                                  <div className="text-sm text-gray-700 font-semibold mb-2">
+                                    {sessionName.charAt(0).toUpperCase() + sessionName.slice(1)}
+                                  </div>
+                                  <div className="text-sm text-gray-700 font-medium mb-1">
+                                      {renderStatusBadge(
+                                        studentAttendee?.attendance?.[sessionName]?.attended ?? false
+                                      )}
+                                  </div>
+                                </div>
+                                {/* Divider only if not the last session */}
+                                {index < enabledSessions.length - 1 && (
+                                  <div className="h-16 w-px bg-gray-300 mx-6"></div>
+                                )}
+                              </div>
+                            ));
+                          })()}
                       </div>
                     </div>
                   </div>
