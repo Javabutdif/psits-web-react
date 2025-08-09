@@ -217,19 +217,32 @@ function Product({ handleCloseAddProduct }) {
 
       if (key === "selectedSizes") {
         try {
-          value = JSON.stringify(value); 
+          value = JSON.stringify(value);
         } catch (error) {
           console.error("Error stringifying selectedSizes:", value);
           return;
         }
+      } else if (key === "sessionConfig") {
+        // Handle sessionConfig object
+        try {
+          value = JSON.stringify(value);
+        } catch (error) {
+          console.error("Error stringifying sessionConfig:", value);
+          return;
+        }
       } else if (Array.isArray(value)) {
-        value = value.join(","); 
+        value = value.join(",");
       }
 
       data.append(key, value);
     }
 
     data.append("isEvent", isEventType);
+
+    console.log("FormData contents:");
+    data.forEach((value, key) => {
+      console.log(key, value);
+    });
 
     try {
       if (await addMerchandise(data)) {
@@ -350,6 +363,45 @@ function Product({ handleCloseAddProduct }) {
 
   const getTypeOptions = (category) => {
     return typeOptions[category] || [];
+  };
+
+  const handleTimeChange = (session, startTime, endTime) => {
+    const timeRange = `${startTime} - ${endTime}`;
+    setFormData((prev) => ({
+      ...prev,
+      sessionConfig: {
+        ...prev.sessionConfig,
+        [`${session}Time`]: timeRange,
+      },
+    }));
+  };
+
+  const parseTimeRange = (timeRange) => {
+    if (!timeRange) return { start: "", end: "" };
+    const [start, end] = timeRange.split(" - ");
+    return { start: start || "", end: end || "" };
+  };
+
+  // Handle session configuration changes
+  const handleSessionChange = (session, field, value) => {
+    // Create the correct field name: is + Session + Enabled
+    const fieldName = `is${
+      session.charAt(0).toUpperCase() + session.slice(1)
+    }${field}`;
+    console.log(`Setting ${fieldName} to ${value}`); // Debug log
+
+    setFormData((prev) => {
+      const newSessionConfig = { ...prev.sessionConfig };
+      newSessionConfig[fieldName] = value;
+
+      // Remove any duplicate fields that might exist
+      delete newSessionConfig[`${session}${field}`];
+
+      return {
+        ...prev,
+        sessionConfig: newSessionConfig,
+      };
+    });
   };
 
   const PreviewModal = ({ data, images, onClose, onConfirm, isLoading }) => {
@@ -527,7 +579,7 @@ function Product({ handleCloseAddProduct }) {
             <i className="fas fa-times"></i>
           </button>
           <h2 className="text-2xl font-semibold mb-4">Add Product</h2>
-         
+
           <form onSubmit={handlePreview} className="space-y-6">
             <ImageInput
               label={"Product Image"}
@@ -619,23 +671,270 @@ function Product({ handleCloseAddProduct }) {
               </div>
             </div>
             {isEventType && (
-              <div className="flex flex-col relative">
-                <label htmlFor="eventDate" className="text-gray-500 mb-1">
-                  Event Date
-                </label>
-                <FormInput
-                  label=""
-                  name="eventDate"
-                  type="date"
-                  value={formData.eventDate}
-                  onChange={handleChange}
-                  labelStyle="text-sm"
-                  inputStyle="text-sm"
-                  error={errors.eventDate}
-                  max={today}
-                />
-              </div>
+              <>
+                <div className="flex flex-col relative">
+                  <label htmlFor="eventDate" className="text-gray-500 mb-1">
+                    Event Date
+                  </label>
+                  <FormInput
+                    label=""
+                    name="eventDate"
+                    type="date"
+                    value={formData.eventDate}
+                    onChange={handleChange}
+                    labelStyle="text-sm"
+                    inputStyle="text-sm"
+                    error={errors.eventDate}
+                    max={today}
+                  />
+                </div>
+
+                {/* Session Configuration */}
+                <div className="form-group">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Session Configuration
+                  </label>
+
+                  {/* Morning Session */}
+                  <div className="border p-4 rounded-lg mb-4">
+                    <div className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        checked={
+                          formData.sessionConfig?.isMorningEnabled || false
+                        }
+                        onChange={(e) =>
+                          handleSessionChange(
+                            "morning",
+                            "Enabled",
+                            e.target.checked
+                          )
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label className="ml-2 font-medium text-sm">
+                        Morning Session
+                      </label>
+                    </div>
+                    {formData.sessionConfig?.isMorningEnabled && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div>
+                          <input
+                            type="time"
+                            value={
+                              parseTimeRange(
+                                formData.sessionConfig.morningTime ||
+                                  "08:00-12:00"
+                              ).start
+                            }
+                            onChange={(e) => {
+                              const endTime = parseTimeRange(
+                                formData.sessionConfig.morningTime ||
+                                  "08:00-12:00"
+                              ).end;
+                              handleTimeChange(
+                                "morning",
+                                e.target.value,
+                                endTime
+                              );
+                            }}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Start time
+                          </p>
+                        </div>
+                        <div>
+                          <input
+                            type="time"
+                            value={
+                              parseTimeRange(
+                                formData.sessionConfig.morningTime ||
+                                  "08:00-12:00"
+                              ).end
+                            }
+                            onChange={(e) => {
+                              const startTime = parseTimeRange(
+                                formData.sessionConfig.morningTime ||
+                                  "08:00-12:00"
+                              ).start;
+                              handleTimeChange(
+                                "morning",
+                                startTime,
+                                e.target.value
+                              );
+                            }}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">End time</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Afternoon Session */}
+                  <div className="border p-4 rounded-lg mb-4">
+                    <div className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        checked={
+                          formData.sessionConfig?.isAfternoonEnabled || false
+                        }
+                        onChange={(e) =>
+                          handleSessionChange(
+                            "afternoon",
+                            "Enabled",
+                            e.target.checked
+                          )
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label className="ml-2 font-medium text-sm">
+                        Afternoon Session
+                      </label>
+                    </div>
+                    {formData.sessionConfig?.isAfternoonEnabled && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div>
+                          <input
+                            type="time"
+                            value={
+                              parseTimeRange(
+                                formData.sessionConfig.afternoonTime ||
+                                  "13:00-17:00"
+                              ).start
+                            }
+                            onChange={(e) => {
+                              const endTime = parseTimeRange(
+                                formData.sessionConfig.afternoonTime ||
+                                  "13:00-17:00"
+                              ).end;
+                              handleTimeChange(
+                                "afternoon",
+                                e.target.value,
+                                endTime
+                              );
+                            }}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Start time
+                          </p>
+                        </div>
+                        <div>
+                          <input
+                            type="time"
+                            value={
+                              parseTimeRange(
+                                formData.sessionConfig.afternoonTime ||
+                                  "13:00-17:00"
+                              ).end
+                            }
+                            onChange={(e) => {
+                              const startTime = parseTimeRange(
+                                formData.sessionConfig.afternoonTime ||
+                                  "13:00-17:00"
+                              ).start;
+                              handleTimeChange(
+                                "afternoon",
+                                startTime,
+                                e.target.value
+                              );
+                            }}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">End time</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Evening Session */}
+                  <div className="border p-4 rounded-lg mb-4">
+                    <div className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        checked={
+                          formData.sessionConfig?.isEveningEnabled || false
+                        }
+                        onChange={(e) =>
+                          handleSessionChange(
+                            "evening",
+                            "Enabled",
+                            e.target.checked
+                          )
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label className="ml-2 font-medium text-sm">
+                        Evening Session
+                      </label>
+                    </div>
+                    {formData.sessionConfig?.isEveningEnabled && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div>
+                          <input
+                            type="time"
+                            value={
+                              parseTimeRange(
+                                formData.sessionConfig.eveningTime ||
+                                  "18:00-22:00"
+                              ).start
+                            }
+                            onChange={(e) => {
+                              const endTime = parseTimeRange(
+                                formData.sessionConfig.eveningTime ||
+                                  "18:00-22:00"
+                              ).end;
+                              handleTimeChange(
+                                "evening",
+                                e.target.value,
+                                endTime
+                              );
+                            }}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Start time
+                          </p>
+                        </div>
+                        <div>
+                          <input
+                            type="time"
+                            value={
+                              parseTimeRange(
+                                formData.sessionConfig.eveningTime ||
+                                  "18:00-22:00"
+                              ).end
+                            }
+                            onChange={(e) => {
+                              const startTime = parseTimeRange(
+                                formData.sessionConfig.eveningTime ||
+                                  "18:00-22:00"
+                              ).start;
+                              handleTimeChange(
+                                "evening",
+                                startTime,
+                                e.target.value
+                              );
+                            }}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">End time</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {errors.sessions && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.sessions}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
+
             <FormSelect
               name="control"
               label="Purchase Control"
