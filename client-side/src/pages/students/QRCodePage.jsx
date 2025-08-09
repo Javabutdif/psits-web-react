@@ -27,7 +27,7 @@ const QRCodePage = ({ closeView, event }) => {
   };
 
   const checkIfUserIsAttendee = () => {
-    setIsFree(true);
+    setIsFree(merchData.attendanceType === "open");
     setIsLoading(true);
 
     setStudentId(student.id_number);

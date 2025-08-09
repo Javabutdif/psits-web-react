@@ -478,6 +478,7 @@ const Attendance = (props) => {
             loading={loading}
             eventId={eventId}
             eventName={eventData.eventName}
+            eventAttendanceType={eventData.attendanceType}
           />
         </div>
       </div>

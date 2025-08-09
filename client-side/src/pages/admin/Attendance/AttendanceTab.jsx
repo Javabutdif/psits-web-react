@@ -25,6 +25,7 @@ const AttendanceTabs = ({
   loading,
   eventId,
   eventName,
+  eventAttendanceType,
 }) => {
   const token = sessionStorage.getItem("Token");
 
@@ -259,7 +260,13 @@ const AttendanceTabs = ({
       navigate(
         `/admin/attendance/${eventId}/${eventName}/markAsPresent/${
           studentData.id_number
-        }/${studentData.first_name + " " + studentData.last_name}`
+        }/${
+          studentData.first_name +
+          " " +
+          studentData.middle_name +
+          " " +
+          studentData.last_name
+        }`
       );
     };
 
@@ -365,7 +372,7 @@ const AttendanceTabs = ({
                 <div className="flex justify-end gap-2">
                   <ButtonsComponent>
                     <div className="flex flex-row items-center gap-2">
-                      {user.campus === "UC-Main" && (
+                      {eventAttendanceType === "open" && (
                         <FormButton
                           type="button"
                           text="Attendance by ID (QR - less)"
