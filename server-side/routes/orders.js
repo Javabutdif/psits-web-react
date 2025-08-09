@@ -355,34 +355,33 @@ router.put("/approve-order", admin_authenticate, async (req, res) => {
               event.totalRevenueAll += Number.parseInt(item.sub_total);
               event.save();
 
-              // Add attendee if event exists and buyer is not already an attendee
-              // Before, it only adds attendee if merch category == "ict_congress"
-              // which is maybe wrong? We're handling different events, not only ict congress
-              await Event.findOneAndUpdate(
-                {
-                  eventId: merchId,
-                  "attendees.id_number": { $ne: successfulOrder.id_number },
-                },
-                {
-                  $push: {
-                    attendees: {
-                      id_number: successfulOrder.id_number,
-                      name: successfulOrder.student_name,
-                      course: successfulOrder.course,
-                      year: successfulOrder.year,
-                      campus: student.campus,
-                      attendance: {
-                        morning: { attended: false, timestamp: "" },
-                        afternoon: { attended: false, timestamp: "" },
-                        evening: { attended: false, timestamp: "" },
+              if (merchToGet) {
+                await Event.findOneAndUpdate(
+                  {
+                    eventId: merchId,
+                    "attendees.id_number": { $ne: successfulOrder.id_number },
+                  },
+                  {
+                    $push: {
+                      attendees: {
+                        id_number: successfulOrder.id_number,
+                        name: successfulOrder.student_name,
+                        course: successfulOrder.course,
+                        year: successfulOrder.year,
+                        campus: student.campus,
+                        attendance: {
+                          morning: { attended: false, timestamp: "" },
+                          afternoon: { attended: false, timestamp: "" },
+                          evening: { attended: false, timestamp: "" },
+                        },
+                        shirtSize: sizes.length > 0 ? sizes[0] : null,
+                        shirtPrice: merchToGet?.price || null,
                       },
-                      shirtSize: sizes.length > 0 ? sizes[0] : null,
-                      shirtPrice: merchToGet?.price || null,
                     },
                   },
-                },
-                { upsert: true }
-              ).session(session);
+                  { upsert: true }
+                ).session(session);
+              }
             }
           }
         })
