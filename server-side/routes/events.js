@@ -222,7 +222,7 @@ router.put(
   admin_authenticate,
   async (req, res) => {
     const { event_id, id_number } = req.params;
-    const { campus, attendeeName, course, year } = req.body;
+    const { campus, attendeeName, course, year, currentDate } = req.body;
 
     try {
       const event = await Events.findOne({ eventId: event_id });
@@ -231,7 +231,7 @@ router.put(
         return res.status(404).json({ message: "Event not found" });
       }
 
-      const now = new Date();
+      const now = currentDate ? new Date(currentDate) : new Date();
       const matchedSessions = [];
 
       for (const session of ["morning", "afternoon", "evening"]) {
