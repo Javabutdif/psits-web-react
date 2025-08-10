@@ -74,6 +74,7 @@ export const markAsPresent = async (
         attendeeName,
         course,
         year,
+        currentDate: new Date(),
       },
       {
         headers: {
