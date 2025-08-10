@@ -243,6 +243,10 @@ router.put(
         const [sh, sm] = startStr.split(":").map(Number);
         const [eh, em] = endStr.split(":").map(Number);
 
+        
+      console.log("Config time range: " + startStr + " " + endStr);
+        console.log("Parsed time: " + sh + ":" + sm + " - " + eh + ":" + em);
+        
         const eventDate = new Date(event.eventDate);
         const today = new Date();
 
