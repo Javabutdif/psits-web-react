@@ -41,26 +41,6 @@ const Members = () => {
     }
   };
 
-  const handleEditModalClose = () => {
-    setIsEditModalVisible(false);
-    setMemberToEdit(null);
-  };
-
-  const handleHideChangePassword = () => {
-    setViewChange(false);
-  };
-
-  const handleSaveEditedMember = async (updatedMember) => {
-    setIsLoading(true);
-    try {
-      editOfficerApi(updatedMember);
-    } catch (error) {
-      console.error("Error updating officer:", error);
-    }
-
-    fetchData();
-    setIsLoading(false);
-  };
   useEffect(() => {
     fetchData();
   }, []);

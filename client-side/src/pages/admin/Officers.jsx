@@ -26,7 +26,7 @@ const Officers = () => {
     executiveAndAdminConditionalAccess()
       ? {
           path: "/admin/officers/request",
-          text: `Request `,
+          text: `Members Request `,
           icon: "fas fa-envelope-open-text",
         }
       : {

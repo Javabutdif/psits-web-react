@@ -19,10 +19,7 @@ import Merchandise from "./pages/admin/Merchandise";
 import Officers from "./pages/admin/Officers";
 import AllOfficers from "./pages/admin/officers/AllOfficers";
 import Request from "./pages/admin/officers/Request";
-import Developers from "./pages/admin/officers/Developers";
-import Media from "./pages/admin/officers/Media";
-import Volunteers from "./pages/admin/officers/Volunteers";
-import StudentOfficer from "./pages/admin/officers/StudentOfficer";
+
 import Raffle from "./pages/admin/events/EventRaffle";
 import AddAttendeeForm from "./pages/admin/Attendance/AddAttendeeForm";
 import AdminEvents from "./pages/admin/events/Events";
@@ -102,18 +99,7 @@ const App = () => {
               path="suspend"
               element={<PrivateRouteAdmin element={Suspend} />}
             />
-            <Route
-              path="developers"
-              element={<PrivateRouteAdmin element={Developers} />}
-            />
-            <Route
-              path="media"
-              element={<PrivateRouteAdmin element={Media} />}
-            />
-            <Route
-              path="volunteers"
-              element={<PrivateRouteAdmin element={Volunteers} />}
-            />
+
             <Route
               path="members"
               element={<PrivateRouteAdmin element={Members} />}

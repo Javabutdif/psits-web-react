@@ -50,7 +50,6 @@ export const getMembershipStatusStudents = async (id_number) => {
     if (response.status === 200) {
       return response.data;
     } else {
-     
     }
   } catch (error) {
     if (error.response && error.response.data) {
@@ -172,5 +171,22 @@ export const fetchSpecificStudent = async (id_number) => {
       console.error("Error:", error);
     }
     console.error("Error:", error);
+  }
+};
+
+export const searchStudentById = async (id_number) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/admin/student_search/${id_number}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    throw error.response?.data?.message || "An error occurred while searching.";
   }
 };
