@@ -261,7 +261,9 @@ router.put(
 
         const sessionEnd = new Date(event.eventDate);
         sessionEnd.setHours(eh, em, 0, 0);
-
+        console.log(sessionStart);
+        console.log(sessionEnd);
+        console.log("Current time: " + now);
         if (now >= sessionStart && now <= sessionEnd) {
           matchedSessions.push(session);
         }
