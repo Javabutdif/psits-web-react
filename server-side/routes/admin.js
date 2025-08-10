@@ -191,7 +191,6 @@ router.get("/history", admin_authenticate, async (req, res) => {
   }
 });
 
-//TODO: REMOVE THIS ROUTE
 router.get("/renew", admin_authenticate, async (req, res) => {
   try {
     const students = await Student.find({ renew: "Pending" });
@@ -364,6 +363,39 @@ router.get("/get-all-officers", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch officers" });
   }
 });
+
+//TODO: get all MEMBERS
+
+router.get("/get-all-members", async (req, res) => {
+  try {
+    const rolesToFind = ["developer", "officer", "media", "volunteer"];
+    const members = await Student.find({
+      role: { $in: rolesToFind },
+      isRequest: false,
+    });
+
+    const users = members.map((members) => ({
+      id_number: members.id_number,
+      email: members.email,
+      name:
+        members.first_name +
+        " " +
+        members.middle_name +
+        " " +
+        members.last_name,
+      course: members.course,
+      year: members.year,
+      role: members.role,
+      status: members.status,
+    }));
+
+    res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("Error fetching officers:", error);
+    res.status(500).json({ error: "Failed to fetch officers" });
+  }
+});
+
 //get all developers
 router.get("/get-all-developers", async (req, res) => {
   try {
