@@ -1,6 +1,6 @@
 # PSITS | University of Cebu - Main Campus
 
-Website link: https://psits-web.vercel.app
+Website link: https://psits.vercel.app
 
 Facebook page: https://www.facebook.com/PSITS.UCmain
 
