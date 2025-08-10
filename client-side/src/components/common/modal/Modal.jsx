@@ -22,10 +22,8 @@ const Modal = ({
   };
 
   return (
-    <div
-      className={`fixed p-4 inset-0 flex items-center justify-center z-50 transition-opacity duration-300 backdrop-blur-sm`}
-    >
-      {/* When the background behind is clicked, the modal closes. */}
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      {/* Overlay background */}
       <div
         className="fixed inset-0 bg-black bg-opacity-40 z-10"
         onClick={handleClose}
@@ -34,25 +32,21 @@ const Modal = ({
       <div
         className={`
           ${className}
-          bg-white rounded-xl shadow-xl 
-          min-w-140 md:min-w-[550px] w-fit z-10 h-full overflow-y-auto max-h-[70vh]
-          overflow-hidden 
+          bg-white rounded-xl shadow-xl
+          min-w-140 md:min-w-[550px] w-fit h-fit z-20
           transform transition-transform duration-300
         `}
       >
-        {
-          /* The close button */
-          showCloseButton && (
-            <div className="flex justify-end p-2">
-              <button
-                className="text-gray-500 hover:text-gray-700"
-                onClick={handleClose}
-              >
-                <FaTimes />
-              </button>
-            </div>
-          )
-        }
+        {showCloseButton && (
+          <div className="flex justify-end p-2">
+            <button
+              className="text-gray-500 hover:text-gray-700"
+              onClick={handleClose}
+            >
+              <FaTimes />
+            </button>
+          </div>
+        )}
         {children}
       </div>
     </div>

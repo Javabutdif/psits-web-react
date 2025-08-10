@@ -31,10 +31,10 @@ const AdminDashboard = () => {
 
   // Pending orders table states
   const [pendingOrder, setPendingOrder] = useState([]); // changed pendingData to pendingOrder for readability
-  const [currentPage, setCurrentPage] = useState(1);  // indicates current page sa pending order pagination
-  const [totalOrders, setTotalOrders] = useState(0);  // total order count
+  const [currentPage, setCurrentPage] = useState(1); // indicates current page sa pending order pagination
+  const [totalOrders, setTotalOrders] = useState(0); // total order count
   const [limit, setLimit] = useState(10); // limit of pending orders per page (pagination)
-  const [totalOrderPages, setTotalOrderPages] = useState(1);  // murag way gamit actually HAHAHA
+  const [totalOrderPages, setTotalOrderPages] = useState(1); // murag way gamit actually HAHAHA
   const [search, setSearch] = useState(""); // search functionality pendingorders
   const [sort, setSort] = useState([]); // sort functionality pendingorders (can sort by multiple columns, asc and desc)
 
@@ -95,17 +95,13 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [
-        studentRes,
-        merchCreate,
-        placedOrder,
-        activeMemberships,
-      ] = await Promise.all([
-        getCountStudent(),
-        merchCreated(),
-        placedOrders(),
-        getCountActiveMemberships(),
-      ]);
+      const [studentRes, merchCreate, placedOrder, activeMemberships] =
+        await Promise.all([
+          getCountStudent(),
+          merchCreated(),
+          placedOrders(),
+          getCountActiveMemberships(),
+        ]);
 
       setFinalCounts({
         student: studentRes.all || 0,
@@ -226,11 +222,13 @@ const AdminDashboard = () => {
         </div>
       ) : (
         <div className="pt-4 md:pt-8">
-         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="min-w-0 text-center"> {/* Add min-w-0 to prevent text overflow */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="min-w-0 text-center">
+              {" "}
+              {/* Add min-w-0 to prevent text overflow */}
               <DashboardCard
                 icon={faBoxOpen}
-                title="Merchandise Created"
+                title="Publish Merchandise"
                 count={counts.merchandise}
                 className="text-sm sm:text-base" // Consistent text sizing
               />

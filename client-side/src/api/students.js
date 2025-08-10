@@ -50,8 +50,7 @@ export const getMembershipStatusStudents = async (id_number) => {
     if (response.status === 200) {
       return response.data;
     } else {
-      // console.log(response.data.message);
-      // window.location.reload();
+     
     }
   } catch (error) {
     if (error.response && error.response.data) {

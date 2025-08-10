@@ -9,6 +9,10 @@ import TableComponent from "../../../components/Custom/TableComponent";
 import FormButton from "../../../components/forms/FormButton";
 import { executiveAndAdminConditionalAccess } from "../../../components/tools/clientTools";
 import FilterAttendees from "./FilterAttendees";
+import { FaUserCheck } from "react-icons/fa";
+import Modal from "../../../components/common/modal/Modal";
+import axios from "axios";
+import backendConnection from "../../../api/backendApi";
 
 const AttendanceTabs = ({
   columns,
@@ -19,7 +23,12 @@ const AttendanceTabs = ({
   setShowModal,
   fetchData,
   loading,
+  eventId,
+  eventName,
+  eventAttendanceType,
 }) => {
+  const token = sessionStorage.getItem("Token");
+
   const [activeTab, setActiveTab] = useState(0);
   const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
   const navigate = useNavigate();
@@ -31,6 +40,12 @@ const AttendanceTabs = ({
   const [selectedSchools, setSelectedSchools] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState([]);
+  const [isAttendanceByIdModalOpen, setIsAttendanceByIdModalOpen] =
+    useState(false);
+
+  const [attendanceModalStudentId, setAttendanceModalStudentId] = useState("");
+  const [studentData, setStudentData] = useState(null);
+  const [error, setError] = useState("");
 
   // Map year options to numeric values
   const yearOptionsMap = {
@@ -149,35 +164,230 @@ const AttendanceTabs = ({
     // Apply all filters to the data
     const filteredDataForTable = applyAllFilters(filteredData, branchName);
 
-    const exportData = filteredDataForTable.map((item) => ({
-      "Student ID": item.id_number,
-      Name: item.name,
-      Course: item.course,
-      "Year Level": item.year,
-      Campus: item.campus,
-      Attendance: item.isAttended ? "Present" : "Absent",
-      Confirm_Attendance_By: item.isAttended ? item.confirmedBy : "N/A",
-      Processed_By: item.transactBy,
-      Processed_Date: item.transactDate,
-      "Shirt Size": item.shirtSize,
-      "Shirt Price": item.shirtPrice,
-      "Raffle Status": item.raffleIsRemoved
-        ? "Removed"
-        : item.raffleIsWinner
-        ? "Winner"
-        : "Null",
-    }));
+    const exportData = filteredDataForTable.map((item) => {
+      const getAttendanceStatus = (attendance) => {
+        if (!attendance) return "Absent";
+
+        const sessions = ["morning", "afternoon", "evening"];
+        const attendedSessions = sessions.filter(
+          (session) => attendance[session] && attendance[session].attended
+        );
+
+        if (attendedSessions.length === 0) return "Absent";
+        if (attendedSessions.length === sessions.length)
+          return "Present (All Sessions)";
+        return `Present (${attendedSessions
+          .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+          .join(", ")})`;
+      };
+
+      const hasAttendedAnySession = (attendance) => {
+        if (!attendance) return false;
+        return ["morning", "afternoon", "evening"].some(
+          (session) => attendance[session] && attendance[session].attended
+        );
+      };
+
+      const isAttended = hasAttendedAnySession(item.attendance);
+
+      return {
+        "Student ID": item.id_number,
+        Name: item.name,
+        Course: item.course,
+        "Year Level": item.year,
+        Campus: item.campus,
+        Attendance: getAttendanceStatus(item.attendance),
+        Confirm_Attendance_By: isAttended ? item.confirmedBy : "N/A",
+        Processed_By: item.transactBy,
+        Processed_Date: item.transactDate,
+        "Shirt Size": item.shirtSize,
+        "Shirt Price": item.shirtPrice,
+        "Raffle Status": item.raffleIsRemoved
+          ? "Removed"
+          : item.raffleIsWinner
+          ? "Winner"
+          : "Null",
+      };
+    });
+
+    const searchStudentById = async (id_number) => {
+      try {
+        const response = await axios.get(
+          `${backendConnection()}/api/admin/student_search/${id_number}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        return response.data.data;
+      } catch (error) {
+        throw (
+          error.response?.data?.message || "An error occurred while searching."
+        );
+      }
+    };
+
+    const handleSearchStudent = async () => {
+      setError("");
+      setStudentData(null);
+
+      if (!attendanceModalStudentId) {
+        setError("Please enter a student ID.");
+        return;
+      }
+
+      try {
+        const student = await searchStudentById(attendanceModalStudentId);
+
+        if (!student) {
+          setError("No student found.");
+          return;
+        }
+
+        setStudentData(student);
+      } catch (errMsg) {
+        setError(errMsg);
+      }
+    };
+
+    const handleIdModalChange = (value) => {
+      setAttendanceModalStudentId(value);
+    };
+
+    const markAsPresent = () => {
+      navigate(
+        `/admin/attendance/${eventId}/${eventName}/markAsPresent/${
+          studentData.id_number
+        }/${
+          studentData.first_name +
+          " " +
+          studentData.middle_name +
+          " " +
+          studentData.last_name
+        }`
+      );
+    };
 
     return (
       <div className="overflow-x-auto">
+        {isAttendanceByIdModalOpen && (
+          <Modal
+            onClose={() => {
+              setIsAttendanceByIdModalOpen(false);
+              setError("");
+              setStudentData(null);
+              setAttendanceModalStudentId("");
+            }}
+            showCloseButton={true}
+          >
+            <div className="p-6 pt-0 rounded-md space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Enter Student ID
+              </h2>
+
+              <input
+                type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="Student ID"
+                value={attendanceModalStudentId}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-300"
+                onChange={(e) => {
+                  handleIdModalChange(e.target.value);
+                }}
+              />
+
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+
+              <button
+                type="button"
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                onClick={handleSearchStudent}
+              >
+                Search
+              </button>
+
+              {studentData && (
+                <div className="mt-4 p-4 border border-gray-300 rounded-md bg-gray-50 shadow-sm">
+                  <h3 className="text-md font-semibold mb-2 text-gray-700">
+                    Student Details
+                  </h3>
+
+                  <div className="space-y-1 text-sm text-gray-700">
+                    <p>
+                      <span className="font-medium">Name:</span>{" "}
+                      {studentData.first_name}{" "}
+                      {studentData.middle_name
+                        ? studentData.middle_name.charAt(0) + "."
+                        : ""}{" "}
+                      {studentData.last_name}
+                    </p>
+                    <p>
+                      <span className="font-medium">ID Number:</span>{" "}
+                      {studentData.id_number}
+                    </p>
+                    <p>
+                      <span className="font-medium">Email:</span>{" "}
+                      {studentData.email}
+                    </p>
+                    <p>
+                      <span className="font-medium">Course:</span>{" "}
+                      {studentData.course}
+                    </p>
+                    <p>
+                      <span className="font-medium">Year:</span>{" "}
+                      {studentData.year}
+                    </p>
+                  </div>
+
+                  <div className="w-full flex justify-end">
+                    <FormButton
+                      type="button"
+                      text="Confirm Attendance"
+                      icon={<FaUserCheck size={18} />}
+                      onClick={() => {
+                        markAsPresent();
+                      }}
+                      styles="mt-2 bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
+                      textClass=" text-gray-800"
+                      whileHover={{ scale: 1.01, opacity: 0.95 }}
+                      whileTap={{ scale: 0.98, opacity: 0.9 }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </Modal>
+        )}
+
         <TableComponent
           columns={columns}
           loading={loading}
           data={filteredDataForTable} // Pass filtered data to the table
           customButtons={
-            <div className="flex flex-col justify-between gap-5 container">
+            <div className="flex flex-col justify-between gap-3 container">
               <div className="flex flex-col justify-between gap-2">
                 <div className="flex justify-end gap-2">
+                  <ButtonsComponent>
+                    <div className="flex flex-row items-center gap-2">
+                      {eventAttendanceType === "open" && (
+                        <FormButton
+                          type="button"
+                          text="Attendance by ID (QR - less)"
+                          icon={<FaUserCheck size={18} />}
+                          onClick={() => {
+                            setIsAttendanceByIdModalOpen(true);
+                          }}
+                          styles="bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 rounded-md px-4 py-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2"
+                          textClass="sm:block hidden text-gray-800"
+                          whileHover={{ scale: 1.01, opacity: 0.95 }}
+                          whileTap={{ scale: 0.98, opacity: 0.9 }}
+                        />
+                      )}
+                    </div>
+                  </ButtonsComponent>
                   <FormButton
                     type="button"
                     text="Filter"

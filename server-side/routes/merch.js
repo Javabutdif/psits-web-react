@@ -43,7 +43,6 @@ router.post(
   admin_authenticate,
   upload.array("images", 3),
   async (req, res) => {
- 
     const {
       name,
       price,
@@ -61,6 +60,7 @@ router.post(
       eventDate,
       type,
       control,
+      sessionConfig,
     } = req.body;
     console.log(req.body);
 
@@ -74,9 +74,22 @@ router.post(
       }
     }
 
+    // Parse sessionConfig if it's a string
+    let parsedSessionConfig;
+    if (typeof sessionConfig === "string") {
+      try {
+        parsedSessionConfig = JSON.parse(sessionConfig);
+      } catch (error) {
+        console.error("Invalid JSON format for sessionConfig:", sessionConfig);
+        return res.status(400).json({ error: "Invalid sessionConfig format" });
+      }
+    } else {
+      parsedSessionConfig = sessionConfig;
+    }
+
     // Get the URLs of the uploaded images
     const imageUrl = req.files.map((file) => file.location);
-    console.log(parsedSelectedSizes);
+
     try {
       const newMerch = new Merch({
         name,
@@ -98,7 +111,7 @@ router.post(
 
       const newMerchId = await newMerch.save();
 
-      if (isEvent) {
+      if (isEvent === "true" || isEvent === true) {
         try {
           const newEvent = new Event({
             eventId: newMerchId._id,
@@ -107,12 +120,28 @@ router.post(
             eventDate: eventDate,
             eventDescription: description,
             status: "Ongoing",
+            attendanceType: "ticketed",
+            sessionConfig: {
+              morning: {
+                enabled: parsedSessionConfig?.isMorningEnabled || false,
+                timeRange: parsedSessionConfig?.morningTime || "",
+              },
+              afternoon: {
+                enabled: parsedSessionConfig?.isAfternoonEnabled || false,
+                timeRange: parsedSessionConfig?.afternoonTime || "",
+              },
+              evening: {
+                enabled: parsedSessionConfig?.isEveningEnabled || false,
+                timeRange: parsedSessionConfig?.eveningTime || "",
+              },
+            },
             attendees: [],
+            createdBy: req.user.name,
           });
 
           await newEvent.save();
         } catch (error) {
-          console.error(error);
+          console.error("Error creating event:", error);
         }
       }
 

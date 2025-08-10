@@ -17,6 +17,37 @@ const mongoose = require("mongoose");
 
 const router = express.Router();
 
+//Search student by ID
+router.get(
+  "/admin/student_search/:id_number",
+  admin_authenticate,
+  async (req, res) => {
+    const { id_number } = req.params;
+
+    console.log(id_number);
+
+    try {
+      const student = await Student.findOne({
+        id_number,
+      });
+
+      console.log(student);
+      if (!student) {
+        res.status(404).json({
+          message: "Student not found!",
+        });
+      } else {
+        res.status(200).json({ data: student });
+      }
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ message: "An error occurred", error: error.message });
+    }
+  }
+);
+
 router.post("/approve-membership", admin_authenticate, async (req, res) => {
   const { reference_code, id_number, type, admin, rfid, date, cash, total } =
     req.body;
@@ -32,11 +63,28 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
+    let updateQuery = {};
+    if (student.isFirstApplication) {
+      updateQuery = {
+        membershipStatus: "ACTIVE",
+        rfid: rfid,
+        isFirstApplication: false,
+      };
+    } else {
+      updateQuery = {
+        membershipStatus: "RENEWED",
+      };
+    }
+
+    await Student.updateOne({ id_number }, { $set: updateQuery }).session(
+      session
+    );
+
     const history = new MembershipHistory({
       id_number,
       rfid,
       reference_code,
-      type,
+      type: student.isFirstApplication ? "Membership" : "Renewal",
       name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
       year: student.year,
       course: student.course,
@@ -48,25 +96,13 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
 
     if (!savedHistory) {
       console.error("Failed to save membership history.");
-      session.abortTransaction();
-      session.endSession();
+
       return res
         .status(500)
         .json({ message: "Failed to save membership history" });
     }
-
-    let updateQuery = {};
-    if (type === "Membership") {
-      updateQuery = { membership: "Accepted", rfid: rfid };
-    } else if (type === "Renewal") {
-      updateQuery = {
-        renew: "Accepted",
-      };
-    }
-
-    await Student.updateOne({ id_number }, { $set: updateQuery }).session(
-      session
-    );
+    await session.commitTransaction();
+    session.endSession();
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -109,21 +145,16 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending email:", error);
-
-        return res
-          .status(500)
-          .json({ message: "Error sending email", error: error.message });
       } else {
-        session.commitTransaction();
-        session.endSession();
-        return res
-          .status(200)
-          .json({ message: "Approve student successful and email sent" });
+        console.log("Email sent: " + info.response);
       }
     });
+    return res
+      .status(200)
+      .json({ message: "Membership approved successfully" });
   } catch (error) {
     console.error("Internal server error:", error);
-    session.abortTransaction();
+    await session.abortTransaction();
     session.endSession();
     res
       .status(500)
@@ -133,17 +164,9 @@ router.post("/approve-membership", admin_authenticate, async (req, res) => {
 
 router.put("/renew-student", admin_authenticate, async (req, res) => {
   try {
-    const renewStudent = await Student.updateMany(
-      {
-        status: "True",
-        membership: "Accepted",
-      },
-      {
-        $set: {
-          renew: "None",
-        },
-      }
-    );
+    const renewStudent = await Student.updateMany({
+      membershipStatus: "NOT_APPLIED",
+    });
 
     if (!renewStudent) {
       return res.status(404).json({ message: "Student not found" });
@@ -167,6 +190,8 @@ router.get("/history", admin_authenticate, async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
+
+//TODO: REMOVE THIS ROUTE
 router.get("/renew", admin_authenticate, async (req, res) => {
   try {
     const students = await Student.find({ renew: "Pending" });
@@ -179,7 +204,7 @@ router.get("/renew", admin_authenticate, async (req, res) => {
 
 router.get("/membershipRequest", admin_authenticate, async (req, res) => {
   try {
-    const students = await Student.find({ membership: "Pending" });
+    const students = await Student.find({ membershipStatus: "PENDING" });
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -192,14 +217,8 @@ router.get("/get-students-count", admin_authenticate, async (req, res) => {
     const [all, request, renew, deleted, history] = await Promise.all([
       Student.countDocuments({
         status: "True",
-        $or: [
-          { renew: "Accepted" },
-          { renew: { $exists: false } },
-          { renew: "" },
-          { renew: "Pending" },
-        ],
       }),
-      Student.countDocuments({ membership: "Pending" }),
+      Student.countDocuments({ membershipStatus: "PENDING" }),
       Student.countDocuments({ renew: "Pending" }),
       Student.countDocuments({ status: "False" }),
       MembershipHistory.countDocuments(),
@@ -218,7 +237,7 @@ router.get(
     try {
       const count = await Student.countDocuments({
         status: "True",
-        $or: [{ membership: "Accepted", renew: null }, { renew: "Accepted" }],
+        $or: [{ membershipStatus: "ACTIVE" }, { membershipStatus: "RENEWED" }],
       });
       res.status(200).json({ message: count });
     } catch (error) {
@@ -229,7 +248,13 @@ router.get(
 );
 
 router.get("/merchandise-created", admin_authenticate, async (req, res) => {
-  const count = await Merch.countDocuments();
+  const now = new Date();
+
+  const count = await Merch.countDocuments({
+    is_active: true,
+    start_date: { $lte: now },
+    end_date: { $gte: now },
+  });
   return res.json({ message: count });
 });
 router.get("/placed-orders", admin_authenticate, async (req, res) => {

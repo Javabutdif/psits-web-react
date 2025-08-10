@@ -1,6 +1,13 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const Schema = mongoose.Schema;
+const attendanceSessionSchema = new Schema(
+  {
+    attended: { type: Boolean, default: false },
+    timestamp: { type: Date },
+  },
+  { _id: false }
+);
 
 const attendeeSchema = new Schema({
   id_number: {
@@ -23,12 +30,17 @@ const attendeeSchema = new Schema({
     type: String,
     required: true,
   },
-  isAttended: {
-    type: Boolean,
-    default: false,
-  },
-  attendDate: {
-    type: Date,
+
+  attendance: {
+    type: new Schema(
+      {
+        morning: { type: attendanceSessionSchema, required: false },
+        afternoon: { type: attendanceSessionSchema, required: false },
+        evening: { type: attendanceSessionSchema, required: false },
+      },
+      { _id: false }
+    ),
+    required: false,
   },
   confirmedBy: {
     type: String,

@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { getMembershipStatusStudents } from "../../../api/students";
+
 import { getInformationData } from "../../../authentication/Authentication";
 import { formattedDate } from "../../../components/tools/clientTools";
 
 const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
   const { pathname } = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [status, setStatus] = useState({ membership: "", renew: "" });
+
   const user = getInformationData();
 
   const isChecked = useMemo(
@@ -16,21 +16,6 @@ const OrderCard = ({ order, onCancel, onCheckboxChange, selectedOrders }) => {
     [selectedOrders, order._id]
   );
   const isNotPaidPage = pathname !== "/student/orders/paid";
-
-  useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const membershipStatus = await getMembershipStatusStudents(
-          user.id_number
-        );
-        setStatus(membershipStatus);
-      } catch (error) {
-        console.error("Failed to fetch membership status:", error);
-      }
-    };
-
-    fetchStatus();
-  }, []);
 
   const handleCancel = (e) => {
     e.stopPropagation();

@@ -2,8 +2,33 @@ import { getInformationData } from "../../authentication/Authentication";
 
 export const formattedDate = (date) => {
   const dates = new Date(date);
+  if (isNaN(dates.getTime())) {
+    return "Invalid Date";
+  } else {
+    return dates.toLocaleDateString();
+  }
+};
 
-  return dates.toLocaleDateString();
+export const handlePrintDataPos = (name) => {
+  const words = name.split(" ");
+  let fullName = "";
+
+  for (let i = 0; i < words.length - 1; i++) {
+    fullName += words[i].charAt(0) + ".";
+  }
+  fullName += " " + words[words.length - 1];
+
+  return fullName;
+};
+
+export const generateReferenceCode = () => {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let referenceCode = "";
+  for (let i = 0; i < 11; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    referenceCode += characters[randomIndex];
+  }
+  return referenceCode;
 };
 
 export const capitalizeWord = (word) => {
@@ -11,14 +36,12 @@ export const capitalizeWord = (word) => {
 };
 
 export const formattedLastName = (name) => {
-  const names = name.trim().split(/\s+/); 
+  const names = name.trim().split(/\s+/);
   if (names.length < 2) return name;
-  const lastName = names.pop(); 
-  const firstNames = names.join(" "); 
+  const lastName = names.pop();
+  const firstNames = names.join(" ");
   return `${lastName}, ${firstNames}`;
 };
-
-
 
 export const noneConditionalAccess = () => {
   const data = getInformationData();

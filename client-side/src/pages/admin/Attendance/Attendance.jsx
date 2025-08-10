@@ -20,6 +20,7 @@ import { ConfirmActionType } from "../../../enums/commonEnums";
 import { IoArrowBack } from "react-icons/io5";
 
 const Attendance = (props) => {
+  // TODO(Adriane): Refactor the entire logic, so many unused variables, no DRY principle and spaghetti logic
   const navigate = useNavigate();
   const { eventId } = useParams();
   const [attendees, setAttendees] = useState([]);
@@ -243,47 +244,47 @@ const Attendance = (props) => {
         const isPastEvent = eventDate < currentDate && !isSameDate;
 
         return (
-					<ButtonsComponent>
-						{isSameDate && !row.isAttended ? (
-							<FormButton
-								type="button"
-								text="Attendance"
-								onClick={() => handleViewBtn(row)}
-								icon={<FaUserCheck size={20} />}
-								styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
-								textClass="text-blue-100"
-								whileHover={{ scale: 1.02, opacity: 0.95 }}
-								whileTap={{ scale: 0.98, opacity: 0.9 }}
-							/>
-						) : isPastEvent ? (
-							<></>
-						) : row.isAttended ? (
-							<>
-								<FormButton
-									type="button"
-									text="Attended"
-									icon={<FaUserCheck size={20} />}
-									styles="px-4 bg-green-600 text-[#DFF6FF] hover:bg-green-500  rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2  flex items-center gap-2"
-									textClass="text-blue-100"
-									whileHover={{ scale: 1.02, opacity: 0.95 }}
-									whileTap={{ scale: 0.98, opacity: 0.9 }}
-									disabled
-								/>
-							</>
-						) : (
-							<FormButton
-								type="button"
-								text="Remove"
-								onClick={() => handleOpenRemoveModal(row.id_number)}
-								icon={<i className="fas fa-trash"></i>}
-								styles="px-4 bg-red-500 text-[#DFF6FF] hover:bg-red-600 active:bg-red-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
-								textClass="text-white"
-								whileHover={{ scale: 1.02, opacity: 0.95 }}
-								whileTap={{ scale: 0.98, opacity: 0.9 }}
-							/>
-						)}
-					</ButtonsComponent>
-				);
+          <ButtonsComponent>
+            {isSameDate && !row.isAttended ? (
+              <FormButton
+                type="button"
+                text="Attendance"
+                onClick={() => handleViewBtn(row)}
+                icon={<FaUserCheck size={20} />}
+                styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
+                textClass="text-blue-100"
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+              />
+            ) : isPastEvent ? (
+              <></>
+            ) : row.isAttended ? (
+              <>
+                <FormButton
+                  type="button"
+                  text="Attended"
+                  icon={<FaUserCheck size={20} />}
+                  styles="px-4 bg-green-600 text-[#DFF6FF] hover:bg-green-500  rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2  flex items-center gap-2"
+                  textClass="text-blue-100"
+                  whileHover={{ scale: 1.02, opacity: 0.95 }}
+                  whileTap={{ scale: 0.98, opacity: 0.9 }}
+                  disabled
+                />
+              </>
+            ) : (
+              <FormButton
+                type="button"
+                text="Remove"
+                onClick={() => handleOpenRemoveModal(row.id_number)}
+                icon={<i className="fas fa-trash"></i>}
+                styles="px-4 bg-red-500 text-[#DFF6FF] hover:bg-red-600 active:bg-red-700 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center gap-2"
+                textClass="text-white"
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+              />
+            )}
+          </ButtonsComponent>
+        );
       },
     },
   ];
@@ -293,7 +294,6 @@ const Attendance = (props) => {
       setLoading(true);
       // TODO:Done modify to get the real data
       const result = await getAllAttendees();
-
       setEventDateToCondition(
         new Date(result.data.eventDate ? result.data.eventDate : new Date())
       );
@@ -343,6 +343,13 @@ const Attendance = (props) => {
     navigate(pageRoute);
   };
 
+  const isSameDate =
+    eventDate.getFullYear() === currentDate.getFullYear() &&
+    eventDate.getMonth() === currentDate.getMonth() &&
+    eventDate.getDate() === currentDate.getDate();
+
+  const isPastEvent = eventDate < currentDate && !isSameDate;
+  const isSoonEvent = eventDate > currentDate && !isSameDate;
   return (
     // Figuring out how to do Pagination..? Still Figuring Things Out
     //TODO: Figure out how to create the layout of the specific_event tab - done?
@@ -371,7 +378,7 @@ const Attendance = (props) => {
             </div>
 
             <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0 whitespace-nowrap">
-              {endDate.getTime() <= currentDate.getTime() ? (
+              {isPastEvent ? (
                 <ButtonsComponent>
                   <div className="py-2">
                     <motion.button
@@ -386,7 +393,7 @@ const Attendance = (props) => {
                     </motion.button>
                   </div>
                 </ButtonsComponent>
-              ) : startDate.getTime() >= currentDate.getTime() ? (
+              ) : isSoonEvent ? (
                 <ButtonsComponent>
                   <div className="py-2">
                     <motion.button
@@ -469,6 +476,9 @@ const Attendance = (props) => {
             setIsFilterOpen={setIsFilterOpen}
             fetchData={fetchData}
             loading={loading}
+            eventId={eventId}
+            eventName={eventData.eventName}
+            eventAttendanceType={eventData.attendanceType}
           />
         </div>
       </div>

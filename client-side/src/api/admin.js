@@ -364,10 +364,13 @@ export const publishMerchandise = async (_id) => {
   }
 };
 //Hard Delete
-export const requestDeletion = async (id_number) => {
+export const cancelMembership = async (id_number) => {
   try {
     const response = await axios.put(
-      `${backendConnection()}/api/students/cancel/${id_number}`,
+      `${backendConnection()}/api/students/cancel-membership`,
+      {
+        id_number,
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -376,7 +379,11 @@ export const requestDeletion = async (id_number) => {
       }
     );
 
-    return response.status;
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    } else {
+      showToast("error", response.data.message || "An error occurred");
+    }
   } catch (error) {
     if (error.response && error.response.data) {
       showToast("error", error.response.data.message || "An error occurred");
@@ -461,7 +468,6 @@ export const addMerchandise = async (formData) => {
       showToast("error", "An error occurred");
       return false;
     }
-    console.error("Error:", error);
   }
 };
 
@@ -974,8 +980,8 @@ export const declineRole = async (id_number) => {
 export const fetchAllPendingCounts = async ({
   limit = 10,
   page = 1,
-  sort = [{ field: 'product_name', direction: 'asc' }],
-  search = ''
+  sort = [{ field: "product_name", direction: "asc" }],
+  search = "",
 } = {}) => {
   try {
     const response = await axios.get(
@@ -985,8 +991,11 @@ export const fetchAllPendingCounts = async ({
           Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
         },
         params: {
-          page, limit, sort, search,
-        }
+          page,
+          limit,
+          sort,
+          search,
+        },
       }
     );
 
@@ -997,7 +1006,7 @@ export const fetchAllPendingCounts = async ({
       total: response.data.total || 0,
       page: response.data.page || 1,
       totalPages: response.data.totalPages || 1,
-      limit: response.data.limit || limit
+      limit: response.data.limit || limit,
     };
   } catch (error) {
     console.error("Error fetching student:", error);
@@ -1005,8 +1014,8 @@ export const fetchAllPendingCounts = async ({
       data: [],
       page: 1,
       total: 0,
-      totalPages: 0
-    }
+      totalPages: 0,
+    };
   }
 };
 
@@ -1150,5 +1159,27 @@ export const editAdminAccess = async (id_number, newAccess) => {
       showToast("error", "An error occurred");
     }
     console.error("Error:", error);
+  }
+};
+
+export const getStudentMembershipHistory = async (studentId) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/students/student-membership-history/${studentId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log("response", response.data);
+    return response.data.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log("error", error.response.data.message || "An error occurred");
+    } else {
+      console.log("error", "An error occurred");
+    }
   }
 };

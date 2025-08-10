@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { showToast } from "../../utils/alertHelper";
-import { membershipRequest, requestDeletion } from "../../api/admin";
+import { membershipRequest, cancelMembership } from "../../api/admin";
 import TableComponent from "../../components/Custom/TableComponent";
 
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
 
 import { ConfirmActionType } from "../../enums/commonEnums";
 import ApproveModal from "../../components/admin/ApproveModal";
-import { financeAndAdminConditionalAccess } from "../../components/tools/clientTools";
+import {
+  financeAndAdminConditionalAccess,
+  generateReferenceCode,
+  handlePrintDataPos,
+} from "../../components/tools/clientTools";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import FormButton from "../../components/forms/FormButton";
 
@@ -98,26 +102,15 @@ function MembershipRequest() {
     },
     {
       key: "status",
-      label: "Status",
-      selector: (row) => row.status,
+      label: "Type",
+      selector: (row) => row.membershipStatus,
       sortable: true,
       cell: (row) => (
         <div className="text-center">
-          <span
-            className={`flex items-center gap-2 ${
-              row.status === "False"
-                ? "bg-green-200 text-green-800"
-                : "bg-red-200 text-red-800"
-            } px-2 py-1 rounded text-xs`}
-          >
-            <i
-              className={`fa ${
-                row.status === "False" ? "fa-check-circle" : "fa-times-circle"
-              } mr-1 ${
-                row.status === "False" ? "text-green-500" : "text-red-500"
-              }`}
-            ></i>
-            {row.status === "False" ? "Paid" : "Unpaid"}
+          <span className="text-xs font-semibold text-start">
+            {row.membershipStatus === "PENDING" && row.isFirstApplication
+              ? "Membership"
+              : "Renewal"}
           </span>
         </div>
       ),
@@ -191,15 +184,8 @@ function MembershipRequest() {
     setSelectedStudentCourse(row.course);
     setSelectedStudentYear(row.year);
     const name = row.first_name + " " + row.middle_name + " " + row.last_name;
-    const words = name.split(" ");
-    let fullName = "";
 
-    for (let i = 0; i < words.length - 1; i++) {
-      fullName += words[i].charAt(0) + ".";
-    }
-    fullName += " " + words[words.length - 1];
-
-    setSelectedStudentName(fullName);
+    setSelectedStudentName(handlePrintDataPos(name));
   };
 
   const handleCloseModal = () => {
@@ -254,8 +240,7 @@ function MembershipRequest() {
 
   const handleConfirmDeletion = async () => {
     try {
-      await requestDeletion(studentIdToBeDeleted);
-      showToast("Student has been deleted successfully.", "success");
+      await cancelMembership(studentIdToBeDeleted);
     } catch (error) {
       console.error("Error deleting student: ", error);
       showToast("Error deleting student.", "error");
@@ -325,9 +310,7 @@ function MembershipRequest() {
       )}
       {isModalOpen && (
         <ApproveModal
-          reference_code={
-            Math.floor(Math.random() * (999999999 - 111111111)) + 111111111
-          }
+          reference_code={generateReferenceCode()}
           id_number={selectedStudentId}
           course={selectedStudentCourse}
           year={selectedStudentYear}

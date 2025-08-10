@@ -41,7 +41,7 @@ const studentSchema = new Schema({
   status: {
     type: String,
   },
-  membership: {
+  membershipStatus: {
     type: String,
   },
   applied: {
@@ -56,12 +56,11 @@ const studentSchema = new Schema({
   deletedDate: {
     type: String,
   },
-  renew: {
-    type: String,
+  isFirstApplication: {
+    type: Boolean,
+    default: true,
   },
-  renewedOn: {
-    type: String,
-  },
+  
   role: {
     type: String,
   },

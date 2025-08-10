@@ -2,12 +2,183 @@ const express = require("express");
 const Events = require("../models/EventsModel");
 const Merch = require("../models/MerchModel");
 const { ObjectId } = require("mongodb");
+const mongoose = require("mongoose");
 const {
   admin_authenticate,
   both_authenticate,
 } = require("../middlewares/custom_authenticate_token");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const { S3Client } = require("@aws-sdk/client-s3");
+require("dotenv").config();
 
 const router = express.Router();
+
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+const upload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: process.env.AWS_BUCKET_NAME,
+    metadata: (req, file, cb) => {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: (req, file, cb) => {
+      cb(null, `event/${Date.now()}_${file.originalname}`);
+    },
+  }),
+});
+
+// POST: Create a new Event
+router.post(
+  "/",
+  admin_authenticate,
+  upload.array("images", 3),
+  async (req, res) => {
+    try {
+      const { name, eventDate, description, sessionConfig } = req.body;
+
+      const imageUrl = req.files ? req.files.map((file) => file.location) : [];
+
+      let parsedSessionConfig;
+      try {
+        parsedSessionConfig =
+          typeof sessionConfig === "string"
+            ? JSON.parse(sessionConfig)
+            : sessionConfig || {};
+      } catch (error) {
+        console.error("Error parsing sessionConfig:", error);
+        return res.status(400).json({
+          message: "Invalid session configuration format",
+          error: error.message,
+        });
+      }
+
+      const {
+        isMorningEnabled = true,
+        morningTime = "",
+        isAfternoonEnabled = false,
+        afternoonTime = "",
+        isEveningEnabled = false,
+        eveningTime = "",
+      } = parsedSessionConfig;
+
+      const hasValidSession =
+        (isMorningEnabled && morningTime) ||
+        (isAfternoonEnabled && afternoonTime) ||
+        (isEveningEnabled && eveningTime);
+
+      if (!hasValidSession) {
+        return res.status(400).json({
+          message: "At least one session must be enabled with a time range",
+        });
+      }
+
+      // Helper: parse "HH:MM - HH:MM" into { start: Date, end: Date }
+      const parseRange = (rangeStr, baseDate, sessionName) => {
+        const [startStr, endStr] = rangeStr.split(" - ");
+        const [sh, sm] = startStr.split(":").map(Number);
+        const [eh, em] = endStr.split(":").map(Number);
+
+        const start = new Date(baseDate);
+        start.setHours(sh, sm, 0, 0);
+
+        const end = new Date(baseDate);
+        end.setHours(eh, em, 0, 0);
+
+        if (end <= start) {
+          return res.status(400).json({
+            message: `Invalid time range for ${sessionName} session: "To" time must be later than "From" time.`,
+          });
+        }
+
+        return { start, end };
+      };
+
+      const enabledSessions = [];
+
+      if (isMorningEnabled && morningTime) {
+        enabledSessions.push({
+          name: "morning",
+          ...parseRange(morningTime, eventDate, "morning"),
+        });
+      }
+      if (isAfternoonEnabled && afternoonTime) {
+        enabledSessions.push({
+          name: "afternoon",
+          ...parseRange(afternoonTime, eventDate, "afternoon"),
+        });
+      }
+      if (isEveningEnabled && eveningTime) {
+        enabledSessions.push({
+          name: "evening",
+          ...parseRange(eveningTime, eventDate, "evening"),
+        });
+      }
+
+      // Check for time overlaps
+      for (let i = 0; i < enabledSessions.length; i++) {
+        for (let j = i + 1; j < enabledSessions.length; j++) {
+          const a = enabledSessions[i];
+          const b = enabledSessions[j];
+
+          if (a.start < b.end && b.start < a.end) {
+            res.status(400).json({
+              message: `Session time ranges overlap between ${a.name} and ${b.name}. Please fix them.`,
+            });
+
+            return;
+          }
+        }
+      }
+
+      const newEvent = new Events({
+        eventId: new mongoose.Types.ObjectId(),
+        eventName: name, // Use 'name' from frontend
+        eventImage: imageUrl,
+        eventDate: eventDate,
+        eventDescription: description,
+        status: "Ongoing",
+        attendanceType: "open",
+        sessionConfig: {
+          morning: {
+            enabled: isMorningEnabled,
+            timeRange: morningTime,
+          },
+          afternoon: {
+            enabled: isAfternoonEnabled,
+            timeRange: afternoonTime,
+          },
+          evening: {
+            enabled: isEveningEnabled,
+            timeRange: eveningTime,
+          },
+        },
+        attendees: [],
+        createdBy: req.user.name,
+      });
+
+      await newEvent.save();
+
+      res.status(201).json({
+        message: "Event created successfully",
+        event: newEvent,
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+      res.status(500).json({
+        message: "Failed to create event",
+        error: error.message,
+      });
+    }
+  }
+);
 
 // GET all events
 router.get("/", both_authenticate, async (req, res) => {
@@ -27,9 +198,16 @@ router.get("/attendees/:id", admin_authenticate, async (req, res) => {
   try {
     const eventId = new ObjectId(id);
     const merchData = await Merch.findById({ _id: eventId });
+    // TODO(Adriane): Refactor, why using attendees when we return event data
     const attendees = await Events.find({ eventId });
-    if (attendees && merchData) {
-      res.status(200).json({ data: attendees, merch_data: merchData });
+    // I replaced "attendees && merchData" with this since
+    // we don't really need merch data,
+    // Its use case was only for merch.start_date & .end_date
+    // but for now we can really just use the events eventDate field
+    if (attendees) {
+      res
+        .status(200)
+        .json({ data: attendees, merch_data: merchData ? merchData : {} });
     } else {
       res.status(500).json({ message: "No attendees" });
     }
@@ -38,58 +216,160 @@ router.get("/attendees/:id", admin_authenticate, async (req, res) => {
   }
 });
 
-// UPDATE Attendee isAttended property
+// UPDATE Attendee attendance per session
 router.put(
   "/attendance/:event_id/:id_number",
   admin_authenticate,
   async (req, res) => {
     const { event_id, id_number } = req.params;
-    const { campus, attendeeName } = req.body;
+    const { campus, attendeeName, course, year, currentDate } = req.body;
 
     try {
-      const eventId = new ObjectId(event_id);
-      const event = await Events.findOne({ eventId });
+      const event = await Events.findOne({ eventId: event_id });
 
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
 
-      const attendee = event.attendees.find(
-        (attendee) =>
-          attendee.id_number === id_number &&
-          attendee.name === attendeeName &&
-          (attendee.campus === campus || campus === "UC-Main")
-      );
+      const now = currentDate ? new Date(currentDate) : new Date();
+      const matchedSessions = [];
 
-      if (!attendee) {
+      for (const session of ["morning", "afternoon", "evening"]) {
+        const config = event.sessionConfig?.[session];
+
+        if (!config?.enabled || !config.timeRange) continue;
+
+        const [startStr, endStr] = config.timeRange.split(" - ");
+        const [sh, sm] = startStr.split(":").map(Number);
+        const [eh, em] = endStr.split(":").map(Number);
+
+        
+      console.log("Config time range: " + startStr + " " + endStr);
+        console.log("Parsed time: " + sh + ":" + sm + " - " + eh + ":" + em);
+        
+        const eventDate = new Date(event.eventDate);
+        const today = new Date();
+
+        if (today.toDateString() !== eventDate.toDateString()) {
+          return res.status(400).json({
+            message: "Attendance can only be recorded on the event date.",
+          });
+        }
+
+        const sessionStart = new Date(event.eventDate);
+        sessionStart.setHours(sh, sm, 0, 0);
+
+        const sessionEnd = new Date(event.eventDate);
+        sessionEnd.setHours(eh, em, 0, 0);
+        console.log(sessionStart);
+        console.log(sessionEnd);
+        console.log("Current time: " + now);
+        if (now >= sessionStart && now <= sessionEnd) {
+          matchedSessions.push(session);
+        }
+      }
+
+      if (matchedSessions.length === 0) {
+        return res.status(400).json({
+          message: "Current time does not fall within any active session.",
+        });
+      }
+
+      if (matchedSessions.length > 1) {
+        return res.status(400).json({
+          message: `Ambiguous session time: current time matches multiple sessions (${matchedSessions.join(
+            ", "
+          )})`,
+        });
+      }
+
+      const session = matchedSessions[0];
+      let attendee;
+      let isNewAttendee = false;
+
+      if (event.attendanceType === "open") {
+        attendee = event.attendees.find(
+          (existingAttendee) => existingAttendee.id_number === id_number
+        );
+
+        if (!attendee) {
+          const newAttendee = {
+            id_number,
+            name: attendeeName,
+            course: course || "Unknown",
+            year: year || 1,
+            campus,
+            attendance: {
+              morning: { attended: false },
+              afternoon: { attended: false },
+              evening: { attended: false },
+            },
+          };
+          attendee = newAttendee;
+          isNewAttendee = true;
+        }
+      } else {
+        attendee = event.attendees.find(
+          (existingAttendee) =>
+            existingAttendee.id_number === id_number &&
+            existingAttendee.name === attendeeName &&
+            (existingAttendee.campus === campus || campus === "UC-Main")
+        );
+
+        if (!attendee) {
+          return res
+            .status(404)
+            .json({ message: "Attendee not found in this event" });
+        }
+      }
+
+      const currentSession = attendee.attendance?.[session];
+
+      if (currentSession?.attended) {
         return res
-          .status(404)
-          .json({ message: "Attendee not found in this event" });
+          .status(400)
+          .json({ message: `Attendance already recorded for ${session}` });
       }
 
-      if (attendee.isAttended) {
-        return res.status(400).json({ message: "Attendance already recorded" });
+      if (!attendee.attendance) {
+        attendee.attendance = {
+          morning: { attended: false },
+          afternoon: { attended: false },
+          evening: { attended: false },
+        };
       }
 
-      attendee.isAttended = true;
-      attendee.attendDate = new Date();
+      if (!attendee.attendance[session]) {
+        attendee.attendance[session] = { attended: false };
+      }
+
+      attendee.attendance[session] = {
+        attended: true,
+        timestamp: new Date(),
+      };
+
       attendee.confirmedBy = req.user?.name;
+      if (isNewAttendee) {
+        event.attendees.push(attendee);
+      }
 
+      event.markModified("attendees");
       await event.save();
 
       res.status(200).json({
-        message: "Attendance successfully recorded",
+        message: `Attendance for ${session} successfully recorded`,
+        session,
         data: attendee,
       });
     } catch (error) {
       console.error("Error marking attendance:", error);
-      res
-        .status(500)
-        .json({ message: "An error occurred while recording attendance" });
+      res.status(500).json({
+        message: "An error occurred while recording attendance",
+        error: error.message,
+      });
     }
   }
 );
-
 router.get("/check-limit/:eventId", admin_authenticate, async (req, res) => {
   const { eventId } = req.params;
 
