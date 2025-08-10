@@ -230,6 +230,7 @@ router.put(
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
+      console.log("Server Date: " + new Date());
 
       const now = currentDate ? new Date(currentDate) : new Date();
       const matchedSessions = [];
