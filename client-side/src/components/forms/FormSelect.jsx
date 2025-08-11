@@ -11,8 +11,8 @@ const FormSelect = ({ label, name, value, onChange, options, styles, labelStyle,
       onChange={onChange}
       disabled={disabled}
       className={`mt-1 block w-full p-2 border  ${error ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500  ${optionStyle} ${styles}`}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+    //  whileHover={{ scale: 1.05 }}
+      // whileTap={{ scale: 0.95 }}
     >
       <option value="" disabled>Select an option</option>
       {options.map(option => (

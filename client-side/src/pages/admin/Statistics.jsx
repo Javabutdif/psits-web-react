@@ -9,9 +9,11 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Link } from "react-router-dom";
 import { getStatistic } from "../../api/event";
-import { useParams } from "react-router-dom";
+import { IoArrowBack } from "react-icons/io5";
+import { Link, useNavigate, useParams } from "react-router-dom";
+
+
 
 //
 
@@ -23,10 +25,15 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
 const Statistics = () => {
   const { eventId } = useParams();
   const [datas, setData] = useState([]);
+
+  const navigate = useNavigate();
+
+  const handleNavigate = (pageRoute) => () => {
+		navigate(pageRoute);
+	};
 
   const chartColors = {
 		backgroundColor: [
@@ -265,6 +272,13 @@ const Statistics = () => {
 
 	return (
 		<div className="">
+			 <button
+				onClick={handleNavigate("/admin/events")}
+				className="flex items-center gap-2"
+			>
+				<IoArrowBack size={20} />
+				Back
+			</button>
 			{/* <Link to="/admin/events">
         <button className="lg:mt-5 sm:mt-3 ml-1 mb-2 text-[#002E48] hover:text-[#4398AC] transition duration-200 rounded-lg">
           <i className="fas fa-arrow-left lg:text-xl"></i>

@@ -228,7 +228,7 @@ const AdminDashboard = () => {
               {/* Add min-w-0 to prevent text overflow */}
               <DashboardCard
                 icon={faBoxOpen}
-                title="Publish Merchandise"
+                title="Published Merchandise"
                 count={counts.merchandise}
                 className="text-sm sm:text-base" // Consistent text sizing
               />

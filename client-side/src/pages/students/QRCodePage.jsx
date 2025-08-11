@@ -159,7 +159,7 @@ const QRCodePage = ({ closeView, event }) => {
       className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl max-h-screen overflow-auto">
+      <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl max-h-[80vh] overflow-auto">
         <i
           className="fas fa-times absolute top-4 right-4 text-2xl text-gray-400 hover:text-red-600 transition duration-200 cursor-pointer"
           onClick={closeView}
