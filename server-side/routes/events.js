@@ -8,7 +8,7 @@ const {
   both_authenticate,
 } = require("../middlewares/custom_authenticate_token");
 
-const { getSgDate } = require("../custom_function/date_formatter");
+const getSgDate = require("../custom_function/date_formatter");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const { S3Client } = require("@aws-sdk/client-s3");
@@ -234,6 +234,7 @@ router.put(
       }
 
       const now = getSgDate();
+      console.log(now);
       const matchedSessions = [];
 
       for (const session of ["morning", "afternoon", "evening"]) {
