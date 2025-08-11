@@ -35,6 +35,7 @@ const ViewStudentAttendance = ({
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
+        timeZone: "UTC", // remove the +8 UTC test
       });
     } catch (error) {
       return "Invalid date";

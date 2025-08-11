@@ -545,6 +545,34 @@ export const deleteReports = async (product_id, id, merchName) => {
   }
 };
 
+//Get all members
+
+export const getAllMembers = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/get-all-members`,
+
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      // console.log(response.data.data);
+      return response.data.data;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      //showToast("error", error.response.data.message || "An error occurred");
+    } else {
+      //showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
 //get-all-officers
 
 export const getAllOfficers = async () => {

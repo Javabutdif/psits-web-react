@@ -7,6 +7,8 @@ const {
   admin_authenticate,
   both_authenticate,
 } = require("../middlewares/custom_authenticate_token");
+
+const getSgDate = require("../custom_function/date_formatter");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const { S3Client } = require("@aws-sdk/client-s3");
@@ -231,7 +233,8 @@ router.put(
         return res.status(404).json({ message: "Event not found" });
       }
 
-      const now = currentDate ? new Date(currentDate) : new Date();
+      const now = getSgDate();
+      console.log(now);
       const matchedSessions = [];
 
       for (const session of ["morning", "afternoon", "evening"]) {
@@ -243,10 +246,6 @@ router.put(
         const [sh, sm] = startStr.split(":").map(Number);
         const [eh, em] = endStr.split(":").map(Number);
 
-        
-      console.log("Config time range: " + startStr + " " + endStr);
-        console.log("Parsed time: " + sh + ":" + sm + " - " + eh + ":" + em);
-        
         const eventDate = new Date(event.eventDate);
         const today = new Date();
 
@@ -261,9 +260,7 @@ router.put(
 
         const sessionEnd = new Date(event.eventDate);
         sessionEnd.setHours(eh, em, 0, 0);
-        console.log(sessionStart);
-        console.log(sessionEnd);
-        console.log("Current time: " + now);
+
         if (now >= sessionStart && now <= sessionEnd) {
           matchedSessions.push(session);
         }
@@ -345,7 +342,7 @@ router.put(
 
       attendee.attendance[session] = {
         attended: true,
-        timestamp: new Date(),
+        timestamp: now,
       };
 
       attendee.confirmedBy = req.user?.name;
@@ -738,6 +735,19 @@ router.get("/get-statistics/:eventId", admin_authenticate, async (req, res) => {
   } catch (error) {
     console.error("Error fetching statistics:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/remove-event", admin_authenticate, async (req, res) => {
+  try {
+    const { eventId } = req.body;
+
+    const eventDeleted = await Events.findOneAndDelete({ eventId });
+    if (eventDeleted) {
+      return res.status(200).json({ message: "Event Successfully Deleted" });
+    }
+  } catch (error) {
+    console.error("Error Delete an Event", error);
   }
 });
 

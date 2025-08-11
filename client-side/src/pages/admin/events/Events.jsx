@@ -1,21 +1,39 @@
 import { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Link } from "react-router-dom";
-import { getEvents } from "../../../api/event";
+import { getEvents, removeEvent } from "../../../api/event";
 import { getInformationData } from "../../../authentication/Authentication";
 import { formattedDate } from "../../../components/tools/clientTools";
 import AddEvent from "./AddEvent";
 import { motion } from "framer-motion";
+import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
+import { adminConditionalAccess } from "../../../components/tools/clientTools";
+import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
+import { ConfirmActionType } from "../../../enums/commonEnums";
 
 function Events() {
   const [events, setEvent] = useState([]);
   const admin = getInformationData();
   const [isLoading, setIsLoading] = useState(false);
+  const [viewConfirm, setViewConfirm] = useState(false);
+  const [eventId, setEventId] = useState(null);
 
   const [isAddEventModalOpen, setAddEventModelOpen] = useState(false);
 
   const openModal = () => setAddEventModelOpen(true);
   const closeModal = () => setAddEventModelOpen(false);
+
+  const handleOpenConfirmDeletion = (eventId) => {
+    setViewConfirm(true);
+    setEventId(eventId);
+  };
+
+  const handleEventDeletion = async () => {
+    if (await removeEvent(eventId)) {
+      setViewConfirm(false);
+      handleGetEvents();
+    }
+  };
 
   const handleGetEvents = async () => {
     setIsLoading(true);
@@ -25,15 +43,13 @@ function Events() {
       setIsLoading(false);
     } catch (error) {
       console.error(error);
-      window.location.reload();
+
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     handleGetEvents();
   }, []);
-
   return (
     <div className="">
       {isLoading ? (
@@ -95,53 +111,74 @@ function Events() {
                   <p className="mb-3 text-[074873]">
                     {formattedDate(event.eventDate)}
                   </p>
-                  <div className="flex gap-1 p-3 items-center justify-center">
-                    <Link
-                      to={`/admin/attendance/${event.eventId}`}
-                      className={
-                        admin.campus === "UC-Main"
-                          ? "w-[80%] h-full"
-                          : "w-full h-full"
-                      }
-                    >
-                      <button
-                        className="w-full h-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
-                        tabIndex="0"
-                      >
-                        View Attendees
-                      </button>
-                    </Link>
-
-                    <Link
-                      to={`/admin/statistics/${event.eventId}`}
-                      className="h-full"
-                    >
-                      <button
-                        className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200 flex-row items-center justify-center"
-                        tabIndex="1"
-                      >
-                        Statistics
-                      </button>
-                    </Link>
-
-                    {admin.campus === "UC-Main" && (
+                  <div className="grid grid-cols-2 grid-flow-col-dense items-center justify-center ">
+                    <ButtonsComponent>
                       <Link
-                        to={`/admin/raffle/${event.eventId}`}
+                        to={`/admin/attendance/${event.eventId}`}
                         className="h-full"
                       >
                         <button
-                          className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
-                          tabIndex="2"
+                          className="w-full h-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
+                          tabIndex="0"
                         >
-                          Raffle
+                          View
                         </button>
                       </Link>
-                    )}
+
+                      <Link
+                        to={`/admin/statistics/${event.eventId}`}
+                        className="h-full"
+                      >
+                        <button
+                          className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200 flex-row items-center justify-center"
+                          tabIndex="1"
+                        >
+                          Statistics
+                        </button>
+                      </Link>
+
+                      {admin.campus === "UC-Main" && (
+                        <Link
+                          to={`/admin/raffle/${event.eventId}`}
+                          className="h-full"
+                        >
+                          <button
+                            className="w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
+                            tabIndex="2"
+                          >
+                            Raffle
+                          </button>
+                        </Link>
+                      )}
+                      {adminConditionalAccess() && (
+                        <>
+                          <button
+                            className="w-full h-full border border-[#6d0000] bg-white hover:bg-[#860000] hover:text-white text-[#920000] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
+                            tabIndex="3"
+                            onClick={() =>
+                              handleOpenConfirmDeletion(event.eventId)
+                            }
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </ButtonsComponent>
                   </div>
                 </div>
               </motion.div>
             ))}
         </div>
+      )}
+      {viewConfirm && (
+        <>
+          <ConfirmationModal
+            confirmType={ConfirmActionType.DELETION}
+            onConfirm={() => handleEventDeletion()}
+            onCancel={() => setViewConfirm(false)}
+            type="event"
+          />
+        </>
       )}
     </div>
   );

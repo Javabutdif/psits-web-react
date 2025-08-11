@@ -1,8 +1,4 @@
-import {
-  getAllVolunteers,
-  editOfficerApi,
-  roleRemove,
-} from "../../../api/admin";
+import { getAllMembers, editOfficerApi, roleRemove } from "../../../api/admin";
 import ChangePassword from "../../../components/ChangePassword";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
 import TableComponent from "../../../components/Custom/TableComponent";
@@ -17,7 +13,7 @@ import React, { useState, useEffect } from "react";
 
 import SearchModal from "../../../components/common/modal/SearchModal";
 
-const Volunteers = () => {
+const Members = () => {
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -35,7 +31,7 @@ const Volunteers = () => {
 
   const fetchData = async () => {
     try {
-      const result = await getAllVolunteers();
+      const result = await getAllMembers();
       setData(result ? result : []);
       setFilteredData(result ? result : []);
       setLoading(false);
@@ -45,26 +41,6 @@ const Volunteers = () => {
     }
   };
 
-  const handleEditModalClose = () => {
-    setIsEditModalVisible(false);
-    setMemberToEdit(null);
-  };
-
-  const handleHideChangePassword = () => {
-    setViewChange(false);
-  };
-
-  const handleSaveEditedMember = async (updatedMember) => {
-    setIsLoading(true);
-    try {
-      editOfficerApi(updatedMember);
-    } catch (error) {
-      console.error("Error updating officer:", error);
-    }
-
-    fetchData();
-    setIsLoading(false);
-  };
   useEffect(() => {
     fetchData();
   }, []);
@@ -180,9 +156,9 @@ const Volunteers = () => {
       ),
     },
     {
-      key: "email",
-      label: "Email Account",
-      selector: (row) => row.email,
+      key: "role",
+      label: "Role",
+      selector: (row) => row.role,
       sortable: true,
     },
     {
@@ -245,7 +221,7 @@ const Volunteers = () => {
               onClick={() => setViewAdd(true)}
               className="bg-blue-500 text-white p-2 rounded hover:bg-blue-400"
             >
-              Add Volunteer Role
+              Add Member Role
             </button>
           </>
         ) : (
@@ -259,18 +235,11 @@ const Volunteers = () => {
       </div>
 
       <TableComponent columns={columns} data={filteredData} />
-      {isEditModalVisible && (
-        <EditOfficer
-          isVisible={isEditModalVisible}
-          onClose={handleEditModalClose}
-          studentData={memberToEdit}
-          onSave={handleSaveEditedMember}
-        />
-      )}
+
       {viewAdd && (
         <SearchModal
           isVisible={viewAdd}
-          position={"Volunteers"}
+          position={"Officers"}
           onClose={() => setViewAdd(false)}
         />
       )}
@@ -281,18 +250,8 @@ const Volunteers = () => {
           onConfirm={handleConfirmRemoveRole}
         />
       )}
-      {viewChange && (
-        <>
-          <ChangePassword
-            id={id}
-            onCancel={handleHideChangePassword}
-            onSubmit={() => setViewChange(false)}
-            position="officer"
-          />
-        </>
-      )}
     </div>
   );
 };
 
-export default Volunteers;
+export default Members;

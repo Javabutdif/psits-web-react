@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { markAsPresent } from "../../api/event";
 import { getInformationData } from "../../authentication/Authentication";
+import { searchStudentById } from "../../api/students";
 
 const MarkAsPresent = () => {
   const { eventId, eventName, attendeeId, attendeeName } = useParams();
@@ -9,15 +10,23 @@ const MarkAsPresent = () => {
   const navigate = useNavigate();
   const user = getInformationData();
 
+  const fetchStudentData = async () => {
+    const studentData = await searchStudentById(attendeeId);
+
+    return studentData;
+  };
+
   const handleMarkAsPresent = async () => {
+    const student = await fetchStudentData();
+
     setIsLoading(true);
     try {
       const result = await markAsPresent(
         eventId,
         attendeeId,
-        user.campus,
-        user.course,
-        user.year,
+        student.campus,
+        student.course,
+        student.year,
         attendeeName,
         navigate
       );
