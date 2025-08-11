@@ -7,6 +7,8 @@ const {
   admin_authenticate,
   both_authenticate,
 } = require("../middlewares/custom_authenticate_token");
+
+const { getSgDate } = require("../custom_function/date_formatter");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const { S3Client } = require("@aws-sdk/client-s3");
@@ -230,9 +232,8 @@ router.put(
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
-      console.log("Server Date: " + new Date());
 
-      const now = currentDate ? new Date(currentDate) : new Date();
+      const now = getSgDate();
       const matchedSessions = [];
 
       for (const session of ["morning", "afternoon", "evening"]) {
@@ -340,7 +341,7 @@ router.put(
 
       attendee.attendance[session] = {
         attended: true,
-        timestamp: currentDate,
+        timestamp: now,
       };
 
       attendee.confirmedBy = req.user?.name;
