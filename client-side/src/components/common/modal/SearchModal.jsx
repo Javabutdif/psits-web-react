@@ -7,6 +7,7 @@ function SearchModal({ position, onClose }) {
   const [result, setResult] = useState(null);
   const [response, setResponse] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState("developer");
   const user = getInformationData();
 
   const handleSearch = async () => {
@@ -29,7 +30,7 @@ function SearchModal({ position, onClose }) {
   };
 
   const handleRequest = async () => {
-    const lowerCase = position.toLowerCase();
+    const lowerCase = role.toLowerCase();
 
     if (await requestRoleAdmin(lowerCase, number, user?.name)) {
       onClose();
@@ -49,14 +50,31 @@ function SearchModal({ position, onClose }) {
           </button>
         </div>
 
-        <h2 className="text-lg font-medium mb-3">Enter ID Number</h2>
-        <input
-          type="number"
-          value={number}
-          onChange={(e) => setNumber(e.target.value)}
-          placeholder="Enter ID number"
-          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
+        <div>
+          <h2 className="text-lg font-medium mb-3">Enter ID Number</h2>
+          <input
+            type="number"
+            value={number}
+            onChange={(e) => setNumber(e.target.value)}
+            placeholder="Enter ID number"
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+        {response && (
+          <div>
+            <h2 className="text-lg font-medium mb-3">Role</h2>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="developer">Developer</option>
+              <option value="officer">Officer</option>
+              <option value="media">Media</option>
+              <option value="volunteer">Volunteer</option>
+            </select>
+          </div>
+        )}
 
         <button
           onClick={handleSearch}

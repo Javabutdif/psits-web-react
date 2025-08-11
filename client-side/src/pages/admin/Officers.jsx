@@ -13,25 +13,11 @@ const Officers = () => {
       icon: "fas fa-users",
     },
     {
-      path: "/admin/officers/student-account",
-      text: `Officers`,
+      path: "/admin/officers/members",
+      text: `Members`,
       icon: "fas fa-users",
     },
-    {
-      path: "/admin/officers/developers",
-      text: `Developers`,
-      icon: "fas fa-code",
-    },
-    {
-      path: "/admin/officers/media",
-      text: `Media`,
-      icon: "fas fa-photo-video",
-    },
-    {
-      path: "/admin/officers/volunteers",
-      text: `Volunteers`,
-      icon: "fas fa-hands-helping",
-    },
+
     {
       path: "/admin/officers/suspend",
       text: `Suspended`,
@@ -40,7 +26,7 @@ const Officers = () => {
     executiveAndAdminConditionalAccess()
       ? {
           path: "/admin/officers/request",
-          text: `Request `,
+          text: `Members Request `,
           icon: "fas fa-envelope-open-text",
         }
       : {

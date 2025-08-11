@@ -24,14 +24,11 @@ router.get(
   async (req, res) => {
     const { id_number } = req.params;
 
-    console.log(id_number);
-
     try {
       const student = await Student.findOne({
         id_number,
       });
 
-      console.log(student);
       if (!student) {
         res.status(404).json({
           message: "Student not found!",
@@ -191,7 +188,6 @@ router.get("/history", admin_authenticate, async (req, res) => {
   }
 });
 
-//TODO: REMOVE THIS ROUTE
 router.get("/renew", admin_authenticate, async (req, res) => {
   try {
     const students = await Student.find({ renew: "Pending" });
@@ -364,27 +360,30 @@ router.get("/get-all-officers", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch officers" });
   }
 });
-//get all developers
-router.get("/get-all-developers", async (req, res) => {
+
+//TODO: get all MEMBERS
+
+router.get("/get-all-members", async (req, res) => {
   try {
-    const developers = await Student.find({
-      role: "developer",
+    const rolesToFind = ["developer", "officer", "media", "volunteer"];
+    const members = await Student.find({
+      role: { $in: rolesToFind },
       isRequest: false,
     });
 
-    const users = developers.map((developer) => ({
-      id_number: developer.id_number,
-      email: developer.email,
+    const users = members.map((members) => ({
+      id_number: members.id_number,
+      email: members.email,
       name:
-        developer.first_name +
+        members.first_name +
         " " +
-        developer.middle_name +
+        members.middle_name +
         " " +
-        developer.last_name,
-      course: developer.course,
-      year: developer.year,
-      role: developer.role,
-      status: developer.status,
+        members.last_name,
+      course: members.course,
+      year: members.year,
+      role: members.role,
+      status: members.status,
     }));
 
     res.status(200).json({ data: users });
@@ -393,85 +392,7 @@ router.get("/get-all-developers", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch officers" });
   }
 });
-//get all media
-router.get("/get-all-media", async (req, res) => {
-  try {
-    const media = await Student.find({ role: "media", isRequest: false });
 
-    const users = media.map((med) => ({
-      id_number: med.id_number,
-      email: med.email,
-      name: med.first_name + " " + med.middle_name + " " + med.last_name,
-      course: med.course,
-      year: med.year,
-      role: med.role,
-      status: med.status,
-    }));
-
-    res.status(200).json({ data: users });
-  } catch (error) {
-    console.error("Error fetching officers:", error);
-    res.status(500).json({ error: "Failed to fetch officers" });
-  }
-});
-//get all volunteers
-router.get("/get-all-volunteers", async (req, res) => {
-  try {
-    const volunteers = await Student.find({
-      role: "volunteers",
-      isRequest: false,
-    });
-
-    const users = volunteers.map((volunteer) => ({
-      id_number: volunteer.id_number,
-      email: volunteer.email,
-      name:
-        volunteer.first_name +
-        " " +
-        volunteer.middle_name +
-        " " +
-        volunteer.last_name,
-      course: volunteer.course,
-      year: volunteer.year,
-      role: volunteer.role,
-      status: volunteer.status,
-    }));
-
-    res.status(200).json({ data: users });
-  } catch (error) {
-    console.error("Error fetching officers:", error);
-    res.status(500).json({ error: "Failed to fetch officers" });
-  }
-});
-//get-all-student-officers
-router.get("/get-all-student-officers", async (req, res) => {
-  try {
-    const officer = await Student.find({
-      role: "officers",
-      isRequest: false,
-    });
-
-    const users = officer.map((officers) => ({
-      id_number: officers.id_number,
-      email: officers.email,
-      name:
-        officers.first_name +
-        " " +
-        officers.middle_name +
-        " " +
-        officers.last_name,
-      course: officers.course,
-      year: officers.year,
-      role: officers.role,
-      status: officers.status,
-    }));
-
-    res.status(200).json({ data: users });
-  } catch (error) {
-    console.error("Error fetching officers:", error);
-    res.status(500).json({ error: "Failed to fetch officers" });
-  }
-});
 router.get("/get-suspend-officers", admin_authenticate, async (req, res) => {
   try {
     const officers = await Admin.find({ status: "Suspend" });

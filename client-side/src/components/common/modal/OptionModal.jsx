@@ -9,6 +9,7 @@ const actionTypes = Object.freeze({
   Renew_Membership: "RENEW",
   Change_Password: "CHANGE",
   Membership_History: "HISTORY",
+  Suspend: "SUSPEND",
 });
 
 const labelToAction = Object.freeze({
@@ -18,6 +19,7 @@ const labelToAction = Object.freeze({
   Renew_Membership: "Renew Membership",
   Change_Password: "Change Password",
   Membership_History: "Membership History",
+  Suspend: "Suspend",
 });
 
 const iconsStyle = (type) => {
@@ -25,6 +27,8 @@ const iconsStyle = (type) => {
     case "edit":
       return <i className="fas fa-edit" />;
     case "delete":
+      return <i className="fas fa-trash-alt" />;
+    case "suspend":
       return <i className="fas fa-trash-alt" />;
     case "request_membership":
       return <i className="fas fa-paper-plane" />;
@@ -49,6 +53,12 @@ const OptionModal = ({ onClose, information, onAction, actionKey }) => {
       information.membershipStatus === "RENEWED"
   );
 
+  const name = React.useState(
+    information.first_name
+      ? `${information.first_name} ${information.last_name}`
+      : information.name
+  );
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center z-50"
@@ -64,9 +74,7 @@ const OptionModal = ({ onClose, information, onAction, actionKey }) => {
         >
           &times;
         </button>
-        <h2 className="text-xl font-semibold mb-4">
-          Options ( {information.first_name} {information.last_name} )
-        </h2>
+        <h2 className="text-xl font-semibold mb-4">Options ( {name} )</h2>
         <div className="mb-4 flex flex-col space-y-2 ">
           {onAction &&
             onAction.label

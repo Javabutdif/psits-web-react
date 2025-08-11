@@ -11,8 +11,7 @@ import { executiveAndAdminConditionalAccess } from "../../../components/tools/cl
 import FilterAttendees from "./FilterAttendees";
 import { FaUserCheck } from "react-icons/fa";
 import Modal from "../../../components/common/modal/Modal";
-import axios from "axios";
-import backendConnection from "../../../api/backendApi";
+import { searchStudentById } from "../../../api/students";
 
 const AttendanceTabs = ({
   columns,
@@ -209,25 +208,6 @@ const AttendanceTabs = ({
           : "Null",
       };
     });
-
-    const searchStudentById = async (id_number) => {
-      try {
-        const response = await axios.get(
-          `${backendConnection()}/api/admin/student_search/${id_number}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        return response.data.data;
-      } catch (error) {
-        throw (
-          error.response?.data?.message || "An error occurred while searching."
-        );
-      }
-    };
 
     const handleSearchStudent = async () => {
       setError("");

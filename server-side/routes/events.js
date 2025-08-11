@@ -244,10 +244,6 @@ router.put(
         const [sh, sm] = startStr.split(":").map(Number);
         const [eh, em] = endStr.split(":").map(Number);
 
-        
-      console.log("Config time range: " + startStr + " " + endStr);
-        console.log("Parsed time: " + sh + ":" + sm + " - " + eh + ":" + em);
-        
         const eventDate = new Date(event.eventDate);
         const today = new Date();
 
@@ -262,9 +258,7 @@ router.put(
 
         const sessionEnd = new Date(event.eventDate);
         sessionEnd.setHours(eh, em, 0, 0);
-        console.log(sessionStart);
-        console.log(sessionEnd);
-        console.log("Current time: " + now);
+
         if (now >= sessionStart && now <= sessionEnd) {
           matchedSessions.push(session);
         }
@@ -346,7 +340,7 @@ router.put(
 
       attendee.attendance[session] = {
         attended: true,
-        timestamp: new Date(),
+        timestamp: currentDate,
       };
 
       attendee.confirmedBy = req.user?.name;
