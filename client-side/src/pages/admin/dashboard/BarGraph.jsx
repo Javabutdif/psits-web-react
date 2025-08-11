@@ -242,7 +242,7 @@ const BarGraph = () => {
                 ctx.font = 'bold 16px Arial';
                 ctx.fillStyle = '#074873';
                 ctx.textAlign = 'center';
-                ctx.fillText(`Total: ${total}`, centerX, centerY);
+                // ctx.fillText(`Total: ${total}`, centerX, centerY);
                 ctx.restore();
               }
             }]}
