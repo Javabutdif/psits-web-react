@@ -738,6 +738,19 @@ router.get("/get-statistics/:eventId", admin_authenticate, async (req, res) => {
   }
 });
 
+router.post("/remove-event", admin_authenticate, async (req, res) => {
+  try {
+    const { eventId } = req.body;
+
+    const eventDeleted = await Events.findOneAndDelete({ eventId });
+    if (eventDeleted) {
+      return res.status(200).json({ message: "Event Successfully Deleted" });
+    }
+  } catch (error) {
+    console.error("Error Delete an Event", error);
+  }
+});
+
 router.post("/remove-attendance", admin_authenticate, async (req, res) => {
   try {
     const { id_number, merchId } = req.body;
