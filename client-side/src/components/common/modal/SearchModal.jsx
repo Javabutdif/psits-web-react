@@ -69,7 +69,7 @@ function SearchModal({ position, onClose }) {
               className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
               <option value="developer">Developer</option>
-              <option value="officer">Officer</option>
+              <option value="officers">Officer</option>
               <option value="media">Media</option>
               <option value="volunteer">Volunteer</option>
             </select>

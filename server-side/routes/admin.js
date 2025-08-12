@@ -365,7 +365,7 @@ router.get("/get-all-officers", async (req, res) => {
 
 router.get("/get-all-members", async (req, res) => {
   try {
-    const rolesToFind = ["developer", "officer", "media", "volunteer"];
+    const rolesToFind = ["developer", "officers", "media", "volunteer"];
     const members = await Student.find({
       role: { $in: rolesToFind },
       isRequest: false,
