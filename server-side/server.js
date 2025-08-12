@@ -24,7 +24,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
+app.set("trust proxy", 1);
 app.use(bodyParser.json());
 mongoose
   .connect(process.env.MONGODB_URI, {
