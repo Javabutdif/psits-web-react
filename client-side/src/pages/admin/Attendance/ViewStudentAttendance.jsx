@@ -9,6 +9,8 @@ const ViewStudentAttendance = ({
   studentData,
   eventId,
   eventName,
+  eventSessionConfig,
+  eventDate,
 }) => {
   const navigate = useNavigate();
   if (!isVisible) return null;
@@ -24,6 +26,7 @@ const ViewStudentAttendance = ({
       onClose();
     }
   };
+  
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "N/A";
@@ -41,8 +44,46 @@ const ViewStudentAttendance = ({
       return "Invalid date";
     }
   };
+  
+  const checkSessionStatus = (sessionConfig, sessionDate) => {
+    if (!sessionConfig?.enabled || !sessionConfig?.timeRange) return "disabled";
+    const currentDate = new Date();
+    const baseDate = new Date(sessionDate);
+    baseDate.setHours(0, 0, 0, 0);
 
-  // Helper function to render values safely
+    const isSameDate =
+      baseDate.getFullYear() === currentDate.getFullYear() &&
+      baseDate.getMonth() === currentDate.getMonth() &&
+      baseDate.getDate() === currentDate.getDate();
+
+    const isPastEvent = baseDate < currentDate && !isSameDate;
+
+    const [startStr, endStr] = sessionConfig.timeRange.split(" - ");
+    const [startHours, startMins] = startStr.split(":").map(Number);
+    const [endHours, endMins] = endStr.split(":").map(Number);
+
+    const sessionStart = new Date(baseDate);
+    sessionStart.setHours(startHours, startMins, 0, 0);
+
+    const sessionEnd = new Date(baseDate);
+    sessionEnd.setHours(endHours, endMins, 0, 0);
+
+    if (isPastEvent) return "absent";
+    return "ongoing";
+  };
+  
+  // Check if any session is active
+  const hasActiveSessions = eventSessionConfig && Object.values(eventSessionConfig)
+    .some(config => checkSessionStatus(config) === "ongoing");
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const eventDay = new Date(eventDate);
+  eventDay.setHours(0, 0, 0, 0);
+
+  const isEventEnded = eventDay < today
+  const canMarkPresent = !isEventEnded && hasActiveSessions;
+
   const renderValue = (key, value) => {
     if (value === null || value === undefined) {
       return "N/A";
@@ -52,38 +93,44 @@ const ViewStudentAttendance = ({
       if (key === "attendance") {
         return (
           <div className="space-y-2">
-            {Object.entries(value).map(([timeSlot, timeData]) => {
-              const isAttended = timeData?.attended || false;
-              const timestamp = timeData?.timestamp;
+            {Object.entries(value)
+              .filter(([timeSlot]) => eventSessionConfig?.[timeSlot]?.enabled)
+              .map(([timeSlot, timeData]) => {
+                const isAttended = timeData?.attended || false;
+                const timestamp = timeData?.timestamp;
+                
+                const status = checkSessionStatus(
+                  eventSessionConfig[timeSlot],
+                  eventDate
+                );
 
-              return (
-                <div
-                  key={timeSlot}
-                  className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium capitalize text-gray-700">
-                      {timeSlot}
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        isAttended
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {isAttended ? "✓ Present" : "✗ Not Attended (Yet)"}
-                    </span>
+                const statusConfig = {
+                  ongoing: { class: "bg-yellow-100 text-yellow-800", text: "● Ongoing" },
+                  absent: { class: "bg-red-100 text-red-800", text: "✗ Absent" },
+                  disabled: { class: "bg-gray-100 text-gray-400", text: "Disabled" }
+                };
+                return (
+                  <div key={timeSlot} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium capitalize text-gray-700">{timeSlot}</span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          isAttended ? "bg-green-100 text-green-800" : statusConfig[status].class
+                        }`}
+                      >
+                        {isAttended ? "✓ Present" : statusConfig[status].text}
+                      </span>
+                    </div>
+                    {isAttended && timestamp && (
+                      <span className="text-xs text-gray-500">{formatTimestamp(timestamp)}</span>
+                    )}
                   </div>
-                  {isAttended && timestamp && (
-                    <span className="text-xs text-gray-500">
-                      {formatTimestamp(timestamp)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+
+
           </div>
+
         );
       }
 
@@ -165,32 +212,31 @@ const ViewStudentAttendance = ({
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex justify-end">
-          {studentData.isAttended ? (
-            <FormButton
-              type="button"
-              text="Attended"
-              icon={<FaUserCheck size={20} />}
-              styles="px-4 bg-[#22c55e] text-[#DFF6FF] cursor-not-allowed rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 flex items-center gap-2"
-              textClass="text-blue-100"
-              whileHover={{ scale: 1.02, opacity: 0.95 }}
-              whileTap={{ scale: 0.98, opacity: 0.9 }}
-            />
-          ) : (
-            <FormButton
-              type="button"
-              text="Mark as Present"
-              onClick={() => {
-                markAsPresent();
-                onClose();
-              }}
-              icon={<FaUserCheck size={20} />}
-              styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
-              textClass="text-blue-100"
-              whileHover={{ scale: 1.02, opacity: 0.95 }}
-              whileTap={{ scale: 0.98, opacity: 0.9 }}
-            />
-          )}
+         <div className="mt-6 flex justify-end">
+        {studentData.isAttended ? (
+          <FormButton
+            text="Attended"
+            icon={<FaUserCheck size={20} />}
+            disabled
+            styles="px-4 bg-green-600 text-[#DFF6FF] hover:bg-green-500 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 flex items-center gap-2"
+            textClass="text-blue-100"       
+             />
+        ) : canMarkPresent ? (
+          <FormButton
+            text="Mark as Present"
+            onClick={() => {
+              markAsPresent();
+              onClose();
+            }}
+            icon={<FaUserCheck size={20} />}
+            textClass="text-blue-100"
+            styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
+          />
+        ) : (
+            <div className="text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded-md">
+              {isEventEnded ? "Event has ended" : "No active sessions currently"}
+            </div>
+        )}
         </div>
       </div>
     </div>
