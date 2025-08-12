@@ -1,15 +1,13 @@
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 import { Link } from "react-router-dom";
 import { getEvents, removeEvent } from "../../../api/event";
 import { getInformationData } from "../../../authentication/Authentication";
-import { formattedDate } from "../../../components/tools/clientTools";
-import AddEvent from "./AddEvent";
-import { motion } from "framer-motion";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
-import { adminConditionalAccess } from "../../../components/tools/clientTools";
-import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
+import { adminConditionalAccess, formattedDate } from "../../../components/tools/clientTools";
 import { ConfirmActionType } from "../../../enums/commonEnums";
+import AddEvent from "./AddEvent";
 
 function Events() {
   const [events, setEvent] = useState([]);
@@ -111,67 +109,67 @@ function Events() {
                   <p className="mb-3 text-[074873]">
                     {formattedDate(event.eventDate)}
                   </p>
-                  <div className="flex  flex-col gap-1 p-3 items-center justify-center">
-                      <div className="w-full h-full bg-[#002E48] hover:bg-[#013e61] text-center text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200">
+                  <div className="flex flex-col gap-1 p-2 items-center justify-center">
+                      <div className="w-full h-full">
                         <Link
                           to={`/admin/attendance/${event.eventId}`}
-                          className="w-full h-full"
+                          className="h-full"
                         >
                           <button
-                            className=""
+                            className="w-full h-full bg-[#002E48] hover:bg-[#013e61] text-white text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200"
                             tabIndex="0"
                           >
                             View
                           </button>
                         </Link>
                       </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2   gap-1 w-full justify-center ">
-                      <div className="border border-[#002E48] bg-white text-center hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200 flex-row items-center justify-center">
-                        <Link
-                          to={`/admin/statistics/${event.eventId}`}
-                          className="h-full"
-                        >
-                          <button
-                            className=""
-                            tabIndex="1"
-                          >
-                            Statistics
-                          </button>
-                        </Link>
-                      </div>
-                      
-                      {admin.campus === "UC-Main" && (
-                        <div className="border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-center text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105">
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 w-full justify-center ">
+                        <div className="h-full w-full rounded-md">
                           <Link
-                            to={`/admin/raffle/${event.eventId}`}
+                            to={`/admin/statistics/${event.eventId}`}
                             className="h-full"
                           >
                             <button
-                              className=""
-                              tabIndex="2"
+                              className="overflow-hidden w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer hover:scale-105 transition-transform duration-200 flex-row items-center justify-center"
+                              tabIndex="1"
                             >
-                              Raffle
+                              Statistics
                             </button>
                           </Link>
                         </div>
-                       
-                      )}
-                      <div className="col-span-1 sm:col-span-2">
-                      {adminConditionalAccess() && (
-                        <>
-                          <button
-                            className="w-full h-full border border-[#6d0000] bg-white hover:bg-[#860000] hover:text-white text-[#920000] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
-                            tabIndex="3"
-                            onClick={() =>
-                              handleOpenConfirmDeletion(event.eventId)
-                            }
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
+                        <div className="h-full w-full rounded-md">
+                          {admin.campus === "UC-Main" && (
+                            <Link
+                              to={`/admin/raffle/${event.eventId}`}
+                              className="h-full"
+                            >
+                              <button
+                                className="overflow-hidden w-full h-full border border-[#002E48] bg-white hover:bg-[#013e61] hover:text-white text-[#002E48] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
+                                tabIndex="2"
+                              >
+                                Raffle
+                              </button>
+                            </Link>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                      <div className="h-full w-full rounded-md bg-cyan-500">
+                        {adminConditionalAccess() && (
+                          <>
+                            <button
+                              className="w-full h-full border border-[#6d0000] bg-white hover:bg-[#860000] hover:text-white text-[#920000] text-sm font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 hover:scale-105"
+                              tabIndex="3"
+                              onClick={() =>
+                                handleOpenConfirmDeletion(event.eventId)
+                              }
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
+
                   </div>
                 </div>
               </motion.div>
