@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import React, { useCallback, useEffect, useState } from "react";
-import { InfinitySpin } from "react-loader-spinner";
+import { useCallback, useEffect, useState } from "react";
+import { FaUserCheck } from "react-icons/fa";
+import { IoArrowBack } from "react-icons/io5";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "react-tabs/style/react-tabs.css";
 import {
@@ -8,16 +9,14 @@ import {
   getEventCheck,
   removeAttendee,
 } from "../../../api/event";
-import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
-import FormButton from "../../../components/forms/FormButton";
-import AttendanceTab from "./AttendanceTab";
-import ViewStudentAttendance from "./ViewStudentAttendance";
-import { FaUserCheck } from "react-icons/fa";
-import AttendanceSettings from "./AttendanceSettings";
 import { getInformationData } from "../../../authentication/Authentication";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
+import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
+import FormButton from "../../../components/forms/FormButton";
 import { ConfirmActionType } from "../../../enums/commonEnums";
-import { IoArrowBack } from "react-icons/io5";
+import AttendanceSettings from "./AttendanceSettings";
+import AttendanceTab from "./AttendanceTab";
+import ViewStudentAttendance from "./ViewStudentAttendance";
 
 const Attendance = (props) => {
   // TODO(Adriane): Refactor the entire logic, so many unused variables, no DRY principle and spaghetti logic
@@ -124,6 +123,55 @@ const Attendance = (props) => {
     setShowModal(true);
   };
 
+  const computeAttendanceStatus = (row) => {
+    const attendance = row.attendance || {};
+    const sessionConfig = eventData.sessionConfig || {};
+    const enabledSessions = Object.keys(sessionConfig).filter(
+      (session) => sessionConfig[session]?.enabled
+    );
+
+    const currentDate = new Date();
+    const eventDateObj = new Date(eventDate);
+
+    const isAllDayEvent = enabledSessions.length > 0 &&
+      enabledSessions.every(s => !sessionConfig[s]?.timeRange);
+
+    if (isAllDayEvent) {
+      const attended = row.isAttended || enabledSessions.some(
+        s => attendance[s]?.attended === true
+      );
+
+      if (eventDateObj < currentDate) return attended ? "Attended" : "Absent";
+      return attended ? "Attended" : "Ongoing";
+    }
+
+    // No sessions
+    if (enabledSessions.length === 0) {
+      if (eventDateObj < currentDate) return "Absent";
+      return "Ongoing";
+    }
+
+    const hasAttendedAny = enabledSessions.some(
+      session => attendance[session]?.attended === true
+    );
+    const attendedAll = enabledSessions.every(
+      session => attendance[session]?.attended === true
+    );
+
+    if (attendedAll) row.isAttended = true;
+
+    if (eventDateObj.toDateString() === currentDate.toDateString()) {
+      if (attendedAll) return "Attended";
+      return "Ongoing";
+    }
+    if (attendedAll) return "Attended";
+    if (!hasAttendedAny) return "Absent";
+    return "Incomplete";
+  };
+
+
+
+
   const columns = [
     {
       key: "select",
@@ -186,22 +234,16 @@ const Attendance = (props) => {
       key: "isAttended",
       label: "Status",
       sortable: true,
-      selector: (row) => {
-        if (row.isAttended) return "Attended";
-        if (!row.isAttended && row.eventDate < currentDate) return "Absent";
-        return "Ongoing";
-      },
+      selector: (row) => computeAttendanceStatus(row),
       cell: (row) => {
-        const status = row.isAttended
-          ? "Attended"
-          : eventDate.getDate() < currentDate.getDate()
-          ? "Absent"
-          : "Ongoing";
+        const status = computeAttendanceStatus(row);
 
         const statusClasses = {
           Attended: "bg-green-200 text-green-800",
           Absent: "bg-red-600 text-white",
+          Incomplete: "bg-orange-200 text-orange-800",
           Ongoing: "bg-yellow-200 text-yellow-800",
+          Upcoming: "bg-gray-600 text-white"
         };
 
         return (
@@ -242,10 +284,13 @@ const Attendance = (props) => {
           eventDate.getDate() === currentDate.getDate();
 
         const isPastEvent = eventDate < currentDate && !isSameDate;
+        const attendanceStatus = computeAttendanceStatus(row);
+        const hasMultipleSessions = eventData.sessionConfig && 
+                              Object.keys(eventData.sessionConfig).length > 1;  
 
         return (
           <ButtonsComponent>
-            {isSameDate && !row.isAttended ? (
+            {isSameDate && attendanceStatus === "Ongoing" ? (
               <FormButton
                 type="button"
                 text="Attendance"
@@ -257,20 +302,33 @@ const Attendance = (props) => {
                 whileTap={{ scale: 0.98, opacity: 0.9 }}
               />
             ) : isPastEvent ? (
-              <></>
-            ) : row.isAttended ? (
-              <>
+              // Show view button for past events with multiple sessions
+              hasMultipleSessions || attendanceStatus === "Incomplete" ? (
                 <FormButton
                   type="button"
-                  text="Attended"
+                  text="View Details"
+                  onClick={() => handleViewBtn(row)}
                   icon={<FaUserCheck size={20} />}
-                  styles="px-4 bg-green-600 text-[#DFF6FF] hover:bg-green-500  rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2  flex items-center gap-2"
+                  styles="px-4 bg-[#074873] text-[#DFF6FF] hover:bg-[#09618F] active:bg-[#0B729C] rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A5C88] flex items-center gap-2"
                   textClass="text-blue-100"
                   whileHover={{ scale: 1.02, opacity: 0.95 }}
                   whileTap={{ scale: 0.98, opacity: 0.9 }}
-                  disabled
                 />
-              </>
+              ) : (
+                <></>
+              )
+            ) : attendanceStatus === "Attended" ? (
+              <FormButton
+                type="button"
+                text="Attended"
+                onClick={() => handleViewBtn(row)}
+                icon={<FaUserCheck size={20} />}
+                styles="px-4 bg-green-600 text-[#DFF6FF] hover:bg-green-500 rounded-md p-2 text-sm transition duration-150 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 flex items-center gap-2"
+                textClass="text-blue-100"
+                whileHover={{ scale: 1.02, opacity: 0.95 }}
+                whileTap={{ scale: 0.98, opacity: 0.9 }}
+                // disabled
+              />
             ) : (
               <FormButton
                 type="button"
@@ -351,8 +409,6 @@ const Attendance = (props) => {
   const isPastEvent = eventDate < currentDate && !isSameDate;
   const isSoonEvent = eventDate > currentDate && !isSameDate;
   return (
-    // Figuring out how to do Pagination..? Still Figuring Things Out
-    //TODO: Figure out how to create the layout of the specific_event tab - done?
     <div className="container mx-auto p-4 ">
       <div className="flex flex-col gap-5 p-2 md:flex-col sm:flex-col">
         <div className="flex justify-start">
@@ -498,6 +554,8 @@ const Attendance = (props) => {
           studentData={selectedData}
           eventId={eventId}
           eventName={eventData.eventName}
+          eventSessionConfig={eventData.sessionConfig}
+          eventDate = {eventDate}
         />
       )}
       {removeModal && (
