@@ -49,13 +49,7 @@ router.put("/students/request", student_authenticate, async (req, res) => {
       {
         $set: {
           membershipStatus: "PENDING",
-          isFirstApplication: {
-            $cond: {
-              if: { $eq: ["$isFirstApplication", true] },
-              then: false,
-              else: "$isFirstApplication",
-            },
-          },
+          
         },
       },
     ]).session(session);
