@@ -237,11 +237,7 @@ const Members = () => {
       <TableComponent columns={columns} data={filteredData} />
 
       {viewAdd && (
-        <SearchModal
-          isVisible={viewAdd}
-          position={"Officers"}
-          onClose={() => setViewAdd(false)}
-        />
+        <SearchModal isVisible={viewAdd} onClose={() => setViewAdd(false)} />
       )}
       {isModalVisible && (
         <ConfirmationModal

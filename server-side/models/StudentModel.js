@@ -43,6 +43,7 @@ const studentSchema = new Schema({
   },
   membershipStatus: {
     type: String,
+    default: "NOT_APPLIED",
   },
   applied: {
     type: String,
@@ -60,7 +61,7 @@ const studentSchema = new Schema({
     type: Boolean,
     default: true,
   },
-  
+
   role: {
     type: String,
   },
