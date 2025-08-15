@@ -217,7 +217,7 @@ const StudentDashboard = () => {
             </div>
 
             <div>
-              <IctMessage/>
+              //<IctMessage/>
               <IntramsMessage/>
             </div>
             <div 
