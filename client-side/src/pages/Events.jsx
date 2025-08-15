@@ -596,7 +596,7 @@ const EmbededMessage = () => {
         </button>
       </div>
 
-      <Video src="/embeded/embeded_video.mp4" />
+     // <Video src="/embeded/embeded_video.mp4" />
     </>
   );
 };
@@ -693,7 +693,7 @@ const YearEnd = () => {
         </h2>
       </div>
 
-      <Video src="/yearEnd/year_end.mp4" />
+      //<Video src="/yearEnd/year_end.mp4" />
     </>
   );
 };
@@ -806,7 +806,7 @@ const Awarding = () => {
         </p>
       </div>
 
-      <Video src="/awarding/awarding.mp4" />
+     // <Video src="/awarding/awarding.mp4" />
     </>
   );
 };
@@ -887,7 +887,7 @@ export const IctMessage = () => {
         </p>
       </div>
 
-      <Video src="/ict-congress/ict_sde.mp4" />
+     // <Video src="/ict-congress/ict_sde.mp4" />
     </>
   );
 };
