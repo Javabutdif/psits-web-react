@@ -105,12 +105,12 @@ const Login = () => {
               window.location.href = `/${data.role.toLowerCase()}/dashboard`;
             }
           } else {
-            console.log("Here is the else ");
+          
             attemptAuthentication();
             setRemainingTime(60);
           }
         } else {
-          console.log("Here is the else ");
+         
           attemptAuthentication();
           setRemainingTime(60);
         }
