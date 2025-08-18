@@ -75,7 +75,7 @@ router.get("/get-all-pending-orders", admin_authenticate, async (req, res) => {
 router.get("/get-all-paid-orders", admin_authenticate, async (req, res) => {
   try {
     const orders = await Orders.find({ order_status: "Paid" }).sort({
-      order_date: -1,
+      transaction_date: -1,
     });
     if (orders.length > 0) {
       res.status(200).json(orders);
