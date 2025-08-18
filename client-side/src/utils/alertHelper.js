@@ -1,20 +1,12 @@
-import Swal from "sweetalert2";
+import { Notyf } from "notyf";
+import "notyf/notyf.min.css";
 
-export const Toast = Swal.mixin({
-  toast: true,
-  position: "top-start",
-  showConfirmButton: false,
-  timer: 2000,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
+const notyf = new Notyf({
+  duration: 2000,
+  position: { x: "left", y: "top" },
 });
 
-export const showToast = (icon, title) => {
-  Toast.fire({
-    icon,
-    title,
-  });
+export const showToast = (type, message) => {
+  if (type === "success") notyf.success(message);
+  else notyf.error(message);
 };
