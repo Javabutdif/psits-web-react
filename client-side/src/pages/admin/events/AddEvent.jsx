@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import backendConnection from "../../../api/backendApi";
+import { createEvent } from "../../../api/event";
 import { showToast } from "../../../utils/alertHelper.js";
 function AddEvent({ handleClose }) {
   const [images, setImages] = useState([]);
@@ -59,9 +59,9 @@ function AddEvent({ handleClose }) {
   };
 
   const handleAttendanceTypeChange = (type) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      attendanceType: type
+      attendanceType: type,
     }));
   };
 
@@ -148,22 +148,12 @@ function AddEvent({ handleClose }) {
             "Error stringifying sessionConfig:",
             formData.sessionConfig
           );
-          
+
           setIsLoading(false);
           return;
         }
-        
-        const token = sessionStorage.getItem("Token");
-        // Use axios with backendConnection utility
-        const response = await axios.post(
-          `${backendConnection()}/api/events`,
-          data,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+
+        const response = createEvent(data);
 
         showToast("success", "Event created successfully!");
         handleClose();
@@ -278,7 +268,7 @@ function AddEvent({ handleClose }) {
                 className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
+
             {/* Event Date */}
             <div className="form-group">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -299,35 +289,38 @@ function AddEvent({ handleClose }) {
               )}
             </div>
 
-        {/* Attendance Type */}
-        <div className="form-group">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Attendance Type
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            {/* Open Option */}
-            <div 
-              className={`border p-4 rounded-lg flex items-center cursor-pointer transition-colors ${
-                formData.attendanceType === "open" 
-                  ? "border-blue-500 bg-blue-50" 
-                  : "hover:bg-gray-50"
-              }`}
-              onClick={() => handleAttendanceTypeChange("open")}
-            >
-              <input
-                type="radio"
-                name="attendanceType"
-                checked={formData.attendanceType === "open"}
-                readOnly // Since we're handling clicks via the container
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 font-medium cursor-pointer">Open</label>
+            {/* Attendance Type */}
+            <div className="form-group">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Attendance Type
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                {/* Open Option */}
+                <div
+                  className={`border p-4 rounded-lg flex items-center cursor-pointer transition-colors ${
+                    formData.attendanceType === "open"
+                      ? "border-blue-500 bg-blue-50"
+                      : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => handleAttendanceTypeChange("open")}
+                >
+                  <input
+                    type="radio"
+                    name="attendanceType"
+                    checked={formData.attendanceType === "open"}
+                    readOnly // Since we're handling clicks via the container
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 font-medium cursor-pointer">
+                    Open
+                  </label>
+                </div>
+              </div>
+              <label className="block text-sm font-medium italic text-gray-500 mt-2">
+                Note: Ticketed events must be created through the Merchandise
+                page.
+              </label>
             </div>
-          </div>
-          <label className="block text-sm font-medium italic text-gray-500 mt-2">
-            Note: Ticketed events must be created through the Merchandise page.
-          </label>
-        </div>
 
             {/* Session Configuration */}
             <div className="form-group">
