@@ -1,5 +1,5 @@
 const express = require("express");
-const { admin_model, user_model } = require("../model_template/model_data");
+
 const {
   admin_authenticate,
   student_authenticate,

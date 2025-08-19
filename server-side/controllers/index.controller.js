@@ -1,21 +1,99 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
-const bycrypt = require("bcrypt");
-
+const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
-
-const router = express.Router();
+const Log = require("../models/LogModel");
 require("dotenv").config();
+const token_key = process.env.JWT_SECRET;
 
 const indicator = process.env.DB_NAME !== "psits-test" ? true : false;
 const url = indicator
-  ? "https://psits-web.vercel.app/reset-password/"
-  : "https://psits-web-react-staging.vercel.app/reset-password/";
+  ? "https://psits.vercel.app/reset-password/"
+  : "https://psits-staging.vercel.app/reset-password/";
 
-router.post("/register", async (req, res) => {
+const loginController = async (req, res) => {
+  const { id_number, password } = req.body;
+
+  try {
+    let users;
+    let role;
+    let admin = null;
+    let student = null;
+    let campus;
+
+    if (id_number.includes("-admin")) {
+      admin = await Admin.findOne({ id_number });
+    }
+
+    if (!admin) {
+      student = await Student.findOne({ id_number });
+      if (!student) {
+        return res.status(400).json({ message: "Invalid Credentials" });
+      }
+
+      const passwordMatch = await bcrypt.compare(password, student.password);
+
+      if (passwordMatch && student.status === "False") {
+        return res
+          .status(400)
+          .json({ message: "Your account has been deleted!" });
+      } else if (passwordMatch && student.status === "True") {
+        users = student;
+        role = "Student";
+      } else {
+        return res
+          .status(400)
+          .json({ message: "Invalid ID number or password" });
+      }
+    } else {
+      const passwordMatch = await bcrypt.compare(password, admin.password);
+
+      if (passwordMatch && admin.status === "Active") {
+        users = admin;
+        role = "Admin";
+      } else if (passwordMatch && admin.status === "Suspend") {
+        return res.status(400).json({
+          message: "Your account has been suspended! Please contact president",
+        });
+      } else {
+        return res
+          .status(400)
+          .json({ message: "Invalid ID number or password" });
+      }
+    }
+
+    const user = {
+      id_number: users.id_number,
+    };
+    campus = users.campus;
+    const token = jwt.sign({ user }, token_key, {
+      expiresIn: role === "Admin" ? "4h" : "10m",
+    });
+
+    if (role === "Admin") {
+      const log = new Log({
+        admin: users.name,
+        admin_id: users._id,
+        action: "Admin Login",
+      });
+
+      await log.save();
+    }
+
+    return res.status(200).json({
+      message: "Signed in successfully",
+      role,
+      token,
+      campus,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "An error occurred", error });
+  }
+};
+
+const registerController = async (req, res) => {
   const {
     id_number,
     password,
@@ -60,10 +138,9 @@ router.post("/register", async (req, res) => {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-});
+};
 
-// Student forgot password
-router.post("/student/forgot-password", async (req, res) => {
+const forgotPasswordController = async (req, res) => {
   try {
     let user;
     let position;
@@ -157,10 +234,9 @@ router.post("/student/forgot-password", async (req, res) => {
     console.error("Server error during forgot password process:", err.message);
     res.status(500).send({ message: err.message });
   }
-});
+};
 
-// Student reset password
-router.post("/student/reset-password/:token", async (req, res) => {
+const resetPasswordController = async (req, res) => {
   try {
     const decodedToken = jwt.verify(req.params.token, process.env.JWT_SECRET);
 
@@ -196,6 +272,11 @@ router.post("/student/reset-password/:token", async (req, res) => {
     // Send error response if any error occurs
     res.status(500).send({ message: err.message });
   }
-});
+};
 
-module.exports = router;
+module.exports = {
+  loginController,
+  registerController,
+  forgotPasswordController,
+  resetPasswordController,
+};
