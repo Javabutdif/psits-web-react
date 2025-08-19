@@ -9,6 +9,7 @@ const admin_model = (admin) => {
     position: admin.position,
     campus: admin.campus,
     access: admin.access,
+    status: admin.status,
   };
 };
 const user_model = (user) => {
@@ -22,7 +23,24 @@ const user_model = (user) => {
     position: "Student",
     audience: user.audience,
     campus: user.campus,
+    status: user.status,
+  };
+};
+const role_model = (user) => {
+  return {
+    id_number: user.id_number,
+    name: user.first_name + " " + user.middle_name + " " + user.last_name,
+    email: user.email,
+    course: user.course,
+    year: user.year,
+    role: user.role,
+    position: "Student",
+    status: user.status,
+    audience: user.audience,
+    campus: user.campus,
+    isRequest: user.isRequest,
+    adminRequest: user.adminRequest,
   };
 };
 
-module.exports = { admin_model, user_model };
+module.exports = { admin_model, user_model, role_model };
