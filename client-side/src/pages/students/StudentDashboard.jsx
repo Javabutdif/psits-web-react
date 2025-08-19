@@ -27,7 +27,7 @@ const StudentDashboard = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const currentDate = new Date();
-  const end = new Date(currentDate.getFullYear(), 3, 30);
+  const end = new Date(currentDate.getFullYear(), 10, 30);
   const token = sessionStorage.getItem("Token");
 
   const fetchAllEvents = async () => {
@@ -198,11 +198,11 @@ const StudentDashboard = () => {
          <div className="lg:order-last md:order-first">
             <OperationHours styles="self-start lg:col-start-6 lg:col-end-8 lg:row-start-1 lg:row-end-3 mb-3" />
             <MembershipBanner styles="lg:row-start-3 lg:col-start-6 lg:col-end-8" />
-            {/* {currentDate <= end && (
+             {currentDate <= end && (
               <div className="lg:row-start-3 lg:col-start-6 lg:col-end-8 mt-2 rounded-lg overflow-hidden shadow-lg">
                 <img src={ads} alt="ads" className="w-full h-40 object-cover" />
               </div>
-            )} */}
+            )}
           </div>
 
           {/* Left Section (Carousel & Events) */}
