@@ -58,9 +58,9 @@ router.get(
 );
 
 router.get("/retrieve-admin", admin_authenticate, retrieveMerchAdminController);
-
+//Delete Report in Merchandise
 router.delete("/delete-report", admin_authenticate, deleteReportController);
-
+//Update Merchandise Data
 router.put(
   "/update/:_id",
   admin_authenticate,
