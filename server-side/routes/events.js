@@ -5,6 +5,7 @@ const { S3Client } = require("@aws-sdk/client-s3");
 const {
   admin_authenticate,
   both_authenticate,
+  role_authenticate,
 } = require("../middlewares/custom_authenticate_token");
 const {
   createManualEventController,
@@ -112,7 +113,12 @@ router.get(
   getEventStatisticsController
 );
 //Remove Events
-router.post("/remove-event", admin_authenticate, removeEventController);
+router.post(
+  "/remove-event",
+  admin_authenticate,
+  role_authenticate(["admin"]),
+  removeEventController
+);
 //Remove Attendee
 router.post(
   "/remove-attendance",
