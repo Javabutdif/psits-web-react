@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import { createEvent } from "../../../api/event";
+import backendConnection from "../../../api/backendApi";
 import { showToast } from "../../../utils/alertHelper.js";
 function AddEvent({ handleClose }) {
   const [images, setImages] = useState([]);
@@ -153,7 +153,17 @@ function AddEvent({ handleClose }) {
           return;
         }
 
-        const response = createEvent(data);
+        const token = sessionStorage.getItem("Token");
+        // Use axios with backendConnection utility
+        const response = await axios.post(
+          `${backendConnection()}/api/events/create-event`,
+          data,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         showToast("success", "Event created successfully!");
         handleClose();
