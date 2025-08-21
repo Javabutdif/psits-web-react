@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const app = express();
+const helmet = require("helmet");
 const PORT = process.env.PORT || 5000;
 const indexRoutes = require("./routes/index");
 const adminRoutes = require("./routes/admin");
@@ -15,6 +16,7 @@ const eventRoutes = require("./routes/events");
 const privateRoutes = require("./routes/private");
 require("dotenv").config();
 
+app.use(helmet());
 app.use(
   cors({
     origin: process.env.CORS,

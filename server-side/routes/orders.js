@@ -3,6 +3,7 @@ require("dotenv").config();
 const {
   admin_authenticate,
   both_authenticate,
+  role_authenticate,
 } = require("../middlewares/custom_authenticate_token");
 const {
   getSpecificOrdersController,
@@ -46,7 +47,12 @@ router.post(
 // Cancel Order
 router.put("/cancel/:product_id", both_authenticate, cancelOrderController);
 
-router.put("/approve-order", admin_authenticate, approveOrderController);
+router.put(
+  "/approve-order",
+  admin_authenticate,
+  role_authenticate(["admin", "finance"]),
+  approveOrderController
+);
 
 // orders.js (backend api)
 router.get(

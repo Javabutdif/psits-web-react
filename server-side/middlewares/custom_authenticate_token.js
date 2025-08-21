@@ -96,8 +96,24 @@ const both_authenticate = (req, res, next) => {
   });
 };
 
+const role_authenticate = (access) => {
+  return (req, res, next) => {
+    try {
+      if (access.includes(req.user.access)) {
+        next();
+      } else {
+        res.status(403).json({ message: "Forbidden Path" });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: error.message });
+    }
+  };
+};
+
 module.exports = {
   admin_authenticate,
   student_authenticate,
   both_authenticate,
+  role_authenticate,
 };

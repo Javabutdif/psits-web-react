@@ -31,6 +31,7 @@ const {
 } = require("../controllers/admin.controller");
 const {
   admin_authenticate,
+  role_authenticate,
 } = require("../middlewares/custom_authenticate_token");
 
 const router = express.Router();
@@ -45,12 +46,14 @@ router.get(
 router.post(
   "/approve-membership",
   admin_authenticate,
+  role_authenticate(["admin", "finance"]),
   approveMembershipController
 );
 //Revoke Student Membership
 router.put(
   "/revoke-student",
   admin_authenticate,
+  role_authenticate(["admin"]),
   revokeAllMembershipController
 );
 //Membership History
@@ -108,21 +111,38 @@ router.get(
   getAllSuspendAdminAccountController
 );
 //Edit Admin Account
-router.post("/edit-officer", admin_authenticate, editAdminAccountController);
+router.post(
+  "/edit-officer",
+  admin_authenticate,
+  role_authenticate(["admin"]),
+  editAdminAccountController
+);
 //Change Password Admin Account
 router.post(
   "/change-password-officer",
   admin_authenticate,
+  role_authenticate(["admin"]),
   changeAdminPasswordController
 );
 //Set Admin Account to Suspend
-router.put("/suspend", admin_authenticate, setSuspendAdminAccountController);
+router.put(
+  "/suspend",
+  admin_authenticate,
+  role_authenticate(["admin"]),
+  setSuspendAdminAccountController
+);
 //Set Member Role Remove
-router.put("/role-remove", admin_authenticate, setMemberRoleRemoveController);
+router.put(
+  "/role-remove",
+  admin_authenticate,
+  role_authenticate(["admin", "executive"]),
+  setMemberRoleRemoveController
+);
 //Set Restore Deleted Admin
 router.put(
   "/restore-officer",
   admin_authenticate,
+  role_authenticate(["admin"]),
   setRestoreAdminAccountController
 );
 //Set Admin Request Role to Member
@@ -140,21 +160,38 @@ router.get(
   getAllRequestAdminAccountController
 );
 //Set Approve Role for Members
-router.put("/approve-role", admin_authenticate, approveRoleMemberController);
+router.put(
+  "/approve-role",
+  admin_authenticate,
+  role_authenticate(["admin"]),
+  approveRoleMemberController
+);
 //Set Decline Role for Members
-router.put("/decline-role", admin_authenticate, setDeclineMemberRoleController);
+router.put(
+  "/decline-role",
+  admin_authenticate,
+  role_authenticate(["admin"]),
+  setDeclineMemberRoleController
+);
 //Add New Admin Account
-router.post("/add-officer", admin_authenticate, addNewAdminAccountController);
+router.post(
+  "/add-officer",
+  admin_authenticate,
+  role_authenticate(["admin"]),
+  addNewAdminAccountController
+);
 //Approve Admin Account Creation
 router.put(
   "/approve-admin-account",
   admin_authenticate,
+  role_authenticate(["admin"]),
   approveAdminAccountController
 );
 //Decline Admin Account Creation
 router.put(
   "/decline-admin-account",
   admin_authenticate,
+  role_authenticate(["admin"]),
   declineAdminAccountController
 );
 //update-admin-access

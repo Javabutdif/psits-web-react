@@ -18,6 +18,7 @@ const {
   admin_authenticate,
   student_authenticate,
   both_authenticate,
+  role_authenticate,
 } = require("../middlewares/custom_authenticate_token");
 
 const router = express.Router();
@@ -59,6 +60,7 @@ router.put(
 router.put(
   "/students/cancel-membership",
   admin_authenticate,
+  role_authenticate(["admin", "finance"]),
   cancelMembershipRequestController
 );
 

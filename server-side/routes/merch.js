@@ -17,6 +17,7 @@ require("dotenv").config();
 const {
   admin_authenticate,
   both_authenticate,
+  role_authenticate,
 } = require("../middlewares/custom_authenticate_token");
 const router = express.Router();
 
@@ -45,6 +46,7 @@ const upload = multer({
 router.post(
   "/",
   admin_authenticate,
+  role_authenticate(["admin", "finance"]),
   upload.array("images", 3),
   createMerchandiseController
 );
@@ -59,19 +61,35 @@ router.get(
 
 router.get("/retrieve-admin", admin_authenticate, retrieveMerchAdminController);
 //Delete Report in Merchandise
-router.delete("/delete-report", admin_authenticate, deleteReportController);
+router.delete(
+  "/delete-report",
+  admin_authenticate,
+  role_authenticate(["admin", "finance"]),
+  deleteReportController
+);
 //Update Merchandise Data
 router.put(
   "/update/:_id",
   admin_authenticate,
+  role_authenticate(["admin", "finance"]),
   upload.array("images", 3),
   updateMerchandiseController
 );
 
 // DELETE merch by id (soft)
-router.put("/delete-soft", admin_authenticate, softDeleteMerchandiseController);
+router.put(
+  "/delete-soft",
+  admin_authenticate,
+  role_authenticate(["admin", "finance"]),
+  softDeleteMerchandiseController
+);
 
 // Publish merch
-router.put("/publish", admin_authenticate, publishMerchandiseController);
+router.put(
+  "/publish",
+  admin_authenticate,
+  role_authenticate(["admin", "finance"]),
+  publishMerchandiseController
+);
 
 module.exports = router;
