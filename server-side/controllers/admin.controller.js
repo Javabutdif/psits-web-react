@@ -1,4 +1,3 @@
-const express = require("express");
 const bcrypt = require("bcryptjs");
 const Admin = require("../models/AdminModel");
 const MembershipHistory = require("../models/MembershipHistory");
@@ -7,14 +6,8 @@ const Student = require("../models/StudentModel");
 const Order = require("../models/OrdersModel");
 const Log = require("../models/LogModel");
 const { format, startOfDay, endOfDay } = require("date-fns");
-const nodemailer = require("nodemailer");
-const ejs = require("ejs");
-const path = require("path");
-const {
-  admin_model,
-  user_model,
-  role_model,
-} = require("../model_template/model_data");
+const { admin_model, role_model } = require("../model_template/model_data");
+const { membershipRequestReceipt } = require("../mail_template/mail.template");
 const mongoose = require("mongoose");
 
 const getSearchStudentByIdController = async (req, res) => {
@@ -95,51 +88,21 @@ const approveMembershipController = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD_APP_EMAIL,
-      },
-    });
-
-    const emailTemplate = await ejs.renderFile(
-      path.join(__dirname, "../templates/appr-membership-receipt.ejs"), // Path to the ejs file
-      {
-        name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
-        reference_code,
-        cash: cash ? cash : 50,
-        total: cash ? cash : 50,
-        course: student.course,
-        year: student.year,
-        admin: admin ? admin : req.user.name,
-        date: format(new Date(), "MMMM d, yyyy"),
-        change: cash - total,
-      }
-    );
-
-    const mailOptions = {
-      from: process.env.EMAIL,
-      to: student.email,
-      subject: "Your Receipt from PSITS - UC Main",
-      html: emailTemplate,
-      attachments: [
-        {
-          filename: "psits.jpg",
-          path: path.join(__dirname, "../src/psits.jpg"),
-          cid: "logo",
-        },
-      ],
+    const data = {
+      name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
+      reference_code,
+      cash: cash ?? 50,
+      total: cash ?? 50,
+      course: student.course,
+      year: student.year,
+      admin: admin ?? req.user.name,
+      date: format(new Date(), "MMMM d, yyyy"),
+      change: (cash ?? 50) - (cash ?? 50),
     };
 
-    // Send the email
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error sending email:", error);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
-    });
+    // Call the reusable receipt function
+    await membershipRequestReceipt(data, student.email);
+
     return res
       .status(200)
       .json({ message: "Membership approved successfully" });
