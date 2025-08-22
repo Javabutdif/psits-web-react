@@ -1,4 +1,3 @@
-const express = require("express");
 const Student = require("../models/StudentModel");
 const Event = require("../models/EventsModel");
 const Cart = require("../models/CartModel");
@@ -9,9 +8,7 @@ const Admin = require("../models/AdminModel");
 const { ObjectId } = require("mongodb");
 require("dotenv").config();
 const { format } = require("date-fns");
-const nodemailer = require("nodemailer");
-const ejs = require("ejs");
-const path = require("path");
+const { orderReceipt } = require("../mail_template/mail.template");
 const orderSearch = require("../utils/searchPendingOrders");
 const orderSort = require("../utils/sortPendingOrders");
 const mongoose = require("mongoose");
@@ -383,57 +380,25 @@ const approveOrderController = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    // Render and send the email
-    const emailTemplate = await ejs.renderFile(
-      path.join(__dirname, "../templates/appr-order-receipt.ejs"),
-      {
-        reference_code: successfulOrder.reference_code,
-        transaction_date: format(
-          new Date(successfulOrder.transaction_date),
-          "MMMM d, yyyy"
-        ),
-        student_name: student
-          ? `${student.first_name} ${student.middle_name} ${student.last_name}`
-          : "N/A",
-        rfid: successfulOrder.rfid || "N/A",
-        course: student.course || "N/A",
-        year: student.year || "N/A",
-        admin: admin || "N/A",
-        items: successfulOrder.items,
-        cash: cash || "N/A",
-        total: successfulOrder.total || "N/A",
-      }
-    );
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD_APP_EMAIL,
-      },
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL,
-      to: student.email,
-      subject: "Your Order Receipt from PSITS - UC Main",
-      html: emailTemplate,
-      attachments: [
-        {
-          filename: "psits.jpg",
-          path: path.join(__dirname, "../src/psits.jpg"),
-          cid: "logo",
-        },
-      ],
+    const data = {
+      reference_code: successfulOrder.reference_code,
+      transaction_date: format(
+        new Date(successfulOrder.transaction_date),
+        "MMMM d, yyyy"
+      ),
+      student_name: student
+        ? `${student.first_name} ${student.middle_name} ${student.last_name}`
+        : "N/A",
+      rfid: successfulOrder.rfid || "N/A",
+      course: student.course || "N/A",
+      year: student.year || "N/A",
+      admin: admin || "N/A",
+      items: successfulOrder.items,
+      cash: cash || "N/A",
+      total: successfulOrder.total || "N/A",
     };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error sending email:", error);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
-    });
+    //Order receipt reusable function
+    await orderReceipt(data, student.email);
 
     return res.status(200).json({
       message: "Order approved. Email may have failed.",
