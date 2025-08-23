@@ -1,7 +1,9 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+import mongoose, { Schema, Document, Types } from "mongoose";
+import { ICart } from "./cart.interface";
 
-const cartItemSchema = new Schema({
+export interface ICartDocument extends ICart, Document {}
+
+const cartItemSchema = new Schema<ICartDocument>({
   product_id: {
     type: Schema.Types.ObjectId,
     ref: "Merch",
@@ -40,16 +42,17 @@ const cartItemSchema = new Schema({
     required: true,
   },
   variation: {
-    type: Array,
+    type: Array<String>,
   },
   sizes: {
-    type: Array,
+    type: Array<String>,
   },
   batch: {
     type: String,
   },
 });
 
-// Export as CartItem
-const CartItem = mongoose.model("CartItem", cartItemSchema);
-module.exports = CartItem;
+export const CartItem = mongoose.model<ICartDocument>(
+  "CartItem",
+  cartItemSchema
+);

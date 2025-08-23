@@ -1,14 +1,13 @@
-const express = require("express");
+import { Router } from "express";
+import loginLimiter from "../util/limiter.util";
+const router: Router = Router();
 
-require("dotenv").config();
 const {
   loginController,
   registerController,
   forgotPasswordController,
   resetPasswordController,
 } = require("../controllers/index.controller");
-const loginLimiter = require("../util/limiter.util");
-const router = express.Router();
 
 //lOGIN
 router.post("/login", loginLimiter, loginController);
@@ -19,4 +18,4 @@ router.post("/student/forgot-password", forgotPasswordController);
 // Student reset password
 router.post("/student/reset-password/:token", resetPasswordController);
 
-module.exports = router;
+export default router;

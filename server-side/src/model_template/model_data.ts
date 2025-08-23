@@ -1,4 +1,12 @@
-const admin_model = (admin) => {
+import { IAdmin } from "../models/admin.interface";
+import { IStudent } from "models/student.interface";
+import {
+  IAdminModelData,
+  IRoleModelData,
+  IUserModelData,
+} from "./model_data.interface";
+
+export const admin_model = (admin: IAdmin): IAdminModelData => {
   return {
     id_number: admin.id_number,
     name: admin.name,
@@ -7,12 +15,12 @@ const admin_model = (admin) => {
     year: admin.year,
     role: "Admin",
     position: admin.position,
-    campus: admin.campus,
+    campus: admin.campus ?? "",
     access: admin.access,
-    status: admin.status,
+    status: admin.status ?? "True",
   };
 };
-const user_model = (user) => {
+export const user_model = (user: IStudent): IUserModelData => {
   return {
     id_number: user.id_number,
     name: user.first_name + " " + user.middle_name + " " + user.last_name,
@@ -21,12 +29,11 @@ const user_model = (user) => {
     year: user.year,
     role: "Student",
     position: "Student",
-    audience: user.audience,
     campus: user.campus,
     status: user.status,
   };
 };
-const role_model = (user) => {
+export const role_model = (user: IStudent): IRoleModelData => {
   return {
     id_number: user.id_number,
     name: user.first_name + " " + user.middle_name + " " + user.last_name,
@@ -36,11 +43,8 @@ const role_model = (user) => {
     role: user.role,
     position: "Student",
     status: user.status,
-    audience: user.audience,
     campus: user.campus,
     isRequest: user.isRequest,
     adminRequest: user.adminRequest,
   };
 };
-
-module.exports = { admin_model, user_model, role_model };

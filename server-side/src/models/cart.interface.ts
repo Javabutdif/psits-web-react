@@ -1,0 +1,17 @@
+import { Types } from "mongoose";
+
+export interface ICart {
+  product_id: Types.ObjectId; //Type schema product_id
+  imageUrl1: string;
+  product_name: string;
+  limited: boolean;
+  start_date: Date;
+  end_date: Date;
+  category: string;
+  price: number;
+  quantity: number;
+  sub_total: number;
+  variation?: Array<String>;
+  sizes?: Array<String>;
+  batch: string;
+}

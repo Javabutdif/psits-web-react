@@ -1,11 +1,23 @@
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
-const token_key = process.env.JWT_SECRET;
-const Admin = require("../models/AdminModel");
-const Student = require("../models/StudentModel");
-const { admin_model, user_model } = require("../model_template/model_data");
+// const jwt = require("jsonwebtoken");
+// require("dotenv").config();
+// const token_key = process.env.JWT_SECRET;
+// const Admin = require("../models/AdminModel");
+// const Student = require("../models/StudentModel");
+// const { admin_model, user_model } = require("../model_template/model_data");
 
-const admin_authenticate = (req, res, next) => {
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import { Request, Response, NextFunction } from "express";
+dotenv.config();
+const token_key = process.env.JWT_SECRET ?? "";
+import { Admin } from "../models/admin.model";
+
+
+const admin_authenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader =
     req.headers["authorization"] || req.headers["Authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -14,7 +26,7 @@ const admin_authenticate = (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  jwt.verify(token, token_key, async (err, decoded) => {
+  jwt.verify(token, token_key, async (err: any, decoded: any) => {
     if (err) {
       return res.status(403).json({ message: "Forbidden" });
     }
