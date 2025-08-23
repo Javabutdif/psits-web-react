@@ -4,7 +4,7 @@
 import ejs from "ejs";
 import path from "path";
 import nodemailer from "nodemailer";
-import { IMembershipRequest } from "./mail.interface";
+import { IMembershipRequest, IOrderReceipt } from "./mail.interface";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -49,7 +49,7 @@ export const membershipRequestReceipt = async (
   });
 };
 
-const orderReceipt = async (data, studentEmail) => {
+const orderReceipt = async (data: IOrderReceipt, studentEmail: string) => {
   const emailTemplate = await ejs.renderFile(
     path.join(__dirname, "../templates/appr-order-receipt.ejs"),
     data
@@ -85,7 +85,11 @@ const orderReceipt = async (data, studentEmail) => {
   });
 };
 
-const forgotPasswordMail = async (studentMail, url, token) => {
+export const forgotPasswordMail = async (
+  studentMail: string,
+  url: string,
+  token: string
+) => {
   const mailOptions = {
     from: process.env.EMAIL,
     to: studentMail,
@@ -122,15 +126,9 @@ const forgotPasswordMail = async (studentMail, url, token) => {
   transporter.sendMail(mailOptions, (err, info) => {
     if (err) {
       console.error("Error sending email:", err.message);
-      return res.status(500).send({ message: err.message });
+      return { status: false, message: "Error sending email" };
     }
 
-    res.status(200).send({ message: "Email sent" });
+    return { status: true, message: "Email Sent" };
   });
-};
-
-module.exports = {
-  membershipRequestReceipt,
-  orderReceipt,
-  forgotPasswordMail,
 };

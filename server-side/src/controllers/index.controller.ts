@@ -1,26 +1,29 @@
-const nodemailer = require("nodemailer");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const Student = require("../models/StudentModel");
-const Admin = require("../models/AdminModel");
-const Log = require("../models/LogModel");
-const { forgotPasswordMail } = require("../mail_template/mail.template");
-require("dotenv").config();
-const token_key = process.env.JWT_SECRET;
+import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import { Student } from "../models/student.model";
+import { Admin, IAdminDocument } from "../models/admin.model";
+import { Log } from "../models/log.model";
+import { forgotPasswordMail } from "../mail_template/mail.template";
+import { Request, Response } from "express";
+import { IStudent } from "../models/student.interface";
+import { IAdmin } from "../models/admin.interface";
+import dotenv from "dotenv";
+dotenv.config();
+const token_key = process.env.JWT_SECRET ?? "Default_Token";
+const url =
+  process.env.DB_NAME !== "psits-test"
+    ? "https://psits.vercel.app/reset-password/"
+    : "https://psits-staging.vercel.app/reset-password/";
 
-const indicator = process.env.DB_NAME !== "psits-test" ? true : false;
-const url = indicator
-  ? "https://psits.vercel.app/reset-password/"
-  : "https://psits-staging.vercel.app/reset-password/";
-
-const loginController = async (req, res) => {
+export const loginController = async (req: Request, res: Response) => {
   const { id_number, password } = req.body;
 
   try {
-    let users;
+    let users: IAdminDocument | IStudent;
     let role;
-    let admin = null;
-    let student = null;
+    let admin: IAdminDocument | null = null;
+    let student: IStudent | null = null;
     let campus;
 
     if (id_number.includes("-admin")) {
@@ -72,14 +75,16 @@ const loginController = async (req, res) => {
       expiresIn: role === "Admin" ? "4h" : "10m",
     });
 
-    if (role === "Admin") {
-      const log = new Log({
-        admin: users.name,
-        admin_id: users._id,
-        action: "Admin Login",
-      });
+    if (admin) {
+      if (role === "Admin") {
+        const log = new Log({
+          admin: admin.name,
+          admin_id: admin._id,
+          action: "Admin Login",
+        });
 
-      await log.save();
+        await log.save();
+      }
     }
 
     return res.status(200).json({
@@ -94,7 +99,7 @@ const loginController = async (req, res) => {
   }
 };
 
-const registerController = async (req, res) => {
+const registerController = async (req: Request, res: Response) => {
   const {
     id_number,
     password,
@@ -132,7 +137,7 @@ const registerController = async (req, res) => {
 
     res.status(200).json({ message: "Registration successful" });
   } catch (error) {
-    if (error.code === 11000) {
+    if (error) {
       res.status(400).json({ message: "Id number already exists" });
     } else {
       console.error({ message: "Error saving new student:", error });
@@ -141,7 +146,7 @@ const registerController = async (req, res) => {
   }
 };
 
-const forgotPasswordController = async (req, res) => {
+export const forgotPasswordController = async (req: Request, res: Response) => {
   try {
     let user;
     let position;
@@ -178,19 +183,23 @@ const forgotPasswordController = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id }, token_key, {
       expiresIn: "10m",
     });
     await forgotPasswordMail(req.body.email, url, token);
   } catch (err) {
-    console.error("Server error during forgot password process:", err.message);
-    res.status(500).send({ message: err.message });
+    console.error("Server error during forgot password process:", err);
+    res.status(500).send({ message: err });
   }
 };
 
-const resetPasswordController = async (req, res) => {
+export interface jwtPayload {
+  userId: string;
+}
+
+export const resetPasswordController = async (req: Request, res: Response) => {
   try {
-    const decodedToken = jwt.verify(req.params.token, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(req.params.token, token_key) as jwtPayload;
 
     if (!decodedToken) {
       return res.status(401).send({ message: "Invalid token" });
@@ -201,15 +210,15 @@ const resetPasswordController = async (req, res) => {
     const getAdmin = await Admin.findOne({ _id: decodedToken.userId });
     if (getStudent) {
       // Hash the new password
-      const salt = await bycrypt.genSalt(10);
-      req.body.newPassword = await bycrypt.hash(req.body.newPassword, salt);
+      const salt = await bcrypt.genSalt(10);
+      req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
 
       // Update user's password, clear reset token and expiration time
       getStudent.password = req.body.newPassword;
       await getStudent.save();
     } else if (getAdmin) {
-      const salt = await bycrypt.genSalt(10);
-      req.body.newPassword = await bycrypt.hash(req.body.newPassword, salt);
+      const salt = await bcrypt.genSalt(10);
+      req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
 
       // Update user's password, clear reset token and expiration time
       getAdmin.password = req.body.newPassword;
@@ -222,13 +231,6 @@ const resetPasswordController = async (req, res) => {
     res.status(200).send({ message: "Password updated" });
   } catch (err) {
     // Send error response if any error occurs
-    res.status(500).send({ message: err.message });
+    res.status(500).send({ message: err });
   }
-};
-
-module.exports = {
-  loginController,
-  registerController,
-  forgotPasswordController,
-  resetPasswordController,
 };
