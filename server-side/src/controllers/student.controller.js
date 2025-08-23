@@ -3,7 +3,7 @@ const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
 const Orders = require("../models/OrdersModel");
 const Log = require("../models/LogModel");
-const MembershipHistory = require("../models/MembershipHistory");
+const MembershipHistory = require("../models/history,model");
 const { format } = require("date-fns");
 
 const mongoose = require("mongoose");

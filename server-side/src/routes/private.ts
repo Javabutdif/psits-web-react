@@ -3,7 +3,7 @@ const {
   student_authenticate,
 } = require("../middlewares/custom_authenticate_token");
 
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
 const router: Router = Router();
 
 //protected route for admin
@@ -12,10 +12,10 @@ router.get(
   admin_authenticate,
   async (req: Request, res: Response) => {
     try {
-      if (req.user?.role === "Admin") {
+      if (req.admin.role === "Admin") {
         return res.status(200).json({
-          user: req.user,
-          role: req.user.role,
+          user: req.admin,
+          role: req.admin.role,
         });
       } else return res.status(400).json({ message: "Access Denied" });
     } catch (error) {
@@ -29,10 +29,10 @@ router.get(
   student_authenticate,
   async (req, res) => {
     try {
-      if (req.user.role === "Student") {
+      if (req.student.role === "Student") {
         return res.status(200).json({
-          user: req.user,
-          role: req.user.role,
+          user: req.student,
+          role: req.student.role,
         });
       } else return res.status(400).json({ message: "Access Denied" });
     } catch (error) {

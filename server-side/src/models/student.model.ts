@@ -1,8 +1,10 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-const CartItem = require("./CartModel"); // Import the CartItem schema
+import mongoose, { Schema, Document, Types } from "mongoose";
+import { IStudent } from "./student.interface";
+import { CartItem } from "./cart.model";
 
-const studentSchema = new Schema({
+export interface IStudentDocument extends IStudent, Document {}
+
+const studentSchema = new Schema<IStudentDocument>({
   id_number: {
     type: String,
     unique: true,
@@ -72,8 +74,10 @@ const studentSchema = new Schema({
     type: String,
   },
 
-  cart: [CartItem.schema],
+  cart: [CartItem],
 });
 
-const Student = mongoose.model("Student", studentSchema);
-module.exports = Student;
+export const Student = mongoose.model<IStudentDocument>(
+  "Student",
+  studentSchema
+);

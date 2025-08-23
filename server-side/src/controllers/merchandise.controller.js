@@ -1,4 +1,4 @@
-const Merch = require("../models/MerchModel");
+const Merch = require("../models/merch.model");
 const Student = require("../models/StudentModel");
 const Orders = require("../models/OrdersModel");
 const Admin = require("../models/AdminModel");

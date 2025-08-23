@@ -1,8 +1,9 @@
-const mongoose = require("mongoose");
+import mongoose, { Schema, Document } from "mongoose";
+import { IHistory } from "./history.interface";
 
-const Schema = mongoose.Schema;
+export interface IHistoryDocument extends IHistory, Document {}
 
-const historySchema = new Schema({
+const historySchema = new Schema<IHistoryDocument>({
   id_number: {
     type: String,
     require: true,
@@ -41,6 +42,7 @@ const historySchema = new Schema({
   },
 });
 
-const MembershipHistory = mongoose.model("membshipHistory", historySchema);
-
-module.exports = MembershipHistory;
+export const MembershipHistory = mongoose.model<IHistoryDocument>(
+  "membshipHistory",
+  historySchema
+);

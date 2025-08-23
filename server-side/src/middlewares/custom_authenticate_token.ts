@@ -1,26 +1,31 @@
-// const jwt = require("jsonwebtoken");
-// require("dotenv").config();
-// const token_key = process.env.JWT_SECRET;
-// const Admin = require("../models/AdminModel");
-// const Student = require("../models/StudentModel");
-// const { admin_model, user_model } = require("../model_template/model_data");
-
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
 dotenv.config();
 const token_key = process.env.JWT_SECRET ?? "";
 import { Admin } from "../models/admin.model";
+import { Student } from "../models/student.model";
+import { admin_model, user_model } from "../model_template/model_data";
 
 
-const admin_authenticate = (
+export const admin_authenticate = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const authHeader =
     req.headers["authorization"] || req.headers["Authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+
+  let token: string | undefined;
+
+  if (authHeader) {
+    if (Array.isArray(authHeader)) {
+      token = authHeader[0].split(" ")[1];
+    } else {
+      token = authHeader.split(" ")[1];
+    }
+  }
+  
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -32,10 +37,10 @@ const admin_authenticate = (
     }
 
     try {
-      const admin = await Admin.findOne({ id_number: decoded.user?.id_number });
+      const admin = await Admin.findOne({ id_number: decoded.user.id_number });
 
       if (admin) {
-        req.user = admin_model(admin);
+        req.admin = admin_model(admin);
         next();
       } else res.status(403).json({ message: "Access Denied" });
     } catch (error) {
@@ -44,15 +49,29 @@ const admin_authenticate = (
   });
 };
 
-const student_authenticate = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+export const student_authenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader =
+    req.headers["authorization"] || req.headers["Authorization"];
+
+  let token: string | undefined;
+
+  if (authHeader) {
+    if (Array.isArray(authHeader)) {
+      token = authHeader[0].split(" ")[1];
+    } else {
+      token = authHeader.split(" ")[1];
+    }
+  }
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  jwt.verify(token, token_key, async (err, decoded) => {
+  jwt.verify(token, token_key, async (err: any, decoded: any) => {
     if (err) {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -63,7 +82,7 @@ const student_authenticate = (req, res, next) => {
       });
 
       if (student) {
-        req.user = user_model(student);
+        req.student = user_model(student);
         next();
       } else res.status(403).json({ message: "Access Denied" });
     } catch (error) {
@@ -72,15 +91,29 @@ const student_authenticate = (req, res, next) => {
   });
 };
 
-const both_authenticate = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+export const both_authenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader =
+    req.headers["authorization"] || req.headers["Authorization"];
+
+  let token: string | undefined;
+
+  if (authHeader) {
+    if (Array.isArray(authHeader)) {
+      token = authHeader[0].split(" ")[1];
+    } else {
+      token = authHeader.split(" ")[1];
+    }
+  }
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  jwt.verify(token, token_key, async (err, decoded) => {
+  jwt.verify(token, token_key, async (err: any, decoded: any) => {
     if (err) {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -95,11 +128,11 @@ const both_authenticate = (req, res, next) => {
           id_number: decoded.user?.id_number,
         });
         if (admin) {
-          req.user = admin_model(admin);
+          req.both = admin_model(admin);
           next();
         } else res.status(403).json({ message: "Access Denied" });
       } else if (student) {
-        req.user = user_model(student);
+        req.both = user_model(student);
         next();
       } else res.status(403).json({ message: "Access Denied" });
     } catch (error) {
@@ -108,24 +141,17 @@ const both_authenticate = (req, res, next) => {
   });
 };
 
-const role_authenticate = (access) => {
-  return (req, res, next) => {
+export const role_authenticate = (access: Array<String>) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (access.includes(req.user.access)) {
+      if (access.includes(req.admin?.access ?? "")) {
         next();
       } else {
         res.status(403).json({ message: "Forbidden Path" });
       }
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error });
     }
   };
-};
-
-module.exports = {
-  admin_authenticate,
-  student_authenticate,
-  both_authenticate,
-  role_authenticate,
 };

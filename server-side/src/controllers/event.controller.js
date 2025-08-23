@@ -1,6 +1,6 @@
 const express = require("express");
 const Events = require("../models/EventsModel");
-const Merch = require("../models/MerchModel");
+const Merch = require("../models/merch.model");
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 

@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export interface ICart {
-  product_id: Types.ObjectId; //Type schema product_id
+  product_id: Types.ObjectId;
   imageUrl1: string;
   product_name: string;
   limited: boolean;

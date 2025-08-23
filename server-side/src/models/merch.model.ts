@@ -1,8 +1,9 @@
-const mongoose = require("mongoose");
+import mongoose, { Schema, Document } from "mongoose";
+import { IOrderDetails, ISales, IMerch } from "./merch.interface";
 
-const Schema = mongoose.Schema;
+export interface IOrderDetailsDocument extends IOrderDetails, Document {}
 
-const orderDetailSchema = new Schema({
+const orderDetailSchema = new Schema<IOrderDetailsDocument>({
   product_name: {
     type: String,
   },
@@ -30,10 +31,10 @@ const orderDetailSchema = new Schema({
     type: String,
   },
   size: {
-    type: Array,
+    type: Array<String>,
   },
   variation: {
-    type: Array,
+    type: Array<String>,
   },
   quantity: {
     type: Number,
@@ -51,7 +52,8 @@ const orderDetailSchema = new Schema({
   },
 });
 
-const salesDataSchema = new Schema({
+export interface ISalesDataDocument extends ISales, Document {}
+const salesDataSchema = new Schema<ISalesDataDocument>({
   unitsSold: {
     type: Number,
     default: 0,
@@ -62,7 +64,9 @@ const salesDataSchema = new Schema({
   },
 });
 
-const merchSchema = new Schema(
+export interface IMerchDocument extends IMerch, Document {}
+
+const merchSchema = new Schema<IMerchDocument>(
   {
     name: {
       type: String,
@@ -83,10 +87,10 @@ const merchSchema = new Schema(
       type: String,
     },
     selectedVariations: {
-      type: Array,
+      type: Array<String>,
     },
     selectedSizes: {
-      type: Map, 
+      type: Map,
       of: new mongoose.Schema({
         custom: Boolean,
         price: String,
@@ -124,7 +128,7 @@ const merchSchema = new Schema(
       required: true,
     },
     imageUrl: {
-      type: Array,
+      type: Array<String>,
     },
 
     sales_data: {
@@ -136,6 +140,4 @@ const merchSchema = new Schema(
   { timestamps: true }
 );
 
-const Merch = mongoose.model("merch", merchSchema);
-
-module.exports = Merch;
+export const Merch = mongoose.model<IMerchDocument>("merch", merchSchema);
