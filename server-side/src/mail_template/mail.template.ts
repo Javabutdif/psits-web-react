@@ -1,6 +1,12 @@
-const ejs = require("ejs");
-const path = require("path");
-const nodemailer = require("nodemailer");
+// const ejs = require("ejs");
+// const path = require("path");
+// const nodemailer = require("nodemailer");
+import ejs from "ejs";
+import path from "path";
+import nodemailer from "nodemailer";
+import { IMembershipRequest } from "./mail.interface";
+import dotenv from "dotenv";
+dotenv.config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -10,7 +16,10 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const membershipRequestReceipt = async (data, studenteEmail) => {
+export const membershipRequestReceipt = async (
+  data: IMembershipRequest,
+  studenteEmail: string
+) => {
   const emailTemplate = await ejs.renderFile(
     path.join(__dirname, "../templates/appr-membership-receipt.ejs"),
     data

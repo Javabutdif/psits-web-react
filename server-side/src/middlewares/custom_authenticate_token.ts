@@ -6,7 +6,7 @@ const token_key = process.env.JWT_SECRET ?? "";
 import { Admin } from "../models/admin.model";
 import { Student } from "../models/student.model";
 import { admin_model, user_model } from "../model_template/model_data";
-
+import { IAdminModelDataDocument } from "../model_template/model_data.interface";
 
 export const admin_authenticate = (
   req: Request,
@@ -25,7 +25,6 @@ export const admin_authenticate = (
       token = authHeader.split(" ")[1];
     }
   }
-  
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });

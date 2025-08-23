@@ -1,4 +1,4 @@
-import { bool } from "aws-sdk/clients/signer";
+import { Document } from "mongoose";
 
 export interface IAdminModelData {
   id_number: string;
@@ -32,8 +32,9 @@ export interface IRoleModelData {
   role: string;
   position: string;
   campus: string;
-
   status: string;
   isRequest: boolean;
   adminRequest: string;
 }
+
+export interface IAdminModelDataDocument extends IAdminModelData, Document {}

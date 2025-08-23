@@ -1,16 +1,26 @@
-const bcrypt = require("bcryptjs");
-const Admin = require("../models/AdminModel");
-const MembershipHistory = require("../models/history,model");
-const Merch = require("../models/merch.model");
-const Student = require("../models/StudentModel");
-const Order = require("../models/OrdersModel");
-const Log = require("../models/log.model");
-const { format, startOfDay, endOfDay } = require("date-fns");
-const { admin_model, role_model } = require("../model_template/model_data");
-const { membershipRequestReceipt } = require("../mail_template/mail.template");
-const mongoose = require("mongoose");
+import { Request, Response } from "express";
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import { Student } from "../models/student.model";
+import { Admin } from "../models/admin.model";
+import { Merch } from "../models/merch.model";
+import { Orders } from "../models/orders.model";
+import { Log } from "../models/log.model";
+import { MembershipHistory } from "models/history,model";
+import { format, startOfDay, endOfDay } from "date-fns";
+import { admin_model, role_model } from "../model_template/model_data";
+import { membershipRequestReceipt } from "mail_template/mail.template";
+import { IMembershipRequest } from "mail_template/mail.interface";
+import { IStudent } from "../models/student.interface";
+import { IHistory } from "../models/history.interface";
+import { IOrders } from "../models/orders.interface";
+import { IAdmin, IAdminDocument } from "../models/admin.interface";
+import { IAdminModelData } from "model_template/model_data.interface";
 
-const getSearchStudentByIdController = async (req, res) => {
+export const getSearchStudentByIdController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.params;
   try {
     const student = await Student.findOne({
@@ -26,13 +36,14 @@ const getSearchStudentByIdController = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const approveMembershipController = async (req, res) => {
+export const approveMembershipController = async (
+  req: Request,
+  res: Response
+) => {
   const { reference_code, id_number, type, admin, rfid, date, cash, total } =
     req.body;
 
@@ -40,7 +51,9 @@ const approveMembershipController = async (req, res) => {
   session.startTransaction();
 
   try {
-    const student = await Student.findOne({ id_number }).session(session);
+    const student: IStudent | null = await Student.findOne({
+      id_number,
+    }).session(session);
 
     if (!student) {
       console.error(`Student with id_number ${id_number} not found.`);
@@ -73,7 +86,7 @@ const approveMembershipController = async (req, res) => {
       year: student.year,
       course: student.course,
       date: new Date(),
-      admin: admin ? admin : req.user.name,
+      admin: admin ? admin : req.admin.name,
     });
 
     const savedHistory = await history.save();
@@ -88,20 +101,20 @@ const approveMembershipController = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    const data = {
+    const data: IMembershipRequest = {
       name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
       reference_code,
       cash: cash ?? 50,
       total: cash ?? 50,
       course: student.course,
       year: student.year,
-      admin: admin ?? req.user.name,
+      admin: admin ?? req.admin.name,
       date: format(new Date(), "MMMM d, yyyy"),
       change: (cash ?? 50) - (cash ?? 50),
     };
 
     // Call the reusable receipt function
-    await membershipRequestReceipt(data, student.email);
+    await membershipRequestReceipt(data, student?.email ?? "");
 
     return res
       .status(200)
@@ -110,19 +123,20 @@ const approveMembershipController = async (req, res) => {
     console.error("Internal server error:", error);
     await session.abortTransaction();
     session.endSession();
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    res.status(500).json({ message: "Internal server error", error: error });
   }
 };
 
-const revokeAllMembershipController = async (req, res) => {
+export const revokeAllMembershipController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const revokeMembership = await Student.updateMany({
       membershipStatus: "NOT_APPLIED",
     });
 
-    if (!resetMembership) {
+    if (!revokeMembership) {
       return res.status(404).json({ message: "Student not found" });
     }
 
@@ -135,9 +149,35 @@ const revokeAllMembershipController = async (req, res) => {
   }
 };
 
-const getMembershipHistoryController = async (req, res) => {
+export const getMembershipHistoryController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const students = await MembershipHistory.find().sort({ date: -1 });
+    const history: IHistory[] = await MembershipHistory.find().sort({
+      date: -1,
+    });
+    if (!history) {
+      res.status(401).json({ message: "No History" });
+    }
+    res.status(200).json(history);
+  } catch (error) {
+    console.error("Error fetching membership history:", error);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const getMembershipRequestController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const students: IStudent[] = await Student.find({
+      membershipStatus: "PENDING",
+    });
+    if (!students) {
+      res.status(401).json({ message: "No students request" });
+    }
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -145,17 +185,10 @@ const getMembershipHistoryController = async (req, res) => {
   }
 };
 
-const getMembershipRequestController = async (req, res) => {
-  try {
-    const students = await Student.find({ membershipStatus: "PENDING" });
-    res.status(200).json(students);
-  } catch (error) {
-    console.error("Error fetching students:", error);
-    res.status(500).json("Internal Server Error");
-  }
-};
-
-const getStudentsCountController = async (req, res) => {
+export const getStudentsCountController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const [all, request, deleted] = await Promise.all([
       Student.countDocuments({
@@ -172,7 +205,10 @@ const getStudentsCountController = async (req, res) => {
   }
 };
 
-const getActiveMembershipCountController = async (req, res) => {
+export const getActiveMembershipCountController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const count = await Student.countDocuments({
       status: "True",
@@ -185,7 +221,10 @@ const getActiveMembershipCountController = async (req, res) => {
   }
 };
 
-const getPublishMerchandiseCountController = async (req, res) => {
+export const getPublishMerchandiseCountController = async (
+  req: Request,
+  res: Response
+) => {
   const now = new Date();
 
   const count = await Merch.countDocuments({
@@ -196,12 +235,18 @@ const getPublishMerchandiseCountController = async (req, res) => {
   return res.json({ message: count });
 };
 
-const getOrderPlacedCountController = async (req, res) => {
-  const count = await Order.countDocuments({ order_status: "Pending" });
+export const getOrderPlacedCountController = async (
+  req: Request,
+  res: Response
+) => {
+  const count = await Orders.countDocuments({ order_status: "Pending" });
   return res.json({ message: count });
 };
 
-const getStudentDashboardCountController = async (req, res) => {
+export const getStudentDashboardCountController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const [
       bsitCount,
@@ -241,13 +286,13 @@ const getStudentDashboardCountController = async (req, res) => {
   }
 };
 
-const getDailySalesController = async (req, res) => {
+export const getDailySalesController = async (req: Request, res: Response) => {
   try {
     const currentDate = new Date();
     const startOfDayDate = startOfDay(currentDate);
     const endOfDayDate = endOfDay(currentDate);
 
-    const result = await Order.aggregate([
+    const result: IOrders[] = await Orders.aggregate([
       {
         $match: {
           transaction_date: {
@@ -282,7 +327,10 @@ const getDailySalesController = async (req, res) => {
   }
 };
 
-const getAllAdminAccountsController = async (req, res) => {
+export const getAllAdminAccountsController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const officers = await Admin.find({ status: "Active" });
     const users = officers.map((officer) => admin_model(officer));
@@ -293,10 +341,13 @@ const getAllAdminAccountsController = async (req, res) => {
   }
 };
 
-const getAllAdminMembersController = async (req, res) => {
+export const getAllAdminMembersController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const rolesToFind = ["developer", "officers", "media", "volunteer"];
-    const members = await Student.find({
+    const members: IStudent[] = await Student.find({
       role: { $in: rolesToFind },
       isRequest: false,
     });
@@ -309,7 +360,10 @@ const getAllAdminMembersController = async (req, res) => {
   }
 };
 
-const getAllSuspendAdminAccountController = async (req, res) => {
+export const getAllSuspendAdminAccountController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const officers = await Admin.find({ status: "Suspend" });
     const users = officers.map((officer) => admin_model(officer));
@@ -320,13 +374,19 @@ const getAllSuspendAdminAccountController = async (req, res) => {
   }
 };
 
-const editAdminAccountController = async (req, res) => {
+export const editAdminAccountController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number, name, position, email, course, year, campus } = req.body;
 
   try {
-    const getAdmin = await Admin.findOne({
+    const getAdmin: IAdminDocument | null = await Admin.findOne({
       id_number: req.body.id_number,
     });
+    if (!getAdmin) {
+      res.status(400).json({ message: "No Admin Found!" });
+    }
 
     const adminResult = await Admin.updateOne(
       { id_number: id_number },
@@ -343,13 +403,12 @@ const editAdminAccountController = async (req, res) => {
     );
 
     if (adminResult.modifiedCount > 0) {
-      // Log the edit admin action
       const log = new Log({
-        admin: req.user.name,
-        admin_id: req.user._id,
+        admin: req.admin.name,
+        admin_id: req.admin._id,
         action: "Edited Admin",
         target: `${id_number} - ${name}`,
-        target_id: getAdmin._id,
+        target_id: getAdmin?._id,
         target_model: "Admin",
       });
 
@@ -365,9 +424,12 @@ const editAdminAccountController = async (req, res) => {
   }
 };
 
-const changeAdminPasswordController = async (req, res) => {
+export const changeAdminPasswordController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const getAdmin = await Admin.findOne({
+    const getAdmin: IAdminDocument | null = await Admin.findOne({
       id_number: req.body.id_number,
     });
 
@@ -381,8 +443,8 @@ const changeAdminPasswordController = async (req, res) => {
 
     // Log the password change action
     const log = new Log({
-      admin: req.user.name,
-      admin_id: req.user._id,
+      admin: req.admin.name,
+      admin_id: req.admin._id,
       action: "Changed Admin Password",
       target: `${getAdmin.id_number} - ${getAdmin.name}`,
       target_id: getAdmin._id,
@@ -393,13 +455,14 @@ const changeAdminPasswordController = async (req, res) => {
 
     res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const setSuspendAdminAccountController = async (req, res) => {
+export const setSuspendAdminAccountController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
@@ -419,13 +482,14 @@ const setSuspendAdminAccountController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error suspending admin:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const setMemberRoleRemoveController = async (req, res) => {
+export const setMemberRoleRemoveController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
@@ -438,7 +502,7 @@ const setMemberRoleRemoveController = async (req, res) => {
       }
     );
 
-    const updatedStudentOrder = await Order.updateMany(
+    const updatedStudentOrder = await Orders.updateMany(
       {
         id_number,
       },
@@ -456,19 +520,24 @@ const setMemberRoleRemoveController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error removing role from admin:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const setRestoreAdminAccountController = async (req, res) => {
+export const setRestoreAdminAccountController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
-    const getAdmin = await Admin.findOne({
+    const getAdmin: IAdminDocument | null = await Admin.findOne({
       id_number: req.body.id_number,
     });
+
+    if (!getAdmin) {
+      return res.status(400).json({ message: "No Admin Found!" });
+    }
 
     const updatedAdmin = await Admin.updateOne(
       { id_number },
@@ -482,11 +551,11 @@ const setRestoreAdminAccountController = async (req, res) => {
     if (updatedAdmin.modifiedCount > 0) {
       // Log the restore officer action
       const log = new Log({
-        admin: req.user.name,
-        admin_id: req.user._id,
+        admin: req.admin.name,
+        admin_id: req.admin._id,
         action: "Restored Suspended Admin",
-        target: `${id_number} - ${getAdmin.name}`,
-        target_id: getAdmin._id,
+        target: `${id_number} - ${getAdmin?.name}`,
+        target_id: getAdmin?._id,
         target_model: "Admin",
       });
 
@@ -498,17 +567,17 @@ const setRestoreAdminAccountController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error activating admin:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const setAdminRequestRoleController = async (req, res) => {
+const setAdminRequestRoleController = async (req: Request, res: Response) => {
   const { id_number, role, admin } = req.body;
 
   try {
-    const student = await Student.findOne({ id_number: id_number });
+    const student: IStudent | null = await Student.findOne({
+      id_number: id_number,
+    });
     const updatedRole = await Student.updateOne(
       { id_number },
       {
@@ -519,7 +588,7 @@ const setAdminRequestRoleController = async (req, res) => {
         },
       }
     );
-    const updatedStudentOrder = await Order.updateMany(
+    const updatedStudentOrder = await Orders.updateMany(
       { id_number },
       {
         $set: {
@@ -530,7 +599,7 @@ const setAdminRequestRoleController = async (req, res) => {
     await new Log({
       admin: admin,
       action:
-        "Request Role for " + student.first_name + " " + student.last_name,
+        "Request Role for " + student?.first_name + " " + student?.last_name,
       target: role + " request",
       target_model: "Student",
     }).save();
@@ -542,15 +611,16 @@ const setAdminRequestRoleController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating student role:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const getAllRequestMemberController = async (req, res) => {
+export const getAllRequestMemberController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const students = await Student.find({ isRequest: true });
+    const students: IStudent[] = await Student.find({ isRequest: true });
     const user = students.map((student) => role_model(student));
     res.status(200).json({ data: user });
   } catch (error) {
@@ -559,9 +629,12 @@ const getAllRequestMemberController = async (req, res) => {
   }
 };
 
-const getAllRequestAdminAccountController = async (req, res) => {
+export const getAllRequestAdminAccountController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const admin = await Admin.find({ status: "Request" });
+    const admin: IAdmin[] = await Admin.find({ status: "Request" });
     const users = admin.map((admins) => ({
       id_number: admins.id_number,
       email: admins.email,
@@ -578,7 +651,10 @@ const getAllRequestAdminAccountController = async (req, res) => {
   }
 };
 
-const approveRoleMemberController = async (req, res) => {
+export const approveRoleMemberController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
@@ -598,13 +674,14 @@ const approveRoleMemberController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating student role:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const setDeclineMemberRoleController = async (req, res) => {
+export const setDeclineMemberRoleController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
@@ -625,13 +702,14 @@ const setDeclineMemberRoleController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating student role:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const addNewAdminAccountController = async (req, res) => {
+export const addNewAdminAccountController = async (
+  req: Request,
+  res: Response
+) => {
   const {
     id_number,
     name,
@@ -646,7 +724,7 @@ const addNewAdminAccountController = async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newAdmin = new Admin({
+    const newAdmin: IAdminDocument = new Admin({
       id_number,
       name,
       password: hashedPassword,
@@ -666,7 +744,10 @@ const addNewAdminAccountController = async (req, res) => {
   }
 };
 
-const approveAdminAccountController = async (req, res) => {
+export const approveAdminAccountController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
@@ -686,13 +767,14 @@ const approveAdminAccountController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating admin account:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const declineAdminAccountController = async (req, res) => {
+export const declineAdminAccountController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
@@ -705,13 +787,14 @@ const declineAdminAccountController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error deleting admin account:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const setNewAdminAccessController = async (req, res) => {
+export const setNewAdminAccessController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number, newAccess } = req.body;
 
   if (!id_number || !newAccess) {
@@ -721,7 +804,9 @@ const setNewAdminAccessController = async (req, res) => {
   }
 
   try {
-    const adminToUpdate = await Admin.findOne({ id_number });
+    const adminToUpdate: IAdminDocument | null = await Admin.findOne({
+      id_number,
+    });
 
     if (!adminToUpdate) {
       return res.status(404).json({ message: "Admin not found" });
@@ -731,7 +816,7 @@ const setNewAdminAccessController = async (req, res) => {
     await adminToUpdate.save();
 
     await new Log({
-      admin: req.user.name,
+      admin: req.admin.name,
       action: `Change Access for ${adminToUpdate.name} to ${newAccess}`,
       target: "Change Access",
       target_model: "Admin",
@@ -740,39 +825,6 @@ const setNewAdminAccessController = async (req, res) => {
     res.status(200).json({ message: "Access updated successfully" });
   } catch (error) {
     console.error("Error updating access account:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
-};
-
-module.exports = {
-  getSearchStudentByIdController,
-  approveMembershipController,
-  revokeAllMembershipController,
-  getMembershipHistoryController,
-  getMembershipRequestController,
-  getStudentsCountController,
-  getActiveMembershipCountController,
-  getPublishMerchandiseCountController,
-  getOrderPlacedCountController,
-  getStudentDashboardCountController,
-  getDailySalesController,
-  getAllAdminAccountsController,
-  getAllAdminMembersController,
-  getAllSuspendAdminAccountController,
-  editAdminAccountController,
-  changeAdminPasswordController,
-  setSuspendAdminAccountController,
-  setMemberRoleRemoveController,
-  setRestoreAdminAccountController,
-  setAdminRequestRoleController,
-  getAllRequestMemberController,
-  getAllRequestAdminAccountController,
-  approveRoleMemberController,
-  setDeclineMemberRoleController,
-  addNewAdminAccountController,
-  approveAdminAccountController,
-  declineAdminAccountController,
-  setNewAdminAccessController,
 };
