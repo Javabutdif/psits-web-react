@@ -1,13 +1,11 @@
-const express = require("express");
-const {
+import { Router } from "express";
+import {
   addCartController,
   viewStudentCartController,
   deleteItemCartController,
-} = require("../controllers/cart.controller");
-const router = express.Router();
-const {
-  student_authenticate,
-} = require("../middlewares/custom_authenticate_token");
+} from "../controllers/cart.controller";
+import { student_authenticate } from "../middlewares/custom_authenticate_token";
+const router = Router();
 
 //Student Add Cart
 router.post("/add-cart", student_authenticate, addCartController);
@@ -16,4 +14,4 @@ router.get("/view-cart", student_authenticate, viewStudentCartController);
 //Student Delete Cart Item
 router.put("/delete-item-cart", student_authenticate, deleteItemCartController);
 
-module.exports = router;
+export default router;

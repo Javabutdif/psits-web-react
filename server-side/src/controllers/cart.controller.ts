@@ -1,8 +1,10 @@
-const Cart = require("../models/CartModel");
-const Student = require("../models/StudentModel");
-const mongoose = require("mongoose");
+import { CartItem } from "../models/cart.model";
+import { ICart } from "../models/cart.interface";
+import { Student, IStudentDocument } from "../models/student.model";
+import mongoose, { Types } from "mongoose";
+import { Request, Response } from "express";
 
-const addCartController = async (req, res) => {
+export const addCartController = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -24,19 +26,25 @@ const addCartController = async (req, res) => {
   } = req.body;
 
   try {
-    const student = await Student.findOne({ id_number }).session(session);
+    const student: IStudentDocument | null = await Student.findOne({
+      id_number,
+    }).session(session);
 
-    const productExists = student.cart.find(
-      (item) => item.product_id.toString() === product_id
+    if (!student) {
+      res.status(400).json({ message: "No student found!" });
+    }
+
+    const productExists = student?.cart.find(
+      (item: any) => item.product_id.toString() === product_id
     );
 
     if (productExists) {
-      const existingCart = await Cart.findOne({
+      const existingCart = await CartItem.findOne({
         _id: productExists._id,
       }).session(session);
 
       if (existingCart) {
-        await Cart.updateOne(
+        await CartItem.updateOne(
           { _id: productExists._id },
           {
             $set: {
@@ -45,23 +53,25 @@ const addCartController = async (req, res) => {
           }
         ).session(session);
 
-        const itemIndex = student.cart.findIndex(
-          (item) => item.product_id.toString() === product_id
-        );
+        if (student) {
+          const itemIndex = student?.cart.findIndex(
+            (item: ICart) => item.product_id.toString() === product_id
+          );
 
-        if (itemIndex > -1) {
-          student.cart[itemIndex].quantity = existingCart.quantity + quantity;
-          await student.save();
-          await session.commitTransaction();
-          session.endSession();
+          if (itemIndex !== -1) {
+            student.cart[itemIndex].quantity = existingCart.quantity + quantity;
+            await student.save();
+            await session.commitTransaction();
+            session.endSession();
 
-          res
-            .status(200)
-            .json({ message: "Added Item into the cart successfully" });
+            res
+              .status(200)
+              .json({ message: "Added Item into the cart successfully" });
+          }
         }
       }
     } else {
-      const newCart = new Cart({
+      const newCart = new CartItem({
         product_id,
         product_name,
         price,
@@ -94,7 +104,7 @@ const addCartController = async (req, res) => {
   } catch (error) {
     session.abortTransaction();
     session.endSession();
-    if (error.code === 11000) {
+    if (error) {
       res.status(400).json({ message: "Cannot add item in cart" });
     } else {
       console.error({ message: "Error saving new cart:", error });
@@ -103,15 +113,19 @@ const addCartController = async (req, res) => {
   }
 };
 
-const viewStudentCartController = async (req, res) => {
+export const viewStudentCartController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.query;
 
   try {
-    const student = await Student.findOne({
+    const student: IStudentDocument | null = await Student.findOne({
       id_number: id_number,
     });
-    if (student.cart.length > 0) {
-      res.status(200).json(student.cart);
+
+    if (student) {
+      if (student.cart.length > 0) res.status(200).json(student.cart);
     } else {
       res.status(400).json({ message: "No Records" });
     }
@@ -121,22 +135,24 @@ const viewStudentCartController = async (req, res) => {
   }
 };
 
-const deleteItemCartController = async (req, res) => {
+export const deleteItemCartController = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   const { id_number, cart_id } = req.body;
 
   try {
-    const result = await Student.findOneAndUpdate(
+    const result: IStudentDocument | null = await Student.findOneAndUpdate(
       { id_number: id_number },
       { $pull: { cart: { _id: cart_id } } },
       { new: true, useFindAndModify: false }
     ).session(session);
 
-    const cartId = new ObjectId(cart_id);
+    const cartId = new Types.ObjectId(cart_id);
 
-    const cartResult = await Cart.findByIdAndDelete(cartId).session(session);
+    const cartResult = await CartItem.findByIdAndDelete(cartId).session(
+      session
+    );
 
     if (!result && !cartResult) {
       await session.abortTransaction();
@@ -152,10 +168,4 @@ const deleteItemCartController = async (req, res) => {
   } catch (error) {
     console.error("Error deleting cart item:", error);
   }
-};
-
-module.exports = {
-  addCartController,
-  viewStudentCartController,
-  deleteItemCartController,
 };

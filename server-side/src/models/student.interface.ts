@@ -1,4 +1,5 @@
 import { ICart } from "./cart.interface";
+import { ICartDocument } from "./cart.model";
 
 export interface IStudent {
   id_number: string;
@@ -20,5 +21,5 @@ export interface IStudent {
   role: string;
   isRequest: boolean;
   adminRequest: string;
-  cart: ICart[];
+  cart: ICartDocument[];
 }

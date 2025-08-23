@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 import { IStudent } from "./student.interface";
-import { CartItem } from "./cart.model";
+import { CartItem, cartItemSchema } from "./cart.model";
 
 export interface IStudentDocument extends IStudent, Document {}
 
@@ -74,7 +74,7 @@ const studentSchema = new Schema<IStudentDocument>({
     type: String,
   },
 
-  cart: [CartItem],
+  cart: [cartItemSchema],
 });
 
 export const Student = mongoose.model<IStudentDocument>(

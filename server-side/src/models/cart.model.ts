@@ -3,7 +3,7 @@ import { ICart } from "./cart.interface";
 
 export interface ICartDocument extends ICart, Document {}
 
-const cartItemSchema = new Schema<ICartDocument>({
+export const cartItemSchema = new Schema<ICartDocument>({
   product_id: {
     type: Schema.Types.ObjectId,
     ref: "Merch",
