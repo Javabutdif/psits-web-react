@@ -1,9 +1,14 @@
-const mongoose = require("mongoose");
-const attendeeSchema = require("./AttendeesModel");
+import mongoose, { Schema, Document } from "mongoose";
+import { ISalesData, ISessionConfigType, IEvent } from "./event.interface";
+import { attendeeSchema } from "./attendee.model";
 
-const Schema = mongoose.Schema;
+export interface ISalesDataDocument extends ISalesData, Document {}
+export interface ISessionConfigTypeDocument
+  extends ISessionConfigType,
+    Document {}
+export interface IEventDocument extends IEvent, Document {}
 
-const salesDataSchema = new Schema({
+const salesDataSchema = new Schema<ISalesDataDocument>({
   campus: {
     type: String,
     enum: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"],
@@ -19,7 +24,7 @@ const salesDataSchema = new Schema({
   },
 });
 
-const sessionConfigTypeSchema = new Schema(
+const sessionConfigTypeSchema = new Schema<ISessionConfigTypeDocument>(
   {
     enabled: { type: Boolean },
     timeRange: { type: String },
@@ -27,7 +32,7 @@ const sessionConfigTypeSchema = new Schema(
   { _id: false }
 );
 
-const eventSchema = new Schema({
+const eventSchema = new Schema<IEventDocument>({
   eventId: {
     type: Schema.Types.ObjectId,
     ref: "Merch",
@@ -118,6 +123,4 @@ const eventSchema = new Schema({
   },
 });
 
-const Event = mongoose.model("event", eventSchema);
-
-module.exports = Event;
+export const Event = mongoose.model<IEventDocument>("event", eventSchema);

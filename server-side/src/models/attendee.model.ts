@@ -1,7 +1,12 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+import { Schema, Document } from "mongoose";
+import { IAttendanceSessionType, IAttendee } from "./attendee.interface";
 
-const attendanceSessionSchema = new Schema(
+export interface IAttendanceSessionTypeDocument
+  extends IAttendanceSessionType,
+    Document {}
+export interface IAttendeeDocument extends IAttendee, Document {}
+
+const attendanceSessionSchema = new Schema<IAttendanceSessionTypeDocument>(
   {
     attended: { type: Boolean, default: false },
     timestamp: { type: Date },
@@ -9,7 +14,7 @@ const attendanceSessionSchema = new Schema(
   { _id: false }
 );
 
-const attendeeSchema = new Schema({
+export const attendeeSchema = new Schema<IAttendeeDocument>({
   id_number: {
     type: String,
     required: true,
@@ -66,5 +71,3 @@ const attendeeSchema = new Schema({
     type: Date,
   },
 });
-
-module.exports = attendeeSchema;

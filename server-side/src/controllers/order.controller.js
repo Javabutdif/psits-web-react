@@ -1,5 +1,5 @@
 const Student = require("../models/StudentModel");
-const Event = require("../models/EventsModel");
+const Event = require("../models/event.model");
 const Cart = require("../models/CartModel");
 const Orders = require("../models/OrdersModel");
 const Merch = require("../models/merch.model");
