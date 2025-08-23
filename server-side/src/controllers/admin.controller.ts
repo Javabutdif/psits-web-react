@@ -571,7 +571,10 @@ export const setRestoreAdminAccountController = async (
   }
 };
 
-const setAdminRequestRoleController = async (req: Request, res: Response) => {
+export const setAdminRequestRoleController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number, role, admin } = req.body;
 
   try {

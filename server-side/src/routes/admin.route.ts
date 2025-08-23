@@ -1,5 +1,9 @@
-const express = require("express");
-const {
+import { Router } from "express";
+import {
+  admin_authenticate,
+  role_authenticate,
+} from "../middlewares/custom_authenticate_token";
+import {
   getSearchStudentByIdController,
   approveMembershipController,
   revokeAllMembershipController,
@@ -28,13 +32,9 @@ const {
   approveAdminAccountController,
   declineAdminAccountController,
   setNewAdminAccessController,
-} = require("../controllers/admin.controller");
-const {
-  admin_authenticate,
-  role_authenticate,
-} = require("../middlewares/custom_authenticate_token");
+} from "../controllers/admin.controller";
 
-const router = express.Router();
+const router = Router();
 
 //Search student by ID
 router.get(
@@ -201,4 +201,4 @@ router.put(
   setNewAdminAccessController
 );
 
-module.exports = router;
+export default router;
