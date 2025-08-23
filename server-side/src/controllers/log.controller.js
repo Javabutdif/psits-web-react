@@ -1,5 +1,5 @@
 const express = require("express");
-const Log = require("../models/LogModel");
+const Log = require("../models/log.model");
 const Admin = require("../models/AdminModel");
 
 const getAllLogsController = async (req, res) => {

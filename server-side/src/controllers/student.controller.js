@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const Student = require("../models/StudentModel");
 const Admin = require("../models/AdminModel");
 const Orders = require("../models/OrdersModel");
-const Log = require("../models/LogModel");
+const Log = require("../models/log.model");
 const MembershipHistory = require("../models/history,model");
 const { format } = require("date-fns");
 

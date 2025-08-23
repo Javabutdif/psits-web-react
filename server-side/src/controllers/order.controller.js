@@ -3,7 +3,7 @@ const Event = require("../models/EventsModel");
 const Cart = require("../models/CartModel");
 const Orders = require("../models/OrdersModel");
 const Merch = require("../models/merch.model");
-const Log = require("../models/LogModel");
+const Log = require("../models/log.model");
 const Admin = require("../models/AdminModel");
 const { ObjectId } = require("mongodb");
 require("dotenv").config();

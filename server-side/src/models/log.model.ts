@@ -1,7 +1,9 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+import mongoose, { Schema, Document } from "mongoose";
+import { ILog } from "./log.interface";
 
-const logSchema = new Schema({
+export interface ILogDocument extends ILog, Document {}
+
+const logSchema = new Schema<ILogDocument>({
   timestamp: {
     type: Date,
     default: Date.now,
@@ -35,6 +37,4 @@ const logSchema = new Schema({
   },
 });
 
-const Log = mongoose.model("Log", logSchema);
-
-module.exports = Log;
+export const Log = mongoose.model<ILogDocument>("Log", logSchema);
