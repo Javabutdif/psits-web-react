@@ -1,18 +1,28 @@
-const bcrypt = require("bcryptjs");
-const Student = require("../models/StudentModel");
-const Admin = require("../models/AdminModel");
-const Orders = require("../models/OrdersModel");
-const Log = require("../models/log.model");
-const MembershipHistory = require("../models/history,model");
-const { format } = require("date-fns");
+import bcrypt from "bcryptjs";
+import { Student, IStudentDocument } from "../models/student.model";
+import { Admin } from "../models/admin.model";
+import { Orders } from "../models/orders.model";
+import { Log } from "../models/log.model";
+import { MembershipHistory } from "../models/history,model";
+import { format } from "date-fns";
+import mongoose from "mongoose";
+import { Request, Response } from "express";
+import { IStudent } from "../models/student.interface";
+import { IHistory } from "../models/history.interface";
+import { IOrders } from "../models/orders.interface";
+import { IAdmin, IAdminDocument } from "../models/admin.interface";
 
-const mongoose = require("mongoose");
-
-const getAllActiveStudentsController = async (req, res) => {
+export const getAllActiveStudentsController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const students = await Student.find({
+    const students: IStudent[] = await Student.find({
       status: "True",
     });
+    if (!students) {
+      res.status(400).json({ message: "No Students" });
+    }
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -20,16 +30,23 @@ const getAllActiveStudentsController = async (req, res) => {
   }
 };
 
-const setStudentMembershipRequest = async (req, res) => {
+export const setStudentMembershipRequest = async (
+  req: Request,
+  res: Response
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const { id_number } = req.body;
 
-    const studentFind = await Student.findOne({ id_number: id_number }).session(
-      session
-    );
+    const studentFind: IStudent | null = await Student.findOne({
+      id_number: id_number,
+    }).session(session);
+
+    if (!studentFind) {
+      return res.status(400).json({ message: "No student found" });
+    }
 
     if (studentFind.membershipStatus !== "NOT_APPLIED") {
       return res
@@ -51,17 +68,21 @@ const setStudentMembershipRequest = async (req, res) => {
   } catch (error) {
     session.abortTransaction();
     session.endSession();
-    res
-      .status(500)
-      .json({ message: "Error submitting request", error: error.message });
+    res.status(500).json({ message: "Error submitting request", error: error });
   }
 };
 
-const getAllDeleteStudentController = async (req, res) => {
+export const getAllDeleteStudentController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const students = await Student.find({
+    const students: IStudent[] = await Student.find({
       status: "False",
     });
+    if (!students) {
+      res.status(400).json({ message: "No Deleted Students" });
+    }
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -69,10 +90,13 @@ const getAllDeleteStudentController = async (req, res) => {
   }
 };
 
-const getMembershipStatusController = async (req, res) => {
+export const getMembershipStatusController = async (
+  req: Request,
+  res: Response
+) => {
   const { id } = req.params;
   try {
-    const student = await Student.findOne({ id_number: id });
+    const student: IStudent | null = await Student.findOne({ id_number: id });
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
@@ -87,7 +111,10 @@ const getMembershipStatusController = async (req, res) => {
   }
 };
 
-const softDeleteStudentController = async (req, res) => {
+export const softDeleteStudentController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number, name } = req.body;
 
   try {
@@ -114,7 +141,10 @@ const softDeleteStudentController = async (req, res) => {
   }
 };
 
-const restoreDeletedStudentController = async (req, res) => {
+export const restoreDeletedStudentController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
@@ -137,7 +167,10 @@ const restoreDeletedStudentController = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
-const cancelMembershipRequestController = async (req, res) => {
+export const cancelMembershipRequestController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.body;
 
   try {
@@ -161,7 +194,7 @@ const cancelMembershipRequestController = async (req, res) => {
   }
 };
 
-const editStudentController = async (req, res) => {
+export const editStudentController = async (req: Request, res: Response) => {
   const {
     id_number,
     rfid,
@@ -175,7 +208,9 @@ const editStudentController = async (req, res) => {
 
   try {
     // Fetch the student document by id_number to get the _id
-    const student = await Student.findOne({ id_number: id_number });
+    const student: IStudentDocument | null = await Student.findOne({
+      id_number: id_number,
+    });
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
@@ -212,8 +247,8 @@ const editStudentController = async (req, res) => {
 
     // Log the editing action
     const log = new Log({
-      admin: req.user.name,
-      admin_id: req.user._id,
+      admin: req.admin.name,
+      admin_id: req.admin._id,
       action: "Edited Student",
       target: `${id_number} - ${first_name} ${middle_name} ${last_name}`,
       target_id: student._id,
@@ -221,7 +256,6 @@ const editStudentController = async (req, res) => {
     });
 
     await log.save();
-    //console.log("Action logged successfully.");
 
     res
       .status(200)
@@ -231,9 +265,9 @@ const editStudentController = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
-const changeStudentPassword = async (req, res) => {
+export const changeStudentPassword = async (req: Request, res: Response) => {
   try {
-    const getStudent = await Student.findOne({
+    const getStudent: IStudentDocument | null = await Student.findOne({
       id_number: req.body.id_number,
     });
 
@@ -247,8 +281,8 @@ const changeStudentPassword = async (req, res) => {
 
     // Log the password change action
     const log = new Log({
-      admin: req.user.name,
-      admin_id: req.user._id,
+      admin: req.admin.name,
+      admin_id: req.admin._id,
       action: "Changed Student Password",
       target: `${getStudent.id_number} - ${getStudent.first_name} ${getStudent.middle_name} ${getStudent.last_name}`,
       target_id: getStudent._id,
@@ -261,17 +295,18 @@ const changeStudentPassword = async (req, res) => {
     res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
     console.error("Error changing student password:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred", error: error.message });
+    res.status(500).json({ message: "An error occurred", error: error });
   }
 };
 
-const fetchSpecificStudentController = async (req, res) => {
+export const fetchSpecificStudentController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.params;
 
   try {
-    const student = await Student.findOne({ id_number });
+    const student: IStudent | null = await Student.findOne({ id_number });
     if (!student) {
       res.status(404).json({ message: "Student not found" });
     } else {
@@ -286,31 +321,24 @@ const fetchSpecificStudentController = async (req, res) => {
   }
 };
 
-const fetchSpecificMembershipHistoryController = async (req, res) => {
+export const fetchSpecificMembershipHistoryController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.params;
 
   try {
-    const membershipHistory = await MembershipHistory.find({
+    const membershipHistory: IHistory[] = await MembershipHistory.find({
       id_number: id_number,
     }).sort({ date: -1 });
+
+    if (!membershipHistory) {
+      res.status(400).json({ message: "No Membership History" });
+    }
 
     res.status(200).json({ data: membershipHistory });
   } catch (error) {
     console.error("Error fetching student membership history:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-};
-
-module.exports = {
-  getAllActiveStudentsController,
-  setStudentMembershipRequest,
-  getAllDeleteStudentController,
-  getMembershipStatusController,
-  softDeleteStudentController,
-  restoreDeletedStudentController,
-  cancelMembershipRequestController,
-  editStudentController,
-  changeStudentPassword,
-  fetchSpecificStudentController,
-  fetchSpecificMembershipHistoryController,
 };

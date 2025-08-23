@@ -1,6 +1,5 @@
-const express = require("express");
-
-const {
+import { Router } from "express";
+import {
   getAllActiveStudentsController,
   setStudentMembershipRequest,
   getAllDeleteStudentController,
@@ -12,16 +11,15 @@ const {
   changeStudentPassword,
   fetchSpecificStudentController,
   fetchSpecificMembershipHistoryController,
-} = require("../controllers/student.controller");
-
-const {
+} from "../controllers/student.controller";
+import {
   admin_authenticate,
   student_authenticate,
   both_authenticate,
   role_authenticate,
-} = require("../middlewares/custom_authenticate_token");
+} from "../middlewares/custom_authenticate_token";
 
-const router = express.Router();
+const router = Router();
 
 // GET list of accepted students
 router.get("/students", admin_authenticate, getAllActiveStudentsController);
@@ -88,4 +86,4 @@ router.get(
   fetchSpecificMembershipHistoryController
 );
 
-module.exports = router;
+export default router;

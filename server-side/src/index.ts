@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 //Routes Import
 import indexRoutes from "./routes/index.route";
 import adminRoutes from "./routes/admin.route";
+import studentRoutes from "./routes/students.route";
 // import { adminRoutes } from "./routes/admin";
 // import { studentRoutes } from "./routes/students";
 // import { merchRoutes } from "./routes/merch";
@@ -43,7 +44,7 @@ mongoose
 
 //Routes
 app.use("/api", indexRoutes);
-// app.use("/api", studentRoutes);
+app.use("/api", studentRoutes);
 app.use("/api/admin", adminRoutes);
 // app.use("/api/merch", merchRoutes);
 // app.use("/api/orders", orderRoutes);

@@ -15,7 +15,7 @@ import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
 import { IOrders } from "../models/orders.interface";
 import { IAdmin, IAdminDocument } from "../models/admin.interface";
-import { IAdminModelData } from "model_template/model_data.interface";
+
 
 export const getSearchStudentByIdController = async (
   req: Request,
