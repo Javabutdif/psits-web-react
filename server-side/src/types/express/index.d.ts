@@ -5,6 +5,8 @@ import {
   IUserModelData,
   IAdminModelDataDocument,
 } from "model_template/model_data.interface";
+import { Request } from "express";
+import { MulterS3File } from "multer-s3";
 
 declare global {
   namespace Express {
@@ -12,6 +14,12 @@ declare global {
       both: IAdminModelData | IUserModelData;
       admin: IAdminModelData | IAdminModelDataDocument | any;
       student: IUserModelData;
+      files?: any;
+    }
+  }
+  namespace MulterS3 {
+    interface File extends Express.Multer.File {
+      location: string;
     }
   }
 }

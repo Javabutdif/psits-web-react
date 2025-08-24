@@ -1,15 +1,28 @@
-const Merch = require("../models/merch.model");
-const Student = require("../models/StudentModel");
-const Orders = require("../models/OrdersModel");
-const Admin = require("../models/AdminModel");
-const Log = require("../models/log.model");
-const Event = require("../models/event.model");
-const mongoose = require("mongoose");
-const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
-const { ObjectId } = require("mongodb");
-require("dotenv").config();
+import { Merch } from "../models/merch.model";
+import { Student } from "../models/student.model";
+import { Orders } from "../models/orders.model";
+import { Admin } from "../models/admin.model";
+import { Log } from "../models/log.model";
+import { Event } from "../models/event.model";
+import mongoose, { Types } from "mongoose";
+import { IMerch } from "../models/merch.interface";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { Request, Response } from "express";
+import dotenv from "dotenv";
+import { S3Client } from "@aws-sdk/client-s3";
+dotenv.config();
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION || "ap-southeast-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
+});
 
-const createMerchandiseController = async (req, res) => {
+export const createMerchandiseController = async (
+  req: Request,
+  res: Response
+) => {
   const {
     name,
     price,
@@ -54,7 +67,11 @@ const createMerchandiseController = async (req, res) => {
   }
 
   // Get the URLs of the uploaded images
-  const imageUrl = req.files.map((file) => file.location);
+
+  const imageUrl =
+    (req.files as Express.MulterS3.File[] | undefined)?.map(
+      (file) => file.location
+    ) || [];
 
   try {
     const newMerch = new Merch({
@@ -102,7 +119,7 @@ const createMerchandiseController = async (req, res) => {
             },
           },
           attendees: [],
-          createdBy: req.user.name,
+          createdBy: req.admin.name,
         });
 
         await newEvent.save();
@@ -113,37 +130,47 @@ const createMerchandiseController = async (req, res) => {
 
     const admin = await Admin.findOne({ name: created_by });
 
-    const log = new Log({
-      admin: admin.name,
-      admin_id: admin._id,
-      action: "Merchandise Creation",
-      target: newMerch.name,
-      target_id: newMerch._id,
-      target_model: "Merchandise",
-    });
+    if (admin) {
+      const log = new Log({
+        admin: admin.name,
+        admin_id: admin._id,
+        action: "Merchandise Creation",
+        target: newMerch.name,
+        target_id: newMerch._id,
+        target_model: "Merchandise",
+      });
 
-    await log.save();
-
+      await log.save();
+    }
     res.status(200).json("Merch Addition Successful");
   } catch (error) {
-    console.error("Error saving new merch:", error.message);
-    res.status(500).send(error.message);
+    console.error("Error saving new merch:", error);
+    res.status(500).send(error);
   }
 };
 
-const retrieveActiveMerchandiseController = async (req, res) => {
+export const retrieveActiveMerchandiseController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const merches = await Merch.find({
+    const merches: IMerch[] = await Merch.find({
       is_active: true,
     });
+    if (!merches) {
+      res.status(400).json({ message: "No Available Merchandise" });
+    }
     res.status(200).json(merches);
   } catch (error) {
-    console.error("Error fetching merches:", error.message);
-    res.status(500).send(error.message);
+    console.error("Error fetching merches:", error);
+    res.status(500).send(error);
   }
 };
 
-const retrieveSpecificMerchandiseController = async (req, res) => {
+export const retrieveSpecificMerchandiseController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { id } = req.params;
     const merch = await Merch.findById(id);
@@ -154,27 +181,33 @@ const retrieveSpecificMerchandiseController = async (req, res) => {
 
     res.status(200).json(merch);
   } catch (error) {
-    console.error("Error fetching merch:", error.message);
-    res.status(500).send(error.message);
+    console.error("Error fetching merch:", error);
+    res.status(500).send(error);
   }
 };
 
-const retrieveMerchAdminController = async (req, res) => {
+export const retrieveMerchAdminController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const merches = await Merch.find({});
+    const merches: IMerch[] = await Merch.find();
+    if (!merches) {
+      res.status(400).json({ message: "No Available Merchandise" });
+    }
     res.status(200).json(merches);
   } catch (error) {
-    console.error("Error fetching merches:", error.message);
-    res.status(500).send(error.message);
+    console.error("Error fetching merches:", error);
+    res.status(500).send(error);
   }
 };
 
-const deleteReportController = async (req, res) => {
+export const deleteReportController = async (req: Request, res: Response) => {
   const { product_id, id, merchName } = req.body;
 
   try {
     // Ensure the request comes from an admin
-    if (req.user.role !== "Admin") {
+    if (req.admin.role !== "Admin") {
       return res.status(403).json({ message: "Forbidden: Admin access only." });
     }
     const productId = new mongoose.Types.ObjectId(product_id);
@@ -193,16 +226,18 @@ const deleteReportController = async (req, res) => {
     }
 
     // Log the deletion action
-    const log = new Log({
-      admin: req.user.name,
-      admin_id: req.user._id,
-      action: "Deleted Merchandise Report",
-      target: merchName,
-      target_id: objectId,
-      target_model: "Merchandise Report",
-    });
+    if (req.admin) {
+      const log = new Log({
+        admin: req.admin.name,
+        admin_id: req.admin._id,
+        action: "Deleted Merchandise Report",
+        target: merchName,
+        target_id: objectId,
+        target_model: "Merchandise Report",
+      });
 
-    await log.save();
+      await log.save();
+    }
 
     res.status(200).json({
       message: "Success deleting student in reports",
@@ -213,7 +248,10 @@ const deleteReportController = async (req, res) => {
   }
 };
 
-const updateMerchandiseController = async (req, res) => {
+export const updateMerchandiseController = async (
+  req: Request,
+  res: Response
+) => {
   const {
     name,
     price,
@@ -227,14 +265,16 @@ const updateMerchandiseController = async (req, res) => {
     category,
     type,
     control,
-    sales_data,
     selectedAudience,
     removeImage,
   } = req.body;
   try {
     const id = req.params._id;
-    //console.log(removeImage);
-    let imageUrl = req.files.map((file) => file.location);
+
+    let imageUrl =
+      (req.files as Express.MulterS3.File[] | undefined)?.map(
+        (file) => file.location
+      ) || [];
     let parsedSelectedSizes;
     if (typeof selectedSizes === "string") {
       try {
@@ -254,7 +294,7 @@ const updateMerchandiseController = async (req, res) => {
     const imageKeys = imagesToRemove.length
       ? imagesToRemove.map((url) => url.replace(process.env.bucketUrl, ""))
       : [];
-    //console.log(imageKeys);
+
     await Promise.all(
       imageKeys.map((imageKey) =>
         s3Client.send(
@@ -270,12 +310,14 @@ const updateMerchandiseController = async (req, res) => {
       console.error("Merch not found");
       return res.status(404).send("Merch not found");
     }
-    let updatedImages = existingMerch.imageUrl.filter(
+
+    let updatedImages = existingMerch.imageUrl?.filter(
       (img) => !imagesToRemove.includes(img)
     );
 
-    updatedImages = [...updatedImages, ...imageUrl];
-
+    if (updatedImages) {
+      updatedImages = [...updatedImages, ...imageUrl];
+    }
     const updatedResult = await Merch.updateOne(
       { _id: id },
       { imageUrl: imagesToRemove },
@@ -284,10 +326,6 @@ const updateMerchandiseController = async (req, res) => {
     if (updatedResult.modifiedCount === 0) {
       console.error("Failed to update merch images");
       return res.status(500).send("Failed to update merch images");
-    }
-
-    if (imageUrl.length === 0) {
-      imageUrl = existingMerch.imageUrl;
     }
 
     const updateFields = {
@@ -307,14 +345,6 @@ const updateMerchandiseController = async (req, res) => {
       selectedAudience: selectedAudience,
     };
 
-    if (sales_data) {
-      for (const key in sales_data) {
-        if (sales_data.hasOwnProperty(key)) {
-          updateFields[`sales_data.${key}`] = sales_data[key];
-        }
-      }
-    }
-
     const result = await Merch.updateOne({ _id: id }, { $set: updateFields });
     const event_result = await Event.updateOne(
       { eventId: id },
@@ -325,7 +355,7 @@ const updateMerchandiseController = async (req, res) => {
       return res.status(404).send("Merch not found");
     }
     const selectedAudienceArray = selectedAudience.includes(",")
-      ? selectedAudience.split(",").map((aud) => aud.trim())
+      ? selectedAudience.split(",").map((aud: string) => aud.trim())
       : [selectedAudience];
 
     const query = selectedAudienceArray.includes("all")
@@ -391,32 +421,35 @@ const updateMerchandiseController = async (req, res) => {
       }
     }
 
-    // Log the edit merch action
-    const log = new Log({
-      admin: req.user.name,
-      admin_id: req.user._id,
-      action: "Edited Merchandise",
-      target: req.body.name,
-      target_id: req.params._id,
-      target_model: "Merchandise",
-    });
+    if (req.admin) {
+      const log = new Log({
+        admin: req.admin.name,
+        admin_id: req.admin._id,
+        action: "Edited Merchandise",
+        target: req.body.name,
+        target_id: req.params._id,
+        target_model: "Merchandise",
+      });
 
-    await log.save();
-    //console.log("Action logged successfully.");
+      await log.save();
+    }
 
     res.status(200).send("Merch, carts, and orders updated successfully");
   } catch (error) {
     console.error(error);
-    console.error("Error updating merch, carts, and orders:", error.message);
-    res.status(500).send(error.message);
+    console.error("Error updating merch, carts, and orders:", error);
+    res.status(500).send(error);
   }
 };
 
-const softDeleteMerchandiseController = async (req, res) => {
+export const softDeleteMerchandiseController = async (
+  req: Request,
+  res: Response
+) => {
   const { _id } = req.body;
 
   try {
-    const product_id = new ObjectId(_id);
+    const product_id = new Types.ObjectId(_id);
 
     // Find the merchandise before updating for logging purposes
     const merch = await Merch.findById(product_id);
@@ -434,30 +467,34 @@ const softDeleteMerchandiseController = async (req, res) => {
     }
 
     // Log the soft delete action
-    const log = new Log({
-      admin: req.user.name,
-      admin_id: req.user._id,
-      action: "Soft Deleted Merchandise",
-      target: merch.name,
-      target_id: merch._id,
-      target_model: "Merchandise",
-    });
+    if (req.admin) {
+      const log = new Log({
+        admin: req.admin.name,
+        admin_id: req.admin._id,
+        action: "Soft Deleted Merchandise",
+        target: merch.name,
+        target_id: merch._id,
+        target_model: "Merchandise",
+      });
 
-    await log.save();
-    //console.log("Action logged successfully.");
+      await log.save();
+    }
 
     res.status(200).json({ message: "Merch deleted successfully" });
   } catch (error) {
-    console.error("Error deleting merch:", error.message);
+    console.error("Error deleting merch:", error);
     res.status(500).send("Error deleting merch");
   }
 };
 
-const publishMerchandiseController = async (req, res) => {
+export const publishMerchandiseController = async (
+  req: Request,
+  res: Response
+) => {
   const { _id } = req.body;
 
   try {
-    const product_id = new ObjectId(_id);
+    const product_id = new Types.ObjectId(_id);
 
     // Find the merchandise before updating for logging purposes
     const merch = await Merch.findById(product_id);
@@ -475,32 +512,22 @@ const publishMerchandiseController = async (req, res) => {
     }
 
     // Log the publish action
-    const log = new Log({
-      admin: req.user.name,
-      admin_id: req.user._id, // Admin's ID from token
-      action: "Re-published Soft Deleted Merchandise",
-      target: merch.name,
-      target_id: merch._id,
-      target_model: "Merchandise",
-    });
+    if (req.admin) {
+      const log = new Log({
+        admin: req.admin.name,
+        admin_id: req.admin._id,
+        action: "Re-published Soft Deleted Merchandise",
+        target: merch.name,
+        target_id: merch._id,
+        target_model: "Merchandise",
+      });
 
-    await log.save();
-    //console.log("Action logged successfully.");
+      await log.save();
+    }
 
     res.status(200).json({ message: "Merch published successfully" });
   } catch (error) {
-    console.error("Error publishing merch:", error.message);
+    console.error("Error publishing merch:", error);
     res.status(500).send("Error publishing merch");
   }
-};
-
-module.exports = {
-  createMerchandiseController,
-  retrieveActiveMerchandiseController,
-  retrieveSpecificMerchandiseController,
-  retrieveMerchAdminController,
-  deleteReportController,
-  updateMerchandiseController,
-  softDeleteMerchandiseController,
-  publishMerchandiseController,
 };

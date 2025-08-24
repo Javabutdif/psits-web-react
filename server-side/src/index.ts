@@ -13,6 +13,7 @@ import cartRoutes from "./routes/cart.route";
 import orderRoutes from "./routes/orders.route";
 import privateRoutes from "./routes/private.route";
 import logRoutes from "./routes/logs.route";
+import merchRoutes from "./routes/merchandise.route";
 // import { merchRoutes } from "./routes/merch";
 // import { orderRoutes } from "./routes/orders";
 // import { logRoutes } from "./routes/logs";
@@ -48,7 +49,7 @@ mongoose
 app.use("/api", indexRoutes);
 app.use("/api", studentRoutes);
 app.use("/api/admin", adminRoutes);
-// app.use("/api/merch", merchRoutes);
+app.use("/api/merch", merchRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/logs", logRoutes);

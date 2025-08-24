@@ -1,8 +1,8 @@
-const express = require("express");
-const multer = require("multer");
-const multerS3 = require("multer-s3");
-const { S3Client } = require("@aws-sdk/client-s3");
-const {
+import { Router, Request } from "express";
+import multer from "multer";
+import multerS3 from "multer-s3";
+import { S3Client } from "@aws-sdk/client-s3";
+import {
   createMerchandiseController,
   retrieveActiveMerchandiseController,
   retrieveSpecificMerchandiseController,
@@ -11,32 +11,39 @@ const {
   updateMerchandiseController,
   softDeleteMerchandiseController,
   publishMerchandiseController,
-} = require("../controllers/merchandise.controller");
-
-require("dotenv").config();
-const {
+} from "../controllers/merchandise.controller";
+import dotenv from "dotenv";
+import {
   admin_authenticate,
   both_authenticate,
   role_authenticate,
-} = require("../middlewares/custom_authenticate_token");
-const router = express.Router();
+} from "../middlewares/custom_authenticate_token";
+const router = Router();
 
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
+  region: process.env.AWS_REGION || "ap-southeast-1",
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
   },
 });
 
 const upload = multer({
   storage: multerS3({
     s3: s3Client,
-    bucket: process.env.AWS_BUCKET_NAME,
-    metadata: (req, file, cb) => {
+    bucket: process.env.AWS_BUCKET_NAME!,
+    metadata: (
+      req: Request,
+      file: Express.Multer.File,
+      cb: (error: any, metadata?: any) => void
+    ) => {
       cb(null, { fieldName: file.fieldname });
     },
-    key: (req, file, cb) => {
+    key: (
+      req: Request,
+      file: Express.Multer.File,
+      cb: (error: any, key?: string) => void
+    ) => {
       cb(null, `merchandise/${Date.now()}_${file.originalname}`);
     },
   }),
@@ -92,4 +99,4 @@ router.put(
   publishMerchandiseController
 );
 
-module.exports = router;
+export default router;
