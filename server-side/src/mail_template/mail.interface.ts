@@ -1,3 +1,5 @@
+import { ICart } from "../models/cart.interface";
+
 export interface IMembershipRequest {
   name: string;
   reference_code: string;
@@ -11,13 +13,13 @@ export interface IMembershipRequest {
 }
 export interface IOrderReceipt {
   reference_code: string;
-  transaction_date: Date;
+  transaction_date: string;
   student_name: string;
   rfid?: string;
   course: string;
   year: number;
   admin: string;
-  items: Array<String>;
+  items: ICart[];
   cash: number;
   total: number;
 }

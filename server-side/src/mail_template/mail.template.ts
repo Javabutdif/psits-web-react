@@ -1,6 +1,3 @@
-// const ejs = require("ejs");
-// const path = require("path");
-// const nodemailer = require("nodemailer");
 import ejs from "ejs";
 import path from "path";
 import nodemailer from "nodemailer";
@@ -49,7 +46,10 @@ export const membershipRequestReceipt = async (
   });
 };
 
-const orderReceipt = async (data: IOrderReceipt, studentEmail: string) => {
+export const orderReceipt = async (
+  data: IOrderReceipt,
+  studentEmail: string
+) => {
   const emailTemplate = await ejs.renderFile(
     path.join(__dirname, "../templates/appr-order-receipt.ejs"),
     data

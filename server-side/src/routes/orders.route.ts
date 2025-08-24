@@ -1,11 +1,10 @@
-const express = require("express");
-require("dotenv").config();
-const {
+import { Router } from "express";
+import {
   admin_authenticate,
   both_authenticate,
   role_authenticate,
-} = require("../middlewares/custom_authenticate_token");
-const {
+} from "../middlewares/custom_authenticate_token";
+import {
   getSpecificOrdersController,
   getAllOrdersController,
   getAllPendingOrdersController,
@@ -14,9 +13,9 @@ const {
   cancelOrderController,
   approveOrderController,
   getAllPendingCountController,
-} = require("../controllers/order.controller");
+} from "../controllers/order.controller";
 
-const router = express.Router();
+const router = Router();
 
 //Get specific order via id_number
 router.get("/", both_authenticate, getSpecificOrdersController);
@@ -61,4 +60,4 @@ router.get(
   getAllPendingCountController
 );
 
-module.exports = router;
+export default router;

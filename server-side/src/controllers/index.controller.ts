@@ -1,4 +1,3 @@
-import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { Student } from "../models/student.model";
@@ -7,7 +6,6 @@ import { Log } from "../models/log.model";
 import { forgotPasswordMail } from "../mail_template/mail.template";
 import { Request, Response } from "express";
 import { IStudent } from "../models/student.interface";
-import { IAdmin } from "../models/admin.interface";
 import dotenv from "dotenv";
 dotenv.config();
 const token_key = process.env.JWT_SECRET ?? "Default_Token";

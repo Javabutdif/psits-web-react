@@ -1,23 +1,29 @@
-const Student = require("../models/StudentModel");
-const Event = require("../models/event.model");
-const Cart = require("../models/CartModel");
-const Orders = require("../models/OrdersModel");
-const Merch = require("../models/merch.model");
-const Log = require("../models/log.model");
-const Admin = require("../models/AdminModel");
-const { ObjectId } = require("mongodb");
-require("dotenv").config();
-const { format } = require("date-fns");
-const { orderReceipt } = require("../mail_template/mail.template");
-const orderSearch = require("../utils/searchPendingOrders");
-const orderSort = require("../utils/sortPendingOrders");
-const mongoose = require("mongoose");
+import { Student } from "../models/student.model";
+import { Event } from "../models/event.model";
+import { CartItem } from "../models/cart.model";
+import { Orders, IOrdersDocument } from "../models/orders.model";
+import { Merch } from "../models/merch.model";
+import { Log } from "../models/log.model";
+import { Admin } from "../models/admin.model";
+import { IOrders } from "../models/orders.interface";
+import { IOrderReceipt } from "../mail_template/mail.interface";
+import { orderSearch } from "../utils/search.pending.orders";
+import { orderSort, ISort } from "../utils/sort.pending.orders";
+//Initialize
+import mongoose, { Types } from "mongoose";
+import dotenv from "dotenv";
+import { format } from "date-fns";
+import { orderReceipt } from "mail_template/mail.template";
+import { Request, Response } from "express";
 
-const getSpecificOrdersController = async (req, res) => {
+export const getSpecificOrdersController = async (
+  req: Request,
+  res: Response
+) => {
   const { id_number } = req.query;
 
   try {
-    const orders = await Orders.find({
+    const orders: IOrders[] = await Orders.find({
       id_number: id_number,
     }).sort({ order_date: -1 });
     if (orders.length > 0) {
@@ -31,9 +37,9 @@ const getSpecificOrdersController = async (req, res) => {
   }
 };
 
-const getAllOrdersController = async (req, res) => {
+export const getAllOrdersController = async (req: Request, res: Response) => {
   try {
-    const orders = await Orders.find().sort({ order_date: -1 });
+    const orders: IOrders[] = await Orders.find().sort({ order_date: -1 });
     if (orders.length > 0) {
       res.status(200).json(orders);
     } else {
@@ -45,9 +51,14 @@ const getAllOrdersController = async (req, res) => {
   }
 };
 
-const getAllPendingOrdersController = async (req, res) => {
+export const getAllPendingOrdersController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const orders = await Orders.find({ order_status: "Pending" }).sort({
+    const orders: IOrders[] = await Orders.find({
+      order_status: "Pending",
+    }).sort({
       order_date: -1,
     });
 
@@ -62,9 +73,12 @@ const getAllPendingOrdersController = async (req, res) => {
   }
 };
 
-const getAllPaidOrdersController = async (req, res) => {
+export const getAllPaidOrdersController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const orders = await Orders.find({ order_status: "Paid" }).sort({
+    const orders: IOrders[] = await Orders.find({ order_status: "Paid" }).sort({
       transaction_date: -1,
     });
     if (orders.length > 0) {
@@ -78,7 +92,10 @@ const getAllPaidOrdersController = async (req, res) => {
   }
 };
 
-const studentAndAdminOrderController = async (req, res) => {
+export const studentAndAdminOrderController = async (
+  req: Request,
+  res: Response
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -101,12 +118,14 @@ const studentAndAdminOrderController = async (req, res) => {
   if (admin) {
     const findAdmin = await Admin.findOne({ id_number: admin });
 
-    await new Log({
-      admin: findAdmin.name,
-      admin_id: findAdmin._id,
-      action: "Make manual Order for [" + student_name + "]",
-      target: "Manual Order [" + student_name + "]",
-    }).save();
+    if (findAdmin) {
+      await new Log({
+        admin: findAdmin.name,
+        admin_id: findAdmin._id,
+        action: "Make manual Order for [" + student_name + "]",
+        target: "Manual Order [" + student_name + "]",
+      }).save();
+    }
   }
 
   const student = await Student.findOne({ id_number: id_number }).session(
@@ -114,22 +133,23 @@ const studentAndAdminOrderController = async (req, res) => {
   );
 
   try {
-    const newOrder = new Orders({
-      id_number,
-      rfid,
-      imageUrl1,
-      membership_discount,
-      course,
-      year,
-      student_name,
-      items: itemsArray,
-      total,
-      order_date,
-      order_status,
-      role: student.role,
-    });
-
-    await newOrder.save();
+    if (student) {
+      const newOrder: IOrdersDocument = new Orders({
+        id_number,
+        rfid,
+        imageUrl1,
+        membership_discount,
+        course,
+        year,
+        student_name,
+        items: itemsArray,
+        total,
+        order_date,
+        order_status,
+        role: student.role,
+      });
+      await newOrder.save();
+    }
 
     const findCart = await Student.findOne({ id_number }).session(session);
 
@@ -138,7 +158,7 @@ const studentAndAdminOrderController = async (req, res) => {
     }
 
     for (let item of itemsArray) {
-      const productId = new ObjectId(item.product_id);
+      const productId = new Types.ObjectId(item.product_id);
 
       const findMerch = await Merch.findOne({ _id: productId }).session(
         session
@@ -169,7 +189,7 @@ const studentAndAdminOrderController = async (req, res) => {
         { $pull: { cart: { product_id: productId } } }
       ).session(session);
 
-      await Cart.findByIdAndDelete(item._id).session(session);
+      await CartItem.findByIdAndDelete(item._id).session(session);
     }
     await session.commitTransaction();
     session.endSession();
@@ -182,7 +202,7 @@ const studentAndAdminOrderController = async (req, res) => {
   }
 };
 
-const cancelOrderController = async (req, res) => {
+export const cancelOrderController = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   const { product_id } = req.params;
@@ -191,7 +211,7 @@ const cancelOrderController = async (req, res) => {
     return res.status(400).json({ message: "Product ID is required" });
   }
 
-  const productId = new ObjectId(product_id);
+  const productId = new Types.ObjectId(product_id);
 
   try {
     const order = await Orders.findById(productId).session(session);
@@ -205,7 +225,7 @@ const cancelOrderController = async (req, res) => {
 
     // Iterate through each item in the order
     for (const item of order.items) {
-      const merchId = new ObjectId(item.product_id);
+      const merchId = new Types.ObjectId(item.product_id);
       const merch = await Merch.findOne({ _id: merchId }).session(session);
 
       if (!merch) {
@@ -220,11 +240,11 @@ const cancelOrderController = async (req, res) => {
     // Delete the order after updating stock
     await Orders.findByIdAndDelete(productId).session(session);
 
-    if (req.user.role === "Admin") {
+    if (req.admin.role === "Admin") {
       // Log the cancellation action
       const log = new Log({
-        admin: req.user.name,
-        admin_id: req.user._id,
+        admin: req.admin.name,
+        admin_id: req.admin._id,
         action: "Canceled Order",
         target: targetNames,
         target_id: order._id,
@@ -232,7 +252,6 @@ const cancelOrderController = async (req, res) => {
       });
 
       await log.save();
-      //console.log("Action logged successfully.");
     }
     await session.commitTransaction();
     session.endSession();
@@ -245,17 +264,17 @@ const cancelOrderController = async (req, res) => {
   }
 };
 
-const approveOrderController = async (req, res) => {
+export const approveOrderController = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   const { transaction_date, reference_code, order_id, admin, cash } = req.body;
 
   try {
-    if (!ObjectId.isValid(order_id)) {
+    if (!Types.ObjectId.isValid(order_id)) {
       return res.status(400).json({ message: "Invalid order ID" });
     }
 
-    const orderId = new ObjectId(order_id);
+    const orderId = new Types.ObjectId(order_id);
     const successfulOrder = await Orders.findByIdAndUpdate(
       orderId,
       {
@@ -290,7 +309,7 @@ const approveOrderController = async (req, res) => {
           const variations = Array.isArray(item.variation)
             ? item.variation
             : [];
-          const merchId = new ObjectId(item.product_id);
+          const merchId = new Types.ObjectId(item.product_id);
 
           const existMerch = await Merch.findOne({
             _id: item.product_id,
@@ -338,10 +357,10 @@ const approveOrderController = async (req, res) => {
               }
 
               campusData.unitsSold += 1;
-              campusData.totalRevenue += Number.parseInt(item.sub_total);
+              campusData.totalRevenue += item.sub_total;
 
               event.totalUnitsSold += 1;
-              event.totalRevenueAll += Number.parseInt(item.sub_total);
+              event.totalRevenueAll += item.sub_total;
               event.save();
 
               if (merchToGet) {
@@ -380,7 +399,7 @@ const approveOrderController = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    const data = {
+    const data: IOrderReceipt = {
       reference_code: successfulOrder.reference_code,
       transaction_date: format(
         new Date(successfulOrder.transaction_date),
@@ -391,14 +410,14 @@ const approveOrderController = async (req, res) => {
         : "N/A",
       rfid: successfulOrder.rfid || "N/A",
       course: student.course || "N/A",
-      year: student.year || "N/A",
+      year: student.year || 0,
       admin: admin || "N/A",
       items: successfulOrder.items,
       cash: cash || "N/A",
-      total: successfulOrder.total || "N/A",
+      total: successfulOrder.total || 0,
     };
     //Order receipt reusable function
-    await orderReceipt(data, student.email);
+    await orderReceipt(data, student?.email ?? "noemail@gmail.com");
 
     return res.status(200).json({
       message: "Order approved. Email may have failed.",
@@ -409,87 +428,93 @@ const approveOrderController = async (req, res) => {
     console.error("Error occurred:", error);
     res.status(500).json({
       message: "An error occurred while approving the order",
-      error: error.message,
+      error: error,
     });
   }
 };
 
-const getAllPendingCountController = async (req, res) => {
+export const getAllPendingCountController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const {
-      page = 1,
-      limit = 10,
+      page = "1",
+      limit = "10",
       search = "",
       sort = [{ field: "product_name", direction: "asc" }],
     } = req.query;
 
     // Base query for pending orders
     let query = { order_status: "Pending" };
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    let sortParam: ISort[] = [{ field: "product_name", direction: "asc" }];
+    try {
+      sortParam = JSON.parse(sort as string);
+    } catch (err) {
+      console.warn("Invalid sort param, using default");
+    }
 
     // Fetch all pending orders
-    let pendingOrders = await Orders.find(query);
+    let pendingOrders: IOrdersDocument[] = await Orders.find(query);
 
     // Apply search if present
     if (search) {
       pendingOrders = orderSearch(pendingOrders, search);
     }
 
-    // Process the orders to get product counts
-    const productCounts = {};
+    const productCounts: Record<
+      string,
+      { total: number; yearCounts: number[] }
+    > = {};
 
     pendingOrders.forEach((order) => {
       order.items.forEach((item) => {
-        if (!productCounts[item.product_name]) {
-          productCounts[item.product_name] = {
+        const name = item.product_name.trim().toLowerCase(); // normalize product names
+
+        if (!productCounts[name]) {
+          productCounts[name] = {
             total: 0,
             yearCounts: [0, 0, 0, 0],
           };
         }
-        productCounts[item.product_name].total += item.quantity;
 
-        if (order.year >= 1 && order.year <= 4) {
-          productCounts[item.product_name].yearCounts[order.year - 1] +=
-            item.quantity;
+        // Add to total
+        productCounts[name].total += item.quantity;
+
+        // Safely increment by year
+        if (order.year && order.year >= 1 && order.year <= 4) {
+          productCounts[name].yearCounts[order.year - 1] += item.quantity;
         }
       });
     });
 
     // Convert products to array
-    let result = Object.keys(productCounts).map((productName) => ({
-      product_name: productName,
-      total: productCounts[productName].total,
-      yearCounts: productCounts[productName].yearCounts,
+    let result = Object.entries(productCounts).map(([productName, data]) => ({
+      product_name: productName, // keep lowercase or format later
+      total: data.total,
+      yearCounts: data.yearCounts,
     }));
 
     // Apply sorting if present
     if (sort) {
-      result = orderSort(result, sort);
+      result = orderSort(result, sortParam);
     }
 
     // Pagination logic
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = pageNum * limitNum;
     const paginatedResult = result.slice(startIndex, endIndex);
 
     res.status(200).json({
       data: paginatedResult,
       total: result.length,
-      page: parseInt(page),
-      totalPages: Math.ceil(result.length / limit),
+      page: pageNum.toString(),
+      totalPages: Math.ceil(result.length / limitNum),
     });
   } catch (error) {
     console.error("Error fetching pending orders:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
-};
-
-module.exports = {
-  getSpecificOrdersController,
-  getAllOrdersController,
-  getAllPendingOrdersController,
-  getAllPaidOrdersController,
-  studentAndAdminOrderController,
-  cancelOrderController,
-  approveOrderController,
-  getAllPendingCountController,
 };
