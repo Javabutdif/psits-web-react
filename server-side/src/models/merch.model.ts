@@ -31,10 +31,10 @@ const orderDetailSchema = new Schema<IOrderDetailsDocument>({
     type: String,
   },
   size: {
-    type: Array<String>,
+    type: [String],
   },
   variation: {
-    type: Array<String>,
+    type: [String],
   },
   quantity: {
     type: Number,
@@ -87,7 +87,7 @@ const merchSchema = new Schema<IMerchDocument>(
       type: String,
     },
     selectedVariations: {
-      type: Array<String>,
+      type: [String],
     },
     selectedSizes: {
       type: Map,
@@ -128,7 +128,7 @@ const merchSchema = new Schema<IMerchDocument>(
       required: true,
     },
     imageUrl: {
-      type: Array<String>,
+      type: [String],
     },
 
     sales_data: {

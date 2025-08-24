@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-import { CartItem } from "./cart.model";
+import { CartItem, cartItemSchema } from "./cart.model";
 import { IOrders } from "./orders.interface";
 
 export interface IOrdersDocument extends IOrders, Document {}
@@ -28,7 +28,7 @@ const orderSchema = new Schema<IOrdersDocument>({
     type: Number,
     required: true,
   },
-  items: [CartItem],
+  items: [cartItemSchema],
   total: {
     type: Number,
     required: true,

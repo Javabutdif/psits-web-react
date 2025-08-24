@@ -42,10 +42,10 @@ export const cartItemSchema = new Schema<ICartDocument>({
     required: true,
   },
   variation: {
-    type: Array<String>,
+    type: [String],
   },
   sizes: {
-    type: Array<String>,
+    type: [String],
   },
   batch: {
     type: String,

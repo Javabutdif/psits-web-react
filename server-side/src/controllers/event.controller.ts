@@ -1,17 +1,23 @@
-const express = require("express");
-const Events = require("../models/event.model");
-const Merch = require("../models/merch.model");
-const { ObjectId } = require("mongodb");
-const mongoose = require("mongoose");
+import { Request, Response } from "express";
+import { Event } from "../models/event.model";
+import { Merch } from "../models/merch.model";
+import mongoose, { Types } from "mongoose";
+import { IEvent } from "../models/event.interface";
+import { getSgDate } from "../custom_function/date.formatter";
+import { ISessionConfig } from "../models/event.interface";
+import { IAttendanceSession, IAttendee } from "../models/attendee.interface";
 
-const getSgDate = require("../custom_function/date_formatter");
-require("dotenv").config();
-
-const createManualEventController = async (req, res) => {
+export const createManualEventController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { name, eventDate, description, sessionConfig } = req.body;
 
-    const imageUrl = req.files ? req.files.map((file) => file.location) : [];
+    const imageUrl =
+      (req.files as Express.MulterS3.File[] | undefined)?.map(
+        (file) => file.location
+      ) || [];
 
     let parsedSessionConfig;
     try {
@@ -23,7 +29,7 @@ const createManualEventController = async (req, res) => {
       console.error("Error parsing sessionConfig:", error);
       return res.status(400).json({
         message: "Invalid session configuration format",
-        error: error.message,
+        error: error,
       });
     }
 
@@ -48,7 +54,11 @@ const createManualEventController = async (req, res) => {
     }
 
     // Helper: parse "HH:MM - HH:MM" into { start: Date, end: Date }
-    const parseRange = (rangeStr, baseDate, sessionName) => {
+    const parseRange = (
+      rangeStr: string,
+      baseDate: Date,
+      sessionName: string
+    ) => {
       const [startStr, endStr] = rangeStr.split(" - ");
       const [sh, sm] = startStr.split(":").map(Number);
       const [eh, em] = endStr.split(":").map(Number);
@@ -60,9 +70,9 @@ const createManualEventController = async (req, res) => {
       end.setHours(eh, em, 0, 0);
 
       if (end <= start) {
-        return res.status(400).json({
-          message: `Invalid time range for ${sessionName} session: "To" time must be later than "From" time.`,
-        });
+        throw new Error(
+          `Invalid time range for ${sessionName} session: "To" time must be later than "From" time.`
+        );
       }
 
       return { start, end };
@@ -105,7 +115,7 @@ const createManualEventController = async (req, res) => {
       }
     }
 
-    const newEvent = new Events({
+    const newEvent = new Event({
       eventId: new mongoose.Types.ObjectId(),
       eventName: name, // Use 'name' from frontend
       eventImage: imageUrl,
@@ -128,7 +138,7 @@ const createManualEventController = async (req, res) => {
         },
       },
       attendees: [],
-      createdBy: req.user.name,
+      createdBy: req.admin.name,
     });
 
     await newEvent.save();
@@ -141,29 +151,34 @@ const createManualEventController = async (req, res) => {
     console.error("Error creating event:", error);
     res.status(500).json({
       message: "Failed to create event",
-      error: error.message,
+      error: error,
     });
   }
 };
 
-const getAllEventsController = async (req, res) => {
+export const getAllEventsController = async (req: Request, res: Response) => {
   try {
-    const events = await Events.find();
-
+    const events: IEvent[] = await Event.find();
+    if (!events) {
+      res.status(400).json({ message: "No event found" });
+    }
     return res.status(200).json({ data: events });
   } catch (error) {
     console.error(error);
   }
 };
 
-const getAllEventsAndAttendeesController = async (req, res) => {
+export const getAllEventsAndAttendeesController = async (
+  req: Request,
+  res: Response
+) => {
   const { id } = req.params;
 
   try {
-    const eventId = new ObjectId(id);
+    const eventId = new Types.ObjectId(id);
     const merchData = await Merch.findById({ _id: eventId });
 
-    const attendees = await Events.find({ eventId });
+    const attendees = await Event.find({ eventId });
 
     if (attendees) {
       res
@@ -177,12 +192,15 @@ const getAllEventsAndAttendeesController = async (req, res) => {
   }
 };
 
-const updateAttendancePerSessionController = async (req, res) => {
+export const updateAttendancePerSessionController = async (
+  req: Request,
+  res: Response
+) => {
   const { event_id, id_number } = req.params;
   const { campus, attendeeName, course, year } = req.body;
 
   try {
-    const event = await Events.findOne({ eventId: event_id });
+    const event = await Event.findOne({ eventId: event_id });
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -191,8 +209,13 @@ const updateAttendancePerSessionController = async (req, res) => {
     const now = getSgDate();
 
     const matchedSessions = [];
+    const sessions: (keyof ISessionConfig)[] = [
+      "morning",
+      "afternoon",
+      "evening",
+    ];
 
-    for (const session of ["morning", "afternoon", "evening"]) {
+    for (const session of sessions) {
       const config = event.sessionConfig?.[session];
 
       if (!config?.enabled || !config.timeRange) continue;
@@ -235,7 +258,7 @@ const updateAttendancePerSessionController = async (req, res) => {
       });
     }
 
-    const session = matchedSessions[0];
+    const session = matchedSessions[0] as keyof IAttendanceSession;
     let attendee;
     let isNewAttendee = false;
 
@@ -245,17 +268,24 @@ const updateAttendancePerSessionController = async (req, res) => {
       );
 
       if (!attendee) {
-        const newAttendee = {
+        const newAttendee: IAttendee = {
           id_number,
           name: attendeeName,
           course: course || "Unknown",
           year: year || 1,
           campus,
           attendance: {
-            morning: { attended: false },
-            afternoon: { attended: false },
-            evening: { attended: false },
+            morning: { attended: false, timestamp: null },
+            afternoon: { attended: false, timestamp: null },
+            evening: { attended: false, timestamp: null },
           },
+          confirmedBy: "",
+          shirtPrice: 0,
+          shirtSize: "",
+          raffleIsRemoved: false,
+          raffleIsWinner: false,
+          transactBy: "",
+          transactDate: null,
         };
         attendee = newAttendee;
         isNewAttendee = true;
@@ -285,14 +315,14 @@ const updateAttendancePerSessionController = async (req, res) => {
 
     if (!attendee.attendance) {
       attendee.attendance = {
-        morning: { attended: false },
-        afternoon: { attended: false },
-        evening: { attended: false },
+        morning: { attended: false, timestamp: null },
+        afternoon: { attended: false, timestamp: null },
+        evening: { attended: false, timestamp: null },
       };
     }
 
     if (!attendee.attendance[session]) {
-      attendee.attendance[session] = { attended: false };
+      attendee.attendance[session] = { attended: false, timestamp: null };
     }
 
     attendee.attendance[session] = {
@@ -300,7 +330,7 @@ const updateAttendancePerSessionController = async (req, res) => {
       timestamp: now,
     };
 
-    attendee.confirmedBy = req.user?.name;
+    attendee.confirmedBy = req.admin.name;
     if (isNewAttendee) {
       event.attendees.push(attendee);
     }
@@ -317,17 +347,20 @@ const updateAttendancePerSessionController = async (req, res) => {
     console.error("Error marking attendance:", error);
     res.status(500).json({
       message: "An error occurred while recording attendance",
-      error: error.message,
+      error: error,
     });
   }
 };
 
-const checkLimitPerCampusController = async (req, res) => {
+export const checkLimitPerCampusController = async (
+  req: Request,
+  res: Response
+) => {
   const { eventId } = req.params;
 
-  const event_id = new ObjectId(eventId);
+  const event_id = new Types.ObjectId(eventId);
   try {
-    const event = await Events.findOne({ eventId: event_id });
+    const event = await Event.findOne({ eventId: event_id });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -338,12 +371,15 @@ const checkLimitPerCampusController = async (req, res) => {
   }
 };
 
-const updateLimitSettingsController = async (req, res) => {
+export const updateLimitSettingsController = async (
+  req: Request,
+  res: Response
+) => {
   const { banilad, pt, lm, cs } = req.body;
-  const event_id = new ObjectId(req.params.eventId);
+  const event_id = new Types.ObjectId(req.params.eventId);
 
   try {
-    const response = await Events.findOneAndUpdate(
+    const response = await Event.findOneAndUpdate(
       { eventId: event_id },
       {
         $set: {
@@ -373,12 +409,15 @@ const updateLimitSettingsController = async (req, res) => {
   }
 };
 
-const getEligibleAttendeesRaffleController = async (req, res) => {
+export const getEligibleAttendeesRaffleController = async (
+  req: Request,
+  res: Response
+) => {
   const { eventId } = req.params;
 
   try {
-    const event_id = new ObjectId(eventId);
-    const event = await Events.findOne({ eventId: event_id });
+    const event_id = new Types.ObjectId(eventId);
+    const event = await Event.findOne({ eventId: event_id });
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -386,10 +425,7 @@ const getEligibleAttendeesRaffleController = async (req, res) => {
 
     // Filter eligible attendees
     const eligibleAttendees = event.attendees.filter(
-      (attendee) =>
-        !attendee.raffleIsWinner &&
-        !attendee.raffleIsRemoved &&
-        attendee.isAttended
+      (attendee) => !attendee.raffleIsWinner && !attendee.raffleIsRemoved
     );
 
     const winners = event.attendees.filter(
@@ -405,13 +441,16 @@ const getEligibleAttendeesRaffleController = async (req, res) => {
   }
 };
 
-const setAttendeeAsRaffleWinnerController = async (req, res) => {
+export const setAttendeeAsRaffleWinnerController = async (
+  req: Request,
+  res: Response
+) => {
   const { eventId, attendeeId } = req.params;
   const { attendeeName } = req.body;
 
   try {
-    const event_id = new ObjectId(eventId);
-    const event = await Events.findOne({ eventId: event_id });
+    const event_id = new Types.ObjectId(eventId);
+    const event = await Event.findOne({ eventId: event_id });
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -450,20 +489,24 @@ const setAttendeeAsRaffleWinnerController = async (req, res) => {
   }
 };
 
-const removeAttendeeInRaffleController = async (req, res) => {
+export const removeAttendeeInRaffleController = async (
+  req: Request,
+  res: Response
+) => {
   const { eventId, attendeeId } = req.params;
   const { attendeeName } = req.body;
 
   try {
-    const event_id = new ObjectId(eventId);
-    const event = await Events.findOne({ eventId: event_id });
+    const event_id = new Types.ObjectId(eventId);
+    const event = await Event.findOne({ eventId: event_id });
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
 
     const attendee = event.attendees.find(
-      (att) => att.id_number === attendeeId && att.name === attendeeName
+      (att: IAttendee) =>
+        att.id_number === attendeeId && att.name === attendeeName
     );
 
     if (!attendee) {
@@ -494,7 +537,7 @@ const removeAttendeeInRaffleController = async (req, res) => {
   }
 };
 
-const addAttendeeController = async (req, res) => {
+export const addAttendeeController = async (req: Request, res: Response) => {
   try {
     const {
       id_number,
@@ -512,7 +555,7 @@ const addAttendeeController = async (req, res) => {
       merchId,
     } = req.body;
 
-    const event = await Events.findOne({ eventId: merchId });
+    const event = await Event.findOne({ eventId: merchId });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -540,15 +583,30 @@ const addAttendeeController = async (req, res) => {
     event.attendees.push({
       id_number,
       name: `${first_name} ${middle_name} ${last_name}`,
-      email,
       course,
       year,
       campus,
-      isAttended: false,
       shirtSize: shirt_size,
       shirtPrice: shirt_price,
       transactBy: admin,
       transactDate: new Date(),
+      attendance: {
+        morning: {
+          attended: false,
+          timestamp: null,
+        },
+        afternoon: {
+          attended: false,
+          timestamp: null,
+        },
+        evening: {
+          attended: false,
+          timestamp: null,
+        },
+      },
+      confirmedBy: "",
+      raffleIsRemoved: false,
+      raffleIsWinner: false,
     });
 
     await event.save();
@@ -560,11 +618,14 @@ const addAttendeeController = async (req, res) => {
   }
 };
 
-const getEventStatisticsController = async (req, res) => {
+export const getEventStatisticsController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { eventId } = req.params;
-    const event_id = new ObjectId(eventId);
-    const event = await Events.findOne({ eventId: event_id });
+    const event_id = new Types.ObjectId(eventId);
+    const event = await Event.findOne({ eventId: event_id });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -579,24 +640,34 @@ const getEventStatisticsController = async (req, res) => {
       (attendee) => attendee.shirtPrice !== 0
     ).length;
 
-    const yearLevels = [1, 2, 3, 4].reduce((acc, year) => {
-      const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
-      acc[`${yearWord}`] = attendees.filter(
-        (attendee) => attendee.year === year && attendee.shirtPrice !== "0"
-      ).length;
-      return acc;
-    }, {});
+    const yearLevels = [1, 2, 3, 4].reduce<Record<string, number>>(
+      (acc, year) => {
+        const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
+        acc[yearWord] = attendees.filter(
+          (attendee) => attendee.year === year && attendee.shirtPrice !== 0
+        ).length;
+        return acc;
+      },
+      {}
+    );
 
-    const yearLevelsAttended = [1, 2, 3, 4].reduce((acc, year) => {
-      const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
-      acc[`${yearWord}`] = attendees.filter(
-        (attendee) =>
-          attendee.year === year &&
-          attendee.isAttended &&
-          attendee.shirtPrice !== "0"
-      ).length;
-      return acc;
-    }, {});
+    const yearLevelsAttended = [1, 2, 3, 4].reduce<Record<string, number>>(
+      (acc, year) => {
+        const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
+        acc[yearWord] = attendees.filter(
+          (attendee) => attendee.year === year && attendee.shirtPrice !== 0
+        ).length;
+        return acc;
+      },
+      {}
+    );
+
+    type YearLevels = {
+      First: number;
+      Second: number;
+      Third: number;
+      Fourth: number;
+    };
 
     const yearLevelsByCampus = [
       "UC-Main",
@@ -608,16 +679,21 @@ const getEventStatisticsController = async (req, res) => {
       const campusWord = campus.split("-")[1];
       return {
         campus: campusWord,
-        yearLevels: [1, 2, 3, 4].reduce((acc, year) => {
-          const yearWord = ["First", "Second", "Third", "Fourth"][year - 1];
-          acc[`${yearWord}`] = attendees.filter(
-            (attendee) =>
-              attendee.year === year &&
-              attendee.campus === campus &&
-              attendee.shirtPrice !== "0"
-          ).length;
-          return acc;
-        }, {}),
+        yearLevels: [1, 2, 3, 4].reduce<YearLevels>(
+          (acc, year) => {
+            const yearWord = ["First", "Second", "Third", "Fourth"][
+              year - 1
+            ] as keyof YearLevels;
+            acc[yearWord] = attendees.filter(
+              (attendee) =>
+                attendee.year === year &&
+                attendee.campus === campus &&
+                attendee.shirtPrice !== 0
+            ).length;
+            return acc;
+          },
+          { First: 0, Second: 0, Third: 0, Fourth: 0 }
+        ),
       };
     });
 
@@ -627,36 +703,37 @@ const getEventStatisticsController = async (req, res) => {
       "UC-LM",
       "UC-PT",
       "UC-CS",
-    ].reduce((acc, campus) => {
+    ].reduce<Record<string, number>>((acc, campus) => {
       const campusWord = campus.split("-")[1];
-      acc[`${campusWord}`] = attendees.filter(
-        (attendee) => attendee.campus === campus && attendee.shirtPrice !== "0"
+      acc[campusWord] = attendees.filter(
+        (attendee) => attendee.campus === campus && attendee.shirtPrice !== 0
       ).length;
       return acc;
     }, {});
+
     const campusesAttended = [
       "UC-Main",
       "UC-Banilad",
       "UC-LM",
       "UC-PT",
       "UC-CS",
-    ].reduce((acc, campus) => {
+    ].reduce<Record<string, number>>((acc, campus) => {
       const campusWord = campus.split("-")[1];
-      acc[`${campusWord}`] = attendees.filter(
-        (attendee) =>
-          attendee.campus === campus &&
-          attendee.isAttended &&
-          attendee.shirtPrice !== "0"
+      acc[campusWord] = attendees.filter(
+        (attendee) => attendee.campus === campus && attendee.shirtPrice !== 0
       ).length;
       return acc;
     }, {});
 
-    const courses = ["BSIT", "BSCS"].reduce((acc, course) => {
-      acc[course] = attendees.filter(
-        (attendee) => attendee.course === course && attendee.shirtPrice !== "0"
-      ).length;
-      return acc;
-    }, {});
+    const courses = ["BSIT", "BSCS"].reduce<Record<string, number>>(
+      (acc, course) => {
+        acc[course] = attendees.filter(
+          (attendee) => attendee.course === course && attendee.shirtPrice !== 0
+        ).length;
+        return acc;
+      },
+      {}
+    );
 
     res.status(200).json({
       yearLevels,
@@ -675,11 +752,11 @@ const getEventStatisticsController = async (req, res) => {
   }
 };
 
-const removeEventController = async (req, res) => {
+export const removeEventController = async (req: Request, res: Response) => {
   try {
     const { eventId } = req.body;
 
-    const eventDeleted = await Events.findOneAndDelete({ eventId });
+    const eventDeleted = await Event.findOneAndDelete({ eventId });
     if (eventDeleted) {
       return res.status(200).json({ message: "Event Successfully Deleted" });
     }
@@ -688,11 +765,14 @@ const removeEventController = async (req, res) => {
   }
 };
 
-const removeAttendanceController = async (req, res) => {
+export const removeAttendanceController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { id_number, merchId } = req.body;
 
-    const event = await Events.findOne({ eventId: merchId });
+    const event = await Event.findOne({ eventId: merchId });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -706,14 +786,14 @@ const removeAttendanceController = async (req, res) => {
 
     const { campus, shirtPrice } = event.attendees[attendeeIndex];
 
-    if (Number.parseInt(shirtPrice) !== 0) {
+    if (shirtPrice !== 0) {
       const campusData = event.sales_data.find((s) => s.campus === campus);
 
       if (campusData) {
         campusData.unitsSold -= 1;
-        campusData.totalRevenue -= Number.parseInt(shirtPrice);
+        campusData.totalRevenue -= shirtPrice;
         event.totalUnitsSold -= 1;
-        event.totalRevenueAll -= Number.parseInt(shirtPrice);
+        event.totalRevenueAll -= shirtPrice;
         event.attendees.splice(attendeeIndex, 1);
       }
     }
@@ -724,20 +804,4 @@ const removeAttendanceController = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
-};
-
-module.exports = {
-  createManualEventController,
-  getAllEventsController,
-  getAllEventsAndAttendeesController,
-  updateAttendancePerSessionController,
-  checkLimitPerCampusController,
-  updateLimitSettingsController,
-  getEligibleAttendeesRaffleController,
-  setAttendeeAsRaffleWinnerController,
-  removeAttendeeInRaffleController,
-  addAttendeeController,
-  getEventStatisticsController,
-  removeEventController,
-  removeAttendanceController,
 };

@@ -3,7 +3,7 @@ import { Student, IStudentDocument } from "../models/student.model";
 import { Admin } from "../models/admin.model";
 import { Orders } from "../models/orders.model";
 import { Log } from "../models/log.model";
-import { MembershipHistory } from "../models/history,model";
+import { MembershipHistory } from "../models/history.model";
 import { format } from "date-fns";
 import mongoose from "mongoose";
 import { Request, Response } from "express";

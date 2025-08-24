@@ -1,8 +1,14 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { ISalesData, ISessionConfigType, IEvent } from "./event.interface";
+import {
+  ISalesData,
+  ISessionConfigType,
+  IEvent,
+  ISessionConfig,
+} from "./event.interface";
 import { attendeeSchema } from "./attendee.model";
 
 export interface ISalesDataDocument extends ISalesData, Document {}
+export interface ISessionConfigDocument extends ISessionConfig, Document {}
 export interface ISessionConfigTypeDocument
   extends ISessionConfigType,
     Document {}
@@ -58,7 +64,7 @@ const eventSchema = new Schema<IEventDocument>({
     default: "ticketed",
   },
   sessionConfig: {
-    type: new Schema(
+    type: new Schema<ISessionConfigDocument>(
       {
         morning: { type: sessionConfigTypeSchema, required: true },
         afternoon: { type: sessionConfigTypeSchema, required: true },

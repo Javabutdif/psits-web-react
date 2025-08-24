@@ -7,8 +7,8 @@ export interface IOrderDetails {
   course: string;
   year: number;
   batch: string;
-  size?: Array<String>;
-  variation?: Array<String>;
+  size?: [String];
+  variation?: [String];
   quantity: number;
   total: number;
   order_date: string;
@@ -25,7 +25,7 @@ export interface IMerch {
   stocks: number;
   batch: string;
   description: string;
-  selectedVariations?: Array<String>;
+  selectedVariations?: [String];
   selectedSizes: Map<string, ISelectedSize>;
   selectedAudience: string;
   control: string;
@@ -35,7 +35,7 @@ export interface IMerch {
   is_active: boolean;
   category: string;
   type: string;
-  imageUrl?: Array<String>;
+  imageUrl?: [String];
   sales_data: ISales;
   order_details: IOrderDetails[];
   timestamps: boolean;

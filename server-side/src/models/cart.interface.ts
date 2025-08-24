@@ -11,7 +11,7 @@ export interface ICart {
   price: number;
   quantity: number;
   sub_total: number;
-  variation?: Array<String>;
-  sizes?: Array<String>;
+  variation?: [String];
+  sizes?: [String];
   batch: string;
 }

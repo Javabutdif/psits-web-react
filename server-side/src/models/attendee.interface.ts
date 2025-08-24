@@ -1,6 +1,6 @@
 export interface IAttendanceSessionType {
   attended: boolean;
-  timestamp: Date;
+  timestamp: Date | null;
 }
 export interface IAttendanceSession {
   morning: IAttendanceSessionType;
@@ -21,5 +21,5 @@ export interface IAttendee {
   raffleIsRemoved: boolean;
   raffleIsWinner: boolean;
   transactBy: string;
-  transactDate: Date;
+  transactDate: Date | null;
 }

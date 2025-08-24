@@ -97,7 +97,7 @@ export const loginController = async (req: Request, res: Response) => {
   }
 };
 
-const registerController = async (req: Request, res: Response) => {
+export const registerController = async (req: Request, res: Response) => {
   const {
     id_number,
     password,

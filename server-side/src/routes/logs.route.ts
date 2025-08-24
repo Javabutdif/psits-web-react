@@ -3,7 +3,7 @@ import {
   getAllLogsController,
   addNewLogController,
 } from "../controllers/log.controller";
-import { admin_authenticate } from "middlewares/custom_authenticate_token";
+import { admin_authenticate } from "../middlewares/custom_authenticate_token";
 
 const router = Router();
 

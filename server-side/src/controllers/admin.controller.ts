@@ -6,16 +6,15 @@ import { Admin } from "../models/admin.model";
 import { Merch } from "../models/merch.model";
 import { Orders } from "../models/orders.model";
 import { Log } from "../models/log.model";
-import { MembershipHistory } from "models/history,model";
+import { MembershipHistory } from "../models/history.model";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { admin_model, role_model } from "../model_template/model_data";
-import { membershipRequestReceipt } from "mail_template/mail.template";
+import { membershipRequestReceipt } from "../mail_template/mail.template";
 import { IMembershipRequest } from "mail_template/mail.interface";
 import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
 import { IOrders } from "../models/orders.interface";
 import { IAdmin, IAdminDocument } from "../models/admin.interface";
-
 
 export const getSearchStudentByIdController = async (
   req: Request,

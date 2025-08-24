@@ -3,7 +3,7 @@ import { IAttendee } from "./attendee.interface";
 export interface IEvent {
   eventId: Types.ObjectId;
   eventName: string;
-  eventImage?: Array<string>;
+  eventImage?: [String];
   eventDate: Date;
   eventDescription: string;
   attendanceType: string;

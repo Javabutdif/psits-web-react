@@ -13,7 +13,7 @@ import { orderSort, ISort } from "../utils/sort.pending.orders";
 import mongoose, { Types } from "mongoose";
 import dotenv from "dotenv";
 import { format } from "date-fns";
-import { orderReceipt } from "mail_template/mail.template";
+import { orderReceipt } from "../mail_template/mail.template";
 import { Request, Response } from "express";
 
 export const getSpecificOrdersController = async (

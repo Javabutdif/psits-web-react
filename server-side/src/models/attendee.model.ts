@@ -1,8 +1,15 @@
 import { Schema, Document } from "mongoose";
-import { IAttendanceSessionType, IAttendee } from "./attendee.interface";
+import {
+  IAttendanceSessionType,
+  IAttendee,
+  IAttendanceSession,
+} from "./attendee.interface";
 
 export interface IAttendanceSessionTypeDocument
   extends IAttendanceSessionType,
+    Document {}
+export interface IAttendanceSessionDocument
+  extends IAttendanceSession,
     Document {}
 export interface IAttendeeDocument extends IAttendee, Document {}
 
@@ -37,11 +44,11 @@ export const attendeeSchema = new Schema<IAttendeeDocument>({
   },
 
   attendance: {
-    type: new Schema(
+    type: new Schema<IAttendanceSessionDocument>(
       {
-        morning: { type: attendanceSessionSchema, required: false },
-        afternoon: { type: attendanceSessionSchema, required: false },
-        evening: { type: attendanceSessionSchema, required: false },
+        morning: attendanceSessionSchema,
+        afternoon: attendanceSessionSchema,
+        evening: attendanceSessionSchema,
       },
       { _id: false }
     ),
