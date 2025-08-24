@@ -1,20 +1,21 @@
-const express = require("express");
-const Log = require("../models/log.model");
-const Admin = require("../models/AdminModel");
+import { Request, Response } from "express";
+import { Log } from "../models/log.model";
+import { Admin } from "../models/admin.model";
 
-const getAllLogsController = async (req, res) => {
+export const getAllLogsController = async (req: Request, res: Response) => {
   try {
-    const logs = await Log.find().sort({ timestamp: -1 }); // Fetch logs, sorted by latest
+    const logs = await Log.find().sort({ timestamp: -1 }); // Fetch logs,
+    if (!logs) {
+      res.status(400).json({ message: "No logs" });
+    }
     res.status(200).json(logs);
   } catch (error) {
     console.error("Error fetching logs:", error);
-    res
-      .status(500)
-      .json({ message: "Internal Server Error", error: error.message });
+    res.status(500).json({ message: "Internal Server Error", error: error });
   }
 };
 
-const addNewLogController = async (req, res) => {
+export const addNewLogController = async (req: Request, res: Response) => {
   try {
     const { admin_id, action, target, target_id, target_model } = req.body;
 
@@ -41,9 +42,4 @@ const addNewLogController = async (req, res) => {
     console.error("Error logging action:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-};
-
-module.exports = {
-  getAllLogsController,
-  addNewLogController,
 };

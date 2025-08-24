@@ -1,10 +1,10 @@
-const {
+import {
   admin_authenticate,
   student_authenticate,
-} = require("../middlewares/custom_authenticate_token");
+} from "../middlewares/custom_authenticate_token";
 
 import { Router, Request, Response } from "express";
-const router: Router = Router();
+const router = Router();
 
 //protected route for admin
 router.get(
@@ -41,4 +41,4 @@ router.get(
   }
 );
 
-module.exports = router;
+export default router;

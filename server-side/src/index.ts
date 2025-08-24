@@ -11,6 +11,8 @@ import adminRoutes from "./routes/admin.route";
 import studentRoutes from "./routes/students.route";
 import cartRoutes from "./routes/cart.route";
 import orderRoutes from "./routes/orders.route";
+import privateRoutes from "./routes/private.route";
+import logRoutes from "./routes/logs.route";
 // import { merchRoutes } from "./routes/merch";
 // import { orderRoutes } from "./routes/orders";
 // import { logRoutes } from "./routes/logs";
@@ -49,9 +51,9 @@ app.use("/api/admin", adminRoutes);
 // app.use("/api/merch", merchRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
-// app.use("/api/logs", logRoutes);
+app.use("/api/logs", logRoutes);
 // app.use("/api/events", eventRoutes);
-// app.use("/api", privateRoutes);
+app.use("/api", privateRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server started, listening at port ${PORT}`);
