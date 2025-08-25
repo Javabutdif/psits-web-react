@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "ts-node src/index.ts",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+    "build": "tsc",
+  "start": "node dist/index.ts",
+  "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
   },
   "keywords": [],
   "author": "",
