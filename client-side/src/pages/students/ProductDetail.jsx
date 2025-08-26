@@ -112,7 +112,6 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       const status = await getMembershipStatusStudents(user.id_number);
-     
       setStatus({
         status: status.status,
         isFirstApplication: status.isFirstApplication,
@@ -248,32 +247,16 @@ const ProductDetail = () => {
     if (validate()) {
       const id_number = user.id_number;
       const product_id = _id;
-      const product_name = name;
       const sizes = selectedSize;
       const variation =
         category === "uniform" ? selectedVariations : selectedColor;
-      const sub_total = price * quantity;
-      const imageUrl1 = imageUrl[0];
-      const limited = product.control === "limited-purchase" ? true : false;
-      const start_date = product.start_date;
-      const end_date = product.end_date;
 
       setFormData({
         id_number,
         product_id,
-        product_name,
-        start_date,
-        end_date,
-        category,
-        price,
         sizes,
         variation,
-        batch,
         quantity,
-        sub_total,
-        imageUrl1,
-        preview,
-        limited,
       });
 
       setShowModal(true);
@@ -559,10 +542,10 @@ const ProductDetail = () => {
               <div className="flex items-center font-primary font-semibold justify-between gap-10">
                 <span className="text-2xl">{name}</span>
               </div>
-              {formData.preview && (
+              {preview && (
                 <div className="mb-4 w-full">
                   <img
-                    src={formData.preview}
+                    src={preview}
                     alt="Product Preview"
                     className="w-min h-32 rounded-md"
                   />
