@@ -14,6 +14,7 @@ export const setInformationData = (data, role) => {
 };
 
 export const getInformationData = () => {
+  // TODO: Add rfid here maybe?
   return {
     id_number: storedData?.id_number || null,
     name: storedData?.name || null,
