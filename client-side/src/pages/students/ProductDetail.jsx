@@ -284,43 +284,26 @@ const ProductDetail = () => {
     setCartIndicator(false);
     if (validate()) {
       const id_number = user.id_number;
-      const rfid = user.rfid;
+      // To Anton: Is this okay? rfid is not defined in getInformationData function
+      const rfid = user.rfid ? user.rfid : "N/A";
       const course = user.course;
       const year = user.year;
       const student_name = user.name;
-      const imageUrl1 = imageUrl[0];
-      const total = calculateTotal();
-      const order_date = new Date();
-      const order_status = "Pending";
-      const membership_discount = statusVerify() ? true : false;
 
       const items = {
         product_id: _id,
-        imageUrl1: imageUrl[0],
-        product_name: name,
-        limited: product.control === "limited-purchase" ? true : false,
-        price: price,
-        membership_discount: statusVerify(),
         quantity: quantity,
-        sub_total: calculateTotal(),
         variation: category === "uniform" ? selectedVariations : selectedColor,
         sizes: selectedSize,
-        batch: batch,
       };
 
       setFormData({
         id_number,
         rfid,
-        imageUrl1,
         course,
-        membership_discount,
         year,
         student_name,
         items,
-        total,
-        order_date,
-        order_status,
-        preview,
       });
 
       setShowModal(true);
