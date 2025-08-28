@@ -354,7 +354,10 @@ const StudentCart = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [status, setStatus] = useState({ status: "", isFirstApplication: true });
+  const [status, setStatus] = useState({
+    status: "",
+    isFirstApplication: true,
+  });
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({});
   const user = getInformationData();
@@ -402,12 +405,9 @@ const StudentCart = () => {
   }, []);
 
   const statusVerify = () => {
-    return (
-      status.status === "ACTIVE" ||
-      status.status === "RENEWED"
-    );
+    return status.status === "ACTIVE" || status.status === "RENEWED";
   };
-    
+
   const handleQuantityChange = (id, newQuantity) => {
     setProducts((prevProducts) =>
       prevProducts.map((product) =>
@@ -440,7 +440,7 @@ const StudentCart = () => {
     setShowModal(true);
     setFormData({
       id_number: user.id_number,
-      rfid: user.rfid,
+      rfid: user.rfid ? user.rfid : "N/A",
       course: user.course,
       year: user.year,
       student_name: user.name,
