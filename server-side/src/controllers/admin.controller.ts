@@ -10,7 +10,7 @@ import { MembershipHistory } from "../models/history.model";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { admin_model, role_model } from "../model_template/model_data";
 import { membershipRequestReceipt } from "../mail_template/mail.template";
-import { IMembershipRequest } from "mail_template/mail.interface";
+import { IMembershipRequest } from "../mail_template/mail.interface";
 import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
 import { IOrders } from "../models/orders.interface";

@@ -1,5 +1,5 @@
 import { IAdmin, IAdminDocument } from "../models/admin.interface";
-import { IStudent } from "models/student.interface";
+import { IStudent } from "../models/student.interface";
 import {
   IAdminModelData,
   IRoleModelData,
