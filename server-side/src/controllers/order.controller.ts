@@ -99,63 +99,52 @@ export const studentAndAdminOrderController = async (
   const session = await mongoose.startSession();
   session.startTransaction();
 
-  const {
-    id_number,
-    rfid,
-    imageUrl1,
-    membership_discount,
-    course,
-    year,
-    student_name,
-    items,
-    total,
-    order_date,
-    order_status,
-    admin,
-  } = req.body;
-  const itemsArray = Array.isArray(items) ? items : [items];
-
-  if (admin) {
-    const findAdmin = await Admin.findOne({ id_number: admin });
-
-    if (findAdmin) {
-      await new Log({
-        admin: findAdmin.name,
-        admin_id: findAdmin._id,
-        action: "Make manual Order for [" + student_name + "]",
-        target: "Manual Order [" + student_name + "]",
-      }).save();
-    }
-  }
-
-  const student = await Student.findOne({ id_number: id_number }).session(
-    session
-  );
-
   try {
-    if (student) {
-      const newOrder: IOrdersDocument = new Orders({
-        id_number,
-        rfid,
-        imageUrl1,
-        membership_discount,
-        course,
-        year,
-        student_name,
-        items: itemsArray,
-        total,
-        order_date,
-        order_status,
-        role: student.role,
-      });
-      await newOrder.save();
+    const { id_number, rfid, course, year, student_name, items, admin } =
+      req.body;
+
+    const itemsArray = Array.isArray(items) ? items : [items];
+
+    const hasMissingFields =
+      !id_number ||
+      !rfid ||
+      !student_name ||
+      !course ||
+      !year ||
+      !itemsArray.length;
+
+    if (hasMissingFields) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const findCart = await Student.findOne({ id_number }).session(session);
+    if (admin) {
+      const findAdmin = await Admin.findOne({ id_number: admin });
+      if (findAdmin) {
+        await new Log({
+          admin: findAdmin.name,
+          admin_id: findAdmin._id,
+          action: "Make manual Order for [" + student_name + "]",
+          target: "Manual Order [" + student_name + "]",
+        }).save();
+      }
+    }
 
-    if (!findCart) {
+    const student = await Student.findOne({ id_number: id_number }).session(
+      session
+    );
+
+    if (!student) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Student not found" });
     }
+
+    const processedItems = [];
+    let orderTotal = 0;
+
+    let finalMembershipDiscount = false;
 
     for (let item of itemsArray) {
       const productId = new Types.ObjectId(item.product_id);
@@ -165,8 +154,101 @@ export const studentAndAdminOrderController = async (
       );
 
       if (!findMerch) {
-        console.warn(`Merchandise with ID ${productId} not found`);
-        continue;
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(404)
+          .json({ message: `Product with ID ${productId} not found` });
+      }
+
+      const isStockInsufficient = findMerch.stocks < item.quantity;
+
+      if (isStockInsufficient) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          message: `Insufficient stock for product: ${findMerch.name}. Available: ${findMerch.stocks}, Requested: ${item.quantity}`,
+        });
+      }
+
+      let actualPrice = findMerch.price;
+
+      // If item has sizes and product has selectedSizes, check for custom pricing
+      if (item.sizes && item.sizes.length > 0 && findMerch.selectedSizes) {
+        const selectedSize = Array.isArray(item.sizes)
+          ? item.sizes[0]
+          : item.sizes;
+        const sizeConfig = findMerch.selectedSizes.get(selectedSize);
+
+        if (sizeConfig && sizeConfig.price) {
+          actualPrice = parseFloat(sizeConfig.price);
+        }
+      }
+
+      let itemSubtotal = actualPrice * item.quantity;
+
+      const membership_discount =
+        (student.membershipStatus === "ACTIVE" ||
+          student.membershipStatus === "RENEWED") &&
+        findMerch.category === "merchandise";
+
+      if (membership_discount) {
+        itemSubtotal = itemSubtotal - itemSubtotal * 0.05; // 5% discount
+        finalMembershipDiscount = true;
+      }
+
+      const processedItem = {
+        product_id: item.product_id,
+        imageUrl1: findMerch.imageUrl?.[0],
+        product_name: findMerch.name,
+        limited: findMerch.control === "limited-purchase" ? true : false,
+        price: actualPrice,
+        membership_discount: membership_discount,
+        quantity: item.quantity,
+        sub_total: itemSubtotal,
+        variation: item.variation,
+        sizes: item.sizes,
+        batch: findMerch.batch,
+      };
+
+      processedItems.push(processedItem);
+      orderTotal += itemSubtotal;
+    }
+
+    const finalOrder = {
+      id_number,
+      rfid,
+      imageUrl1: processedItems[0]?.imageUrl1,
+      membership_discount: finalMembershipDiscount,
+      course,
+      year,
+      student_name,
+      items: processedItems,
+      total: orderTotal,
+      order_date: new Date(),
+      order_status: "Pending",
+      role: student.role,
+    };
+
+    console.log("==========Final Order==========", finalOrder);
+
+    const newOrder = new Orders(finalOrder);
+    await newOrder.save({ session });
+
+    for (let i = 0; i < itemsArray.length; i++) {
+      const item = itemsArray[i];
+      const productId = new Types.ObjectId(item.product_id);
+
+      const findMerch = await Merch.findOne({ _id: productId }).session(
+        session
+      );
+
+      if (!findMerch) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(404)
+          .json({ message: `Product with ID ${productId} not found` });
       }
 
       const newStocks = findMerch.stocks - item.quantity;
@@ -177,28 +259,37 @@ export const studentAndAdminOrderController = async (
       ).session(session);
 
       if (merchStocks.modifiedCount === 0) {
-        await session.abortTransaction();
-        session.endSession();
-        console.error(
+        throw new Error(
           `Could not deduct the stocks for product ID ${productId}`
         );
       }
 
+      // Remove from student cart
       await Student.updateOne(
         { id_number },
         { $pull: { cart: { product_id: productId } } }
       ).session(session);
 
-      await CartItem.findByIdAndDelete(item._id).session(session);
+      // Delete from Cart collection if item has _id
+      if (item._id) {
+        await CartItem.findByIdAndDelete(item._id).session(session);
+      }
     }
+
     await session.commitTransaction();
     session.endSession();
-    res.status(200).json({ message: "Order Placed Successfully" });
-  } catch (error) {
+    res.status(200).json({
+      message: "Order Placed Successfully",
+      order_id: newOrder._id,
+      total: finalOrder.total,
+    });
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Order processing error:", error);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error: " + error.message });
   }
 };
 export const cancelOrderController = async (req: Request, res: Response) => {

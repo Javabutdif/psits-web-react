@@ -15,6 +15,7 @@ export interface IAdminModelData {
 export interface IUserModelData {
   id_number: string;
   name: string;
+  rfid?: string;
   email?: string;
   course: string;
   year: number;

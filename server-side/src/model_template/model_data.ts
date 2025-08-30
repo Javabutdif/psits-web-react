@@ -25,6 +25,7 @@ export const admin_model = (admin: IAdminDocument): any => {
 export const user_model = (user: IStudent): IUserModelData => {
   return {
     id_number: user.id_number,
+    rfid: user.rfid ?? "N/A",
     name: user.first_name + " " + user.middle_name + " " + user.last_name,
     email: user.email,
     course: user.course,
