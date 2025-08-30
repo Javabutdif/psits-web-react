@@ -194,7 +194,13 @@ export const viewStudentCartController = async (
     });
 
     if (student) {
-      if (student.cart.length > 0) res.status(200).json(student.cart);
+      if (student.cart.length > 0) {
+        res.status(200).json(student.cart);
+        return;
+      } else {
+        res.status(200).json([]);
+        return;
+      }
     } else {
       res.status(400).json({ message: "No Records" });
     }
