@@ -4,7 +4,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon",
-    "build": "tsc",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "node -e \"const fs=require('fs'); fs.cpSync('src/assets','dist/assets',{recursive:true}); \"",
     "start": "node dist/index.js"
   },
   "keywords": [],
