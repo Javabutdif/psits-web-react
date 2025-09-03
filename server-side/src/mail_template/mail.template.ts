@@ -18,7 +18,7 @@ export const membershipRequestReceipt = async (
   studenteEmail: string
 ) => {
   const emailTemplate = await ejs.renderFile(
-    path.join(__dirname, "../templates/appr-membership-receipt.ejs"),
+    path.join(__dirname, "../assets/appr-membership-receipt.ejs"),
     data
   );
 
@@ -30,7 +30,7 @@ export const membershipRequestReceipt = async (
     attachments: [
       {
         filename: "psits.jpg",
-        path: path.join(__dirname, "../src/psits.jpg"),
+        path: path.join(__dirname, "../assets/psits.jpg"),
         cid: "logo",
       },
     ],
@@ -51,7 +51,7 @@ export const orderReceipt = async (
   studentEmail: string
 ) => {
   const emailTemplate = await ejs.renderFile(
-    path.join(__dirname, "../templates/appr-order-receipt.ejs"),
+    path.join(__dirname, "../assets/appr-order-receipt.ejs"),
     data
   );
   const transporter = nodemailer.createTransport({
@@ -70,7 +70,7 @@ export const orderReceipt = async (
     attachments: [
       {
         filename: "psits.jpg",
-        path: path.join(__dirname, "../src/psits.jpg"),
+        path: path.join(__dirname, "../assets/psits.jpg"),
         cid: "logo",
       },
     ],
