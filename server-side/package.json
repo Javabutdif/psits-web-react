@@ -4,8 +4,9 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "build": "tsc && npm run copy-templates",
+    "start": "node dist/index.js",
+    "copy-templates": "cpy src/templates/** dist/templates && cpy src/psits.jpg dist/"
   },
   "keywords": [],
   "author": "",
@@ -43,6 +44,7 @@
     "@types/multer-s3": "^3.0.3",
     "@types/node": "^24.3.0",
     "cors": "^2.8.5",
+    "cpy-cli": "^6.0.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
