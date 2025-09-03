@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import FormButton from "../../components/forms/FormButton";
@@ -10,7 +10,6 @@ import { getInformationData } from "../../authentication/Authentication";
 import { getOrder } from "../../api/orders";
 import { addToCartApi, viewCart } from "../../api/students";
 import ImagePreview from "../../components/Image/ImagePreview";
-import { format } from "date-fns";
 import { showToast } from "../../utils/alertHelper";
 
 import ImageGallery from "../../components/Image/ImageGallery";
@@ -267,7 +266,6 @@ const ProductDetail = () => {
     setCartIndicator(false);
     if (validate()) {
       const id_number = user.id_number;
-      // To Anton: Is this okay? rfid is not defined in getInformationData function
       const rfid = user.rfid ? user.rfid : "N/A";
       const course = user.course;
       const year = user.year;
