@@ -111,7 +111,6 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       const status = await getMembershipStatusStudents(user.id_number);
-
       setStatus({
         status: status.status,
         isFirstApplication: status.isFirstApplication,
