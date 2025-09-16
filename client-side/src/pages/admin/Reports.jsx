@@ -499,7 +499,6 @@ const Reports = () => {
   }));
 
   const exportDataMerchandiseData = formattedMerchandiseData.map((item) => {
-    console.log("Var", item.variation);
     return {
       "Reference Code": item.reference_code,
       Merchandise: item.product_name,
