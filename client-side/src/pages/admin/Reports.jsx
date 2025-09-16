@@ -399,13 +399,15 @@ const Reports = () => {
     },
     {
       name: "Size",
-      selector: (row) => row.size?.[0]?.$each?.[0] || "",
+      selector: (row) =>
+        Array.isArray(row.size) ? row.size.join(", ") : row.size,
       sortable: true,
       width: "70px",
     },
     {
       name: "Color",
-      selector: (row) => row.variation?.[0]?.$each?.[0] || "",
+      selector: (row) =>
+        Array.isArray(row.variation) ? row.variation.join(", ") : row.variation,
       sortable: true,
     },
 
@@ -474,11 +476,13 @@ const Reports = () => {
   const membershipRevenue = membershipCount * 50;
   const renewalRevenue = renewalCount * 50;
 
-  const formattedMerchandiseData = filteredMerchandiseData.map((row) => ({
-    ...row,
-    size: row.size?.[0]?.$each?.[0] || "",
-    variation: row.variation?.[0]?.$each?.[0] || "",
-  }));
+  const formattedMerchandiseData = filteredMerchandiseData.map((row) => {
+    return {
+      ...row,
+      size: row.size || "",
+      variation: row.variation || "",
+    };
+  });
   const uniqueProductNames = Array.from(
     new Set(productNames.map((detail) => detail.product_name))
   );
@@ -494,20 +498,24 @@ const Reports = () => {
     "Approved By": item.admin,
   }));
 
-  const exportDataMerchandiseData = formattedMerchandiseData.map((item) => ({
-    "Reference Code": item.reference_code,
-    Merchandise: item.product_name,
-    "Student ID": item.id_number,
-    Name: formattedLastName(item.student_name),
-    Course: item.course,
-    "Year Level": item.year,
-    Batch: item.batch,
-    Size: item.size,
-    Variation: item.variation,
-    Qty: item.quantity,
-    Total: item.total,
-    "Transaction Date": formattedDate(item.transaction_date),
-  }));
+  const exportDataMerchandiseData = formattedMerchandiseData.map((item) => {
+    return {
+      "Reference Code": item.reference_code,
+      Merchandise: item.product_name,
+      "Student ID": item.id_number,
+      Name: formattedLastName(item.student_name),
+      Course: item.course,
+      "Year Level": item.year,
+      Batch: item.batch,
+      Size: Array.isArray(item.size) ? item.size.join(", ") : item.size,
+      Variation: Array.isArray(item.variation)
+        ? item.variation.join(", ")
+        : item.variation,
+      Qty: item.quantity,
+      Total: item.total,
+      "Transaction Date": formattedDate(item.transaction_date),
+    };
+  });
 
   return (
     <div className="container mx-auto p-4">
