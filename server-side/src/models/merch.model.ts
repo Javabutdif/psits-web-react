@@ -31,10 +31,10 @@ const orderDetailSchema = new Schema<IOrderDetailsDocument>({
     type: String,
   },
   size: {
-    type: [String],
+    type: Schema.Types.Mixed,
   },
   variation: {
-    type: [String],
+    type: Schema.Types.Mixed,
   },
   quantity: {
     type: Number,
