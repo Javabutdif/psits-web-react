@@ -19,6 +19,7 @@ import { financeAndAdminConditionalAccess } from "../../components/tools/clientT
 import { ConfirmActionType } from "../../enums/commonEnums";
 import { CSVLink } from "react-csv";
 import { getInformationData } from "../../authentication/Authentication";
+import normalizeField from "../../utils/normalize";
 
 const Reports = () => {
   const [membershipData, setMembershipData] = useState([]);
@@ -148,6 +149,7 @@ const Reports = () => {
   const fetchMerchandiseData = async () => {
     try {
       const data = await merchandiseAdmin();
+      console.log("FETCHED DATA", data);
       const allOrderDetails = data
         ? data.flatMap((order) => order.order_details || [])
         : [];
@@ -168,6 +170,7 @@ const Reports = () => {
     }
   };
 
+  // #1
   const applyFilter = (data, setData) => {
     let filteredData = data;
 
@@ -262,7 +265,7 @@ const Reports = () => {
       }
       if (filterSize) {
         filteredData = filteredData.filter((item) =>
-          item.size?.[0]?.$each?.some((size) => size === filterSize)
+          Array.isArray(item.size) ? item.size.join(", ") : item.size
         );
       }
       if (filterColor) {
@@ -399,15 +402,13 @@ const Reports = () => {
     },
     {
       name: "Size",
-      selector: (row) =>
-        Array.isArray(row.size) ? row.size.join(", ") : row.size,
+      selector: (row) => normalizeField(row.size).join(", "),
       sortable: true,
       width: "70px",
     },
     {
       name: "Color",
-      selector: (row) =>
-        Array.isArray(row.variation) ? row.variation.join(", ") : row.variation,
+      selector: (row) => normalizeField(row.variation).join(", "),
       sortable: true,
     },
 
@@ -479,8 +480,8 @@ const Reports = () => {
   const formattedMerchandiseData = filteredMerchandiseData.map((row) => {
     return {
       ...row,
-      size: row.size || "",
-      variation: row.variation || "",
+      size: normalizeField(row.size),
+      variation: normalizeField(row.variation),
     };
   });
   const uniqueProductNames = Array.from(
@@ -507,10 +508,8 @@ const Reports = () => {
       Course: item.course,
       "Year Level": item.year,
       Batch: item.batch,
-      Size: Array.isArray(item.size) ? item.size.join(", ") : item.size,
-      Variation: Array.isArray(item.variation)
-        ? item.variation.join(", ")
-        : item.variation,
+      Size: normalizeField(item.size).join(", "),
+      Variation: normalizeField(item.variation).join(", "),
       Qty: item.quantity,
       Total: item.total,
       "Transaction Date": formattedDate(item.transaction_date),

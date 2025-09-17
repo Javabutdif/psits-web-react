@@ -7,8 +7,8 @@ export interface IOrderDetails {
   course: string;
   year: number;
   batch: string;
-  size?: [String];
-  variation?: [String];
+  size?: string[] | string;
+  variation?: string[] | string;
   quantity: number;
   total: number;
   order_date: string;
