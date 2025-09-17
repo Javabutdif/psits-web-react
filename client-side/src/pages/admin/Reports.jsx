@@ -149,7 +149,6 @@ const Reports = () => {
   const fetchMerchandiseData = async () => {
     try {
       const data = await merchandiseAdmin();
-      console.log("FETCHED DATA", data);
       const allOrderDetails = data
         ? data.flatMap((order) => order.order_details || [])
         : [];
@@ -294,7 +293,7 @@ const Reports = () => {
       setSalesData({});
     }
   };
-  // console.log("This is filter batch" + filterBatch);
+
   const handleFilter = () => {
     if (activeTab === 0) {
       applyFilter(membershipData, setFilteredMembershipData);
