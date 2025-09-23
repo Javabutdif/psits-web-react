@@ -6,7 +6,6 @@ import CoreValues from "../components/sections/home/CoreValues";
 import Goals from "../components/sections/home/Goals";
 import MissionVision from "../components/sections/home/MissionVision";
 import { removeAuthentication } from "../authentication/Authentication";
-import DefacedOverlay from "../components/DefacedOverlay";
 
 const Home = () => {
   useEffect(() => {
@@ -20,7 +19,6 @@ const Home = () => {
 
   return (
     <>
-      <DefacedOverlay initiallyOpen={true} />
       <Banner />
       <DeansMessage />
       <MissionVision />
