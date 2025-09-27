@@ -26,6 +26,8 @@ app.use(
     crossOriginResourcePolicy: false,
   })
 );
+
+console.log(process.env.CORS);
 app.use(
   cors({
     origin: process.env.CORS,
