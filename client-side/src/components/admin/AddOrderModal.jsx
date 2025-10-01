@@ -6,6 +6,7 @@ import PropTypes from "prop-types";
 import TextInput from "../common/TextInput";
 import Button from "../../components/common/Button";
 import { getInformationData } from "../../authentication/Authentication";
+import { TailSpin } from "react-loader-spinner";
 
 const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
   const [studentOptions, setStudentOptions] = useState([]);
@@ -14,7 +15,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
   const [item, setItem] = useState(null);
   const [size, setSize] = useState("");
   const [variation, setVariation] = useState("");
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState("0.00");
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -27,15 +28,64 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
       setMerchOptions(
         temp
           .filter((opt) => opt.is_active === true)
-          .map((opt) => ({
-            label: `${opt.name}`,
-            value: opt,
-          }))
+          .map((opt) => {
+            // Normalize selectedSizes: array → object
+            let normalizedSizes = {};
+            if (Array.isArray(opt.selectedSizes)) {
+              normalizedSizes = opt.selectedSizes.reduce((acc, sizeObj) => {
+                if (sizeObj.size != null && sizeObj.price != null) {
+                  acc[sizeObj.size] = { price: parseFloat(sizeObj.price) };
+                }
+                return acc;
+              }, {});
+            } else if (opt.selectedSizes && typeof opt.selectedSizes === 'object') {
+              normalizedSizes = Object.keys(opt.selectedSizes).reduce((acc, key) => {
+                const val = opt.selectedSizes[key];
+                acc[key] = {
+                  price: typeof val.price === 'number' ? val.price : parseFloat(val.price) || 0
+                };
+                return acc;
+              }, {});
+            }
+
+            // ✅ Normalize selectedVariations: array of objects → array of strings
+            let normalizedVariations = [];
+            if (Array.isArray(opt.selectedVariations)) {
+              normalizedVariations = opt.selectedVariations
+                .map(v => {
+                  // Handle both { variation: "Red" } and plain strings
+                  if (typeof v === 'string') return v;
+                  if (v && v.variation) return v.variation;
+                  if (v && v.name) return v.name; // fallback
+                  return null;
+                })
+                .filter(Boolean); // remove null/undefined
+            } else if (Array.isArray(opt.variations)) {
+              // Some APIs use "variations" instead of "selectedVariations"
+              normalizedVariations = opt.variations
+                .map(v => typeof v === 'string' ? v : (v?.variation || v?.name || null))
+                .filter(Boolean);
+            } else if (typeof opt.selectedVariations === 'string') {
+              // Rare: comma-separated string?
+              normalizedVariations = opt.selectedVariations.split(',').map(s => s.trim()).filter(Boolean);
+            }
+
+            return {
+              label: `${opt.name}`,
+              value: {
+                ...opt,
+                selectedSizes: normalizedSizes,
+                selectedVariations: normalizedVariations, // ✅ now array of strings
+              },
+            };
+          })
       );
     };
 
     const fetchStudentOptions = async () => {
       try {
+        setIsLoading(true)
+
         const result = await membership();
         setStudentOptions(
           result.map((student) => ({
@@ -45,6 +95,8 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
         );
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false)
       }
     };
 
@@ -53,13 +105,30 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
   }, []);
 
   useEffect(() => {
-    if (item?.selectedSizes && size && quantity) {
+    if (!item) {
+      setItem(null)
+      setAmount("0.00")
+      return;
+    }
+    
+    if (quantity <= 0) return;
+    let price = 0;
+
+    // Case 1: Item has sizes → use selected size price
+    if (item.selectedSizes && size) {
       const selected = item.selectedSizes[size];
-      if (selected && selected.price) {
-        setAmount((selected.price * quantity).toFixed(2));
-        setFinalPrice(selected.price);
+      if (selected && typeof selected.price === 'number') {
+        price = selected.price;
       }
     }
+    // Case 2: No sizes → use base price
+    else if (typeof item.price === 'number') {
+      price = item.price;
+    }
+
+    const total = (price * quantity).toFixed(2);
+    setAmount(total);
+    setFinalPrice(price);
   }, [item, size, quantity]);
 
   const validateForm = () => {
@@ -90,7 +159,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
       price: finalPrice ? finalPrice : item.price,
       quantity,
       sub_total: amount,
-      variation: item.category === "uniform" ? variation : "",
+      variation: variation,
       sizes: size,
       batch: item.batch,
     };
@@ -115,7 +184,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
 
   return (
     <Modal onClose={handleClose}>
-      <div className="flex flex-col gap-2 p-4 h-full overflow-y-auto">
+      <div className="flex flex-col gap-2 p-4 h-full max-h-[80vh] overflow-y-auto">
         <h1 className="text-2xl font-semibold"> Add Order </h1>
 
         <SearchDropdown
@@ -162,6 +231,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
           type="number"
           value={amount}
           placeholder="Price"
+          readOnly
         />
 
         {item &&
@@ -226,30 +296,17 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
         >
           {isLoading ? (
             <div className="flex items-center justify-center">
-              <svg
-                className="animate-spin h-5 w-5 mr-2 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4l3-3m-3 3l-3-3m3 3V4a8 8 0 018 8h-4l3 3m-3-3l3 3"
-                ></path>
-              </svg>
-              Loading...
+              <TailSpin
+                visible={true}
+                height="20"
+                width="20"
+                color="#ffffff"
+                ariaLabel="tail-spin-loading"
+              />
+              <span className="ml-2">Loading...</span>
             </div>
           ) : !student || !item || quantity <= 0 ? (
-            "Disabled"
+            "Add Details Before Submitting"
           ) : (
             "Create Order"
           )}
