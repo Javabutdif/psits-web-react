@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
-import { FaUserCheck } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaUserCheck } from "react-icons/fa";
 import { IoArrowBack } from "react-icons/io5";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "react-tabs/style/react-tabs.css";
@@ -12,11 +12,16 @@ import {
 import { getInformationData } from "../../../authentication/Authentication";
 import ConfirmationModal from "../../../components/common/modal/ConfirmationModal";
 import ButtonsComponent from "../../../components/Custom/ButtonsComponent";
+import Button from "../../../components/common/Button";
 import FormButton from "../../../components/forms/FormButton";
 import { ConfirmActionType } from "../../../enums/commonEnums";
 import AttendanceSettings from "./AttendanceSettings";
 import AttendanceTab from "./AttendanceTab";
 import ViewStudentAttendance from "./ViewStudentAttendance";
+import Modal from "../../../components/common/modal/Modal";
+import { updateAttendeeRequirements } from "../../../api/event";
+import { showToast } from "../../../utils/alertHelper";
+import { InfinitySpin } from "react-loader-spinner";
 
 const Attendance = (props) => {
   // TODO(Adriane): Refactor the entire logic, so many unused variables, no DRY principle and spaghetti logic
@@ -49,6 +54,43 @@ const Attendance = (props) => {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [merchData, setMerchData] = useState("");
+  const [requirementsModalOpen, setRequirementsModalOpen] = useState(false);
+  const [selectedRequirements, setSelectedRequirements] = useState({
+    insurance: false,
+    prelim_payment: false,
+    midterm_payment: false,
+  });
+  const [selectedAttendeeId, setSelectedAttendeeId] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleUpdateAttendeeRequirements = async () => {
+    if (!selectedAttendeeId) {
+      showToast("error", "Attendee ID is missing.");
+      return;
+    }
+
+    const { insurance, prelim_payment, midterm_payment } = selectedRequirements;
+  
+    try {
+      setLoading(true)
+      await updateAttendeeRequirements({
+        eventId,
+        id_number: selectedAttendeeId,
+        insurance: insurance,
+        prelim_payment: prelim_payment,
+        midterm_payment: midterm_payment,
+      });
+  
+      showToast("success", "Requirements updated successfully!");
+      fetchData();
+      // setRequirementsModalOpen(false);
+    } catch (err) {
+      console.error("Update error:", err);
+      showToast("error", err.response?.data?.message || "Failed to update requirements!");
+    } finally {
+      setLoading(false)
+    }
+  };
 
   const handleRowSelection = (id) => {
     setSelectedRows((prevSelectedRows) =>
@@ -258,6 +300,28 @@ const Attendance = (props) => {
       },
     },
     {
+      key: "requirements",
+      label: "Requirements",
+      sortable: false,
+      selector: (row) => row.requirements,
+      cell: (row) => {
+        const req = row.requirements || {};
+        return (
+          <Button 
+            type={"button"}
+            onClick={() => {
+              setSelectedRequirements(req);
+              setSelectedAttendeeId(row.id_number);
+              setRequirementsModalOpen(true);
+            }}
+            className={"text-blue-600 text-sm"}
+          >
+            View
+          </Button>
+        );
+      },
+    },
+    {
       key: "attendDate",
       label: "Confirmed Date",
       sortable: true,
@@ -410,6 +474,111 @@ const Attendance = (props) => {
   const isSoonEvent = eventDate > currentDate && !isSameDate;
   return (
     <div className="container mx-auto p-4 ">
+      {/* Requirements Modal */}
+      {requirementsModalOpen && (
+        <Modal
+          onClose={() => {
+            setRequirementsModalOpen(false);
+            setIsEditing(false); // reset mode when closing
+          }}
+          showCloseButton={true}
+        >
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              {isEditing ? "Edit Requirements" : "Attendee Requirements"}
+            </h3>
+
+            <div className="space-y-4">
+              {[
+                { key: "insurance", label: "Insurance" },
+                { key: "prelim_payment", label: "Prelim Payment" },
+                { key: "midterm_payment", label: "Midterm Payment" },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center justify-between">
+                  <span className="text-gray-700">{item.label}</span>
+
+                  {isEditing ? (
+                    // ✅ Edit Mode: Toggle switch
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedRequirements[item.key]}
+                        onChange={(e) => {
+                          setSelectedRequirements(prev => ({
+                            ...prev,
+                            [item.key]: e.target.checked
+                          }));
+                        }}
+                        className="sr-only"
+                      />
+                      <div
+                        className={`w-11 h-6 flex items-center rounded-full p-1 transition ${
+                          selectedRequirements[item.key]
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                        }`}
+                      >
+                        <div
+                          className={`bg-white w-4 h-4 rounded-full shadow transform transition ${
+                            selectedRequirements[item.key]
+                              ? "translate-x-5"
+                              : ""
+                          }`}
+                        />
+                      </div>
+                    </label>
+                  ) : (
+                    selectedRequirements[item.key] ? (
+                      <span className="text-green-600">
+                        <FaCheckCircle size={18} />
+                      </span>
+                    ) : (
+                      <span className="text-red-600">
+                        <FaTimesCircle size={18} />
+                      </span>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUpdateAttendeeRequirements}
+                    disabled={loading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
+
       <div className="flex flex-col gap-5 p-2 md:flex-col sm:flex-col">
         <div className="flex justify-start">
           <button

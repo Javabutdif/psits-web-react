@@ -7,6 +7,7 @@ import TextInput from "../common/TextInput";
 import Button from "../../components/common/Button";
 import { getInformationData } from "../../authentication/Authentication";
 import { TailSpin } from "react-loader-spinner";
+import { showToast } from "../../utils/alertHelper";
 
 const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
   const [studentOptions, setStudentOptions] = useState([]);
@@ -139,47 +140,58 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
       tempErrors.quantity = "Quantity must be greater than 0.";
     if (item.selectedVariations.length > 0 && variation.length === 0)
       tempErrors.variation = "Variation is required.";
-    if (item.selectedSizes.length > 0 && size.length === 0)
+    
+    const hasSizes = item.selectedSizes && Object.keys(item.selectedSizes).length > 0;
+    if (hasSizes && !size) {
       tempErrors.size = "Size is required.";
+    }
 
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0; // Returns true if no errors
   };
 
-  const createOrderHandler = () => {
-    if (!validateForm()) return;
+  const createOrderHandler = async () => {
+    try {
+      if (!validateForm()) return;
 
-    setIsLoading(true);
+      setIsLoading(true);
+      console.log('loading')
 
-    const items = {
-      product_id: item._id,
-      imageUrl1: item.imageUrl[0],
-      product_name: item.name,
-      limited: item.control === "limited-purchase",
-      price: finalPrice ? finalPrice : item.price,
-      quantity,
-      sub_total: amount,
-      variation: variation,
-      sizes: size,
-      batch: item.batch,
-    };
+      const items = {
+        product_id: item._id,
+        imageUrl1: item.imageUrl[0],
+        product_name: item.name,
+        limited: item.control === "limited-purchase",
+        price: finalPrice ? finalPrice : item.price,
+        quantity,
+        sub_total: amount,
+        variation: variation,
+        sizes: size,
+        batch: item.batch,
+      };
 
-    const formData = {
-      id_number: student.id_number,
-      rfid: student.rfid,
-      imageUrl1: item.imageUrl[0],
-      membership_discount: false,
-      course: student.course,
-      year: student.year,
-      student_name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
-      items,
-      total: (quantity * amount).toFixed(2),
-      admin: user.id_number,
-      order_date: new Date(),
-      order_status: "Pending",
-    };
+      const formData = {
+        id_number: student.id_number,
+        rfid: student.rfid,
+        imageUrl1: item.imageUrl[0],
+        membership_discount: false,
+        course: student.course,
+        year: student.year,
+        student_name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
+        items,
+        total: (quantity * amount).toFixed(2),
+        admin: user.id_number,
+        order_date: new Date(),
+        order_status: "Pending",
+      };
 
-    onCreateOrder(formData);
+      await onCreateOrder(formData);
+    } catch(err) {
+      // pass
+    } finally {
+      setIsLoading(false)
+      console.log("not loading")
+    }
   };
 
   return (
@@ -288,6 +300,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
           size="full"
           onClick={createOrderHandler}
           disabled={isLoading || !student || !item || quantity <= 0}
+          title={(!student || !item || quantity <= 0) && "Add details before submitting."}
           className={`${
             isLoading || !student || !item || quantity <= 0
               ? "bg-gray-400 cursor-not-allowed"
@@ -306,7 +319,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
               <span className="ml-2">Loading...</span>
             </div>
           ) : !student || !item || quantity <= 0 ? (
-            "Add Details Before Submitting"
+            "Disabled"
           ) : (
             "Create Order"
           )}
