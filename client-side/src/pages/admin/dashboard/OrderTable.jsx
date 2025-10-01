@@ -23,7 +23,6 @@ const OrderTable = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [pendingSort, setPendingSort] = useState([]);
   const [appliedSort, setAppliedSort] = useState([]);
-  const [sortConfig, setSortConfig] = useState([]);
   const [page, setPage] = useState(initialPage || 1);
   const [limit, setLimit] = useState(initialLimit || 10);
 
