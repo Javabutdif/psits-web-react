@@ -594,12 +594,12 @@ const Reports = () => {
         </TabPanel>
 
         <TabPanel>
-          <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
+          <div className="mb-6 bg-white p-4 rounded-lg h-[45rem] shadow-md">
             <h2 className="text-xl font-bold mb-4">
               Merchandise Sales Summary
             </h2>
             <div className="overflow-hidden">
-              <div className="h-36 overflow-y-auto">
+              <div className="h-[40rem] overflow-y-auto">
                 {" "}
                 <table className="min-w-full  rounded-lg shadow-md">
                   <thead style={{ backgroundColor: "#0e4a6a", color: "#fff" }}>
