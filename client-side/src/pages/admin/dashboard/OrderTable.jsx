@@ -21,7 +21,8 @@ const OrderTable = ({
   loading,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState([]);
+  const [pendingSort, setPendingSort] = useState([]);
+  const [appliedSort, setAppliedSort] = useState([]);
   const [page, setPage] = useState(initialPage || 1);
   const [limit, setLimit] = useState(initialLimit || 10);
 
@@ -36,62 +37,71 @@ const OrderTable = ({
     return () => clearTimeout(timer);
   }, [searchTerm, onSearch]);
 
-  const handleSort = (field) => {
-    let newSortConfig = [...sortConfig];
-    const existingSortIndex = newSortConfig.findIndex(
-      (sort) => sort.field === field
-    );
+  const handleSortClick = (field) => {
+    let newPending = [...pendingSort];
+    const existingIndex = newPending.findIndex((s) => s.field === field);
 
-    if (existingSortIndex >= 0) {
-      // Cycle through sort states: asc -> desc -> none
-      const existingSort = newSortConfig[existingSortIndex];
-      if (existingSort.direction === "asc") {
-        newSortConfig[existingSortIndex] = {
-          ...existingSort,
-          direction: "desc",
-        };
+    if (existingIndex >= 0) {
+      const currentDir = newPending[existingIndex].direction;
+      if (currentDir === "desc") {
+        // desc → asc
+        newPending[existingIndex] = { field, direction: "asc" };
       } else {
-        // Remove this sort if cycling from desc
-        newSortConfig.splice(existingSortIndex, 1);
+        // asc → remove
+        newPending.splice(existingIndex, 1);
       }
     } else {
-      // Add new sort
-      newSortConfig.push({ field, direction: "asc" });
+      // First click → desc (down arrow)
+      newPending.push({ field, direction: "desc" });
     }
 
-    setSortConfig(newSortConfig);
+    setPendingSort(newPending);
+  };
+
+  const handleApplySort = () => {
+    setAppliedSort(pendingSort);
     if (onSortChange) {
-      onSortChange(newSortConfig);
+      onSortChange(pendingSort);
+    }
+    // Reset to page 1 after sort
+    if (page !== 1) {
+      setPage(1);
+      onPageChange?.(1, limit);
     }
   };
 
-  const resetSort = () => {
-    setSortConfig([]);
-    if (onSortChange) {
-      onSortChange([]);
+  const handleResetSort = () => {
+    setPendingSort([]);
+    setAppliedSort([]);
+    if (onSortChange) onSortChange([]);
+    if (page !== 1) {
+      setPage(1);
+      onPageChange?.(1, limit);
     }
+  };
+
+  // Returns the sort priority (1, 2, 3...) or null if not sorted
+  const getSortPriority = (field) => {
+    const index = pendingSort.findIndex((s) => s.field === field);
+    return index === -1 ? null : index + 1;
   };
 
   const getSortIcon = (field) => {
-    const sortItem = sortConfig.find((sort) => sort.field === field);
+    const sortItem = pendingSort.find((s) => s.field === field);
     if (!sortItem) return faSort;
     return sortItem.direction === "asc" ? faSortUp : faSortDown;
   };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
-    if (onPageChange) {
-      onPageChange(newPage, limit);
-    }
+    onPageChange?.(newPage, limit);
   };
 
   const handleLimitChange = (e) => {
     const newLimit = parseInt(e.target.value);
     setLimit(newLimit);
-    setPage(1); // Reset to first page when limit changes
-    if (onPageChange) {
-      onPageChange(1, newLimit);
-    }
+    setPage(1);
+    onPageChange?.(1, newLimit);
   };
 
   const getYearSuffix = (year) => {
@@ -102,17 +112,6 @@ const OrderTable = ({
   };
 
   const totalPages = Math.ceil(total / limit);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        when: "beforeChildren",
-        staggerChildren: 0.1,
-      },
-    },
-  };
 
   const rowVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -182,15 +181,32 @@ const OrderTable = ({
             Search
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-center">
+          {/* Apply Sort Button */}
           <button
-            onClick={resetSort}
+            onClick={handleApplySort}
+            disabled={pendingSort.length === 0}
+            className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+              pendingSort.length === 0
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
+            title="Apply selected sort"
+          >
+            <span>Sort</span>
+          </button>
+
+          {/* Reset Button */}
+          <button
+            onClick={handleResetSort}
             className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center gap-2 transition-colors"
             title="Reset sort"
           >
             <FontAwesomeIcon icon={faSyncAlt} />
-            <span className="hidden sm:inline">Reset Sort</span>
+            <span className="hidden sm:inline">Reset</span>
           </button>
+
+          {/* Limit Selector */}
           <select
             value={limit}
             onChange={handleLimitChange}
@@ -216,77 +232,50 @@ const OrderTable = ({
             >
               <th
                 className="p-3 text-left cursor-pointer hover:bg-gray-200 transition-colors"
-                onClick={() => handleSort("product_name")}
+                onClick={() => handleSortClick("product_name")}
               >
                 <div className="flex items-center gap-1">
                   <span>Order Name</span>
                   <FontAwesomeIcon icon={getSortIcon("product_name")} />
+                  {getSortPriority("product_name") !== null && (
+                    <span className="text-[0.65rem] font-bold text-blue-600 ml-0.5">
+                      {getSortPriority("product_name")}
+                    </span>
+                  )}
                 </div>
               </th>
               <th
                 className="p-3 text-center cursor-pointer hover:bg-gray-200 transition-colors"
-                onClick={() => handleSort("total")}
+                onClick={() => handleSortClick("total")}
               >
                 <div className="flex items-center justify-center gap-1">
                   <span>Quantity</span>
                   <FontAwesomeIcon icon={getSortIcon("total")} />
+                  {getSortPriority("total") !== null && (
+                    <span className="text-[0.65rem] font-bold text-blue-600 ml-0.5">
+                      {getSortPriority("total")}
+                    </span>
+                  )}
                 </div>
               </th>
-              {initialData && initialData.length > 0 ? (
-                initialData[0].yearCounts.map((_, index) => (
-                  <th
-                    key={index}
-                    className="p-3 text-center cursor-pointer hover:bg-gray-200 transition-colors"
-                    onClick={() => handleSort(`year_${index + 1}`)}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>{`${getYearSuffix(index + 1)} Year`}</span>
-                      <FontAwesomeIcon
-                        icon={getSortIcon(`year_${index + 1}`)}
-                      />
-                    </div>
-                  </th>
-                ))
-              ) : (
-                <>
-                  <th
-                    className="p-3 text-center cursor-pointer hover:bg-gray-200 transition-colors"
-                    onClick={() => handleSort("year_1")}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>1st Year</span>
-                      <FontAwesomeIcon icon={getSortIcon("year_1")} />
-                    </div>
-                  </th>
-                  <th
-                    className="p-3 text-center cursor-pointer hover:bg-gray-200 transition-colors"
-                    onClick={() => handleSort("year_2")}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>2nd Year</span>
-                      <FontAwesomeIcon icon={getSortIcon("year_2")} />
-                    </div>
-                  </th>
-                  <th
-                    className="p-3 text-center cursor-pointer hover:bg-gray-200 transition-colors"
-                    onClick={() => handleSort("year_3")}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>3rd Year</span>
-                      <FontAwesomeIcon icon={getSortIcon("year_3")} />
-                    </div>
-                  </th>
-                  <th
-                    className="p-3 text-center cursor-pointer hover:bg-gray-200 transition-colors"
-                    onClick={() => handleSort("year_4")}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>4th Year</span>
-                      <FontAwesomeIcon icon={getSortIcon("year_4")} />
-                    </div>
-                  </th>
-                </>
-              )}
+              {/* Year Columns */}
+              {Array.from({ length: 4 }, (_, i) => i + 1).map((year) => (
+                <th
+                  key={year}
+                  className="p-3 text-center cursor-pointer hover:bg-gray-200 transition-colors"
+                  onClick={() => handleSortClick(`year_${year}`)}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>{`${getYearSuffix(year)} Year`}</span>
+                    <FontAwesomeIcon icon={getSortIcon(`year_${year}`)} />
+                    {getSortPriority(`year_${year}`) !== null && (
+                      <span className="text-[0.65rem] font-bold text-blue-600 ml-0.5">
+                        {getSortPriority(`year_${year}`)}
+                      </span>
+                    )}
+                  </div>
+                </th>
+              ))}
             </motion.tr>
           </thead>
 
@@ -340,22 +329,12 @@ const OrderTable = ({
                       </motion.span>
                     </motion.td>
 
-                    {order.yearCounts.map((year, cellIndex) => (
-                      <motion.td
-                        key={cellIndex}
-                        custom={cellIndex + 2}
-                        variants={cellVariants}
-                        className="p-3 text-center"
-                      >
-                        <motion.span
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: (cellIndex + 2) * 0.05 }}
-                          className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold inline-block"
-                        >
-                          {year}
-                        </motion.span>
-                      </motion.td>
+                    {order.yearCounts.map((count, idx) => (
+                      <td key={idx} className="p-3 text-center">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold inline-block">
+                          {count}
+                        </span>
+                      </td>
                     ))}
                   </motion.tr>
                 ))}

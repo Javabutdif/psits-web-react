@@ -40,11 +40,15 @@ function Events() {
     setIsLoading(true);
     try {
       const response = await getEvents();
-      setEvent(response.data ? response.data : []);
+      let eventsData = response.data ? response.data : [];
+
+      // Sort events by eventDate in descending order (newest first)
+      eventsData.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+
+      setEvent(eventsData);
       setIsLoading(false);
     } catch (error) {
       console.error(error);
-
       setIsLoading(false);
     }
   };
@@ -52,6 +56,7 @@ function Events() {
   useEffect(() => {
     handleGetEvents();
   }, []);
+
   return (
     <div className="">
       {isLoading ? (
@@ -84,7 +89,7 @@ function Events() {
               Add Event
             </span>
           </button>
-          {isAddEventModalOpen && <AddEvent handleClose={closeModal} />}
+          {isAddEventModalOpen && <AddEvent handleClose={closeModal} handleGetEvents={handleGetEvents} />}
           {events &&
             events.map((event) => (
               <motion.div

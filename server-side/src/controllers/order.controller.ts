@@ -292,6 +292,7 @@ export const studentAndAdminOrderController = async (
       .json({ message: "Internal Server Error: " + error.message });
   }
 };
+
 export const cancelOrderController = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -485,6 +486,7 @@ export const approveOrderController = async (req: Request, res: Response) => {
               event.totalRevenueAll += item.sub_total;
               await event.save({ session });
 
+              // Update merch (if isEvent) and create instance of it as event attendee
               if (merchToGet) {
                 await Event.findOneAndUpdate(
                   {
@@ -499,6 +501,13 @@ export const approveOrderController = async (req: Request, res: Response) => {
                         course: successfulOrder.course,
                         year: successfulOrder.year,
                         campus: student.campus,
+                        requirements: {
+                          // false nalng ni uis HAHAHA
+                          // set to false on order approval (e.g. if order is related to acquiantance/ict congress)
+                          insurance: false,
+                          prelim_payment: false,
+                          midterm_payment: false
+                        },
                         attendance: {
                           morning: { attended: false, timestamp: "" },
                           afternoon: { attended: false, timestamp: "" },

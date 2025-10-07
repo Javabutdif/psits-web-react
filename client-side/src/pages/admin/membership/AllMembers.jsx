@@ -21,6 +21,8 @@ import EditMember from "./EditMember";
 import StudentMembershipHistory from "./StudentMembershipHistory";
 import OptionModal from "../../../components/common/modal/OptionModal";
 import { generateReferenceCode } from "../../../components/tools/clientTools";
+import { updateStudent } from "../../../api/admin";
+import { TailSpin } from "react-loader-spinner";
 
 const Membership = () => {
   const [data, setData] = useState([]);
@@ -97,20 +99,21 @@ const Membership = () => {
     setViewChange(false);
   };
 
-  const handleSaveEditedMember = async (updatedMember) => {
+  const handleSaveEditedMember = async (formData) => {
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        `${backendConnection()}/api/editedStudent`,
-        updatedMember,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      // console.log(response.data.message);
-      showToast("success", "Student updated successfully!");
+      const response = await updateStudent(
+        formData.id_number,
+        formData.rfid,
+        formData.first_name,
+        formData.middle_name,
+        formData.last_name,
+        formData.email,
+        formData.course,
+        formData.year
+      )
+      await fetchData();
+      showToast("success", "Student updated successfully!")
     } catch (error) {
       console.error("Error updating student:", error);
       showToast(
@@ -118,11 +121,10 @@ const Membership = () => {
         error.response?.data?.message ||
           error.message ||
           "An unexpected error occurred."
-      );
+      )
+    } finally {
+      setIsLoading(false);
     }
-
-    fetchData();
-    setIsLoading(false);
   };
 
   const handleRequestMembershipModal = async (row) => {
@@ -372,6 +374,17 @@ const Membership = () => {
 
   return (
     <div className="">
+      {isLoading && (
+        <div className="flex items-center justify-center">
+          <TailSpin
+            height="20"
+            width="20"
+            color="#074873"
+            ariaLabel="tail-spin-loading"
+          />
+          <span className="ml-2">Loading...</span>
+        </div>
+      )}
       <TableComponent columns={columns} data={filteredData} />
       {isEditModalVisible && (
         <EditMember

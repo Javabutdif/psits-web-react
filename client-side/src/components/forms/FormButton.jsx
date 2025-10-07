@@ -14,6 +14,7 @@ const FormButton = ({
   icon,
   textClass, // Add this prop
   disabled,
+  title
 }) => {
   return (
     <motion.button
@@ -26,6 +27,7 @@ const FormButton = ({
       whileHover={whileHover}
       whileTap={whileTap}
       disabled={disabled}
+      title={title}
     >
       {icon}
       <span className={textClass}>{text}</span> {/* Apply textClass here */}

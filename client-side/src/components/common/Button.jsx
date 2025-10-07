@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 const Button = ({
   onClick,
   children,
+  title = "",
   type = "button",
   className = "",
   size = "fit",
@@ -9,6 +10,7 @@ const Button = ({
   return (
     <button
       type={type}
+      title={title}
       className={` 
         ${className} 
         ${size === "fit" ? "w-fit" : "w-full"}
@@ -23,6 +25,7 @@ const Button = ({
 Button.propTypes = {
   onClick: PropTypes.func,
   children: PropTypes.node.isRequired,
+  title: PropTypes.string,
   type: PropTypes.oneOf(["button", "submit", "reset"]),
   size: PropTypes.oneOf(["fit", "full"]),
   className: PropTypes.string,

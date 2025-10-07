@@ -342,3 +342,40 @@ export const fetchSpecificMembershipHistoryController = async (
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const editStudentYearLevel = async (
+  req: Request,
+  res: Response
+) => {
+  const { id_number } = req.params;
+  const { year } = req.body
+
+  if (year === undefined || year === null) {
+    return res.status(400).json({ message: "Year level is required." })
+  }
+
+  if (typeof year !== 'number' || year < 1 || year > 4) {
+    return res.status(400).json({ message: "Year level must be between 1 and 4" })
+  }
+
+  try {
+    const student: IStudent | null = await Student.findOne({ id_number })
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" })
+    }
+
+    const updatedStudent = await Student.findOneAndUpdate(
+      { id_number },
+      { year },
+      { new: true, runValidators: true }
+    )
+
+    return res.status(200).json({
+      message: "Student year level updated successfully",
+      student: updatedStudent
+    })
+  } catch(error) {
+    console.error(error)
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}

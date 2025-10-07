@@ -21,6 +21,7 @@ import {
   getEventStatisticsController,
   removeEventController,
   removeAttendanceController,
+  updateAttendeeRequirementsController,
 } from "../controllers/event.controller";
 import dotenv from "dotenv";
 dotenv.config();
@@ -66,7 +67,7 @@ router.post(
 // GET all events
 router.get("/get-all-event", both_authenticate, getAllEventsController);
 
-// GET all events and attendees
+// GET an event and all of its attendees
 router.get(
   "/attendees/:id",
   admin_authenticate,
@@ -112,8 +113,11 @@ router.put(
   admin_authenticate,
   removeAttendeeInRaffleController
 );
-//Add attendee in events
+
+// Add attendee in events
+// Possibly unused route
 router.post("/add-attendee", admin_authenticate, addAttendeeController);
+
 //Get all statistic in events
 router.get(
   "/get-statistics/:eventId",
@@ -133,5 +137,13 @@ router.post(
   admin_authenticate,
   removeAttendanceController
 );
+
+// Update event attendee's requirements
+// Request body: insurance (boolean), prelim_payment (boolean), midterm_payment (boolean)
+router.put(
+  "/:eventId/attendees/:id_number/requirements",
+  admin_authenticate,
+  updateAttendeeRequirementsController
+)
 
 export default router;

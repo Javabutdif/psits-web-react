@@ -121,16 +121,18 @@ const AdminDashboard = () => {
   const fetchPendingCounts = async () => {
     try {
       setOrderLoading(true);
-      const [
-        { data: pendingOrders, total: totalOrder, totalPages: totalPage },
-      ] = await Promise.all([
+      const sortParam = sort.length > 0 ? JSON.stringify(sort) : undefined;
+
+      const [{ data: pendingOrders, total: totalOrder, totalPages: totalPage }] =
+      await Promise.all([
         fetchAllPendingCounts({
           page: currentPage,
           limit,
-          sort,
+          sort: sortParam, // ← now a string!
           search,
         }),
       ]);
+      
       // console.log('pending orders: ', pendingOrders)
       setPendingOrder(pendingOrders || []);
       setTotalOrders(totalOrder || 0);

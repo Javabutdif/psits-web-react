@@ -1110,3 +1110,41 @@ export const getStudentMembershipHistory = async (studentId) => {
     }
   }
 };
+
+export const updateStudent = async (
+  id_number,
+  rfid,
+  first_name,
+  middle_name,
+  last_name,
+  email,
+  course,
+  year
+) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/students/edited-student`,
+      { 
+        id_number,
+        rfid,
+        first_name,
+        middle_name,
+        last_name,
+        email,
+        course,
+        year 
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    return response
+  } catch (error) {
+    console.error("Error updating student:", error)
+    throw error
+  }
+}

@@ -2,7 +2,7 @@ import axios from "axios";
 import { useState } from "react";
 import backendConnection from "../../../api/backendApi";
 import { showToast } from "../../../utils/alertHelper.js";
-function AddEvent({ handleClose }) {
+function AddEvent({ handleClose, handleGetEvents }) {
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -166,6 +166,7 @@ function AddEvent({ handleClose }) {
         );
 
         showToast("success", "Event created successfully!");
+        handleGetEvents()
         handleClose();
       } catch (error) {
         console.error("Error creating event:", error);

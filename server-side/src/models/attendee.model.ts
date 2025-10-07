@@ -3,6 +3,7 @@ import {
   IAttendanceSessionType,
   IAttendee,
   IAttendanceSession,
+  IAttendeeRequirements
 } from "./attendee.interface";
 
 export interface IAttendanceSessionTypeDocument
@@ -11,7 +12,10 @@ export interface IAttendanceSessionTypeDocument
 export interface IAttendanceSessionDocument
   extends IAttendanceSession,
     Document {}
+
 export interface IAttendeeDocument extends IAttendee, Document {}
+
+export interface IAttendeeRequirementsDocument extends IAttendeeRequirements, Document {} 
 
 const attendanceSessionSchema = new Schema<IAttendanceSessionTypeDocument>(
   {
@@ -20,6 +24,17 @@ const attendanceSessionSchema = new Schema<IAttendanceSessionTypeDocument>(
   },
   { _id: false }
 );
+
+const attendeeRequirementsSchema = new Schema<IAttendeeRequirementsDocument>(
+  {
+    insurance: { type: Boolean, default: false },
+    prelim_payment: { type: Boolean, default: false },
+    midterm_payment: { type: Boolean, default: false }
+  },
+  {
+    _id: false
+  }
+)
 
 export const attendeeSchema = new Schema<IAttendeeDocument>({
   id_number: {
@@ -42,7 +57,10 @@ export const attendeeSchema = new Schema<IAttendeeDocument>({
     type: String,
     required: true,
   },
-
+  requirements: {
+    type: attendeeRequirementsSchema,
+    required: true
+  },
   attendance: {
     type: new Schema<IAttendanceSessionDocument>(
       {

@@ -11,6 +11,7 @@ import {
   changeStudentPassword,
   fetchSpecificStudentController,
   fetchSpecificMembershipHistoryController,
+  editStudentYearLevel,
 } from "../controllers/student.controller";
 import {
   admin_authenticate,
@@ -85,5 +86,12 @@ router.get(
   admin_authenticate,
   fetchSpecificMembershipHistoryController
 );
+
+
+router.put(
+  "/students/edit-year-level/:id_number",
+  both_authenticate,
+  editStudentYearLevel
+)
 
 export default router;
