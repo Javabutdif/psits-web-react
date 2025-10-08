@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { showToast } from "../../utils/alertHelper";
-import { membershipRequest, cancelMembership } from "../../api/admin";
+import {
+  membershipRequest,
+  cancelMembership,
+  membershipPrice,
+} from "../../api/admin";
 import TableComponent from "../../components/Custom/TableComponent";
 
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
@@ -30,6 +34,7 @@ function MembershipRequest() {
   const [selectedStudentName, setSelectedStudentName] = useState("");
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [price, setPrice] = useState(0);
 
   const columns = [
     {
@@ -197,6 +202,8 @@ function MembershipRequest() {
   const fetchData = async () => {
     try {
       const result = await membershipRequest();
+      const price = await membershipPrice();
+      setPrice(price ? price : 0);
       setData(result);
       setFilteredData(result);
       setLoading(false);
@@ -319,8 +326,8 @@ function MembershipRequest() {
           onCancel={handleCloseModal}
           onSubmit={handleFormSubmit}
           qty={1}
-          itemTotal={50}
-          total={50}
+          itemTotal={price}
+          total={price}
         />
       )}
     </>

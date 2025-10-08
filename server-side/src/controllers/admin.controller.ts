@@ -6,6 +6,7 @@ import { Admin } from "../models/admin.model";
 import { Merch } from "../models/merch.model";
 import { Orders } from "../models/orders.model";
 import { Log } from "../models/log.model";
+import { Settings } from "../models/settings.model";
 import { MembershipHistory } from "../models/history.model";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { admin_model, role_model } from "../model_template/model_data";
@@ -43,13 +44,20 @@ export const approveMembershipController = async (
   req: Request,
   res: Response
 ) => {
-  const { reference_code, id_number, type, admin, rfid, date, cash, total } =
-    req.body;
+  const { reference_code, id_number, admin, rfid, date, cash } = req.body;
 
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
+    const settings = await Settings.findOne();
+
+    if (!settings) {
+      await new Settings({
+        membership_price: 50,
+      }).save();
+    }
+
     const student: IStudent | null = await Student.findOne({
       id_number,
     }).session(session);
@@ -104,7 +112,7 @@ export const approveMembershipController = async (
       name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
       reference_code,
       cash: cash ?? 50,
-      total: cash ?? 50,
+      total: settings?.membership_price ?? 0,
       course: student.course,
       year: student.year,
       admin: admin ?? req.admin.name,
@@ -828,5 +836,48 @@ export const setNewAdminAccessController = async (
   } catch (error) {
     console.error("Error updating access account:", error);
     res.status(500).json({ message: "An error occurred", error: error });
+  }
+};
+export const getMembershipPrice = async (req: Request, res: Response) => {
+  try {
+    const settings = await Settings.findOne();
+    console.log(settings);
+    if (settings) {
+      res.status(200).json({ data: settings });
+    } else {
+      res.status(404).json({ message: "No data found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching Membership Price" });
+  }
+};
+
+export const changeMembershipPrice = async (req: Request, res: Response) => {
+  const { price } = req.body;
+
+  try {
+    const settings = await Settings.find();
+    if (settings.length === 0) {
+      await new Settings({
+        membership_price: price,
+      }).save();
+      await new Settings({ membership_price: price }).save();
+      return res.status(201).json({ message: "Membership fee created" });
+    }
+    const update = await Settings.updateOne(
+      {},
+      {
+        $set: {
+          membership_price: price,
+        },
+      }
+    );
+    if (update.matchedCount > 0) {
+      res.status(200).json({ message: "Memberhsip Fee Updated" });
+    } else {
+      res.status(404).json({ message: "Error updating fee" });
+    }
+  } catch (error) {
+    console.error(error);
   }
 };

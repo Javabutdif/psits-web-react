@@ -1110,3 +1110,56 @@ export const getStudentMembershipHistory = async (studentId) => {
     }
   }
 };
+
+export const membershipPrice = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/admin/get-membership-price`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      return response.data.data.membership_price;
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return false;
+    } else {
+      console.log("error", "An error occurred");
+      return false;
+    }
+  }
+};
+
+export const changeMembershipPrice = async (price) => {
+  const newPriceFormData = new FormData();
+  newPriceFormData.set("price", price);
+
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/admin/change-membership-price`,
+      newPriceFormData,
+
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+    }
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return false;
+    } else {
+      console.log("error", "An error occurred");
+      return false;
+    }
+  }
+};

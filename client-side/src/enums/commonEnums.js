@@ -11,6 +11,7 @@ export const ConfirmActionType = Object.freeze({
   DECLINE: "Decline",
   REQUEST: "Request",
   RESET: "Reset",
+  CHANGE: "Change",
 });
 
 export const ConfirmActionWords = Object.freeze({
@@ -26,4 +27,5 @@ export const ConfirmActionWords = Object.freeze({
   Decline: "decline",
   Request: "request",
   Reset: "reset",
+  Change: "change",
 });

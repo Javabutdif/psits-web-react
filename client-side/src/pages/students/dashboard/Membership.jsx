@@ -2,6 +2,7 @@ import {
   requestMembership,
   getMembershipStatusStudents,
 } from "../../../api/students";
+import { membershipPrice } from "../../../api/admin";
 import { getInformationData } from "../../../authentication/Authentication";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -13,12 +14,15 @@ function Membership({ styles }) {
     status: MembershipStatus.NotApplied,
     isFirstApplication: true,
   });
+  const [price, setPrice] = useState(0);
   const token = sessionStorage.getItem("Token");
 
   const user = getInformationData();
   const fetchStatus = async () => {
     try {
       const status = await getMembershipStatusStudents(user.id_number);
+      const price = await membershipPrice();
+      setPrice(price ? price : 0);
       if (status) {
         setMembershipStatus({
           status: MembershipStatus[status.status],
@@ -103,8 +107,8 @@ function Membership({ styles }) {
             </h2>
             <p className="text-xs sm:text-sm mb-2 sm:mb-3 text-gray-600">
               Are you sure you want to request membership? Please note that you
-              need to pay PHP 50 in the PSITS Office to activate your membership
-              until the end of the semester.
+              need to pay PHP {price} in the PSITS Office to activate your
+              membership until the end of the semester.
             </p>
             <div className="bg-gray-100 p-2 rounded-lg mb-3 sm:mb-4 border border-gray-300">
               <h3 className="text-sm sm:text-md font-semibold mb-1 sm:mb-2 text-gray-700">
