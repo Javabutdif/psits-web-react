@@ -8,4 +8,5 @@ export interface IHistory {
   type: string;
   date: Date;
   admin: string;
+  total: Number;
 }

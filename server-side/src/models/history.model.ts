@@ -40,6 +40,10 @@ const historySchema = new Schema<IHistoryDocument>({
     type: String,
     require: true,
   },
+  total: {
+    type: Number,
+    require: true,
+  },
 });
 
 export const MembershipHistory = mongoose.model<IHistoryDocument>(

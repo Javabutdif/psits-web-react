@@ -16,6 +16,7 @@ import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
 import { IOrders } from "../models/orders.interface";
 import { IAdmin, IAdminDocument } from "../models/admin.interface";
+import { ISettings } from "../models/settings.interface";
 
 export const getSearchStudentByIdController = async (
   req: Request,
@@ -53,11 +54,8 @@ export const approveMembershipController = async (
     const settings = await Settings.findOne();
 
     if (!settings) {
-      await new Settings({
-        membership_price: 50,
-      }).save();
+      res.status(500).json({ message: "No membership price in the backend" });
     }
-
     const student: IStudent | null = await Student.findOne({
       id_number,
     }).session(session);
@@ -94,6 +92,7 @@ export const approveMembershipController = async (
       course: student.course,
       date: new Date(),
       admin: admin ? admin : req.admin.name,
+      total: settings?.membership_price,
     });
 
     const savedHistory = await history.save();
