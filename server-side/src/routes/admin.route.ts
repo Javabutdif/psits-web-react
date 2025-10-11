@@ -99,6 +99,7 @@ router.get("/get-daily-sales", admin_authenticate, getDailySalesController);
 router.get(
   "/get-all-officers",
   admin_authenticate,
+  role_authenticate(["admin", "finance", "executive"]),
   getAllAdminAccountsController
 );
 //Get All Members

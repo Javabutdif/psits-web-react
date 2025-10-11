@@ -338,9 +338,22 @@ export const getAllAdminAccountsController = async (
   res: Response
 ) => {
   try {
+    const access = req.admin.access;
+    
     const officers = await Admin.find({ status: "Active" });
     const users = officers.map((officer) => admin_model(officer));
-    res.status(200).json({ data: users });
+    let data;
+    if (access === "finance") {
+      data = users.filter(
+        (user) => user.access !== "executive" && user.access !== "admin"
+      );
+    } else if (access === "executive") {
+      data = users.filter((user) => user.access !== "admin");
+    } else {
+      data = users;
+    }
+
+    res.status(200).json({ data: data });
   } catch (error) {
     console.error("Error fetching officers:", error);
     res.status(500).json({ error: "Failed to fetch officers" });
