@@ -339,19 +339,18 @@ export const getAllAdminAccountsController = async (
 ) => {
   try {
     const access = req.admin.access;
-    
+
     const officers = await Admin.find({ status: "Active" });
     const users = officers.map((officer) => admin_model(officer));
-    let data;
-    if (access === "finance") {
-      data = users.filter(
-        (user) => user.access !== "executive" && user.access !== "admin"
-      );
-    } else if (access === "executive") {
-      data = users.filter((user) => user.access !== "admin");
-    } else {
-      data = users;
-    }
+
+    const data =
+      access === "finance"
+        ? users.filter(
+            (user) => user.access !== "executive" && user.access !== "admin"
+          )
+        : access === "executive"
+        ? users.filter((user) => user.access !== "admin")
+        : users;
 
     res.status(200).json({ data: data });
   } catch (error) {

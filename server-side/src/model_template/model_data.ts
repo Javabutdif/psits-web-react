@@ -1,11 +1,6 @@
-import { IAdmin, IAdminDocument } from "../models/admin.interface";
+import { IAdminDocument } from "../models/admin.interface";
 import { IStudent } from "../models/student.interface";
-import {
-  IAdminModelData,
-  IRoleModelData,
-  IUserModelData,
-  IAdminModelDataDocument,
-} from "./model_data.interface";
+import { IRoleModelData, IUserModelData } from "./model_data.interface";
 
 export const admin_model = (admin: IAdminDocument): any => {
   return {

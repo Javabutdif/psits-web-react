@@ -358,6 +358,12 @@ const Reports = () => {
     },
     { name: "Type", selector: (row) => row.type, sortable: true },
     {
+      name: "Managed",
+      selector: (row) => row.admin,
+      sortable: true,
+      wrap: true,
+    },
+    {
       name: "Total",
       selector: (row) => row.total,
       cell: (row) => <div>₱ {row.total}</div>,
