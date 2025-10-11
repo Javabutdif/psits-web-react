@@ -617,7 +617,7 @@ export const roleRemove = async (id_number) => {
         },
       }
     );
-    // console.log(response.data.message);
+
     return response.status;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -786,7 +786,7 @@ export const fetchAdminLogs = async () => {
 export const fetchStudentName = async (id_number) => {
   try {
     const response = await axios.get(
-      `${backendConnection()}/api/admin/search_student/${id_number}`,
+      `${backendConnection()}/api/admin/student_search/${id_number}`,
       {
         headers: {
           "Content-Type": "application/json",

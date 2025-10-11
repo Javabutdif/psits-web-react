@@ -880,8 +880,3 @@ export const changeMembershipPrice = async (req: Request, res: Response) => {
     console.error(error);
   }
 };
-
-
-
-
-

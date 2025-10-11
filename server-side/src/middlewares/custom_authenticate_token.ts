@@ -6,10 +6,6 @@ const token_key = process.env.JWT_SECRET ?? "";
 import { Admin } from "../models/admin.model";
 import { Student } from "../models/student.model";
 import { admin_model, user_model } from "../model_template/model_data";
-import {
-  IAdminModelData,
-  IUserModelData,
-} from "../model_template/model_data.interface";
 
 export const admin_authenticate = (
   req: Request,
@@ -43,7 +39,7 @@ export const admin_authenticate = (
 
       if (admin) {
         req.admin = admin_model(admin);
-        log_console_admin(admin_model(admin), req);
+
         next();
       } else res.status(403).json({ message: "Access Denied" });
     } catch (error) {
@@ -86,7 +82,7 @@ export const student_authenticate = (
 
       if (student) {
         req.student = user_model(student);
-        log_console(user_model(student), req);
+
         next();
       } else res.status(403).json({ message: "Access Denied" });
     } catch (error) {
@@ -133,12 +129,12 @@ export const both_authenticate = (
         });
         if (admin) {
           req.both = admin_model(admin);
-          log_console_admin(admin_model(admin), req);
+
           next();
         } else res.status(403).json({ message: "Access Denied" });
       } else if (student) {
         req.both = user_model(student);
-        log_console(user_model(student), req);
+
         next();
       } else res.status(403).json({ message: "Access Denied" });
     } catch (error) {
@@ -160,29 +156,4 @@ export const role_authenticate = (access: Array<String>) => {
       res.status(500).json({ message: error });
     }
   };
-};
-
-export const log_console_admin = (user: IAdminModelData, request: Request) => {
-  console.log(
-    "*********************************\nAdmin Name: " +
-      user.name +
-      "\nAccess: " +
-      user.access +
-      "\nRequested Route: " +
-      request.originalUrl +
-      "\n*********************************"
-  );
-};
-export const log_console = (user: IUserModelData, request: Request) => {
-  console.log(
-    "*********************************\nStudent Name: " +
-      user.name +
-      "\nCourse & Year: " +
-      user.course +
-      "-" +
-      user.year +
-      "\nRequested Route: " +
-      request.originalUrl +
-      "\n*********************************"
-  );
 };
