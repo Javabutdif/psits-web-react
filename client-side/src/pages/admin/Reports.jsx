@@ -348,7 +348,7 @@ const Reports = () => {
       wrap: true,
       cell: (row) => <div className="text-xs">{row.name}</div>,
     },
-    { name: "RFID", selector: (row) => row.rfid, sortable: true },
+
     { name: "Course", selector: (row) => row.course, sortable: true },
     { name: "Year", selector: (row) => row.year, sortable: true },
     {
@@ -357,6 +357,11 @@ const Reports = () => {
       sortable: true,
     },
     { name: "Type", selector: (row) => row.type, sortable: true },
+    {
+      name: "Total",
+      selector: (row) => row.total,
+      cell: (row) => <div>₱ {row.total}</div>,
+    },
   ];
 
   const merchandiseColumns = [
@@ -455,26 +460,22 @@ const Reports = () => {
           "Invalid data format: membershipData should be an array."
         );
       }
+      const total_sum = membershipData.reduce(
+        (sum, data) => sum + data.total,
+        0
+      );
 
-      const membershipCount = membershipData.filter(
-        (data) => data.type === "Membership"
-      ).length;
-
-      const renewalCount = membershipData.filter(
-        (data) => data.type === "Renewal"
-      ).length;
-
-      return { membershipCount, renewalCount };
+      return { total_sum };
     } catch (error) {
       console.error("Error processing membership data:", error);
 
-      return { membershipCount: 0, renewalCount: 0 };
+      return { total_sum: 0 };
     }
   };
-  const { membershipCount, renewalCount } = getMembershipCounts(membershipData);
 
-  const membershipRevenue = membershipCount * 50;
-  const renewalRevenue = renewalCount * 50;
+  const { total_sum } = getMembershipCounts(membershipData);
+
+  const membershipRevenue = total_sum;
 
   const formattedMerchandiseData = filteredMerchandiseData.map((row) => {
     return {
@@ -525,36 +526,40 @@ const Reports = () => {
 
         <TabPanel>
           <div className="mb-6 p-4 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold mb-4">Membership Sales Summary</h2>
-            <table className="min-w-full bg-gray-100 rounded-lg overflow-hidden shadow-md">
-              <thead style={{ backgroundColor: "#0e4a6a", color: "#fff" }}>
-                <tr>
-                  <th className="border px-4 py-2 text-left">
-                    Membership Type
-                  </th>
-                  <th className="border px-4 py-2 text-left">
-                    Registered Students
-                  </th>
-                  <th className="border px-4 py-2 text-left">Total Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border px-4 py-2">Membership</td>
-                  <td className="border px-4 py-2">{membershipCount}</td>
-                  <td className="border px-4 py-2">
-                    ₱{membershipRevenue.toFixed(2)}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border px-4 py-2">Renewal</td>
-                  <td className="border px-4 py-2">{renewalCount}</td>
-                  <td className="border px-4 py-2">
-                    ₱{renewalRevenue.toFixed(2)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <h2 className="text-xl font-bold mb-4 text-[#0e4a6a]">
+              Membership Sales Summary
+            </h2>
+
+            <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
+              <table className="min-w-full bg-white">
+                <thead className="bg-[#0e4a6a] text-white">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm sm:text-base">
+                      Membership
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm sm:text-base">
+                      Total Members
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm sm:text-base">
+                      Total Revenue
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-gray-800 text-sm sm:text-base">
+                      Membership
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-sm sm:text-base">
+                      {membershipData.length}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-sm sm:text-base">
+                      ₱{membershipRevenue.toFixed(2)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Membership Tab Content */}
