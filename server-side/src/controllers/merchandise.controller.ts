@@ -10,6 +10,7 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { Request, Response } from "express";
 import dotenv from "dotenv";
 import { S3Client } from "@aws-sdk/client-s3";
+import { expiryStatus } from "../custom_function/conditional_dates";
 dotenv.config();
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || "ap-southeast-1",
@@ -161,6 +162,27 @@ export const retrieveActiveMerchandiseController = async (
       res.status(400).json({ message: "No Available Merchandise" });
     }
     res.status(200).json(merches);
+  } catch (error) {
+    console.error("Error fetching merches:", error);
+    res.status(500).send(error);
+  }
+};
+
+export const retrieveActiveAndPublishMerchandiseController = async (
+  req: Request,
+  res: Response
+) => {
+  const now = new Date();
+  try {
+    const merches: IMerch[] = await Merch.find({
+      is_active: true,
+    });
+    if (!merches) {
+      res.status(400).json({ message: "No Available Merchandise" });
+    }
+    const data = merches.filter((merch) => new Date(merch.end_date) > now);
+
+    res.status(200).json(data);
   } catch (error) {
     console.error("Error fetching merches:", error);
     res.status(500).send(error);

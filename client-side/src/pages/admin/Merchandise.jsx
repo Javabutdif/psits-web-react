@@ -20,6 +20,7 @@ import { showToast } from "../../utils/alertHelper";
 import FilterOptions from "../students/merchandise/FilterOptions";
 import EditProduct from "./EditProduct";
 import Product from "./Product";
+import { Link } from "react-router-dom";
 
 function Merchandise() {
   const [data, setData] = useState([]);
@@ -415,8 +416,17 @@ function Merchandise() {
               customButtons={
                 financeAndAdminConditionalAccess() && (
                   <ButtonsComponent>
-                    {/* Filters Button */}
-
+                    {/* Discount Button */}
+                    <Link to="/admin/promo-dashboard">
+                      <motion.button
+                        whileHover={{ scale: 1.05, backgroundColor: "#0056b3" }} // Hover effect for primary
+                        whileTap={{ scale: 0.98, backgroundColor: "#003d7a" }} // Active effect for primary
+                        className="text-sm md:text-base bg-accent text-white flex items-center gap-2 px-5 py-2 border border-neutral-medium rounded-lg shadow-sm hover:shadow-md transition ease-in-out duration-150 focus:outline-none focus:ring-2 focus:ring-highlight"
+                      >
+                        <i className="fas fa-percent text-white"></i>
+                        <span className="font-medium">Promo Code </span>
+                      </motion.button>
+                    </Link>
                     {/* Add Product Button */}
                     <motion.button
                       whileHover={{ scale: 1.05, backgroundColor: "#0056b3" }} // Hover effect for primary

@@ -288,6 +288,30 @@ export const merchandise = async () => {
   }
 };
 
+export const activePublishMerchandise = async () => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/merch/retrieve-publish-merchandise`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      showToast("error", error.response.data.message || "An error occurred");
+      window.location.reload();
+    } else {
+      showToast("error", "An error occurred");
+    }
+    console.error("Error:", error);
+  }
+};
+
 export const merchandiseAdmin = async () => {
   try {
     const response = await axios.get(
@@ -1135,7 +1159,6 @@ export const membershipPrice = async () => {
     }
   }
 };
-
 
 export const changeMembershipPrice = async (price) => {
   const newPriceFormData = new FormData();

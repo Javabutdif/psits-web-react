@@ -68,6 +68,9 @@ import Resouces from "./pages/students/Resouces";
 import MarkAsPresent from "./pages/admin/MarkAsPresent";
 import { QRCodeScanner } from "./pages/admin/QRCodeScanner";
 
+//Promo Code
+import PromoDashboard from "./pages/admin/PromoCode/PromoDashboard";
+
 const App = () => {
   return (
     <Router>
@@ -212,6 +215,10 @@ const App = () => {
           ></Route>
 
           <Route path="logs" element={<PrivateRouteAdmin element={Logs} />} />
+          <Route
+            path="promo-dashboard"
+            element={<PrivateRouteAdmin element={PromoDashboard} />}
+          />
         </Route>
 
         <Route

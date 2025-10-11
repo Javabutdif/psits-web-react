@@ -11,6 +11,7 @@ import {
   updateMerchandiseController,
   softDeleteMerchandiseController,
   publishMerchandiseController,
+  retrieveActiveAndPublishMerchandiseController,
 } from "../controllers/merchandise.controller";
 import dotenv from "dotenv";
 import {
@@ -59,6 +60,11 @@ router.post(
 );
 //Retrieve All Active Merchandise
 router.get("/retrieve", both_authenticate, retrieveActiveMerchandiseController);
+router.get(
+  "/retrieve-publish-merchandise",
+  both_authenticate,
+  retrieveActiveAndPublishMerchandiseController
+);
 //Retrieve Specific Merchandise
 router.get(
   "/retrieve/:id",
