@@ -1122,6 +1122,7 @@ export const membershipPrice = async () => {
         },
       }
     );
+
     if (response.status === 200) {
       return response.data.data.membership_price;
     }
@@ -1135,6 +1136,7 @@ export const membershipPrice = async () => {
   }
 };
 
+
 export const changeMembershipPrice = async (price) => {
   const newPriceFormData = new FormData();
   newPriceFormData.set("price", price);
@@ -1143,7 +1145,6 @@ export const changeMembershipPrice = async (price) => {
     const response = await axios.put(
       `${backendConnection()}/api/admin/change-membership-price`,
       newPriceFormData,
-
       {
         headers: {
           "Content-Type": "application/json",
@@ -1151,6 +1152,7 @@ export const changeMembershipPrice = async (price) => {
         },
       }
     );
+
     if (response.status === 200) {
       showToast("success", response.data.message);
     }
@@ -1161,5 +1163,43 @@ export const changeMembershipPrice = async (price) => {
       console.log("error", "An error occurred");
       return false;
     }
+  }
+};
+
+export const updateStudent = async (
+  id_number,
+  rfid,
+  first_name,
+  middle_name,
+  last_name,
+  email,
+  course,
+  year
+) => {
+  try {
+    const response = await axios.post(
+      `${backendConnection()}/api/students/edited-student`,
+      {
+        id_number,
+        rfid,
+        first_name,
+        middle_name,
+        last_name,
+        email,
+        course,
+        year,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response;
+  } catch (error) {
+    console.error("Error updating student:", error);
+    throw error;
   }
 };
