@@ -49,7 +49,6 @@ export const getMembershipStatusStudents = async (id_number) => {
 
     if (response.status === 200) {
       return response.data;
-    } else {
     }
   } catch (error) {
     if (error.response && error.response.data) {
@@ -188,5 +187,46 @@ export const searchStudentById = async (id_number) => {
     return response.data.data;
   } catch (error) {
     throw error.response?.data?.message || "An error occurred while searching.";
+  }
+};
+
+export const updateStudentYearLevelForCurrentYear = async (
+  id_number,
+  yearToUpdate
+) => {
+  try {
+    const response = await axios.put(
+      `${backendConnection()}/api/students/edit-year-level/${id_number}`,
+      { year: yearToUpdate },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data; // Contains message and updatedStudent data
+  } catch (error) {
+    console.error("Student year level update error: ", error);
+    throw error;
+  }
+};
+
+export const isStudentYearUpdated = async (id_number) => {
+  try {
+    const response = await axios.get(
+      `${backendConnection()}/api/students/is-year-updated/${id_number}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data.isYearUpdated;
+  } catch (error) {
+    console.error("Fetching isStudentYearUpdate error: ", error);
+    throw error;
   }
 };
