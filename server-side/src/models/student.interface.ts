@@ -11,6 +11,7 @@ export interface IStudent {
   email?: string;
   course: string;
   year: number;
+  isYearUpdated: boolean; // Tracks if student's year level is updated for that school year
   status: string;
   membershipStatus: string;
   applied?: string;
