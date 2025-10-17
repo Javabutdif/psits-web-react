@@ -343,39 +343,80 @@ export const fetchSpecificMembershipHistoryController = async (
   }
 };
 
-export const editStudentYearLevel = async (
-  req: Request,
-  res: Response
-) => {
+export const editStudentYearLevel = async (req: Request, res: Response) => {
   const { id_number } = req.params;
-  const { year } = req.body
+  const { year } = req.body;
 
+  // Validate year input
   if (year === undefined || year === null) {
-    return res.status(400).json({ message: "Year level is required." })
+    return res.status(400).json({ message: "Year level is required." });
   }
 
-  if (typeof year !== 'number' || year < 1 || year > 4) {
-    return res.status(400).json({ message: "Year level must be between 1 and 4" })
+  if (typeof year !== "number" || year < 1 || year > 5) {
+    return res
+      .status(400)
+      .json({ message: "Year level must be between 1 and 5." });
   }
 
   try {
-    const student: IStudent | null = await Student.findOne({ id_number })
+    // Find the student first to check current state
+    const student: IStudent | null = await Student.findOne({ id_number });
     if (!student) {
-      return res.status(404).json({ message: "Student not found" })
+      return res.status(404).json({ message: "Student not found." });
     }
 
+    // Check if already updated this school year
+    if (student.isYearUpdated) {
+      return res.status(400).json({
+        message:
+          "Student's year level has already been updated for this school year.",
+      });
+    }
+
+    // Update both year and isYearUpdated flag
     const updatedStudent = await Student.findOneAndUpdate(
       { id_number },
-      { year },
+      {
+        year,
+        isYearUpdated: true,
+      },
       { new: true, runValidators: true }
-    )
+    );
 
     return res.status(200).json({
-      message: "Student year level updated successfully",
-      student: updatedStudent
-    })
-  } catch(error) {
-    console.error(error)
-    res.status(500).json({ message: "Internal Server Error" });
+      message: "Student year level updated successfully.",
+      student: updatedStudent,
+    });
+  } catch (error) {
+    console.error("Error updating student year level:", error);
+    return res.status(500).json({ message: "Internal Server Error." });
   }
-}
+};
+
+export const isYearUpdatedController = async (req: Request, res: Response) => {
+  const { id_number } = req.params;
+  try {
+    // Validate id_number presence (optional but recommended)
+    if (!id_number) {
+      return res
+        .status(400)
+        .json({ message: "Student ID number is required." });
+    }
+
+    // Find student by id_number
+    const student: IStudent | null = await Student.findOne({ id_number });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+
+    // Return the isYearUpdated status
+    return res.status(200).json({
+      isYearUpdated: student.isYearUpdated,
+      message: "Student year update status retrieved successfully.",
+    });
+  } catch (error) {
+    console.error("Error updating student year level:", error);
+    return res.status(500).json({ message: "Internal Server Error." });
+  }
+};

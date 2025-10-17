@@ -152,7 +152,6 @@ export const studentAndAdminOrderController = async (
       const findMerch = await Merch.findOne({ _id: productId }).session(
         session
       );
-
       if (!findMerch) {
         await session.abortTransaction();
         session.endSession();
@@ -162,7 +161,6 @@ export const studentAndAdminOrderController = async (
       }
 
       const isStockInsufficient = findMerch.stocks < item.quantity;
-
       if (isStockInsufficient) {
         await session.abortTransaction();
         session.endSession();
@@ -173,13 +171,12 @@ export const studentAndAdminOrderController = async (
 
       let actualPrice = findMerch.price;
 
-      // If item has sizes and product has selectedSizes, check for custom pricing
+      // Check size-based price override
       if (item.sizes && item.sizes.length > 0 && findMerch.selectedSizes) {
         const selectedSize = Array.isArray(item.sizes)
           ? item.sizes[0]
           : item.sizes;
         const sizeConfig = findMerch.selectedSizes.get(selectedSize);
-
         if (sizeConfig && sizeConfig.price) {
           actualPrice = parseFloat(sizeConfig.price);
         }
@@ -187,13 +184,21 @@ export const studentAndAdminOrderController = async (
 
       let itemSubtotal = actualPrice * item.quantity;
 
+      // Apply manual discount from frontend (if provided)
+      if (item.discount && !isNaN(item.discount)) {
+        const discountPercent = parseFloat(item.discount);
+        const discountAmount = (itemSubtotal * discountPercent) / 100;
+        itemSubtotal -= discountAmount;
+      }
+
+      // Membership discount (optional, can stack if you allow)
       const membership_discount =
         (student.membershipStatus === "ACTIVE" ||
           student.membershipStatus === "RENEWED") &&
         findMerch.category === "merchandise";
 
       if (membership_discount) {
-        itemSubtotal = itemSubtotal - itemSubtotal * 0.05; // 5% discount
+        itemSubtotal = itemSubtotal - itemSubtotal * 0.05; // 5%
         finalMembershipDiscount = true;
       }
 
@@ -201,9 +206,10 @@ export const studentAndAdminOrderController = async (
         product_id: item.product_id,
         imageUrl1: findMerch.imageUrl?.[0],
         product_name: findMerch.name,
-        limited: findMerch.control === "limited-purchase" ? true : false,
+        limited: findMerch.control === "limited-purchase",
         price: actualPrice,
-        membership_discount: membership_discount,
+        discount: item.discount || 0, // keep record
+        membership_discount,
         quantity: item.quantity,
         sub_total: itemSubtotal,
         variation: item.variation,

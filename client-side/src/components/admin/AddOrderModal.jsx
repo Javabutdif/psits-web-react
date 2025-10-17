@@ -21,6 +21,8 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [finalPrice, setFinalPrice] = useState(0);
+  const [discount, setDiscount] = useState(0); // percentage
+
   const user = getInformationData();
 
   useEffect(() => {
@@ -39,23 +41,32 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
                 }
                 return acc;
               }, {});
-            } else if (opt.selectedSizes && typeof opt.selectedSizes === 'object') {
-              normalizedSizes = Object.keys(opt.selectedSizes).reduce((acc, key) => {
-                const val = opt.selectedSizes[key];
-                acc[key] = {
-                  price: typeof val.price === 'number' ? val.price : parseFloat(val.price) || 0
-                };
-                return acc;
-              }, {});
+            } else if (
+              opt.selectedSizes &&
+              typeof opt.selectedSizes === "object"
+            ) {
+              normalizedSizes = Object.keys(opt.selectedSizes).reduce(
+                (acc, key) => {
+                  const val = opt.selectedSizes[key];
+                  acc[key] = {
+                    price:
+                      typeof val.price === "number"
+                        ? val.price
+                        : parseFloat(val.price) || 0,
+                  };
+                  return acc;
+                },
+                {}
+              );
             }
 
             // ✅ Normalize selectedVariations: array of objects → array of strings
             let normalizedVariations = [];
             if (Array.isArray(opt.selectedVariations)) {
               normalizedVariations = opt.selectedVariations
-                .map(v => {
+                .map((v) => {
                   // Handle both { variation: "Red" } and plain strings
-                  if (typeof v === 'string') return v;
+                  if (typeof v === "string") return v;
                   if (v && v.variation) return v.variation;
                   if (v && v.name) return v.name; // fallback
                   return null;
@@ -64,11 +75,16 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
             } else if (Array.isArray(opt.variations)) {
               // Some APIs use "variations" instead of "selectedVariations"
               normalizedVariations = opt.variations
-                .map(v => typeof v === 'string' ? v : (v?.variation || v?.name || null))
+                .map((v) =>
+                  typeof v === "string" ? v : v?.variation || v?.name || null
+                )
                 .filter(Boolean);
-            } else if (typeof opt.selectedVariations === 'string') {
+            } else if (typeof opt.selectedVariations === "string") {
               // Rare: comma-separated string?
-              normalizedVariations = opt.selectedVariations.split(',').map(s => s.trim()).filter(Boolean);
+              normalizedVariations = opt.selectedVariations
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
             }
 
             return {
@@ -85,8 +101,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
 
     const fetchStudentOptions = async () => {
       try {
-        setIsLoading(true)
-
+        setIsLoading(true);
         const result = await membership();
         setStudentOptions(
           result.map((student) => ({
@@ -97,7 +112,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     };
 
@@ -107,30 +122,36 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
 
   useEffect(() => {
     if (!item) {
-      setItem(null)
-      setAmount("0.00")
+      setItem(null);
+      setAmount("0.00");
+      setFinalPrice(0);
       return;
     }
-    
+
     if (quantity <= 0) return;
     let price = 0;
 
     // Case 1: Item has sizes → use selected size price
     if (item.selectedSizes && size) {
       const selected = item.selectedSizes[size];
-      if (selected && typeof selected.price === 'number') {
+      if (selected && typeof selected.price === "number") {
         price = selected.price;
       }
     }
     // Case 2: No sizes → use base price
-    else if (typeof item.price === 'number') {
+    else if (typeof item.price === "number") {
       price = item.price;
     }
 
-    const total = (price * quantity).toFixed(2);
-    setAmount(total);
-    setFinalPrice(price);
-  }, [item, size, quantity]);
+    const subtotal = price * quantity;
+
+    // Apply discount if any
+    const discountAmount = discount > 0 ? (subtotal * discount) / 100 : 0;
+    const total = (subtotal - discountAmount).toFixed(2);
+
+    setAmount(subtotal.toFixed(2)); // before discount
+    setFinalPrice(total); // after discount
+  }, [item, size, quantity, discount]);
 
   const validateForm = () => {
     let tempErrors = {};
@@ -157,33 +178,34 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
       setIsLoading(true);
       console.log('loading')
 
-      const items = {
-        product_id: item._id,
-        imageUrl1: item.imageUrl[0],
-        product_name: item.name,
-        limited: item.control === "limited-purchase",
-        price: finalPrice ? finalPrice : item.price,
-        quantity,
-        sub_total: amount,
-        variation: variation,
-        sizes: size,
-        batch: item.batch,
-      };
+    const items = {
+      product_id: item._id,
+      imageUrl1: item.imageUrl[0],
+      product_name: item.name,
+      limited: item.control === "limited-purchase",
+      price: finalPrice ? finalPrice : item.price,
+      quantity,
+      sub_total: finalPrice, // now discounted
+      variation: variation,
+      sizes: size,
+      batch: item.batch,
+      discount: discount,
+    };
 
-      const formData = {
-        id_number: student.id_number,
-        rfid: student.rfid,
-        imageUrl1: item.imageUrl[0],
-        membership_discount: false,
-        course: student.course,
-        year: student.year,
-        student_name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
-        items,
-        total: (quantity * amount).toFixed(2),
-        admin: user.id_number,
-        order_date: new Date(),
-        order_status: "Pending",
-      };
+    const formData = {
+      id_number: student.id_number,
+      rfid: student.rfid,
+      imageUrl1: item.imageUrl[0],
+      membership_discount: false,
+      course: student.course,
+      year: student.year,
+      student_name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
+      items,
+      total: finalPrice, // total after discount
+      admin: user.id_number,
+      order_date: new Date(),
+      order_status: "Pending",
+    };
 
       await onCreateOrder(formData);
     } catch(err) {
@@ -243,6 +265,22 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
           type="number"
           value={amount}
           placeholder="Price"
+          readOnly
+        />
+
+        <TextInput
+          label="Discount (%)"
+          type="number"
+          value={discount}
+          placeholder="Enter discount %"
+          onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+        />
+
+        <TextInput
+          label="Final Price (After Discount)"
+          type="number"
+          value={finalPrice}
+          placeholder="Final Price"
           readOnly
         />
 
@@ -319,7 +357,7 @@ const AddOrderModal = ({ handleClose = () => {}, onCreateOrder }) => {
               <span className="ml-2">Loading...</span>
             </div>
           ) : !student || !item || quantity <= 0 ? (
-            "Disabled"
+            "Add Details Before Submitting"
           ) : (
             "Create Order"
           )}
