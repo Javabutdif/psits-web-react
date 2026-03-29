@@ -1,0 +1,7 @@
+export const campus_type = Object.freeze({
+  MAIN: "CCS_PSITS_CAMPUS_UC_MAIN",
+  BANILAD: "CCS_PSITS_CAMPUS_UC_BANILAD",
+  LM: "CCS_PSITS_CAMPUS_UC_LM",
+  PT: "CCS_PSITS_CAMPUS_UC_PT",
+  JONES: "CCS_PSITS_CAMPUS_UC_JONES",
+});

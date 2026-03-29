@@ -5,7 +5,7 @@ export interface IRefund{
     order_reference: String,
     product_id: Types.ObjectId,
     product_name: String,
-    refund_price: Number,
+    refund_price: number,
     refund_admin: String,
     refund_admin_id: String,
     refund_date: Date,

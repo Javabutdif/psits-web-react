@@ -1,0 +1,16 @@
+export const account_status = Object.freeze({
+  ACTIVE: "PSITS_STATUS_ACTIVE",
+  DELETED: "PSITS_STATUS_DELETED",
+  SUSPENDED: "PSITS_STATUS_SUSPENDED",
+});
+
+export const membership_status = Object.freeze({
+  ACTIVE: "PSITS_MEMBERSHIP_ACTIVE",
+  RENEWED: "PSITS_MEMBERSHIP_RENEWED",
+  PENDING: "PSITS_MEMBERSHIP_PENDING",
+  NONE: "PSITS_MEMBERSHIP_NONE",
+});
+export const membership_type = Object.freeze({
+  MEMBER: "PSITS_MEMBERSHIP_TYPE_MEMBER",
+  RENEWAL: "PSITS_MEMBERSHIP_TYPE_RENEWAL",
+});
