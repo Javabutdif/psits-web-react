@@ -1,7 +1,7 @@
 import { IAdminDocument } from "../models/admin.interface";
 import { IStudent } from "../models/student.interface";
 import { IRoleModelData, IUserModelData } from "./model_data.interface";
-import { getFullNameStudent } from "../services/student.service";
+import { studentService } from "../services/student.service";
 
 export const admin_model = (admin: IAdminDocument): any => {
   return {
@@ -22,7 +22,7 @@ export const user_model = (user: any): IUserModelData => {
   return {
     id_number: user.id_number,
     rfid: user.rfid ?? "N/A",
-    name: getFullNameStudent(user),
+    name: studentService.fullNameFormat(user),
     email: user.email,
     course: user.course,
     year: user.year,
