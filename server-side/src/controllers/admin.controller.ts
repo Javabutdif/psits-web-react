@@ -349,8 +349,8 @@ export const getAllAdminAccountsController = async (
             (user) => user.access !== "executive" && user.access !== "admin"
           )
         : access === "executive"
-        ? users.filter((user) => user.access !== "admin")
-        : users;
+          ? users.filter((user) => user.access !== "admin")
+          : users;
 
     res.status(200).json({ data: data });
   } catch (error) {
@@ -852,7 +852,7 @@ export const setNewAdminAccessController = async (
 export const getMembershipPrice = async (req: Request, res: Response) => {
   try {
     const settings = await Settings.findOne();
-    
+
     if (settings) {
       res.status(200).json({ data: settings });
     } else {

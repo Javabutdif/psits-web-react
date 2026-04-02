@@ -11,13 +11,24 @@ export const getSearchStudentByIdController = async (
   try {
     const student = await studentService.getId(id_number);
 
-    if (student === 404) {
+    if (!student) {
       res.status(404).json({
         message: "Student not found!",
       });
     } else {
       res.status(200).json({ data: user_model(student) });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "An error occurred", error: error });
+  }
+};
+
+export const getStudentCountController = async (res: Response) => {
+  try {
+    const response = await studentService.count();
+
+    res.status(200).json(response);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "An error occurred", error: error });

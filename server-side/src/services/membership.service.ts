@@ -76,6 +76,62 @@ class MembershipService {
       console.error("Server error");
     }
   };
+  //Number of active membership
+  getActiveMembershipCount = async () => {
+    try {
+      const count = await Student.countDocuments({
+        status: account_status.ACTIVE,
+        $or: [
+          { membershipStatus: membership_status.ACTIVE },
+          { membershipStatus: membership_status.RENEWED },
+        ],
+      });
+      return count;
+    } catch (error) {
+      console.error("Error fetching active membership count:", error);
+      throw error;
+    }
+  };
+  //Get Membership Price
+  getMemberPrice = async () => {
+    try {
+      const settings = await Settings.findOne();
+
+      return settings;
+    } catch (error) {
+      return { status: false, message: "Error fetching Membership Price" };
+    }
+  };
+  //Change Membership Price
+  changeMemberPrice = async (req: Request) => {
+    const { price } = req.body;
+
+    try {
+      const settings = await Settings.find();
+      if (settings.length === 0) {
+        await new Settings({
+          membership_price: price,
+        }).save();
+        await new Settings({ membership_price: price }).save();
+        return { status: true, message: "Membership fee created" };
+      }
+      const update = await Settings.updateOne(
+        {},
+        {
+          $set: {
+            membership_price: price,
+          },
+        }
+      );
+      if (update.matchedCount > 0) {
+        return { status: true, message: "Memberhsip Fee Updated" };
+      } else {
+        return { status: false, message: "Error updating fee" };
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 }
 
 const membershipService = new MembershipService();

@@ -35,7 +35,7 @@ export const user_model = (user: any): IUserModelData => {
 export const role_model = (user: IStudent): IRoleModelData => {
   return {
     id_number: user.id_number,
-    name: user.first_name + " " + user.middle_name + " " + user.last_name,
+    name: studentService.fullNameFormat(user),
     email: user.email,
     course: user.course,
     year: user.year,

@@ -19,6 +19,7 @@ import { IAdmin, IAdminDocument } from "../models/admin.interface";
 import { user_model } from "../model_template/model_data";
 
 class SettingsService {
+  //Settings configuration
   config = async () => {
     return await Settings.findOne();
   };

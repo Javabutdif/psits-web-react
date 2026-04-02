@@ -22,18 +22,30 @@ import { student_roles } from "../enums/role.enums";
 import { campus_type } from "../enums/campus.enums";
 
 class StudentService {
+  //Function Format
+  //Full Name format
+  fullNameFormat(student: IStudent) {
+    return (
+      student.first_name + " " + student.middle_name + " " + student.last_name
+    );
+  }
+  //Word Format
+  capitalizeFormat(word: String) {
+    if (!word) return "";
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }
+  //
+  //
+  //Services
   //get search specific student
   getId = async (id_number: String) => {
     try {
       const student = await Student.findOne({ id_number });
 
-      if (!student) {
-        return 404;
-      } else {
-        return student;
-      }
+      return student;
     } catch (error) {
       console.error("No student found");
+      throw error;
     }
   };
   //get search student with session
@@ -45,11 +57,7 @@ class StudentService {
     try {
       const student: IStudent[] = await Student.find();
 
-      if (!student) {
-        return 404;
-      } else {
-        return student;
-      }
+      return student;
     } catch (error) {
       console.error("No student found");
     }
@@ -63,35 +71,30 @@ class StudentService {
       );
 
       if (result.matchedCount === 0) {
-        return { success: false, message: "Student not found" };
+        return { status: false, message: "Student not found" };
       }
 
       if (result.modifiedCount === 0) {
-        return { success: true, message: "No changes made" };
+        return { status: true, message: "No changes made" };
       }
 
-      return { success: true, message: "Student updated successfully" };
+      return { status: true, message: "Student updated successfully" };
     } catch (error) {
-      return { success: false, message: "Error updating student", error };
+      return { status: false, message: "Error updating student", error };
     }
   };
-  fullNameFormat(student: IStudent) {
-    return (
-      student.first_name + " " + student.middle_name + " " + student.last_name
-    );
-  }
+
+  //Register | Create student
   create = async (req: Request) => {
     const {
       id_number,
       password,
-      rfid,
       first_name,
       middle_name,
       last_name,
       email,
       course,
       year,
-      applied,
     } = req.body;
 
     try {
@@ -101,9 +104,10 @@ class StudentService {
         id_number,
         rfid: "N/A",
         password: hashedPassword,
-        first_name,
-        middle_name: middle_name === undefined ? "" : middle_name,
-        last_name,
+        first_name: this.capitalizeFormat(first_name),
+        middle_name:
+          middle_name === undefined ? "" : this.capitalizeFormat(middle_name),
+        last_name: this.capitalizeFormat(last_name),
         email,
         course,
         year,
@@ -125,6 +129,24 @@ class StudentService {
         console.error({ message: "Error saving new student:", error });
         return { status: false, message: "Internal Server Error" };
       }
+    }
+  };
+  //Count on how many students, request and deleted, this will be under membership tab
+  count = async () => {
+    try {
+      const [all, request, deleted] = await Promise.all([
+        Student.countDocuments({
+          status: account_status.ACTIVE,
+        }),
+        Student.countDocuments({ membershipStatus: membership_status.PENDING }),
+
+        Student.countDocuments({ status: account_status.ACTIVE }),
+      ]);
+
+      return { all, request, deleted };
+    } catch (error) {
+      console.error(error);
+      return { all: 0, request: 0, deleted: 0 };
     }
   };
 }

@@ -158,3 +158,14 @@ export const getMembershipRequestController = async (
     res.status(500).json("Internal Server Error");
   }
 };
+
+export const getActiveMembershipCountController = async (res: Response) => {
+  try {
+    const response = await membershipService.getActiveMembershipCount();
+
+    res.status(200).json({ message: response });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
