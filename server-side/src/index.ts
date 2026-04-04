@@ -22,6 +22,7 @@ import privateRoutes from "./routes/private.route";
 import promoRoutes from "./routes/promo.route";
 import studentRoutes from "./routes/students.route";
 import studentV2Routes from "./routes/studentsV2.route";
+import indexV2Routes from "./routes/index.v2.route";
 import { errorHandler } from "./util/errors.util";
 
 dotenv.config();
@@ -53,7 +54,7 @@ app.set("trust proxy", 1);
 app.use(bodyParser.json());
 
 // Routes
-app.use("/api", indexRoutes);
+app.use("/api", indexV2Routes);
 app.use("/api", studentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/merch", merchRoutes);
