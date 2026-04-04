@@ -16,3 +16,9 @@ export const student_roles = Object.freeze({
   VOLUNTEER: "PSITS_VOLUNTEER",
   OFFICER: "PSITS_OFFICER",
 });
+
+export const general_roles=  Object.freeze({
+  STUDENT: "STUDENT",
+  ADMIN: "ADMIN",
+ 
+});

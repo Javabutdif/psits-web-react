@@ -20,6 +20,7 @@ import { user_model } from "../model_template/model_data";
 import { account_status, membership_status } from "../enums/status.enums";
 import { student_roles } from "../enums/role.enums";
 import { campus_type } from "../enums/campus.enums";
+import { stripTypeScriptTypes } from "module";
 
 class StudentService {
   //Function Format
@@ -37,10 +38,10 @@ class StudentService {
   //
   //
   //Services
-  //get search specific student
-  getId = async (id_number: String) => {
+  //get search specific student with params
+  getSpecific = async (params: any) => {
     try {
-      const student = await Student.findOne({ id_number });
+      const student = await Student.findOne({ params });
 
       return student;
     } catch (error) {

@@ -18,7 +18,7 @@ export const admin_model = (admin: IAdminDocument): any => {
     status: admin.status ?? "True",
   };
 };
-export const user_model = (user: any): IUserModelData => {
+export const user_model = (user: IStudent): IUserModelData => {
   return {
     id_number: user.id_number,
     rfid: user.rfid ?? "N/A",

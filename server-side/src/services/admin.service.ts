@@ -271,7 +271,7 @@ class AdminService {
         second_params
       );
       //For logs
-      const student: any = await studentService.getId(id_number);
+      const student = await studentService.getSpecific(id_number);
 
       if (
         updatedRole.modifiedCount > 0 ||
@@ -301,9 +301,9 @@ class AdminService {
     const { id_number } = req.body;
 
     try {
-      const admin: IAdminDocument | null = await Admin.findOne({
-        id_number: req.body.id_number,
-      });
+      const admin: IAdminDocument | null = await this.access(
+        req.body.id_number
+      );
 
       if (!admin) {
         return { status: 404, message: "No Admin Found!" };
@@ -576,9 +576,7 @@ class AdminService {
     }
 
     try {
-      const adminToUpdate: IAdminDocument | null = await Admin.findOne({
-        id_number,
-      });
+      const adminToUpdate: IAdminDocument | null = await this.access(id_number);
 
       if (!adminToUpdate) {
         return { status: false, message: "Admin not found" };
@@ -602,6 +600,10 @@ class AdminService {
       console.error("Error updating access account:", error);
       return { status: false, message: "An error occurred", error: error };
     }
+  };
+  //Retrive Specific Admin
+  access = async (id_number: String) => {
+    return await Admin.findOne({ id_number });
   };
 }
 

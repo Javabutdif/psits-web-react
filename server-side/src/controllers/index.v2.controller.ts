@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { account_status, membership_status } from "../enums/status.enums";
-import { student_roles } from "../enums/role.enums";
+import { student_roles, general_roles } from "../enums/role.enums";
 import { campus_type } from "../enums/campus.enums";
 import bcrypt from "bcryptjs";
 import { Student } from "../models/student.model";
@@ -20,55 +20,54 @@ const url =
     : "https://psits-staging.vercel.app/reset-password/";
 
 import { studentService } from "../services/student.service";
+import { adminService } from "../services/admin.service";
+import { indexService } from "../services/index.service";
+import { logService } from "../services/log.service";
 
 export const loginController = async (req: Request, res: Response) => {
   const { id_number, password } = req.body;
 
   try {
-    let users: IAdminDocument | IStudent;
+    let users: any;
     let role;
     let admin: IAdminDocument | null = null;
     let student: IStudent | null = null;
     let campus;
-    //-ucmn
+
     if (id_number.includes("-admin")) {
-      admin = await Admin.findOne({ id_number });
+      admin = await adminService.access(id_number);
     }
 
     if (!admin) {
-      student = await Student.findOne({ id_number });
+      student = await studentService.getSpecific(id_number);
       if (!student) {
         return res.status(400).json({ message: "Invalid Credentials" });
       }
 
-      const passwordMatch = await bcrypt.compare(password, student.password);
+      const result: any = await indexService.checkValidation(
+        general_roles.STUDENT,
+        password,
+        student
+      );
 
-      if (passwordMatch && student.status === account_status.DELETED) {
-        return res
-          .status(400)
-          .json({ message: "Your account has been deleted!" });
-      } else if (passwordMatch && student.status === account_status.ACTIVE) {
-        users = student;
-        role = "Student";
+      if (!result.status) {
+        res.status(404).json({ message: result.message });
       } else {
-        return res
-          .status(400)
-          .json({ message: "Invalid ID number or password" });
+        users = result.users;
+        role = result.role;
       }
     } else {
-      const passwordMatch = await bcrypt.compare(password, admin.password);
+      const result: any = await indexService.checkValidation(
+        general_roles.ADMIN,
+        password,
+        admin
+      );
 
-      if (passwordMatch && admin.status === account_status.ACTIVE) {
-        users = admin;
-        role = "Admin";
-      } else if (passwordMatch && admin.status === account_status.SUSPENDED) {
-        return res.status(400).json({
-          message: "Your account has been suspended! Please contact president",
-        });
+      if (!result.status) {
+        res.status(404).json({ message: result.message });
       } else {
-        return res
-          .status(400)
-          .json({ message: "Invalid ID number or password" });
+        users = result.users;
+        role = result.role;
       }
     }
 
@@ -77,21 +76,21 @@ export const loginController = async (req: Request, res: Response) => {
     };
     campus = users.campus;
     const token = jwt.sign({ user }, token_key, {
-      expiresIn: role === "Admin" ? "4h" : "10m",
+      expiresIn: role === general_roles.ADMIN ? "4h" : "10m",
     });
 
     if (admin) {
-      if (role === "Admin") {
-        const log = new Log({
+      if (role === general_roles.ADMIN) {
+        const params = {
           admin: admin.name,
           admin_id: admin._id,
           action: "Admin Login",
-        });
-
-        await log.save();
+        };
+        //Runs logs
+        await logService.create(params);
       }
     }
-
+    console.log({ role, token, campus });
     return res.status(200).json({
       message: "Signed in successfully",
       role,

@@ -6,9 +6,7 @@ class LogService {
   //Create Logs
   create = async (params: any) => {
     try {
-      await new Log({
-        params,
-      }).save();
+      await new Log(params).save();
     } catch (error) {
       console.error(error);
       throw error;
