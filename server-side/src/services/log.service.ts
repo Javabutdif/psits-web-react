@@ -5,12 +5,7 @@ import { Types } from "mongoose";
 class LogService {
   //Create Logs
   create = async (params: any) => {
-    try {
-      await new Log(params).save();
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    await new Log(params).save();
   };
 }
 const logService = new LogService();

@@ -24,6 +24,7 @@ import studentRoutes from "./routes/students.route";
 import studentV2Routes from "./routes/studentsV2.route";
 import indexV2Routes from "./routes/index.v2.route";
 import { errorHandler } from "./util/errors.util";
+import { globalErrorHandler } from "./middlewares/global.error.middleware";
 
 dotenv.config();
 
@@ -70,6 +71,7 @@ app.use("/api/v2/events", eventsV2Routes);
 app.use("/api/v2/students", studentV2Routes);
 
 app.use(errorHandler);
+app.use(globalErrorHandler);
 
 async function startServer() {
   try {

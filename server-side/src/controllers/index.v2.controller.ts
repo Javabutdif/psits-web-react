@@ -23,11 +23,12 @@ import { studentService } from "../services/student.service";
 import { adminService } from "../services/admin.service";
 import { indexService } from "../services/index.service";
 import { logService } from "../services/log.service";
+import { catchAsync } from "../util/catch.async.util";
 
-export const loginController = async (req: Request, res: Response) => {
-  const { id_number, password } = req.body;
+export const loginController = catchAsync(
+  async (req: Request, res: Response) => {
+    const { id_number, password } = req.body;
 
-  try {
     let users: any;
     let role;
     let admin: IAdminDocument | null = null;
@@ -97,27 +98,22 @@ export const loginController = async (req: Request, res: Response) => {
       token,
       campus,
     });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "An error occurred", error });
   }
-};
+);
 
-export const registerController = async (req: Request, res: Response) => {
-  try {
+export const registerController = catchAsync(
+  async (req: Request, res: Response) => {
     const result = await studentService.create(req);
     if (!result.status) {
       res.status(400).json({ message: result.message });
     } else {
       res.status(200).json({ message: result.message });
     }
-  } catch (error) {
-    res.status(400).json({ message: "Internal server error" });
   }
-};
+);
 
-export const forgotPasswordController = async (req: Request, res: Response) => {
-  try {
+export const forgotPasswordController = catchAsync(
+  async (req: Request, res: Response) => {
     let user;
     let position;
 
@@ -164,11 +160,8 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
       message:
         "Email sent successfully! Please check your email for further instructions.",
     });
-  } catch (err) {
-    console.error("Server error during forgot password process:", err);
-    res.status(500).send({ message: "Internal Server Error" });
   }
-};
+);
 
 export interface jwtPayload {
   userId: string;

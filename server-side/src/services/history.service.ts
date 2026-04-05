@@ -18,29 +18,22 @@ import { IOrders } from "../models/orders.interface";
 import { IAdmin, IAdminDocument } from "../models/admin.interface";
 import { user_model } from "../model_template/model_data";
 import { account_status, membership_status } from "../enums/status.enums";
+import { AppError } from "../util/app.error.util";
 
 class HistoryService {
   //record membership history
   record = async (query: IHistory) => {
-    try {
-      return await new MembershipHistory(query).save();
-    } catch (error) {
-      return { success: false, message: "Error updating student", error };
-    }
+    return await new MembershipHistory(query).save();
   };
   //Get all membership history
   getAll = async () => {
-    try {
-      const history: IHistory[] = await MembershipHistory.find().sort({
-        date: -1,
-      });
-      if (!history) {
-        return { status: false, message: "No history" };
-      }
-      return history;
-    } catch (error) {
-      return { status: false, message: "Server error" };
+    const history: IHistory[] = await MembershipHistory.find().sort({
+      date: -1,
+    });
+    if (!history) {
+      throw new AppError("No history found!", 404);
     }
+    return history;
   };
 }
 const historyService = new HistoryService();
