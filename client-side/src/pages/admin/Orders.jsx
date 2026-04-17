@@ -1,10 +1,8 @@
 import {
-  getAllOrders,
   cancelOrder,
   getAllPendingOrders,
   getAllPaidOrders,
   makeOrder,
-
 } from "../../api/orders";
 import { refund } from "../../api/refund.api";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
@@ -30,93 +28,82 @@ import {
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
   const [selectedTab, setSelectedTab] = useState("Pending");
   const [rowData, setPrintData] = useState(null);
   const [selectedStudent, setSelectedStudentName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(50);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [tabTotals, setTabTotals] = useState({ Pending: 0, Paid: 0 });
   const [shouldPrint, setShouldPrint] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [delModal, setDelModal] = useState(false);
   const [refModal, setRefModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [error, setError] = useState(null);
   const componentRef = useRef();
   const printRef = useRef();
   const [isLoading, setIsLoading] = useState(false);
   const [refundId, setRefundId] = useState("");
   const [isAddOrderModalShown, showAddOrderModal] = useState(false);
 
-  const fetchOrders = async () => {
-    selectedTab === "Pending" ? fetchPendingOrders() : fetchPaidOrders();
-  };
-
   const refundAction = async () => {
     try {
-      const result = await refund(refundId);
-      fetchPaidOrders();
-setRefModal(false);
+      await refund(refundId);
+      setRefModal(false);
+      fetchOrders(selectedTab, currentPage, debouncedSearchTerm);
     } catch (error) {
       console.error("Error in refunding order");
     }
-  }
+  };
   const handleRefundModal = (order_id) => {
     setRefundId(order_id);
     setRefModal(true);
-  }
-
-
-
-  const fetchPendingOrders = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getAllPendingOrders();
-      console.log(data);
-      if (data === 0 || data.length === 0) {
-        setOrders([]);
-        setFilteredOrders([]);
-        setError("No orders found.");
-      } else {
-        setOrders(data);
-        setFilteredOrders(data);
-        setError(null);
-        setIsLoading(false);
-      }
-    } catch (err) {
-      setOrders([]);
-      setFilteredOrders([]);
-      setError("Failed to fetch orders. Please try again later.");
-      console.error("Error fetching orders:", err);
-      setIsLoading(false);
-    }
   };
 
-  const fetchPaidOrders = async () => {
+  const fetchOrders = useCallback(async (
+    tab = selectedTab,
+    page = currentPage,
+    search = debouncedSearchTerm
+  ) => {
     setIsLoading(true);
     try {
-      const data = await getAllPaidOrders();
+      const fetcher =
+        tab === "Pending" ? getAllPendingOrders : getAllPaidOrders;
+      const data = await fetcher({
+        page,
+        limit: itemsPerPage,
+        search,
+      });
 
-      if (data === 0 || data.length === 0) {
-        setOrders([]);
-        setFilteredOrders([]);
-        setError("No orders found.");
-      } else {
-        setOrders(data);
-        setFilteredOrders(data);
-        setError(null);
-        setIsLoading(false);
+      const nextOrders = data?.data || [];
+      const nextTotal = data?.total || 0;
+      const nextTotalPages = data?.totalPages || 0;
+
+      if (page > 1 && nextTotalPages > 0 && page > nextTotalPages) {
+        setCurrentPage(nextTotalPages);
+        return;
       }
+
+      setOrders(nextOrders);
+      setTotalItems(nextTotal);
+      setTotalPages(nextTotalPages);
+      setTabTotals((prev) => ({
+        ...prev,
+        [tab]: nextTotal,
+      }));
     } catch (err) {
       setOrders([]);
-      setFilteredOrders([]);
-      setError("Failed to fetch orders. Please try again later.");
+      setTotalItems(0);
+      setTotalPages(0);
       console.error("Error fetching orders:", err);
+    } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, debouncedSearchTerm, itemsPerPage, selectedTab]);
 
   /* Manual Order here */
   const openAddModalHandler = async () => {
@@ -132,35 +119,24 @@ setRefModal(false);
     if (await makeOrder(formData)) {
       // close modals
       showToast("success", "Manual Order Successful");
-      fetchPendingOrders();
       showAddOrderModal(false);
+      setSelectedTab("Pending");
+      setCurrentPage(1);
+      fetchOrders("Pending", 1, debouncedSearchTerm);
     }
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    const debounceTimer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
   useEffect(() => {
-    const filtered = orders.filter((order) => {
-      const matchesStatus = order.order_status === selectedTab;
-
-      const searchTermLower = searchTerm?.toLowerCase() || "";
-      const matchesSearch =
-        order.student_name?.toLowerCase().includes(searchTermLower) ||
-        order.id_number?.toLowerCase().includes(searchTermLower) ||
-        order.rfid?.toLowerCase().includes(searchTermLower) ||
-        order.items?.some((item) =>
-          item.product_name?.toLowerCase().includes(searchTermLower)
-        ) ||
-        (order.reference_code &&
-          order.reference_code.toString().includes(searchTerm));
-
-      return matchesStatus && (searchTerm === "" || matchesSearch);
-    });
-
-    setFilteredOrders(filtered);
-    setCurrentPage(1); // Reset to first page when filter changes
-  }, [orders, selectedTab, searchTerm]);
+    fetchOrders(selectedTab, currentPage, debouncedSearchTerm);
+  }, [fetchOrders, selectedTab, currentPage, debouncedSearchTerm]);
 
   const handlePrintData = (row) => {
     setPrintData(row);
@@ -194,7 +170,7 @@ setRefModal(false);
     await cancelOrder(selectedOrder._id);
 
     handleDeleteModal();
-    fetchOrders();
+    fetchOrders(selectedTab, currentPage, debouncedSearchTerm);
   };
   const handleDeleteModal = () => {
     setDelModal(false);
@@ -214,15 +190,12 @@ setRefModal(false);
     setOpenDropdown(openDropdown === id ? null : id);
   };
 
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const currentOrders = filteredOrders.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const displayTotalPages = totalPages || 1;
+  const currentOrders = orders;
 
   const handleSelectedTab = (select) => {
     setSelectedTab(select);
-    select === "Pending" ? fetchPendingOrders() : fetchPaidOrders();
+    setCurrentPage(1);
   };
 
   return (
@@ -232,7 +205,10 @@ setRefModal(false);
           type="text"
           placeholder="Search..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
           className="px-4 py-2 border border-gray-300 rounded-md w-full"
         />
       </div>
@@ -255,8 +231,7 @@ setRefModal(false);
               selectedTab === tab ? "bg-[#002E48] text-white" : "text-gray-600"
             }`}
           >
-            {tab} ({orders.filter((order) => order.order_status === tab).length}
-            )
+            {tab} ({tabTotals[tab] || 0})
           </button>
         ))}
       </div>
@@ -619,11 +594,11 @@ setRefModal(false);
                 Previous
               </button>
               <span>
-                Page {currentPage} of {totalPages}
+                Page {currentPage} of {displayTotalPages}
               </span>
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                disabled={currentPage >= displayTotalPages || totalItems === 0}
                 className="px-4 py-1 bg-[#002E48] text-white rounded-md disabled:bg-white disabled:text-black"
               >
                 Next

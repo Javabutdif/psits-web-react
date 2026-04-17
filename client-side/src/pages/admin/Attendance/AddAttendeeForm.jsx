@@ -218,7 +218,8 @@ const AddAttendeeForm = (merchId) => {
   ];
 
   const sizeOptions = [
-    { value: "XXS", label: "XXS" },
+    { value: "18", label: "18" },
+    { value: "2XS", label: "2XS" },
     { value: "XS", label: "XS" },
     { value: "S", label: "S" },
     { value: "M", label: "M" },
@@ -252,9 +253,9 @@ const AddAttendeeForm = (merchId) => {
   }, []);
 
   return (
-    <div className="container lg:w-8/12 lg:h-8/12 p-6 ">
+    <div className="lg:h-8/12 container p-6 lg:w-8/12">
       {loading ? (
-        <div className="flex flex-row justify-center ">
+        <div className="flex flex-row justify-center">
           <InfinitySpin
             visible={true}
             width={200}
@@ -263,11 +264,11 @@ const AddAttendeeForm = (merchId) => {
           />
         </div>
       ) : (
-        <div class="flex flex-col gap-5 p-2 md:flex-col sm:flex-col bg-white">
-          <motion.div className="flex flex-col justify-center p-2 gap-5">
+        <div className="flex flex-col gap-5 bg-white p-2 sm:flex-col md:flex-col">
+          <motion.div className="flex flex-col justify-center gap-5 p-2">
             {/* Header */}
-            <div className="flex w-full px-5 p-2">
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold ">
+            <div className="flex w-full p-2 px-5">
+              <h2 className="text-lg font-bold sm:text-xl md:text-2xl lg:text-3xl">
                 Attendee Information ({user.campus})
               </h2>
             </div>
@@ -275,7 +276,7 @@ const AddAttendeeForm = (merchId) => {
             {/* Form */}
             <div className="border-black-10">
               <form
-                className="flex flex-col w-full space-y-6 p-4  lg:p-5"
+                className="flex w-full flex-col space-y-6 p-4 lg:p-5"
                 onSubmit={handleSubmit}
               >
                 {/* Form inputs */}
@@ -293,7 +294,7 @@ const AddAttendeeForm = (merchId) => {
                   />
 
                   {/* Student NAme */}
-                  <div className="flex flex-col sm:flex-row space-y-6 sm:space-y-0 sm:space-x-4">
+                  <div className="flex flex-col space-y-6 sm:flex-row sm:space-x-4 sm:space-y-0">
                     <FormInput
                       label={"First Name"}
                       type="text"
@@ -328,7 +329,7 @@ const AddAttendeeForm = (merchId) => {
                   </div>
                   {/* Email Address */}
 
-                  <div className="flex flex-col justify-center  w-full">
+                  <div className="flex w-full flex-col justify-center">
                     {user.campus !== "UC-Main" && (
                       <FormInput
                         label={"Email Address"}
@@ -352,7 +353,7 @@ const AddAttendeeForm = (merchId) => {
                       />
                     </div>
                   </div>
-                  <div className="flex flex-row items-center gap-5 w-full">
+                  <div className="flex w-full flex-row items-center gap-5">
                     {/* T-Shirt Size Select */}
 
                     {/* Price Display */}
@@ -407,7 +408,7 @@ const AddAttendeeForm = (merchId) => {
                       styles="flex-1"
                     />
                   </div>
-                  <div className="flex flex-row items-center gap-5 py-2 w-full">
+                  <div className="flex w-full flex-row items-center gap-5 py-2">
                     <div>
                       <FormButton
                         type="submit"
@@ -418,7 +419,7 @@ const AddAttendeeForm = (merchId) => {
                     </div>
                     <div>
                       <Link to={`/admin/attendance/${eventId}`}>
-                        <button className="w-full hover:bg-[#b00000] bg-[#d00000] text-white p-2 rounded transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 active:bg-[#8f0000]">
+                        <button className="w-full transform rounded bg-[#d00000] p-2 text-white transition-all duration-200 ease-in-out hover:scale-105 hover:bg-[#b00000] active:scale-95 active:bg-[#8f0000]">
                           Cancel
                         </button>
                       </Link>

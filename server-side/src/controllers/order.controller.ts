@@ -19,6 +19,29 @@ import { Request, Response } from "express";
 import { Refund } from "../models/refund.model";
 import { refundCodeGenerator } from "../custom_function/code_generator";
 
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const buildOrderSearchQuery = (search: string) => {
+  const trimmedSearch = search.trim();
+
+  if (!trimmedSearch) {
+    return {};
+  }
+
+  const searchRegex = new RegExp(escapeRegex(trimmedSearch), "i");
+
+  return {
+    $or: [
+      { student_name: searchRegex },
+      { id_number: searchRegex },
+      { rfid: searchRegex },
+      { reference_code: searchRegex },
+      { "items.product_name": searchRegex },
+    ],
+  };
+};
+
 export const getSpecificOrdersController = async (
   req: Request,
   res: Response
@@ -61,17 +84,45 @@ export const getAllPendingOrdersController = async (
   res: Response
 ) => {
   try {
-    const orders: IOrders[] = await Orders.find({
+    const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit as string, 10) || 50, 1);
+    const search = (req.query.search as string) || "";
+    const trimmedSearch = search.trim();
+
+    const query = {
       order_status: "Pending",
-    }).sort({
-      order_date: -1,
+      ...buildOrderSearchQuery(search),
+    };
+
+    console.log("[getAllPendingOrdersController] Fetching pending orders", {
+      page,
+      limit,
+      search: trimmedSearch || null,
     });
 
-    if (orders.length > 0) {
-      res.status(200).json(orders);
-    } else {
-      res.status(400).json({ message: "No Records" });
-    }
+    const total = await Orders.countDocuments(query);
+    const orders: IOrders[] = await Orders.find(query)
+      .sort({
+        order_date: -1,
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    console.log("[getAllPendingOrdersController] Pending orders fetched", {
+      total,
+      returned: orders.length,
+      page,
+      limit,
+      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+    });
+
+    res.status(200).json({
+      data: orders,
+      total,
+      page,
+      limit,
+      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json("Internal Server Error");
@@ -83,14 +134,45 @@ export const getAllPaidOrdersController = async (
   res: Response
 ) => {
   try {
-    const orders: IOrders[] = await Orders.find({ order_status: "Paid" }).sort({
-      transaction_date: -1,
+    const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit as string, 10) || 50, 1);
+    const search = (req.query.search as string) || "";
+    const trimmedSearch = search.trim();
+
+    const query = {
+      order_status: "Paid",
+      ...buildOrderSearchQuery(search),
+    };
+
+    console.log("[getAllPaidOrdersController] Fetching paid orders", {
+      page,
+      limit,
+      search: trimmedSearch || null,
     });
-    if (orders.length > 0) {
-      res.status(200).json(orders);
-    } else {
-      res.status(400).json({ message: "No Records" });
-    }
+
+    const total = await Orders.countDocuments(query);
+    const orders: IOrders[] = await Orders.find(query)
+      .sort({
+        transaction_date: -1,
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    console.log("[getAllPaidOrdersController] Paid orders fetched", {
+      total,
+      returned: orders.length,
+      page,
+      limit,
+      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+    });
+
+    res.status(200).json({
+      data: orders,
+      total,
+      page,
+      limit,
+      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json("Internal Server Error");

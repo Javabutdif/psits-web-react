@@ -531,12 +531,12 @@ const Reports = () => {
         </TabList>
 
         <TabPanel>
-          <div className="mb-6 p-4 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold mb-4 text-[#0e4a6a]">
+          <div className="mb-6 rounded-lg p-4 shadow-md">
+            <h2 className="mb-4 text-xl font-bold text-[#0e4a6a]">
               Membership Sales Summary
             </h2>
 
-            <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-md">
               <table className="min-w-full bg-white">
                 <thead className="bg-[#0e4a6a] text-white">
                   <tr>
@@ -552,14 +552,14 @@ const Reports = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-800 text-sm sm:text-base">
+                  <tr className="transition-colors hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-800 sm:text-base">
                       Membership
                     </td>
-                    <td className="px-4 py-3 text-gray-700 text-sm sm:text-base">
+                    <td className="px-4 py-3 text-sm text-gray-700 sm:text-base">
                       {membershipData.length}
                     </td>
-                    <td className="px-4 py-3 text-gray-700 text-sm sm:text-base">
+                    <td className="px-4 py-3 text-sm text-gray-700 sm:text-base">
                       ₱{membershipRevenue.toFixed(2)}
                     </td>
                   </tr>
@@ -569,9 +569,9 @@ const Reports = () => {
           </div>
 
           {/* Membership Tab Content */}
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded"
+              className="rounded bg-blue-500 px-4 py-2 text-white"
               onClick={() => setIsFilterOpen(true)}
             >
               Filter
@@ -583,7 +583,7 @@ const Reports = () => {
               filename="membership-data.csv"
             >
               <button
-                className="bg-green-500 text-white px-4 py-2 rounded"
+                className="rounded bg-green-500 px-4 py-2 text-white"
                 onClick={() => {
                   logAdminAction({
                     admin_id: userData.id_number,
@@ -605,14 +605,14 @@ const Reports = () => {
         </TabPanel>
 
         <TabPanel>
-          <div className="mb-6 bg-white p-4 rounded-lg h-[45rem] shadow-md">
-            <h2 className="text-xl font-bold mb-4">
+          <div className="mb-6 h-[45rem] rounded-lg bg-white p-4 shadow-md">
+            <h2 className="mb-4 text-xl font-bold">
               Merchandise Sales Summary
             </h2>
             <div className="overflow-hidden">
               <div className="h-[40rem] overflow-y-auto">
                 {" "}
-                <table className="min-w-full  rounded-lg shadow-md">
+                <table className="min-w-full rounded-lg shadow-md">
                   <thead style={{ backgroundColor: "#0e4a6a", color: "#fff" }}>
                     <tr>
                       <th className="border px-4 py-2 text-left">
@@ -641,9 +641,9 @@ const Reports = () => {
           </div>
 
           {/* Merchandise Tab Content */}
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded"
+              className="rounded bg-blue-500 px-4 py-2 text-white"
               onClick={() => setIsFilterOpen(true)}
             >
               Filter
@@ -664,7 +664,7 @@ const Reports = () => {
               }
             >
               <button
-                className="bg-green-500 text-white px-4 py-2 rounded"
+                className="rounded bg-green-500 px-4 py-2 text-white"
                 onClick={() => {
                   logAdminAction({
                     admin_id: userData.id_number,
@@ -693,20 +693,20 @@ const Reports = () => {
         />
       )}
       {isFilterOpen && (
-        <div className="fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-75">
-          <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-lg w-full max-w-xs sm:max-w-sm md:max-w-md">
-            <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-600 bg-opacity-75">
+          <div className="w-full max-w-xs rounded-lg bg-white p-4 shadow-lg sm:max-w-sm sm:p-6 md:max-w-md md:p-8">
+            <h2 className="mb-3 text-base font-bold sm:mb-4 sm:text-lg">
               Filter Data
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <input
-                className="border w-full p-1 sm:p-2 mb-2"
+                className="mb-2 w-full border p-1 sm:p-2"
                 placeholder="ID Number"
                 value={filterID}
                 onChange={(e) => setFilterID(e.target.value)}
               />
               <input
-                className="border w-full p-1 sm:p-2 mb-2"
+                className="mb-2 w-full border p-1 sm:p-2"
                 placeholder="Name"
                 value={filterName}
                 onChange={(e) => setFilterName(e.target.value)}
@@ -714,7 +714,7 @@ const Reports = () => {
               {activeTab !== 0 && (
                 <>
                   <select
-                    className="border w-full p-1 sm:p-2 mb-2"
+                    className="mb-2 w-full border p-1 sm:p-2"
                     value={filterProductName}
                     onChange={(e) => {
                       setFilterProductName(e.target.value);
@@ -729,13 +729,16 @@ const Reports = () => {
                     ))}
                   </select>
                   <select
-                    className="border w-full p-1 sm:p-2 mb-2"
+                    className="mb-2 w-full border p-1 sm:p-2"
                     value={filterSize}
                     onChange={(e) => setFilterSize(e.target.value)}
                   >
                     <option value="">Select Size</option>
                     <option key="18" value="18">
                       18
+                    </option>
+                    <option key="2XS" value="2XS">
+                      2XS
                     </option>
                     <option key="XS" value="XS">
                       XS
@@ -761,7 +764,7 @@ const Reports = () => {
                   </select>
                   {filterProductName && (
                     <select
-                      className="border w-full p-1 sm:p-2 mb-2"
+                      className="mb-2 w-full border p-1 sm:p-2"
                       value={filterBatch}
                       onChange={(e) => setFilterBatch(e.target.value)}
                     >
@@ -785,14 +788,14 @@ const Reports = () => {
                 </>
               )}
               <input
-                className="border w-full p-1 sm:p-2 mb-2"
+                className="mb-2 w-full border p-1 sm:p-2"
                 placeholder="RFID"
                 value={filterRFID}
                 onChange={(e) => setFilterRFID(e.target.value)}
               />
               {activeTab === 0 && (
                 <select
-                  className="border w-full p-1 sm:p-2 mb-2"
+                  className="mb-2 w-full border p-1 sm:p-2"
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                 >
@@ -806,7 +809,7 @@ const Reports = () => {
                 </select>
               )}
               <select
-                className="border w-full p-1 sm:p-2 mb-2"
+                className="mb-2 w-full border p-1 sm:p-2"
                 value={filterCourse}
                 onChange={(e) => setFilterCourse(e.target.value)}
               >
@@ -822,7 +825,7 @@ const Reports = () => {
                 </option>
               </select>
               <select
-                className="border w-full p-1 sm:p-2 mb-2"
+                className="mb-2 w-full border p-1 sm:p-2"
                 value={filterYear}
                 onChange={(e) => setFilterYear(e.target.value)}
               >
@@ -843,7 +846,7 @@ const Reports = () => {
               <div>
                 <label className="block text-sm font-medium">Start Date</label>
                 <input
-                  className="border w-full p-1 sm:p-2 mb-2"
+                  className="mb-2 w-full border p-1 sm:p-2"
                   type="date"
                   value={filterDateFrom}
                   onChange={(e) => setFilterDateFrom(e.target.value)}
@@ -852,28 +855,28 @@ const Reports = () => {
               <div>
                 <label className="block text-sm font-medium">End Date</label>
                 <input
-                  className="border w-full p-1 sm:p-2 mb-2"
+                  className="mb-2 w-full border p-1 sm:p-2"
                   type="date"
                   value={filterDateTo}
                   onChange={(e) => setFilterDateTo(e.target.value)}
                 />
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row justify-between mt-4 gap-2">
+            <div className="mt-4 flex flex-col justify-between gap-2 sm:flex-row">
               <button
-                className="bg-[#4398AC] text-white px-4 py-2 rounded mb-2 sm:mb-0"
+                className="mb-2 rounded bg-[#4398AC] px-4 py-2 text-white sm:mb-0"
                 onClick={() => setIsFilterOpen(false)}
               >
                 Cancel
               </button>
               <button
-                className="bg-[#002E48] text-white px-4 py-2 rounded"
+                className="rounded bg-[#002E48] px-4 py-2 text-white"
                 onClick={handleFilter}
               >
                 Apply
               </button>
               <button
-                className="bg-red-500 text-white px-4 py-2 rounded mb-2 sm:mb-0"
+                className="mb-2 rounded bg-red-500 px-4 py-2 text-white sm:mb-0"
                 onClick={handleClearFilters}
               >
                 Clear

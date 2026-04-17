@@ -37,6 +37,7 @@ function Product({ handleCloseAddProduct }) {
   ];
   const size = [
     "18",
+    "2XS",
     "XS",
     "S",
     "M",
@@ -411,16 +412,16 @@ function Product({ handleCloseAddProduct }) {
       <div>
         {/** Semi-transparent background */}
         <div
-          className="fixed inset-0 flex items-center justify-center z-50"
+          className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={onClose}
         >
           <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
 
           {/** Modal Container */}
-          <div className="bg-white rounded-xl shadow-xl min-w-96 md:min-w-[450px] w-fit z-10 overflow-hidden transform transition-all duration-300 scale-95">
+          <div className="z-10 w-fit min-w-96 scale-95 transform overflow-hidden rounded-xl bg-white shadow-xl transition-all duration-300 md:min-w-[450px]">
             {/** Header */}
-            <div className="flex justify-between items-center p-6 bg-navy text-white rounded-t-xl shadow-md">
-              <h5 className="text-xl font-primary font-bold">Preview</h5>
+            <div className="flex items-center justify-between rounded-t-xl bg-navy p-6 text-white shadow-md">
+              <h5 className="font-primary text-xl font-bold">Preview</h5>
               <button
                 type="button"
                 className="text-3xl leading-none hover:text-gray-200 focus:outline-none"
@@ -432,19 +433,19 @@ function Product({ handleCloseAddProduct }) {
             </div>
 
             {/** Body */}
-            <div className="p-6 space-y-3 bg-gray-50 text-gray-800">
+            <div className="space-y-3 bg-gray-50 p-6 text-gray-800">
               {imagesToShow.length > 0 && (
-                <div className="flex gap-2 mb-4 overflow-x-auto">
+                <div className="mb-4 flex gap-2 overflow-x-auto">
                   {imagesToShow.map((image, index) => (
                     <img
                       key={index}
                       src={URL.createObjectURL(image)}
                       alt={`Product Preview ${index + 1}`}
-                      className="w-20 h-20 object-cover rounded-md shadow-sm border border-gray-200"
+                      className="h-20 w-20 rounded-md border border-gray-200 object-cover shadow-sm"
                     />
                   ))}
                   {images.length > 3 && (
-                    <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-md shadow-sm border border-gray-200">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-md border border-gray-200 bg-gray-100 shadow-sm">
                       <p className="text-xs text-gray-500">
                         +{images.length - 3} more
                       </p>
@@ -453,7 +454,7 @@ function Product({ handleCloseAddProduct }) {
                 </div>
               )}
 
-              <div className="text-gray-700 space-y-1">
+              <div className="space-y-1 text-gray-700">
                 {Object.entries({
                   "Product Name": data.name,
                   Price: `₱${data.price}`,
@@ -472,15 +473,15 @@ function Product({ handleCloseAddProduct }) {
                     key={label}
                     className="flex items-center justify-between gap-10"
                   >
-                    <span className="font-medium text-md">{label}:</span>
+                    <span className="text-md font-medium">{label}:</span>
 
                     {/* Handle array values separately */}
                     {Array.isArray(value) ? (
-                      <div className="flex gap-2 flex-wrap">
+                      <div className="flex flex-wrap gap-2">
                         {value.map(([size, details]) => (
                           <div
                             key={size}
-                            className="flex items-center gap-1 border p-1 rounded"
+                            className="flex items-center gap-1 rounded border p-1"
                           >
                             <span>{size}</span>
                             {details.custom && (
@@ -500,17 +501,17 @@ function Product({ handleCloseAddProduct }) {
             </div>
 
             {/** Footer */}
-            <div className="flex items-center justify-end p-6 bg-white border-t border-gray-200 rounded-b-xl">
+            <div className="flex items-center justify-end rounded-b-xl border-t border-gray-200 bg-white p-6">
               <button
                 type="button"
-                className="px-5 py-2 text-gray-500 hover:text-gray-700 transition-all focus:outline-none rounded-md border border-gray-300 hover:border-gray-400"
+                className="rounded-md border border-gray-300 px-5 py-2 text-gray-500 transition-all hover:border-gray-400 hover:text-gray-700 focus:outline-none"
                 onClick={onClose}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="ml-3 px-6 py-2 bg-navy text-white rounded-md hover:shadow-lg hover:bg-primary focus:outline-none transition-all duration-300 ease-in-out"
+                className="ml-3 rounded-md bg-navy px-6 py-2 text-white transition-all duration-300 ease-in-out hover:bg-primary hover:shadow-lg focus:outline-none"
                 onClick={onConfirm}
                 disabled={isLoading}
               >
@@ -564,21 +565,21 @@ function Product({ handleCloseAddProduct }) {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       {isLoading ? (
         <div className="flex items-center justify-center">
           <div className="loader"></div>
           <p className="ml-4 text-white">Uploading product, please wait...</p>
         </div>
       ) : (
-        <div className="relative h-[90%] max-w-md w-full mx-4 md:mx-8 p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
+        <div className="relative mx-4 h-[90%] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 shadow-lg md:mx-8">
           <button
             onClick={handleCloseAddProduct}
-            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition-colors"
+            className="absolute right-4 top-4 text-gray-600 transition-colors hover:text-gray-900"
           >
             <i className="fas fa-times"></i>
           </button>
-          <h2 className="text-2xl font-semibold mb-4">Add Product</h2>
+          <h2 className="mb-4 text-2xl font-semibold">Add Product</h2>
 
           <form onSubmit={handlePreview} className="space-y-6">
             <ImageInput
@@ -597,7 +598,7 @@ function Product({ handleCloseAddProduct }) {
               labelStyle="text-sm"
               inputStyle="text-sm"
             />
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col gap-4 md:flex-row">
               <FormInput
                 label="Price"
                 name="price"
@@ -634,7 +635,7 @@ function Product({ handleCloseAddProduct }) {
               labelStyle="text-sm"
               inputStyle="text-sm"
             />
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col gap-4 md:flex-row">
               <FormSelect
                 name="category"
                 label="Category"
@@ -656,11 +657,11 @@ function Product({ handleCloseAddProduct }) {
                 optionStyle="text-sm"
               />
             </div>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex flex-row relative gap-4">
+            <div className="flex flex-col gap-4 md:flex-row">
+              <div className="relative flex flex-row gap-4">
                 <label
                   htmlFor="start_date"
-                  className="text-gray-500 mb-1 text-sm"
+                  className="mb-1 text-sm text-gray-500"
                 >
                   Is Merch of Event type?
                 </label>
@@ -672,8 +673,8 @@ function Product({ handleCloseAddProduct }) {
             </div>
             {isEventType && (
               <>
-                <div className="flex flex-col relative">
-                  <label htmlFor="eventDate" className="text-gray-500 mb-1">
+                <div className="relative flex flex-col">
+                  <label htmlFor="eventDate" className="mb-1 text-gray-500">
                     Event Date
                   </label>
                   <FormInput
@@ -691,13 +692,13 @@ function Product({ handleCloseAddProduct }) {
 
                 {/* Session Configuration */}
                 <div className="form-group">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
                     Session Configuration
                   </label>
 
                   {/* Morning Session */}
-                  <div className="border p-4 rounded-lg mb-4">
-                    <div className="flex items-center mb-2">
+                  <div className="mb-4 rounded-lg border p-4">
+                    <div className="mb-2 flex items-center">
                       <input
                         type="checkbox"
                         checked={
@@ -710,14 +711,14 @@ function Product({ handleCloseAddProduct }) {
                             e.target.checked
                           )
                         }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <label className="ml-2 font-medium text-sm">
+                      <label className="ml-2 text-sm font-medium">
                         Morning Session
                       </label>
                     </div>
                     {formData.sessionConfig?.isMorningEnabled && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                      <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                           <input
                             type="time"
@@ -738,9 +739,9 @@ function Product({ handleCloseAddProduct }) {
                                 endTime
                               );
                             }}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                           />
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="mt-1 text-xs text-gray-500">
                             Start time
                           </p>
                         </div>
@@ -764,17 +765,17 @@ function Product({ handleCloseAddProduct }) {
                                 e.target.value
                               );
                             }}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                           />
-                          <p className="text-xs text-gray-500 mt-1">End time</p>
+                          <p className="mt-1 text-xs text-gray-500">End time</p>
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Afternoon Session */}
-                  <div className="border p-4 rounded-lg mb-4">
-                    <div className="flex items-center mb-2">
+                  <div className="mb-4 rounded-lg border p-4">
+                    <div className="mb-2 flex items-center">
                       <input
                         type="checkbox"
                         checked={
@@ -787,14 +788,14 @@ function Product({ handleCloseAddProduct }) {
                             e.target.checked
                           )
                         }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <label className="ml-2 font-medium text-sm">
+                      <label className="ml-2 text-sm font-medium">
                         Afternoon Session
                       </label>
                     </div>
                     {formData.sessionConfig?.isAfternoonEnabled && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                      <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                           <input
                             type="time"
@@ -815,9 +816,9 @@ function Product({ handleCloseAddProduct }) {
                                 endTime
                               );
                             }}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                           />
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="mt-1 text-xs text-gray-500">
                             Start time
                           </p>
                         </div>
@@ -841,17 +842,17 @@ function Product({ handleCloseAddProduct }) {
                                 e.target.value
                               );
                             }}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                           />
-                          <p className="text-xs text-gray-500 mt-1">End time</p>
+                          <p className="mt-1 text-xs text-gray-500">End time</p>
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Evening Session */}
-                  <div className="border p-4 rounded-lg mb-4">
-                    <div className="flex items-center mb-2">
+                  <div className="mb-4 rounded-lg border p-4">
+                    <div className="mb-2 flex items-center">
                       <input
                         type="checkbox"
                         checked={
@@ -864,14 +865,14 @@ function Product({ handleCloseAddProduct }) {
                             e.target.checked
                           )
                         }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <label className="ml-2 font-medium text-sm">
+                      <label className="ml-2 text-sm font-medium">
                         Evening Session
                       </label>
                     </div>
                     {formData.sessionConfig?.isEveningEnabled && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                      <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                           <input
                             type="time"
@@ -892,9 +893,9 @@ function Product({ handleCloseAddProduct }) {
                                 endTime
                               );
                             }}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                           />
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="mt-1 text-xs text-gray-500">
                             Start time
                           </p>
                         </div>
@@ -918,9 +919,9 @@ function Product({ handleCloseAddProduct }) {
                                 e.target.value
                               );
                             }}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                           />
-                          <p className="text-xs text-gray-500 mt-1">End time</p>
+                          <p className="mt-1 text-xs text-gray-500">End time</p>
                         </div>
                       </div>
                     )}
@@ -968,7 +969,7 @@ function Product({ handleCloseAddProduct }) {
                         <button
                           type="button"
                           onClick={() => handleSizeClick(s)}
-                          className={`p-2 w-14 text-center border rounded ${
+                          className={`w-14 rounded border p-2 text-center ${
                             formData.selectedSizes[s]
                               ? "bg-blue-500 text-white"
                               : "bg-white text-gray-800"
@@ -1004,7 +1005,7 @@ function Product({ handleCloseAddProduct }) {
                             onChange={(e) =>
                               handlePriceChange(s, e.target.value)
                             }
-                            className="border p-1 rounded w-full max-w-32"
+                            className="w-full max-w-32 rounded border p-1"
                           />
                         )}
                       </div>
@@ -1015,13 +1016,13 @@ function Product({ handleCloseAddProduct }) {
               {(isShown || isVariation) && (
                 <div>
                   <p className="font-semibold">Variations:</p>
-                  <div className="flex gap-2 flex-wrap text-sm">
+                  <div className="flex flex-wrap gap-2 text-sm">
                     {variation.map((v) => (
                       <button
                         key={v}
                         type="button"
                         onClick={() => handleVariationClick(v)}
-                        className={`p-2 border rounded ${
+                        className={`rounded border p-2 ${
                           formData.selectedVariations.includes(v)
                             ? "bg-blue-500 text-white"
                             : "bg-white text-gray-800"
@@ -1035,9 +1036,9 @@ function Product({ handleCloseAddProduct }) {
               )}
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex flex-col relative">
-                <label htmlFor="start_date" className="text-gray-500 mb-1">
+            <div className="flex flex-col gap-4 md:flex-row">
+              <div className="relative flex flex-col">
+                <label htmlFor="start_date" className="mb-1 text-gray-500">
                   Start Date
                 </label>
                 <FormInput
@@ -1052,8 +1053,8 @@ function Product({ handleCloseAddProduct }) {
                   max={today}
                 />
               </div>
-              <div className="flex flex-col relative">
-                <label htmlFor="end_date" className="text-gray-500 mb-1">
+              <div className="relative flex flex-col">
+                <label htmlFor="end_date" className="mb-1 text-gray-500">
                   End Date
                 </label>
                 <FormInput

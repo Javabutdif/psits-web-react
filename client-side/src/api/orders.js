@@ -140,7 +140,11 @@ export const approveOrder = async (formData) => {
 };
 
 
-export const getAllPendingOrders = async () => {
+export const getAllPendingOrders = async ({
+	page = 1,
+	limit = 50,
+	search = "",
+} = {}) => {
 	try {
 		const response = await axios.get(
 			`${backendConnection()}/api/orders/get-all-pending-orders`,
@@ -149,11 +153,22 @@ export const getAllPendingOrders = async () => {
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${token}`,
 				},
+				params: {
+					page,
+					limit,
+					search,
+				},
 			}
 		);
 
 		if (response.status === 200) {
-			return response.data;
+			return {
+				data: response.data.data || [],
+				total: response.data.total || 0,
+				page: response.data.page || page,
+				limit: response.data.limit || limit,
+				totalPages: response.data.totalPages || 0,
+			};
 		} else {
 			return null;
 		}
@@ -164,10 +179,21 @@ export const getAllPendingOrders = async () => {
 			console.error("Error:", error);
 		}
 		console.error("Error:", error);
+		return {
+			data: [],
+			total: 0,
+			page,
+			limit,
+			totalPages: 0,
+		};
 	}
 };
 
-export const getAllPaidOrders = async () => {
+export const getAllPaidOrders = async ({
+	page = 1,
+	limit = 50,
+	search = "",
+} = {}) => {
 	try {
 		const response = await axios.get(
 			`${backendConnection()}/api/orders/get-all-paid-orders`,
@@ -176,11 +202,22 @@ export const getAllPaidOrders = async () => {
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${token}`,
 				},
+				params: {
+					page,
+					limit,
+					search,
+				},
 			}
 		);
 
 		if (response.status === 200) {
-			return response.data;
+			return {
+				data: response.data.data || [],
+				total: response.data.total || 0,
+				page: response.data.page || page,
+				limit: response.data.limit || limit,
+				totalPages: response.data.totalPages || 0,
+			};
 		} else {
 			return null;
 		}
@@ -191,5 +228,12 @@ export const getAllPaidOrders = async () => {
 			console.error("Error:", error);
 		}
 		console.error("Error:", error);
+		return {
+			data: [],
+			total: 0,
+			page,
+			limit,
+			totalPages: 0,
+		};
 	}
 };
