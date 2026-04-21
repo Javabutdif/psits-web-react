@@ -12,6 +12,8 @@ import { Student } from "../models/student.model";
 import {
   ATTENDANCE_ERROR_STATUS_MAP,
   AttendanceError,
+  hydrateAttendeesAttendance,
+  hydrateEventsAttendance,
   markAttendance,
 } from "../services/attendance.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
@@ -494,7 +496,7 @@ export const getEventAttendeesV2Controller = async (
 
     const effectiveCampus = isUcMainAdmin ? params.campus : requesterCampus;
 
-    const event = await Event.findOne(query).select("attendees eventId");
+    const event = await Event.findOne(query).select("_id attendees eventId").lean();
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -503,8 +505,12 @@ export const getEventAttendeesV2Controller = async (
     const attendeeList = Array.isArray(event.attendees)
       ? (event.attendees as unknown as IAttendee[])
       : [];
+    const hydratedAttendees = await hydrateAttendeesAttendance(
+      event._id,
+      attendeeList
+    );
 
-    const filteredAttendees = filterAttendees(attendeeList, {
+    const filteredAttendees = filterAttendees(hydratedAttendees, {
       ...params,
       campus: effectiveCampus,
     });
@@ -1303,8 +1309,9 @@ export const getMyEventsController = async (req: Request, res: Response) => {
         );
       }),
     }));
+    const hydratedEvents = await hydrateEventsAttendance(filteredEvents);
 
-    return res.status(200).json({ data: filteredEvents });
+    return res.status(200).json({ data: hydratedEvents });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -1336,9 +1343,9 @@ export const getEventStatisticsV2Controller = async (
     const isUcMainAdmin = requesterCampus === "UC-Main";
     const campusScope = isUcMainAdmin ? "all" : requesterCampus;
 
-    const event = await Event.findOne(query).select(
-      "attendees sales_data totalRevenueAll totalUnitsSold eventId"
-    );
+    const event = await Event.findOne(query)
+      .select("_id attendees sales_data totalRevenueAll totalUnitsSold eventId")
+      .lean();
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -1347,10 +1354,14 @@ export const getEventStatisticsV2Controller = async (
     const attendeeList = Array.isArray(event.attendees)
       ? (event.attendees as unknown as IAttendee[])
       : [];
+    const hydratedAttendees = await hydrateAttendeesAttendance(
+      event._id,
+      attendeeList
+    );
     const salesData = Array.isArray(event.sales_data) ? event.sales_data : [];
 
     const statistics = computeEventStatistics(
-      attendeeList,
+      hydratedAttendees,
       salesData,
       campusScope
     );

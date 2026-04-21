@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
-import { Event } from "../models/event.model";
-import { ISessionConfig } from "../models/event.interface";
+import mongoose, { ClientSession, Types } from "mongoose";
+import { IAttendance } from "../models/attendance.interface";
+import { Attendance } from "../models/attendance.model";
 import { IAttendanceSession, IAttendee } from "../models/attendee.interface";
-
-// ─── Constants ───────────────────────────────────────────────────────────────
+import { ISessionConfig } from "../models/event.interface";
+import { Event } from "../models/event.model";
 
 const TIMEZONE = "Asia/Manila";
 
@@ -12,8 +12,6 @@ const SESSION_NAMES: Array<keyof ISessionConfig> = [
   "afternoon",
   "evening",
 ];
-
-// ─── Error Class ─────────────────────────────────────────────────────────────
 
 export class AttendanceError extends Error {
   constructor(
@@ -36,8 +34,6 @@ export const ATTENDANCE_ERROR_STATUS_MAP: Record<string, number> = {
   ALREADY_RECORDED: 409,
 };
 
-// ─── DTOs ────────────────────────────────────────────────────────────────────
-
 export interface MarkAttendanceInput {
   eventId: string;
   attendeeIdNumber: string;
@@ -55,16 +51,30 @@ export interface MarkAttendanceResult {
     name: string;
     campus: string;
     attendance: IAttendanceSession;
+    confirmedBy: string;
   };
   isNewAttendee: boolean;
 }
 
-// ─── Timezone Helpers ────────────────────────────────────────────────────────
+export type HydratableAttendee = IAttendee & {
+  _id?: Types.ObjectId | string | null;
+};
 
-/**
- * Get the current date string and time components in Asia/Manila timezone.
- * Uses Intl.DateTimeFormat — no manual UTC offset arithmetic.
- */
+type EventWithAttendees<TAttendee extends HydratableAttendee = HydratableAttendee> =
+  {
+    _id?: unknown;
+    attendees?: TAttendee[] | null;
+  };
+
+type EventAttendee = HydratableAttendee & { _id: Types.ObjectId };
+type AttendanceEventMetadata = {
+  _id?: unknown;
+  attendanceType: string;
+  eventDate: Date;
+  status: string;
+  sessionConfig?: ISessionConfig;
+};
+
 function getNowInManila(): {
   dateString: string;
   hour: number;
@@ -72,7 +82,6 @@ function getNowInManila(): {
 } {
   const now = new Date();
 
-  // Get YYYY-MM-DD in Manila timezone (en-CA locale produces ISO format)
   const dateString = new Intl.DateTimeFormat("en-CA", {
     timeZone: TIMEZONE,
     year: "numeric",
@@ -80,7 +89,6 @@ function getNowInManila(): {
     day: "2-digit",
   }).format(now);
 
-  // Get hour and minute in Manila timezone
   const timeParts = new Intl.DateTimeFormat("en-US", {
     timeZone: TIMEZONE,
     hour: "numeric",
@@ -94,9 +102,6 @@ function getNowInManila(): {
   return { dateString, hour, minute };
 }
 
-/**
- * Format an event date as YYYY-MM-DD in Manila timezone for comparison.
- */
 function getEventDateInManila(eventDate: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: TIMEZONE,
@@ -106,35 +111,209 @@ function getEventDateInManila(eventDate: Date): string {
   }).format(new Date(eventDate));
 }
 
-// ─── Query Helper ────────────────────────────────────────────────────────────
-
-/**
- * Build a query that matches an event by either _id or eventId.
- * Mirrors the pattern from eventV2.controller.ts buildEventLookupQuery.
- */
 function buildEventLookupQuery(eventId: string) {
   const objectId = new mongoose.Types.ObjectId(eventId);
   return { $or: [{ _id: objectId }, { eventId: objectId }] };
 }
 
-// ─── Core Service Function ──────────────────────────────────────────────────
+function toObjectIdString(value: unknown): string | null {
+  if (!value) return null;
+  const normalized = String(value);
+  return normalized && normalized !== "undefined" && normalized !== "null"
+    ? normalized
+    : null;
+}
 
-export async function markAttendance(
-  input: MarkAttendanceInput
-): Promise<MarkAttendanceResult> {
-  // 1. Validate eventId format
-  if (!mongoose.Types.ObjectId.isValid(input.eventId)) {
-    throw new AttendanceError("INVALID_EVENT_ID", "Invalid event ID format");
+function toObjectId(value: unknown): Types.ObjectId | null {
+  const normalized = toObjectIdString(value);
+  if (!normalized || !Types.ObjectId.isValid(normalized)) {
+    return null;
   }
 
-  // 2. Find event
-  const query = buildEventLookupQuery(input.eventId);
-  const event = await Event.findOne(query);
-  if (!event) {
-    throw new AttendanceError("EVENT_NOT_FOUND", "Event not found");
+  return new Types.ObjectId(normalized);
+}
+
+function normalizeTimestamp(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
   }
 
-  // 3. Check event status
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  return null;
+}
+
+export function buildDefaultAttendance(): IAttendanceSession {
+  return {
+    morning: { attended: false, timestamp: null },
+    afternoon: { attended: false, timestamp: null },
+    evening: { attended: false, timestamp: null },
+  };
+}
+
+export function normalizeAttendance(
+  value?: Partial<IAttendanceSession> | null
+): IAttendanceSession {
+  return {
+    morning: {
+      attended: Boolean(value?.morning?.attended),
+      timestamp: normalizeTimestamp(value?.morning?.timestamp),
+    },
+    afternoon: {
+      attended: Boolean(value?.afternoon?.attended),
+      timestamp: normalizeTimestamp(value?.afternoon?.timestamp),
+    },
+    evening: {
+      attended: Boolean(value?.evening?.attended),
+      timestamp: normalizeTimestamp(value?.evening?.timestamp),
+    },
+  };
+}
+
+export function isAttendancePresent(
+  value?: Partial<IAttendanceSession> | null
+): boolean {
+  const attendance = normalizeAttendance(value);
+
+  return [attendance.morning, attendance.afternoon, attendance.evening].some(
+    (session) => Boolean(session.attended)
+  );
+}
+
+function buildAttendanceKey(eventId: string, attendeeId: string) {
+  return `${eventId}:${attendeeId}`;
+}
+
+function extractAttendeeRef(attendee: HydratableAttendee): Types.ObjectId | null {
+  return toObjectId(attendee._id);
+}
+
+function hydrateAttendeeFromMap<T extends HydratableAttendee>(
+  eventId: string | null,
+  attendee: T,
+  attendanceMap: Map<string, Pick<IAttendance, "attendance" | "confirmedBy">>
+): T {
+  const attendeeRef = extractAttendeeRef(attendee);
+  const record =
+    eventId && attendeeRef
+      ? attendanceMap.get(buildAttendanceKey(eventId, attendeeRef.toString()))
+      : undefined;
+
+  const attendance = record
+    ? normalizeAttendance(record.attendance)
+    : normalizeAttendance(attendee.attendance);
+  const confirmedBy = record?.confirmedBy ?? attendee.confirmedBy ?? "";
+
+  return {
+    ...attendee,
+    attendance,
+    confirmedBy,
+  };
+}
+
+async function getAttendanceMap(
+  pairs: Array<{
+    eventId: unknown;
+    attendeeRef: unknown;
+  }>
+): Promise<Map<string, Pick<IAttendance, "attendance" | "confirmedBy">>> {
+  const eventIds = new Set<string>();
+  const attendeeIds = new Set<string>();
+
+  for (const pair of pairs) {
+    const eventId = toObjectIdString(pair.eventId);
+    const attendeeId = toObjectIdString(pair.attendeeRef);
+    if (!eventId || !attendeeId) continue;
+    eventIds.add(eventId);
+    attendeeIds.add(attendeeId);
+  }
+
+  if (eventIds.size === 0 || attendeeIds.size === 0) {
+    return new Map();
+  }
+
+  const attendanceDocs = await Attendance.find({
+    event: { $in: Array.from(eventIds, (id) => new Types.ObjectId(id)) },
+    attendeeRef: {
+      $in: Array.from(attendeeIds, (id) => new Types.ObjectId(id)),
+    },
+  })
+    .select("event attendeeRef attendance confirmedBy")
+    .lean();
+
+  return new Map(
+    attendanceDocs.map((doc) => [
+      buildAttendanceKey(String(doc.event), String(doc.attendeeRef)),
+      {
+        attendance: normalizeAttendance(doc.attendance),
+        confirmedBy: doc.confirmedBy ?? "",
+      },
+    ])
+  );
+}
+
+export async function hydrateAttendeesAttendance<T extends HydratableAttendee>(
+  eventId: unknown,
+  attendees: T[]
+): Promise<T[]> {
+  if (!Array.isArray(attendees) || attendees.length === 0) {
+    return [];
+  }
+
+  const eventIdString = toObjectIdString(eventId);
+  const attendanceMap = await getAttendanceMap(
+    attendees
+      .filter((attendee) => Boolean(toObjectIdString(attendee._id)))
+      .map((attendee) => ({
+        eventId,
+        attendeeRef: attendee._id!,
+      }))
+  );
+
+  return attendees.map((attendee) =>
+    hydrateAttendeeFromMap(eventIdString, attendee, attendanceMap)
+  );
+}
+
+export async function hydrateEventsAttendance<T extends EventWithAttendees>(
+  events: T[]
+): Promise<T[]> {
+  if (!Array.isArray(events) || events.length === 0) {
+    return [];
+  }
+
+  const pairs = events.flatMap((event) =>
+    (Array.isArray(event.attendees) ? event.attendees : [])
+      .filter((attendee) => Boolean(toObjectIdString(attendee._id)))
+      .map((attendee) => ({
+        eventId: event._id ?? "",
+        attendeeRef: attendee._id!,
+      }))
+  );
+
+  const attendanceMap = await getAttendanceMap(pairs);
+
+  return events.map((event) => {
+    const eventId = toObjectIdString(event._id);
+    const attendees = Array.isArray(event.attendees) ? event.attendees : [];
+
+    return {
+      ...event,
+      attendees: attendees.map((attendee) =>
+        hydrateAttendeeFromMap(eventId, attendee, attendanceMap)
+      ),
+    };
+  });
+}
+
+function getActiveSession(event: {
+  sessionConfig?: ISessionConfig;
+  eventDate: Date;
+  status: string;
+}): keyof IAttendanceSession {
   if (event.status !== "Ongoing") {
     throw new AttendanceError(
       "EVENT_NOT_ACTIVE",
@@ -142,7 +321,6 @@ export async function markAttendance(
     );
   }
 
-  // 4. Get current Manila time and compare dates
   const manila = getNowInManila();
   const eventDateManila = getEventDateInManila(event.eventDate);
 
@@ -153,7 +331,6 @@ export async function markAttendance(
     );
   }
 
-  // 5. Find which session(s) the current time falls within
   const matchedSessions: Array<keyof ISessionConfig> = [];
   const currentMinutes = manila.hour * 60 + manila.minute;
 
@@ -173,7 +350,6 @@ export async function markAttendance(
     }
   }
 
-  // 6. Validate session match count
   if (matchedSessions.length === 0) {
     throw new AttendanceError(
       "NO_ACTIVE_SESSION",
@@ -188,102 +364,263 @@ export async function markAttendance(
     );
   }
 
-  const session = matchedSessions[0] as keyof IAttendanceSession;
+  return matchedSessions[0] as keyof IAttendanceSession;
+}
 
-  // 7. Find or create attendee based on attendanceType
-  let attendee: IAttendee | undefined;
-  let isNewAttendee = false;
+function buildOpenEventAttendee(input: MarkAttendanceInput): EventAttendee {
+  return {
+    _id: new Types.ObjectId(),
+    id_number: input.attendeeIdNumber,
+    name: input.attendeeName,
+    course: input.course || "Unknown",
+    year: input.year || 1,
+    campus: input.campus,
+    attendance: buildDefaultAttendance(),
+    confirmedBy: "",
+    shirtPrice: 0,
+    shirtSize: "",
+    raffleIsRemoved: false,
+    raffleIsWinner: false,
+    transactBy: "",
+    transactDate: null,
+    editedBy: [],
+  };
+}
+
+async function findProjectedAttendee(
+  eventId: Types.ObjectId,
+  attendeeMatch: Record<string, unknown>,
+  session: ClientSession
+): Promise<EventAttendee | null> {
+  const projectedEvent = await Event.findById(
+    eventId,
+    {
+      attendees: { $elemMatch: attendeeMatch },
+    },
+    { session }
+  ).lean();
+
+  const projectedAttendees = Array.isArray(projectedEvent?.attendees)
+    ? (projectedEvent.attendees as unknown as EventAttendee[])
+    : [];
+
+  return projectedAttendees[0] ?? null;
+}
+
+async function resolveAttendanceAttendee(
+  event: Pick<AttendanceEventMetadata, "_id" | "attendanceType">,
+  input: MarkAttendanceInput,
+  session: ClientSession
+): Promise<{ attendee: EventAttendee; isNewAttendee: boolean }> {
+  const eventObjectId = toObjectId(event._id);
+  if (!eventObjectId) {
+    throw new AttendanceError("EVENT_NOT_FOUND", "Event not found");
+  }
 
   if (event.attendanceType === "open") {
-    attendee = event.attendees.find(
-      (a) => a.id_number === input.attendeeIdNumber
+    const existing = await findProjectedAttendee(
+      eventObjectId,
+      { id_number: input.attendeeIdNumber },
+      session
     );
 
-    if (!attendee) {
-      const newAttendee: IAttendee = {
-        id_number: input.attendeeIdNumber,
-        name: input.attendeeName,
-        course: input.course || "Unknown",
-        year: input.year || 1,
-        campus: input.campus,
-        attendance: {
-          morning: { attended: false, timestamp: null },
-          afternoon: { attended: false, timestamp: null },
-          evening: { attended: false, timestamp: null },
-        },
-        confirmedBy: "",
-        shirtPrice: 0,
-        shirtSize: "",
-        raffleIsRemoved: false,
-        raffleIsWinner: false,
-        transactBy: "",
-        transactDate: null,
-      };
-      attendee = newAttendee;
-      isNewAttendee = true;
+    if (existing) {
+      return { attendee: existing, isNewAttendee: false };
     }
-  } else {
-    // "ticketed" mode — attendee must already exist
-    attendee = event.attendees.find(
-      (a) =>
-        a.id_number === input.attendeeIdNumber &&
-        a.name === input.attendeeName &&
-        (a.campus === input.campus || input.campus === "UC-Main")
+
+    const newAttendee = buildOpenEventAttendee(input);
+    const insertResult = await Event.updateOne(
+      {
+        _id: eventObjectId,
+        "attendees.id_number": { $ne: input.attendeeIdNumber },
+      },
+      {
+        $push: {
+          attendees: newAttendee,
+        },
+      },
+      { session }
     );
 
-    if (!attendee) {
+    const inserted = await findProjectedAttendee(
+      eventObjectId,
+      { id_number: input.attendeeIdNumber },
+      session
+    );
+
+    if (!inserted) {
       throw new AttendanceError(
         "ATTENDEE_NOT_FOUND",
         "Attendee not found in this event"
       );
     }
-  }
 
-  // 8. Check for duplicate attendance
-  if (attendee.attendance?.[session]?.attended) {
-    throw new AttendanceError(
-      "ALREADY_RECORDED",
-      `Attendance already recorded for ${session}`
-    );
-  }
-
-  // 9. Initialize attendance object if missing
-  if (!attendee.attendance) {
-    attendee.attendance = {
-      morning: { attended: false, timestamp: null },
-      afternoon: { attended: false, timestamp: null },
-      evening: { attended: false, timestamp: null },
+    return {
+      attendee: inserted,
+      isNewAttendee: insertResult.modifiedCount > 0,
     };
   }
 
-  if (!attendee.attendance[session]) {
-    attendee.attendance[session] = { attended: false, timestamp: null };
-  }
-
-  // 10. Mark attendance
-  attendee.attendance[session] = {
-    attended: true,
-    timestamp: new Date(),
-  };
-  attendee.confirmedBy = input.confirmedByAdminName;
-
-  // 11. Push new attendee or save existing
-  if (isNewAttendee) {
-    event.attendees.push(attendee);
-  }
-
-  event.markModified("attendees");
-  await event.save();
-
-  // 12. Return result
-  return {
-    session,
-    attendee: {
-      id_number: attendee.id_number,
-      name: attendee.name,
-      campus: attendee.campus,
-      attendance: attendee.attendance,
+  const attendee = await findProjectedAttendee(
+    eventObjectId,
+    {
+      id_number: input.attendeeIdNumber,
+      name: input.attendeeName,
+      campus:
+        input.campus === "UC-Main"
+          ? { $in: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"] }
+          : input.campus,
     },
-    isNewAttendee,
-  };
+    session
+  );
+
+  if (!attendee) {
+    throw new AttendanceError(
+      "ATTENDEE_NOT_FOUND",
+      "Attendee not found in this event"
+    );
+  }
+
+  return { attendee, isNewAttendee: false };
+}
+
+function isDuplicateKeyError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: number }).code === 11000
+  );
+}
+
+async function ensureAttendanceSeed(
+  eventId: Types.ObjectId,
+  attendee: EventAttendee,
+  session: ClientSession
+) {
+  try {
+    await Attendance.updateOne(
+      {
+        event: eventId,
+        attendeeRef: attendee._id,
+      },
+      {
+        $setOnInsert: {
+          event: eventId,
+          attendeeRef: attendee._id,
+          id_number: attendee.id_number,
+          attendance: normalizeAttendance(attendee.attendance),
+          confirmedBy: attendee.confirmedBy ?? "",
+        },
+      },
+      { upsert: true, session }
+    );
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) {
+      throw error;
+    }
+  }
+}
+
+async function updateAttendanceRecord(
+  eventId: Types.ObjectId,
+  attendee: EventAttendee,
+  sessionName: keyof IAttendanceSession,
+  confirmedByAdminName: string,
+  timestamp: Date,
+  session: ClientSession
+) {
+  await ensureAttendanceSeed(eventId, attendee, session);
+
+  const updatedRecord = await Attendance.findOneAndUpdate(
+    {
+      event: eventId,
+      attendeeRef: attendee._id,
+      [`attendance.${sessionName}.attended`]: { $ne: true },
+    },
+    {
+      $set: {
+        [`attendance.${sessionName}`]: {
+          attended: true,
+          timestamp,
+        },
+        confirmedBy: confirmedByAdminName,
+        id_number: attendee.id_number,
+      },
+    },
+    { new: true, session }
+  );
+
+  if (!updatedRecord) {
+    throw new AttendanceError(
+      "ALREADY_RECORDED",
+      `Attendance already recorded for ${sessionName}`
+    );
+  }
+
+  return updatedRecord;
+}
+
+export async function markAttendance(
+  input: MarkAttendanceInput
+): Promise<MarkAttendanceResult> {
+  if (!mongoose.Types.ObjectId.isValid(input.eventId)) {
+    throw new AttendanceError("INVALID_EVENT_ID", "Invalid event ID format");
+  }
+
+  const dbSession = await mongoose.startSession();
+
+  try {
+    dbSession.startTransaction();
+
+    const query = buildEventLookupQuery(input.eventId);
+    const event = await Event.findOne(query)
+      .select("_id eventDate status sessionConfig attendanceType")
+      .session(dbSession)
+      .lean<AttendanceEventMetadata | null>();
+    if (!event) {
+      throw new AttendanceError("EVENT_NOT_FOUND", "Event not found");
+    }
+
+    const sessionName = getActiveSession(event);
+    const { attendee, isNewAttendee } = await resolveAttendanceAttendee(
+      event,
+      input,
+      dbSession
+    );
+    const eventObjectId = toObjectId(event._id);
+    if (!eventObjectId) {
+      throw new AttendanceError("EVENT_NOT_FOUND", "Event not found");
+    }
+    const timestamp = new Date();
+    const attendanceRecord = await updateAttendanceRecord(
+      eventObjectId,
+      attendee,
+      sessionName,
+      input.confirmedByAdminName,
+      timestamp,
+      dbSession
+    );
+
+    await dbSession.commitTransaction();
+
+    return {
+      session: sessionName,
+      attendee: {
+        id_number: attendee.id_number,
+        name: attendee.name,
+        campus: attendee.campus,
+        attendance: normalizeAttendance(attendanceRecord.attendance),
+        confirmedBy: attendanceRecord.confirmedBy ?? input.confirmedByAdminName,
+      },
+      isNewAttendee,
+    };
+  } catch (error) {
+    if (dbSession.inTransaction()) {
+      await dbSession.abortTransaction();
+    }
+    throw error;
+  } finally {
+    dbSession.endSession();
+  }
 }
