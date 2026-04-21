@@ -1,5 +1,4 @@
 import { Router } from "express";
-import loginLimiter from "../util/limiter.util";
 import {
   loginV2Controller,
   refreshV2Controller,
@@ -12,7 +11,7 @@ const router: Router = Router();
  * POST /v2/auth/login
  * Authenticate user with id_number + password, issue tokens, set refresh cookie
  */
-router.post("/login", loginLimiter, loginV2Controller);
+router.post("/login", loginV2Controller);
 
 /**
  * POST /v2/auth/refresh
