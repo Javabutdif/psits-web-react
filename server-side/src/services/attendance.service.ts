@@ -465,11 +465,6 @@ async function resolveAttendanceAttendee(
     eventObjectId,
     {
       id_number: input.attendeeIdNumber,
-      name: input.attendeeName,
-      campus:
-        input.campus === "UC-Main"
-          ? { $in: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"] }
-          : input.campus,
     },
     session
   );
