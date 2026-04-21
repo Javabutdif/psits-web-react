@@ -108,7 +108,7 @@ export const WinnersModal: React.FC<WinnersModalProps> = ({ winners, onClose }) 
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {winners.map((w, i) => (
-                <div key={i} style={{
+                <div key={`${w.round}-${w.name}-${i}`} style={{
                   display: "flex", alignItems: "center", gap: "12px",
                   padding: "11px 14px",
                   background: "#f8faff",
@@ -120,7 +120,7 @@ export const WinnersModal: React.FC<WinnersModalProps> = ({ winners, onClose }) 
                     background: "#dbeafe", border: "1.5px solid #93c5fd",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: "12px", fontWeight: 800, color: "#2563eb",
-                  }}>{i + 1}</div>
+                  }}>{w.round}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
                       color: "#1e293b", fontWeight: 700, fontSize: "0.92rem",

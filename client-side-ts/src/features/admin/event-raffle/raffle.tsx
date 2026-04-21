@@ -23,11 +23,18 @@ const VISIBLE = 5;
 const CENTER_SLOT = Math.floor(VISIBLE / 2);
 
 // ─── Animation tuning ────────────────────────────────────────────────────────
-const CRUISE_SPEED = 1.5; // keep — good speed
-const MIN_SPIN_TIME = 700; // was 400 — guarantee at least 2s of cruise
+const MIN_SPIN_TIME = 2000; // cruise phase before braking
+const WAITING_HINT_DELAY = 5000;
+const RESET_UNDO_TIMEOUT_MS = 12000;
+const RESET_UNDO_RETRY_COUNT = 1;
+const ACCEL_DURATION = 1200;
+const START_SPEED = 0.35;
+const MAX_CRUISE_SPEED = 2.1;
+const BRAKE_DURATION_MIN = 2800;
+const BRAKE_DURATION_MAX = 6000;
 const BRAKE_ITEMS = 80; // was 50 — more runway = gentler entry into brake
 const WINNER_IDX = 80; // was 80 — push winner deeper so reel has room
-const BRAKE_DURATION = 4000; // was 5500 — slightly snappier stop feels cleaner
+const MIN_BRAKE_START_SPEED = 0.8;
 // ─── Reel cap ─────────────────────────────────────────────────────────────────
 
 const REEL_SIZE = WINNER_IDX + BRAKE_ITEMS + VISIBLE + 40;
@@ -36,7 +43,7 @@ const CAMPUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All Campuses" },
   { value: "UC-Main", label: "UC Main" },
   { value: "UC-Banilad", label: "UC Banilad" },
-  { value: "UC-LM", label: "UC Lapu-Lapu and Mandaue" },
+  { value: "UC-LM", label: "UCLM" },
   { value: "UC-PT", label: "UCPT" },
 ];
 
@@ -45,13 +52,39 @@ function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(`Operation timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      });
+  });
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Winner = {
+  attendeeId: string;
   name: string;
   campus?: string;
   round: number;
   timestamp: string;
 };
+
+type ResetRequest = {
+  winnerIds: string[];
+  label: string;
+  campus: string;
+};
+
 type PendingWinner = DrawRaffleWinnerResponse["winner"] | null;
 
 // ─── Reel generation ──────────────────────────────────────────────────────────
@@ -128,13 +161,17 @@ export default function RaffleDraw({
     buildReelPool([], VISIBLE + 2)
   );
   const [isRedrawing, setIsRedrawing] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [winnerLit, setWinnerLit] = useState(false);
   const [pendingWinner, setPendingWinner] = useState<PendingWinner>(null);
+  const [pendingReset, setPendingReset] = useState<ResetRequest | null>(null);
+  const [isWaitingForWinner, setIsWaitingForWinner] = useState(false);
   const [selectedCampus, setSelectedCampus] = useState<string>("all");
 
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const fetchedWinnerRef = useRef<PendingWinner>(null);
+  const hasInitializedWinnersRef = useRef(false);
 
   const reelRef = useRef<HTMLDivElement>(null);
 
@@ -143,6 +180,12 @@ export default function RaffleDraw({
       reelRef.current.style.transform = `translateY(${offset}px)`;
     }
   }, []);
+
+  useEffect(() => {
+    hasInitializedWinnersRef.current = false;
+    setWinners([]);
+    setRound(1);
+  }, [normalizedEventId]);
 
   // ─── Load participants ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -161,8 +204,19 @@ export default function RaffleDraw({
         });
         if (cancelled) return;
         setAllParticipants(pool.eligible);
-        if (pool.winners?.length) {
-          const historical = pool.winners.map((w, i) => ({
+
+        // Build round numbering once from the all-campus list so campus
+        // filters keep the same global winner positions.
+        if (!hasInitializedWinnersRef.current) {
+          const winnersSource =
+            selectedCampus === "all"
+              ? pool
+              : await getEligibleRaffleAttendeesV2(normalizedEventId);
+
+          if (cancelled) return;
+
+          const historical = (winnersSource.winners ?? []).map((w, i) => ({
+            attendeeId: w.attendeeId,
             name: w.name,
             campus: w.campus,
             round: i + 1,
@@ -170,7 +224,9 @@ export default function RaffleDraw({
           }));
           setWinners(historical);
           setRound(historical.length + 1);
+          hasInitializedWinnersRef.current = true;
         }
+
         setTotalParticipants(
           (pool.eligible?.length ?? 0) + (pool.winners?.length ?? 0)
         );
@@ -180,6 +236,10 @@ export default function RaffleDraw({
             VISIBLE + 2
           )
         );
+
+        // Keep idle preview visible after campus changes or pool refresh.
+        setTransform(0);
+        setWinnerLit(false);
       } catch {
         if (!cancelled) setLoadError("Failed to load raffle pool.");
       } finally {
@@ -207,15 +267,17 @@ export default function RaffleDraw({
 
   // ─── Core draw ───────────────────────────────────────────────────────────────
   const drawWinner = useCallback(() => {
-    if (isSpinning || allParticipants.length === 0) return;
+    if (isSpinning || isResetting || allParticipants.length === 0) return;
 
     setIsSpinning(true);
     setWinnerLit(false);
     setShowConfetti(false);
+    setIsWaitingForWinner(false);
     fetchedWinnerRef.current = null;
 
     const participantNames = allParticipants.map((a) => a.name).filter(Boolean);
     const idleReel = buildReelPool(participantNames, REEL_SIZE);
+    const reelCycleHeight = idleReel.length * ITEM_HEIGHT;
     setReelItems(idleReel);
 
     setTransform(0);
@@ -223,12 +285,15 @@ export default function RaffleDraw({
     // ── Animation state ────────────────────────────────────────────────────────
     let phase: "cruise" | "brake" = "cruise";
     let offset = 0;
+    let currentSpeed = START_SPEED;
     let prevTime: number | null = null;
+    const spinStartedAt = performance.now();
 
     // Set when braking begins:
     let brakeStartOffset = 0;
     let brakeStartTime = 0;
     let targetOffset = 0;
+    let brakeDurationMs = BRAKE_DURATION_MIN;
 
     // ── RAF loop ───────────────────────────────────────────────────────────────
     const tick = (now: number) => {
@@ -236,14 +301,26 @@ export default function RaffleDraw({
       prevTime = now;
 
       if (phase === "cruise") {
-        offset -= CRUISE_SPEED * dt;
+        const cruiseElapsed = now - spinStartedAt;
+        const accelT = Math.min(cruiseElapsed / ACCEL_DURATION, 1);
+        const accelEased = easeOutCubic(accelT);
+        currentSpeed =
+          START_SPEED + (MAX_CRUISE_SPEED - START_SPEED) * accelEased;
+
+        offset -= currentSpeed * dt;
+
+        // Keep the reel in a visible range while waiting for slow API responses.
+        if (reelCycleHeight > 0 && offset <= -reelCycleHeight) {
+          offset = -((-offset) % reelCycleHeight);
+        }
+
         setTransform(offset);
 
         rafRef.current = requestAnimationFrame(tick);
       } else {
         // ── Brake phase: time-based easing ────────────────────────────────────
         const elapsed = now - brakeStartTime;
-        const t = Math.min(elapsed / BRAKE_DURATION, 1.0);
+        const t = Math.min(elapsed / brakeDurationMs, 1.0);
         const eased = easeOutCubic(t);
 
         const currentOffset =
@@ -287,6 +364,17 @@ export default function RaffleDraw({
       brakeStartTime = now;
       targetOffset = -((winnerIndex - CENTER_SLOT) * ITEM_HEIGHT);
 
+      const distanceToTarget = Math.max(
+        1,
+        Math.abs(targetOffset - brakeStartOffset)
+      );
+      const continuitySpeed = Math.max(currentSpeed, MIN_BRAKE_START_SPEED);
+      const computedBrakeDuration = (3 * distanceToTarget) / continuitySpeed;
+      brakeDurationMs = Math.min(
+        BRAKE_DURATION_MAX,
+        Math.max(BRAKE_DURATION_MIN, computedBrakeDuration)
+      );
+
       // 5. Flip phase — next tick uses easing formula
       phase = "brake";
     };
@@ -299,6 +387,12 @@ export default function RaffleDraw({
       campus: selectedCampus === "all" ? undefined : selectedCampus,
     });
 
+    const waitingHintTimeout = window.setTimeout(() => {
+      if (!fetchedWinnerRef.current) {
+        setIsWaitingForWinner(true);
+      }
+    }, WAITING_HINT_DELAY);
+
     Promise.all([apiPromise, minSpinPromise])
       .then(([apiResponse, resolvedAt]) => {
         fetchedWinnerRef.current = apiResponse.winner;
@@ -307,8 +401,19 @@ export default function RaffleDraw({
       .catch((error) => {
         console.error("Failed to draw from server:", error);
         startBraking("Draw Error", performance.now());
+      })
+      .finally(() => {
+        window.clearTimeout(waitingHintTimeout);
+        setIsWaitingForWinner(false);
       });
-  }, [isSpinning, normalizedEventId, allParticipants, setTransform]);
+  }, [
+    isSpinning,
+    isResetting,
+    normalizedEventId,
+    allParticipants,
+    selectedCampus,
+    setTransform,
+  ]);
 
   // ─── Winner actions ───────────────────────────────────────────────────────────
   const handleConfirmWinner = () => {
@@ -316,6 +421,7 @@ export default function RaffleDraw({
     setWinners((prev) => [
       ...prev,
       {
+        attendeeId: pendingWinner.attendeeId,
         name: pendingWinner.name,
         campus: pendingWinner.campus,
         round,
@@ -351,34 +457,147 @@ export default function RaffleDraw({
     }
   };
 
-  const handleCloseModal = () => {
+  const clearWinnerModalState = () => {
     setPendingWinner(null);
     setWinnerLit(false);
     setShowConfetti(false);
   };
 
-  const resetAll = async () => {
-    if (isSpinning) return;
-    if (
-      !window.confirm(
-        "Reset the entire raffle? All winners will be returned to the pool."
-      )
-    )
+  const handleCloseModal = () => {
+    if (isRedrawing) return;
+
+    if (!pendingWinner) {
+      clearWinnerModalState();
       return;
-    setIsSpinning(true);
+    }
+
+    const attendeeIdToUndo = pendingWinner.attendeeId;
+    clearWinnerModalState();
+    setIsSpinning(false);
+
+    void undoRaffleWinner(normalizedEventId, attendeeIdToUndo).catch((error) => {
+      console.error("Reject failed:", error);
+      alert("Failed to reject winner. Please try again.");
+    });
+  };
+
+  const resetAll = () => {
+    if (isSpinning || isResetting) return;
+
+    const winnersToReset =
+      selectedCampus === "all"
+        ? winners
+        : winners.filter((winner) => winner.campus === selectedCampus);
+
+    if (winnersToReset.length === 0) {
+      return;
+    }
+
+    const label =
+      selectedCampus === "all"
+        ? "all winners"
+        : `all ${selectedCampus} winners`;
+
+    setPendingReset({
+      winnerIds: winnersToReset.map((winner) => winner.attendeeId),
+      label,
+      campus: selectedCampus,
+    });
+  };
+
+  const cancelResetAll = () => {
+    if (isSpinning || isResetting) return;
+    setPendingReset(null);
+  };
+
+  const confirmResetAll = async () => {
+    if (isSpinning || isResetting || !pendingReset) return;
+
+    const { winnerIds, campus } = pendingReset;
+    setPendingReset(null);
+
+    setIsResetting(true);
     try {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      setWinners([]);
-      setRound(1);
+
+      const succeededIds: string[] = [];
+      const failedIds: string[] = [];
+
+      for (const attendeeId of winnerIds) {
+        let isUndone = false;
+
+        for (let attempt = 0; attempt <= RESET_UNDO_RETRY_COUNT; attempt++) {
+          try {
+            await withTimeout(
+              undoRaffleWinner(normalizedEventId, attendeeId),
+              RESET_UNDO_TIMEOUT_MS
+            );
+            succeededIds.push(attendeeId);
+            isUndone = true;
+            break;
+          } catch {
+            // Retry transient failures once before marking as failed.
+          }
+        }
+
+        if (!isUndone) {
+          failedIds.push(attendeeId);
+        }
+      }
+
+      const failedCount = failedIds.length;
+
+      if (succeededIds.length > 0) {
+        const succeededSet = new Set(succeededIds);
+        const remainingWinners = winners.filter(
+          (winner) => !succeededSet.has(winner.attendeeId)
+        );
+        setWinners(remainingWinners);
+        setRound(
+          remainingWinners.length > 0
+            ? Math.max(...remainingWinners.map((winner) => winner.round)) + 1
+            : 1
+        );
+      }
+
+      if (failedCount > 0) {
+        alert(
+          `${failedCount} winner(s) could not be reset. Please try again.`
+        );
+      }
+
       setWinnerLit(false);
       setTransform(0);
       setPendingWinner(null);
       setShowConfetti(false);
+
       const pool = await getEligibleRaffleAttendeesV2(normalizedEventId, {
-        campus: selectedCampus === "all" ? undefined : selectedCampus,
+        campus: campus === "all" ? undefined : campus,
       });
+
+      const globalPool =
+        campus === "all"
+          ? pool
+          : await getEligibleRaffleAttendeesV2(normalizedEventId);
+
+      const refreshedWinners = (globalPool.winners ?? []).map(
+        (winner, index) => ({
+          attendeeId: winner.attendeeId,
+          name: winner.name,
+          campus: winner.campus,
+          round: index + 1,
+          timestamp: "Previously Drawn",
+        })
+      );
+
+      setWinners(refreshedWinners);
+      setRound(refreshedWinners.length + 1);
+      hasInitializedWinnersRef.current = true;
+
       setAllParticipants(pool.eligible);
-      setTotalParticipants(pool.totalEligible);
+      setTotalParticipants(
+        (pool.eligible?.length ?? 0) + (pool.winners?.length ?? 0)
+      );
       setReelItems(
         buildReelPool(
           pool.eligible.map((a) => a.name).filter(Boolean),
@@ -389,9 +608,14 @@ export default function RaffleDraw({
       console.error("Failed to reset raffle:", error);
       alert("Failed to reset the raffle. Please try again.");
     } finally {
-      setIsSpinning(false);
+      setIsResetting(false);
     }
   };
+
+  const filteredWinners =
+    selectedCampus === "all"
+      ? winners
+      : winners.filter((winner) => winner.campus === selectedCampus);
 
   // ─── Render ───────────────────────────────────────────────────────────────────
   return (
@@ -466,7 +690,7 @@ export default function RaffleDraw({
           }}
         >
           ★ Winners
-          {winners.length > 0 && (
+          {filteredWinners.length > 0 && (
             <span
               style={{
                 background: "#ffffff",
@@ -481,7 +705,7 @@ export default function RaffleDraw({
                 justifyContent: "center",
               }}
             >
-              {winners.length}
+              {filteredWinners.length}
             </span>
           )}
         </button>
@@ -554,22 +778,39 @@ export default function RaffleDraw({
           {allParticipants.length} of {totalParticipants} participants remaining
         </p>
 
+        {isSpinning && isWaitingForWinner && (
+          <p
+            style={{
+              fontSize: "12px",
+              color: "#64748b",
+              letterSpacing: "0.04em",
+              margin: 0,
+            }}
+          >
+            Still getting winner from server. Spin will stop automatically.
+          </p>
+        )}
+
         <RaffleControls
           isSpinning={isSpinning}
+          isResetting={isResetting}
           isLoadingParticipants={isLoadingParticipants}
           poolLength={allParticipants.length}
-          winnersCount={winners.length}
+          winnersCount={filteredWinners.length}
           selectedCampus={selectedCampus}
           campusOptions={CAMPUS_OPTIONS}
           onCampusChange={setSelectedCampus}
           onDraw={drawWinner}
           onReset={resetAll}
-          disableReset={true}
+          disableReset={false}
         />
       </div>
 
       {showWinners && (
-        <WinnersModal winners={winners} onClose={() => setShowWinners(false)} />
+        <WinnersModal
+          winners={filteredWinners}
+          onClose={() => setShowWinners(false)}
+        />
       )}
       {pendingWinner && (
         <WinnerDeclaredModal
@@ -581,6 +822,105 @@ export default function RaffleDraw({
           onClose={handleCloseModal}
           isRedrawing={isRedrawing}
         />
+      )}
+
+      {pendingReset && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{
+            background: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              background: "#ffffff",
+              borderRadius: "24px",
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 20px 60px rgba(15,23,42,0.25)",
+              padding: "24px",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: "12px",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "#64748b",
+                fontWeight: 700,
+              }}
+            >
+              Confirm Reset
+            </p>
+            <h3
+              style={{
+                margin: "8px 0 10px",
+                color: "#0f172a",
+                fontSize: "1.3rem",
+                fontWeight: 800,
+              }}
+            >
+              Reset {pendingReset.label}?
+            </h3>
+            <p
+              style={{
+                margin: 0,
+                color: "#475569",
+                lineHeight: 1.45,
+                fontSize: "0.95rem",
+              }}
+            >
+              This will return {pendingReset.winnerIds.length} winner
+              {pendingReset.winnerIds.length !== 1 ? "s" : ""} to the raffle
+              pool.
+            </p>
+
+            <div
+              style={{
+                marginTop: "18px",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+              }}
+            >
+              <button
+                onClick={cancelResetAll}
+                disabled={isResetting}
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  color: "#475569",
+                  fontWeight: 600,
+                  cursor: isResetting ? "not-allowed" : "pointer",
+                  opacity: isResetting ? 0.65 : 1,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmResetAll}
+                disabled={isResetting}
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  border: "1px solid #dc2626",
+                  background: "#dc2626",
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  cursor: isResetting ? "not-allowed" : "pointer",
+                  opacity: isResetting ? 0.65 : 1,
+                }}
+              >
+                Confirm Reset
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <style>{`
