@@ -1,5 +1,8 @@
 import api from "@/api/axios";
-import type { StudentProfile, StudentProfileResponse } from "@/features/student";
+import type {
+  StudentProfile,
+  StudentProfileResponse,
+} from "@/features/student";
 import type { AxiosResponse } from "axios";
 import axios, { AxiosError } from "axios";
 import backendConnection from "../../../api/backendApi";
@@ -50,7 +53,8 @@ const getToken = (): string | null => sessionStorage.getItem("Token");
 const handleApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
-    const errorMessage = axiosError.response?.data?.message ?? "An error occurred";
+    const errorMessage =
+      axiosError.response?.data?.message ?? "An error occurred";
     console.error("Error:", errorMessage);
     showToast("error", errorMessage);
     return errorMessage;
@@ -111,7 +115,9 @@ export const getMembershipStatusStudents = async (
   }
 };
 
-export const addToCartApi = async (formData: CartItemFormData): Promise<boolean> => {
+export const addToCartApi = async (
+  formData: CartItemFormData
+): Promise<boolean> => {
   try {
     const token = getToken();
     const response: AxiosResponse = await axios.post(
@@ -138,13 +144,16 @@ export const addToCartApi = async (formData: CartItemFormData): Promise<boolean>
 export const viewCart = async (id_number: string): Promise<CartItem[]> => {
   try {
     const token = getToken();
-    const response: AxiosResponse = await axios.get(`${backendConnection()}/api/cart/view-cart`, {
-      params: { id_number },
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    const response: AxiosResponse = await axios.get(
+      `${backendConnection()}/api/cart/view-cart`,
+      {
+        params: { id_number },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      }
+    );
 
     if (response.status === 200) {
       return response.data as CartItem[];
@@ -186,7 +195,9 @@ export const deleteItem = async (data: DeleteItemRequest): Promise<boolean> => {
   }
 };
 
-export const fetchSpecificStudent = async (id_number: string): Promise<Student | null> => {
+export const fetchSpecificStudent = async (
+  id_number: string
+): Promise<Student | null> => {
   try {
     const token = getToken();
     const response: AxiosResponse<{ data: Student }> = await axios.get(
@@ -224,13 +235,33 @@ export const searchStudentById = async (id_number: string): Promise<any> => {
     return response.data.data;
   } catch (error: any) {
     handleApiError(error);
-    throw error?.response?.data?.message || "An error occurred while searching.";
+    throw (
+      error?.response?.data?.message || "An error occurred while searching."
+    );
   }
 };
 
-export const getStudentProfileV2 = async (id_number: string): Promise<StudentProfile> => {
+export const searchStudentByIdV2 = async (id_number: string): Promise<any> => {
   try {
-    const response = await api.get<StudentProfileResponse>(`/api/v2/students/profile/${id_number}`);
+    const response: AxiosResponse = await api.get(
+      `/api/v2/students/lookup/${id_number}`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    handleApiError(error);
+    throw (
+      error?.response?.data?.message || "An error occurred while searching."
+    );
+  }
+};
+
+export const getStudentProfileV2 = async (
+  id_number: string
+): Promise<StudentProfile> => {
+  try {
+    const response = await api.get<StudentProfileResponse>(
+      `/api/v2/students/profile/${id_number}`
+    );
     if (response.status === 200) {
       return response.data.data;
     }
@@ -239,7 +270,7 @@ export const getStudentProfileV2 = async (id_number: string): Promise<StudentPro
     handleApiError(error);
     throw error;
   }
-}
+};
 
 export const updateStudentYearLevelForCurrentYear = async (
   id_number: string,
@@ -264,7 +295,9 @@ export const updateStudentYearLevelForCurrentYear = async (
   }
 };
 
-export const isStudentYearUpdated = async (id_number: string): Promise<boolean> => {
+export const isStudentYearUpdated = async (
+  id_number: string
+): Promise<boolean> => {
   try {
     const token = getToken();
     const response: AxiosResponse = await axios.get(
