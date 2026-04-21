@@ -16,7 +16,7 @@ export const WinnerDeclaredModal: React.FC<WinnerDeclaredModalProps> = ({
   round,
   onConfirm,
   onRedraw,
-  onClose: _onClose,
+  onClose,
   isRedrawing = false,
 }) => {
   return (
@@ -58,39 +58,45 @@ export const WinnerDeclaredModal: React.FC<WinnerDeclaredModalProps> = ({
           }}
         />
 
-        {/* Close Button */}
-        {/* <button
+        {/* Quick reject button: reject this winner and close modal */}
+        <button
           onClick={onClose}
+          disabled={isRedrawing}
           style={{
             position: "absolute",
-            top: "20px",
-            right: "20px",
-            background: "transparent",
-            border: "none",
-            fontSize: "1.25rem",
-            color: "#64748b",
-            cursor: "pointer",
-            transition: "all 0.2s",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "32px",
-            height: "32px",
+            top: "16px",
+            right: "16px",
+            width: "36px",
+            height: "36px",
             borderRadius: "50%",
+            border: "1px solid #e2e8f0",
+            background: "#ffffff",
+            color: isRedrawing ? "#cbd5e1" : "#64748b",
+            fontSize: "1rem",
+            fontWeight: 700,
+            lineHeight: 1,
+            cursor: isRedrawing ? "not-allowed" : "pointer",
+            transition: "all 0.2s",
             zIndex: 10,
+            opacity: isRedrawing ? 0.7 : 1,
           }}
           onMouseOver={(e) => {
-            e.currentTarget.style.color = "#0f172a";
-            e.currentTarget.style.background = "#f1f5f9";
+            if (isRedrawing) return;
+            e.currentTarget.style.background = "#f8fafc";
+            e.currentTarget.style.borderColor = "#cbd5e1";
+            e.currentTarget.style.color = "#334155";
           }}
           onMouseOut={(e) => {
+            if (isRedrawing) return;
+            e.currentTarget.style.background = "#ffffff";
+            e.currentTarget.style.borderColor = "#e2e8f0";
             e.currentTarget.style.color = "#64748b";
-            e.currentTarget.style.background = "transparent";
           }}
-          aria-label="Close modal"
+          aria-label="Reject winner and close"
+          title="Reject winner and close"
         >
-          ✕
-        </button> */}
+          X
+        </button>
 
         {/* Decorative Trophy / Icon */}
         <div

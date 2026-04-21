@@ -2,6 +2,7 @@ import React from "react";
 
 interface RaffleControlsProps {
   isSpinning: boolean;
+  isResetting?: boolean;
   isLoadingParticipants?: boolean;
   poolLength: number;
   winnersCount: number;
@@ -15,6 +16,7 @@ interface RaffleControlsProps {
 
 export const RaffleControls: React.FC<RaffleControlsProps> = ({
   isSpinning,
+  isResetting = false,
   isLoadingParticipants = false,
   poolLength,
   winnersCount,
@@ -25,7 +27,7 @@ export const RaffleControls: React.FC<RaffleControlsProps> = ({
   onReset,
   disableReset = false,
 }) => {
-  const isBusy = isSpinning || isLoadingParticipants;
+  const isBusy = isSpinning || isLoadingParticipants || isResetting;
   const [showCampusFilters, setShowCampusFilters] = React.useState(
     selectedCampus !== undefined && selectedCampus !== "all"
   );
@@ -56,20 +58,22 @@ export const RaffleControls: React.FC<RaffleControlsProps> = ({
             ? "Spinning..."
             : isLoadingParticipants
             ? "Loading Pool..."
+            : isResetting
+            ? "Resetting..."
             : "Draw Winner"}
         </button>
 
-        {winnersCount > 0 && !isBusy && (
+        {winnersCount > 0 && (
           <button
             onClick={onReset}
-            disabled={disableReset}
+            disabled={disableReset || isBusy}
             className="btn btn-secondary px-6 py-3"
             style={{
-              opacity: disableReset ? 0.5 : 1,
-              cursor: disableReset ? "not-allowed" : "pointer",
+              opacity: disableReset || isBusy ? 0.5 : 1,
+              cursor: disableReset || isBusy ? "not-allowed" : "pointer",
             }}
           >
-            Reset
+            {isResetting ? "Resetting..." : "Reset"}
           </button>
         )}
       </div>
@@ -83,7 +87,7 @@ export const RaffleControls: React.FC<RaffleControlsProps> = ({
           className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
             isBusy
               ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-slate-100/70 dark:hover:bg-zinc-700/60"
+              : "cursor-pointer hover:bg-slate-100/70 dark:hover:bg-zinc-700/60"
           } ${
             selectedCampus && selectedCampus !== "all"
               ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300"
@@ -138,7 +142,7 @@ export const RaffleControls: React.FC<RaffleControlsProps> = ({
                       isSelected
                         ? "bg-white dark:bg-zinc-700 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-black/5"
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100/50 dark:hover:bg-zinc-700/50"
-                    } ${isBusy ? "opacity-50 cursor-not-allowed" : ""}`}
+                    } ${isBusy ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     {option.label}
                   </button>
