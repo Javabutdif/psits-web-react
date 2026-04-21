@@ -65,7 +65,7 @@ export const EventCard: React.FC<EventCardProps> = ({
 
   return (
     <Card className="overflow-hidden border-gray-200 transition-shadow hover:shadow-lg">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-white p-6">
+      <div className="relative aspect-4/3 overflow-hidden rounded-lg bg-white p-6">
         <img
           src={eventImage}
           alt={eventTitle}
@@ -108,7 +108,7 @@ export const EventCard: React.FC<EventCardProps> = ({
                 <span>Statistics</span>
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="cursor-not-allowed"
+                className="cursor-pointer"
                 onClick={() => onViewRaffle?.(eventId)}
               >
                 <Ticket />

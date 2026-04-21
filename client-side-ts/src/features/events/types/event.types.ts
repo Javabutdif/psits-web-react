@@ -396,3 +396,29 @@ export interface ChangeAttendeePasswordV2Payload {
 export interface ChangeAttendeePasswordV2Response {
   message: string;
 }
+
+// ─── Event Raffle V2 Types ──────────────────────────────────────
+
+export type RaffleAttendeeDto = {
+  attendeeId: string;
+  id_number: string;
+  name: string;
+  campus: string;
+  course: string;
+  year: number;
+};
+
+export type GetRafflePoolResponse = {
+  eligible: RaffleAttendeeDto[];
+  winners: RaffleAttendeeDto[];
+  totalEligible: number;
+};
+
+export type DrawRaffleWinnerResponse = {
+  message: string;
+  winner: RaffleAttendeeDto;
+};
+
+export interface RaffleQueryParams {
+  campus?: string;
+}

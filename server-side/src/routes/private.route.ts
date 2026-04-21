@@ -2,7 +2,6 @@ import {
   admin_authenticate,
   student_authenticate,
 } from "../middlewares/custom_authenticate_token";
-import loginLimiter from "../util/limiter.util";
 
 import { Router, Request, Response } from "express";
 const router = Router();
@@ -10,7 +9,6 @@ const router = Router();
 //protected route for admin
 router.get(
   "/protected-route-admin",
-  loginLimiter,
   admin_authenticate,
   async (req: Request, res: Response) => {
     try {

@@ -10,6 +10,7 @@ import StudentLayout from "./layouts/StudentLayout";
 import EventManagement from "./pages/admin/EventManagement";
 import EventsPage from "./pages/admin/EventsPage";
 import EventStatisticsPage from "./pages/admin/EventStatisticsPage";
+import EventRafflePage from "./pages/admin/EventRafflePage";
 import GeneralAdminPage from "./pages/admin/GeneralAdminPage";
 import { MainCampusFinancePage } from "./pages/admin/MainCampusFinancePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -101,6 +102,20 @@ const router = createBrowserRouter([
               {
                 path: "events/:eventId/statistics",
                 Component: EventStatisticsPage,
+              },
+              {
+                element: (
+                  <AdminCampusRouteGuard
+                    allowedCampuses={["UC-Main"]}
+                    campusUnauthorizedToastMessage="Unauthorized"
+                  />
+                ),
+                children: [
+                  {
+                    path: "events/:eventId/raffle",
+                    Component: EventRafflePage,
+                  },
+                ],
               },
               // TODO: Remove this sample
               // Example of a general admin page with campus-specific component

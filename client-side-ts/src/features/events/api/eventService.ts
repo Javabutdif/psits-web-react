@@ -3,30 +3,33 @@ import axios, { AxiosError } from "axios";
 import backendConnection from "../../../api/backendApi";
 import { showToast } from "../../../utils/alertHelper";
 import type {
-  ApiErrorResponse,
-  Event,
-  GetAttendeesParams,
-  PaginatedAttendeesResponse,
-  EventCheckData,
-  RaffleResponse,
-  StatisticsData,
-  EventStatisticsResponse,
-  CreateEventData,
-  CreateEventResponse,
   AddAttendeeFormData,
   AddAttendeeV2Payload,
   AddAttendeeV2Response,
-  RemoveAttendeeFormData,
-  UpdateSettingsFormData,
-  RaffleWinnerResponse,
-  RemoveRaffleResponse,
-  MarkAttendanceV2Payload,
-  MarkAttendanceV2Response,
+  ApiErrorResponse,
+  ChangeAttendeePasswordV2Payload,
+  ChangeAttendeePasswordV2Response,
+  CreateEventData,
+  CreateEventResponse,
+  DrawRaffleWinnerResponse,
   EditableAttendeeResponse,
   EditAttendeeV2Payload,
   EditAttendeeV2Response,
-  ChangeAttendeePasswordV2Payload,
-  ChangeAttendeePasswordV2Response,
+  Event,
+  EventCheckData,
+  EventStatisticsResponse,
+  GetAttendeesParams,
+  GetRafflePoolResponse,
+  MarkAttendanceV2Payload,
+  MarkAttendanceV2Response,
+  PaginatedAttendeesResponse,
+  RaffleQueryParams,
+  RaffleResponse,
+  RaffleWinnerResponse,
+  RemoveAttendeeFormData,
+  RemoveRaffleResponse,
+  StatisticsData,
+  UpdateSettingsFormData,
 } from "../types/event.types";
 
 const getAuthToken = (): string | null => {
@@ -305,6 +308,38 @@ export const getEligibleRaffleAttendees = async (
     console.error("Error fetching eligible attendees:", error);
     return error as AxiosError;
   }
+};
+
+export const getEligibleRaffleAttendeesV2 = async (
+  eventId: string,
+  params? : RaffleQueryParams
+): Promise<GetRafflePoolResponse> => {
+  const { data } = await api.get<GetRafflePoolResponse>(
+    `${backendConnection()}/api/v2/events/raffle/${eventId}`, {params}
+  );
+  return data;
+};
+
+export const drawRaffleWinner = async (
+  eventId: string,
+  params?: RaffleQueryParams
+): Promise<DrawRaffleWinnerResponse> => {
+  const { data } = await api.post<DrawRaffleWinnerResponse>(
+    `${backendConnection()}/api/v2/events/raffle/${eventId}/draw`,
+    undefined,
+    { params }
+  );
+  return data;
+};
+
+export const undoRaffleWinner = async (
+  eventId: string,
+  attendeeId: string
+): Promise<{ message: string }> => {
+  const { data } = await api.post<{ message: string }>(
+    `${backendConnection()}/api/v2/events/raffle/${eventId}/undo/${attendeeId}`
+  );
+  return data;
 };
 
 export const raffleWinner = async (

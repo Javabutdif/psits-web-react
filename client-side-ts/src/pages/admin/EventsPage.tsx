@@ -50,8 +50,7 @@ const EventsPage: React.FC = () => {
   };
 
   const handleViewRaffle = (eventId: string) => {
-    // TODO: Implement view raffle logic
-    console.warn("View raffle for event:", eventId);
+    navigate(`/admin/events/${eventId}/raffle`);
   };
 
   return (

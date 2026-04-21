@@ -43,11 +43,7 @@ const EventRaffle = () => {
       setCurrentParticipants(participants);
     } else {
       const filtered = participants.filter(
-        (participant) =>
-          (selectedCampus === "UC-Main" &&
-            (participant.campus === "UC-Main" ||
-              participant.campus === "UC-CS")) ||
-          participant.campus === selectedCampus
+        (participant) => participant.campus === selectedCampus
       );
 
       setCurrentParticipants(filtered);

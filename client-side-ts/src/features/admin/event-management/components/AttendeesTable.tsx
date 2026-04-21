@@ -870,7 +870,10 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
           });
           if (result) {
             setRefreshTick((t) => t + 1);
+            return true;
           }
+
+          return false;
         }}
       />
       <MarkAttendanceModal

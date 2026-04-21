@@ -1,5 +1,4 @@
 import { Router } from "express";
-import loginLimiter from "../util/limiter.util";
 const router: Router = Router();
 
 const {
@@ -10,7 +9,7 @@ const {
 } = require("../controllers/index.controller");
 
 //lOGIN
-router.post("/login", loginLimiter, loginController);
+router.post("/login", loginController);
 //Register
 router.post("/register", registerController);
 // Student forgot password

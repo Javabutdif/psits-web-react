@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { QRCodePayloadV2 } from "@/features/events/types/event.types";
 
 interface ScanQRModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onScanSuccess: (payload: QRCodePayloadV2) => void;
+  onScanSuccess: (payload: QRCodePayloadV2) => Promise<boolean>;
 }
 
 function parseQRPayload(raw: string): QRCodePayloadV2 | null {
@@ -43,29 +44,52 @@ export const ScanQRModal: React.FC<ScanQRModalProps> = ({
   onScanSuccess,
 }) => {
   const [error, setError] = useState("");
+  const [isProcessingScan, setIsProcessingScan] = useState(false);
 
   const handleClose = () => {
+    if (isProcessingScan) return;
     setError("");
     onOpenChange(false);
   };
 
-  const handleScan = (detectedCodes: Array<{ rawValue: string }>) => {
-    if (detectedCodes.length === 0) return;
+  const handleScan = async (detectedCodes: Array<{ rawValue: string }>) => {
+    if (detectedCodes.length === 0 || isProcessingScan) return;
 
     const scannedValue = detectedCodes[0].rawValue;
     const payload = parseQRPayload(scannedValue);
 
     if (payload) {
       setError("");
-      onScanSuccess(payload);
-      handleClose();
+      setIsProcessingScan(true);
+
+      try {
+        const isSuccess = await onScanSuccess(payload);
+
+        if (isSuccess) {
+          handleClose();
+          return;
+        }
+
+        setError("Unable to mark attendance. Please scan the QR code again.");
+      } catch {
+        setError("Failed to process the scan. Please try again.");
+      } finally {
+        setIsProcessingScan(false);
+      }
     } else {
       setError("Invalid QR Code. Please scan a valid attendance QR code.");
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          handleClose();
+        }
+      }}
+    >
       <DialogContent
         className="w-full max-w-lg gap-0 rounded-lg p-0 sm:max-w-xs sm:rounded-xl"
         showCloseButton={false}
@@ -79,6 +103,7 @@ export const ScanQRModal: React.FC<ScanQRModalProps> = ({
               variant="ghost"
               size="icon-sm"
               onClick={handleClose}
+              disabled={isProcessingScan}
               className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full"
             >
               <X className="h-4 w-4" />
@@ -96,7 +121,7 @@ export const ScanQRModal: React.FC<ScanQRModalProps> = ({
 
           {/* QR Scanner */}
           <div className="bg-muted relative aspect-square overflow-hidden rounded-lg">
-            {open && (
+            {open && !isProcessingScan && (
               <Scanner
                 onScan={handleScan}
                 onError={(err) => {
@@ -111,21 +136,43 @@ export const ScanQRModal: React.FC<ScanQRModalProps> = ({
               />
             )}
 
-            {/* Scanning Overlay */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="relative h-64 w-64">
-                <div className="absolute top-0 left-0 h-16 w-16 rounded-tl-lg border-t-4 border-l-4 border-[#1C9DDE]" />
-                <div className="absolute top-0 right-0 h-16 w-16 rounded-tr-lg border-t-4 border-r-4 border-[#1C9DDE]" />
-                <div className="absolute bottom-0 left-0 h-16 w-16 rounded-bl-lg border-b-4 border-l-4 border-[#1C9DDE]" />
-                <div className="absolute right-0 bottom-0 h-16 w-16 rounded-br-lg border-r-4 border-b-4 border-[#1C9DDE]" />
+            {isProcessingScan && (
+              <div className="absolute inset-0 z-10 space-y-4 p-4">
+                <Skeleton className="mx-auto h-5 w-40" />
+                <Skeleton className="h-44 w-full rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Scanning Overlay */}
+            {!isProcessingScan && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="relative h-64 w-64">
+                  <div className="absolute top-0 left-0 h-16 w-16 rounded-tl-lg border-t-4 border-l-4 border-[#1C9DDE]" />
+                  <div className="absolute top-0 right-0 h-16 w-16 rounded-tr-lg border-t-4 border-r-4 border-[#1C9DDE]" />
+                  <div className="absolute bottom-0 left-0 h-16 w-16 rounded-bl-lg border-b-4 border-l-4 border-[#1C9DDE]" />
+                  <div className="absolute right-0 bottom-0 h-16 w-16 rounded-br-lg border-r-4 border-b-4 border-[#1C9DDE]" />
+                </div>
+              </div>
+            )}
 
             {/* Instructions */}
-            {!error && (
+            {!error && !isProcessingScan && (
               <div className="pointer-events-none absolute right-0 bottom-4 left-0 text-center">
                 <p className="inline-block rounded-full bg-black/50 px-4 py-2 text-sm font-medium text-white">
                   Position QR code within the frame
+                </p>
+              </div>
+            )}
+
+            {isProcessingScan && (
+              <div className="absolute right-0 bottom-4 left-0 text-center">
+                <p className="inline-block rounded-full bg-black/50 px-4 py-2 text-sm font-medium text-white">
+                  Processing scan...
                 </p>
               </div>
             )}
@@ -135,9 +182,10 @@ export const ScanQRModal: React.FC<ScanQRModalProps> = ({
           <Button
             variant="outline"
             onClick={handleClose}
+            disabled={isProcessingScan}
             className="w-full cursor-pointer"
           >
-            Cancel
+            {isProcessingScan ? "Processing..." : "Cancel"}
           </Button>
 
           <p className="text-muted-foreground text-center text-xs">

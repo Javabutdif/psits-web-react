@@ -3,9 +3,13 @@ import { Event } from "../models/event.model";
 import { Merch } from "../models/merch.model";
 import mongoose, { Types } from "mongoose";
 import { IEvent } from "../models/event.interface";
-import { getSgDate } from "../custom_function/date.formatter";
-import { ISessionConfig } from "../models/event.interface";
-import { IAttendanceSession, IAttendee } from "../models/attendee.interface";
+import { IAttendee } from "../models/attendee.interface";
+import { Attendance } from "../models/attendance.model";
+import {
+  AttendanceError,
+  hydrateEventsAttendance,
+  markAttendance,
+} from "../services/attendance.service";
 
 export const createManualEventController = async (
   req: Request,
@@ -179,12 +183,13 @@ export const getAllEventsAndAttendeesController = async (
     const eventId = new Types.ObjectId(id);
     const merchData = await Merch.findById({ _id: eventId });
 
-    const attendees = await Event.find({ eventId });
+    const attendees = await Event.find({ eventId }).lean();
+    const hydratedEvents = await hydrateEventsAttendance(attendees);
 
     if (attendees) {
       res
         .status(200)
-        .json({ data: attendees, merch_data: merchData ? merchData : {} });
+        .json({ data: hydratedEvents, merch_data: merchData ? merchData : {} });
     } else {
       res.status(500).json({ message: "No attendees" });
     }
@@ -201,150 +206,29 @@ export const updateAttendancePerSessionController = async (
   const { campus, attendeeName, course, year } = req.body;
 
   try {
-    const event = await Event.findOne({ eventId: event_id });
-
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
-    }
-
-    const now = getSgDate();
-
-    const matchedSessions = [];
-    const sessions: (keyof ISessionConfig)[] = [
-      "morning",
-      "afternoon",
-      "evening",
-    ];
-
-    for (const session of sessions) {
-      const config = event.sessionConfig?.[session];
-
-      if (!config?.enabled || !config.timeRange) continue;
-
-      const [startStr, endStr] = config.timeRange.split(" - ");
-      const [sh, sm] = startStr.split(":").map(Number);
-      const [eh, em] = endStr.split(":").map(Number);
-
-      const eventDate = new Date(event.eventDate);
-      const today = new Date();
-
-      if (today.toDateString() !== eventDate.toDateString()) {
-        return res.status(400).json({
-          message: "Attendance can only be recorded on the event date.",
-        });
-      }
-
-      const sessionStart = new Date(event.eventDate);
-      sessionStart.setHours(sh, sm, 0, 0);
-
-      const sessionEnd = new Date(event.eventDate);
-      sessionEnd.setHours(eh, em, 0, 0);
-
-      if (now >= sessionStart && now <= sessionEnd) {
-        matchedSessions.push(session);
-      }
-    }
-
-    if (matchedSessions.length === 0) {
-      return res.status(400).json({
-        message: "Current time does not fall within any active session.",
-      });
-    }
-
-    if (matchedSessions.length > 1) {
-      return res.status(400).json({
-        message: `Ambiguous session time: current time matches multiple sessions (${matchedSessions.join(
-          ", "
-        )})`,
-      });
-    }
-
-    const session = matchedSessions[0] as keyof IAttendanceSession;
-    let attendee;
-    let isNewAttendee = false;
-
-    if (event.attendanceType === "open") {
-      attendee = event.attendees.find(
-        (existingAttendee) => existingAttendee.id_number === id_number
-      );
-
-      if (!attendee) {
-        const newAttendee: IAttendee = {
-          id_number,
-          name: attendeeName,
-          course: course || "Unknown",
-          year: year || 1,
-          campus,
-          attendance: {
-            morning: { attended: false, timestamp: null },
-            afternoon: { attended: false, timestamp: null },
-            evening: { attended: false, timestamp: null },
-          },
-          confirmedBy: "",
-          shirtPrice: 0,
-          shirtSize: "",
-          raffleIsRemoved: false,
-          raffleIsWinner: false,
-          transactBy: "",
-          transactDate: null,
-        };
-        attendee = newAttendee;
-        isNewAttendee = true;
-      }
-    } else {
-      attendee = event.attendees.find(
-        (existingAttendee) =>
-          existingAttendee.id_number === id_number &&
-          existingAttendee.name === attendeeName &&
-          (existingAttendee.campus === campus || campus === "UC-Main")
-      );
-
-      if (!attendee) {
-        return res
-          .status(404)
-          .json({ message: "Attendee not found in this event" });
-      }
-    }
-
-    const currentSession = attendee.attendance?.[session];
-
-    if (currentSession?.attended) {
-      return res
-        .status(400)
-        .json({ message: `Attendance already recorded for ${session}` });
-    }
-
-    if (!attendee.attendance) {
-      attendee.attendance = {
-        morning: { attended: false, timestamp: null },
-        afternoon: { attended: false, timestamp: null },
-        evening: { attended: false, timestamp: null },
-      };
-    }
-
-    if (!attendee.attendance[session]) {
-      attendee.attendance[session] = { attended: false, timestamp: null };
-    }
-
-    attendee.attendance[session] = {
-      attended: true,
-      timestamp: now,
-    };
-
-    attendee.confirmedBy = req.admin.name;
-    if (isNewAttendee) {
-      event.attendees.push(attendee);
-    }
-
-    event.markModified("attendees");
-    await event.save();
+    const result = await markAttendance({
+      eventId: event_id,
+      attendeeIdNumber: id_number,
+      attendeeName,
+      campus,
+      course: course || "Unknown",
+      year: Number(year) || 1,
+      confirmedByAdminName: req.admin.name,
+    });
 
     res.status(200).json({
-      message: `Attendance for ${session} successfully recorded`,
-      session,
-      data: attendee,
+      message: `Attendance for ${result.session} successfully recorded`,
+      session: result.session,
+      data: result.attendee,
     });
   } catch (error) {
+    if (error instanceof AttendanceError) {
+      const status =
+        error.code === "EVENT_NOT_FOUND" || error.code === "ATTENDEE_NOT_FOUND"
+          ? 404
+          : 400;
+      return res.status(status).json({ message: error.message });
+    }
     console.error("Error marking attendance:", error);
     res.status(500).json({
       message: "An error occurred while recording attendance",
@@ -754,14 +638,28 @@ export const getEventStatisticsController = async (
 };
 
 export const removeEventController = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+
   try {
     const { eventId } = req.body;
+    session.startTransaction();
 
-    const eventDeleted = await Event.findOneAndDelete({ eventId });
+    const eventDeleted = await Event.findOneAndDelete({ eventId }).session(
+      session
+    );
     if (eventDeleted) {
+      await Attendance.deleteMany({ event: eventDeleted._id }).session(session);
+      await session.commitTransaction();
+      session.endSession();
       return res.status(200).json({ message: "Event Successfully Deleted" });
     }
+    await session.abortTransaction();
+    session.endSession();
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
     console.error("Error Delete an Event", error);
   }
 };
@@ -770,11 +668,16 @@ export const removeAttendanceController = async (
   req: Request,
   res: Response
 ) => {
+  const session = await mongoose.startSession();
+
   try {
     const { id_number, merchId } = req.body;
+    session.startTransaction();
 
-    const event = await Event.findOne({ eventId: merchId });
+    const event = await Event.findOne({ eventId: merchId }).session(session);
     if (!event) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Event not found" });
     }
 
@@ -782,10 +685,15 @@ export const removeAttendanceController = async (
       (a) => a.id_number === id_number
     );
     if (attendeeIndex === -1) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Attendee not found" });
     }
 
-    const { campus, shirtPrice } = event.attendees[attendeeIndex];
+    const { campus, shirtPrice, _id } = event.attendees[
+      attendeeIndex
+    ] as IAttendee & { _id?: Types.ObjectId };
+    let removedAttendanceRef: Types.ObjectId | null = null;
 
     if (shirtPrice !== 0) {
       const campusData = event.sales_data.find((s) => s.campus === campus);
@@ -796,12 +704,25 @@ export const removeAttendanceController = async (
         event.totalUnitsSold -= 1;
         event.totalRevenueAll -= shirtPrice;
         event.attendees.splice(attendeeIndex, 1);
+        removedAttendanceRef = _id ?? null;
       }
     }
-    await event.save();
+    await event.save({ session });
+    if (removedAttendanceRef) {
+      await Attendance.deleteOne({
+        event: event._id,
+        attendeeRef: removedAttendanceRef,
+      }).session(session);
+    }
+    await session.commitTransaction();
+    session.endSession();
 
     res.json({ message: "Attendee removed successfully" });
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
