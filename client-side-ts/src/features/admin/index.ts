@@ -2,6 +2,7 @@
 export * from './components';
 
 // Admin subfeatures
+export * from './dashboard';
 export * from './event-management';
 
 // Admin API
