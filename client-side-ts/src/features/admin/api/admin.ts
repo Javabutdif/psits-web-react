@@ -21,6 +21,8 @@ interface MembershipData {
   message?: string;
 }
 
+type StudentsResponse = Student[] | MembershipData;
+
 interface DeletedStudent extends Student {
   deletedAt?: string;
 }
@@ -30,7 +32,9 @@ interface DeletedStudentsResponse {
 }
 
 interface StudentCountResponse {
-  count: number;
+  all: number;
+  request: number;
+  deleted: number;
   message?: string;
 }
 
@@ -62,14 +66,6 @@ interface MerchandiseResponse {
   message?: string;
 }
 
-interface MerchandiseCount {
-  count: number;
-}
-
-interface OrdersCount {
-  count: number;
-}
-
 interface RenewStudentData {
   id_number: string;
   first_name: string;
@@ -94,20 +90,31 @@ interface MembershipHistoryResponse {
 }
 
 interface DashboardStats {
-  totalStudents: number;
-  activeMemberships: number;
-  totalRevenue: number;
-  pendingRequests: number;
+  courses: {
+    BSIT: number;
+    BSCS: number;
+    ACT?: number;
+  };
+  years: {
+    year1: number;
+    year2: number;
+    year3: number;
+    year4: number;
+  };
 }
 
 interface DailySalesData {
-  date: string;
-  sales: number;
-  orders: number;
+  product_name: string;
+  totalQuantity: number;
+  totalSubtotal: number;
 }
 
-interface DailySalesResponse {
-  data: DailySalesData[];
+interface DashboardPaidOrder {
+  _id?: string;
+  total?: number;
+  transaction_date?: string | Date;
+  order_date?: string | Date;
+  order_status?: string;
 }
 
 interface Member {
@@ -160,10 +167,9 @@ interface RoleRequestResponse {
 }
 
 interface PendingCountItem {
-  product_id: string;
   product_name: string;
-  pendingCount: number;
-  totalOrders: number;
+  total: number;
+  yearCounts: number[];
 }
 
 interface PendingCountsResult {
@@ -172,6 +178,26 @@ interface PendingCountsResult {
   page: number;
   totalPages: number;
   limit: number;
+}
+
+interface DashboardPaidOrdersResult {
+  data: DashboardPaidOrder[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}
+
+interface PendingCountSortRule {
+  field: string;
+  direction: "asc" | "desc";
+}
+
+interface PendingCountsParams {
+  limit?: number;
+  page?: number;
+  sort?: string | PendingCountSortRule[];
+  search?: string;
 }
 
 interface AdminRequest {
@@ -230,8 +256,26 @@ export const membership = async (): Promise<MembershipData | false> => {
       window.location.reload();
       return false;
     }
-  } catch (error) {
+  } catch {
     return false;
+  }
+};
+
+export const getDashboardActiveStudents = async (): Promise<Student[]> => {
+  try {
+    const response: AxiosResponse<StudentsResponse> = await axios.get(
+      `${backendConnection()}/api/students`,
+      { headers: createHeaders() }
+    );
+
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+
+    return response.data.data || [];
+  } catch (error) {
+    handleApiError(error, false);
+    return [];
   }
 };
 
@@ -254,7 +298,7 @@ export const getCountStudent = async (): Promise<StudentCountResponse | false> =
       { headers: createHeaders() }
     );
     return response.data;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -266,7 +310,7 @@ export const getCountActiveMemberships = async (): Promise<number | false> => {
       { headers: createHeaders() }
     );
     return response.data.message;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -315,9 +359,9 @@ export const approveMembership = async (formData: FormData): Promise<boolean | v
   }
 };
 
-export const merchCreated = async (): Promise<MerchandiseCount | void> => {
+export const merchCreated = async (): Promise<number | void> => {
   try {
-    const response: AxiosResponse<{ message: MerchandiseCount }> = await axios.get(
+    const response: AxiosResponse<{ message: number }> = await axios.get(
       `${backendConnection()}/api/admin/merchandise-created`,
       { headers: createHeaders() }
     );
@@ -327,9 +371,9 @@ export const merchCreated = async (): Promise<MerchandiseCount | void> => {
   }
 };
 
-export const placedOrders = async (): Promise<OrdersCount | void> => {
+export const placedOrders = async (): Promise<number | void> => {
   try {
-    const response: AxiosResponse<{ message: OrdersCount }> = await axios.get(
+    const response: AxiosResponse<{ message: number }> = await axios.get(
       `${backendConnection()}/api/admin/placed-orders`,
       { headers: createHeaders() }
     );
@@ -491,15 +535,44 @@ export const getDashboardStats = async (): Promise<DashboardStats | void> => {
   }
 };
 
-export const getDailySales = async (): Promise<DailySalesResponse | void> => {
+export const getDailySales = async (): Promise<DailySalesData[] | void> => {
   try {
-    const response: AxiosResponse<DailySalesResponse> = await axios.get(
+    const response: AxiosResponse<DailySalesData[]> = await axios.get(
       `${backendConnection()}/api/admin/get-daily-sales`, {
       headers: createHeaders(),
     });
     return response.data;
   } catch (error) {
     handleApiError(error, false);
+  }
+};
+
+export const getDashboardPaidOrders = async ({
+  page = 1,
+  limit = 5000,
+}: {
+  page?: number;
+  limit?: number;
+} = {}): Promise<DashboardPaidOrdersResult> => {
+  try {
+    const response: AxiosResponse<DashboardPaidOrdersResult> = await axios.get(
+      `${backendConnection()}/api/orders/get-all-paid-orders`,
+      {
+        headers: createHeaders(),
+        params: { page, limit },
+      }
+    );
+
+    return {
+      data: response.data.data || [],
+      total: response.data.total || 0,
+      page: response.data.page || page,
+      totalPages: response.data.totalPages || 1,
+      limit: response.data.limit || limit,
+    };
+  } catch (error) {
+    handleApiError(error, false);
+    return { data: [], total: 0, page, totalPages: 1, limit };
   }
 };
 
@@ -698,7 +771,7 @@ export const fetchAllPendingCounts = async ({
   page = 1, 
   sort = [{ field: "product_name", direction: "asc" as const }], 
   search = "" }
-   = {}): Promise<PendingCountsResult> => {
+   : PendingCountsParams = {}): Promise<PendingCountsResult> => {
   try {
     const response: AxiosResponse<PendingCountsResult> = await axios.get(
       `${backendConnection()}/api/orders/get-all-pending-counts`, {
@@ -797,7 +870,7 @@ export const membershipPrice = async (): Promise<number | false> => {
       `${backendConnection()}/api/admin/get-membership-price`, 
       { headers: createHeaders() });
     return response.status === 200 ? response.data.data.membership_price : false;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
