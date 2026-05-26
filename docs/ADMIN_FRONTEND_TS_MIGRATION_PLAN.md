@@ -247,6 +247,7 @@ Implementation notes:
 - Keep count animation only if it fits the new design and does not cause repeated API calls.
 - Use typed responses from `features/admin/api/admin.ts`.
 
+***AFTER IMPLEMENTATION***
 Findings (After implementation)
 High: dashboard can still show 0 after silent refresh or legacy-token expiry.
 The legacy token is only created during login in auth.api.ts (line 52), but AuthProvider can restore a user through V2 refresh in AuthContext.tsx (line 29) without recreating sessionStorage.Token. Since admin APIs still read only sessionStorage.Token in admin.ts (line 229), opening a new tab or staying logged in past the old 4h token can make admin data fail again.
@@ -289,6 +290,25 @@ Implementation notes:
 - Rename user-facing label to `Organization`.
 - Keep data and actions typed around officer/member/admin request models.
 - Use route child tabs or local tab state depending on final design.
+
+***AFTER IMPLEMENTATION***
+Findings
+
+High: Organization is still route-accessible to non-UC Main admins. The sidebar blocks the link at client-side-ts/src/features/admin/components/AdminSidebar.tsx:186, but the real route at client-side-ts/src/router.tsx:102 has no AdminCampusRouteGuard. A user can manually visit /admin/organization. This matters more because backend read routes like server-side/src/routes/admin.route.ts:107, :156, and :162 only require admin_authenticate.
+
+High: Organization depends on the legacy sessionStorage.Token. The admin API reads from sessionStorage at client-side-ts/src/features/admin/api/admin.ts:230, while the token is only synced during login at client-side-ts/src/features/auth/api/auth.api.ts:28 and :52. If the user restores a session, opens a new tab, or the legacy token expires while the V2 auth still works, Organization can fail or show empty data.
+
+Medium: API fetch failures can look like “no records” instead of an error. In useOrganizationData.ts:189, failed API helpers become result || [], and several helpers catch errors without throwing, like admin.ts:595, :607, :631, :733, and :808. For deployment, this can hide backend/auth problems.
+
+Medium: Rapid tab switching can show stale data. fetchAccounts in useOrganizationData.ts:173 has no cancellation or stale-response guard. If a slow Members request returns after switching to Admin Request, it can overwrite the current tab’s data.
+
+Medium: Bulk actions can partially succeed but leave the UI stale. runAction uses Promise.all at useOrganizationData.ts:409, then only refetches if every result succeeds at :425. If 3 approvals work and 1 fails, the successful rows may still remain until refresh.
+
+Low/Medium: The last sortable column is misleading in request tabs. The header changes to Requested By or Status at OrganizationView.tsx:251, but sorting still uses campus at :298. Clicking that column will not sort the visible value.
+
+Low: Add Account actually creates an admin request, not an active account. That is from status: "Request" in useOrganizationData.ts:352. Functionally okay if intended, but the button label may confuse admins.
+
+Low: Bulk request actions only support Approve. Row-level Deny exists, but selected rows default to approve at OrganizationView.tsx:1279. If admins expect bulk deny, it is missing.
 
 ## Phase 4: Students
 
