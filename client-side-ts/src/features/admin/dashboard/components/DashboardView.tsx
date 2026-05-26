@@ -654,7 +654,7 @@ export const DashboardView = () => {
   const displayedStudentTotal = totalStudentsByYear || counts.students;
 
   return (
-    <div className="bg-background flex min-h-full flex-1 flex-col text-[#1d1d1d]">
+    <div className="bg-background flex min-h-full flex-1 flex-col text-[#1d1d1d] [&_button:not(:disabled)]:cursor-pointer [&_button:disabled]:pointer-events-auto [&_button:disabled]:cursor-not-allowed">
       <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
