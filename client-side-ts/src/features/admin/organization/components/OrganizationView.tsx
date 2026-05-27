@@ -555,30 +555,67 @@ const OrganizationFilterPopover = ({
   roleOptions,
   onApply,
 }: OrganizationFilterPopoverProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(filters);
+  const emptyFilters: OrganizationFilters = {
+    courses: [],
+    years: [],
+    campuses: [],
+    role: "all",
+  };
+  const hasActiveFilters =
+    filters.courses.length > 0 ||
+    filters.years.length > 0 ||
+    filters.campuses.length > 0 ||
+    filters.role !== "all";
 
   useEffect(() => {
     setDraft(filters);
   }, [filters]);
 
+  const resetFilter = () => setDraft(emptyFilters);
+
+  const clearAppliedFilters = () => {
+    setDraft(emptyFilters);
+    onApply(emptyFilters);
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    setDraft(filters);
+    setIsOpen(false);
+  };
+
+  const handleApply = () => {
+    onApply(draft);
+    setIsOpen(false);
+  };
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className="h-9 rounded-full border-[#e5e5e5] px-4 text-sm"
+    <div className="flex items-center gap-2">
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-9 rounded-full border-[#e5e5e5] px-4 text-sm"
+          >
+            <Filter className="h-4 w-4" />
+            Filter
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="end"
+          side="bottom"
+          sideOffset={8}
+          collisionPadding={24}
+          className="w-[330px] rounded-2xl border-[#eeeeee] p-5 shadow-xl"
         >
-          <Filter className="h-4 w-4" />
-          Filter
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[330px] rounded-2xl border-[#eeeeee] p-5 shadow-xl">
         <div className="mb-5 flex items-center justify-between">
           <h3 className="text-base font-medium">Filter</h3>
           <button
             type="button"
             className="text-xs text-red-500"
-            onClick={() => setDraft({ courses: [], years: [], campuses: [], role: "all" })}
+            onClick={resetFilter}
           >
             Reset Filter
           </button>
@@ -686,20 +723,34 @@ const OrganizationFilterPopover = ({
             type="button"
             variant="ghost"
             className="rounded-full px-5"
-            onClick={() => setDraft(filters)}
+            onClick={handleCancel}
           >
             Cancel
           </Button>
           <Button
             type="button"
             className="rounded-full bg-[#1c9dde] px-5 hover:bg-[#168bc7]"
-            onClick={() => onApply(draft)}
+            onClick={handleApply}
           >
             Apply Filter
           </Button>
         </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+      {hasActiveFilters && (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label="Clear filters"
+          title="Clear filters"
+          className="h-9 w-9 rounded-full border-[#e8e8e8] bg-white text-red-500 hover:bg-red-50 hover:text-red-600"
+          onClick={clearAppliedFilters}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
   );
 };
 
