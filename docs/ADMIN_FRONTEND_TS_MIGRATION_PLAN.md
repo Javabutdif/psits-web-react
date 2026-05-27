@@ -342,6 +342,37 @@ Implementation notes:
 - Avoid a 3-second polling loop unless the user explicitly wants live counts.
 - Keep membership status data shaped exactly as backend expects.
 
+***AFTER IMPLEMENTATION***
+Findings
+High: Students route is not campus-guarded.
+client-side-ts/src/router.tsx:104 exposes /admin/students to any authenticated admin. The UI blocks actions for non-UC Main admins in StudentsView.tsx:1342, but data still loads. If Students is UC-Main-only, add an AdminCampusRouteGuard.
+
+High: failed mutations can be treated as success.
+client-side-ts/src/features/admin/students/hooks/useStudentsData.ts:376 treats undefined as success. But helpers like cancelMembership, studentDeletion, studentRestore, and approveMembership return undefined on catch. A failed deny/delete/restore/approve can close the modal and refresh as if it worked.
+
+High/Medium: Students depends on legacy sessionStorage.Token.
+client-side-ts/src/features/admin/api/admin.ts:240 reads only sessionStorage.getItem("Token"). New tabs or restored V2 sessions may not have that token, causing empty data or unauthorized requests.
+
+Medium: API errors can become empty tables.
+getDashboardActiveStudents() catches errors and returns [] at client-side-ts/src/features/admin/api/admin.ts:287. The hook then renders an empty table instead of showing an error. Same risk exists for requests/deleted endpoints that swallow errors.
+
+Medium: hidden selected rows can still be bulk-mutated.
+Selection is based on all loaded students at useStudentsData.ts:258, not the filtered visible list. If you select rows, then search/filter, hidden selected rows can still be deleted/restored/approved from the bulk bar.
+
+Medium: edit-student failures have weak UI feedback.
+updateStudent() throws after console.error at client-side-ts/src/features/admin/api/admin.ts:927, while saveStudent() has no catch around it at useStudentsData.ts:292. Failed edits may show only console output instead of a clean toast.
+
+Medium: Membership History print is not real receipt printing.
+StudentsView.tsx:1076 uses window.print(), so it prints the whole page/modal, unlike the legacy receipt-specific print flow. If receipt reprint is required, this is incomplete.
+
+Medium/Low: membership approval confirmation can show wrong fee if price fetch fails.
+Default fee is 50 at useStudentsData.ts:139. If membershipPrice() fails, the confirmation/payment payload may show/send 50 even if backend settings differ.
+
+Low: date filter may be off by timezone.
+formatDateKey() uses toISOString() at useStudentsData.ts:121, which converts to UTC. For dates near midnight, Applied on filtering can shift by one day.
+
+Low: reference code generation can theoretically collide.
+createReferenceCode() uses random 9-digit numbers at useStudentsData.ts:124. Backend has unique reference codes, so rare collisions can fail approval.
 ## Phase 5: Merchandise
 
 Legacy files to inspect first:
