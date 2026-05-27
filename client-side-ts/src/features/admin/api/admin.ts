@@ -118,20 +118,30 @@ interface DashboardPaidOrder {
 }
 
 interface Member {
+  _id?: string;
   id_number: string;
-  first_name: string;
+  name?: string;
+  first_name?: string;
   middle_name?: string;
-  last_name: string;
+  last_name?: string;
   email: string;
   role?: string;
+  position?: string;
   course?: string;
   year?: string | number;
+  campus?: string;
+  status?: string;
+  isRequest?: boolean;
+  adminRequest?: string;
 }
 
 interface Officer extends Member {
   position: string;
   department?: string;
   isSuspended?: boolean;
+  access?: string | string[];
+  password?: string;
+  confirm_password?: string;
 }
 
 interface AdminLog {
@@ -149,15 +159,11 @@ interface AdminLogsResponse {
 }
 
 interface StudentSearchResponse {
-  data: Student;
+  data: Student & { name?: string };
 }
 
-interface RoleRequest {
-  id_number: string;
-  first_name: string;
-  last_name: string;
-  requestedRole: string;
-  status: string;
+interface RoleRequest extends Member {
+  requestedRole?: string;
   admin?: string;
   createdAt: string;
 }
@@ -200,13 +206,8 @@ interface PendingCountsParams {
   search?: string;
 }
 
-interface AdminRequest {
-  id_number: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  requestedAccess: string[];
-  status: string;
+interface AdminRequest extends Member {
+  requestedAccess?: string[];
   createdAt: string;
 }
 
@@ -759,7 +760,8 @@ export const declineRole = async (id_number: string): Promise<boolean | void> =>
       `${backendConnection()}/api/admin/decline-role`, 
       { id_number }, 
       { headers: createHeaders() });
-    if (response.status === 200) showToast("success", response.data.message); else showToast("error", response.data.message);
+    if (response.status === 200) showToast("success", "Role declined successfully");
+    else showToast("error", response.data.message);
     return response.status === 200;
   } catch (error) {
     handleApiError(error);
