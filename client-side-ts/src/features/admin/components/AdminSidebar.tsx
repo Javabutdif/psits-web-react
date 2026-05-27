@@ -178,7 +178,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             )}
             <ul className="space-y-1">
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -210,7 +210,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </Tooltip>
               </li>
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -242,15 +242,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </Tooltip>
               </li>
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={restrictedNavButtonClass}
+                      className={getNavButtonClass("/admin/students", !isUcMainAdmin)}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/students" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -271,7 +271,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </Tooltip>
               </li>
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -304,7 +304,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             )}
             <ul className="space-y-1">
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -336,7 +336,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </Tooltip>
               </li>
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -365,7 +365,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </Tooltip>
               </li>
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -404,7 +404,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             )}
             <ul className="space-y-1">
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -433,7 +433,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </Tooltip>
               </li>
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -465,7 +465,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </Tooltip>
               </li>
               <li>
-                <Tooltip open={false}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -502,7 +502,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {/* User Profile */}
         <div className="p-3">
           {collapsed ? (
-            <Tooltip open={false}>
+            <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex justify-center">
                   <Avatar className="h-10 w-10 cursor-pointer">

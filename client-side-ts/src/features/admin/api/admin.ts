@@ -4,6 +4,7 @@ import backendConnection from "../../../api/backendApi";
 import { showToast } from "../../../utils/alertHelper";
 
 interface Student {
+  _id?: string;
   id_number?: string;
   rfid?: string;
   first_name?: string;
@@ -12,11 +13,18 @@ interface Student {
   email?: string;
   course?: string;
   year?: string | number;
+  status?: string;
+  membershipStatus?: string;
+  applied?: string;
+  campus?: string;
+  deletedBy?: string;
+  deletedDate?: string;
+  isFirstApplication?: boolean;
   [key: string]: unknown;
 }
 
 interface MembershipData {
-  data: Student[];
+  data?: Student[];
   total?: number;
   message?: string;
 }
@@ -27,9 +35,7 @@ interface DeletedStudent extends Student {
   deletedAt?: string;
 }
 
-interface DeletedStudentsResponse {
-  data: DeletedStudent[];
-}
+type DeletedStudentsResponse = DeletedStudent[] | { data: DeletedStudent[] };
 
 interface StudentCountResponse {
   all: number;
@@ -38,18 +44,14 @@ interface StudentCountResponse {
   message?: string;
 }
 
-interface MembershipRequestData {
+interface MembershipRequestData extends Student {
   id_number: string;
-  first_name: string;
-  last_name: string;
   email: string;
-  status: string;
-  createdAt: string;
+  status?: string;
+  createdAt?: string;
 }
 
-interface MembershipRequestResponse {
-  data: MembershipRequestData[];
-}
+type MembershipRequestResponse = MembershipRequestData[] | { data: MembershipRequestData[] };
 
 interface MerchandiseItem {
   _id: string;
@@ -79,15 +81,18 @@ interface RenewResponse {
 
 interface MembershipHistoryItem {
   id_number: string;
-  student_name: string;
-  action: string;
-  timestamp: string;
+  rfid?: string;
+  reference_code: string;
+  name: string;
+  year: string | number;
+  course: string;
+  type: string;
+  date: string | Date;
   admin?: string;
+  total?: number;
 }
 
-interface MembershipHistoryResponse {
-  data: MembershipHistoryItem[];
-}
+type MembershipHistoryResponse = MembershipHistoryItem[] | { data: MembershipHistoryItem[] };
 
 interface DashboardStats {
   courses: {
@@ -108,6 +113,8 @@ interface DailySalesData {
   totalQuantity: number;
   totalSubtotal: number;
 }
+
+type DailySalesResponse = DailySalesData[] | { data: DailySalesData[] };
 
 interface DashboardPaidOrder {
   _id?: string;
@@ -211,16 +218,19 @@ interface AdminRequest extends Member {
   createdAt: string;
 }
 
-interface MembershipHistoryData {
-  id_number: string;
-  status: string;
-  startDate: string;
-  endDate?: string;
-  renewalDate?: string;
-}
-
 interface MembershipPriceData {
   membership_price: number;
+}
+
+interface MembershipApprovalPayload {
+  reference_code: string;
+  id_number: string;
+  rfid?: string;
+  type: "Membership" | "Renewal";
+  admin?: string;
+  cash?: number;
+  date?: Date;
+  total?: number;
 }
 
 interface ApiErrorResponse {
@@ -280,13 +290,13 @@ export const getDashboardActiveStudents = async (): Promise<Student[]> => {
   }
 };
 
-export const deletedStudent = async (): Promise<DeletedStudentsResponse | void> => {
+export const deletedStudent = async (): Promise<DeletedStudent[] | void> => {
   try {
     const response: AxiosResponse<DeletedStudentsResponse> = await axios.get(
       `${backendConnection()}/api/students/deleted-students`,
       { headers: createHeaders() }
     );
-    return response.data;
+    return Array.isArray(response.data) ? response.data : response.data.data;
   } catch (error) {
     handleApiError(error);
   }
@@ -316,13 +326,13 @@ export const getCountActiveMemberships = async (): Promise<number | false> => {
   }
 };
 
-export const membershipRequest = async (): Promise<MembershipRequestResponse | void> => {
+export const membershipRequest = async (): Promise<MembershipRequestData[] | void> => {
   try {
     const response: AxiosResponse<MembershipRequestResponse> = await axios.get(
       `${backendConnection()}/api/admin/membership-request`,
       { headers: createHeaders() }
     );
-    return response.data;
+    return Array.isArray(response.data) ? response.data : response.data.data;
   } catch (error) {
     handleApiError(error);
   }
@@ -343,7 +353,9 @@ export const revokeAllStudent = async (): Promise<boolean> => {
   }
 };
 
-export const approveMembership = async (formData: FormData): Promise<boolean | void> => {
+export const approveMembership = async (
+  formData: MembershipApprovalPayload
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.post(
       `${backendConnection()}/api/admin/approve-membership`,
@@ -395,12 +407,12 @@ export const renewStudent = async (): Promise<RenewResponse | void> => {
   }
 };
 
-export const membershipHistory = async (): Promise<MembershipHistoryResponse | void> => {
+export const membershipHistory = async (): Promise<MembershipHistoryItem[] | void> => {
   try {
     const response: AxiosResponse<MembershipHistoryResponse> = await axios.get(`${backendConnection()}/api/admin/history`, {
       headers: createHeaders(),
     });
-    return response.data;
+    return Array.isArray(response.data) ? response.data : response.data.data;
   } catch (error) {
     handleApiError(error, false);
   }
@@ -538,11 +550,11 @@ export const getDashboardStats = async (): Promise<DashboardStats | void> => {
 
 export const getDailySales = async (): Promise<DailySalesData[] | void> => {
   try {
-    const response: AxiosResponse<DailySalesData[]> = await axios.get(
+    const response: AxiosResponse<DailySalesResponse> = await axios.get(
       `${backendConnection()}/api/admin/get-daily-sales`, {
       headers: createHeaders(),
     });
-    return response.data;
+    return Array.isArray(response.data) ? response.data : response.data.data;
   } catch (error) {
     handleApiError(error, false);
   }
@@ -855,9 +867,11 @@ export const editAdminAccess = async (id_number: string, newAccess: string[]): P
   }
 };
 
-export const getStudentMembershipHistory = async (studentId: string): Promise<MembershipHistoryData[] | void> => {
+export const getStudentMembershipHistory = async (
+  studentId: string
+): Promise<MembershipHistoryItem[] | void> => {
   try {
-    const response: AxiosResponse<{ data: MembershipHistoryData[] }> = await axios.get(
+    const response: AxiosResponse<{ data: MembershipHistoryItem[] }> = await axios.get(
       `${backendConnection()}/api/students/student-membership-history/${studentId}`, 
       { headers: createHeaders() });
     return response.data.data;
@@ -913,5 +927,22 @@ export const updateStudent = async (
   } catch (error) {
     console.error("Error updating student:", error);
     throw error;
+  }
+};
+
+export const changeStudentPasswordAdmin = async (
+  id_number: string,
+  password: string
+): Promise<boolean | void> => {
+  try {
+    const response: AxiosResponse = await axios.post(
+      `${backendConnection()}/api/students/change-password-admin`,
+      { id_number, password },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error);
   }
 };
