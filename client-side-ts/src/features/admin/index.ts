@@ -5,6 +5,7 @@ export * from './components';
 export * from './dashboard';
 export * from './event-management';
 export * from './organization';
+export * from './students';
 
 // Admin API
 export * from './api/admin';

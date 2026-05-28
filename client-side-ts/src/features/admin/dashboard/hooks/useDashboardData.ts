@@ -27,11 +27,6 @@ const initialCounts: DashboardCounts = {
   activeMembers: 0,
 };
 
-const formatCoursePercentage = (value: number, total: number) => {
-  if (total <= 0) return 0;
-  return Number(((value / total) * 100).toFixed(1));
-};
-
 const normalizeYear = (year?: string | number) => {
   const yearValue = String(year ?? "").trim().toLowerCase();
 
@@ -247,21 +242,15 @@ export const useDashboardData = () => {
       ];
 
       const courseStats = studentStats?.courses;
-      const courseTotal =
-        (courseStats?.BSIT ?? 0) +
-        (courseStats?.BSCS ?? 0) +
-        (courseStats?.ACT ?? 0);
       const courseData: CourseDatum[] = [
         {
           label: "BSIT",
           value: courseStats?.BSIT ?? 0,
-          percentage: formatCoursePercentage(courseStats?.BSIT ?? 0, courseTotal),
           color: "#0B4A63",
         },
         {
           label: "BSCS",
           value: courseStats?.BSCS ?? 0,
-          percentage: formatCoursePercentage(courseStats?.BSCS ?? 0, courseTotal),
           color: "#1689BD",
         },
       ];

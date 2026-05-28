@@ -16,7 +16,6 @@ export interface YearLevelDatum {
 export interface CourseDatum {
   label: "BSIT" | "BSCS";
   value: number;
-  percentage: number;
   color: string;
 }
 

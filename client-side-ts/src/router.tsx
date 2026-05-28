@@ -13,6 +13,7 @@ import EventStatisticsPage from "./pages/admin/EventStatisticsPage";
 import EventRafflePage from "./pages/admin/EventRafflePage";
 import Dashboard from "./pages/admin/Dashboard";
 import Organization from "./pages/admin/Organization";
+import Students from "./pages/admin/Students";
 import GeneralAdminPage from "./pages/admin/GeneralAdminPage";
 import { MainCampusFinancePage } from "./pages/admin/MainCampusFinancePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -100,6 +101,7 @@ const router = createBrowserRouter([
             children: [
               { path: "dashboard", Component: Dashboard },
               { path: "organization", Component: Organization },
+              { path: "students", Component: Students },
               { path: "events", Component: EventsPage },
               { path: "events/:eventId", Component: EventManagement },
               {

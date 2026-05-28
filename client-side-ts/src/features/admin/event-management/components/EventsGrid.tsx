@@ -3,6 +3,7 @@ import { MoreVertical, BarChart3, Ticket } from "lucide-react";
 import { EventCard } from "./EventCard";
 import type { Event as ApiEvent } from "@/features/events/types/event.types";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,62 @@ interface EventsGridProps {
   onViewStatistics?: (eventId: string) => void;
   onViewRaffle?: (eventId: string) => void;
 }
+
+interface EventsGridSkeletonProps {
+  viewMode?: "grid" | "list";
+}
+
+export const EventsGridSkeleton: React.FC<EventsGridSkeletonProps> = ({
+  viewMode = "grid",
+}) => {
+  if (viewMode === "list") {
+    return (
+      <div className="flex flex-col gap-3 px-4 pb-8 sm:px-6 lg:px-8">
+        {Array.from({ length: 5 }, (_, index) => (
+          <div
+            key={index}
+            className="border-border bg-background flex items-center gap-4 rounded-xl border px-4 py-3"
+          >
+            <Skeleton className="h-13 w-13 shrink-0 rounded-xl" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-48 max-w-full rounded-full" />
+              <Skeleton className="h-3 w-28 rounded-full" />
+            </div>
+            <Skeleton className="hidden h-9 w-32 rounded-full sm:block" />
+            <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 pb-8 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+        {Array.from({ length: 6 }, (_, index) => (
+          <div
+            key={index}
+            className="overflow-hidden rounded-xl border border-gray-200 bg-white"
+          >
+            <div className="p-6">
+              <Skeleton className="aspect-4/3 w-full rounded-lg" />
+            </div>
+            <div className="space-y-4 p-4 pt-0">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-3/4 rounded-full" />
+                <Skeleton className="h-4 w-32 rounded-full" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 flex-1 rounded-2xl" />
+                <Skeleton className="h-10 w-10 rounded-full" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const EventsGrid: React.FC<EventsGridProps> = ({
   events,

@@ -277,11 +277,11 @@ const CourseBubbleChart = ({ data }: CourseBubbleChartProps) => {
     <div className={cn(cardBaseClass, "min-h-[238px] p-5")}>
       <SectionTitle icon={BookOpen}>Students by Course</SectionTitle>
       <div className="relative mx-auto mt-6 h-[172px] max-w-[270px]">
-        <div className="absolute top-2 left-[44px] flex h-[128px] w-[128px] items-center justify-center rounded-full bg-[#0b4a63] text-[15px] font-semibold text-white">
-          {bsit?.percentage.toFixed(1) ?? "0.0"}%
+        <div className="absolute top-2 left-[44px] flex h-[128px] w-[128px] items-center justify-center rounded-full bg-[#0b4a63] text-[24px] font-semibold text-white">
+          {(bsit?.value ?? 0).toLocaleString()}
         </div>
-        <div className="absolute top-[68px] right-[34px] flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#178fca] text-[12px] font-semibold text-white ring-4 ring-white">
-          {bscs?.percentage.toFixed(1) ?? "0.0"}%
+        <div className="absolute top-[68px] right-[34px] flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#178fca] text-[16px] font-semibold text-white ring-4 ring-white">
+          {(bscs?.value ?? 0).toLocaleString()}
         </div>
       </div>
       <div className="flex justify-center gap-3">
