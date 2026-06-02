@@ -16,6 +16,9 @@ import { MainCampusFinancePage } from "./pages/admin/MainCampusFinancePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Login from "./pages/auth/Login";
 import OTPCode from "./pages/auth/OtpCode";
+import Dashboard from "./pages/admin/Dashboard";
+import Organization from "./pages/admin/Organization";
+import Students from "./pages/admin/Students";
 import SetNewPassword from "./pages/auth/SetNewPassword";
 import { ErrorPage } from "./pages/ErrorPage";
 import { Events } from "./pages/events";
@@ -98,7 +101,9 @@ const router = createBrowserRouter([
           {
             Component: AdminLayout,
             children: [
-              // { path: "dashboard", Component: Dashboard },
+              { path: "dashboard", Component: Dashboard },
+              { path: "organization", Component: Organization },
+              { path: "students", Component: Students },
               { path: "events", Component: EventsPage },
               { path: "events/:eventId", Component: EventManagement },
               {
