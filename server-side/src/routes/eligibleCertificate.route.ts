@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { admin_authenticate } from "../middlewares/custom_authenticate_token";
 import multer from "multer";
 import {
   addEligibleCertificates,
@@ -7,7 +8,6 @@ import {
   bulkCheckEligibility,
   importEligibleCertificatesFromCSV,
 } from "../controllers/eligibleCertificate.controller";
-import { verifyAdmin } from "../middlewares/verifyAdmin.middleware";
 
 const router = Router();
 
@@ -27,7 +27,7 @@ const upload = multer({
 });
 
 // All routes require admin authentication
-router.use(verifyAdmin);
+router.use(admin_authenticate);
 
 // Add eligible certificates
 router.post("/", addEligibleCertificates);

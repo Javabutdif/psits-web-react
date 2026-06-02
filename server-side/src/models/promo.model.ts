@@ -26,9 +26,7 @@ const SelectMerchandiseSchema = new Schema<ISelectMerchandise>(
       type: String,
       required: true,
     },
-    items: {
-      type: [ItemsAvailSchema],
-    },
+    items: [ItemsAvailSchema],
   },
   { _id: false }
 );
@@ -50,12 +48,8 @@ const promoSchema = new Schema<IPromoDocument>({
     type: Boolean,
     required: true,
   },
-  selected_audience: {
-    type: [String],
-  },
-  selected_specific_students: {
-    type: [String],
-  },
+  selected_audience: [String],
+  selected_specific_students: [String],
   discount: {
     type: Number,
     required: true,
@@ -71,9 +65,7 @@ const promoSchema = new Schema<IPromoDocument>({
     type: Date,
     required: true,
   },
-  selected_merchandise: {
-    type: [SelectMerchandiseSchema],
-  },
+  selected_merchandise: [SelectMerchandiseSchema],
   status: {
     type: String,
     default: "Active",
