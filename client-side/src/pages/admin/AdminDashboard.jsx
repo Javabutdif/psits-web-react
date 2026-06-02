@@ -132,7 +132,7 @@ const AdminDashboard = () => {
           search,
         }),
       ]);
-      
+
       // console.log('pending orders: ', pendingOrders)
       setPendingOrder(pendingOrders || []);
       setTotalOrders(totalOrder || 0);

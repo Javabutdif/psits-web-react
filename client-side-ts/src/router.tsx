@@ -11,9 +11,6 @@ import EventManagement from "./pages/admin/EventManagement";
 import EventsPage from "./pages/admin/EventsPage";
 import EventStatisticsPage from "./pages/admin/EventStatisticsPage";
 import EventRafflePage from "./pages/admin/EventRafflePage";
-import Dashboard from "./pages/admin/Dashboard";
-import Organization from "./pages/admin/Organization";
-import Students from "./pages/admin/Students";
 import GeneralAdminPage from "./pages/admin/GeneralAdminPage";
 import { MainCampusFinancePage } from "./pages/admin/MainCampusFinancePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -31,6 +28,7 @@ import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import AccountSettings from "./pages/student/AccountSettings";
 import EventAttendance from "./pages/student/EventAttendance";
 import MyOrders from "./pages/student/MyOrders";
+import CertificatesPage from "./pages/CertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
 
@@ -63,6 +61,7 @@ const router = createBrowserRouter([
               { index: true, Component: AccountSettings },
               { path: "event-attendance", Component: EventAttendance },
               { path: "account-settings", Component: AccountSettings },
+              { path: "certificates", Component: CertificatesPage },
               {
                 element: (
                   <StudentCampusRouteGuard allowedCampuses={["UC-Main"]} />
@@ -99,9 +98,7 @@ const router = createBrowserRouter([
           {
             Component: AdminLayout,
             children: [
-              { path: "dashboard", Component: Dashboard },
-              { path: "organization", Component: Organization },
-              { path: "students", Component: Students },
+              // { path: "dashboard", Component: Dashboard },
               { path: "events", Component: EventsPage },
               { path: "events/:eventId", Component: EventManagement },
               {

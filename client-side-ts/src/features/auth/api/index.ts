@@ -1,18 +1,7 @@
 import { showToast } from "@/utils/alertHelper";
 import backendConnection from "@/api/backendApi";
 import axios, { AxiosError } from "axios";
-
-interface LoginFormData {
-  idNumber: string;
-  password: string;
-  [key: string]: any;
-}
-
-interface RegisterFormData {
-  email: string;
-  password: string;
-  [key: string]: any;
-}
+import type { LoginFormData, RegisterFormData } from "@/types/api";
 
 interface LoginResponse {
   role: string;
@@ -33,7 +22,8 @@ interface ApiSuccessResponse {
 const handleApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
-    const errorMessage = axiosError.response?.data?.message || "An error occurred";
+    const errorMessage =
+      axiosError.response?.data?.message || "An error occurred";
     console.error("Error:", errorMessage);
     showToast("error", errorMessage);
     return errorMessage;
@@ -77,7 +67,6 @@ export const login = async (
     return false;
   }
 };
-
 
 export const register = async (
   formData: RegisterFormData

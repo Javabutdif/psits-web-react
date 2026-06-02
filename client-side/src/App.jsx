@@ -70,6 +70,7 @@ import Logs from "./pages/admin/Logs";
 import Community from "./pages/Community";
 import Events from "./pages/Events";
 import DocumentationManagement from "./pages/admin/documentation/DocumentationManagement";
+import EligibleCertificates from "./pages/admin/EligibleCertificates";
 
 import StudentPaidOrders from "./pages/students/orders/PaidOrders";
 import StudentPendingOrder from "./pages/students/orders/PendingOrders";
@@ -93,7 +94,7 @@ const App = () => {
           <Route path="/community" element={<Community />} />
           <Route path="/admin-register" element={<AdminRegister />} />
         </Route>
-        
+
         {/* Protected docs routes - requires admin authentication with login modal */}
         <Route path="/docs" element={<PrivateRouteAdmin element={DocsHome} />} />
         <Route path="/docs/api" element={<PrivateRouteAdmin element={ApiEndpoints} />} />
@@ -136,6 +137,10 @@ const App = () => {
           <Route
             path="events/"
             element={<PrivateRouteAdmin element={AdminEvents} />}
+          />
+          <Route
+            path="certificates"
+            element={<PrivateRouteAdmin element={EligibleCertificates} />}
           />
           <Route
             path="attendance/:eventId"
@@ -217,12 +222,12 @@ const App = () => {
             path="refund"
             element={<PrivateRouteAdmin element={RefundDashboard} />}
             >
-           
 
-             
+
+
             </Route>
                <Route path="refund/view"
-            element={<PrivateRouteAdmin element={ViewRefund} />}/> 
+            element={<PrivateRouteAdmin element={ViewRefund} />}/>
           <Route
             path="reports"
             element={<PrivateRouteAdmin element={Reports} />}
