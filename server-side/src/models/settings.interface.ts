@@ -1,4 +1,3 @@
-
-export interface ISettings{
-    membership_price: number
+export interface ISettings {
+  membership_price: number;
 }

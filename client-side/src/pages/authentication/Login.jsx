@@ -93,24 +93,28 @@ const Login = () => {
       setIsLoading(true);
       if (getAttemptAuthentication() < 3 && getTimeout() === null) {
         const data = await login(formData);
-
+        console.log(data);
         if (data) {
-          if (data.role === "Admin" || data.role === "Student") {
+          if (
+            data.role === "Admin" ||
+            data.role === "Student" ||
+            data.role === "ADMIN"
+          ) {
             resetAttemptAuthentication();
 
             showToast("success", data.message);
             if (data.campus !== "UC-Main" && data.role === "Admin") {
               window.location.href = `/${data.role.toLowerCase()}/events`;
             } else {
-              window.location.href = `/${data.role.toLowerCase()}/dashboard`;
+              setTimeout(() => {
+                window.location.href = `/${data.role.toLowerCase()}/dashboard`;
+              }, 1000);
             }
           } else {
-          
             attemptAuthentication();
             setRemainingTime(60);
           }
         } else {
-         
           attemptAuthentication();
           setRemainingTime(60);
         }
@@ -152,9 +156,9 @@ const Login = () => {
   }
 
   return (
-    <div className="relative min-h-screen flex justify-center items-center bg-gray-100 px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-gray-100 px-4">
       {isLoading ? (
-        <div className="flex justify-center items-center h-60vh">
+        <div className="h-60vh flex items-center justify-center">
           <InfinitySpin
             visible={true}
             width={200}
@@ -166,12 +170,12 @@ const Login = () => {
         <motion.div
           initial={{ x: -100 }}
           animate={{ x: 0 }}
-          className="w-full max-w-lg flex flex-col items-center justify-center bg-white shadow-lg rounded-lg"
+          className="flex w-full max-w-lg flex-col items-center justify-center rounded-lg bg-white shadow-lg"
         >
           <button
             type="button"
             onClick={handleNavigate("/")}
-            className=" absolute top-4 left-4 bg-opacity-0 text-white transition duration-300 ease-in-out transform hover:scale-105"
+            className="absolute left-4 top-4 transform bg-opacity-0 text-white transition duration-300 ease-in-out hover:scale-105"
           >
             <IoArrowBack size={35} color="#074873" />
           </button>
@@ -182,9 +186,9 @@ const Login = () => {
           />
           <form
             onSubmit={handleLogin}
-            className="flex flex-col space-y-5 w-full p-5"
+            className="flex w-full flex-col space-y-5 p-5"
           >
-            <h3 className="text-xl sm:text-2xl font-bold text-center mb-4">
+            <h3 className="mb-4 text-center text-xl font-bold sm:text-2xl">
               Welcome Back!
             </h3>
             <div className="space-y-6">
@@ -225,7 +229,7 @@ const Login = () => {
               variants={loginButtonVariants}
             />
 
-            <div className="text-sm sm:text-md flex items-center justify-center">
+            <div className="sm:text-md flex items-center justify-center text-sm">
               <p className="text-gray-600">Don't have an account?</p>
               <FormButton
                 type="button"
