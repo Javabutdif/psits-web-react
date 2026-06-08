@@ -155,9 +155,13 @@ export const retrieveActiveMerchandiseController = async (
   res: Response
 ) => {
   try {
-    const merches: IMerch[] = await Merch.find({
+    const merches = await Merch.find({
       is_active: true,
-    });
+    })
+      .select(
+        "name price stocks batch description selectedVariations selectedSizes selectedAudience control created_by start_date end_date category type imageUrl"
+      )
+      .lean();
     if (!merches) {
       res.status(400).json({ message: "No Available Merchandise" });
     }
@@ -215,7 +219,28 @@ export const retrieveMerchAdminController = async (
   res: Response
 ) => {
   try {
-    const merches: IMerch[] = await Merch.find();
+    const merches = await Merch.find()
+      .select(
+        "name price stocks batch description selectedVariations selectedSizes selectedAudience control created_by start_date end_date is_active category type imageUrl"
+      )
+      .lean();
+    if (!merches) {
+      res.status(400).json({ message: "No Available Merchandise" });
+    }
+    res.status(200).json(merches);
+  } catch (error) {
+    console.error("Error fetching merches:", error);
+    res.status(500).send(error);
+  }
+};
+export const retrieveReportController = async (req: Request, res: Response) => {
+  try {
+    const merches = await Merch.find()
+      .select(
+        "name price batch start_date end_date category type sales_data order_details"
+      )
+      .lean()
+      .sort({ createdAt: -1 });
     if (!merches) {
       res.status(400).json({ message: "No Available Merchandise" });
     }

@@ -12,6 +12,7 @@ import {
   softDeleteMerchandiseController,
   publishMerchandiseController,
   retrieveActiveAndPublishMerchandiseController,
+  retrieveReportController,
 } from "../controllers/merchandise.controller";
 import dotenv from "dotenv";
 import {
@@ -104,5 +105,6 @@ router.put(
   role_authenticate(["admin", "finance"]),
   publishMerchandiseController
 );
+router.get("/reports", admin_authenticate, retrieveReportController);
 
 export default router;

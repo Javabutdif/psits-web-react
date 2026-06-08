@@ -18,15 +18,31 @@ import { IOrders } from "../models/orders.interface";
 import { IAdmin, IAdminDocument } from "../models/admin.interface";
 import { user_model } from "../model_template/model_data";
 
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const findStudentByLookupId = async (rawIdNumber: string) => {
+  const normalized = rawIdNumber.trim();
+  const baseIdNumber = normalized.split("-")[0]?.trim() ?? "";
+
+  let student = await Student.findOne({ id_number: normalized });
+
+  if (!student && baseIdNumber) {
+    student = await Student.findOne({
+      id_number: new RegExp(`^${escapeRegex(baseIdNumber)}(?:-.*)?$`),
+    });
+  }
+
+  return student;
+};
+
 export const getSearchStudentByIdController = async (
   req: Request,
   res: Response
 ) => {
   const { id_number } = req.params;
   try {
-    const student = await Student.findOne({
-      id_number,
-    });
+    const student = await findStudentByLookupId(id_number);
 
     if (!student) {
       res.status(404).json({

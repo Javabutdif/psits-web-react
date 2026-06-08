@@ -8,10 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  markAttendanceV2,
-  getAttendees,
-} from "@/features/events/api/eventService";
+import { markAttendanceV2 } from "@/features/events/api/eventService";
+import { searchStudentByIdV2 } from "@/features/student/api/student";
 
 interface StudentDetails {
   id_number: string;
@@ -53,25 +51,25 @@ export const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
     setStudentDetails(null);
 
     try {
-      const result = await getAttendees(eventId, {
-        search: studentId.trim(),
-        limit: 1,
-      });
+      const student = await searchStudentByIdV2(studentId.trim());
 
-      if (result && result.data && result.data.length > 0) {
-        const attendee = result.data[0];
+      if (student) {
         setStudentDetails({
-          id_number: attendee.id_number,
-          name: attendee.name,
-          campus: attendee.campus,
-          course: attendee.course,
-          year: attendee.year,
+          id_number: student.id_number,
+          name: student.name,
+          campus: student.campus,
+          course: student.course,
+          year: Number(student.year) || 1,
         });
       } else {
-        setError("Student not found in this event's attendee list");
+        setError("Student not found");
       }
-    } catch {
-      setError("Failed to search for student");
+    } catch (searchError) {
+      setError(
+        typeof searchError === "string"
+          ? searchError
+          : "Failed to search for student"
+      );
     } finally {
       setIsSearching(false);
     }

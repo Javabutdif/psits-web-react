@@ -12,7 +12,6 @@ const router = Router();
 //protected route for admin
 router.get(
   "/protected-route-admin",
-  loginLimiter,
   admin_authenticate,
   async (req: Request, res: Response) => {
     try {

@@ -1,7 +1,7 @@
 export { EventsHeader } from "./EventsHeader";
 export { EventCard } from "./EventCard";
 export { ViewToggle } from "./ViewToggle";
-export { EventsGrid } from "./EventsGrid";
+export { EventsGrid, EventsGridSkeleton } from "./EventsGrid";
 export type { Event } from "@/features/events/types/event.types";
 export { AttendeesTable } from "./AttendeesTable";
 

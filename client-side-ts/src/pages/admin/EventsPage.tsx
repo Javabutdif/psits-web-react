@@ -4,6 +4,7 @@ import {
   EventsHeader,
   ViewToggle,
   EventsGrid,
+  EventsGridSkeleton,
   AddEventModal,
 } from "@/features/admin/event-management";
 
@@ -50,8 +51,7 @@ const EventsPage: React.FC = () => {
   };
 
   const handleViewRaffle = (eventId: string) => {
-    // TODO: Implement view raffle logic
-    console.warn("View raffle for event:", eventId);
+    navigate(`/admin/events/${eventId}/raffle`);
   };
 
   return (
@@ -61,12 +61,7 @@ const EventsPage: React.FC = () => {
       <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
 
       {isLoading ? (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-[#1C9DDE]"></div>
-            <p className="text-gray-500">Loading events...</p>
-          </div>
-        </div>
+        <EventsGridSkeleton viewMode={viewMode} />
       ) : (
         <EventsGrid
           events={events}

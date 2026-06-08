@@ -10,11 +10,15 @@ import StudentLayout from "./layouts/StudentLayout";
 import EventManagement from "./pages/admin/EventManagement";
 import EventsPage from "./pages/admin/EventsPage";
 import EventStatisticsPage from "./pages/admin/EventStatisticsPage";
+import EventRafflePage from "./pages/admin/EventRafflePage";
 import GeneralAdminPage from "./pages/admin/GeneralAdminPage";
 import { MainCampusFinancePage } from "./pages/admin/MainCampusFinancePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Login from "./pages/auth/Login";
 import OTPCode from "./pages/auth/OtpCode";
+import Dashboard from "./pages/admin/Dashboard";
+import Organization from "./pages/admin/Organization";
+import Students from "./pages/admin/Students";
 import SetNewPassword from "./pages/auth/SetNewPassword";
 import { ErrorPage } from "./pages/ErrorPage";
 import { Events } from "./pages/events";
@@ -27,6 +31,7 @@ import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import AccountSettings from "./pages/student/AccountSettings";
 import EventAttendance from "./pages/student/EventAttendance";
 import MyOrders from "./pages/student/MyOrders";
+import CertificatesPage from "./pages/CertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
 
@@ -59,6 +64,7 @@ const router = createBrowserRouter([
               { index: true, Component: AccountSettings },
               { path: "event-attendance", Component: EventAttendance },
               { path: "account-settings", Component: AccountSettings },
+              { path: "certificates", Component: CertificatesPage },
               {
                 element: (
                   <StudentCampusRouteGuard allowedCampuses={["UC-Main"]} />
@@ -95,12 +101,28 @@ const router = createBrowserRouter([
           {
             Component: AdminLayout,
             children: [
-              // { path: "dashboard", Component: Dashboard },
+              { path: "dashboard", Component: Dashboard },
+              { path: "organization", Component: Organization },
+              { path: "students", Component: Students },
               { path: "events", Component: EventsPage },
               { path: "events/:eventId", Component: EventManagement },
               {
                 path: "events/:eventId/statistics",
                 Component: EventStatisticsPage,
+              },
+              {
+                element: (
+                  <AdminCampusRouteGuard
+                    allowedCampuses={["UC-Main"]}
+                    campusUnauthorizedToastMessage="Unauthorized"
+                  />
+                ),
+                children: [
+                  {
+                    path: "events/:eventId/raffle",
+                    Component: EventRafflePage,
+                  },
+                ],
               },
               // TODO: Remove this sample
               // Example of a general admin page with campus-specific component

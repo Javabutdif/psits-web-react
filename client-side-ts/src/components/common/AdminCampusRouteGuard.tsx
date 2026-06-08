@@ -3,6 +3,7 @@ import type { Campus } from "@/features/auth/types/auth.types";
 
 interface CampusRouteGuardProps {
   allowedCampuses: Campus[];
+  campusUnauthorizedToastMessage?: string;
 }
 
 /**
@@ -14,11 +15,15 @@ interface CampusRouteGuardProps {
  *   <Route path="some-uc-main-page" Component={SomeUcMainPage} />
  * </Route>
  */
-export function AdminCampusRouteGuard({ allowedCampuses }: CampusRouteGuardProps) {
+export function AdminCampusRouteGuard({
+  allowedCampuses,
+  campusUnauthorizedToastMessage,
+}: CampusRouteGuardProps) {
   return (
     <ProtectedRoute
       allowedRoles={["Admin"]}
       allowedCampuses={allowedCampuses}
+      campusUnauthorizedToastMessage={campusUnauthorizedToastMessage}
     />
   );
 }

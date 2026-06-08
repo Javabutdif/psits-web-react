@@ -1,13 +1,10 @@
-import bodyParser from "body-parser";
-import cors from "cors";
 import dotenv from "dotenv";
-import express, { Express } from "express";
-import helmet from "helmet";
 import mongoose from "mongoose";
 import cron from "node-cron";
+import dns from "node:dns";
 
-// Routes Import
 import { checkPromos } from "./custom_function/check_promo";
+import { createApp } from "./app";
 import adminRoutes from "./routes/admin.route";
 import authV2Routes from "./routes/authV2.route";
 import cartRoutes from "./routes/cart.route";
@@ -28,7 +25,19 @@ import { globalErrorHandler } from "./middlewares/global.error.middleware";
 
 dotenv.config();
 
-const app: Express = express();
+// Force DNS servers to avoid Windows SRV ECONNREFUSED issues (see https://alexbevi.com/blog/2023/11/13/querysrv-errors-when-connecting-to-mongodb-atlas/)
+// Only apply this workaround when running against the local/test database name `psits-test`.
+if ((process.env.DB_NAME ?? "psits-test") === "psits-test" && process.env.FORCE_DNS !== "false") {
+  try {
+    dns.setServers(["1.1.1.1", "8.8.8.8"]);
+    console.log('Set DNS servers to 1.1.1.1,8.8.8.8 for Atlas SRV lookups (applied for psits-test)');
+  } catch (err) {
+    console.warn('Failed to set DNS servers:', err);
+  }
+}
+
+
+const app = createApp();
 
 const allowedOrigins = [
   process.env.CORS,

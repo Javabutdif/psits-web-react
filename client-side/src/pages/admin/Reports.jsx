@@ -7,6 +7,7 @@ import {
   merchandiseAdmin,
   deleteReports,
   logAdminAction,
+  merchandiseReports,
 } from "../../api/admin";
 import ButtonsComponent from "../../components/Custom/ButtonsComponent";
 import ConfirmationModal from "../../components/common/modal/ConfirmationModal";
@@ -148,7 +149,12 @@ const Reports = () => {
 
   const fetchMerchandiseData = async () => {
     try {
-      const data = await merchandiseAdmin();
+      const data = await merchandiseReports();
+      setFilterProductName(
+        data.length > 0 && data[0].order_details.length > 0
+          ? data[0].order_details[0].product_name
+          : ""
+      );
       const allOrderDetails = data
         ? data.flatMap((order) => order.order_details || [])
         : [];
@@ -605,39 +611,54 @@ const Reports = () => {
         </TabPanel>
 
         <TabPanel>
-          <div className="mb-6 h-[45rem] rounded-lg bg-white p-4 shadow-md">
+          <div className="mb-6 h-[20rem] rounded-lg bg-white p-4 shadow-md">
             <h2 className="mb-4 text-xl font-bold">
               Merchandise Sales Summary
             </h2>
-            <div className="overflow-hidden">
-              <div className="h-[40rem] overflow-y-auto">
-                {" "}
-                <table className="min-w-full rounded-lg shadow-md">
-                  <thead style={{ backgroundColor: "#0e4a6a", color: "#fff" }}>
-                    <tr>
-                      <th className="border px-4 py-2 text-left">
-                        Product Name
-                      </th>
-                      <th className="border px-4 py-2 text-left">Units Sold</th>
-                      <th className="border px-4 py-2 text-left">
-                        Total Revenue
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(salesData).map(([productName, data]) => (
-                      <tr key={productName}>
-                        <td className="border px-4 py-2">{productName}</td>
-                        <td className="border px-4 py-2">{data.unitsSold}</td>
-                        <td className="border px-4 py-2">
-                          ₱{data.totalRevenue.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {getData.length === 0 ? (
+              <div className="flex items-center justify-center gap-1 text-center">
+                <span>Fetching Reports</span>
+                <span className="animate-bounce">.</span>
+                <span className="animate-bounce [animation-delay:0.2s]">.</span>
+                <span className="animate-bounce [animation-delay:0.4s]">.</span>
               </div>
-            </div>
+            ) : (
+              <div className="overflow-hidden">
+                <div className="h-[15rem] overflow-y-auto">
+                  <table className="min-w-full rounded-lg shadow-md">
+                    <thead
+                      style={{
+                        backgroundColor: "#0e4a6a",
+                        color: "#fff",
+                      }}
+                    >
+                      <tr>
+                        <th className="sticky top-0 z-10 border bg-[#0e4a6a] px-4 py-2 text-left">
+                          Product Name
+                        </th>
+                        <th className="sticky top-0 z-10 border bg-[#0e4a6a] px-4 py-2 text-left">
+                          Units Sold
+                        </th>
+                        <th className="sticky top-0 z-10 border bg-[#0e4a6a] px-4 py-2 text-left">
+                          Total Revenue
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(salesData).map(([productName, data]) => (
+                        <tr key={productName}>
+                          <td className="border px-4 py-2">{productName}</td>
+                          <td className="border px-4 py-2">{data.unitsSold}</td>
+                          <td className="border px-4 py-2">
+                            ₱{data.totalRevenue}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Merchandise Tab Content */}
