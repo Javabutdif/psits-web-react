@@ -18,6 +18,21 @@ const authAxios = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+type LegacyLoginResponse = {
+  role: string;
+  campus: string;
+  token: string;
+  message: string;
+};
+
+const syncLegacySessionToken = async (payload: LoginPayload): Promise<void> => {
+  const { data } = await authAxios.post<LegacyLoginResponse>(
+    "/api/login",
+    payload
+  );
+  sessionStorage.setItem("Token", data.token);
+};
+
 /**
  * POST /api/v2/auth/login
  *
@@ -32,6 +47,15 @@ export const loginUser = async (
     payload
   );
   setAccessToken(data.accessToken);
+
+  try {
+    await syncLegacySessionToken(payload);
+  } catch (error) {
+    clearAccessToken();
+    sessionStorage.removeItem("Token");
+    throw error;
+  }
+
   return data;
 };
 
@@ -84,5 +108,6 @@ export const logoutUser = async (): Promise<void> => {
     await authAxios.post("/api/v2/auth/logout");
   } finally {
     clearAccessToken();
+    sessionStorage.removeItem("Token");
   }
 };
