@@ -1,5 +1,5 @@
 import { ICart } from "./cart.interface";
-import Types from "mongoose";
+import { Types } from "mongoose";
 export interface IPromoOrder {
   _id: Types.ObjectId;
   promo_name: string;
