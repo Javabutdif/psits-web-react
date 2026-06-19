@@ -1,4 +1,4 @@
-import puppeteer, { PDFOptions } from "puppeteer";
+import puppeteer, { Browser, PDFOptions } from "puppeteer";
 import ejs from "ejs";
 import path from "path";
 import { pngToBase64, ttfToBase64 } from "../../utils/to-base64";
@@ -14,6 +14,27 @@ const pdfConfig: PDFOptions = {
   format: "A4",
   landscape: true,
   printBackground: true,
+};
+
+let browserInstance: Browser | null = null;
+
+const getBrowser = async (): Promise<Browser> => {
+  // If no browser exists or the connection was dropped, spin up/connect a new one
+  if (!browserInstance || !browserInstance.isConnected()) {
+    const browserlessUrl = process.env.BROWSERLESS_URL;
+    
+    if (browserlessUrl) {
+      console.log("Connecting to Browserless...");
+      browserInstance = await puppeteer.connect({ browserWSEndpoint: browserlessUrl });
+    } else {
+      console.log("Launching local Puppeteer browser...");
+      browserInstance = await puppeteer.launch({ 
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"]
+      });
+    }
+  }
+  return browserInstance;
 };
 
 export const validateAndFinalizeFilePath = (
@@ -66,16 +87,15 @@ export const generatePDFFromEJS = async (
     { cache: true }
   )) as string;
 
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await getBrowser();
   const page = await browser.newPage();
 
-  await page.setContent(ejsTemplate, { waitUntil: "networkidle0" as any });
-
-  const pdfBuffer = await page.pdf(pdfConfig);
-
-  await browser.close();
-
-  // const end = performance.now();
-  // console.log(`Time elapsed converting ejs to pdf: ${end - start}ms`);
-  return pdfBuffer;
+  try {
+    await page.setContent(ejsTemplate, { waitUntil: "load" });
+    const pdfBuffer = await page.pdf(pdfConfig);
+    return pdfBuffer;
+  } finally {
+    // ALWAYS close the tab to free up memory, but keep the browser connection alive
+    await page.close();
+  }
 };
