@@ -2,9 +2,12 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cron from "node-cron";
 import dns from "node:dns";
+import cors from "cors";
+import helmet from "helmet";
+import bodyParser from "body-parser";
+import express from "express";
 
 import { checkPromos } from "./custom_function/check_promo";
-import { createApp } from "./app";
 import adminRoutes from "./routes/admin.route";
 import authV2Routes from "./routes/authV2.route";
 import cartRoutes from "./routes/cart.route";
@@ -20,24 +23,14 @@ import promoRoutes from "./routes/promo.route";
 import studentRoutes from "./routes/students.route";
 import studentV2Routes from "./routes/studentsV2.route";
 import indexV2Routes from "./routes/index.v2.route";
+import eligibleCertificateRoutes from "./routes/eligibleCertificate.route";
+import certificateRoutes from "./routes/certificate.route";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 
 dotenv.config();
 
-// Force DNS servers to avoid Windows SRV ECONNREFUSED issues (see https://alexbevi.com/blog/2023/11/13/querysrv-errors-when-connecting-to-mongodb-atlas/)
-// Only apply this workaround when running against the local/test database name `psits-test`.
-if ((process.env.DB_NAME ?? "psits-test") === "psits-test" && process.env.FORCE_DNS !== "false") {
-  try {
-    dns.setServers(["1.1.1.1", "8.8.8.8"]);
-    console.log('Set DNS servers to 1.1.1.1,8.8.8.8 for Atlas SRV lookups (applied for psits-test)');
-  } catch (err) {
-    console.warn('Failed to set DNS servers:', err);
-  }
-}
-
-
-const app = createApp();
+const app = express();
 
 const allowedOrigins = [
   process.env.CORS,
@@ -78,6 +71,8 @@ app.use("/api/docs", documentationRoutes);
 app.use("/api/v2/auth", authV2Routes);
 app.use("/api/v2/events", eventsV2Routes);
 app.use("/api/v2/students", studentV2Routes);
+app.use("/api/admin/eligible-certificates", eligibleCertificateRoutes);
+app.use("/api/certificates", certificateRoutes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);

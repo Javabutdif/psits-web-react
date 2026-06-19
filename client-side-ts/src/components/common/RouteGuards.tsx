@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/common/ProtectedRoute";
  * Wrap route groups with this component to require Student role.
  */
 export function StudentRouteGuard() {
-  return <ProtectedRoute allowedRoles={["Student"]} />;
+  return <ProtectedRoute allowedRoles={["student"]} />;
 }
 
 /**
@@ -13,5 +13,5 @@ export function StudentRouteGuard() {
  * Wrap route groups with this component to require Admin role.
  */
 export function AdminRouteGuard() {
-  return <ProtectedRoute allowedRoles={["Admin"]} />;
+  return <ProtectedRoute allowedRoles={["admin"]} />;
 }

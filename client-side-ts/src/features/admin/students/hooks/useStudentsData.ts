@@ -140,7 +140,7 @@ export const useStudentsData = () => {
   const [tabCounts, setTabCounts] =
     useState<StudentTabCounts>(DEFAULT_TAB_COUNTS);
 
-  const isUcMainAdmin = user?.role === "Admin" && user.campus === "UC-Main";
+  const isUcMainAdmin = user?.role === "admin" && user.campus === "UC-Main";
   const canManageMembership =
     isUcMainAdmin && (user?.access === "admin" || user?.access === "finance");
 

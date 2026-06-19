@@ -6,7 +6,7 @@ import { showToast } from "@/utils/alertHelper";
 
 interface ProtectedRouteProps {
   /** Which roles are allowed through. Omit to allow any authenticated user. */
-  allowedRoles?: Array<"Admin" | "Student">;
+  allowedRoles?: Array<"admin" | "student">;
   /** Which campuses are allowed. Only applies to Admins. Omit to allow all. */
   allowedCampuses?: Campus[];
   /** Optional toast shown when blocked by campus restrictions. */
@@ -69,7 +69,7 @@ export default function ProtectedRoute({
 
   if (allowedCampuses && user && !allowedCampuses.includes(user.campus)) {
     // User's campus is not allowed, send to a safe dashboard based on role
-    const fallback = user.role === "Admin" ? "/admin/events" : "/";
+    const fallback = user.role === "admin" ? "/admin/events" : "/";
     return <Navigate to={fallback} replace />;
   }
 

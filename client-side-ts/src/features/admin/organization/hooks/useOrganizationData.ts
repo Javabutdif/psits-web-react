@@ -165,7 +165,7 @@ export const useOrganizationData = () => {
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isUcMainAdmin = user?.role === "Admin" && user.campus === "UC-Main";
+  const isUcMainAdmin = user?.role === "admin" && user.campus === "UC-Main";
   const isAdminAccess = isUcMainAdmin && user?.access === "admin";
   const isExecutiveAccess =
     isUcMainAdmin && (user?.access === "executive" || user?.access === "admin");

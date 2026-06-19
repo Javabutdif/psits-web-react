@@ -33,7 +33,7 @@ export const ErrorPage: React.FC = () => {
 
   const dashboardHref =
     isAuthenticated && user
-      ? user.role === "Admin"
+      ? user.role === "admin"
         ? "/admin/events"
         : "/student/event-attendance"
       : "/";
@@ -68,7 +68,7 @@ export const ErrorPage: React.FC = () => {
           >
             <Home className="h-5 w-5" />
             {dashboardHref
-              ? user?.role === "Admin"
+              ? user?.role === "admin"
                 ? "Admin Dashboard"
                 : "My Dashboard"
               : "Back to Home"}

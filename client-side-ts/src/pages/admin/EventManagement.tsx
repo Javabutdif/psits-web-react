@@ -262,7 +262,7 @@ const EventManagement: React.FC = () => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const isAdmin = user?.role === "Admin";
+  const isAdmin = user?.role === "admin";
   const isUcMainAdmin = isAdmin && user?.campus === "UC-Main";
 
   const availableCampusCodes = useMemo(() => {

@@ -1,7 +1,7 @@
 import {
-  admin_authenticate,
-  student_authenticate,
-} from "../middlewares/custom_authenticate_token";
+  requireAccessTokenV2,
+  roleAuthenticateV2,
+} from "../middlewares/authV2.middleware";
 import loginLimiter from "../util/limiter.util";
 //Added enum role
 import { general_roles } from "../enums/role.enums";
@@ -12,38 +12,34 @@ const router = Router();
 //protected route for admin
 router.get(
   "/protected-route-admin",
-  admin_authenticate,
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
   async (req: Request, res: Response) => {
     try {
-      console.log(req.admin);
-      if (
-        req.admin.role === general_roles.ADMIN ||
-        req.admin.role === "Admin"
-      ) {
-        return res.status(200).json({
-          user: req.admin,
-          role: req.admin.role,
-        });
-      } else return res.status(400).json({ message: "Access Denied" });
+      return res.status(200).json({
+        user: req.userV2,
+        role: req.userV2?.role,
+      });
     } catch (error) {
       console.error(error);
+      return res.status(500).json({ message: "Server error" });
     }
   }
 );
 //Student route
 router.get(
   "/protected-route-student",
-  student_authenticate,
-  async (req, res) => {
+  requireAccessTokenV2,
+  roleAuthenticateV2(["student"]),
+  async (req: Request, res: Response) => {
     try {
-      if (req.student.position === "Student") {
-        return res.status(200).json({
-          user: req.student,
-          position: req.student.position,
-        });
-      } else return res.status(400).json({ message: "Access Denied" });
+      return res.status(200).json({
+        user: req.userV2,
+        role: req.userV2?.role,
+      });
     } catch (error) {
       console.error(error);
+      return res.status(500).json({ message: "Server error" });
     }
   }
 );

@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { admin_authenticate } from "../middlewares/custom_authenticate_token";
 import multer from "multer";
 import {
   addEligibleCertificates,
@@ -8,6 +7,11 @@ import {
   bulkCheckEligibility,
   importEligibleCertificatesFromCSV,
 } from "../controllers/eligibleCertificate.controller";
+import {
+  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2,
+} from "../middlewares/authV2.middleware";
 
 const router = Router();
 
@@ -26,22 +30,45 @@ const upload = multer({
   },
 });
 
-// All routes require admin authentication
-router.use(admin_authenticate);
-
 // Add eligible certificates
-router.post("/", addEligibleCertificates);
+router.post(
+  "/",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  addEligibleCertificates
+);
 
 // Remove eligible certificates
-router.delete("/", removeEligibleCertificates);
+router.delete(
+  "/",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  removeEligibleCertificates
+);
 
 // Get eligible certificates by event
-router.get("/event/:eventId", getEligibleCertificatesByEvent);
+router.get(
+  "/event/:eventId",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  getEligibleCertificatesByEvent
+);
 
 // Bulk check eligibility
-router.post("/bulk-check", bulkCheckEligibility);
+router.post(
+  "/bulk-check",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  bulkCheckEligibility
+);
 
 // Import from CSV
-router.post("/import-csv", upload.single("file"), importEligibleCertificatesFromCSV);
+router.post(
+  "/import-csv",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  upload.single("file"),
+  importEligibleCertificatesFromCSV
+);
 
 export default router;

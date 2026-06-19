@@ -486,7 +486,7 @@ export const getEventAttendeesV2Controller = async (
 
     const claims = req.userV2;
 
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
@@ -646,7 +646,7 @@ export const getEligibleAttendeesRaffleV2Controller = async (
 ) => {
   try {
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
     if (claims.campus !== "UC-Main") {
@@ -722,7 +722,7 @@ export const drawEventRaffleWinnerController = async (
   try {
     const claims = req.userV2;
 
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
     if (claims.campus !== "UC-Main") {
@@ -798,7 +798,7 @@ export const undoEventRaffleWinnerController = async (
   try {
     const claims = req.userV2;
 
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
     if (claims.campus !== "UC-Main") {
@@ -933,7 +933,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
   try {
     // ── Auth guard ──────────────────────────────────────────────────────
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
@@ -1335,7 +1335,7 @@ export const getEventStatisticsV2Controller = async (
     }
 
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
@@ -1386,7 +1386,7 @@ export const markAttendanceV2Controller = async (
 ) => {
   try {
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
@@ -1460,7 +1460,7 @@ export const getEditableAttendeeV2Controller = async (
 ) => {
   try {
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
@@ -1580,7 +1580,7 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
   try {
     // ── Auth guard ──────────────────────────────────────────────────────
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
@@ -2044,7 +2044,7 @@ export const changeAttendeePasswordV2Controller = async (
   try {
     // ── Auth guard ──────────────────────────────────────────────────────
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",

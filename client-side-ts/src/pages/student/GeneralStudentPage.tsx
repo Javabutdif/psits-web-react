@@ -9,7 +9,7 @@ export default function GeneralStudentPage() {
       </p>
 
       {/* Conditional UI for UC-Main Students */}
-      <CampusView allowedCampuses={["UC-Main"]} role="Student">
+      <CampusView allowedCampuses={["UC-Main"]} role="student">
         <div className="relative rounded border border-blue-400 bg-blue-100 px-4 py-3 text-blue-700">
           <strong className="font-bold">UC-Main Specific Content:</strong>
           <span className="block sm:inline">

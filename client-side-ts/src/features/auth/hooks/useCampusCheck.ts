@@ -10,7 +10,7 @@ import type { Campus } from "@/features/auth/types/auth.types";
  */
 export function useCampusCheck(
   allowedCampuses: Campus[],
-  requiredRole: "Admin" | "Student" = "Admin"
+  requiredRole: "admin" | "student" = "admin"
 ): boolean {
   const { user } = useAuth();
 

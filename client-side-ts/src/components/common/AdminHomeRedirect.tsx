@@ -9,7 +9,7 @@ export const AdminHomeRedirect = () => {
     return null;
   }
 
-  if (isAuthenticated && user?.role === "Admin") {
+  if (isAuthenticated && user?.role === "admin") {
     return <Navigate to="/admin/dashboard" replace />;
   }
 

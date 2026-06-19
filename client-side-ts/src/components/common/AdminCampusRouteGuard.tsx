@@ -21,7 +21,7 @@ export function AdminCampusRouteGuard({
 }: CampusRouteGuardProps) {
   return (
     <ProtectedRoute
-      allowedRoles={["Admin"]}
+      allowedRoles={["admin"]}
       allowedCampuses={allowedCampuses}
       campusUnauthorizedToastMessage={campusUnauthorizedToastMessage}
     />

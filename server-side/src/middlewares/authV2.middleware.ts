@@ -164,7 +164,7 @@ export const requireAccessTokenWithDBCheck = async (
     const claims = verifyAccessToken(token);
 
     // Verify user still exists and is active
-    if (claims.role === "Admin") {
+    if (claims.role === "admin") {
       const admin = await Admin.findById(claims.sub);
       if (!admin || admin.status !== "Active") {
         return res.status(403).json({
@@ -225,7 +225,7 @@ export const requireAccessTokenWithDBCheck = async (
  * router.get("/data", requireAccessTokenV2, roleAuthenticateV2(["Student", "Admin"]), controller)
  */
 export const roleAuthenticateV2 = (
-  allowedRoles: Array<"Admin" | "Student">
+  allowedRoles: Array<"admin" | "student">
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.userV2) {
@@ -274,7 +274,7 @@ export const roleAuthenticateV2 = (
  */
 export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.userV2 || req.userV2.role !== "Admin") {
+    if (!req.userV2 || req.userV2.role !== "admin") {
       return res.status(403).json({ message: "Admin access required" });
     }
 

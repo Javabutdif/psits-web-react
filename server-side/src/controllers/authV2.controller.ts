@@ -20,7 +20,7 @@ import { AuthError, AuthErrorCodes } from "../util/errors.util";
 type UserResponse = {
   id: string;
   idNumber: string;
-  role: "Admin" | "Student";
+  role: "admin" | "student";
   campus: string;
   name?: string;
   email?: string;
@@ -36,14 +36,14 @@ type UserResponse = {
  */
 const toUserResponse = (
   user: IStudentDocument | IAdminDocument,
-  role: "Admin" | "Student"
+  role: "admin" | "student"
 ): UserResponse => {
-  if (role === "Student") {
+  if (role === "student") {
     const student = user as IStudentDocument;
     return {
       id: student._id.toString(),
       idNumber: student.id_number,
-      role: "Student",
+      role: "student",
       campus: student.campus,
       name: `${student.first_name} ${student.middle_name || ""} ${
         student.last_name
@@ -58,7 +58,7 @@ const toUserResponse = (
     return {
       id: admin._id.toString(),
       idNumber: admin.id_number,
-      role: "Admin",
+      role: "admin",
       campus: admin.campus || "UC-Main",
       name: admin.name,
       email: admin.email,
@@ -81,9 +81,10 @@ export const loginV2Controller = async (
 ) => {
   const { id_number, password } = req.body;
 
+  console.log(`Login attempt for ID: ${id_number}`);
   try {
     let user: IAdminDocument | IStudentDocument | null = null;
-    let role: "Admin" | "Student";
+    let  role: "admin" | "student";
 
     // Check if admin login (id_number contains "-admin")
     if (id_number.includes("-admin")) {
@@ -106,7 +107,7 @@ export const loginV2Controller = async (
       }
 
       user = admin;
-      role = "Admin";
+      role = "admin";
 
       // Log admin login
       const log = new Log({
@@ -136,7 +137,7 @@ export const loginV2Controller = async (
       }
 
       user = student;
-      role = "Student";
+      role = "student";
     }
 
     // Sign tokens
@@ -155,7 +156,7 @@ export const loginV2Controller = async (
     });
 
     // Save refresh token to database for rotation validation
-    if (role === "Admin") {
+    if (role === "admin") {
       await Admin.findByIdAndUpdate(user._id, {
         currentRefreshToken: refreshToken,
       });
@@ -206,9 +207,9 @@ export const refreshV2Controller = async (
 
     // Fetch user from DB to check if token matches stored currentRefreshToken
     let user: IStudentDocument | IAdminDocument | null = null;
-    let role: "Admin" | "Student" = claims.role;
+    let role: "admin" | "student" = claims.role;
 
-    if (role === "Admin") {
+    if (role === "admin") {
       user = await Admin.findById(claims.sub);
     } else {
       user = await Student.findById(claims.sub);
@@ -221,7 +222,7 @@ export const refreshV2Controller = async (
     }
 
     const isAccountActive =
-      role === "Admin" ? user.status === "Active" : user.status === "True";
+      role === "admin" ? user.status === "Active" : user.status === "True";
 
     if (!isAccountActive) {
       clearRefreshCookie(res);
@@ -231,7 +232,7 @@ export const refreshV2Controller = async (
     // CRITICAL: Verify refresh token matches the stored token (rotation check)
     if (user.currentRefreshToken !== refreshToken) {
       // Invalidate all sessions for this user by setting currentRefreshToken to null
-      if (role === "Admin") {
+      if (role === "admin") {
         await Admin.findByIdAndUpdate(claims.sub, {
           currentRefreshToken: null,
         });
@@ -264,7 +265,7 @@ export const refreshV2Controller = async (
     });
 
     // Update database with new refresh token (invalidate old one)
-    if (role === "Admin") {
+    if (role === "admin") {
       await Admin.findByIdAndUpdate(claims.sub, {
         currentRefreshToken: newRefreshToken,
       });
@@ -305,7 +306,7 @@ export const logoutV2Controller = async (
       try {
         const claims = verifyRefreshToken(refreshToken);
 
-        if (claims.role === "Admin") {
+        if (claims.role === "admin") {
           await Admin.findByIdAndUpdate(claims.sub, {
             currentRefreshToken: null,
           });

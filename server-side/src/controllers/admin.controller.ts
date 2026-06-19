@@ -17,6 +17,7 @@ import { IHistory } from "../models/history.interface";
 import { IOrders } from "../models/orders.interface";
 import { IAdmin, IAdminDocument } from "../models/admin.interface";
 import { user_model } from "../model_template/model_data";
+import { adminService } from "../services/admin.service";
 
 const escapeRegex = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -269,43 +270,7 @@ export const getStudentDashboardCountController = async (
   req: Request,
   res: Response
 ) => {
-  try {
-    const [
-      bsitCount,
-      bscsCount,
-      actCount,
-      year1Count,
-      year2Count,
-      year3Count,
-      year4Count,
-    ] = await Promise.all([
-      Student.countDocuments({ course: "BSIT" }),
-      Student.countDocuments({ course: "BSCS" }),
-      Student.countDocuments({ course: "ACT" }),
-      Student.countDocuments({ year: "1" }),
-      Student.countDocuments({ year: "2" }),
-      Student.countDocuments({ year: "3" }),
-      Student.countDocuments({ year: "4" }),
-    ]);
-
-    return res.json({
-      courses: {
-        BSIT: bsitCount,
-        BSCS: bscsCount,
-        ACT: actCount,
-      },
-      years: {
-        year1: year1Count,
-        year2: year2Count,
-        year3: year3Count,
-        year4: year4Count,
-      },
-    });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ error: "An error occurred while fetching statistics." });
-  }
+  adminService.getAdminDashboardCount();
 };
 
 export const getDailySalesController = async (req: Request, res: Response) => {
