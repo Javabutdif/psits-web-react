@@ -1,10 +1,13 @@
 import { Request, Response } from "express";
+import { Student } from "../models/student.model";
+import { Merch } from "../models/merch.model";
+import { Orders } from "../models/orders.model";
 import { studentService } from "../services/student.service";
 import { adminService } from "../services/admin.service";
-import { merchandiseService } from "../services/merchandise.service";
 import { orderService } from "../services/order.service";
 import { user_model } from "../model_template/model_data";
 import { catchAsync } from "../util/catch.async.util";
+import { account_status, membership_status } from "../enums/status.enums";
 
 export const getSearchStudentByIdController = catchAsync(
   async (req: Request, res: Response) => {
@@ -26,14 +29,40 @@ export const getStudentCountController = catchAsync(
 
 export const getDashboardStats = catchAsync(
   async (req: Request, res: Response) => {
-    const studentCount = await adminService.getAdminDashboardCount();
-    const merchCount = await merchandiseService.getPublishCount();
-    const pendingCount = await orderService.getPendingCount();
-    const dailySales = await orderService.getDailySales();
+    const [
+      dashboardCount,
+      studentCount,
+      merchCount,
+      pendingCount,
+      activeMembershipCount,
+      dailySales,
+    ] = await Promise.all([
+      adminService.getAdminDashboardCount(),
+      studentService.count(),
+      Merch.countDocuments({
+        is_active: true,
+        start_date: { $lte: new Date() },
+        end_date: { $gte: new Date() },
+      }),
+      Orders.countDocuments({ order_status: "Pending" }),
+      Student.countDocuments({
+        status: account_status.ACTIVE,
+        $or: [
+          { membershipStatus: membership_status.ACTIVE },
+          { membershipStatus: membership_status.RENEWED },
+        ],
+      }),
+      orderService.getDailySales(),
+    ]);
 
-    res
-      .status(200)
-      .json({ studentCount, merchCount, pendingCount, dailySales });
+    res.status(200).json({
+      dashboardCount,
+      studentCount,
+      merchCount,
+      pendingCount,
+      activeMembershipCount,
+      dailySales,
+    });
   }
 );
 

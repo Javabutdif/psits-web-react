@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import { Request, Response } from "express";
 import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
+import { account_status } from "../enums/status.enums";
 
 export const getAllActiveStudentsController = async (
   req: Request,
@@ -16,7 +17,7 @@ export const getAllActiveStudentsController = async (
 ) => {
   try {
     const students: IStudent[] = await Student.find({
-      status: "True",
+      status: { $in: ["True", account_status.ACTIVE] },
     });
     if (!students) {
       res.status(400).json({ message: "No Students" });
@@ -76,7 +77,7 @@ export const getAllDeleteStudentController = async (
 ) => {
   try {
     const students: IStudent[] = await Student.find({
-      status: "False",
+      status: { $in: ["False", account_status.DELETED] },
     });
     if (!students) {
       res.status(400).json({ message: "No Deleted Students" });

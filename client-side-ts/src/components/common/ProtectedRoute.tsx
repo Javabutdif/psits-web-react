@@ -2,6 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth";
 import type { Campus } from "@/features/auth/types/auth.types";
+import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
 
 interface ProtectedRouteProps {
@@ -35,7 +36,13 @@ export default function ProtectedRoute({
     useState(false);
 
   useEffect(() => {
-    if (allowedCampuses && user && !allowedCampuses.includes(user.campus)) {
+    const canAccessCampus = allowedCampuses
+      ? allowedCampuses.some(
+          (campus) => normalizeCampus(campus) === normalizeCampus(user?.campus)
+        )
+      : true;
+
+    if (allowedCampuses && user && !canAccessCampus) {
       if (campusUnauthorizedToastMessage && !hasShownCampusUnauthorizedToast) {
         showToast("error", campusUnauthorizedToastMessage);
         const t = setTimeout(() => setHasShownCampusUnauthorizedToast(true), 0);
@@ -67,10 +74,16 @@ export default function ProtectedRoute({
     return <Navigate to="/" replace />;
   }
 
-  if (allowedCampuses && user && !allowedCampuses.includes(user.campus)) {
-    // User's campus is not allowed, send to a safe dashboard based on role
-    const fallback = user.role === "admin" ? "/admin/events" : "/";
-    return <Navigate to={fallback} replace />;
+  if (allowedCampuses && user) {
+    const canAccessCampus = allowedCampuses.some(
+      (campus) => normalizeCampus(campus) === normalizeCampus(user.campus)
+    );
+
+    if (!canAccessCampus) {
+      // User's campus is not allowed, send to a safe dashboard based on role
+      const fallback = user.role === "admin" ? "/admin/events" : "/";
+      return <Navigate to={fallback} replace />;
+    }
   }
 
   return <Outlet />;

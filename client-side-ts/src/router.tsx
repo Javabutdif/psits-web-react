@@ -67,7 +67,7 @@ const router = createBrowserRouter([
               { path: "certificates", Component: CertificatesPage },
               {
                 element: (
-                  <StudentCampusRouteGuard allowedCampuses={["UC-Main"]} />
+                  <StudentCampusRouteGuard allowedCampuses={["UC-MAIN"]} />
                 ),
                 children: [{ path: "my-orders", Component: MyOrders }],
               },
@@ -113,7 +113,7 @@ const router = createBrowserRouter([
               {
                 element: (
                   <AdminCampusRouteGuard
-                    allowedCampuses={["UC-Main"]}
+                    allowedCampuses={["UC-MAIN"]}
                     campusUnauthorizedToastMessage="Unauthorized"
                   />
                 ),
@@ -133,7 +133,7 @@ const router = createBrowserRouter([
           // Example of a campus-specific route
           {
             path: "finances",
-            element: <AdminCampusRouteGuard allowedCampuses={["UC-Main"]} />,
+            element: <AdminCampusRouteGuard allowedCampuses={["UC-MAIN"]} />,
             children: [{ index: true, Component: MainCampusFinancePage }],
           },
         ],

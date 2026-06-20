@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchAllPendingCounts,
-  getCountActiveMemberships,
-  getCountStudent,
-  getDashboardActiveStudents,
   getDashboardPaidOrders,
-  merchCreated,
-  placedOrders,
+  getDashboardStats,
 } from "@/features/admin/api/admin";
 import type {
   CourseDatum,
   DashboardCounts,
+  DashboardStatsResponse,
   PendingOrderCount,
   PendingOrderSortRule,
   RevenueDatum,
@@ -25,50 +22,6 @@ const initialCounts: DashboardCounts = {
   students: 0,
   orders: 0,
   activeMembers: 0,
-};
-
-const normalizeYear = (year?: string | number) => {
-  const yearValue = String(year ?? "").trim().toLowerCase();
-
-  if (yearValue === "1" || yearValue.includes("1st")) return "year1";
-  if (yearValue === "2" || yearValue.includes("2nd")) return "year2";
-  if (yearValue === "3" || yearValue.includes("3rd")) return "year3";
-  if (yearValue === "4" || yearValue.includes("4th")) return "year4";
-
-  return null;
-};
-
-const buildStudentStatsFromActiveStudents = (
-  students: Array<{ course?: string; year?: string | number }>
-) => {
-  const stats = {
-    courses: {
-      BSIT: 0,
-      BSCS: 0,
-      ACT: 0,
-    },
-    years: {
-      year1: 0,
-      year2: 0,
-      year3: 0,
-      year4: 0,
-    },
-  };
-
-  students.forEach((student) => {
-    const course = student.course?.trim().toUpperCase();
-    const year = normalizeYear(student.year);
-
-    if (course === "BSIT" || course === "BSCS" || course === "ACT") {
-      stats.courses[course] += 1;
-    }
-
-    if (year) {
-      stats.years[year] += 1;
-    }
-  });
-
-  return stats;
 };
 
 const startOfLocalDay = (date: Date) =>
@@ -181,76 +134,81 @@ export const useDashboardData = () => {
     setError(null);
 
     try {
-      const [
-        studentCount,
-        merchandiseCount,
-        orderCount,
-        activeMembershipCount,
-        activeStudents,
-        paidOrders,
-      ] = await Promise.all([
-        getCountStudent(),
-        merchCreated(),
-        placedOrders(),
-        getCountActiveMemberships(),
-        getDashboardActiveStudents(),
+      const [dashboardStats, paidOrders] = await Promise.all([
+        getDashboardStats(),
         fetchPaidOrdersForRevenue(),
       ]);
 
-      const nextCounts: DashboardCounts = {
-        onSaleProducts:
-          typeof merchandiseCount === "number" ? merchandiseCount : 0,
-        students: studentCount ? studentCount.all : 0,
-        orders: typeof orderCount === "number" ? orderCount : 0,
-        activeMembers:
-          typeof activeMembershipCount === "number"
-            ? activeMembershipCount
-            : 0,
+      const stats: DashboardStatsResponse = dashboardStats ?? {
+        dashboardCount: {
+          courses: { BSIT: 0, BSCS: 0, ACT: 0 },
+          years: { year1: 0, year2: 0, year3: 0, year4: 0 },
+        },
+        studentCount: { all: 0, request: 0, deleted: 0 },
+        merchCount: 0,
+        pendingCount: 0,
+        activeMembershipCount: 0,
+        dailySales: [],
       };
 
-      const studentStats = buildStudentStatsFromActiveStudents(activeStudents);
-      const years = studentStats.years;
+      const nextCounts: DashboardCounts = {
+        onSaleProducts: stats.merchCount ?? 0,
+        students: stats.studentCount?.all ?? 0,
+        orders: stats.pendingCount ?? 0,
+        activeMembers: stats.activeMembershipCount ?? 0,
+      };
+
+      const years = stats.dashboardCount?.years ?? {
+        year1: 0,
+        year2: 0,
+        year3: 0,
+        year4: 0,
+      };
       const yearData: YearLevelDatum[] = [
         {
           key: "year1",
           label: "1st Year",
           shortLabel: "1st",
-          value: years?.year1 ?? 0,
+          value: years.year1 ?? 0,
           color: YEAR_COLORS[0],
         },
         {
           key: "year2",
           label: "2nd Year",
           shortLabel: "2nd",
-          value: years?.year2 ?? 0,
+          value: years.year2 ?? 0,
           color: YEAR_COLORS[1],
         },
         {
           key: "year3",
           label: "3rd Year",
           shortLabel: "3rd",
-          value: years?.year3 ?? 0,
+          value: years.year3 ?? 0,
           color: YEAR_COLORS[2],
         },
         {
           key: "year4",
           label: "4th Year",
           shortLabel: "4th",
-          value: years?.year4 ?? 0,
+          value: years.year4 ?? 0,
           color: YEAR_COLORS[3],
         },
       ];
 
-      const courseStats = studentStats?.courses;
+      const courseStats = stats.dashboardCount?.courses ?? {
+        BSIT: 0,
+        BSCS: 0,
+        ACT: 0,
+      };
       const courseData: CourseDatum[] = [
         {
           label: "BSIT",
-          value: courseStats?.BSIT ?? 0,
+          value: courseStats.BSIT ?? 0,
           color: "#0B4A63",
         },
         {
           label: "BSCS",
-          value: courseStats?.BSCS ?? 0,
+          value: courseStats.BSCS ?? 0,
           color: "#1689BD",
         },
       ];

@@ -45,10 +45,10 @@ class AdminService {
       Student.countDocuments({ course: "BSIT" }),
       Student.countDocuments({ course: "BSCS" }),
       Student.countDocuments({ course: "ACT" }),
-      Student.countDocuments({ year: "1" }),
-      Student.countDocuments({ year: "2" }),
-      Student.countDocuments({ year: "3" }),
-      Student.countDocuments({ year: "4" }),
+      Student.countDocuments({ year: 1 }),
+      Student.countDocuments({ year: 2 }),
+      Student.countDocuments({ year: 3 }),
+      Student.countDocuments({ year: 4 }),
     ]);
 
     return {

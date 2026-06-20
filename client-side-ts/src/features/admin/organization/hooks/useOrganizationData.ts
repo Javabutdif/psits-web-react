@@ -18,8 +18,10 @@ import {
   roleRemove,
 } from "@/features/admin/api/admin";
 import { useAuth } from "@/features/auth";
+import { normalizeCampus } from "@/features/auth/utils/campus";
 import { changePasswordAdmin } from "@/features/auth/api/forgot";
 import { showToast } from "@/utils/alertHelper";
+import { PSITS_ROLES } from "../../constants/adminAccess";
 import type {
   OrganizationAccount,
   OrganizationAccountFormValues,
@@ -89,7 +91,8 @@ const normalizeAccount = (
 ): OrganizationAccount => {
   const isAdminRequest = tab === "adminRequests";
   const isMemberRequest = tab === "memberRequests";
-  const isAdminRecord = tab === "admins" || tab === "suspended" || isAdminRequest;
+  const isAdminRecord =
+    tab === "admins" || tab === "suspended" || isAdminRequest;
   const role = isAdminRecord
     ? record.position || record.role || "Admin"
     : formatRole(record.role) || "Member";
@@ -157,18 +160,20 @@ export const useOrganizationData = () => {
   const [accounts, setAccounts] = useState<OrganizationAccount[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
-  const [filters, setFilters] =
-    useState<OrganizationFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<OrganizationFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<OrganizationSort>(DEFAULT_SORT);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isUcMainAdmin = user?.role === "admin" && user.campus === "UC-Main";
-  const isAdminAccess = isUcMainAdmin && user?.access === "admin";
+  const isUcMainAdmin =
+    user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
+  const isAdminAccess = isUcMainAdmin && user?.access === PSITS_ROLES.ADMIN;
   const isExecutiveAccess =
-    isUcMainAdmin && (user?.access === "executive" || user?.access === "admin");
+    isUcMainAdmin &&
+    (user?.access === PSITS_ROLES.EXECUTIVE ||
+      user?.access === PSITS_ROLES.ADMIN);
 
   const fetchAccounts = useCallback(async () => {
     setIsLoading(true);
@@ -247,7 +252,10 @@ export const useOrganizationData = () => {
       });
   }, [accounts, filters, search, sort]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredAccounts.length / ROWS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAccounts.length / ROWS_PER_PAGE)
+  );
   const currentPage = Math.min(page, totalPages);
   const pagedAccounts = filteredAccounts.slice(
     (currentPage - 1) * ROWS_PER_PAGE,
@@ -267,8 +275,9 @@ export const useOrganizationData = () => {
 
   const roleOptions = useMemo(
     () =>
-      Array.from(new Set(accounts.map((record) => record.role).filter(Boolean)))
-        .sort((left, right) => left.localeCompare(right)),
+      Array.from(
+        new Set(accounts.map((record) => record.role).filter(Boolean))
+      ).sort((left, right) => left.localeCompare(right)),
     [accounts]
   );
 

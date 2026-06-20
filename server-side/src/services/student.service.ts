@@ -115,8 +115,9 @@ class StudentService {
         status: account_status.ACTIVE,
       }),
       Student.countDocuments({ membershipStatus: membership_status.PENDING }),
-
-      Student.countDocuments({ status: account_status.ACTIVE }),
+      Student.countDocuments({
+        status: account_status.DELETED,
+      }),
     ]);
 
     return { all, request, deleted };

@@ -1,5 +1,6 @@
 import { useAuth } from "@/features/auth";
 import type { Campus } from "@/features/auth/types/auth.types";
+import { normalizeCampus } from "@/features/auth/utils/campus";
 
 /**
  * A hook to check if the current user belongs to one of the specified campuses.
@@ -18,5 +19,8 @@ export function useCampusCheck(
     return false;
   }
 
-  return allowedCampuses.includes(user.campus);
+  const currentCampus = normalizeCampus(user.campus);
+  return allowedCampuses.some(
+    (campus) => normalizeCampus(campus) === currentCampus
+  );
 }

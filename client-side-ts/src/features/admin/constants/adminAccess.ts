@@ -1,0 +1,11 @@
+export const PSITS_ROLES = Object.freeze({
+  ADMIN: "PSITS_ADMIN",
+  DEVELOPER: "PSITS_DEV",
+  HEAD_FINANCE: "PSITS_HEAD_FINANCE",
+  FINANCE: "PSITS_FINANCE",
+  EXECUTIVE: "PSITS_EXEC",
+  STANDARD: "PSITS_STANDARD",
+  NO_ACCESS: "PSITS_NO_ACCESS",
+} as const);
+
+export type PsitsRole = (typeof PSITS_ROLES)[keyof typeof PSITS_ROLES];

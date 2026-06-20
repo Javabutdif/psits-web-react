@@ -2,6 +2,7 @@ import axios from "axios";
 import type { AxiosError, AxiosResponse } from "axios";
 import backendConnection from "../../../api/backendApi";
 import { showToast } from "../../../utils/alertHelper";
+import type { DashboardStatsResponse } from "../dashboard/types/dashboard.types";
 
 interface Student {
   _id?: string;
@@ -51,7 +52,9 @@ interface MembershipRequestData extends Student {
   createdAt?: string;
 }
 
-type MembershipRequestResponse = MembershipRequestData[] | { data: MembershipRequestData[] };
+type MembershipRequestResponse =
+  | MembershipRequestData[]
+  | { data: MembershipRequestData[] };
 
 interface MerchandiseItem {
   _id: string;
@@ -92,21 +95,9 @@ interface MembershipHistoryItem {
   total?: number;
 }
 
-type MembershipHistoryResponse = MembershipHistoryItem[] | { data: MembershipHistoryItem[] };
-
-interface DashboardStats {
-  courses: {
-    BSIT: number;
-    BSCS: number;
-    ACT?: number;
-  };
-  years: {
-    year1: number;
-    year2: number;
-    year3: number;
-    year4: number;
-  };
-}
+type MembershipHistoryResponse =
+  | MembershipHistoryItem[]
+  | { data: MembershipHistoryItem[] };
 
 interface DailySalesData {
   product_name: string;
@@ -249,7 +240,10 @@ const handleApiError = (error: unknown, showUser = true): void => {
     const axiosError = error as AxiosError<ApiErrorResponse>;
     const message = axiosError.response?.data?.message || "An error occurred";
     if (showUser) showToast("error", message);
-    console.error("API Error:", axiosError.response?.data || axiosError.message);
+    console.error(
+      "API Error:",
+      axiosError.response?.data || axiosError.message
+    );
   } else {
     if (showUser) showToast("error", "An unexpected error occurred");
     console.error("Unexpected Error:", error);
@@ -258,9 +252,12 @@ const handleApiError = (error: unknown, showUser = true): void => {
 
 export const membership = async (): Promise<MembershipData | false> => {
   try {
-    const response: AxiosResponse<MembershipData> = await axios.get(`${backendConnection()}/api/students`, {
-      headers: createHeaders(),
-    });
+    const response: AxiosResponse<MembershipData> = await axios.get(
+      `${backendConnection()}/api/students`,
+      {
+        headers: createHeaders(),
+      }
+    );
     if (response.status === 200) {
       return response.data;
     } else {
@@ -301,8 +298,23 @@ export const deletedStudent = async (): Promise<DeletedStudent[] | void> => {
     handleApiError(error);
   }
 };
+export const getDashboardStatistics = async (): Promise<
+  StudentCountResponse | false
+> => {
+  try {
+    const response: AxiosResponse<StudentCountResponse> = await axios.get(
+      `${backendConnection()}/api/admin/get-dashboard`,
+      { headers: createHeaders() }
+    );
+    return response.data;
+  } catch {
+    return false;
+  }
+};
 
-export const getCountStudent = async (): Promise<StudentCountResponse | false> => {
+export const getCountStudent = async (): Promise<
+  StudentCountResponse | false
+> => {
   try {
     const response: AxiosResponse<StudentCountResponse> = await axios.get(
       `${backendConnection()}/api/admin/get-students-count`,
@@ -326,7 +338,9 @@ export const getCountActiveMemberships = async (): Promise<number | false> => {
   }
 };
 
-export const membershipRequest = async (): Promise<MembershipRequestData[] | void> => {
+export const membershipRequest = async (): Promise<
+  MembershipRequestData[] | void
+> => {
   try {
     const response: AxiosResponse<MembershipRequestResponse> = await axios.get(
       `${backendConnection()}/api/admin/membership-request`,
@@ -398,20 +412,28 @@ export const placedOrders = async (): Promise<number | void> => {
 
 export const renewStudent = async (): Promise<RenewResponse | void> => {
   try {
-    const response: AxiosResponse<RenewResponse> = await axios.get(`${backendConnection()}/api/renew`, {
-      headers: createHeaders(),
-    });
+    const response: AxiosResponse<RenewResponse> = await axios.get(
+      `${backendConnection()}/api/renew`,
+      {
+        headers: createHeaders(),
+      }
+    );
     return response.data;
   } catch (error) {
     handleApiError(error, false);
   }
 };
 
-export const membershipHistory = async (): Promise<MembershipHistoryItem[] | void> => {
+export const membershipHistory = async (): Promise<
+  MembershipHistoryItem[] | void
+> => {
   try {
-    const response: AxiosResponse<MembershipHistoryResponse> = await axios.get(`${backendConnection()}/api/admin/history`, {
-      headers: createHeaders(),
-    });
+    const response: AxiosResponse<MembershipHistoryResponse> = await axios.get(
+      `${backendConnection()}/api/admin/history`,
+      {
+        headers: createHeaders(),
+      }
+    );
     return Array.isArray(response.data) ? response.data : response.data.data;
   } catch (error) {
     handleApiError(error, false);
@@ -420,40 +442,50 @@ export const membershipHistory = async (): Promise<MembershipHistoryItem[] | voi
 
 export const merchandise = async (): Promise<MerchandiseResponse | void> => {
   try {
-    const response: AxiosResponse<MerchandiseResponse> = await axios.get(`${backendConnection()}/api/merch/retrieve`, {
-      headers: createHeaders(),
-    });
-    return response.data;
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
-export const activePublishMerchandise = async (): Promise<MerchandiseResponse | void> => {
-  try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-      `${backendConnection()}/api/merch/retrieve-publish-merchandise`,
-      { headers: createHeaders() }
+      `${backendConnection()}/api/merch/retrieve`,
+      {
+        headers: createHeaders(),
+      }
     );
     return response.data;
   } catch (error) {
     handleApiError(error);
-    throw error;
   }
 };
 
-export const merchandiseAdmin = async (): Promise<MerchandiseResponse | void> => {
-  try {
-    const response: AxiosResponse<MerchandiseResponse> = await axios.get(`${backendConnection()}/api/merch/retrieve-admin`, {
-      headers: createHeaders(),
-    });
-    return response.data;
-  } catch (error) {
-    handleApiError(error);
-  }
-};
+export const activePublishMerchandise =
+  async (): Promise<MerchandiseResponse | void> => {
+    try {
+      const response: AxiosResponse<MerchandiseResponse> = await axios.get(
+        `${backendConnection()}/api/merch/retrieve-publish-merchandise`,
+        { headers: createHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  };
 
-export const deleteMerchandise = async (_id: string): Promise<boolean | void> => {
+export const merchandiseAdmin =
+  async (): Promise<MerchandiseResponse | void> => {
+    try {
+      const response: AxiosResponse<MerchandiseResponse> = await axios.get(
+        `${backendConnection()}/api/merch/retrieve-admin`,
+        {
+          headers: createHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+export const deleteMerchandise = async (
+  _id: string
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
       `${backendConnection()}/api/merch/delete-soft`,
@@ -466,7 +498,9 @@ export const deleteMerchandise = async (_id: string): Promise<boolean | void> =>
   }
 };
 
-export const publishMerchandise = async (_id: string): Promise<boolean | void> => {
+export const publishMerchandise = async (
+  _id: string
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
       `${backendConnection()}/api/merch/publish`,
@@ -492,7 +526,10 @@ export const cancelMembership = async (id_number: string): Promise<void> => {
   }
 };
 
-export const studentDeletion = async (id_number: string, name: string): Promise<number | void> => {
+export const studentDeletion = async (
+  id_number: string,
+  name: string
+): Promise<number | void> => {
   try {
     const response: AxiosResponse = await axios.put(
       `${backendConnection()}/api/students/softdelete`,
@@ -505,7 +542,9 @@ export const studentDeletion = async (id_number: string, name: string): Promise<
   }
 };
 
-export const studentRestore = async (id_number: string): Promise<number | void> => {
+export const studentRestore = async (
+  id_number: string
+): Promise<number | void> => {
   try {
     const response: AxiosResponse = await axios.put(
       `${backendConnection()}/api/students/restore`,
@@ -522,13 +561,16 @@ export const addMerchandise = async (formData: FormData): Promise<boolean> => {
   try {
     const token = getAuthToken();
     const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/merch`, formData, {
-      headers: {
-        // allow axios to set the correct multipart boundary when sending FormData
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "Content-Type": "multipart/form-data",
-      },
-    });
+      `${backendConnection()}/api/merch`,
+      formData,
+      {
+        headers: {
+          // allow axios to set the correct multipart boundary when sending FormData
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
     return response.status === 200;
   } catch (error) {
     handleApiError(error);
@@ -536,12 +578,16 @@ export const addMerchandise = async (formData: FormData): Promise<boolean> => {
   }
 };
 
-export const getDashboardStats = async (): Promise<DashboardStats | void> => {
+export const getDashboardStats = async (): Promise<
+  DashboardStatsResponse | void
+> => {
   try {
-    const response: AxiosResponse<DashboardStats> = await axios.get(
-      `${backendConnection()}/api/admin/dashboard-stats`, {
-      headers: createHeaders(),
-    });
+    const response: AxiosResponse<DashboardStatsResponse> = await axios.get(
+      `${backendConnection()}/api/admin/dashboard-stats`,
+      {
+        headers: createHeaders(),
+      }
+    );
     return response.data;
   } catch (error) {
     handleApiError(error, false);
@@ -551,9 +597,11 @@ export const getDashboardStats = async (): Promise<DashboardStats | void> => {
 export const getDailySales = async (): Promise<DailySalesData[] | void> => {
   try {
     const response: AxiosResponse<DailySalesResponse> = await axios.get(
-      `${backendConnection()}/api/admin/get-daily-sales`, {
-      headers: createHeaders(),
-    });
+      `${backendConnection()}/api/admin/get-daily-sales`,
+      {
+        headers: createHeaders(),
+      }
+    );
     return Array.isArray(response.data) ? response.data : response.data.data;
   } catch (error) {
     handleApiError(error, false);
@@ -589,13 +637,19 @@ export const getDashboardPaidOrders = async ({
   }
 };
 
-export const deleteReports = async (product_id: string, id: string, merchName: string): Promise<boolean> => {
+export const deleteReports = async (
+  product_id: string,
+  id: string,
+  merchName: string
+): Promise<boolean> => {
   try {
     const response: AxiosResponse = await axios.delete(
-      `${backendConnection()}/api/merch/delete-report`, {
-      data: { product_id, id, merchName },
-      headers: createHeaders(),
-    });
+      `${backendConnection()}/api/merch/delete-report`,
+      {
+        data: { product_id, id, merchName },
+        headers: createHeaders(),
+      }
+    );
     if (response.status === 200) showToast("success", response.data.message);
     return response.status === 200;
   } catch (error) {
@@ -607,9 +661,11 @@ export const deleteReports = async (product_id: string, id: string, merchName: s
 export const getAllMembers = async (): Promise<Member[] | void> => {
   try {
     const response: AxiosResponse<{ data: Member[] }> = await axios.get(
-      `${backendConnection()}/api/admin/get-all-members`, {
-      headers: createHeaders(),
-    });
+      `${backendConnection()}/api/admin/get-all-members`,
+      {
+        headers: createHeaders(),
+      }
+    );
     return response.status === 200 ? response.data.data : [];
   } catch (error) {
     handleApiError(error, false);
@@ -619,9 +675,11 @@ export const getAllMembers = async (): Promise<Member[] | void> => {
 export const getAllOfficers = async (): Promise<Officer[] | void> => {
   try {
     const response: AxiosResponse<{ data: Officer[] }> = await axios.get(
-      `${backendConnection()}/api/admin/get-all-officers`, {
-      headers: createHeaders(),
-    });
+      `${backendConnection()}/api/admin/get-all-officers`,
+      {
+        headers: createHeaders(),
+      }
+    );
     return response.status === 200 ? response.data.data : [];
   } catch (error) {
     handleApiError(error, false);
@@ -631,9 +689,10 @@ export const getAllOfficers = async (): Promise<Officer[] | void> => {
 export const roleRemove = async (id_number: string): Promise<number | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/role-remove`, 
-      { id_number }, 
-      { headers: createHeaders() });
+      `${backendConnection()}/api/admin/role-remove`,
+      { id_number },
+      { headers: createHeaders() }
+    );
     return response.status;
   } catch (error) {
     handleApiError(error);
@@ -643,19 +702,24 @@ export const roleRemove = async (id_number: string): Promise<number | void> => {
 export const getSuspendOfficers = async (): Promise<Officer[] | void> => {
   try {
     const response: AxiosResponse<{ data: Officer[] }> = await axios.get(
-      `${backendConnection()}/api/admin/get-suspend-officers`, { headers: createHeaders() });
+      `${backendConnection()}/api/admin/get-suspend-officers`,
+      { headers: createHeaders() }
+    );
     return response.status === 200 ? response.data.data : [];
   } catch (error) {
     handleApiError(error, false);
   }
 };
 
-export const editOfficerApi = async (updatedMember: Partial<Officer>): Promise<boolean | void> => {
+export const editOfficerApi = async (
+  updatedMember: Partial<Officer>
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/admin/edit-officer`, 
-      updatedMember, 
-      { headers: createHeaders() });
+      `${backendConnection()}/api/admin/edit-officer`,
+      updatedMember,
+      { headers: createHeaders() }
+    );
     if (response.status === 200) {
       showToast("success", response.data.message);
       return true;
@@ -665,52 +729,61 @@ export const editOfficerApi = async (updatedMember: Partial<Officer>): Promise<b
   }
 };
 
-export const officerSuspend = async (id_number: string): Promise<number | void> => {
+export const officerSuspend = async (
+  id_number: string
+): Promise<number | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/suspend`, 
-      { id_number }, 
-      { headers: createHeaders() });
+      `${backendConnection()}/api/admin/suspend`,
+      { id_number },
+      { headers: createHeaders() }
+    );
     return response.status;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const officerRestore = async (id_number: string): Promise<number | void> => {
+export const officerRestore = async (
+  id_number: string
+): Promise<number | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/restore-officer`, 
-      { id_number }, 
-      { headers: createHeaders() });
+      `${backendConnection()}/api/admin/restore-officer`,
+      { id_number },
+      { headers: createHeaders() }
+    );
     return response.status;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const logAdminAction = async (payload: { 
-  admin_id: string; 
-  action: string; 
-  target?: string; 
-  target_id?: string; 
-  target_model?: string 
+export const logAdminAction = async (payload: {
+  admin_id: string;
+  action: string;
+  target?: string;
+  target_id?: string;
+  target_model?: string;
 }): Promise<void> => {
   try {
-    await axios.post(
-      `${backendConnection()}/api/logs`, 
-      payload, 
-      { headers: { Authorization: `Bearer ${getAuthToken()}` } });
+    await axios.post(`${backendConnection()}/api/logs`, payload, {
+      headers: { Authorization: `Bearer ${getAuthToken()}` },
+    });
   } catch (error) {
-    console.error("Error logging admin action:", (error as AxiosError)?.response?.data || (error as Error)?.message);
+    console.error(
+      "Error logging admin action:",
+      (error as AxiosError)?.response?.data || (error as Error)?.message
+    );
   }
 };
 
 export const fetchAdminLogs = async (): Promise<AdminLogsResponse | void> => {
   try {
     const response: AxiosResponse<AdminLogsResponse> = await axios.get(
-      `${backendConnection()}/api/logs`, 
-      { headers: { Authorization: `Bearer ${getAuthToken()}` } });
+      `${backendConnection()}/api/logs`,
+      { headers: { Authorization: `Bearer ${getAuthToken()}` } }
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching admin logs:", error);
@@ -718,61 +791,32 @@ export const fetchAdminLogs = async (): Promise<AdminLogsResponse | void> => {
   }
 };
 
-export const fetchStudentName = async (id_number: string): Promise<StudentSearchResponse | void> => {
+export const fetchStudentName = async (
+  id_number: string
+): Promise<StudentSearchResponse | void> => {
   try {
     const response: AxiosResponse<StudentSearchResponse> = await axios.get(
-      `${backendConnection()}/api/admin/student_search/${id_number}`, 
-      { headers: createHeaders() });
+      `${backendConnection()}/api/admin/student_search/${id_number}`,
+      { headers: createHeaders() }
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching student:", error);
   }
 };
 
-export const requestRoleAdmin = async (role: string, id_number: string, admin: string): Promise<boolean | void> => {
+export const requestRoleAdmin = async (
+  role: string,
+  id_number: string,
+  admin: string
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/request-role`, 
-      { role, id_number, admin }, 
-      { headers: createHeaders() });
-    if (response.status === 200) showToast("success", response.data.message); else showToast("error", response.data.message);
-    return response.status === 200;
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
-export const fetchAllStudentRequestRole = async (): Promise<RoleRequest[] | void> => {
-  try {
-    const response: AxiosResponse<RoleRequestResponse> = await axios.get(
-      `${backendConnection()}/api/admin/get-request-role`, 
-      { headers: { Authorization: `Bearer ${getAuthToken()}` } });
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching student:", error);
-  }
-};
-
-export const approveRole = async (id_number: string): Promise<boolean | void> => {
-  try {
-    const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/approve-role`, 
-      { id_number }, 
-      { headers: createHeaders() });
-    if (response.status === 200) showToast("success", response.data.message); else showToast("error", response.data.message);
-    return response.status === 200;
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
-export const declineRole = async (id_number: string): Promise<boolean | void> => {
-  try {
-    const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/decline-role`, 
-      { id_number }, 
-      { headers: createHeaders() });
-    if (response.status === 200) showToast("success", "Role declined successfully");
+      `${backendConnection()}/api/admin/request-role`,
+      { role, id_number, admin },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
     else showToast("error", response.data.message);
     return response.status === 200;
   } catch (error) {
@@ -780,18 +824,69 @@ export const declineRole = async (id_number: string): Promise<boolean | void> =>
   }
 };
 
-export const fetchAllPendingCounts = async ({ 
-  limit = 10, 
-  page = 1, 
-  sort = [{ field: "product_name", direction: "asc" as const }], 
-  search = "" }
-   : PendingCountsParams = {}): Promise<PendingCountsResult> => {
+export const fetchAllStudentRequestRole = async (): Promise<
+  RoleRequest[] | void
+> => {
+  try {
+    const response: AxiosResponse<RoleRequestResponse> = await axios.get(
+      `${backendConnection()}/api/admin/get-request-role`,
+      { headers: { Authorization: `Bearer ${getAuthToken()}` } }
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching student:", error);
+  }
+};
+
+export const approveRole = async (
+  id_number: string
+): Promise<boolean | void> => {
+  try {
+    const response: AxiosResponse = await axios.put(
+      `${backendConnection()}/api/admin/approve-role`,
+      { id_number },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
+    else showToast("error", response.data.message);
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const declineRole = async (
+  id_number: string
+): Promise<boolean | void> => {
+  try {
+    const response: AxiosResponse = await axios.put(
+      `${backendConnection()}/api/admin/decline-role`,
+      { id_number },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200)
+      showToast("success", "Role declined successfully");
+    else showToast("error", response.data.message);
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const fetchAllPendingCounts = async ({
+  limit = 10,
+  page = 1,
+  sort = [{ field: "product_name", direction: "asc" as const }],
+  search = "",
+}: PendingCountsParams = {}): Promise<PendingCountsResult> => {
   try {
     const response: AxiosResponse<PendingCountsResult> = await axios.get(
-      `${backendConnection()}/api/orders/get-all-pending-counts`, {
-      headers: { Authorization: `Bearer ${getAuthToken()}` },
-      params: { page, limit, sort, search },
-    });
+      `${backendConnection()}/api/orders/get-all-pending-counts`,
+      {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+        params: { page, limit, sort, search },
+      }
+    );
     return {
       data: response.data.data || [],
       total: response.data.total || 0,
@@ -805,62 +900,84 @@ export const fetchAllPendingCounts = async ({
   }
 };
 
-export const addOfficer = async (formData: Partial<Officer>): Promise<boolean | void> => {
+export const addOfficer = async (
+  formData: Partial<Officer>
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/admin/add-officer`, 
-      formData, 
-      { headers: createHeaders() });
-    if (response.status === 200) { showToast("success", response.data.message); return true; }
+      `${backendConnection()}/api/admin/add-officer`,
+      formData,
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) {
+      showToast("success", response.data.message);
+      return true;
+    }
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const getRequestAdminAccount = async (): Promise<AdminRequest[] | void> => {
+export const getRequestAdminAccount = async (): Promise<
+  AdminRequest[] | void
+> => {
   try {
     const response: AxiosResponse<{ data: AdminRequest[] }> = await axios.get(
-      `${backendConnection()}/api/admin/get-request-admin`, 
-      { headers: createHeaders() });
+      `${backendConnection()}/api/admin/get-request-admin`,
+      { headers: createHeaders() }
+    );
     return response.status === 200 ? response.data.data : [];
   } catch (error) {
     handleApiError(error, false);
   }
 };
 
-export const approveAdminAccount = async (id_number: string): Promise<boolean | void> => {
+export const approveAdminAccount = async (
+  id_number: string
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/approve-admin-account`, 
-      { id_number }, 
-      { headers: createHeaders() });
-    if (response.status === 200) showToast("success", response.data.message); else showToast("error", response.data.message);
+      `${backendConnection()}/api/admin/approve-admin-account`,
+      { id_number },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
+    else showToast("error", response.data.message);
     return response.status === 200;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const declineAdminAccount = async (id_number: string): Promise<boolean | void> => {
+export const declineAdminAccount = async (
+  id_number: string
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/decline-admin-account`, 
-      { id_number }, 
-      { headers: createHeaders() });
-    if (response.status === 200) showToast("success", response.data.message); else showToast("error", response.data.message);
+      `${backendConnection()}/api/admin/decline-admin-account`,
+      { id_number },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
+    else showToast("error", response.data.message);
     return response.status === 200;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const editAdminAccess = async (id_number: string, newAccess: string[]): Promise<boolean | void> => {
+export const editAdminAccess = async (
+  id_number: string,
+  newAccess: string[]
+): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/update-admin-access`, 
-      { id_number, newAccess }, 
-      { headers: createHeaders() });
-    if (response.status === 200) showToast("success", response.data.message); else showToast("error", response.data.message);
+      `${backendConnection()}/api/admin/update-admin-access`,
+      { id_number, newAccess },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
+    else showToast("error", response.data.message);
     return response.status === 200;
   } catch (error) {
     handleApiError(error);
@@ -871,9 +988,11 @@ export const getStudentMembershipHistory = async (
   studentId: string
 ): Promise<MembershipHistoryItem[] | void> => {
   try {
-    const response: AxiosResponse<{ data: MembershipHistoryItem[] }> = await axios.get(
-      `${backendConnection()}/api/students/student-membership-history/${studentId}`, 
-      { headers: createHeaders() });
+    const response: AxiosResponse<{ data: MembershipHistoryItem[] }> =
+      await axios.get(
+        `${backendConnection()}/api/students/student-membership-history/${studentId}`,
+        { headers: createHeaders() }
+      );
     return response.data.data;
   } catch (error) {
     handleApiError(error, false);
@@ -882,23 +1001,29 @@ export const getStudentMembershipHistory = async (
 
 export const membershipPrice = async (): Promise<number | false> => {
   try {
-    const response: AxiosResponse<{ data: MembershipPriceData }> = await axios.get(
-      `${backendConnection()}/api/admin/get-membership-price`, 
-      { headers: createHeaders() });
-    return response.status === 200 ? response.data.data.membership_price : false;
+    const response: AxiosResponse<{ data: MembershipPriceData }> =
+      await axios.get(`${backendConnection()}/api/admin/get-membership-price`, {
+        headers: createHeaders(),
+      });
+    return response.status === 200
+      ? response.data.data.membership_price
+      : false;
   } catch {
     return false;
   }
 };
 
-export const changeMembershipPrice = async (price: string | number): Promise<boolean> => {
+export const changeMembershipPrice = async (
+  price: string | number
+): Promise<boolean> => {
   const newPriceFormData = new FormData();
   newPriceFormData.set("price", String(price));
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/change-membership-price`, 
+      `${backendConnection()}/api/admin/change-membership-price`,
       newPriceFormData,
-      { headers: createHeaders() });
+      { headers: createHeaders() }
+    );
     if (response.status === 200) showToast("success", response.data.message);
     return response.status === 200;
   } catch (error) {
@@ -920,7 +1045,16 @@ export const updateStudent = async (
   try {
     const response: AxiosResponse = await axios.post(
       `${backendConnection()}/api/students/edited-student`,
-      { id_number, rfid, first_name, middle_name, last_name, email, course, year },
+      {
+        id_number,
+        rfid,
+        first_name,
+        middle_name,
+        last_name,
+        email,
+        course,
+        year,
+      },
       { headers: createHeaders() }
     );
     return response;

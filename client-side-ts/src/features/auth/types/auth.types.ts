@@ -1,4 +1,4 @@
-export type Campus = "UC-Main" | "UC-Banilad" | "UC-LM" | "UC-PT" | "UC-CS";
+export type Campus = "UC-MAIN" | "UC-BANILAD" | "UC-LM" | "UC-PT" | "UC-CS";
 
 /** User object returned by the backend on login/refresh. */
 export type User = {

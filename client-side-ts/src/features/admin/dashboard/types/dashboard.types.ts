@@ -5,6 +5,35 @@ export interface DashboardCounts {
   activeMembers: number;
 }
 
+export interface DashboardStatsResponse {
+  dashboardCount: {
+    courses: {
+      BSIT: number;
+      BSCS: number;
+      ACT: number;
+    };
+    years: {
+      year1: number;
+      year2: number;
+      year3: number;
+      year4: number;
+    };
+  };
+  studentCount: {
+    all: number;
+    request: number;
+    deleted: number;
+  };
+  merchCount: number;
+  pendingCount: number;
+  activeMembershipCount: number;
+  dailySales: Array<{
+    product_name: string;
+    totalQuantity: number;
+    totalSubtotal: number;
+  }>;
+}
+
 export interface YearLevelDatum {
   key: "year1" | "year2" | "year3" | "year4";
   label: string;

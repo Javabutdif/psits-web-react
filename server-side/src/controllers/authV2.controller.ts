@@ -13,6 +13,8 @@ import {
 import { verifyRefreshToken } from "../util/jwt.util";
 import { Log } from "../models/log.model";
 import { AuthError, AuthErrorCodes } from "../util/errors.util";
+import { account_status } from "../enums/status.enums";
+import { campus_type } from "../enums/campus.enums";
 
 /**
  * Shared user response type for frontend
@@ -84,7 +86,8 @@ export const loginV2Controller = async (
   console.log(`Login attempt for ID: ${id_number}`);
   try {
     let user: IAdminDocument | IStudentDocument | null = null;
-    let  role: "admin" | "student";
+    let role: "admin" | "student";
+    let accessLevel: string | undefined;
 
     // Check if admin login (id_number contains "-admin")
     if (id_number.includes("-admin")) {
@@ -98,16 +101,17 @@ export const loginV2Controller = async (
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
-      if (admin.status === "Suspend") {
+      if (admin.status === account_status.SUSPENDED) {
         throw new AuthError(AuthErrorCodes.AccountSuspended);
       }
 
-      if (admin.status !== "Active") {
+      if (admin.status !== account_status.ACTIVE) {
         throw new AuthError(AuthErrorCodes.AccountNotActive);
       }
 
       user = admin;
       role = "admin";
+      accessLevel = admin.access;
 
       // Log admin login
       const log = new Log({
@@ -128,11 +132,11 @@ export const loginV2Controller = async (
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
-      if (student.status === "False") {
+      if (student.status === account_status.DELETED) {
         throw new AuthError(AuthErrorCodes.AccountDeleted);
       }
 
-      if (student.status !== "True") {
+      if (student.status !== account_status.ACTIVE) {
         throw new AuthError(AuthErrorCodes.AccountNotActive);
       }
 
@@ -145,14 +149,15 @@ export const loginV2Controller = async (
       sub: user._id.toString(),
       idNumber: user.id_number,
       role,
-      campus: user.campus || "UC-Main",
+      campus: user.campus || campus_type.MAIN,
+      access: accessLevel,
     });
 
     const refreshToken = signRefreshToken({
       sub: user._id.toString(),
       idNumber: user.id_number,
       role,
-      campus: user.campus || "UC-Main",
+      campus: user.campus || campus_type.MAIN,
     });
 
     // Save refresh token to database for rotation validation
@@ -222,7 +227,9 @@ export const refreshV2Controller = async (
     }
 
     const isAccountActive =
-      role === "admin" ? user.status === "Active" : user.status === "True";
+      role === "admin"
+        ? user.status === account_status.ACTIVE
+        : user.status === account_status.ACTIVE;
 
     if (!isAccountActive) {
       clearRefreshCookie(res);
@@ -254,14 +261,15 @@ export const refreshV2Controller = async (
       sub: user._id.toString(),
       idNumber: user.id_number,
       role,
-      campus: user.campus || "UC-Main",
+      campus: user.campus || campus_type.MAIN,
+      access: role === "admin" ? (user as IAdminDocument).access : undefined,
     });
 
     const newRefreshToken = signRefreshToken({
       sub: user._id.toString(),
       idNumber: user.id_number,
       role,
-      campus: user.campus || "UC-Main",
+      campus: user.campus || campus_type.MAIN,
     });
 
     // Update database with new refresh token (invalidate old one)

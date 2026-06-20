@@ -135,3 +135,25 @@ export const getActiveMembershipCountController = catchAsync(
     res.status(200).json({ message: response });
   }
 );
+export const getMemberPriceController = catchAsync(
+  async (req: Request, res: Response) => {
+    const settings = await membershipService.getMemberPrice();
+    if (!settings) {
+      return res.status(404).json({ message: "Member price not found" });
+    }
+    return res
+      .status(200)
+      .json({ membership_price: settings.membership_price });
+  }
+);
+export const changeMemberPriceController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await membershipService.changeMemberPrice(req);
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+    return res
+      .status(200)
+      .json({ message: "Member price updated successfully" });
+  }
+);

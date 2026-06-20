@@ -14,7 +14,9 @@ import {
   updateStudent,
 } from "@/features/admin/api/admin";
 import { useAuth } from "@/features/auth";
+import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
+import { PSITS_ROLES } from "../../constants/adminAccess";
 import type {
   AdminStudent,
   StudentAction,
@@ -84,7 +86,7 @@ const normalizeStudent = (record: StudentApiRecord): AdminStudent => ({
   email: String(record.email || ""),
   course: String(record.course || ""),
   year: String(record.year || ""),
-  membershipStatus: String(record.membershipStatus || "NOT_APPLIED"),
+  membershipStatus: String(record.membershipStatus || "MEMBERSHIP_NONE"),
   status: String(record.status || ""),
   applied: String(record.applied || ""),
   deletedBy: String(record.deletedBy || ""),
@@ -140,9 +142,12 @@ export const useStudentsData = () => {
   const [tabCounts, setTabCounts] =
     useState<StudentTabCounts>(DEFAULT_TAB_COUNTS);
 
-  const isUcMainAdmin = user?.role === "admin" && user.campus === "UC-Main";
+  const isUcMainAdmin =
+    user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
   const canManageMembership =
-    isUcMainAdmin && (user?.access === "admin" || user?.access === "finance");
+    isUcMainAdmin &&
+    (user?.access === PSITS_ROLES.ADMIN ||
+      user?.access === PSITS_ROLES.FINANCE);
 
   const fetchStudentCounts = useCallback(async () => {
     const result = await getCountStudent();
@@ -244,7 +249,10 @@ export const useStudentsData = () => {
       });
   }, [filters, search, sort, students]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / ROWS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredStudents.length / ROWS_PER_PAGE)
+  );
   const currentPage = Math.min(page, totalPages);
   const pagedStudents = filteredStudents.slice(
     (currentPage - 1) * ROWS_PER_PAGE,
@@ -282,8 +290,7 @@ export const useStudentsData = () => {
   const togglePageSelection = () => {
     const pageIds = pagedStudents.map((student) => student.id_number);
     setSelectedIds((currentIds) =>
-      pageIds.length > 0 &&
-      pageIds.every((id) => currentIds.includes(id))
+      pageIds.length > 0 && pageIds.every((id) => currentIds.includes(id))
         ? currentIds.filter((id) => !pageIds.includes(id))
         : Array.from(new Set([...currentIds, ...pageIds]))
     );
@@ -327,37 +334,40 @@ export const useStudentsData = () => {
     return (result || []) as StudentMembershipHistoryItem[];
   }, []);
 
-  const approveStudentMembership = useCallback((student: AdminStudent) => {
-    return approveMembership({
-      reference_code: String(createReferenceCode()),
-      id_number: student.id_number,
-      rfid: student.rfid || "N/A",
-      type: student.isFirstApplication ? "Membership" : "Renewal",
-      admin: user?.name || "Admin",
-      cash: membershipFee,
-      date: new Date(),
-      total: membershipFee,
-    });
-  }, [membershipFee, user?.name]);
+  const approveStudentMembership = useCallback(
+    (student: AdminStudent) => {
+      return approveMembership({
+        reference_code: String(createReferenceCode()),
+        id_number: student.id_number,
+        rfid: student.rfid || "N/A",
+        type: student.isFirstApplication ? "Membership" : "Renewal",
+        admin: user?.name || "Admin",
+        cash: membershipFee,
+        date: new Date(),
+        total: membershipFee,
+      });
+    },
+    [membershipFee, user?.name]
+  );
 
-  const submitMembership = useCallback(async (student: AdminStudent) => {
-    setIsMutating(true);
-    try {
-      const result = await approveStudentMembership(student);
-      if (result) {
-        await Promise.all([fetchStudents(), fetchStudentCounts()]);
-        return true;
+  const submitMembership = useCallback(
+    async (student: AdminStudent) => {
+      setIsMutating(true);
+      try {
+        const result = await approveStudentMembership(student);
+        if (result) {
+          await Promise.all([fetchStudents(), fetchStudentCounts()]);
+          return true;
+        }
+        return false;
+      } finally {
+        setIsMutating(false);
       }
-      return false;
-    } finally {
-      setIsMutating(false);
-    }
-  }, [approveStudentMembership, fetchStudentCounts, fetchStudents]);
+    },
+    [approveStudentMembership, fetchStudentCounts, fetchStudents]
+  );
 
-  const runAction = async (
-    action: StudentAction,
-    records: AdminStudent[]
-  ) => {
+  const runAction = async (action: StudentAction, records: AdminStudent[]) => {
     if (records.length === 0) return false;
 
     setIsMutating(true);
@@ -368,13 +378,16 @@ export const useStudentsData = () => {
             return studentDeletion(record.id_number, user?.name || "Admin");
           }
           if (action === "restore") return studentRestore(record.id_number);
-          if (action === "cancelRequest") return cancelMembership(record.id_number);
+          if (action === "cancelRequest")
+            return cancelMembership(record.id_number);
           return approveStudentMembership(record);
         })
       );
 
       const isSuccess = results.every((result) =>
-        typeof result === "boolean" ? result : result === 200 || result === undefined
+        typeof result === "boolean"
+          ? result
+          : result === 200 || result === undefined
       );
 
       if (isSuccess) {

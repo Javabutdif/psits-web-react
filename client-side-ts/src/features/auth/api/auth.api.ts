@@ -33,7 +33,9 @@ const syncLegacySessionToken = async (payload: LoginPayload): Promise<void> => {
     );
     // V2 login now also handles /api/login, which returns { accessToken, user }
     // (not the old { token, role, campus } shape). Try both shapes.
-    const legacyToken = (data as Record<string, unknown>).token || (data as Record<string, unknown>).accessToken;
+    const legacyToken =
+      (data as Record<string, unknown>).token ||
+      (data as Record<string, unknown>).accessToken;
     if (legacyToken) {
       sessionStorage.setItem("Token", String(legacyToken));
     }
@@ -56,7 +58,7 @@ export const loginUser = async (
     payload
   );
   setAccessToken(data.accessToken);
-
+  console.log(data);
   try {
     await syncLegacySessionToken(payload);
   } catch (error) {
