@@ -270,7 +270,15 @@ export const getStudentDashboardCountController = async (
   req: Request,
   res: Response
 ) => {
-  adminService.getAdminDashboardCount();
+  try {
+    const data = await adminService.getAdminDashboardCount();
+    return res.json(data);
+  } catch (error) {
+    console.error("Error fetching student dashboard counts:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching statistics." });
+  }
 };
 
 export const getDailySalesController = async (req: Request, res: Response) => {
@@ -320,6 +328,7 @@ export const getAllAdminAccountsController = async (
 ) => {
   try {
     const access = req.admin.access;
+    console.log("Admin access level:", req.admin);
 
     const officers = await Admin.find({ status: "Active" });
     const users = officers.map((officer) => admin_model(officer));

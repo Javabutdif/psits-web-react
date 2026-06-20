@@ -17,7 +17,7 @@ import { catchAsync } from "../util/catch.async.util";
 
 export const approveMembershipController = catchAsync(
   async (req: Request, res: Response) => {
-    const { reference_code, id_number, admin, rfid, date, cash } = req.body;
+    const { reference_code, id_number, admin, rfid, cash } = req.body;
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -40,6 +40,11 @@ export const approveMembershipController = catchAsync(
     //check membership
     const result = await membershipService.checkApplication(student);
 
+    if (!result.status) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: result.message });
+    }
     const historyQuery = {
       id_number,
       rfid,
