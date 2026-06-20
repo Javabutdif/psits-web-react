@@ -1,0 +1,17 @@
+export const logs_action = Object.freeze({
+  CHANGE_PASSWORD: "Change Password",
+  EDITED_ADMIN: "Edited Admin",
+  ADMIN_LOGIN: "Admin Login",
+  ADMIN_LOGOUT: "Admin Logout",
+  EXPORT: "Exported Merchandise Report CSV",
+  REMOVE_ROLE: "Remove Role",
+  SUSPEND: "Suspend Admin Account",
+  RESTORE: "Restore Suspended Admin",
+  REQUEST_ROLE: "Requested a Role",
+  APPROVE_ROLE: "Approved a Role",
+  DECLINE_ROLE: "Decline a Role",
+  CREATE_ADMIN: "Create Admin Account",
+  APPROVE_ADMIN: "Approved Admin Account",
+  DECLINE_ADMIN: "Decline Admin Account",
+  CHANGE_ACCESS: "Change Access",
+});

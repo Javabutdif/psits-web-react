@@ -3,14 +3,28 @@ import {
   getAllLogsController,
   addNewLogController,
 } from "../controllers/log.controller";
-import { admin_authenticate } from "../middlewares/custom_authenticate_token";
+import {
+  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2,
+} from "../middlewares/authV2.middleware";
 
 const router = Router();
 
 // Fetch all logs
-router.get("/", admin_authenticate, getAllLogsController);
+router.get(
+  "/",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  getAllLogsController
+);
 
 // Add a new log
-router.post("/", admin_authenticate, addNewLogController);
+router.post(
+  "/",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  addNewLogController
+);
 
 export default router;

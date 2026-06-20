@@ -13,9 +13,9 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === "Admin") {
+      if (user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
-      } else if (user.role === "Student") {
+      } else if (user.role === "student") {
         navigate("/student/event-attendance", { replace: true });
       } else {
         navigate("/", { replace: true });
@@ -33,9 +33,9 @@ export default function Login() {
 
       showToast("success", "Signed in successfully");
 
-      if (loggedInUser.role === "Admin") {
+      if (loggedInUser.role === "admin") {
         navigate("/admin/dashboard");
-      } else if (loggedInUser.role === "Student") {
+      } else if (loggedInUser.role === "student") {
         navigate("/student/event-attendance");
       } else {
         navigate("/");

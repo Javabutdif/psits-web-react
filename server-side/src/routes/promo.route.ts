@@ -1,10 +1,5 @@
 import { Router } from "express";
 import {
-  admin_authenticate,
-  role_authenticate,
-  both_authenticate,
-} from "../middlewares/custom_authenticate_token";
-import {
   createPromoCode,
   getAllPromoCode,
   deletePromo,
@@ -12,23 +7,51 @@ import {
   getPromoLog,
   updatePromoCode,
 } from "../controllers/promo.controller";
+import {
+  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2,
+  adminAccessAuthenticateV2,
+} from "../middlewares/authV2.middleware";
 const router = Router();
 
 router.post(
   "/create",
-  admin_authenticate,
-  role_authenticate(["finance", "admin"]),
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(["finance", "admin"]),
   createPromoCode
 );
-router.get("/fetch", both_authenticate, getAllPromoCode);
+router.get(
+  "/fetch",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin", "student"]),
+  getAllPromoCode
+);
 router.delete(
   "/delete/:id",
-  admin_authenticate,
-  role_authenticate(["admin", "finance"]),
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(["admin", "finance"]),
   deletePromo
 );
-router.get("/verify/:promo_code/:merchId", both_authenticate, verifyPromo);
-router.get("/log", admin_authenticate, getPromoLog);
-router.post("/update", admin_authenticate, updatePromoCode);
+router.get(
+  "/verify/:promo_code/:merchId",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin", "student"]),
+  verifyPromo
+);
+router.get(
+  "/log",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  getPromoLog
+);
+router.post(
+  "/update",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  updatePromoCode
+);
 
 export default router;

@@ -8,9 +8,9 @@ import { requireAccessTokenV2, roleAuthenticateV2 } from "../middlewares/authV2.
 const router = Router();
 
 // Get eligible certificates for authenticated student
-router.get("/eligible", requireAccessTokenV2, roleAuthenticateV2(["Student"]), getEligibleCertificatesForStudent);
+router.get("/eligible", requireAccessTokenV2, roleAuthenticateV2(["student"]), getEligibleCertificatesForStudent);
 
 // Generate certificate - requires student authentication
-router.post("/generate", requireAccessTokenV2, roleAuthenticateV2(["Student"]), generateCertificate);
+router.post("/generate", requireAccessTokenV2, roleAuthenticateV2(["student"]), generateCertificate);
 
 export default router;

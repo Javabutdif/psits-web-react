@@ -502,7 +502,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         <div className="mt-2 flex w-full flex-row items-center gap-2 sm:mt-0 sm:w-auto">
           <CampusView
             allowedCampuses={["UC-LM", "UC-PT", "UC-Banilad"]}
-            role="Admin"
+            role="admin"
           >
             <div className="flex-1 sm:flex-none">
               <Button

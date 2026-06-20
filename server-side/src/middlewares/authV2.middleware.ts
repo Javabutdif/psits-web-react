@@ -52,6 +52,7 @@ import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken, AccessTokenClaims } from "../util/jwt.util";
 import { Student } from "../models/student.model";
 import { Admin } from "../models/admin.model";
+import { admin_model } from "../model_template/model_data";
 
 /**
  * Extend Express Request to include v2 auth user claims from access token.
@@ -78,7 +79,7 @@ declare global {
  * - 401: Missing or invalid access token
  * - Then chain with roleAuthenticateV2() to control access by role
  */
-export const requireAccessTokenV2 = (
+export const requireAccessTokenV2 = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -105,6 +106,12 @@ export const requireAccessTokenV2 = (
   try {
     const claims = verifyAccessToken(token);
     req.userV2 = claims;
+    if (claims.role === "admin") {
+      const admin = await Admin.findById(claims.sub);
+      if (admin) {
+        req.admin = admin_model(admin);
+      }
+    }
     next();
   } catch (error) {
     const message =
@@ -164,7 +171,7 @@ export const requireAccessTokenWithDBCheck = async (
     const claims = verifyAccessToken(token);
 
     // Verify user still exists and is active
-    if (claims.role === "Admin") {
+    if (claims.role === "admin") {
       const admin = await Admin.findById(claims.sub);
       if (!admin || admin.status !== "Active") {
         return res.status(403).json({
@@ -179,6 +186,7 @@ export const requireAccessTokenWithDBCheck = async (
           message: "Account credentials mismatch",
         });
       }
+      req.admin = admin_model(admin);
     } else {
       const student = await Student.findById(claims.sub);
       if (!student || student.status !== "True") {
@@ -225,7 +233,7 @@ export const requireAccessTokenWithDBCheck = async (
  * router.get("/data", requireAccessTokenV2, roleAuthenticateV2(["Student", "Admin"]), controller)
  */
 export const roleAuthenticateV2 = (
-  allowedRoles: Array<"Admin" | "Student">
+  allowedRoles: Array<"admin" | "student">
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.userV2) {
@@ -274,21 +282,41 @@ export const roleAuthenticateV2 = (
  */
 export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.userV2 || req.userV2.role !== "Admin") {
+    if (!req.userV2 || req.userV2.role !== "admin") {
       return res.status(403).json({ message: "Admin access required" });
     }
 
     try {
-      // Fetch admin to check access level
-      const admin = await Admin.findById(req.userV2.sub);
-      if (!admin) {
-        return res.status(403).json({ message: "Admin not found" });
+      const currentAccess = req.admin?.access ?? req.userV2.access;
+
+      if (!currentAccess) {
+        const admin = await Admin.findById(req.userV2.sub);
+        if (!admin) {
+          return res.status(403).json({ message: "Admin not found" });
+        }
+
+        if (!allowedAccess.includes(admin.access)) {
+          return res
+            .status(403)
+            .json({ message: "Insufficient admin permissions" });
+        }
+
+        req.admin = admin_model(admin);
+        next();
+        return;
       }
 
-      if (!allowedAccess.includes(admin.access)) {
+      if (!allowedAccess.includes(currentAccess)) {
         return res
           .status(403)
           .json({ message: "Insufficient admin permissions" });
+      }
+
+      if (!req.admin) {
+        const admin = await Admin.findById(req.userV2.sub);
+        if (admin) {
+          req.admin = admin_model(admin);
+        }
       }
 
       next();

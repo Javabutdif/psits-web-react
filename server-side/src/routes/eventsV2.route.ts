@@ -27,7 +27,7 @@ const router = Router();
 router.get(
   "/get-all-event",
   requireAccessTokenV2,
-  roleAuthenticateV2(["Admin", "Student"]),
+  roleAuthenticateV2(["admin", "student"]),
   getAllEventsV2Controller
 );
 
@@ -36,7 +36,7 @@ router.get(
 router.get(
   "/my-events",
   requireAccessTokenV2,
-  roleAuthenticateV2(["Student"]),
+  roleAuthenticateV2(["student"]),
   getMyEventsController
 );
 
@@ -44,7 +44,7 @@ router.get(
 router.get(
   "/:eventId",
   requireAccessTokenV2,
-  roleAuthenticateV2(["Admin", "Student"]),
+  roleAuthenticateV2(["admin", "student"]),
   getEventByIdV2Controller
 );
 
@@ -52,7 +52,7 @@ router.get(
 router.get(
   "/:eventId/attendees",
   requireAccessTokenV2,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   getEventAttendeesV2Controller
 );
 
@@ -60,7 +60,7 @@ router.get(
 router.get(
   "/:eventId/statistics",
   requireAccessTokenV2,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   getEventStatisticsV2Controller
 );
 
@@ -68,7 +68,7 @@ router.get(
 router.post(
   "/:eventId/attendees",
   requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   addAttendeeV2Controller
 );
 
@@ -76,7 +76,7 @@ router.post(
 router.put(
   "/:eventId/attendance/:idNumber",
   requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   markAttendanceV2Controller
 );
 
@@ -84,7 +84,7 @@ router.put(
 router.get(
   "/:eventId/attendees/:idNumber/editable",
   requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   getEditableAttendeeV2Controller
 );
 
@@ -92,7 +92,7 @@ router.get(
 router.put(
   "/:eventId/attendees/:idNumber",
   requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   editAttendeeV2Controller
 );
 
@@ -100,7 +100,7 @@ router.put(
 router.put(
   "/:eventId/attendees/:idNumber/password",
   requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   changeAttendeePasswordV2Controller
 );
 
@@ -108,7 +108,7 @@ router.put(
 router.get(
   "/raffle/:eventId/",
   requireAccessTokenV2,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   getEligibleAttendeesRaffleV2Controller
 );
 
@@ -116,7 +116,7 @@ router.get(
 router.post(
   "/raffle/:eventId/draw",
   requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   drawEventRaffleWinnerController
 );
 
@@ -124,7 +124,7 @@ router.post(
 router.post(
   "/raffle/:eventId/undo/:attendeeId",
   requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["Admin"]),
+  roleAuthenticateV2(["admin"]),
   undoEventRaffleWinnerController
 );
 export default router;

@@ -3,10 +3,11 @@ import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
 import {
-  admin_authenticate,
-  both_authenticate,
-  role_authenticate,
-} from "../middlewares/custom_authenticate_token";
+  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2,
+  adminAccessAuthenticateV2,
+} from "../middlewares/authV2.middleware";
 import {
   createManualEventController,
   getAllEventsController,
@@ -58,82 +59,103 @@ const upload = multer({
 // POST: Create a new Event
 router.post(
   "/create-event",
-  admin_authenticate,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
   upload.array("images", 3),
   createManualEventController
 );
 
 // GET all events
-router.get("/get-all-event", both_authenticate, getAllEventsController);
+router.get(
+  "/get-all-event",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin", "student"]),
+  getAllEventsController
+);
 
 // GET an event and all of its attendees
 router.get(
   "/attendees/:id",
-  admin_authenticate,
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
   getAllEventsAndAttendeesController
 );
 
 // UPDATE Attendee attendance per session
 router.put(
   "/attendance/:event_id/:id_number",
-  admin_authenticate,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
   updateAttendancePerSessionController
 );
 //Check Limit per campus
 router.get(
   "/check-limit/:eventId",
-  admin_authenticate,
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
   checkLimitPerCampusController
 );
 //update-settings
 router.post(
   "/update-settings/:eventId",
-  admin_authenticate,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
   updateLimitSettingsController
 );
 
 // Get Eligible Attendees for Raffle
 router.get(
   "/raffle/:eventId",
-  admin_authenticate,
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
   getEligibleAttendeesRaffleController
 );
 
 // Mark Attendee as Raffle Winner
 router.post(
   "/raffle/winner/:eventId/:attendeeId",
-  admin_authenticate,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
   setAttendeeAsRaffleWinnerController
 );
 
 // Remove Attendee from Raffle
 router.put(
   "/raffle/remove/:eventId/:attendeeId",
-  admin_authenticate,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
   removeAttendeeInRaffleController
 );
 
 // Add attendee in events
 // Possibly unused route
-router.post("/add-attendee", admin_authenticate, addAttendeeController);
+router.post(
+  "/add-attendee",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  addAttendeeController
+);
 
 //Get all statistic in events
 router.get(
   "/get-statistics/:eventId",
-  admin_authenticate,
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
   getEventStatisticsController
 );
 //Remove Events
 router.post(
   "/remove-event",
-  admin_authenticate,
-  role_authenticate(["admin"]),
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(["admin"]),
   removeEventController
 );
 //Remove Attendee
 router.post(
   "/remove-attendance",
-  admin_authenticate,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
   removeAttendanceController
 );
 

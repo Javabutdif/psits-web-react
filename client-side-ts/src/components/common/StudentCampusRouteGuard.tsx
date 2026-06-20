@@ -19,7 +19,7 @@ export function StudentCampusRouteGuard({
 }: CampusRouteGuardProps) {
   return (
     <ProtectedRoute
-      allowedRoles={["Student"]}
+      allowedRoles={["student"]}
       allowedCampuses={allowedCampuses}
     />
   );

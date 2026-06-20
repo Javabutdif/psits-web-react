@@ -1,6 +1,7 @@
 import { IAdminDocument } from "../models/admin.interface";
 import { IStudent } from "../models/student.interface";
 import { IRoleModelData, IUserModelData } from "./model_data.interface";
+import { studentService } from "../services/student.service";
 
 export const admin_model = (admin: IAdminDocument): any => {
   return {
@@ -21,7 +22,7 @@ export const user_model = (user: IStudent): IUserModelData => {
   return {
     id_number: user.id_number,
     rfid: user.rfid ?? "N/A",
-    name: user.first_name + " " + user.middle_name + " " + user.last_name,
+    name: studentService.fullNameFormat(user),
     email: user.email,
     course: user.course,
     year: user.year,
@@ -34,7 +35,7 @@ export const user_model = (user: IStudent): IUserModelData => {
 export const role_model = (user: IStudent): IRoleModelData => {
   return {
     id_number: user.id_number,
-    name: user.first_name + " " + user.middle_name + " " + user.last_name,
+    name: studentService.fullNameFormat(user),
     email: user.email,
     course: user.course,
     year: user.year,

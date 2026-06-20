@@ -36,6 +36,6 @@ export const PublicShopCampusGuard = () => {
   }
 
   const fallback =
-    user?.role === "Admin" ? "/admin/events" : "/student/event-attendance";
+    user?.role === "admin" ? "/admin/events" : "/student/event-attendance";
   return <Navigate to={fallback} replace />;
 };

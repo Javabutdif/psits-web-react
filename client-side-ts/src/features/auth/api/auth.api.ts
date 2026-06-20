@@ -26,11 +26,22 @@ type LegacyLoginResponse = {
 };
 
 const syncLegacySessionToken = async (payload: LoginPayload): Promise<void> => {
-  const { data } = await authAxios.post<LegacyLoginResponse>(
-    "/api/login",
-    payload
-  );
-  sessionStorage.setItem("Token", data.token);
+  try {
+    const { data } = await authAxios.post<LegacyLoginResponse>(
+      "/api/login",
+      payload
+    );
+    // V2 login now also handles /api/login, which returns { accessToken, user }
+    // (not the old { token, role, campus } shape). Try both shapes.
+    const legacyToken =
+      (data as Record<string, unknown>).token ||
+      (data as Record<string, unknown>).accessToken;
+    if (legacyToken) {
+      sessionStorage.setItem("Token", String(legacyToken));
+    }
+  } catch {
+    // Legacy sync is best-effort; don't block login if it fails
+  }
 };
 
 /**
@@ -47,7 +58,7 @@ export const loginUser = async (
     payload
   );
   setAccessToken(data.accessToken);
-
+  console.log(data);
   try {
     await syncLegacySessionToken(payload);
   } catch (error) {

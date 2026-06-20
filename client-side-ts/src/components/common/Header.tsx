@@ -60,9 +60,9 @@ export const Header = () => {
   const homeHref =
     !isAuthenticated || !user
       ? "/"
-      : user.role === "Admin"
+      : user.role === "admin"
         ? "/admin/events"
-        : user.role === "Student"
+        : user.role === "student"
           ? "/student/event-attendance"
           : "/";
 
@@ -146,7 +146,7 @@ export const Header = () => {
         <CampusView
           key={link.name}
           allowedCampuses={link.allowedCampus}
-          role={user.role === "Admin" ? "Admin" : "Student"}
+          role={user.role === "admin" ? "admin" : "student"}
         >
           {linkEl}
         </CampusView>
@@ -206,7 +206,7 @@ export const Header = () => {
           {isAuthenticated && user ? (
             <CampusView
               allowedCampuses={["UC-Main", "UC-CS"]}
-              role={user.role === "Admin" ? "Admin" : "Student"}
+              role={user.role === "admin" ? "admin" : "student"}
             >
               <Link
                 to="/cart"
