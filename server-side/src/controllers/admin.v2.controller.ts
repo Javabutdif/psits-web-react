@@ -109,3 +109,99 @@ export const setRestoreAdminAccountController = catchAsync(
       .json({ message: "Admin account restored successfully" });
   }
 );
+export const setAdminRequestRoleController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.requestRole(req);
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+    return res
+      .status(200)
+      .json({ message: "Admin role request submitted successfully" });
+  }
+);
+
+export const getAllRequestMemberRoleController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.getAllMemberRequest();
+    if (!result) {
+      return res.status(400).json({ message: "Failed to get role requests" });
+    }
+    return res.status(200).json({ data: result });
+  }
+);
+export const getAllRequestAdminAccountController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.getAllAdminRequest();
+    if (!result) {
+      return res.status(400).json({ message: "Failed to get admin requests" });
+    }
+    return res.status(200).json({ data: result });
+  }
+);
+export const approveRoleMemberController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.approveMember(req);
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+    return res
+      .status(200)
+      .json({ message: "Role request approved successfully" });
+  }
+);
+export const setDeclineMemberRoleController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.declineMember(req);
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+    return res
+      .status(200)
+      .json({ message: "Role request declined successfully" });
+  }
+);
+export const addNewAdminAccountController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.create(req);
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+    return res
+      .status(200)
+      .json({ message: "Admin account created successfully" });
+  }
+);
+export const approveAdminAccountController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.approveAdmin(req);
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+    return res
+      .status(200)
+      .json({ message: "Admin account approved successfully" });
+  }
+);
+export const declineAdminAccountController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.declineAdmin(req);
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+    return res
+      .status(200)
+      .json({ message: "Admin account declined successfully" });
+  }
+);
+export const setNewAdminAccessController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await adminService.changeAccess(req);
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+    return res
+      .status(200)
+      .json({ message: "Admin access updated successfully" });
+  }
+);
