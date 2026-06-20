@@ -475,7 +475,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     }
   };
 
-  const NON_UC_MAIN_EDIT_CAMPUSES = ["UC-Banilad", "UC-LM", "UC-PT"];
+  const NON_UC_MAIN_EDIT_CAMPUSES = ["UC-BANILAD", "UC-LM", "UC-PT"];
   const showEditActions = NON_UC_MAIN_EDIT_CAMPUSES.includes(adminCampus ?? "");
 
   const handleEditAttendee = () => {
@@ -501,7 +501,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         <h3 className="text-lg font-semibold">{venue}</h3>
         <div className="mt-2 flex w-full flex-row items-center gap-2 sm:mt-0 sm:w-auto">
           <CampusView
-            allowedCampuses={["UC-LM", "UC-PT", "UC-Banilad"]}
+            allowedCampuses={["UC-LM", "UC-PT", "UC-BANILAD"]}
             role="admin"
           >
             <div className="flex-1 sm:flex-none">
