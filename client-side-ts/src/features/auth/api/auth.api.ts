@@ -25,19 +25,20 @@ type LegacyLoginResponse = {
   message: string;
 };
 
+const extractAccessToken = (data: Record<string, unknown>): string | null => {
+  const token = data.accessToken ?? data.token;
+  return typeof token === "string" && token.length > 0 ? token : null;
+};
+
 const syncLegacySessionToken = async (payload: LoginPayload): Promise<void> => {
   try {
     const { data } = await authAxios.post<LegacyLoginResponse>(
       "/api/login",
       payload
     );
-    // V2 login now also handles /api/login, which returns { accessToken, user }
-    // (not the old { token, role, campus } shape). Try both shapes.
-    const legacyToken =
-      (data as Record<string, unknown>).token ||
-      (data as Record<string, unknown>).accessToken;
+    const legacyToken = extractAccessToken(data as Record<string, unknown>);
     if (legacyToken) {
-      sessionStorage.setItem("Token", String(legacyToken));
+      sessionStorage.setItem("Token", legacyToken);
     }
   } catch {
     // Legacy sync is best-effort; don't block login if it fails
@@ -57,8 +58,12 @@ export const loginUser = async (
     "/api/v2/auth/login",
     payload
   );
-  setAccessToken(data.accessToken);
-  console.log(data);
+  const accessToken = extractAccessToken(data as Record<string, unknown>);
+  if (!accessToken) {
+    throw new Error("Login response did not include an access token.");
+  }
+
+  setAccessToken(accessToken);
   try {
     await syncLegacySessionToken(payload);
   } catch (error) {
@@ -94,8 +99,13 @@ export const refreshTokens = (): Promise<AuthResponse | null> => {
   inflightRefresh = authAxios
     .post<AuthResponse>("/api/v2/auth/refresh")
     .then(({ data }) => {
-      setAccessToken(data.accessToken);
-      return data;
+      const accessToken = extractAccessToken(data as Record<string, unknown>);
+      if (!accessToken) {
+        throw new Error("Refresh response did not include an access token.");
+      }
+
+      setAccessToken(accessToken);
+      return { ...data, accessToken };
     })
     .catch(() => {
       clearAccessToken();

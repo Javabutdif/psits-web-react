@@ -6,9 +6,15 @@ import type { LoginFormData, RegisterFormData } from "@/types/api";
 interface LoginResponse {
   role: string;
   campus: string;
-  token: string;
+  token?: string;
+  accessToken?: string;
   message: string;
 }
+
+const readToken = (response: LoginResponse): string | null => {
+  const token = response.token ?? response.accessToken;
+  return typeof token === "string" && token.length > 0 ? token : null;
+};
 
 interface ApiErrorResponse {
   message?: string;
@@ -50,12 +56,15 @@ export const login = async (
     );
 
     if (response.status === 200) {
-      sessionStorage.setItem("Token", response.data.token);
+      const token = readToken(response.data);
+      if (token) {
+        sessionStorage.setItem("Token", token);
+      }
 
       return {
         role: response.data.role,
         campus: response.data.campus,
-        token: response.data.token,
+        token: token ?? "",
         message: response.data.message,
       };
     } else {
