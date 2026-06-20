@@ -36,7 +36,9 @@ const syncLegacySessionToken = async (payload: LoginPayload): Promise<void> => {
       "/api/login",
       payload
     );
+
     const legacyToken = extractAccessToken(data as Record<string, unknown>);
+    console.log("Legacy login response:", data);
     if (legacyToken) {
       sessionStorage.setItem("Token", legacyToken);
     }
@@ -58,12 +60,14 @@ export const loginUser = async (
     "/api/v2/auth/login",
     payload
   );
+  console.log(data);
   const accessToken = extractAccessToken(data as Record<string, unknown>);
   if (!accessToken) {
     throw new Error("Login response did not include an access token.");
   }
 
   setAccessToken(accessToken);
+  sessionStorage.setItem("Token", accessToken);
   try {
     await syncLegacySessionToken(payload);
   } catch (error) {
@@ -105,6 +109,7 @@ export const refreshTokens = (): Promise<AuthResponse | null> => {
       }
 
       setAccessToken(accessToken);
+      sessionStorage.setItem("Token", accessToken);
       return { ...data, accessToken };
     })
     .catch(() => {
