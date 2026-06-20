@@ -9,7 +9,7 @@ export default function GeneralAdminPage() {
       </p>
 
       {/* Conditional UI for UC-Main Admins */}
-      <CampusView allowedCampuses={["UC-Main"]} role="admin">
+      <CampusView allowedCampuses={["UC-MAIN"]} role="admin">
         <div className="relative rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700">
           <strong className="font-bold">UC-Main Specific Content:</strong>
           <span className="block sm:inline">

@@ -4,7 +4,7 @@ import { useAuth } from "@/features/auth";
 import type { Campus } from "@/features/auth/types/auth.types";
 import { showToast } from "@/utils/alertHelper";
 
-const SHOP_ALLOWED_CAMPUSES: Campus[] = ["UC-Main", "UC-CS"];
+const SHOP_ALLOWED_CAMPUSES: Campus[] = ["UC-MAIN", "UC-CS"];
 
 export const PublicShopCampusGuard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -22,7 +22,7 @@ export const PublicShopCampusGuard = () => {
       hasShownToastRef.current = true;
       showToast(
         "error",
-        "Shop and cart are currently available for UC-Main and UC-CS accounts only."
+        "Shop and cart are currently available for UC-MAIN and UC-CS accounts only."
       );
     }
   }, [isBlocked]);

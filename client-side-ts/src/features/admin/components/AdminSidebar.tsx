@@ -49,7 +49,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const isUcMainAdmin = useCampusCheck(["UC-Main"]);
+  const isUcMainAdmin = useCampusCheck(["UC-MAIN"]);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

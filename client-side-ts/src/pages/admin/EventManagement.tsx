@@ -58,17 +58,17 @@ interface EventDetails {
 }
 
 const CAMPUS_CODE_TO_NAME: Record<Campus, string> = {
-  "UC-Main": "University of Cebu Main Campus",
-  "UC-Banilad": "University of Cebu Banilad Campus",
+  "UC-MAIN": "University of Cebu Main Campus",
+  "UC-BANILAD": "University of Cebu Banilad Campus",
   "UC-LM": "University of Cebu Lapu-Lapu & Mandaue",
   "UC-PT": "University of Cebu Pardo & Talisay",
   "UC-CS": "University of Cebu Main Campus",
 };
 
-const DEFAULT_CAMPUSES: Campus[] = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"];
+const DEFAULT_CAMPUSES: Campus[] = ["UC-MAIN", "UC-BANILAD", "UC-LM", "UC-PT"];
 
 const normalizeCampusForFilter = (campus: Campus): Campus =>
-  campus === "UC-CS" ? "UC-Main" : campus;
+  campus === "UC-CS" ? "UC-MAIN" : campus;
 
 const UNDER_CONSTRUCTION_MESSAGE =
   "This is under construction, visit legacy website to access this functionality.";
@@ -208,7 +208,7 @@ const mapApiEventToEventDetails = (
 
   const normalizedCampusCodes = Array.from(
     new Set<Campus>([
-      "UC-Main",
+      "UC-MAIN",
       ...(mappedCampusCodes.length > 0 ? mappedCampusCodes : DEFAULT_CAMPUSES),
     ])
   );
@@ -263,7 +263,7 @@ const EventManagement: React.FC = () => {
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const isAdmin = user?.role === "admin";
-  const isUcMainAdmin = isAdmin && user?.campus === "UC-Main";
+  const isUcMainAdmin = isAdmin && user?.campus === "UC-MAIN";
 
   const availableCampusCodes = useMemo(() => {
     const eventCampusCodes = eventDetails?.campusCodes ?? DEFAULT_CAMPUSES;
