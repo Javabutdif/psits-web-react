@@ -1,26 +1,6 @@
 import { Router } from "express";
 
-import {
-  getSearchStudentByIdController,
-  getDashboardStats,
-  getAllAdminMembersController,
-  getAllSuspendAdminAccountController,
-  editAdminController,
-  changeAdminPasswordController,
-  setSuspendAdminAccountController,
-  setMemberRoleRemoveController,
-  setRestoreAdminAccountController,
-  setAdminRequestRoleController,
-  getAllRequestAdminAccountController,
-  approveRoleMemberController,
-  setDeclineMemberRoleController,
-  addNewAdminAccountController,
-  approveAdminAccountController,
-  declineAdminAccountController,
-  setNewAdminAccessController,
-  getAllAdminController,
-  getStudentCountController,
-} from "../controllers/admin.v2.controller";
+import { adminController } from "../controllers/admin.v2.controller";
 import {
   approveMembershipController,
   getMembershipHistoryController,
@@ -45,7 +25,7 @@ router.get(
   "/student_search/:id_number",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getSearchStudentByIdController
+  adminController.getSearchStudentByIdController
 );
 //ApproveMembership
 router.post(
@@ -82,13 +62,13 @@ router.get(
   "/get-dashboard",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getDashboardStats
+  adminController.getDashboardStats
 );
 router.get(
   "/dashboard-stats",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getDashboardStats
+  adminController.getDashboardStats
 );
 //get-active-membership-count
 router.get(
@@ -103,7 +83,7 @@ router.get(
   "/get-students-count",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getStudentCountController
+  adminController.getStudentCountController
 );
 
 //Get All admin officers
@@ -116,21 +96,21 @@ router.get(
     psits_roles.FINANCE,
     psits_roles.EXECUTIVE,
   ]),
-  getAllAdminController
+  adminController.getAllAdminController
 );
 //Get All Members
 router.get(
   "/get-all-members",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getAllAdminMembersController
+  adminController.getAllAdminMembersController
 );
 //Get Suspend Admin Accounts
 router.get(
   "/get-suspend-officers",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getAllSuspendAdminAccountController
+  adminController.getAllSuspendAdminAccountController
 );
 //Edit Admin Account
 router.post(
@@ -138,7 +118,7 @@ router.post(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  editAdminController
+  adminController.editAdminController
 );
 //Change Password Admin Account
 router.post(
@@ -146,7 +126,7 @@ router.post(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  changeAdminPasswordController
+  adminController.changeAdminPasswordController
 );
 //Set Admin Account to Suspend
 router.put(
@@ -154,7 +134,7 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  setSuspendAdminAccountController
+  adminController.setSuspendAdminAccountController
 );
 //Set Member Role Remove
 router.put(
@@ -162,7 +142,7 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.EXECUTIVE]),
-  setMemberRoleRemoveController
+  adminController.setMemberRoleRemoveController
 );
 //Set Restore Deleted Admin
 router.put(
@@ -170,28 +150,28 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2(["admin"]),
-  setRestoreAdminAccountController
+  adminController.setRestoreAdminAccountController
 );
 //Set Admin Request Role to Member
 router.put(
   "/request-role",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  setAdminRequestRoleController
+  adminController.setAdminRequestRoleController
 );
 //Get all Members Account Request Role
 router.get(
   "/get-request-role",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getAllRequestAdminAccountController
+  adminController.getAllRequestAdminAccountController
 );
 //Get all Admin Account Request Role
 router.get(
   "/get-request-admin",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getAllRequestAdminAccountController
+  adminController.getAllRequestAdminAccountController
 );
 //Set Approve Role for Members
 router.put(
@@ -199,7 +179,7 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  approveRoleMemberController
+  adminController.approveRoleMemberController
 );
 //Set Decline Role for Members
 router.put(
@@ -207,7 +187,7 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  setDeclineMemberRoleController
+  adminController.setDeclineMemberRoleController
 );
 //Add New Admin Account
 router.post(
@@ -215,7 +195,7 @@ router.post(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  addNewAdminAccountController
+  adminController.addNewAdminAccountController
 );
 //Approve Admin Account Creation
 router.put(
@@ -223,7 +203,7 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  approveAdminAccountController
+  adminController.approveAdminAccountController
 );
 //Decline Admin Account Creation
 router.put(
@@ -231,14 +211,14 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  declineAdminAccountController
+  adminController.declineAdminAccountController
 );
 //update-admin-access
 router.put(
   "/update-admin-access",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  setNewAdminAccessController
+  adminController.setNewAdminAccessController
 );
 router.get(
   "/get-membership-price",
