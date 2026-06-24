@@ -1,15 +1,7 @@
 import { Router } from "express";
 
 import { adminController } from "../controllers/admin.v2.controller";
-import {
-  approveMembershipController,
-  getMembershipHistoryController,
-  getMembershipRequestController,
-  getActiveMembershipCountController,
-  revokeAllMembershipController,
-  changeMemberPriceController,
-  getMemberPriceController,
-} from "../controllers/membership.v2.controller";
+import { membershipController } from "../controllers/membership.v2.controller";
 
 import {
   requireAccessTokenV2,
@@ -33,7 +25,7 @@ router.post(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
-  approveMembershipController
+  membershipController.approveMembershipController
 );
 //Revoke Student Membership
 router.put(
@@ -41,21 +33,21 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN]),
-  revokeAllMembershipController
+  membershipController.revokeAllMembershipController
 );
 //Membership History
 router.get(
   "/history",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getMembershipHistoryController
+  membershipController.getMembershipHistoryController
 );
 //Membership Request
 router.get(
   "/membership-request",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getMembershipRequestController
+  membershipController.getMembershipRequestController
 );
 //Dashboard Student Counts
 router.get(
@@ -75,7 +67,7 @@ router.get(
   "/get-active-membership-count",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getActiveMembershipCountController
+  membershipController.getActiveMembershipCountController
 );
 
 //get-student-count
@@ -224,14 +216,14 @@ router.get(
   "/get-membership-price",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getMemberPriceController
+  membershipController.getMemberPriceController
 );
 router.put(
   "/change-membership-price",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
-  changeMemberPriceController
+  membershipController.changeMemberPriceController
 );
 
 export default router;
