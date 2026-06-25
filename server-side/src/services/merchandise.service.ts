@@ -1,5 +1,5 @@
 import { Merch } from "../models/merch.model";
-import { Types } from "mongoose";
+import mongoose, { Types, ClientSession } from "mongoose";
 import { IMerch } from "../models/merch.interface";
 import { AppError } from "../util/app.error.util";
 import { IResponseMessage } from "../models/global.response.interface";
@@ -26,8 +26,10 @@ class MerchandiseService {
       throw new AppError("Product doesn't exist", 404);
     }
 
-    if (this.checkAvailable(result) && this.checkStocks(result)) {
+    if (this.checkAvailable(result) && this.checkStocks(result.stocks)) {
       return { status: true, data: result, message: "Product exist" };
+    } else {
+      return { status: false };
     }
   };
   //Check if product is available
@@ -35,8 +37,8 @@ class MerchandiseService {
     return product.is_active ? true : false;
   };
   //Check if stocks is sufficient
-  checkStocks = (product: IMerch) => {
-    return product.stocks > 0 ? true : false;
+  checkStocks = (stocks: number) => {
+    return stocks > 0 ? true : false;
   };
   //Check if merchandise is expired
   checkExpired = async (product_id: Types.ObjectId) => {
@@ -60,7 +62,45 @@ class MerchandiseService {
       throw error;
     }
   };
-  //
+  //Check stocks if sufficient for the quantity orders to be deduct
+  checkSufficientStocks = (
+    productStocks: number,
+    itemQuantity: number
+  ): boolean => {
+    return productStocks - itemQuantity >= 0;
+  };
+  //Update stocks when ordering, can be used in process orders
+  updateStocks = async (
+    product_id: Types.ObjectId,
+    quantity: number,
+    session: ClientSession
+  ) => {
+    const result = await Merch.updateOne(
+      {
+        product_id,
+        stocks: {
+          $gte: quantity,
+        },
+      },
+      {
+        $set: {
+          stocks: -quantity,
+        },
+      }
+    ).session(session);
+
+    //If there is an error deducting stocks
+    if (result.modifiedCount === 0) {
+      await session.abortTransaction();
+      session.endSession();
+      throw new AppError(
+        `Could not deduct the stocks for product ID ${product_id}`,
+        404
+      );
+    } else {
+      return true;
+    }
+  };
 }
 
 const merchandiseService = new MerchandiseService();
