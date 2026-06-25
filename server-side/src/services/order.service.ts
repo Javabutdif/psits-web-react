@@ -162,6 +162,13 @@ class OrderService {
   so I will add a parameter of requestor.
   The requestor is coming from the authorization handler 
 
+  the params are
+  1. promo_id = if ever naa
+  2. items [order items]
+  3. admin (if ever naa)
+
+  then requestor
+
   */
   createOrderService = async (params: any, requestor: any) => {
     //Check user availability

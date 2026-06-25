@@ -36,7 +36,7 @@ export const loginController = catchAsync(
     let campus;
 
     if (id_number.includes("-admin")) {
-      admin = await adminService.access(id_number);
+      admin = await adminService.retrieveSpecific(id_number);
     }
 
     if (!admin) {
