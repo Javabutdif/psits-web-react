@@ -61,7 +61,7 @@ import { admin_model } from "../model_template/model_data";
 declare global {
   namespace Express {
     interface Request {
-      userV2?: AccessTokenClaims;
+      userV2: AccessTokenClaims;
     }
   }
 }

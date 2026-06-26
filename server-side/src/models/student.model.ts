@@ -1,6 +1,7 @@
 import mongoose, { Schema, Types } from "mongoose";
 import { IStudentDocument } from "./student.interface";
 import { CartItem, cartItemSchema } from "./cart.model";
+import { membership_status } from "../enums/status.enums";
 
 const studentSchema = new Schema<IStudentDocument>({
   id_number: {
@@ -47,7 +48,7 @@ const studentSchema = new Schema<IStudentDocument>({
   },
   membershipStatus: {
     type: String,
-    default: "NOT_APPLIED",
+    default: membership_status.NONE,
   },
   applied: {
     type: String,
