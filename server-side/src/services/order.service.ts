@@ -6,6 +6,7 @@ import mongoose, { Types, ClientSession } from "mongoose";
 import { merchandiseService } from "./merchandise.service";
 import { adminService } from "./admin.service";
 import { studentService } from "./student.service";
+import { promoService } from "./promo.service";
 
 //Object Order Service for order related database operations
 class OrderService {
@@ -194,7 +195,34 @@ class OrderService {
       session
     );
 
-    //Process Final Order
+    //Promo Code Validation
+    const validation = await promoService.verifyOrderPromoEligibility(
+      params.promo_id,
+      requestor,
+      processOrder.orderItems
+    );
+
+    //Process final Order
+    const finalOrder = {
+      id_number: requestor.id_number,
+      rfid: requestor.rfid,
+      promo: {
+        _id: validation.promo._id,
+        promo_name: validation.promo.promo_name,
+        promo_discount: validation.promo.promo_discount,
+      },
+      course: requestor.course,
+      year: requestor.year,
+      student_name: requestor.name,
+      items: processOrder.orderItems,
+      total: processOrder.orderTotal,
+      order_date: new Date(),
+      order_status: "Pending",
+      role: requestor.role,
+    };
+
+    const newOrder = new Orders(finalOrder);
+    await newOrder.save({ session });
   };
 
   //This service will process the order and return the orders subtotal and total
@@ -280,6 +308,7 @@ class OrderService {
         variation: item.variation,
         sizes: item.sizes,
         batch: findMerch.data?.batch,
+        category: findMerch.data?.category,
       };
 
       //Push into the array

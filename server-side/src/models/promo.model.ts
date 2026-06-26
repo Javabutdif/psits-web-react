@@ -37,6 +37,15 @@ const promoSchema = new Schema<IPromoDocument>({
   },
   selected_audience: [String],
   selected_specific_students: [String],
+  selected_categories: {
+    type: [String],
+    default: [],
+  },
+  promo_scope: {
+    type: String,
+    enum: ["merchandise"],
+    default: "merchandise",
+  },
   discount: {
     type: Number,
     required: true,
