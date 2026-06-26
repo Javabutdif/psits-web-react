@@ -5,6 +5,7 @@ import { AppError } from "../util/app.error.util";
 import { IPromo } from "../models/promo.interface";
 import { PromoUsage } from "../models/promo.usage.model";
 import { membership_status } from "../enums/status.enums";
+import { promoCodeGenerator } from "../custom_function/code_generator";
 
 class PromoService {
   //fetch Promo
@@ -40,6 +41,7 @@ class PromoService {
 
     return result ? true : false;
   };
+  //Check on what promo type
   checkPromoType = (promo: IPromo, requestor: any) => {
     switch (promo.type) {
       case "All Students":
@@ -70,6 +72,54 @@ class PromoService {
           message: "Invalid promo type",
         };
     }
+  };
+  //Create promo code
+  create = async (data: any, requestor: any) => {
+    const parsedMerchandise = JSON.parse(data.selectedMerchandise);
+    const parsedAudience = JSON.parse(data.selectedAudience);
+
+    if (this.inputValidation(data)) {
+      throw new AppError("All required fields must be filled", 404);
+    }
+    const uniqueMerchandise = this.filterUniqueMerchandise(parsedMerchandise);
+
+    //Saved the new Promo Code
+    await new Promo({
+      promo_name: promoCodeGenerator(data.promoName),
+      type: data.type,
+      limit_type: data.limitType,
+      one_person_limit: data.singleStudent === "yes" ? true : false,
+      discount: data.discount,
+      start_date: data.startDate,
+      end_date: data.endDate,
+      selected_merchandise: uniqueMerchandise,
+      selected_audience:
+        data.type === "Organization Members" ? parsedAudience : [],
+      selected_specific_students:
+        data.type === "Students" ? parsedAudience : [],
+      quantity: data.quantity,
+      created_by: requestor.name,
+    }).save();
+  };
+  //Input validation
+  inputValidation = (data: any): boolean => {
+    return (
+      !data.promoName ||
+      !data.type ||
+      !data.limitType ||
+      data.discount === undefined ||
+      !data.startDate ||
+      !data.endDate ||
+      !data.selectedMerchandise ||
+      !Array.isArray(data.parsedMerchandise) ||
+      data.parsedMerchandise.length === 0
+    );
+  };
+  //Filter unique merchandise in promo
+  filterUniqueMerchandise = (merchandise: any[]) => {
+    return Array.from(
+      new Map(merchandise.map((item) => [item._id.toString(), item])).values()
+    );
   };
 }
 
