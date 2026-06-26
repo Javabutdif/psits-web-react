@@ -201,26 +201,21 @@ class OrderService {
       requestor,
       processOrder.orderItems
     );
-
+    //Promo Code Discount Calculation
+    const total =
+      validation.promoDiscount.discount === 0
+        ? processOrder.orderTotal
+        : this.processDiscountAmount(
+            processOrder.orderTotal,
+            validation.promoDiscount.discount
+          );
     //Process final Order
-    const finalOrder = {
-      id_number: requestor.id_number,
-      rfid: requestor.rfid,
-      promo: {
-        _id: validation.promo._id,
-        promo_name: validation.promo.promo_name,
-        promo_discount: validation.promo.promo_discount,
-      },
-      course: requestor.course,
-      year: requestor.year,
-      student_name: requestor.name,
-      items: processOrder.orderItems,
-      total: processOrder.orderTotal,
-      order_date: new Date(),
-      order_status: "Pending",
-      role: requestor.role,
-    };
-
+    const finalOrder = this.processFinalOrder(
+      requestor,
+      validation,
+      processOrder,
+      total
+    );
     const newOrder = new Orders(finalOrder);
     await newOrder.save({ session });
   };
@@ -287,15 +282,6 @@ class OrderService {
         throw new AppError("Could not update stocks in database", 404);
       }
 
-      //This will be the discounted or promo logic here, I will leave it blank for now
-      /**
-       * 
-   
-
-
-
-
-      */
       //This will be the process
       const processedItem = {
         product_id: item.product_id,
@@ -320,7 +306,35 @@ class OrderService {
   };
 
   //Process Final Order
-  processFinalOrder = async () => {};
+  processFinalOrder = (
+    requestor: any,
+    validation: any,
+    processOrder: any,
+    total: number
+  ) => {
+    const finalOrder = {
+      id_number: requestor.id_number,
+      rfid: requestor.rfid,
+      promo: {
+        _id: validation.promo._id,
+        promo_name: validation.promo.promo_name,
+        promo_discount: validation.promo.promo_discount,
+      },
+      course: requestor.course,
+      year: requestor.year,
+      student_name: requestor.name,
+      items: processOrder.orderItems,
+      total: total,
+      order_date: new Date(),
+      order_status: "Pending",
+      role: requestor.role,
+    };
+    return finalOrder;
+  };
+  processDiscountAmount = (subTotal: number, discountPercent: number) => {
+    const discountAmount = subTotal * (discountPercent / 100);
+    return subTotal - discountAmount;
+  };
 }
 
 export const orderService = new OrderService();
