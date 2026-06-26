@@ -8,9 +8,17 @@ import { membership_status } from "../enums/status.enums";
 import { promoCodeGenerator } from "../custom_function/code_generator";
 
 class PromoService {
-  //fetch Promo
+  //fetch Promo by string
   fetchPromo = async (promo_id: string) => {
     const result = await Promo.findOne({ promo_id });
+    if (!result) {
+      throw new AppError("Promo does not exist!", 404);
+    }
+    return result;
+  };
+  //fetch Promo by mongoose ID
+  fetchPromoById = async (promo_id: Types.ObjectId) => {
+    const result = await Promo.findById({ promo_id });
     if (!result) {
       throw new AppError("Promo does not exist!", 404);
     }
@@ -120,6 +128,36 @@ class PromoService {
     return Array.from(
       new Map(merchandise.map((item) => [item._id.toString(), item])).values()
     );
+  };
+  //Update promo code
+  update = async (data: any) => {
+    const parsedMerchandise = JSON.parse(data.selectedMerchandise);
+    const parsedAudience = data.selectedAudience
+      ? JSON.parse(data.selectedAudience)
+      : [];
+    if (this.inputValidation(data)) {
+      throw new AppError("All required fields must be filled", 404);
+    }
+    const uniqueMerchandise = this.filterUniqueMerchandise(parsedMerchandise);
+    const promo = await this.fetchPromoById(data.promoId);
+    //Update the field
+    promo.promo_name = data.promoName;
+    promo.type = data.type;
+    promo.limit_type = data.limitType;
+    promo.one_person_limit = data.singleStudent === "yes" ? true : false;
+    promo.discount = data.discount;
+    promo.start_date = data.startDate;
+    promo.end_date = data.endDate;
+    promo.quantity = data.quantity;
+    promo.selected_merchandise = uniqueMerchandise;
+    promo.selected_audience =
+      data.type === "Organization Members" ? parsedAudience : [];
+    promo.selected_specific_students =
+      data.type === "Students" || data.type === "Specific"
+        ? parsedAudience
+        : [];
+
+    await promo.save();
   };
 }
 
