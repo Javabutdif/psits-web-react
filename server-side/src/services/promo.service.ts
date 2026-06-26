@@ -4,6 +4,7 @@ import mongoose, { Types, ClientSession } from "mongoose";
 import { AppError } from "../util/app.error.util";
 import { IPromo } from "../models/promo.interface";
 import { PromoUsage } from "../models/promo.usage.model";
+import { PromoLog } from "../models/promo.log.model";
 import { membership_status } from "../enums/status.enums";
 import { promoCodeGenerator } from "../custom_function/code_generator";
 
@@ -23,6 +24,20 @@ class PromoService {
       throw new AppError("Promo does not exist!", 404);
     }
     return result;
+  };
+  //Fetch all promo code
+  fetchAll = async () => {
+    return await Promo.find({ status: "Active" });
+  };
+  //Soft Delete Promo Code
+  delete = async (id: Types.ObjectId) => {
+    await Promo.findByIdAndUpdate(
+      id,
+      {
+        status: "Deleted",
+      },
+      { new: true }
+    );
   };
   //Verify if the merchandise associated is in the promo eligibility
   verifyMerchPromo = (promo: IPromo, merchId: string): boolean => {
@@ -158,6 +173,10 @@ class PromoService {
         : [];
 
     await promo.save();
+  };
+  //Fetch PromoLog
+  promoLog = async () => {
+    return await PromoLog.find().sort({ data: -1 });
   };
 }
 
