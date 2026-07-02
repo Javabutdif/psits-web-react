@@ -331,6 +331,7 @@ class OrderService {
     };
     return finalOrder;
   };
+  //Process discount amount total
   processDiscountAmount = (subTotal: number, discountPercent: number) => {
     const discountAmount = subTotal * (discountPercent / 100);
     return subTotal - discountAmount;
