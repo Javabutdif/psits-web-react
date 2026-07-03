@@ -697,7 +697,7 @@ export const approveOrderController = async (req: Request, res: Response) => {
         }
       }
 
-      const data: IOrderReceipt = {
+      const data: any = {
         reference_code: successfulOrder.reference_code,
         transaction_date: format(
           new Date(successfulOrder.transaction_date),

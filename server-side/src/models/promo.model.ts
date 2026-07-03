@@ -43,7 +43,6 @@ const promoSchema = new Schema<IPromoDocument>({
   },
   promo_scope: {
     type: String,
-    enum: ["merchandise"],
     default: "merchandise",
   },
   discount: {

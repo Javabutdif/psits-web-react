@@ -24,6 +24,9 @@ import { adminService } from "../services/admin.service";
 import { AppError } from "../util/app.error.util";
 import { studentService } from "../services/student.service";
 import { promoService } from "../services/promo.service";
+import { reportService } from "../services/report.service";
+import { merchandiseService } from "../services/merchandise.service";
+import { IStudent } from "../models/student.interface";
 
 class OrderController {
   //Specific Order using id number
@@ -94,7 +97,7 @@ class OrderController {
         throw new AppError("User does not exist!", 404);
       }
     } else {
-      const result = await studentService.getSpecific(user.id_number);
+      const result: IStudent = await studentService.getSpecific(user.id_number);
       if (!result) {
         throw new AppError("User does not exist!", 404);
       }
@@ -149,6 +152,61 @@ class OrderController {
 
     return res.status(200).json({
       message: result.message,
+    });
+  };
+  //Approve Order Controller
+  approveOrder = async (req: Request, res: Response) => {
+    const { order_id, admin, cash } = req.body;
+
+    //Start session
+    const session = await mongoose.startSession();
+    await session.startTransaction();
+
+    //Call for approve order service
+    const result: any = await orderService.approveOrderService(
+      order_id,
+      admin,
+      session
+    );
+    //Create a Stocks array for bulk update
+    const productArray = result.items.map((item: any) => ({
+      product_id: item.product_id,
+      quantity: item.quantity,
+    }));
+    //Update the stocks of the products
+    await merchandiseService.updateManyStocks(productArray, session);
+    //Create a report data array
+    const reportDataArray = result.items.map((item: any) => ({
+      order_id: result._id,
+      student_id: result.id_number,
+      merch_id: item.product_id,
+      item_count: item.quantity,
+      total: item.sub_total,
+      date: result.order_date,
+    }));
+    //Store the report data array to reports
+    const processReports = await reportService.createReports(
+      reportDataArray,
+      session
+    );
+    if (!processReports.success) {
+      session.abortTransaction();
+      session.endSession();
+      throw new AppError("Failed to create reports", 500);
+    }
+    //Create a receipt for the order
+    const receipt: any = await orderService.generateOrderReceipt(
+      result,
+      admin,
+      cash
+    );
+    //Call for order receipt service
+    await orderReceipt(receipt, result.email);
+    //End session and commit transaction
+    await session.commitTransaction();
+    session.endSession();
+    return res.status(200).json({
+      message: "Successfully approved order",
     });
   };
 }

@@ -101,6 +101,36 @@ class MerchandiseService {
       return true;
     }
   };
+  updateManyStocks = async (
+    products: {
+      product_id: Types.ObjectId;
+      quantity: number;
+    }[],
+    session: ClientSession
+  ) => {
+    const result = await Merch.bulkWrite(
+      products.map((item) => ({
+        updateOne: {
+          filter: {
+            _id: item.product_id,
+            stocks: {
+              $gte: item.quantity,
+            },
+          },
+          update: {
+            $inc: {
+              stocks: -item.quantity,
+            },
+          },
+        },
+      })),
+      { session }
+    );
+
+    if (result.modifiedCount !== products.length) {
+      throw new AppError("Some products have insufficient stocks", 400);
+    }
+  };
 }
 
 const merchandiseService = new MerchandiseService();

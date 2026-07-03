@@ -17,7 +17,7 @@ export interface IPromo {
   start_date: Date;
   end_date: Date;
   status: string;
-  promo_scope: "Merchandise" | "Category" | "Both";
+  promo_scope: string;
   selected_merchandise: ISelectMerchandise[];
   created_by: string;
 }

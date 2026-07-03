@@ -7,6 +7,7 @@ import { merchandiseService } from "./merchandise.service";
 import { adminService } from "./admin.service";
 import { studentService } from "./student.service";
 import { promoService } from "./promo.service";
+import { IStudent } from "../models/student.interface";
 
 //Object Order Service for order related database operations
 class OrderService {
@@ -240,27 +241,27 @@ class OrderService {
 
   //Process Final Order
   processFinalOrder = (
-    requestor: any,
+    user: IStudent,
     validation: any,
     processOrder: any,
     total: number
   ) => {
     const finalOrder = {
-      id_number: requestor.id_number,
-      rfid: requestor.rfid,
+      id_number: user.id_number,
+      rfid: user.rfid,
       promo: {
         _id: validation.promo._id,
         promo_name: validation.promo.promo_name,
         promo_discount: validation.promo.promo_discount,
       },
-      course: requestor.course,
-      year: requestor.year,
-      student_name: requestor.name,
+      course: user.course,
+      year: user.year,
+      student_name: studentService.fullNameFormat(user),
       items: processOrder.orderItems,
       total: total,
       order_date: new Date(),
       order_status: "Pending",
-      role: requestor.role,
+      role: user.role,
     };
     return finalOrder;
   };
@@ -279,6 +280,65 @@ class OrderService {
     return {
       message: "Order cancelled successfully",
     };
+  };
+  //Approve Order Service
+  approveOrderService = async (
+    _id: Types.ObjectId,
+    admin: string,
+    session: ClientSession
+  ) => {
+    const result = await Orders.findByIdAndUpdate(
+      _id,
+      {
+        order_status: "Paid",
+        reference_code: this.generateReferenceCode(),
+        transaction_date: new Date(),
+        admin,
+      },
+      { new: true, session }
+    );
+    if (!result) {
+      throw new AppError("Order not found!", 404);
+    }
+    return {
+      status: true,
+      items: result.items,
+      id_number: result.id_number,
+      order: result,
+    };
+  };
+  //Generate Reference Code Service
+  generateReferenceCode = () => {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const randomString = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase();
+    return `${timestamp}-${randomString}`;
+  };
+  //Generate Order Receipt Service
+  generateOrderReceipt = async (
+    order: IOrders,
+    admin: string,
+    cash: number
+  ) => {
+    const receipt = {
+      reference_code: order.reference_code,
+      order_date: order.order_date,
+      transaction_date: order.transaction_date,
+      student_name: order.student_name,
+      id_number: order.id_number,
+      course: order.course,
+      year: order.year,
+      admin,
+      items: order.items.map((item) => ({
+        product_name: item.product_name,
+        price: item.price,
+      })),
+      cash,
+      total: order.total,
+    };
+    return receipt;
   };
 }
 

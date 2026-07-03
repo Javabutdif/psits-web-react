@@ -6,6 +6,18 @@ export interface IPromoOrder {
   promo_discount: boolean;
 }
 
+export interface IOrdersItems {
+  product_id: Types.ObjectId;
+  product_name: string;
+  limited: boolean;
+  price: number;
+  quantity: number;
+  sub_total: number;
+  variation?: [String];
+  sizes?: [String];
+  batch: number;
+}
+
 export interface IOrders {
   id_number: string;
   rfid?: string;
@@ -14,7 +26,7 @@ export interface IOrders {
   student_name: string;
   course: string;
   year: number;
-  items: ICart[];
+  items: IOrdersItems[];
   total: number;
   order_date: Date;
   transaction_date: Date;
