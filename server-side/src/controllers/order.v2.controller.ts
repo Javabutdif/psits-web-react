@@ -163,7 +163,7 @@ class OrderController {
   approveOrder = async (req: Request, res: Response) => {
     const { order_id, admin, cash } = req.body;
 
-    const checkOrder = await orderService.checkOrderStatus(order_id);
+    const checkOrder = await orderService.checkOrderApproveStatus(order_id);
     if (checkOrder.status) {
       return res.status(400).json({
         message: checkOrder.message,

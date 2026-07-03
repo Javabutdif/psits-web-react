@@ -86,10 +86,9 @@ class OrderService {
   };
   //Update inside the order with dynamic $set of query
   updateOneDynamic = async (first_params: any, second_params: any) => {
-    const result = await Orders.updateMany(
-      { first_params },
-      { $set: second_params }
-    );
+    const result = await Orders.updateOne(first_params, {
+      $set: second_params,
+    });
 
     if (result.matchedCount === 0) {
       throw new AppError("No orders updated!", 404);
@@ -341,7 +340,7 @@ class OrderService {
     return receipt;
   };
   //Check if order is approved or not
-  checkOrderStatus = async (_id: Types.ObjectId) => {
+  checkOrderApproveStatus = async (_id: Types.ObjectId) => {
     const result = await Orders.findById(_id);
     if (!result) {
       throw new AppError("Order not found!", 404);
@@ -350,6 +349,17 @@ class OrderService {
       return { status: true, message: "Order is already approved" };
     }
     return { status: false, message: "Order is not approved" };
+  };
+  //Check if order is Paid before refunding
+  checkOrderPaidStatus = async (_id: Types.ObjectId) => {
+    const result = await Orders.findById(_id);
+    if (!result) {
+      throw new AppError("Order not found!", 404);
+    }
+    if (result.order_status !== "Paid") {
+      return { result, status: false, message: "Order is not paid" };
+    }
+    return { result, status: true, message: "Order is paid" };
   };
 }
 
