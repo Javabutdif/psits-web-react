@@ -340,6 +340,17 @@ class OrderService {
     };
     return receipt;
   };
+  //Check if order is approved or not
+  checkOrderStatus = async (_id: Types.ObjectId) => {
+    const result = await Orders.findById(_id);
+    if (!result) {
+      throw new AppError("Order not found!", 404);
+    }
+    if (result.order_status === "Paid") {
+      return { status: true, message: "Order is already approved" };
+    }
+    return { status: false, message: "Order is not approved" };
+  };
 }
 
 export const orderService = new OrderService();

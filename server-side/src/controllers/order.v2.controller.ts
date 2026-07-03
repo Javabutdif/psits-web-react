@@ -145,7 +145,10 @@ class OrderController {
     });
   };
 
-  //Cancel Order Controller
+  /*
+    To cancel an order, the admin will just need to provide the order id and then the system will check if the order is already approved or not, if it is already approved then the system will not allow to cancel the order, if it is still pending then the system will cancel the order and then return a message that the order is cancelled
+  
+  */
   cancelOrder = async (req: Request, res: Response) => {
     const { _id } = req.body;
     const result = await orderService.cancelOrderService(_id);
@@ -154,9 +157,18 @@ class OrderController {
       message: result.message,
     });
   };
-  //Approve Order Controller
+  /*
+    To approve an order, the admin will just need to provide the order id and then the system will check if the order is already approved or not, if it is already approved then the system will not allow to approve the order, if it is still pending then the system will approve the order and then return a message that the order is approved
+  */
   approveOrder = async (req: Request, res: Response) => {
     const { order_id, admin, cash } = req.body;
+
+    const checkOrder = await orderService.checkOrderStatus(order_id);
+    if (checkOrder.status) {
+      return res.status(400).json({
+        message: checkOrder.message,
+      });
+    }
 
     //Start session
     const session = await mongoose.startSession();
