@@ -111,11 +111,11 @@ class OrderService {
     return result;
   };
   //Get all orders with params, excluding refunded orders
-  getAllOrders = async (params: any) => {
-    const result = await Orders.find(
-      { params },
-      { order_status: { $ne: "Refunded" } }
-    )
+  getAllOrders = async (params: any = {}) => {
+    const result = await Orders.find({
+      ...params,
+      order_status: { $ne: "Refunded" },
+    })
       .sort({ order_date: -1 })
       .lean();
     if (!result) {
@@ -151,73 +151,6 @@ class OrderService {
       limit,
       totalPages: Math.ceil(total / limit),
     };
-  };
-
-  //Create Order
-  /*
-  The previous logic is we have dynamic order process where in students and admin can order, thus the req.both is where who is processing the order
-
-  if it is the student then we will get it. or an admin
-
-
-  so I will add a parameter of requestor.
-  The requestor is coming from the authorization handler 
-
-  the params are
-  1. promo_id = if ever naa
-  2. items [order items]
-  3. admin (if ever naa)
-
-  then requestor
-
-  */
-  createOrderService = async (params: any, requestor: any) => {
-    //Check user availability
-    if (params.admin) {
-      const result = await adminService.retrieveSpecific(params.admin);
-      if (!result) {
-        throw new AppError("User does not exist!", 404);
-      }
-    } else {
-      const result = await studentService.getSpecific(requestor.id_number);
-      if (!result) {
-        throw new AppError("User does not exist!", 404);
-      }
-    }
-
-    //Start to do transaction case in database
-    const session = await mongoose.startSession();
-    await session.startTransaction();
-
-    //Process Order
-    const processOrder = await this.orderProcessingService(
-      params.items,
-      session
-    );
-
-    //Promo Code Validation
-    const validation = await promoService.verifyOrderPromoEligibility(
-      params.promo_id,
-      requestor,
-      processOrder.orderItems
-    );
-    //Promo Code Discount Calculation
-    const total =
-      validation.promoDiscount.discount === 0
-        ? processOrder.orderTotal
-        : this.processDiscountAmount(
-            processOrder.orderTotal,
-            validation.promoDiscount.discount
-          );
-    //Process final Order
-    const finalOrder = this.processFinalOrder(
-      requestor,
-      validation,
-      processOrder,
-      total
-    );
-    const newOrder = new Orders(finalOrder);
-    await newOrder.save({ session });
   };
 
   //This service will process the order and return the orders subtotal and total
@@ -335,6 +268,17 @@ class OrderService {
   processDiscountAmount = (subTotal: number, discountPercent: number) => {
     const discountAmount = subTotal * (discountPercent / 100);
     return subTotal - discountAmount;
+  };
+  //Cancel Order Service
+  cancelOrderService = async (_id: Types.ObjectId) => {
+    const result = await Orders.findByIdAndDelete(_id);
+    if (!result) {
+      throw new AppError("Order not found!", 404);
+    }
+
+    return {
+      message: "Order cancelled successfully",
+    };
   };
 }
 
