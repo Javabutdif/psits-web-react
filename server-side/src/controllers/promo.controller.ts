@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import mongoose, { Types } from "mongoose";
 import { Promo } from "../models/promo.model";
 import { PromoLog } from "../models/promo.log.model";
+import { PromoUsage } from "../models/promo.usage.model";
 
 import { promoCodeGenerator } from "../custom_function/code_generator";
 
@@ -182,6 +183,10 @@ export const verifyPromo = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Promo not found or deleted" });
     }
 
+    if (!Types.ObjectId.isValid(merchId)) {
+      return res.status(400).json({ message: "Invalid merchandise ID" });
+    }
+
     if (currentDate < promo.start_date || currentDate > promo.end_date) {
       return res.status(400).json({ message: "Expired Promo Code" });
     }
@@ -198,18 +203,11 @@ export const verifyPromo = async (req: Request, res: Response) => {
     }
 
     if (promo.limit_type === "Limited" && promo.one_person_limit) {
-      const merch = promo.selected_merchandise.find(
-        (m) => m._id.toString() === merchId
-      );
-
-      if (!merch) {
-        return res.status(404).json({ message: "Merchandise not found" });
-      }
-
-      // Check if student already used the promo for this merchandise
-      const alreadyUsed = merch.items?.some(
-        (item) => item.id_number === student.id_number
-      );
+      const alreadyUsed = await PromoUsage.findOne({
+        promo_id: promo._id,
+        merch_id: new Types.ObjectId(merchId),
+        id_number: student.id_number,
+      });
 
       if (alreadyUsed) {
         return res

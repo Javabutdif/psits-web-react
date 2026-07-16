@@ -263,7 +263,7 @@ class AdminService {
   restore = async (req: Request) => {
     const { id_number } = req.body;
 
-    const admin = await this.access(req.body.id_number);
+    const admin = await this.retrieveSpecific(req.body.id_number);
 
     if (!admin) {
       throw new AppError("No admin found!", 404);
@@ -420,7 +420,7 @@ class AdminService {
       req.body;
 
     //Check if id number existed
-    const admin = await this.access(id_number);
+    const admin = await this.retrieveSpecific(id_number);
     if (admin) {
       throw new AppError("Already have an account!", 404);
     }
@@ -507,7 +507,7 @@ class AdminService {
       return { status: false, message: "id_number and newAccess are required" };
     }
 
-    const adminToUpdate = await this.access(id_number);
+    const adminToUpdate = await this.retrieveSpecific(id_number);
 
     if (!adminToUpdate) {
       throw new AppError("Admin not found!", 404);
@@ -530,7 +530,7 @@ class AdminService {
   };
   //
   //Retrive Specific Admin
-  access = async (id_number: String) => {
+  retrieveSpecific = async (id_number: String) => {
     const admin = await Admin.findOne({ id_number });
     if (!admin) {
       throw new AppError("No admin found!", 404);
