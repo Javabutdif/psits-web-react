@@ -4,7 +4,11 @@ import { startOfDay, endOfDay } from "date-fns";
 import { AppError } from "../util/app.error.util";
 import mongoose, { Types, ClientSession } from "mongoose";
 import { merchandiseService } from "./merchandise.service";
-import { adminService } from "./admin.service";
+import {
+  IUserItems,
+  IOrderProcessingResult,
+  IOrderFinalizationResult,
+} from "./order.service.inteface";
 import { studentService } from "./student.service";
 import { promoService } from "./promo.service";
 import { IStudent } from "../models/student.interface";
@@ -154,9 +158,12 @@ class OrderService {
   };
 
   //This service will process the order and return the orders subtotal and total
-  orderProcessingService = async (items: any, session: ClientSession) => {
+  orderProcessingService = async (
+    items: IUserItems[],
+    session: ClientSession
+  ) => {
     let orderTotal = 0;
-    let orderItems: any[] = [];
+    let orderItems: IUserItems[] = [];
 
     const itemsArray = Array.isArray(items) ? items : [items];
     // Check if itemsArray is empty
@@ -216,7 +223,7 @@ class OrderService {
       }
 
       //This will be the process
-      const processedItem = {
+      const processedItem: IUserItems = {
         product_id: item.product_id,
         product_name: findMerch.data?.name,
         limited: findMerch.data?.control === "limited-purchase",
@@ -242,12 +249,11 @@ class OrderService {
   processFinalOrder = (
     user: IStudent,
     validation: any,
-    processOrder: any,
+    processOrder: IOrderProcessingResult,
     total: number
   ) => {
-    const finalOrder = {
+    const finalOrder: IOrderFinalizationResult = {
       id_number: user.id_number,
-      rfid: user.rfid,
       promo: {
         _id: validation.promo._id,
         promo_name: validation.promo.promo_name,

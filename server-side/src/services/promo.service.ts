@@ -8,6 +8,7 @@ import { PromoUsage } from "../models/promo.usage.model";
 import { PromoLog } from "../models/promo.log.model";
 import { membership_status } from "../enums/status.enums";
 import { promoCodeGenerator } from "../custom_function/code_generator";
+import { IUserItems } from "./order.service.inteface";
 
 class PromoService {
   private parseListInput = (value: any): any[] => {
@@ -145,11 +146,11 @@ class PromoService {
   checkPromoType = (promo: IPromo, requestor: any) => {
     switch (promo.type) {
       case "All Students":
-        return { discount: promo.discount, message: "Verified Promo" };
+        return { discount: promo.discount, verfied: true };
 
       case "Organization Members":
         if (promo.selected_audience.includes(requestor.role)) {
-          return { discount: promo.discount, message: "Verified Promo" };
+          return { discount: promo.discount, verfied: true };
         }
         break;
       case "Membership Holders":
@@ -157,19 +158,19 @@ class PromoService {
           requestor.membershipStatus === membership_status.ACTIVE ||
           requestor.membershipStatus === membership_status.RENEWED
         ) {
-          return { discount: promo.discount, message: "Verified Promo" };
+          return { discount: promo.discount, verfied: true };
         }
         break;
 
       case "Students":
         if (promo.selected_specific_students.includes(requestor.id_number)) {
-          return { discount: promo.discount, message: "Verified Promo" };
+          return { discount: promo.discount, verfied: true };
         }
         break;
       default:
         return {
           discount: 0,
-          message: "Invalid promo type",
+          verfied: false,
         };
     }
   };
@@ -302,7 +303,7 @@ class PromoService {
   verifyOrderPromoEligibility = async (
     promoId: Types.ObjectId,
     requestor: any,
-    items: any[]
+    items: IUserItems[]
   ) => {
     const promo = await this.fetchPromoById(promoId);
 

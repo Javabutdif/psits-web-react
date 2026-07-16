@@ -27,6 +27,11 @@ import { promoService } from "../services/promo.service";
 import { reportService } from "../services/report.service";
 import { merchandiseService } from "../services/merchandise.service";
 import { IStudent } from "../models/student.interface";
+import {
+  IOrderProcessingResult,
+  IOrderFinalizationResult,
+} from "../services/order.service.inteface";
+import { IOrderPromoEligibility } from "../services/promo.service.interface";
 
 class OrderController {
   //Specific Order using id number
@@ -107,17 +112,16 @@ class OrderController {
     await session.startTransaction();
 
     //Process Order
-    const processOrder = await orderService.orderProcessingService(
-      items,
-      session
-    );
+    const processOrder: IOrderProcessingResult =
+      await orderService.orderProcessingService(items, session);
 
     //Promo Code Validation
-    const validation = await promoService.verifyOrderPromoEligibility(
-      promo_id,
-      user,
-      processOrder.orderItems
-    );
+    const validation: IOrderPromoEligibility =
+      await promoService.verifyOrderPromoEligibility(
+        promo_id,
+        user,
+        processOrder.orderItems
+      );
     //Promo Code Discount Calculation
     const total =
       validation.promoDiscount.discount === 0
@@ -127,7 +131,7 @@ class OrderController {
             validation.promoDiscount.discount
           );
     //Process final Order
-    const finalOrder = orderService.processFinalOrder(
+    const finalOrder: IOrderFinalizationResult = orderService.processFinalOrder(
       user,
       validation,
       processOrder,
