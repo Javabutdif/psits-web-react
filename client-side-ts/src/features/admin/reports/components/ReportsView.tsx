@@ -107,10 +107,10 @@ const ReportsFilterPopover = ({
           <Button
             type="button"
             variant="outline"
-            className="h-9 rounded-full border-[#e8e8e8] bg-white px-4 hover:bg-white"
+            className="h-9 shrink-0 rounded-full border-[#e8e8e8] bg-white px-3 hover:bg-white sm:px-4"
           >
             <Filter className="h-4 w-4" />
-            Filter
+            <span className="hidden sm:inline">Filter</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -461,16 +461,17 @@ export const ReportsView = () => {
 
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
         {/* Tabs */}
-        <div className="mb-5 flex flex-wrap gap-8 border-b border-[#eeeeee]">
+        <div className="mb-5 flex w-full border-b border-[#eeeeee] sm:w-auto sm:gap-8">
           <button
             type="button"
             className={cn(
-              "relative flex cursor-pointer items-center gap-2 pb-3 text-sm text-[#858585]",
+              "relative flex flex-1 cursor-pointer items-center justify-center gap-2 pb-3 text-sm text-[#858585]",
+              "sm:flex-initial sm:justify-start",
               isMembership && "font-medium text-[#1c9dde]"
             )}
             onClick={() => setActiveTab("membership")}
           >
-            <Wallet className="h-4 w-4" />
+            <Wallet className="h-4 w-4 shrink-0" />
             Membership
             {isMembership && (
               <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-[#1c9dde]" />
@@ -479,12 +480,13 @@ export const ReportsView = () => {
           <button
             type="button"
             className={cn(
-              "relative flex cursor-pointer items-center gap-2 pb-3 text-sm text-[#858585]",
+              "relative flex flex-1 cursor-pointer items-center justify-center gap-2 pb-3 text-sm text-[#858585]",
+              "sm:flex-initial sm:justify-start",
               !isMembership && "font-medium text-[#1c9dde]"
             )}
             onClick={() => setActiveTab("merchandise")}
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingBag className="h-4 w-4 shrink-0" />
             Merchandise
             {!isMembership && (
               <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-[#1c9dde]" />
@@ -551,8 +553,8 @@ export const ReportsView = () => {
         )}
 
         <section className="rounded-[22px] border border-[#e5e5e5] bg-white px-4 py-5 sm:px-6">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:max-w-[260px]">
+          <div className="mb-5 flex items-center gap-2 sm:justify-between sm:gap-3">
+            <div className="relative min-w-0 flex-1 sm:max-w-[260px]">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#9b9b9b]" />
               <Input
                 value={search}
@@ -561,7 +563,7 @@ export const ReportsView = () => {
                 className="h-9 rounded-full border-[#e8e8e8] pl-9 text-sm"
               />
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="flex shrink-0 items-center gap-2">
               <ReportsFilterPopover
                 activeTab={activeTab}
                 filters={filters}
@@ -572,12 +574,13 @@ export const ReportsView = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="h-9 rounded-full border-[#e8e8e8] px-4"
+                className="h-9 shrink-0 rounded-full border-[#e8e8e8] px-3 sm:px-4"
                 onClick={handleExport}
                 disabled={status !== "success"}
+                aria-label="Export CSV"
               >
                 <Download className="h-4 w-4" />
-                Export CSV
+                <span className="hidden sm:inline">Export CSV</span>
               </Button>
             </div>
           </div>
@@ -649,19 +652,19 @@ const MembershipTable = ({
   isLoading: boolean;
 }) => (
   <div className="overflow-x-auto">
-    <table className="w-full min-w-[860px] table-fixed border-collapse text-sm">
+    <table className="w-full min-w-[920px] table-fixed border-collapse text-sm">
       <thead>
         <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-          <th className="w-[16%] rounded-l-md px-2 py-2 text-left font-medium">
+          <th className="w-[14%] rounded-l-md px-2 py-2 text-left font-medium">
             Reference Code
           </th>
-          <th className="w-[14%] px-2 py-2 text-left font-medium">Student ID</th>
-          <th className="w-[18%] px-2 py-2 text-left font-medium">Name</th>
-          <th className="w-[12%] px-2 py-2 text-left font-medium">Course &amp; Year</th>
-          <th className="w-[12%] px-2 py-2 text-left font-medium">Date</th>
-          <th className="w-[10%] px-2 py-2 text-left font-medium">Type</th>
-          <th className="w-[10%] px-2 py-2 text-left font-medium">Managed By</th>
-          <th className="w-[8%] rounded-r-md px-2 py-2 text-right font-medium">Total</th>
+          <th className="w-[11%] px-2 py-2 text-left font-medium">Student ID</th>
+          <th className="w-[16%] px-2 py-2 text-left font-medium">Name</th>
+          <th className="w-[11%] px-2 py-2 text-left font-medium">Course &amp; Year</th>
+          <th className="w-[11%] px-2 py-2 text-left font-medium">Date</th>
+          <th className="w-[11%] px-2 py-2 text-left font-medium">Type</th>
+          <th className="w-[14%] px-2 py-2 text-left font-medium">Managed By</th>
+          <th className="w-[12%] rounded-r-md px-2 py-2 text-right font-medium">Total</th>
         </tr>
       </thead>
       <tbody>
@@ -685,9 +688,9 @@ const MembershipTable = ({
                 {row.course} {row.year ? `- ${row.year}` : ""}
               </td>
               <td className="px-2 py-3">{formatDate(row.date)}</td>
-              <td className="px-2 py-3">{row.type}</td>
+              <td className="truncate px-2 py-3">{row.type}</td>
               <td className="truncate px-2 py-3">{row.admin || "-"}</td>
-              <td className="px-2 py-3 text-right font-medium">
+              <td className="whitespace-nowrap px-2 py-3 text-right font-medium">
                 {formatCurrency(row.total || 0)}
               </td>
             </tr>
