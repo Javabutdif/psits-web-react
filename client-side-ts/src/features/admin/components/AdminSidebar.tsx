@@ -369,11 +369,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={restrictedNavButtonClass}
+                      className={getNavButtonClass("/admin/reports", !isUcMainAdmin)}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/reports" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();

@@ -370,7 +370,7 @@ export const updateMerchandiseController = async (
     const updatedResult = await Merch.updateOne(
       { _id: id },
       { imageUrl: imagesToRemove },
-      { $pull: { imageUrl: imagesToRemove } }
+      // { $pull: { imageUrl: imagesToRemove } }
     );
     if (updatedResult.modifiedCount === 0) {
       console.error("Failed to update merch images");
@@ -451,10 +451,7 @@ export const updateMerchandiseController = async (
           if (item.product_id.toString() === id) {
             item.product_name = name;
             item.price = price;
-
-            item.imageUrl1 = imageUrl[0];
-
-            item.category = category;
+            
             item.batch = batch;
             item.limited = control === "limited-purchase" ? true : false;
             item.quantity = control === "limited-purchase" ? 1 : item.quantity;
