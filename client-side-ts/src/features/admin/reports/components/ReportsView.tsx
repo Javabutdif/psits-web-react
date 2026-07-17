@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   BadgeDollarSign, Download, Filter,
   Package, Search, ShoppingBag,
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useReportsData } from "../hooks/useReportsData";
+import { useReportsData, ROWS_PER_PAGE } from "../hooks/useReportsData";
 import { downloadCsv } from "../utils/exportCsv";
 import type { MerchandiseOrderDetail, ReportsFilters } from "../types/reports.types";
 
@@ -39,22 +39,35 @@ const formatDate = (value: string | Date) => {
   });
 };
 
-const normalizeDisplay = (value?: string | string[]) =>
-  Array.isArray(value) ? value.join(", ") : value || "-";
+const flattenVariant = (value: unknown): string[] => {
+  if (value == null) return [];
+  if (typeof value === "string") return value.trim() ? [value] : [];
+  if (Array.isArray(value)) return value.flatMap(flattenVariant);
+  if (typeof value === "object" && "$each" in (value as Record<string, unknown>)) {
+    return flattenVariant((value as { $each: unknown }).$each);
+  }
+  return [];
+};
+
+const normalizeDisplay = (value?: unknown): string => {
+  const items = flattenVariant(value);
+  return items.length > 0 ? items.join(", ") : "-";
+};
 
 interface ReportsFilterPopoverProps {
   activeTab: "membership" | "merchandise";
   filters: ReportsFilters;
   uniqueProductNames: string[];
-  uniqueBatchesForProduct: string[];
+  getBatchesForProduct: (productName: string) => string[]; 
   onApply: (filters: ReportsFilters) => void;
 }
+
 
 const ReportsFilterPopover = ({
   activeTab,
   filters,
   uniqueProductNames,
-  uniqueBatchesForProduct,
+  getBatchesForProduct,
   onApply,
 }: ReportsFilterPopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,6 +86,12 @@ const ReportsFilterPopover = ({
     dateFrom: "",
     dateTo: "",
   };
+
+  const batchOptions = useMemo(
+    () => getBatchesForProduct(draft.productName),
+    [draft.productName, getBatchesForProduct]
+  );
+
   const hasActiveFilters = Object.values(filters).some(Boolean);
 
   const update = (field: keyof ReportsFilters, value: string) =>
@@ -181,7 +200,10 @@ const ReportsFilterPopover = ({
                   </Label>
                   <Select
                     value={draft.productName}
-                    onValueChange={(v) => update("productName", v)}
+                    onValueChange={(v) => {
+                      update("productName", v);
+                      setDraft((current) => ({ ...current, batch: "" })); 
+                    }}
                   >
                     <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
                       <SelectValue placeholder="All products" />
@@ -223,7 +245,7 @@ const ReportsFilterPopover = ({
                         <SelectValue placeholder="All batches" />
                       </SelectTrigger>
                       <SelectContent>
-                        {uniqueBatchesForProduct.map((batch) => (
+                        {batchOptions.map((batch) => (
                           <SelectItem key={batch} value={batch}>
                             {batch}
                           </SelectItem>
@@ -341,7 +363,8 @@ const PaginationFooter = ({ page, totalPages, total, onPageChange }: PaginationF
   return (
     <div className="mt-7 flex flex-col items-center justify-between gap-3 text-xs text-[#8a8a8a] sm:flex-row">
       <span>
-        Showing {total > 0 ? (page - 1) * 10 + 1 : 0} to {Math.min(page * 10, total)} of {total}
+        Showing {total > 0 ? (page - 1) * ROWS_PER_PAGE + 1 : 0} to{" "}
+        {Math.min(page * ROWS_PER_PAGE, total)} of {total}
       </span>
       <div className="flex items-center gap-1">
         <button
@@ -424,7 +447,7 @@ export const ReportsView = () => {
     membershipSummary,
     merchandiseSalesSummary,
     uniqueProductNames,
-    uniqueBatchesForProduct,
+    getBatchesForProduct,
     canDeleteReports,
     isMutating,
     deleteMerchandiseReportItem,
@@ -519,8 +542,10 @@ export const ReportsView = () => {
               <>
                 <SummaryCard
                   icon={Package}
-                  label="Products Sold (filtered)"
-                  value={merchandiseSalesSummary.size.toLocaleString()}
+                  label="Units Sold (filtered)"
+                  value={Array.from(merchandiseSalesSummary.values())
+                    .reduce((sum, item) => sum + item.unitsSold, 0)
+                    .toLocaleString()}
                 />
                 <SummaryCard
                   icon={BadgeDollarSign}
@@ -568,7 +593,7 @@ export const ReportsView = () => {
                 activeTab={activeTab}
                 filters={filters}
                 uniqueProductNames={uniqueProductNames}
-                uniqueBatchesForProduct={uniqueBatchesForProduct}
+                getBatchesForProduct={getBatchesForProduct}
                 onApply={setFilters}
               />
               <Button

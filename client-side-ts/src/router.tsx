@@ -133,7 +133,10 @@ const router = createBrowserRouter([
                   />
                 ),
                 children: [
-                  { path: "reports", Component: Reports },
+                  { 
+                    path: "reports", 
+                    Component: Reports 
+                  },
                 ],
               },
               // TODO: Remove this sample
