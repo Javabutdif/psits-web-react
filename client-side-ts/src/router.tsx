@@ -19,6 +19,7 @@ import OTPCode from "./pages/auth/OtpCode";
 import Dashboard from "./pages/admin/Dashboard";
 import Organization from "./pages/admin/Organization";
 import Students from "./pages/admin/Students";
+import Reports from "./pages/admin/Reports";
 import SetNewPassword from "./pages/auth/SetNewPassword";
 import { ErrorPage } from "./pages/ErrorPage";
 import { Events } from "./pages/events";
@@ -124,8 +125,18 @@ const router = createBrowserRouter([
                   },
                 ],
               },
+              {
+                element: (
+                  <AdminCampusRouteGuard
+                    allowedCampuses={["UC-MAIN"]}
+                    campusUnauthorizedToastMessage="Unauthorized"
+                  />
+                ),
+                children: [
+                  { path: "reports", Component: Reports },
+                ],
+              },
               // TODO: Remove this sample
-              // Example of a general admin page with campus-specific component
               { path: "general", Component: GeneralAdminPage },
             ],
           },

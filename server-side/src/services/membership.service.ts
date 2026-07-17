@@ -48,9 +48,10 @@ class MembershipService {
   };
   //Revoke All Membership
   revokeMembership = async () => {
-    const revokeMembership = await Student.updateMany({
-      membershipStatus: "NOT_APPLIED",
-    });
+    const revokeMembership = await Student.updateMany(
+      {},
+      { $set: { membershipStatus: "NOT_APPLIED" } }
+    );
 
     if (!revokeMembership) {
       throw new AppError("Cannot revoke membership", 404);
