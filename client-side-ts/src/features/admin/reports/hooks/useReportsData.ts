@@ -18,7 +18,7 @@ import type {
   ReportsTab,
 } from "../types/reports.types";
 
-const ROWS_PER_PAGE = 10;
+export const ROWS_PER_PAGE = 10;
 
 const DEFAULT_FILTERS: ReportsFilters = {
   id: "",
@@ -132,17 +132,20 @@ export const useReportsData = () => {
     [merchandiseDetails]
   );
 
-  const uniqueBatchesForProduct = useMemo(() => {
-    if (!filters.productName) return [];
+  const getBatchesForProduct = useCallback(
+  (productName: string): string[] => {
+    if (!productName) return [];
     return Array.from(
       new Set(
         merchandiseDetails
-          .filter((detail) => detail.product_name === filters.productName)
+          .filter((detail) => detail.product_name === productName)
           .map((detail) => detail.batch)
           .filter((batch): batch is string => Boolean(batch))
       )
     );
-  }, [merchandiseDetails, filters.productName]);
+  },
+  [merchandiseDetails]
+);
 
   const filteredMembership = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -345,7 +348,7 @@ export const useReportsData = () => {
     membershipSummary,
     merchandiseSalesSummary,
     uniqueProductNames,
-    uniqueBatchesForProduct,
+    getBatchesForProduct,
     canDeleteReports,
     isMutating,
     deleteMerchandiseReportItem,
