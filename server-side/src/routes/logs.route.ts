@@ -22,7 +22,7 @@ router.get(
 // Add a new log
 router.post(
   "/",
-  requireAccessTokenWithDBCheck,
+  requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
   addNewLogController
 );

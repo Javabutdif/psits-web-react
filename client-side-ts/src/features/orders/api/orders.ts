@@ -22,13 +22,13 @@ interface CartItem {
 // Merchandise/Product interfaces
 export interface MerchandiseItem {
   _id: string;
-  name: string; 
-  product_name?: string; 
+  name: string;
+  product_name?: string;
   price: number;
   stocks?: number;
   stock?: number;
-  imageUrl?: string[]; 
-  imageUrl1?: string; 
+  imageUrl?: string[];
+  imageUrl1?: string;
   imageUrl2?: string;
   description?: string;
   category?: string;
@@ -102,12 +102,16 @@ const createHeaders = () => ({
 const handleApiError = (error: unknown, showUserError = true): void => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ErrorResponse>;
-    const errorMessage = axiosError.response?.data?.message || "An error occurred";
-    
+    const errorMessage =
+      axiosError.response?.data?.message || "An error occurred";
+
     if (showUserError) {
       showToast("error", errorMessage);
     }
-    console.error("API Error:", axiosError.response?.data || axiosError.message);
+    console.error(
+      "API Error:",
+      axiosError.response?.data || axiosError.message
+    );
   } else {
     if (showUserError) {
       showToast("error", "An unexpected error occurred");
@@ -131,7 +135,9 @@ export const makeOrder = async (formData: OrderFormData): Promise<boolean> => {
   }
 };
 
-export const getOrder = async (id_number: string): Promise<OrderResponse | null> => {
+export const getOrder = async (
+  id_number: string
+): Promise<OrderResponse | null> => {
   try {
     const response: AxiosResponse<OrderResponse> = await axios.get(
       `${backendConnection()}/api/orders`,
@@ -162,7 +168,9 @@ export const getAllOrders = async (): Promise<OrderResponse[] | null> => {
   }
 };
 
-export const cancelOrder = async (product_id: string | number): Promise<boolean> => {
+export const cancelOrder = async (
+  product_id: string | number
+): Promise<boolean> => {
   try {
     const response: AxiosResponse = await axios.put(
       `${backendConnection()}/api/orders/cancel/${product_id}`,
@@ -183,7 +191,9 @@ export const cancelOrder = async (product_id: string | number): Promise<boolean>
   }
 };
 
-export const approveOrder = async (formData: OrderFormData): Promise<boolean> => {
+export const approveOrder = async (
+  formData: OrderFormData
+): Promise<boolean> => {
   try {
     const response: AxiosResponse = await axios.put(
       `${backendConnection()}/api/orders/approve-order`,
@@ -198,8 +208,9 @@ export const approveOrder = async (formData: OrderFormData): Promise<boolean> =>
   }
 };
 
-
-export const getAllPendingOrders = async (): Promise<OrderResponse[] | null> => {
+export const getAllPendingOrders = async (): Promise<
+  OrderResponse[] | null
+> => {
   try {
     const response: AxiosResponse<OrderResponse[]> = await axios.get(
       `${backendConnection()}/api/orders/get-all-pending-orders`,
@@ -212,7 +223,6 @@ export const getAllPendingOrders = async (): Promise<OrderResponse[] | null> => 
     return null;
   }
 };
-
 
 export const getAllPaidOrders = async (): Promise<OrderResponse[] | null> => {
   try {
@@ -228,7 +238,9 @@ export const getAllPaidOrders = async (): Promise<OrderResponse[] | null> => {
   }
 };
 
-export const getPublishedMerchandise = async (): Promise<MerchandiseItem[] | null> => {
+export const getPublishedMerchandise = async (): Promise<
+  MerchandiseItem[] | null
+> => {
   try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
       `${backendConnection()}/api/merch/retrieve-publish-merchandise`,
@@ -242,7 +254,9 @@ export const getPublishedMerchandise = async (): Promise<MerchandiseItem[] | nul
   }
 };
 
-export const getAllMerchandise = async (): Promise<MerchandiseItem[] | null> => {
+export const getAllMerchandise = async (): Promise<
+  MerchandiseItem[] | null
+> => {
   try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
       `${backendConnection()}/api/merch/retrieve`,
@@ -256,7 +270,9 @@ export const getAllMerchandise = async (): Promise<MerchandiseItem[] | null> => 
   }
 };
 
-export const getMerchandiseById = async (productId: string): Promise<MerchandiseItem | null> => {
+export const getMerchandiseById = async (
+  productId: string
+): Promise<MerchandiseItem | null> => {
   try {
     const response: AxiosResponse<{ data: MerchandiseItem }> = await axios.get(
       `${backendConnection()}/api/merch/retrieve/${productId}`,
