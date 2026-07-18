@@ -24,8 +24,8 @@ export interface MerchandiseOrderDetail {
   year: string | number;
   product_name: string;
   batch?: string;
-  size?: string | string[];
-  variation?: string | string[];
+  size?: unknown;
+  variation?: unknown;
   quantity: number;
   total: number;
   transaction_date: string | Date;
