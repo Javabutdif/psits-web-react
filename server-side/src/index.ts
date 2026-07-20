@@ -29,8 +29,6 @@ import studentRoutes from "./routes/students.route";
 import studentV2Routes from "./routes/studentsV2.route";
 import indexV2Routes from "./routes/index.v2.route";
 import reportV2Routes from "./routes/report.v2.route";
-import eligibleCertificateRoutes from "./routes/eligibleCertificate.route";
-import certificateRoutes from "./routes/certificate.route";
 import recruitmentRoutes from "./routes/recruitment.route";
 import { hardDeleteSoftDeletedMerch } from "./controllers/merchandise.v2.controller";
 import { errorHandler } from "./util/errors.util";
@@ -82,8 +80,6 @@ app.use("/api/v2/auth", authV2Routes);
 app.use("/api/v2/events", eventsV2Routes);
 app.use("/api/v2/merchandise", merchandiseV2Routes);
 app.use("/api/v2/students", studentV2Routes);
-app.use("/api/admin/eligible-certificates", eligibleCertificateRoutes);
-app.use("/api/certificates", certificateRoutes);
 app.use("/api/v2/dev", devtoolsRoutes);
 app.use("/api/v2/recruitment", recruitmentRoutes);
 
