@@ -91,7 +91,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       if (user?.id) {
         await logAdminAction({
           admin_id: user.id,
-          action: "Logged out (V2)",
+          action: "Admin Logged Out (V2)",
         });
       }
       await logout();
