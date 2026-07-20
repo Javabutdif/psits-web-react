@@ -13,6 +13,9 @@ export interface IOrdersItems {
   price: number;
   quantity: number;
   sub_total: number;
+  // check docs/error_memory.md line 54.
+  imageUrl1: string;
+  category: string;
   variation?: [String];
   sizes?: [String];
   batch: number;
