@@ -35,6 +35,7 @@ import MyOrders from "./pages/student/MyOrders";
 import CertificatesPage from "./pages/CertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
+import { LogsView } from "./features/admin/logs";
 
 const router = createBrowserRouter([
   {
@@ -132,12 +133,16 @@ const router = createBrowserRouter([
                     campusUnauthorizedToastMessage="Unauthorized"
                   />
                 ),
-                children: [
-                  { 
-                    path: "reports", 
-                    Component: Reports 
-                  },
-                ],
+                children: [{ path: "reports", Component: Reports }],
+              },
+              {
+                element: (
+                  <AdminCampusRouteGuard
+                    allowedCampuses={["UC-MAIN"]}
+                    campusUnauthorizedToastMessage="Unauthorized"
+                  />
+                ),
+                children: [{ path: "logs", Component: LogsView }],
               },
               // TODO: Remove this sample
               { path: "general", Component: GeneralAdminPage },
