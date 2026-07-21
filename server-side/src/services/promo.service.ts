@@ -9,6 +9,7 @@ import { PromoLog } from "../models/promo.log.model";
 import { membership_status } from "../enums/status.enums";
 import { promoCodeGenerator } from "../custom_function/code_generator";
 import { IUserItems } from "./order.service.inteface";
+import { IStudent } from "../models/student.interface";
 
 class PromoService {
   private parseListInput = (value: any): any[] => {
@@ -302,7 +303,7 @@ class PromoService {
   //Verify promo against order items before final order processing
   verifyOrderPromoEligibility = async (
     promoId: Types.ObjectId,
-    requestor: any,
+    requestor: IStudent,
     items: IUserItems[]
   ) => {
     const promo = await this.fetchPromoById(promoId);

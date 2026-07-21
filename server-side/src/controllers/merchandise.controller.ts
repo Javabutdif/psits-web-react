@@ -452,9 +452,6 @@ export const updateMerchandiseController = async (
             item.product_name = name;
             item.price = price;
 
-            item.imageUrl1 = imageUrl[0];
-
-            item.category = category;
             item.batch = batch;
             item.limited = control === "limited-purchase" ? true : false;
             item.quantity = control === "limited-purchase" ? 1 : item.quantity;
