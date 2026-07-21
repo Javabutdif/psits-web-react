@@ -89,19 +89,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     setMenuOpen(false);
     try {
       if (user?.id) {
-<<<<<<< Updated upstream
         await logAdminAction({
           admin_id: user.id,
           action: "Admin Logged Out (V2)",
         });
       }
-=======
-      await logAdminAction({
-        admin_id: user.id,
-        action: "Logged out",
-      });
-    }
->>>>>>> Stashed changes
       await logout();
       showToast("success", "Logged out successfully");
       navigate("/auth/login", { replace: true });
