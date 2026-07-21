@@ -368,44 +368,47 @@ const RevenueLineChart = ({
       </div>
       <div className="mt-3 h-[238px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
-          <CartesianGrid vertical={false} stroke="#eeeeee" />
-          <XAxis
-            dataKey="label"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 10, fill: "#7b7b7b" }}
-            dy={12}
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 10, fill: "#7b7b7b" }}
-            tickFormatter={(value: number) =>
-              value === 0 ? "0" : `₱${value / 1000}k`
-            }
-            width={36}
-          />
-          <Tooltip
-            cursor={{ stroke: "#d6d6d6", strokeDasharray: "4 4" }}
-            content={renderRevenueTooltip}
-          />
-          <Line
-            type="monotone"
-            dataKey="previous"
-            stroke="#c9c9c9"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-            dot={false}
-          />
-          <Line
-            type="monotone"
-            dataKey="current"
-            stroke="#1c9dde"
-            strokeWidth={1.5}
-            dot={{ r: 3, fill: "#1c9dde", strokeWidth: 0 }}
-            activeDot={{ r: 5, fill: "#1c9dde" }}
-          />
+          <LineChart
+            data={data}
+            margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid vertical={false} stroke="#eeeeee" />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 10, fill: "#7b7b7b" }}
+              dy={12}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 10, fill: "#7b7b7b" }}
+              tickFormatter={(value: number) =>
+                value === 0 ? "0" : `₱${value / 1000}k`
+              }
+              width={36}
+            />
+            <Tooltip
+              cursor={{ stroke: "#d6d6d6", strokeDasharray: "4 4" }}
+              content={renderRevenueTooltip}
+            />
+            <Line
+              type="monotone"
+              dataKey="previous"
+              stroke="#c9c9c9"
+              strokeDasharray="5 5"
+              strokeWidth={1.5}
+              dot={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="current"
+              stroke="#1c9dde"
+              strokeWidth={1.5}
+              dot={{ r: 3, fill: "#1c9dde", strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: "#1c9dde" }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -654,7 +657,7 @@ export const DashboardView = () => {
   const displayedStudentTotal = totalStudentsByYear || counts.students;
 
   return (
-    <div className="bg-background flex min-h-full flex-1 flex-col text-[#1d1d1d] [&_button:not(:disabled)]:cursor-pointer [&_button:disabled]:pointer-events-auto [&_button:disabled]:cursor-not-allowed">
+    <div className="bg-background flex min-h-full flex-1 flex-col text-[#1d1d1d] [&_button:disabled]:pointer-events-auto [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
       <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">

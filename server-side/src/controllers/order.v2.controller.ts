@@ -32,6 +32,7 @@ import {
   IOrderFinalizationResult,
 } from "../services/order.service.inteface";
 import { IOrderPromoEligibility } from "../services/promo.service.interface";
+import { IAdmin } from "../models/admin.interface";
 
 class OrderController {
   //Specific Order using id number
@@ -93,19 +94,16 @@ class OrderController {
 
   */
   createOrder = async (req: Request, res: Response) => {
-    const { promo_id, items, admin } = req.body;
-    const user = req.both;
+    const { promo_id, items } = req.body;
+    const user = req.userV2;
     //Check user availability
-    if (admin) {
-      const result = await adminService.retrieveSpecific(admin);
-      if (!result) {
-        throw new AppError("User does not exist!", 404);
-      }
-    } else {
-      const result: IStudent = await studentService.getSpecific(user.id_number);
-      if (!result) {
-        throw new AppError("User does not exist!", 404);
-      }
+    const student = await studentService.getSpecific(user.idNumber);
+    const admin = await adminService.retrieveSpecific(user.idNumber);
+    if (!student) {
+      throw new AppError("No student found!", 404);
+    }
+    if (!admin) {
+      throw new AppError("No admin found!", 404);
     }
     //Start to do transaction case in database
     const session = await mongoose.startSession();
@@ -119,7 +117,7 @@ class OrderController {
     const validation: IOrderPromoEligibility =
       await promoService.verifyOrderPromoEligibility(
         promo_id,
-        user,
+        student,
         processOrder.orderItems
       );
     //Promo Code Discount Calculation
@@ -132,7 +130,7 @@ class OrderController {
           );
     //Process final Order
     const finalOrder: IOrderFinalizationResult = orderService.processFinalOrder(
-      user,
+      student,
       validation,
       processOrder,
       total
@@ -165,7 +163,14 @@ class OrderController {
     To approve an order, the admin will just need to provide the order id and then the system will check if the order is already approved or not, if it is already approved then the system will not allow to approve the order, if it is still pending then the system will approve the order and then return a message that the order is approved
   */
   approveOrder = async (req: Request, res: Response) => {
-    const { order_id, admin, cash } = req.body;
+    const { order_id, cash } = req.body;
+    const user = req.userV2;
+
+    const admin = await adminService.retrieveSpecific(user.idNumber);
+
+    if (!admin) {
+      throw new AppError("Admin not found", 404);
+    }
 
     const checkOrder = await orderService.checkOrderApproveStatus(order_id);
     if (checkOrder.status) {
@@ -181,7 +186,7 @@ class OrderController {
     //Call for approve order service
     const result: any = await orderService.approveOrderService(
       order_id,
-      admin,
+      admin.name,
       session
     );
     //Create a Stocks array for bulk update
@@ -194,7 +199,7 @@ class OrderController {
     //Create a report data array
     const reportDataArray = result.items.map((item: any) => ({
       order_id: result._id,
-      student_id: result.id_number,
+      id_number: result.id_number,
       merch_id: item.product_id,
       item_count: item.quantity,
       total: item.sub_total,
@@ -213,7 +218,7 @@ class OrderController {
     //Create a receipt for the order
     const receipt: any = await orderService.generateOrderReceipt(
       result,
-      admin,
+      admin.name,
       cash
     );
     //Call for order receipt service

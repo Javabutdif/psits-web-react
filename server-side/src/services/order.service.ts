@@ -251,7 +251,7 @@ class OrderService {
     validation: any,
     processOrder: IOrderProcessingResult,
     total: number
-  ) => {
+  ): IOrderFinalizationResult => {
     const finalOrder: IOrderFinalizationResult = {
       id_number: user.id_number,
       promo: {
@@ -271,7 +271,10 @@ class OrderService {
     return finalOrder;
   };
   //Process discount amount total
-  processDiscountAmount = (subTotal: number, discountPercent: number) => {
+  processDiscountAmount = (
+    subTotal: number,
+    discountPercent: number
+  ): number => {
     const discountAmount = subTotal * (discountPercent / 100);
     return subTotal - discountAmount;
   };

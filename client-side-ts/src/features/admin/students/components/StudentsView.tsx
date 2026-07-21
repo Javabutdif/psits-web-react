@@ -36,7 +36,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -139,7 +143,9 @@ const formatDeletedDate = (value: string) => {
   return value;
 };
 
-const formValuesFromStudent = (student?: AdminStudent | null): StudentFormValues =>
+const formValuesFromStudent = (
+  student?: AdminStudent | null
+): StudentFormValues =>
   student
     ? {
         id_number: student.id_number,
@@ -244,7 +250,9 @@ const StudentsTable = ({
             <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
               <th className="rounded-l-md px-2 py-2 text-center align-middle">
                 <Checkbox
-                  checked={isPageSelected || (isSomePageSelected && "indeterminate")}
+                  checked={
+                    isPageSelected || (isSomePageSelected && "indeterminate")
+                  }
                   onCheckedChange={onSelectPage}
                   className="border-[#a7a7a7] data-[state=checked]:border-[#1c9dde] data-[state=checked]:bg-[#1c9dde]"
                   aria-label="Select visible rows"
@@ -330,7 +338,9 @@ const StudentsTable = ({
                     </td>
                     <td className="px-2 py-3 text-left align-middle">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{student.name}</p>
+                        <p className="truncate text-sm font-medium">
+                          {student.name}
+                        </p>
                         <p className="truncate text-xs text-[#929292]">
                           {student.email || "No email"}
                         </p>
@@ -343,7 +353,8 @@ const StudentsTable = ({
                       {student.rfid || "N/A"}
                     </td>
                     <td className="px-2 py-3 text-left align-middle">
-                      {student.course || "-"} {student.year ? `- ${student.year}` : ""}
+                      {student.course || "-"}{" "}
+                      {student.year ? `- ${student.year}` : ""}
                     </td>
                     <td className="px-2 py-3 text-left align-middle">
                       {isDeletedTab ? (
@@ -352,7 +363,9 @@ const StudentsTable = ({
                         <>
                           <span>{formatDate(student.applied)}</span>
                           <span className="block text-xs text-[#8a8a8a]">
-                            {student.isFirstApplication ? "Membership" : "Renewal"}
+                            {student.isFirstApplication
+                              ? "Membership"
+                              : "Renewal"}
                           </span>
                         </>
                       ) : (
@@ -416,12 +429,17 @@ const StudentsTable = ({
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5">
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-52 rounded-xl p-1.5"
+                          >
                             <DropdownMenuItem onClick={() => onEdit(student)}>
                               <Edit3 className="h-4 w-4" />
                               Edit Account Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onChangePassword(student)}>
+                            <DropdownMenuItem
+                              onClick={() => onChangePassword(student)}
+                            >
                               <KeyRound className="h-4 w-4" />
                               Change Password
                             </DropdownMenuItem>
@@ -432,7 +450,9 @@ const StudentsTable = ({
                               <RefreshCcw className="h-4 w-4" />
                               Renew Membership
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onHistory(student)}>
+                            <DropdownMenuItem
+                              onClick={() => onHistory(student)}
+                            >
                               <History className="h-4 w-4" />
                               Membership History
                             </DropdownMenuItem>
@@ -668,7 +688,9 @@ const StudentsFilterPopover = ({
             </div>
             {activeTab === "requests" && (
               <div>
-                <Label className="mb-2 block text-xs font-medium">Applied on</Label>
+                <Label className="mb-2 block text-xs font-medium">
+                  Applied on
+                </Label>
                 <Input
                   type="date"
                   value={draft.appliedOn}
@@ -835,7 +857,9 @@ const StudentFormDialog = ({
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label className="mb-1.5 block text-xs font-medium">Course</Label>
+                <Label className="mb-1.5 block text-xs font-medium">
+                  Course
+                </Label>
                 <Select
                   value={values.course}
                   onValueChange={(value) => updateValue("course", value)}
@@ -913,7 +937,8 @@ const PasswordDialog = ({
   onClose,
   onSubmit,
 }: PasswordDialogProps) => {
-  const [values, setValues] = useState<StudentPasswordValues>(emptyPasswordValues);
+  const [values, setValues] =
+    useState<StudentPasswordValues>(emptyPasswordValues);
 
   const handleSubmit = async () => {
     if (!account) return;
@@ -1088,7 +1113,10 @@ const HistoryDialog = ({
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-3 py-12 text-center text-[#777]">
+                    <td
+                      colSpan={5}
+                      className="px-3 py-12 text-center text-[#777]"
+                    >
                       No membership history found.
                     </td>
                   </tr>
@@ -1121,7 +1149,10 @@ interface ConfirmDialogProps {
   isSaving: boolean;
   membershipFee: number;
   onClose: () => void;
-  onConfirm: (action: StudentAction, records: AdminStudent[]) => Promise<boolean>;
+  onConfirm: (
+    action: StudentAction,
+    records: AdminStudent[]
+  ) => Promise<boolean>;
 }
 
 const ConfirmDialog = ({
@@ -1171,7 +1202,9 @@ const ConfirmDialog = ({
           <div
             className={cn(
               "mb-6 grid h-9 w-9 place-items-center rounded-full",
-              isDelete ? "bg-red-100 text-red-500" : "bg-green-100 text-green-600"
+              isDelete
+                ? "bg-red-100 text-red-500"
+                : "bg-green-100 text-green-600"
             )}
           >
             {isDelete ? (
@@ -1256,7 +1289,9 @@ export const StudentsView = () => {
   const [passwordStudent, setPasswordStudent] = useState<AdminStudent | null>(
     null
   );
-  const [historyStudent, setHistoryStudent] = useState<AdminStudent | null>(null);
+  const [historyStudent, setHistoryStudent] = useState<AdminStudent | null>(
+    null
+  );
   const [confirmState, setConfirmState] = useState<ConfirmDialogState | null>(
     null
   );
@@ -1275,7 +1310,7 @@ export const StudentsView = () => {
         : "Delete";
 
   return (
-    <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_a]:cursor-pointer [&_button:not(:disabled)]:cursor-pointer [&_button:disabled]:pointer-events-auto [&_button:disabled]:cursor-not-allowed [&_[role=menuitem]]:cursor-pointer [&_[data-disabled]]:pointer-events-auto [&_[data-disabled]]:cursor-not-allowed">
+    <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_[data-disabled]]:pointer-events-auto [&_[data-disabled]]:cursor-not-allowed [&_[role=menuitem]]:cursor-pointer [&_a]:cursor-pointer [&_button:disabled]:pointer-events-auto [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
       <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <h1 className="text-2xl font-bold sm:text-3xl">Students</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">

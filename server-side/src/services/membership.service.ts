@@ -50,7 +50,11 @@ class MembershipService {
   revokeMembership = async () => {
     const revokeMembership = await Student.updateMany(
       {},
-      { $set: { membershipStatus: "NOT_APPLIED" } }
+      {
+        $set: {
+          membershipStatus: "NOT_APPLIED",
+        },
+      }
     );
 
     if (!revokeMembership) {

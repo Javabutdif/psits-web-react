@@ -17,6 +17,7 @@ export interface MembershipReportRow {
 
 export interface MerchandiseOrderDetail {
   _id: string;
+  product_id: string;
   reference_code: string;
   student_name: string;
   id_number: string;

@@ -53,6 +53,7 @@ import { verifyAccessToken, AccessTokenClaims } from "../util/jwt.util";
 import { Student } from "../models/student.model";
 import { Admin } from "../models/admin.model";
 import { admin_model } from "../model_template/model_data";
+import { account_status } from "../enums/status.enums";
 
 /**
  * Extend Express Request to include v2 auth user claims from access token.
@@ -173,7 +174,7 @@ export const requireAccessTokenWithDBCheck = async (
     // Verify user still exists and is active
     if (claims.role === "admin") {
       const admin = await Admin.findById(claims.sub);
-      if (!admin || admin.status !== "Active") {
+      if (!admin || admin.status !== account_status.ACTIVE) {
         return res.status(403).json({
           error: "ACCOUNT_INACTIVE",
           message: "Account no longer active",

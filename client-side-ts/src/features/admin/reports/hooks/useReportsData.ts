@@ -11,7 +11,6 @@ import { PSITS_ROLES } from "../../constants/adminAccess";
 import type {
   MembershipReportRow,
   MerchandiseOrderDetail,
-  MerchandiseReportOrder,
   MerchandiseSalesSummary,
   ReportsFilters,
   ReportsStatus,
@@ -55,20 +54,31 @@ const toDateKey = (value: string | Date | undefined): string => {
     return [];
   };
 
+type MerchandiseReportsResult = {
+  data: MerchandiseOrderDetail[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
 export const useReportsData = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ReportsTab>("membership");
 
-  const [membershipData, setMembershipData] = useState<MembershipReportRow[]>([]);
-  const [membershipStatus, setMembershipStatus] = useState<ReportsStatus>("idle");
-
-  const [merchandiseOrders, setMerchandiseOrders] = useState<MerchandiseReportOrder[]>(
+  const [membershipData, setMembershipData] = useState<MembershipReportRow[]>(
     []
   );
+  const [membershipStatus, setMembershipStatus] =
+    useState<ReportsStatus>("idle");
+
   const [merchandiseDetails, setMerchandiseDetails] = useState<
     MerchandiseOrderDetail[]
   >([]);
-  const [merchandiseStatus, setMerchandiseStatus] = useState<ReportsStatus>("idle");
+  const [merchandiseTotal, setMerchandiseTotal] = useState(0);
+  const [merchandiseTotalPages, setMerchandiseTotalPages] = useState(1);
+  const [merchandiseStatus, setMerchandiseStatus] =
+    useState<ReportsStatus>("idle");
 
   const [filters, setFilters] = useState<ReportsFilters>(DEFAULT_FILTERS);
   const [search, setSearch] = useState("");
@@ -89,7 +99,8 @@ export const useReportsData = () => {
     
   const canDeleteReports =
     isUcMainAdmin &&
-    (user?.access === PSITS_ROLES.ADMIN || user?.access === PSITS_ROLES.FINANCE);
+    (user?.access === PSITS_ROLES.ADMIN ||
+      user?.access === PSITS_ROLES.FINANCE);
 
   const fetchMembership = useCallback(async () => {
     const requestId = ++membershipRequestRef.current;
@@ -130,6 +141,8 @@ export const useReportsData = () => {
       if (requestId !== merchandiseRequestRef.current) return;
       setMerchandiseOrders([]);
       setMerchandiseDetails([]);
+      setMerchandiseTotal(0);
+      setMerchandiseTotalPages(1);
       setMerchandiseStatus("error");
     }
   }, []);
@@ -138,10 +151,10 @@ export const useReportsData = () => {
     if (activeTab === "membership" && membershipStatus === "idle") {
       fetchMembership();
     }
-    if (activeTab === "merchandise" && merchandiseStatus === "idle") {
-      fetchMerchandise();
+    if (activeTab === "merchandise") {
+      fetchMerchandise(page);
     }
-  }, [activeTab, membershipStatus, merchandiseStatus, fetchMembership, fetchMerchandise]);
+  }, [activeTab, page, membershipStatus, fetchMembership, fetchMerchandise]);
 
   useEffect(() => {
     setPage(1);
@@ -150,25 +163,29 @@ export const useReportsData = () => {
   const uniqueProductNames = useMemo(
     () =>
       Array.from(
-        new Set(merchandiseDetails.map((detail) => detail.product_name).filter(Boolean))
+        new Set(
+          merchandiseDetails
+            .map((detail) => detail.product_name)
+            .filter(Boolean)
+        )
       ),
     [merchandiseDetails]
   );
 
   const getBatchesForProduct = useCallback(
-  (productName: string): string[] => {
-    if (!productName) return [];
-    return Array.from(
-      new Set(
-        merchandiseDetails
-          .filter((detail) => detail.product_name === productName)
-          .map((detail) => detail.batch)
-          .filter((batch): batch is string => Boolean(batch))
-      )
-    );
-  },
-  [merchandiseDetails]
-);
+    (productName: string): string[] => {
+      if (!productName) return [];
+      return Array.from(
+        new Set(
+          merchandiseDetails
+            .filter((detail) => detail.product_name === productName)
+            .map((detail) => detail.batch)
+            .filter((batch): batch is string => Boolean(batch))
+        )
+      );
+    },
+    [merchandiseDetails]
+  );
 
   const filteredMembership = useMemo(() => {
     if (activeTab !== "membership") return EMPTY_MEMBERSHIP_ROWS;
@@ -183,7 +200,10 @@ export const useReportsData = () => {
         return false;
       }
       if (filters.id && !row.reference_code?.includes(filters.id)) return false;
-      if (filters.name && !row.name?.toLowerCase().includes(filters.name.toLowerCase()))
+      if (
+        filters.name &&
+        !row.name?.toLowerCase().includes(filters.name.toLowerCase())
+      )
         return false;
       if (filters.rfid && !row.rfid?.includes(filters.rfid)) return false;
       if (
@@ -193,7 +213,8 @@ export const useReportsData = () => {
         return false;
       if (filters.year && String(row.year) !== filters.year) return false;
       if (filters.type && row.type !== filters.type) return false;
-      if (filters.dateFrom && toDateKey(row.date) < filters.dateFrom) return false;
+      if (filters.dateFrom && toDateKey(row.date) < filters.dateFrom)
+        return false;
       if (filters.dateTo && toDateKey(row.date) > filters.dateTo) return false;
       return true;
     });
@@ -255,7 +276,7 @@ export const useReportsData = () => {
 
   const merchandiseSalesSummary = useMemo(() => {
     const map = new Map<string, MerchandiseSalesSummary>();
-    filteredMerchandise.forEach((detail) => {
+    merchandiseDetails.forEach((detail) => {
       const current = map.get(detail.product_name) || {
         unitsSold: 0,
         totalRevenue: 0,
@@ -265,11 +286,14 @@ export const useReportsData = () => {
       map.set(detail.product_name, current);
     });
     return map;
-  }, [filteredMerchandise]);
+  }, [merchandiseDetails]);
 
   const activeRowCount =
-    activeTab === "membership" ? filteredMembership.length : filteredMerchandise.length;
-  const totalPages = Math.max(1, Math.ceil(activeRowCount / ROWS_PER_PAGE));
+    activeTab === "membership" ? filteredMembership.length : merchandiseTotal;
+  const totalPages =
+    activeTab === "membership"
+      ? Math.max(1, Math.ceil(activeRowCount / ROWS_PER_PAGE))
+      : merchandiseTotalPages;
   const currentPage = Math.min(page, totalPages);
 
   const pagedMembership = useMemo(
@@ -282,12 +306,8 @@ export const useReportsData = () => {
   );
 
   const pagedMerchandise = useMemo(
-    () =>
-      filteredMerchandise.slice(
-        (currentPage - 1) * ROWS_PER_PAGE,
-        currentPage * ROWS_PER_PAGE
-      ),
-    [filteredMerchandise, currentPage]
+    () => merchandiseDetails,
+    [merchandiseDetails]
   );
 
   const deleteMerchandiseReportItem = async (
@@ -298,23 +318,14 @@ export const useReportsData = () => {
       return false;
     }
 
-    const parentOrder = merchandiseOrders.find((order) =>
-      order.order_details.some((item) => item._id === detail._id)
-    );
-
-    if (!parentOrder) {
-      showToast("error", "Unable to locate the parent order for this item.");
-      return false;
-    }
-
     setIsMutating(true);
     try {
       const success = await deleteReports(
-        parentOrder._id,
+        detail.product_id,
         detail._id,
         detail.product_name
       );
-      if (success) await fetchMerchandise();
+      if (success) await fetchMerchandise(page);
       return success;
     } finally {
       setIsMutating(false);
@@ -334,7 +345,7 @@ export const useReportsData = () => {
     }));
 
   const buildMerchandiseExportRows = () =>
-    filteredMerchandise.map((detail) => ({
+    merchandiseDetails.map((detail) => ({
       "Reference Code": detail.reference_code,
       Merchandise: detail.product_name,
       "Student ID": detail.id_number,
@@ -364,7 +375,7 @@ export const useReportsData = () => {
     pagedMembership,
     pagedMerchandise,
     totalMembershipRows: filteredMembership.length,
-    totalMerchandiseRows: filteredMerchandise.length,
+    totalMerchandiseRows: merchandiseTotal,
     membershipSummary,
     merchandiseSalesSummary,
     uniqueProductNames,
@@ -375,6 +386,6 @@ export const useReportsData = () => {
     buildMembershipExportRows,
     buildMerchandiseExportRows,
     refetchMembership: fetchMembership,
-    refetchMerchandise: fetchMerchandise,
+    refetchMerchandise: () => fetchMerchandise(page),
   };
 };
