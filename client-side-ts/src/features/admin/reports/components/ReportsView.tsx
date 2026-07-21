@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useReportsData, ROWS_PER_PAGE } from "../hooks/useReportsData";
+import { useReportsData, ROWS_PER_PAGE, DEFAULT_FILTERS } from "../hooks/useReportsData";
 import { downloadCsv } from "../utils/exportCsv";
 import type { MerchandiseOrderDetail, ReportsFilters } from "../types/reports.types";
 
@@ -39,21 +39,6 @@ const formatDate = (value: string | Date) => {
   });
 };
 
-const flattenVariant = (value: unknown): string[] => {
-  if (value == null) return [];
-  if (typeof value === "string") return value.trim() ? [value] : [];
-  if (Array.isArray(value)) return value.flatMap(flattenVariant);
-  if (typeof value === "object" && "$each" in (value as Record<string, unknown>)) {
-    return flattenVariant((value as { $each: unknown }).$each);
-  }
-  return [];
-};
-
-const normalizeDisplay = (value?: unknown): string => {
-  const items = flattenVariant(value);
-  return items.length > 0 ? items.join(", ") : "-";
-};
-
 interface ReportsFilterPopoverProps {
   activeTab: "membership" | "merchandise";
   filters: ReportsFilters;
@@ -72,20 +57,6 @@ const ReportsFilterPopover = ({
 }: ReportsFilterPopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(filters);
-  const emptyFilters: ReportsFilters = {
-    id: "",
-    name: "",
-    rfid: "",
-    course: "",
-    year: "",
-    type: "",
-    productName: "",
-    batch: "",
-    size: "",
-    color: "",
-    dateFrom: "",
-    dateTo: "",
-  };
 
   const batchOptions = useMemo(
     () => getBatchesForProduct(draft.productName),
@@ -108,8 +79,8 @@ const ReportsFilterPopover = ({
   };
 
   const clearAppliedFilters = () => {
-    setDraft(emptyFilters);
-    onApply(emptyFilters);
+    setDraft(DEFAULT_FILTERS);
+    onApply(DEFAULT_FILTERS);
     setIsOpen(false);
   };
 
@@ -144,7 +115,7 @@ const ReportsFilterPopover = ({
             <button
               type="button"
               className="cursor-pointer text-xs text-red-500"
-              onClick={() => setDraft(emptyFilters)}
+              onClick={() => setDraft(DEFAULT_FILTERS)}
             >
               Reset Filter
             </button>
@@ -611,11 +582,12 @@ export const ReportsView = () => {
           </div>
 
           {isMembership ? (
-            <MembershipTable rows={pagedMembership} isLoading={status === "loading"} />
+            <MembershipTable rows={pagedMembership} isLoading={status === "loading"} hasError={status === "error"} />
           ) : (
             <MerchandiseTable
               rows={pagedMerchandise}
               isLoading={status === "loading"}
+              hasError={status === "error"}
               canDelete={canDeleteReports}
               onRequestDelete={setDeleteTarget}
             />
@@ -672,9 +644,11 @@ export const ReportsView = () => {
 const MembershipTable = ({
   rows,
   isLoading,
+  hasError,
 }: {
   rows: ReturnType<typeof useReportsData>["pagedMembership"];
   isLoading: boolean;
+  hasError: boolean;
 }) => (
   <div className="overflow-x-auto">
     <table className="w-full min-w-[920px] table-fixed border-collapse text-sm">
@@ -703,9 +677,12 @@ const MembershipTable = ({
               ))}
             </tr>
           ))
-        ) : rows.length > 0 ? (
-          rows.map((row) => (
-            <tr key={row.reference_code} className="border-b border-[#ededed] text-[#303030]">
+        ) : hasError ? null : rows.length > 0 ? (
+          rows.map((row, index) => (
+            <tr 
+              key={`${row.reference_code}-${row.id_number}-${index}`} 
+              className="border-b border-[#ededed] text-[#303030]"
+            >
               <td className="truncate px-2 py-3">{row.reference_code}</td>
               <td className="px-2 py-3">{row.id_number}</td>
               <td className="truncate px-2 py-3">{row.name}</td>
@@ -737,10 +714,12 @@ const MerchandiseTable = ({
   isLoading,
   canDelete,
   onRequestDelete,
+  hasError,
 }: {
   rows: MerchandiseOrderDetail[];
   isLoading: boolean;
   canDelete: boolean;
+  hasError: boolean;
   onRequestDelete: (detail: MerchandiseOrderDetail) => void;
 }) => (
   <div className="overflow-x-auto">
@@ -772,7 +751,7 @@ const MerchandiseTable = ({
               ))}
             </tr>
           ))
-        ) : rows.length > 0 ? (
+        ) : hasError ? null : rows.length > 0 ? (
           rows.map((detail) => (
             <tr key={detail._id} className="border-b border-[#ededed] text-[#303030]">
               <td className="truncate px-2 py-3">{detail.reference_code}</td>
@@ -782,8 +761,8 @@ const MerchandiseTable = ({
               <td className="px-2 py-3">
                 {detail.course} {detail.year ? `- ${detail.year}` : ""}
               </td>
-              <td className="px-2 py-3">{normalizeDisplay(detail.size)}</td>
-              <td className="px-2 py-3">{normalizeDisplay(detail.variation)}</td>
+              <td className="px-2 py-3">{detail.size.length > 0 ? detail.size.join(", ") : "-"}</td>
+              <td className="px-2 py-3">{detail.variation.length > 0 ? detail.variation.join(", ") : "-"}</td>
               <td className="px-2 py-3 text-right">{detail.quantity}</td>
               <td className="px-2 py-3 text-right font-medium">
                 {formatCurrency(detail.total || 0)}
