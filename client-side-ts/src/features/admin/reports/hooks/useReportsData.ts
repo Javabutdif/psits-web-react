@@ -11,7 +11,6 @@ import { PSITS_ROLES } from "../../constants/adminAccess";
 import type {
   MembershipReportRow,
   MerchandiseOrderDetail,
-  MerchandiseReportOrder,
   MerchandiseSalesSummary,
   ReportsFilters,
   ReportsStatus,
@@ -48,20 +47,31 @@ const normalizeStringArray = (value: unknown): string[] => {
   return [];
 };
 
+type MerchandiseReportsResult = {
+  data: MerchandiseOrderDetail[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
 export const useReportsData = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ReportsTab>("membership");
 
-  const [membershipData, setMembershipData] = useState<MembershipReportRow[]>([]);
-  const [membershipStatus, setMembershipStatus] = useState<ReportsStatus>("idle");
-
-  const [merchandiseOrders, setMerchandiseOrders] = useState<MerchandiseReportOrder[]>(
+  const [membershipData, setMembershipData] = useState<MembershipReportRow[]>(
     []
   );
+  const [membershipStatus, setMembershipStatus] =
+    useState<ReportsStatus>("idle");
+
   const [merchandiseDetails, setMerchandiseDetails] = useState<
     MerchandiseOrderDetail[]
   >([]);
-  const [merchandiseStatus, setMerchandiseStatus] = useState<ReportsStatus>("idle");
+  const [merchandiseTotal, setMerchandiseTotal] = useState(0);
+  const [merchandiseTotalPages, setMerchandiseTotalPages] = useState(1);
+  const [merchandiseStatus, setMerchandiseStatus] =
+    useState<ReportsStatus>("idle");
 
   const [filters, setFilters] = useState<ReportsFilters>(DEFAULT_FILTERS);
   const [search, setSearch] = useState("");
@@ -75,7 +85,8 @@ export const useReportsData = () => {
   // (adminAccessAuthenticateV2(["admin", "finance"])).
   const canDeleteReports =
     isUcMainAdmin &&
-    (user?.access === PSITS_ROLES.ADMIN || user?.access === PSITS_ROLES.FINANCE);
+    (user?.access === PSITS_ROLES.ADMIN ||
+      user?.access === PSITS_ROLES.FINANCE);
 
   const fetchMembership = useCallback(async () => {
     setMembershipStatus("loading");
@@ -90,19 +101,22 @@ export const useReportsData = () => {
     }
   }, []);
 
-  const fetchMerchandise = useCallback(async () => {
+  const fetchMerchandise = useCallback(async (targetPage = 1) => {
     setMerchandiseStatus("loading");
     try {
-      const result = await merchandiseReports();
+      const result = (await merchandiseReports({
+        page: targetPage,
+        limit: ROWS_PER_PAGE,
+      })) as MerchandiseReportsResult | void;
       if (!result) throw new Error("No merchandise reports returned");
-      const orders = result as unknown as MerchandiseReportOrder[];
-      setMerchandiseOrders(orders);
-      const details = orders.flatMap((order) => order.order_details || []);
-      setMerchandiseDetails(details.filter(Boolean));
+      setMerchandiseDetails((result.data || []).filter(Boolean));
+      setMerchandiseTotal(result.total || 0);
+      setMerchandiseTotalPages(result.totalPages || 1);
       setMerchandiseStatus("success");
     } catch {
-      setMerchandiseOrders([]);
       setMerchandiseDetails([]);
+      setMerchandiseTotal(0);
+      setMerchandiseTotalPages(1);
       setMerchandiseStatus("error");
     }
   }, []);
@@ -115,10 +129,10 @@ export const useReportsData = () => {
     if (activeTab === "membership" && membershipStatus === "idle") {
       fetchMembership();
     }
-    if (activeTab === "merchandise" && merchandiseStatus === "idle") {
-      fetchMerchandise();
+    if (activeTab === "merchandise") {
+      fetchMerchandise(page);
     }
-  }, [activeTab, membershipStatus, merchandiseStatus, fetchMembership, fetchMerchandise]);
+  }, [activeTab, page, membershipStatus, fetchMembership, fetchMerchandise]);
 
   useEffect(() => {
     setPage(1);
@@ -127,25 +141,29 @@ export const useReportsData = () => {
   const uniqueProductNames = useMemo(
     () =>
       Array.from(
-        new Set(merchandiseDetails.map((detail) => detail.product_name).filter(Boolean))
+        new Set(
+          merchandiseDetails
+            .map((detail) => detail.product_name)
+            .filter(Boolean)
+        )
       ),
     [merchandiseDetails]
   );
 
   const getBatchesForProduct = useCallback(
-  (productName: string): string[] => {
-    if (!productName) return [];
-    return Array.from(
-      new Set(
-        merchandiseDetails
-          .filter((detail) => detail.product_name === productName)
-          .map((detail) => detail.batch)
-          .filter((batch): batch is string => Boolean(batch))
-      )
-    );
-  },
-  [merchandiseDetails]
-);
+    (productName: string): string[] => {
+      if (!productName) return [];
+      return Array.from(
+        new Set(
+          merchandiseDetails
+            .filter((detail) => detail.product_name === productName)
+            .map((detail) => detail.batch)
+            .filter((batch): batch is string => Boolean(batch))
+        )
+      );
+    },
+    [merchandiseDetails]
+  );
 
   const filteredMembership = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -159,7 +177,10 @@ export const useReportsData = () => {
         return false;
       }
       if (filters.id && !row.reference_code?.includes(filters.id)) return false;
-      if (filters.name && !row.name?.toLowerCase().includes(filters.name.toLowerCase()))
+      if (
+        filters.name &&
+        !row.name?.toLowerCase().includes(filters.name.toLowerCase())
+      )
         return false;
       if (filters.rfid && !row.rfid?.includes(filters.rfid)) return false;
       if (
@@ -169,53 +190,12 @@ export const useReportsData = () => {
         return false;
       if (filters.year && String(row.year) !== filters.year) return false;
       if (filters.type && row.type !== filters.type) return false;
-      if (filters.dateFrom && toDateKey(row.date) < filters.dateFrom) return false;
+      if (filters.dateFrom && toDateKey(row.date) < filters.dateFrom)
+        return false;
       if (filters.dateTo && toDateKey(row.date) > filters.dateTo) return false;
       return true;
     });
   }, [membershipData, filters, search]);
-
-  const filteredMerchandise = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return merchandiseDetails.filter((detail) => {
-      if (
-        query &&
-        !`${detail.student_name} ${detail.id_number} ${detail.product_name}`
-          .toLowerCase()
-          .includes(query)
-      ) {
-        return false;
-      }
-      if (filters.id && !detail.id_number?.includes(filters.id)) return false;
-      if (
-        filters.name &&
-        !detail.student_name?.toLowerCase().includes(filters.name.toLowerCase())
-      )
-        return false;
-      if (filters.rfid && !detail.rfid?.includes(filters.rfid)) return false;
-      if (
-        filters.course &&
-        !detail.course?.toLowerCase().includes(filters.course.toLowerCase())
-      )
-        return false;
-      if (filters.year && String(detail.year) !== filters.year) return false;
-      if (filters.productName && detail.product_name !== filters.productName)
-        return false;
-      if (filters.batch && detail.batch !== filters.batch) return false;
-      if (filters.size && !normalizeStringArray(detail.size).includes(filters.size))
-        return false;
-      if (
-        filters.color &&
-        !normalizeStringArray(detail.variation).includes(filters.color)
-      )
-        return false;
-      if (filters.dateFrom && toDateKey(detail.transaction_date) < filters.dateFrom)
-        return false;
-      if (filters.dateTo && toDateKey(detail.transaction_date) > filters.dateTo)
-        return false;
-      return true;
-    });
-  }, [merchandiseDetails, filters, search]);
 
   const membershipSummary = useMemo(() => {
     const totalMembers = filteredMembership.length;
@@ -228,7 +208,7 @@ export const useReportsData = () => {
 
   const merchandiseSalesSummary = useMemo(() => {
     const map = new Map<string, MerchandiseSalesSummary>();
-    filteredMerchandise.forEach((detail) => {
+    merchandiseDetails.forEach((detail) => {
       const current = map.get(detail.product_name) || {
         unitsSold: 0,
         totalRevenue: 0,
@@ -238,11 +218,14 @@ export const useReportsData = () => {
       map.set(detail.product_name, current);
     });
     return map;
-  }, [filteredMerchandise]);
+  }, [merchandiseDetails]);
 
   const activeRowCount =
-    activeTab === "membership" ? filteredMembership.length : filteredMerchandise.length;
-  const totalPages = Math.max(1, Math.ceil(activeRowCount / ROWS_PER_PAGE));
+    activeTab === "membership" ? filteredMembership.length : merchandiseTotal;
+  const totalPages =
+    activeTab === "membership"
+      ? Math.max(1, Math.ceil(activeRowCount / ROWS_PER_PAGE))
+      : merchandiseTotalPages;
   const currentPage = Math.min(page, totalPages);
 
   useEffect(() => {
@@ -259,12 +242,8 @@ export const useReportsData = () => {
   );
 
   const pagedMerchandise = useMemo(
-    () =>
-      filteredMerchandise.slice(
-        (currentPage - 1) * ROWS_PER_PAGE,
-        currentPage * ROWS_PER_PAGE
-      ),
-    [filteredMerchandise, currentPage]
+    () => merchandiseDetails,
+    [merchandiseDetails]
   );
 
   const clearFilters = () => setFilters(DEFAULT_FILTERS);
@@ -277,23 +256,14 @@ export const useReportsData = () => {
       return false;
     }
 
-    const parentOrder = merchandiseOrders.find((order) =>
-      order.order_details.some((item) => item._id === detail._id)
-    );
-
-    if (!parentOrder) {
-      showToast("error", "Unable to locate the parent order for this item.");
-      return false;
-    }
-
     setIsMutating(true);
     try {
       const success = await deleteReports(
-        parentOrder._id,
+        detail.product_id,
         detail._id,
         detail.product_name
       );
-      if (success) await fetchMerchandise();
+      if (success) await fetchMerchandise(page);
       return success;
     } finally {
       setIsMutating(false);
@@ -313,7 +283,7 @@ export const useReportsData = () => {
     }));
 
   const buildMerchandiseExportRows = () =>
-    filteredMerchandise.map((detail) => ({
+    merchandiseDetails.map((detail) => ({
       "Reference Code": detail.reference_code,
       Merchandise: detail.product_name,
       "Student ID": detail.id_number,
@@ -344,7 +314,7 @@ export const useReportsData = () => {
     pagedMembership,
     pagedMerchandise,
     totalMembershipRows: filteredMembership.length,
-    totalMerchandiseRows: filteredMerchandise.length,
+    totalMerchandiseRows: merchandiseTotal,
     membershipSummary,
     merchandiseSalesSummary,
     uniqueProductNames,
@@ -355,6 +325,6 @@ export const useReportsData = () => {
     buildMembershipExportRows,
     buildMerchandiseExportRows,
     refetchMembership: fetchMembership,
-    refetchMerchandise: fetchMerchandise,
+    refetchMerchandise: () => fetchMerchandise(page),
   };
 };

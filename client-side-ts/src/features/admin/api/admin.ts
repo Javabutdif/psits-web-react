@@ -107,6 +107,7 @@ interface DailySalesData {
 
 interface MerchandiseReportOrderDetail {
   _id: string;
+  product_id: string;
   reference_code: string;
   student_name: string;
   id_number: string;
@@ -125,6 +126,20 @@ interface MerchandiseReportOrderDetail {
 interface MerchandiseReportOrder {
   _id: string;
   order_details: MerchandiseReportOrderDetail[];
+}
+
+interface MerchandiseReportsResult {
+  data: MerchandiseReportOrderDetail[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  message?: string;
+}
+
+interface MerchandiseReportsParams {
+  page?: number;
+  limit?: number;
 }
 
 type DailySalesResponse = DailySalesData[] | { data: DailySalesData[] };
@@ -521,14 +536,19 @@ export const deleteMerchandise = async (
   }
 };
 
-export const merchandiseReports = async (): Promise<
-  MerchandiseReportOrder[] | void
-> => {
+export const merchandiseReports = async ({
+  page = 1,
+  limit = 10,
+}: MerchandiseReportsParams = {}): Promise<MerchandiseReportsResult | void> => {
   try {
-    const response: AxiosResponse<MerchandiseReportOrder[]> = await axios.get(
-      `${backendConnection()}/api/merch/reports`,
-      { headers: createHeaders() }
+    const response: AxiosResponse<MerchandiseReportsResult> = await axios.get(
+      `${backendConnection()}/api/reports`,
+      {
+        headers: createHeaders(),
+        params: { page, limit },
+      }
     );
+    console.log(response.data);
     return response.data;
   } catch (error) {
     handleApiError(error, false);

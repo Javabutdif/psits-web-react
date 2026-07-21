@@ -2,7 +2,7 @@ import { Document, Types } from "mongoose";
 
 export interface IReport {
   order_id: Types.ObjectId;
-  student_id: string;
+  id_number: string;
   merch_id: Types.ObjectId;
   item_count: number;
   total: number;

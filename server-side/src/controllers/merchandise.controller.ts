@@ -235,16 +235,72 @@ export const retrieveMerchAdminController = async (
 };
 export const retrieveReportController = async (req: Request, res: Response) => {
   try {
-    const merches = await Merch.find()
-      .select(
-        "name price batch start_date end_date category type sales_data order_details"
-      )
-      .lean()
-      .sort({ createdAt: -1 });
-    if (!merches) {
-      res.status(400).json({ message: "No Available Merchandise" });
-    }
-    res.status(200).json(merches);
+    const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit as string, 10) || 10, 1);
+    const skip = (page - 1) * limit;
+
+    const [result] = await Merch.aggregate([
+      {
+        $match: {
+          order_details: { $exists: true, $ne: [] },
+        },
+      },
+      { $unwind: "$order_details" },
+      {
+        $sort: {
+          "order_details.transaction_date": -1,
+          createdAt: -1,
+          "order_details._id": -1,
+        },
+      },
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                _id: "$order_details._id",
+                product_id: "$_id",
+                reference_code: "$order_details.reference_code",
+                product_name: {
+                  $ifNull: ["$order_details.product_name", "$name"],
+                },
+                student_name: "$order_details.student_name",
+                id_number: "$order_details.id_number",
+                course: "$order_details.course",
+                year: "$order_details.year",
+                batch: "$order_details.batch",
+                size: "$order_details.size",
+                variation: "$order_details.variation",
+                quantity: "$order_details.quantity",
+                total: "$order_details.total",
+                transaction_date: {
+                  $ifNull: [
+                    "$order_details.transaction_date",
+                    "$order_details.order_date",
+                  ],
+                },
+                rfid: "$order_details.rfid",
+              },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    ]);
+
+    const data = result?.data || [];
+    const total = result?.totalCount?.[0]?.count || 0;
+
+    return res.status(200).json({
+      message: "Successfully retrieved merchandise reports",
+      data,
+      total,
+      page,
+      limit,
+      totalPages: total === 0 ? 1 : Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error("Error fetching merches:", error);
     res.status(500).send(error);

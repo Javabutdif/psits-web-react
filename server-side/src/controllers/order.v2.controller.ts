@@ -199,7 +199,7 @@ class OrderController {
     //Create a report data array
     const reportDataArray = result.items.map((item: any) => ({
       order_id: result._id,
-      student_id: result.id_number,
+      id_number: result.id_number,
       merch_id: item.product_id,
       item_count: item.quantity,
       total: item.sub_total,
