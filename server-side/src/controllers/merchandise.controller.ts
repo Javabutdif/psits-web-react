@@ -451,6 +451,7 @@ export const updateMerchandiseController = async (
           if (item.product_id.toString() === id) {
             item.product_name = name;
             item.price = price;
+
             item.batch = batch;
             item.limited = control === "limited-purchase" ? true : false;
             item.quantity = control === "limited-purchase" ? 1 : item.quantity;
