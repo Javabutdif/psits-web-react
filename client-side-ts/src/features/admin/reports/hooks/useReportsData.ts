@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteReports,
   membershipHistory,
@@ -19,8 +19,11 @@ import type {
 } from "../types/reports.types";
 
 export const ROWS_PER_PAGE = 10;
+const SEARCH_DEBOUNCE_MS = 250;
+const EMPTY_MEMBERSHIP_ROWS: MembershipReportRow[] = [];
+const EMPTY_MERCHANDISE_DETAILS: MerchandiseOrderDetail[] = [];
 
-const DEFAULT_FILTERS: ReportsFilters = {
+export const DEFAULT_FILTERS: ReportsFilters = {
   id: "",
   name: "",
   rfid: "",
@@ -39,14 +42,18 @@ const toDateKey = (value: string | Date | undefined): string => {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10); 
 };
 
-const normalizeStringArray = (value: unknown): string[] => {
-  if (Array.isArray(value)) return value.map(String);
-  if (typeof value === "string" && value) return [value];
-  return [];
-};
+  const flattenVariantField = (value: unknown): string[] => {
+    if (value == null) return [];
+    if (typeof value === "string") return value.trim() ? [value] : [];
+    if (Array.isArray(value)) return value.flatMap(flattenVariantField);
+    if (typeof value === "object" && "$each" in (value as Record<string, unknown>)) {
+      return flattenVariantField((value as { $each: unknown }).$each);
+    }
+    return [];
+  };
 
 export const useReportsData = () => {
   const { user } = useAuth();
@@ -65,52 +72,68 @@ export const useReportsData = () => {
 
   const [filters, setFilters] = useState<ReportsFilters>(DEFAULT_FILTERS);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const [page, setPage] = useState(1);
   const [isMutating, setIsMutating] = useState(false);
+  const membershipRequestRef = useRef(0);
+  const merchandiseRequestRef = useRef(0);
 
   const isUcMainAdmin =
     user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
-  // Mirrors the legacy `financeAndAdminConditionalAccess()` check, and
-  // matches the backend's own gate on DELETE /api/merch/delete-report
-  // (adminAccessAuthenticateV2(["admin", "finance"])).
+    
   const canDeleteReports =
     isUcMainAdmin &&
     (user?.access === PSITS_ROLES.ADMIN || user?.access === PSITS_ROLES.FINANCE);
 
   const fetchMembership = useCallback(async () => {
+    const requestId = ++membershipRequestRef.current;
     setMembershipStatus("loading");
     try {
       const result = await membershipHistory();
+      if (requestId !== membershipRequestRef.current) return;
       if (!result) throw new Error("No membership history returned");
-      setMembershipData(result as unknown as MembershipReportRow[]);
+      setMembershipData(result);
       setMembershipStatus("success");
     } catch {
+      if (requestId !== membershipRequestRef.current) return;
       setMembershipData([]);
       setMembershipStatus("error");
     }
   }, []);
 
   const fetchMerchandise = useCallback(async () => {
+    const requestId = ++merchandiseRequestRef.current;
     setMerchandiseStatus("loading");
     try {
       const result = await merchandiseReports();
+      if (requestId !== merchandiseRequestRef.current) return;
       if (!result) throw new Error("No merchandise reports returned");
-      const orders = result as unknown as MerchandiseReportOrder[];
+      const orders = result.map((order) => ({
+        _id: order._id,
+        order_details: order.order_details.map((detail) => ({
+          ...detail,
+          size: flattenVariantField(detail.size),
+          variation: flattenVariantField(detail.variation),
+        })),
+      }));
       setMerchandiseOrders(orders);
       const details = orders.flatMap((order) => order.order_details || []);
       setMerchandiseDetails(details.filter(Boolean));
       setMerchandiseStatus("success");
     } catch {
+      if (requestId !== merchandiseRequestRef.current) return;
       setMerchandiseOrders([]);
       setMerchandiseDetails([]);
       setMerchandiseStatus("error");
     }
   }, []);
 
-  // Fetch once per tab, lazily. Failure lands in an explicit "error"
-  // state rather than looping or silently showing an empty table —
-  // this is the fix for the "Fetching Reports..." infinite-spinner bug
-  // in the legacy component.
   useEffect(() => {
     if (activeTab === "membership" && membershipStatus === "idle") {
       fetchMembership();
@@ -148,6 +171,7 @@ export const useReportsData = () => {
 );
 
   const filteredMembership = useMemo(() => {
+    if (activeTab !== "membership") return EMPTY_MEMBERSHIP_ROWS;
     const query = search.trim().toLowerCase();
     return membershipData.filter((row) => {
       if (
@@ -173,10 +197,12 @@ export const useReportsData = () => {
       if (filters.dateTo && toDateKey(row.date) > filters.dateTo) return false;
       return true;
     });
-  }, [membershipData, filters, search]);
+  }, [activeTab, membershipData, filters, debouncedSearch]);
 
   const filteredMerchandise = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  if (activeTab !== "merchandise") return EMPTY_MERCHANDISE_DETAILS;
+  const query = search.trim().toLowerCase();
+
     return merchandiseDetails.filter((detail) => {
       if (
         query &&
@@ -186,28 +212,29 @@ export const useReportsData = () => {
       ) {
         return false;
       }
-      if (filters.id && !detail.id_number?.includes(filters.id)) return false;
+      if (filters.id && !detail.id_number?.includes(filters.id)) 
+        return false;
       if (
         filters.name &&
         !detail.student_name?.toLowerCase().includes(filters.name.toLowerCase())
       )
         return false;
-      if (filters.rfid && !detail.rfid?.includes(filters.rfid)) return false;
+      if (filters.rfid && !detail.rfid?.includes(filters.rfid)) 
+        return false;
       if (
         filters.course &&
         !detail.course?.toLowerCase().includes(filters.course.toLowerCase())
       )
         return false;
-      if (filters.year && String(detail.year) !== filters.year) return false;
+      if (filters.year && String(detail.year) !== filters.year) 
+        return false;
       if (filters.productName && detail.product_name !== filters.productName)
         return false;
-      if (filters.batch && detail.batch !== filters.batch) return false;
-      if (filters.size && !normalizeStringArray(detail.size).includes(filters.size))
+      if (filters.batch && detail.batch !== filters.batch) 
         return false;
-      if (
-        filters.color &&
-        !normalizeStringArray(detail.variation).includes(filters.color)
-      )
+      if (filters.size && !detail.size.includes(filters.size)) 
+        return false;
+      if (filters.color && !detail.variation.includes(filters.color))
         return false;
       if (filters.dateFrom && toDateKey(detail.transaction_date) < filters.dateFrom)
         return false;
@@ -215,7 +242,7 @@ export const useReportsData = () => {
         return false;
       return true;
     });
-  }, [merchandiseDetails, filters, search]);
+  }, [activeTab, merchandiseDetails, filters, search]);
 
   const membershipSummary = useMemo(() => {
     const totalMembers = filteredMembership.length;
@@ -245,10 +272,6 @@ export const useReportsData = () => {
   const totalPages = Math.max(1, Math.ceil(activeRowCount / ROWS_PER_PAGE));
   const currentPage = Math.min(page, totalPages);
 
-  useEffect(() => {
-    if (page !== currentPage) setPage(currentPage);
-  }, [currentPage, page]);
-
   const pagedMembership = useMemo(
     () =>
       filteredMembership.slice(
@@ -266,8 +289,6 @@ export const useReportsData = () => {
       ),
     [filteredMerchandise, currentPage]
   );
-
-  const clearFilters = () => setFilters(DEFAULT_FILTERS);
 
   const deleteMerchandiseReportItem = async (
     detail: MerchandiseOrderDetail
@@ -299,7 +320,7 @@ export const useReportsData = () => {
       setIsMutating(false);
     }
   };
-
+  
   const buildMembershipExportRows = () =>
     filteredMembership.map((row) => ({
       "Reference Code": row.reference_code,
@@ -321,8 +342,8 @@ export const useReportsData = () => {
       Course: detail.course,
       "Year Level": detail.year,
       Batch: detail.batch || "",
-      Size: normalizeStringArray(detail.size).join(", "),
-      Variation: normalizeStringArray(detail.variation).join(", "),
+      Size: detail.size.join(", "),
+      Variation: detail.variation.join(", "),
       Qty: detail.quantity,
       Total: detail.total,
       "Transaction Date": toDateKey(detail.transaction_date),
@@ -337,7 +358,6 @@ export const useReportsData = () => {
     setSearch,
     filters,
     setFilters,
-    clearFilters,
     page: currentPage,
     setPage,
     totalPages,

@@ -12,7 +12,7 @@ export interface MembershipReportRow {
   type: string;
   admin?: string;
   rfid?: string;
-  total: number;
+  total?: number;
 }
 
 export interface MerchandiseOrderDetail {
@@ -24,8 +24,8 @@ export interface MerchandiseOrderDetail {
   year: string | number;
   product_name: string;
   batch?: string;
-  size?: unknown;
-  variation?: unknown;
+  size: string[];
+  variation: string[];
   quantity: number;
   total: number;
   transaction_date: string | Date;
