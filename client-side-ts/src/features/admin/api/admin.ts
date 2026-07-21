@@ -105,6 +105,28 @@ interface DailySalesData {
   totalSubtotal: number;
 }
 
+interface MerchandiseReportOrderDetail {
+  _id: string;
+  reference_code: string;
+  student_name: string;
+  id_number: string;
+  course: string;
+  year: string | number;
+  product_name: string;
+  batch?: string;
+  size?: string | string[];
+  variation?: string | string[];
+  quantity: number;
+  total: number;
+  transaction_date: string;
+  rfid?: string;
+}
+
+interface MerchandiseReportOrder {
+  _id: string;
+  order_details: MerchandiseReportOrderDetail[];
+}
+
 type DailySalesResponse = DailySalesData[] | { data: DailySalesData[] };
 
 interface DashboardPaidOrder {
@@ -144,6 +166,7 @@ interface Officer extends Member {
 
 interface AdminLog {
   _id: string;
+  admin: string;
   admin_id: string;
   action: string;
   target?: string;
@@ -498,6 +521,20 @@ export const deleteMerchandise = async (
   }
 };
 
+export const merchandiseReports = async (): Promise<
+  MerchandiseReportOrder[] | void
+> => {
+  try {
+    const response: AxiosResponse<MerchandiseReportOrder[]> = await axios.get(
+      `${backendConnection()}/api/merch/reports`,
+      { headers: createHeaders() }
+    );
+    return response.data;
+  } catch (error) {
+    handleApiError(error, false);
+  }
+};
+
 export const publishMerchandise = async (
   _id: string
 ): Promise<boolean | void> => {
@@ -578,21 +615,20 @@ export const addMerchandise = async (formData: FormData): Promise<boolean> => {
   }
 };
 
-export const getDashboardStats = async (): Promise<
-  DashboardStatsResponse | void
-> => {
-  try {
-    const response: AxiosResponse<DashboardStatsResponse> = await axios.get(
-      `${backendConnection()}/api/admin/dashboard-stats`,
-      {
-        headers: createHeaders(),
-      }
-    );
-    return response.data;
-  } catch (error) {
-    handleApiError(error, false);
-  }
-};
+export const getDashboardStats =
+  async (): Promise<DashboardStatsResponse | void> => {
+    try {
+      const response: AxiosResponse<DashboardStatsResponse> = await axios.get(
+        `${backendConnection()}/api/admin/dashboard-stats`,
+        {
+          headers: createHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      handleApiError(error, false);
+    }
+  };
 
 export const getDailySales = async (): Promise<DailySalesData[] | void> => {
   try {

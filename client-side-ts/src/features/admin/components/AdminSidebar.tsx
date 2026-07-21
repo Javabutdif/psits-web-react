@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/features/auth";
 import { useCampusCheck } from "@/features/auth/hooks/useCampusCheck";
+import { logAdminAction } from "@/features/admin/api/admin";
 import { showToast } from "@/utils/alertHelper";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 
@@ -87,6 +88,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const handleLogout = async () => {
     setMenuOpen(false);
     try {
+      if (user?.id) {
+        await logAdminAction({
+          admin_id: user.id,
+          action: "Admin Logged Out (V2)",
+        });
+      }
       await logout();
       showToast("success", "Logged out successfully");
       navigate("/auth/login", { replace: true });
@@ -151,7 +158,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 className={cn(
                   "hidden shrink-0 transition-all duration-300 lg:flex",
                   collapsed &&
-                    "absolute top-4 right-1 h-7 w-7 border bg-background opacity-0 shadow-sm group-hover/sidebar:opacity-100 focus-visible:opacity-100"
+                    "bg-background absolute top-4 right-1 h-7 w-7 border opacity-0 shadow-sm group-hover/sidebar:opacity-100 focus-visible:opacity-100"
                 )}
                 aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
@@ -246,7 +253,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={getNavButtonClass("/admin/students", !isUcMainAdmin)}
+                      className={getNavButtonClass(
+                        "/admin/students",
+                        !isUcMainAdmin
+                      )}
                       asChild
                     >
                       <Link
@@ -369,11 +379,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={restrictedNavButtonClass}
+                      className={getNavButtonClass(
+                        "/admin/reports",
+                        !isUcMainAdmin
+                      )}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/reports" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -473,7 +486,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/logs" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();

@@ -370,7 +370,7 @@ export const updateMerchandiseController = async (
     const updatedResult = await Merch.updateOne(
       { _id: id },
       { imageUrl: imagesToRemove },
-      { $pull: { imageUrl: imagesToRemove } }
+      // { $pull: { imageUrl: imagesToRemove } }
     );
     if (updatedResult.modifiedCount === 0) {
       console.error("Failed to update merch images");

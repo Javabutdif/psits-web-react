@@ -20,7 +20,7 @@ export const addNewLogController = async (req: Request, res: Response) => {
     const { admin_id, action, target, target_id, target_model } = req.body;
 
     // Find the admin using the admin_id
-    const admin = await Admin.findOne({ id_number: admin_id });
+    const admin = await Admin.findById(admin_id);
 
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
