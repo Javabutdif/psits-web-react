@@ -99,11 +99,4 @@ router.put(
   merchandiseController.publish
 );
 
-router.get(
-  "/reports",
-  requireAccessTokenV2,
-  roleAuthenticateV2(["admin"]),
-  merchandiseController.getReports
-);
-
 export default router;

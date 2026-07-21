@@ -8,13 +8,13 @@ const reportSchema = new Schema<IReportDocument>(
       ref: "Orders",
       required: true,
     },
-    student_id: {
+    id_number: {
       type: String,
       required: true,
     },
     merch_id: {
       type: Schema.Types.ObjectId,
-      ref: "Merch",
+      ref: "merch",
       required: true,
     },
     item_count: {
