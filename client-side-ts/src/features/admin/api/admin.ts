@@ -123,23 +123,31 @@ interface MerchandiseReportOrderDetail {
   rfid?: string;
 }
 
-interface MerchandiseReportOrder {
-  _id: string;
-  order_details: MerchandiseReportOrderDetail[];
-}
-
-interface MerchandiseReportsResult {
+export interface MerchandiseReportsResult {
   data: MerchandiseReportOrderDetail[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
   message?: string;
+  summary: { unitsSold: number; totalRevenue: number };
+  productNames: string[];
 }
 
-interface MerchandiseReportsParams {
+export interface MerchandiseReportsParams {
   page?: number;
   limit?: number;
+  search?: string;
+  referenceCode?: string;
+  studentId?: string;
+  name?: string;
+  course?: string;
+  year?: string;
+  productName?: string;
+  size?: string;
+  color?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 type DailySalesResponse = DailySalesData[] | { data: DailySalesData[] };
@@ -539,16 +547,40 @@ export const deleteMerchandise = async (
 export const merchandiseReports = async ({
   page = 1,
   limit = 10,
+  search,
+  referenceCode,
+  studentId,
+  name,
+  course,
+  year,
+  productName,
+  size,
+  color,
+  dateFrom,
+  dateTo,
 }: MerchandiseReportsParams = {}): Promise<MerchandiseReportsResult | void> => {
   try {
     const response: AxiosResponse<MerchandiseReportsResult> = await axios.get(
       `${backendConnection()}/api/reports`,
       {
         headers: createHeaders(),
-        params: { page, limit },
+        params: {
+          page,
+          limit,
+          search,
+          referenceCode,
+          studentId,
+          name,
+          course,
+          year,
+          productName,
+          size,
+          color,
+          dateFrom,
+          dateTo,
+        },
       }
     );
-    console.log(response.data);
     return response.data;
   } catch (error) {
     handleApiError(error, false);
