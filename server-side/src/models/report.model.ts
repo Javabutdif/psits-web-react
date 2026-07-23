@@ -35,4 +35,6 @@ const reportSchema = new Schema<IReportDocument>(
   }
 );
 
+reportSchema.index({ order_id: 1, merch_id: 1 }, { unique: true });
+
 export const Report = mongoose.model<IReportDocument>("Report", reportSchema);
