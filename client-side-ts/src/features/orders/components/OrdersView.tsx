@@ -77,7 +77,8 @@ type OrderRowData = {
 };
 
 const OrderProducts = ({ items }: { items: OrderRowData["items"] }) => {
-  if (!items || items.length === 0) return <span className="text-[#777]">-</span>;
+  if (!items || items.length === 0)
+    return <span className="text-[#777]">-</span>;
   const maxLen = 22;
   const displayItems = items.slice(0, 2);
   const summary = displayItems.map(
@@ -195,7 +196,7 @@ const ApproveOrderDialog = ({
           </div>
 
           <div className="mb-5 rounded-lg bg-[#f0fafd] px-4 py-3">
-            <p className="text-sm text-[#1c9dde] font-medium">
+            <p className="text-sm font-medium text-[#1c9dde]">
               Order Total: {formatCurrency(order?.total ?? 0)}
             </p>
             <p className="mt-1 text-xs text-[#1c9dde]/80">
@@ -292,18 +293,31 @@ export const OrdersView = () => {
   const [detailOrder, setDetailOrder] = useState<OrderRowData | null>(null);
 
   const data = activeTab === "pending" ? pendingData : paidData;
-  const totalPages = activeTab === "pending" ? pendingTotalPages : paidTotalPages;
+  const totalPages =
+    activeTab === "pending" ? pendingTotalPages : paidTotalPages;
   const status = activeTab === "pending" ? pendingStatus : paidStatus;
-  const rowCount = activeTab === "pending" ? pendingData.length : paidData.length;
+  const rowCount =
+    activeTab === "pending" ? pendingData.length : paidData.length;
 
   const tabs = [
-    { key: "pending" as const, label: "Pending", icon: Clock3, count: pendingData.length },
-    { key: "paid" as const, label: "Paid", icon: Check, count: paidData.length },
+    {
+      key: "pending" as const,
+      label: "Pending",
+      icon: Clock3,
+      count: pendingData.length,
+    },
+    {
+      key: "paid" as const,
+      label: "Paid",
+      icon: Check,
+      count: paidData.length,
+    },
   ];
 
   const pageIds = data.map((row: OrderRowData) => row._id);
   const isPageSelected =
-    pageIds.length > 0 && pageIds.every((id: string) => selectedIds.includes(id));
+    pageIds.length > 0 &&
+    pageIds.every((id: string) => selectedIds.includes(id));
   const isSomePageSelected =
     !isPageSelected && pageIds.some((id: string) => selectedIds.includes(id));
 
@@ -315,7 +329,7 @@ export const OrdersView = () => {
   const currentPage = Math.min(page, totalPagesNum);
 
   return (
-    <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer [&_[data-disabled]]:pointer-events-auto [&_[data-disabled]]:cursor-not-allowed [&_[role=menuitem]]:cursor-pointer [&_a]:cursor-pointer">
+    <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_[data-disabled]]:pointer-events-auto [&_[data-disabled]]:cursor-not-allowed [&_[role=menuitem]]:cursor-pointer [&_a]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
       <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <h1 className="text-2xl font-bold sm:text-3xl">Orders</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
@@ -341,9 +355,11 @@ export const OrdersView = () => {
             >
               <tab.icon className="h-4 w-4" />
               <span>{tab.label}</span>
-              <span className="text-xs text-current/70">({tab.count.toLocaleString()})</span>
+              <span className="text-xs text-current/70">
+                ({tab.count.toLocaleString()})
+              </span>
               {activeTab === tab.key && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1c9dde]" />
+                <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-[#1c9dde]" />
               )}
             </button>
           ))}
@@ -395,17 +411,22 @@ export const OrdersView = () => {
                 <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
                   <th className="rounded-l-md px-2 py-2 text-center align-middle">
                     <Checkbox
-                      checked={isPageSelected || (isSomePageSelected && "indeterminate")}
+                      checked={
+                        isPageSelected ||
+                        (isSomePageSelected && "indeterminate")
+                      }
                       onCheckedChange={() => toggleAllOnPage(pageIds)}
                       className="border-[#a7a7a7] data-[state=checked]:border-[#1c9dde] data-[state=checked]:bg-[#1c9dde]"
                       aria-label="Select visible rows"
                     />
                   </th>
                   <th className="px-2 py-2 text-left align-middle font-medium">
-                    {activeTab === "pending" ? "Student Name" : "Reference Code"}
+                    {activeTab === "pending"
+                      ? "Student Name"
+                      : "Reference Code"}
                   </th>
                   <th className="px-2 py-2 text-left align-middle font-medium">
-                    Student ID
+                    {activeTab === "pending" ? "Student ID" : "Student Name"}
                   </th>
                   {activeTab === "paid" && (
                     <th className="px-2 py-2 text-left align-middle font-medium">
@@ -419,11 +440,9 @@ export const OrdersView = () => {
                     {activeTab === "pending" ? "Products" : "Total"}
                   </th>
                   <th className="px-2 py-2 text-left align-middle font-medium">
-                    {activeTab === "pending" ? "Order Date" : "-"}
+                    {activeTab === "pending" ? "Order Date" : "Managed By"}
                   </th>
-                  <th className="px-2 py-2 text-left align-middle font-medium">
-                    RFID
-                  </th>
+
                   <th className="rounded-r-md px-2 py-2 text-right align-middle" />
                 </tr>
               </thead>
@@ -431,11 +450,14 @@ export const OrdersView = () => {
                 {status === "loading" ? (
                   Array.from({ length: 8 }, (_, index) => (
                     <tr key={index} className="border-b border-[#ededed]">
-                      {Array.from({ length: activeTab === "paid" ? 9 : 9 }, (_, cell) => (
-                        <td key={cell} className="px-2 py-3">
-                          <Skeleton className="h-4 w-full rounded-full" />
-                        </td>
-                      ))}
+                      {Array.from(
+                        { length: activeTab === "paid" ? 9 : 9 },
+                        (_, cell) => (
+                          <td key={cell} className="px-2 py-3">
+                            <Skeleton className="h-4 w-full rounded-full" />
+                          </td>
+                        )
+                      )}
                     </tr>
                   ))
                 ) : status === "error" ? null : data.length > 0 ? (
@@ -455,18 +477,28 @@ export const OrdersView = () => {
                       <td className="px-2 py-3 text-left align-middle">
                         {activeTab === "pending" ? (
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{order.student_name}</p>
+                            <p className="truncate text-sm font-medium">
+                              {order.student_name}
+                            </p>
                           </div>
                         ) : (
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{order.student_name}</p>
+                            <p className="truncate text-sm font-medium">
+                              {order.reference_code}
+                            </p>
                           </div>
                         )}
                       </td>
-                      <td className="px-2 py-3 text-left align-middle">{order.id_number}</td>
+                      <td className="px-2 py-3 text-left align-middle">
+                        {activeTab === "pending"
+                          ? order.id_number
+                          : order.student_name}
+                      </td>
                       {activeTab === "paid" && (
                         <td className="px-2 py-3 text-left align-middle">
-                          {formatDate(order.transaction_date || order.order_date)}
+                          {formatDate(
+                            order.transaction_date || order.order_date
+                          )}
                         </td>
                       )}
                       <td className="px-2 py-3 text-left align-middle">
@@ -476,15 +508,17 @@ export const OrdersView = () => {
                         {activeTab === "pending" ? (
                           <OrderProducts items={order.items} />
                         ) : (
-                          <span className="font-medium">{formatCurrency(order.total)}</span>
+                          <span className="font-medium">
+                            {formatCurrency(order.total)}
+                          </span>
                         )}
                       </td>
                       <td className="px-2 py-3 text-left align-middle">
-                        {activeTab === "pending" ? formatDate(order.order_date) : "-"}
+                        {activeTab === "pending"
+                          ? formatDate(order.order_date)
+                          : order.admin}
                       </td>
-                      <td className="px-2 py-3 text-left align-middle">
-                        {order.rfid || "N/A"}
-                      </td>
+
                       <td className="px-2 py-3 text-right align-middle">
                         <div className="flex justify-end gap-2">
                           {activeTab === "pending" && isUcMainAdmin && (
@@ -657,7 +691,9 @@ export const OrdersView = () => {
               <X className="h-5 w-5" />
             </div>
             <h2 className="mb-3 text-lg font-medium">
-              {refundTarget ? `Refund ${refundTarget.student_name}?` : "Refund this order?"}
+              {refundTarget
+                ? `Refund ${refundTarget.student_name}?`
+                : "Refund this order?"}
             </h2>
             <p className="mb-8 text-sm leading-relaxed text-[#8a8a8a]">
               {refundTarget
@@ -692,7 +728,10 @@ export const OrdersView = () => {
       </Dialog>
 
       {/* Order Details Dialog */}
-      <Dialog open={!!detailOrder} onOpenChange={(open) => !open && setDetailOrder(null)}>
+      <Dialog
+        open={!!detailOrder}
+        onOpenChange={(open) => !open && setDetailOrder(null)}
+      >
         <DialogContent className="max-w-[560px] rounded-[24px] border-0 p-0">
           <DialogHeader className="sr-only">
             <DialogTitle>Order Details</DialogTitle>
@@ -703,7 +742,9 @@ export const OrdersView = () => {
           <div className="p-6">
             <div className="mb-5 flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-base font-medium">{detailOrder?.student_name}</h2>
+                <h2 className="text-base font-medium">
+                  {detailOrder?.student_name}
+                </h2>
                 <p className="mt-0.5 text-sm text-[#8f8f8f]">
                   ID: {detailOrder?.id_number} &middot; {detailOrder?.course}{" "}
                   {detailOrder?.year ? `- ${detailOrder.year}` : ""}
@@ -714,24 +755,28 @@ export const OrdersView = () => {
               </div>
             </div>
 
-            <div className="rounded-lg bg-[#f7f7f7] px-4 py-3 mb-5">
+            <div className="mb-5 rounded-lg bg-[#f7f7f7] px-4 py-3">
               <p className="text-sm text-[#303030]">
-                Total: <span className="font-medium">{formatCurrency(detailOrder?.total || 0)}</span>
+                Total:{" "}
+                <span className="font-medium">
+                  {formatCurrency(detailOrder?.total || 0)}
+                </span>
               </p>
-              {detailOrder?.order_status === "Paid" && detailOrder?.transaction_date && (
-                <p className="mt-1 text-xs text-[#8a8a8a]">
-                  Transaction Date: {formatDate(detailOrder.transaction_date)}
-                </p>
-              )}
+              {detailOrder?.order_status === "Paid" &&
+                detailOrder?.transaction_date && (
+                  <p className="mt-1 text-xs text-[#8a8a8a]">
+                    Transaction Date: {formatDate(detailOrder.transaction_date)}
+                  </p>
+                )}
             </div>
 
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[#efefef] text-left text-xs text-[#2f2f2f]">
                   <th className="px-3 py-2 font-medium">Product</th>
-                  <th className="px-3 py-2 font-medium text-right">Qty</th>
-                  <th className="px-3 py-2 font-medium text-right">Price</th>
-                  <th className="px-3 py-2 font-medium text-right">Subtotal</th>
+                  <th className="px-3 py-2 text-right font-medium">Qty</th>
+                  <th className="px-3 py-2 text-right font-medium">Price</th>
+                  <th className="px-3 py-2 text-right font-medium">Subtotal</th>
                 </tr>
               </thead>
               <tbody>
@@ -745,12 +790,18 @@ export const OrdersView = () => {
                         </span>
                       ) : null}
                       {item.sizes?.length ? (
-                        <span className="ml-1 text-xs text-[#8a8a8a]">[{item.sizes.join(", ")}]</span>
+                        <span className="ml-1 text-xs text-[#8a8a8a]">
+                          [{item.sizes.join(", ")}]
+                        </span>
                       ) : null}
                     </td>
                     <td className="px-3 py-2 text-right">{item.quantity}</td>
-                    <td className="px-3 py-2 text-right">{formatCurrency(item.price)}</td>
-                    <td className="px-3 py-2 text-right">{formatCurrency(item.sub_total)}</td>
+                    <td className="px-3 py-2 text-right">
+                      {formatCurrency(item.price)}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {formatCurrency(item.sub_total)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

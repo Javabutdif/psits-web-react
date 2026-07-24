@@ -365,7 +365,7 @@ export const getAllPendingPaidOrdersV2 = async ({
         headers: createHeaders(),
       }
     );
-
+    console.log(response.data.data);
     if (response.status === 200) {
       return {
         data: response.data.data || [],
