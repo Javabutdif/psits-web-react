@@ -350,18 +350,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={restrictedNavButtonClass}
+                      className={getNavButtonClass("/admin/orders")}
                       asChild
                     >
-                      <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
-                        onClick={(e) => {
-                          if (!isUcMainAdmin) {
-                            e.preventDefault();
-                            showToast("error", "Unauthorized.");
-                          }
-                        }}
-                      >
+                      <Link to="/admin/orders">
                         <ClipboardList className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Orders</span>}
                       </Link>

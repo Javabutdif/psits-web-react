@@ -20,6 +20,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import Organization from "./pages/admin/Organization";
 import Students from "./pages/admin/Students";
 import Reports from "./pages/admin/Reports";
+import Orders from "./pages/admin/Orders";
 import SetNewPassword from "./pages/auth/SetNewPassword";
 import { ErrorPage } from "./pages/ErrorPage";
 import { Events } from "./pages/events";
@@ -133,7 +134,10 @@ const router = createBrowserRouter([
                     campusUnauthorizedToastMessage="Unauthorized"
                   />
                 ),
-                children: [{ path: "reports", Component: Reports }],
+                children: [
+                  { path: "reports", Component: Reports },
+                  { path: "orders", Component: Orders },
+                ],
               },
               {
                 element: (

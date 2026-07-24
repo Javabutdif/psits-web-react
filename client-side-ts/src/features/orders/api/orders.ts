@@ -208,33 +208,71 @@ export const approveOrder = async (
   }
 };
 
-export const getAllPendingOrders = async (): Promise<
-  OrderResponse[] | null
-> => {
+export const getAllPendingOrders = async ({
+  page = 1,
+  limit = 8,
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+} = {}): Promise<{ data: OrderResponse[]; total: number; page: number; limit: number; totalPages: number } | null> => {
   try {
-    const response: AxiosResponse<OrderResponse[]> = await axios.get(
+    const response: AxiosResponse = await axios.get(
       `${backendConnection()}/api/orders/get-all-pending-orders`,
-      { headers: createHeaders() }
+      {
+        params: { page, limit, search },
+        headers: createHeaders(),
+      }
     );
 
-    return response.status === 200 ? response.data : null;
+    if (response.status === 200) {
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        page: response.data.page || page,
+        limit: response.data.limit || limit,
+        totalPages: response.data.totalPages || 0,
+      };
+    }
+    return null;
   } catch (error) {
     handleApiError(error, false);
-    return null;
+    return { data: [], total: 0, page, limit, totalPages: 0 };
   }
 };
 
-export const getAllPaidOrders = async (): Promise<OrderResponse[] | null> => {
+export const getAllPaidOrders = async ({
+  page = 1,
+  limit = 50,
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+} = {}): Promise<{ data: OrderResponse[]; total: number; page: number; limit: number; totalPages: number } | null> => {
   try {
-    const response: AxiosResponse<OrderResponse[]> = await axios.get(
+    const response: AxiosResponse = await axios.get(
       `${backendConnection()}/api/orders/get-all-paid-orders`,
-      { headers: createHeaders() }
+      {
+        params: { page, limit, search },
+        headers: createHeaders(),
+      }
     );
 
-    return response.status === 200 ? response.data : null;
+    if (response.status === 200) {
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        page: response.data.page || page,
+        limit: response.data.limit || limit,
+        totalPages: response.data.totalPages || 0,
+      };
+    }
+    return null;
   } catch (error) {
     handleApiError(error, false);
-    return null;
+    return { data: [], total: 0, page, limit, totalPages: 0 };
   }
 };
 

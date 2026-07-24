@@ -1,0 +1,224 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  getAllPendingOrders,
+  getAllPaidOrders,
+  approveOrder as apiApproveOrder,
+  cancelOrder as apiCancelOrder,
+} from "@/features/orders/api/orders";
+import { useAuth } from "@/features/auth";
+import { normalizeCampus } from "@/features/auth/utils/campus";
+import { showToast } from "@/utils/alertHelper";
+import type { OrdersTab, OrdersStatus } from "../types/orders.types";
+import type { OrderRow, ApprovePayload } from "../types/orders.types";
+
+export const ROWS_PER_PAGE = 8;
+const SEARCH_DEBOUNCE_MS = 250;
+
+export const useOrdersData = () => {
+  const { user } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<OrdersTab>("pending");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [isMutating, setIsMutating] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Pending state
+  const [pendingData, setPendingData] = useState<OrderRow[]>([]);
+  const [pendingTotal, setPendingTotal] = useState(0);
+  const [pendingTotalPages, setPendingTotalPages] = useState(1);
+  const [pendingStatus, setPendingStatus] = useState<OrdersStatus>("idle");
+  const pendingRef = useRef(0);
+
+  // Paid state
+  const [paidData, setPaidData] = useState<OrderRow[]>([]);
+  const [paidTotal, setPaidTotal] = useState(0);
+  const [paidTotalPages, setPaidTotalPages] = useState(1);
+  const [paidStatus, setPaidStatus] = useState<OrdersStatus>("idle");
+  const paidRef = useRef(0);
+
+  const isUcMainAdmin =
+    user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const fetchPending = useCallback(
+    async (requestedPage: number) => {
+      const requestId = ++pendingRef.current;
+      setPendingStatus("loading");
+      try {
+        const result = await getAllPendingOrders({ page: requestedPage, limit: ROWS_PER_PAGE, search: debouncedSearch });
+        if (requestId !== pendingRef.current) return;
+        if (!result || !result.data) {
+          setPendingData([]);
+          setPendingTotal(0);
+          setPendingTotalPages(1);
+          setPendingStatus("error");
+          return;
+        }
+        setPendingData(result.data as OrderRow[]);
+        setPendingTotal(result.total);
+        setPendingTotalPages(result.totalPages);
+        setPendingStatus("success");
+      } catch {
+        if (requestId !== pendingRef.current) return;
+        setPendingData([]);
+        setPendingTotal(0);
+        setPendingTotalPages(1);
+        setPendingStatus("error");
+      }
+    },
+    [debouncedSearch]
+  );
+
+  const fetchPaid = useCallback(
+    async (requestedPage: number) => {
+      const requestId = ++paidRef.current;
+      setPaidStatus("loading");
+      try {
+        const result = await getAllPaidOrders({ page: requestedPage, limit: ROWS_PER_PAGE, search: debouncedSearch });
+        if (requestId !== paidRef.current) return;
+        if (!result || !result.data) {
+          setPaidData([]);
+          setPaidTotal(0);
+          setPaidTotalPages(1);
+          setPaidStatus("error");
+          return;
+        }
+        setPaidData(result.data as OrderRow[]);
+        setPaidTotal(result.total);
+        setPaidTotalPages(result.totalPages);
+        setPaidStatus("success");
+      } catch {
+        if (requestId !== paidRef.current) return;
+        setPaidData([]);
+        setPaidTotal(0);
+        setPaidTotalPages(1);
+        setPaidStatus("error");
+      }
+    },
+    [debouncedSearch]
+  );
+
+  useEffect(() => {
+    if (activeTab === "pending") {
+      if (pendingStatus === "idle") {
+        fetchPending(page);
+      }
+    }
+    if (activeTab === "paid") {
+      if (paidStatus === "idle") {
+        fetchPaid(page);
+      }
+    }
+  }, [activeTab, page, pendingStatus, paidStatus, fetchPending, fetchPaid]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, debouncedSearch]);
+
+  const handleApprove = useCallback(
+    async (payload: ApprovePayload): Promise<boolean> => {
+      if (!isUcMainAdmin) {
+        showToast("error", "Unauthorized.");
+        return false;
+      }
+      setIsMutating(true);
+      try {
+        const success = await apiApproveOrder(payload as never);
+        if (success) {
+          showToast("success", "Order approved successfully.");
+          await fetchPending(page);
+          await fetchPaid(1);
+          return true;
+        }
+        showToast("error", "Failed to approve order.");
+        return false;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [isUcMainAdmin, page, fetchPending, fetchPaid]
+  );
+
+  const handleCancel = useCallback(
+    async (orderId: string): Promise<boolean> => {
+      if (!isUcMainAdmin) {
+        showToast("error", "Unauthorized.");
+        return false;
+      }
+      setIsMutating(true);
+      try {
+        const success = await apiCancelOrder(orderId);
+        if (success) {
+          showToast("success", "Order cancelled successfully.");
+          if (activeTab === "pending") {
+            await fetchPending(page);
+          } else {
+            await fetchPaid(page);
+          }
+          return true;
+        }
+        showToast("error", "Failed to cancel order.");
+        return false;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [isUcMainAdmin, activeTab, page, fetchPending, fetchPaid]
+  );
+
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }, []);
+
+  const toggleAllOnPage = useCallback((ids: string[]) => {
+    setSelectedIds((prev) => {
+      const allSelected = ids.every((id) => prev.includes(id));
+      if (allSelected) {
+        return prev.filter((id) => !ids.includes(id));
+      }
+      const newSet = new Set([...prev, ...ids]);
+      return Array.from(newSet);
+    });
+  }, []);
+
+  const selectedCount = selectedIds.length;
+  const pendingCount = pendingTotal;
+  const paidCount = paidTotal;
+
+  return {
+    activeTab,
+    setActiveTab,
+    search,
+    setSearch,
+    page,
+    setPage,
+    pendingData,
+    pendingTotal,
+    pendingTotalPages,
+    pendingStatus,
+    paidData,
+    paidTotal,
+    paidTotalPages,
+    paidStatus,
+    isMutating,
+    selectedIds,
+    selectedCount,
+    pendingCount,
+    paidCount,
+    isUcMainAdmin,
+    toggleSelection,
+    toggleAllOnPage,
+    handleApprove,
+    handleCancel,
+    refetchPending: () => fetchPending(page),
+    refetchPaid: () => fetchPaid(page),
+  };
+};
