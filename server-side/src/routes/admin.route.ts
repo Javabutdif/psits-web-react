@@ -210,6 +210,7 @@ router.put(
   "/update-admin-access",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
   adminController.setNewAdminAccessController
 );
 router.get(

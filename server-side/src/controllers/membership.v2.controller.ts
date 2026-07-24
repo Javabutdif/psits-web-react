@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import { settingsService } from "../services/settings.service";
 import { studentService } from "../services/student.service";
+import { Settings } from "../models/settings.model";
 import { IStudent } from "../models/student.interface";
 
 import { membership_type } from "../enums/status.enums";
@@ -25,7 +26,7 @@ class MembershipController {
       const session = await mongoose.startSession();
       session.startTransaction();
 
-      const settings: ISettings | null = await settingsService.config();
+      const settings: ISettings | null = await settingsService.getConfig();
 
       if (!settings) {
         res.status(500).json({ message: "No membership price in the backend" });
@@ -139,19 +140,19 @@ class MembershipController {
     }
   );
   getMemberPriceController = catchAsync(async (req: Request, res: Response) => {
-    const settings = await membershipService.getMemberPrice();
-    if (!settings) {
-      return res.status(404).json({ message: "Member price not found" });
-    }
+    const settings = await settingsService.getMembershipPrice();
     return res
       .status(200)
       .json({ membership_price: settings.membership_price });
   });
   changeMemberPriceController = catchAsync(
     async (req: Request, res: Response) => {
-      const result = await membershipService.changeMemberPrice(req);
-      if (!result.status) {
-        return res.status(400).json({ message: result.message });
+      const { price } = req.body;
+      const update = await settingsService.updateMembershipPrice(price);
+      if (update.matchedCount === 0 && !(await Settings.exists({}))) {
+        return res
+          .status(200)
+          .json({ message: "Member price created successfully" });
       }
       return res
         .status(200)

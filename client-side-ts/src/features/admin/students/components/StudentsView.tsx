@@ -75,7 +75,7 @@ const tabs: Array<{
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
-const membershipStatuses = ["ACTIVE", "RENEWED", "PENDING", "NOT_APPLIED"];
+const membershipStatuses = ["ACTIVE", "RENEWED", "PENDING", "NONE"];
 
 const initialFormValues: StudentFormValues = {
   id_number: "",
@@ -106,6 +106,12 @@ const membershipTone = (status: string) => {
   }
   if (status === "PENDING") return "bg-sky-100 text-sky-600";
   return "bg-[#f2f2f2] text-[#979797]";
+};
+
+const formatHistoryType = (type: string) => {
+  if (type === "MEMBERSHIP_TYPE_MEMBER") return "Membership";
+  if (type === "MEMBERSHIP_TYPE_RENEWAL") return "Renewal";
+  return type;
 };
 
 const formatYear = (year: string) => {
@@ -1095,7 +1101,7 @@ const HistoryDialog = ({
                     >
                       <td className="px-3 py-3">{item.reference_code}</td>
                       <td className="px-3 py-3">{formatDate(item.date)}</td>
-                      <td className="px-3 py-3">{item.type}</td>
+                      <td className="px-3 py-3">{formatHistoryType(item.type)}</td>
                       <td className="px-3 py-3">{item.admin || "-"}</td>
                       <td className="px-3 py-3 text-right">
                         <Button
