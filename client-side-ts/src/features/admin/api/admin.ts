@@ -255,9 +255,6 @@ interface AdminRequest extends Member {
   createdAt: string;
 }
 
-interface MembershipPriceData {
-  membership_price: number;
-}
 
 interface MembershipApprovalPayload {
   reference_code: string;
@@ -1085,39 +1082,6 @@ export const getStudentMembershipHistory = async (
     return response.data.data;
   } catch (error) {
     handleApiError(error, false);
-  }
-};
-
-export const membershipPrice = async (): Promise<number | false> => {
-  try {
-    const response: AxiosResponse<{ data: MembershipPriceData }> =
-      await axios.get(`${backendConnection()}/api/admin/get-membership-price`, {
-        headers: createHeaders(),
-      });
-    return response.status === 200
-      ? response.data.data.membership_price
-      : false;
-  } catch {
-    return false;
-  }
-};
-
-export const changeMembershipPrice = async (
-  price: string | number
-): Promise<boolean> => {
-  const newPriceFormData = new FormData();
-  newPriceFormData.set("price", String(price));
-  try {
-    const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/change-membership-price`,
-      newPriceFormData,
-      { headers: createHeaders() }
-    );
-    if (response.status === 200) showToast("success", response.data.message);
-    return response.status === 200;
-  } catch (error) {
-    handleApiError(error);
-    return false;
   }
 };
 

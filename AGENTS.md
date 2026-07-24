@@ -61,6 +61,15 @@ Do not commit generated output from `client-side/dist/`, `client-side/node_modul
 - Have proper error handling and return consistent success and error JSON bodies based on existing backend conventions.
 - Reuse existing middleware and helper patterns for auth, uploads, rate limits, and shared request handling instead of bypassing them with one-off logic.
 
+### V2 & Service Layer Rules
+
+- Controllers follow naming pattern: `*.v2.controller.ts` = active/new logic, no `.v2.` suffix = legacy (READ-ONLY reference, never edit or delete).
+- Routes are flat (no v2 suffix). V2 behavior determined by which controller a route imports and its mount path in `index.ts`.
+- Services NEVER have v2 variants. All services live in `src/services/` without v2 naming. All controllers share the same service layer.
+- ALWAYS check `src/services/` first before writing business logic. If a service exists for the domain (e.g., `refund.service.ts`), add logic there. If no service exists for the domain, CREATE one.
+- When editing a `.v2.controller.ts`, you may reference non-v2 counterparts for shared logic patterns. Improve both if bugs found.
+- Do NOT over-engineer. Keep changes minimal. Follow existing patterns exactly.
+
 ## Manual Intervention Rules
 
 - Recognize when a task cannot be completed correctly without user action.

@@ -7,12 +7,12 @@ import {
   getCountStudent,
   getDashboardActiveStudents,
   getStudentMembershipHistory,
-  membershipPrice,
   membershipRequest,
   studentDeletion,
   studentRestore,
   updateStudent,
 } from "@/features/admin/api/admin";
+import { membershipPrice } from "@/features/admin/settings/api/settings.endpoints";
 import { useAuth } from "@/features/auth";
 import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";

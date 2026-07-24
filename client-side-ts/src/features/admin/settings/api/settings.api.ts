@@ -2,9 +2,11 @@ import {
   getAllOfficers,
   editAdminAccess,
   revokeAllStudent,
+} from "@/features/admin/api/admin";
+import {
   membershipPrice,
   changeMembershipPrice,
-} from "@/features/admin/api/admin";
+} from "./settings.endpoints";
 import type { Officer } from "../types/settings.types";
 import type { PsitsRole } from "@/features/admin/constants/adminAccess";
 
