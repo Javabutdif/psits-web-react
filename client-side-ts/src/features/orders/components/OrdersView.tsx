@@ -521,18 +521,6 @@ export const OrdersView = () => {
                               Refund
                             </Button>
                           )}
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                              "h-8 rounded-full text-red-600 hover:bg-red-50",
-                              !isUcMainAdmin && "hidden"
-                            )}
-                            onClick={() => setCancelTarget(order)}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
                         </div>
                       </td>
                     </tr>

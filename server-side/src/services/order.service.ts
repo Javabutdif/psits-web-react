@@ -141,12 +141,19 @@ class OrderService {
     const trimmedSearch = search.trim();
     const status = params.status;
 
-    const total = status.toLowerCase() === "paid" ? await this.getPaidCount() : await this.getPendingCount();
+    const total =
+      status.toLowerCase() === "paid"
+        ? await this.getPaidCount()
+        : await this.getPendingCount();
     const result = await Orders.find({
       order_status: status,
       ...this.buildOrderSearchQuery(trimmedSearch),
     })
-      .sort(status.toLowerCase() === "paid" ? { transaction_date: -1 } : { order_date: -1 })
+      .sort(
+        status.toLowerCase() === "paid"
+          ? { transaction_date: -1 }
+          : { order_date: -1 }
+      )
       .skip((page - 1) * limit)
       .limit(limit);
     return {
@@ -303,7 +310,11 @@ class OrderService {
 
     // Restore stock for each item
     for (const item of order.items) {
-      await merchandiseService.restoreStocks(item.product_id, item.quantity, session);
+      await merchandiseService.restoreStocks(
+        item.product_id,
+        item.quantity,
+        session
+      );
     }
 
     // Delete the order
@@ -393,49 +404,6 @@ class OrderService {
       return { result, status: false, message: "Order is not paid" };
     }
     return { result, status: true, message: "Order is paid" };
-  };
-
-  //Process refund for a paid order (V2)
-  processRefundService = async (_id: Types.ObjectId, adminName: string, adminId: string, session: ClientSession) => {
-    const { Refund } = await import("../models/refund.model");
-    const { Merch } = await import("../models/merch.model");
-    const { refundCodeGenerator } = await import("../custom_function/code_generator");
-
-    const order = await Orders.findById(_id).session(session);
-    if (!order) {
-      throw new AppError("Order not found!", 404);
-    }
-    if (order.order_status !== "Paid") {
-      throw new AppError("Order is not paid or already refunded", 400);
-    }
-
-    // Update order status to Refunded
-    await Orders.updateOne(
-      { _id },
-      { $set: { order_status: "Refunded" } }
-    ).session(session);
-
-    // Create refund records and restore stock per item
-    for (const item of order.items) {
-      const refundId = refundCodeGenerator();
-      
-      await Refund.create([{
-        refund_id: refundId,
-        order_id: _id,
-        order_reference: order.reference_code || "",
-        product_id: item.product_id,
-        product_name: item.product_name,
-        refund_price: item.sub_total,
-        refund_admin: adminName,
-        refund_admin_id: adminId,
-        refund_date: new Date(),
-      }], { session });
-
-      // Restore stock
-      await merchandiseService.restoreStocks(item.product_id, item.quantity, session);
-    }
-
-    return { message: "Refund processed successfully" };
   };
 }
 

@@ -25,6 +25,7 @@ import { AppError } from "../util/app.error.util";
 import { studentService } from "../services/student.service";
 import { promoService } from "../services/promo.service";
 import { reportService } from "../services/report.service";
+import { refundService } from "../services/refund.service";
 import { merchandiseService } from "../services/merchandise.service";
 import { IStudent } from "../models/student.interface";
 import {
@@ -225,7 +226,7 @@ class OrderController {
       total: item.sub_total,
       date: new Date(),
     }));
-    console.log(reportDataArray);
+    
     //Store the report data array to reports
     const processReports = await reportService.createReports(
       reportDataArray,
@@ -266,10 +267,10 @@ class OrderController {
     await session.startTransaction();
 
     try {
-      const result = await orderService.processRefundService(
+      const result = await refundService.processRefund(
         order_id,
         admin.name,
-        admin._id.toString(),
+        user.idNumber,
         session
       );
       await session.commitTransaction();
