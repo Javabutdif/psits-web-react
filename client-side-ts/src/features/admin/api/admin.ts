@@ -182,7 +182,7 @@ interface Officer extends Member {
   position: string;
   department?: string;
   isSuspended?: boolean;
-  access?: string | string[];
+  access?: string;
   password?: string;
   confirm_password?: string;
 }
@@ -760,12 +760,13 @@ export const getAllMembers = async (): Promise<Member[] | void> => {
   }
 };
 
-export const getAllOfficers = async (): Promise<Officer[] | void> => {
+export const getAllOfficers = async (roleFilter?: string): Promise<Officer[] | void> => {
   try {
     const response: AxiosResponse<{ data: Officer[] }> = await axios.get(
       `${backendConnection()}/api/admin/get-all-officers`,
       {
         headers: createHeaders(),
+        params: roleFilter && roleFilter !== "all" ? { role_filter: roleFilter } : {},
       }
     );
     return response.status === 200 ? response.data.data : [];
