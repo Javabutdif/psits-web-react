@@ -104,7 +104,10 @@ const buildBasePipeline = (filters: MerchandiseReportFilters) => {
 
   if (filters.referenceCode) {
     matchConditions.push({
-      effective_reference_code: { $regex: filters.referenceCode.trim(), $options: "i" },
+      effective_reference_code: {
+        $regex: filters.referenceCode.trim(),
+        $options: "i",
+      },
     });
   }
 
@@ -131,7 +134,7 @@ const buildBasePipeline = (filters: MerchandiseReportFilters) => {
     matchConditions.push({ date: dateFilter });
   }
 
-   const pipeline: any[] = [
+  const pipeline: any[] = [
     {
       $lookup: {
         from: "orders",
@@ -384,7 +387,7 @@ export const createReports = async (
     : rawPayload
       ? [rawPayload]
       : [];
-
+  console.log(payloadArray);
   const docs = payloadArray.map((payload) => ({
     order_id: payload.orderId ?? payload.order_id,
     id_number: payload.idNumber ?? payload.id_number,

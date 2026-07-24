@@ -131,6 +131,17 @@ class MerchandiseService {
       throw new AppError("Some products have insufficient stocks", 400);
     }
   };
+
+  restoreStocks = async (
+    product_id: Types.ObjectId,
+    quantity: number,
+    session: ClientSession
+  ) => {
+    await Merch.updateOne(
+      { _id: product_id },
+      { $inc: { stocks: quantity } }
+    ).session(session);
+  };
 }
 
 const merchandiseService = new MerchandiseService();

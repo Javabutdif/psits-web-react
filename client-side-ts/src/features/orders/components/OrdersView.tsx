@@ -300,12 +300,14 @@ export const OrdersView = () => {
     toggleAllOnPage,
     handleApprove,
     handleCancel,
+    handleRefund,
     refetchPending,
     refetchPaid,
   } = useOrdersData();
 
   const [approveOrder, setApproveOrder] = useState<OrderRowData | null>(null);
   const [cancelTarget, setCancelTarget] = useState<OrderRowData | null>(null);
+  const [refundTarget, setRefundTarget] = useState<OrderRowData | null>(null);
 
   const data = activeTab === "pending" ? pendingData : paidData;
   const totalPages = activeTab === "pending" ? pendingTotalPages : paidTotalPages;
@@ -514,6 +516,18 @@ export const OrdersView = () => {
                               Approve
                             </Button>
                           )}
+                          {activeTab === "paid" && isUcMainAdmin && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-8 rounded-full border-red-300 text-red-600 hover:bg-red-50"
+                              onClick={() => setRefundTarget(order)}
+                            >
+                              <X className="mr-1 h-3.5 w-3.5" />
+                              Refund
+                            </Button>
+                          )}
                           <Button
                             type="button"
                             size="sm"
@@ -640,6 +654,57 @@ export const OrdersView = () => {
                 }}
               >
                 {isMutating ? "Processing..." : "Confirm Cancel"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Refund Confirm Dialog */}
+      <Dialog
+        open={!!refundTarget}
+        onOpenChange={(open) => !open && setRefundTarget(null)}
+      >
+        <DialogContent className="max-w-[420px] rounded-[24px] border-0 p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Refund Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to refund this order?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-8">
+            <div className="mb-6 grid h-9 w-9 place-items-center rounded-full bg-orange-100 text-orange-500">
+              <X className="h-5 w-5" />
+            </div>
+            <h2 className="mb-3 text-lg font-medium">
+              {refundTarget ? `Refund ${refundTarget.student_name}?` : "Refund this order?"}
+            </h2>
+            <p className="mb-8 text-sm leading-relaxed text-[#8a8a8a]">
+              {refundTarget
+                ? `This will refund ${formatCurrency(refundTarget.total)} for ${refundTarget.student_name}. Stock will be restored automatically and the order status will change to "Refunded".`
+                : "This action cannot be undone."}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-full"
+                onClick={() => setRefundTarget(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                className="h-10 rounded-full"
+                disabled={isMutating}
+                onClick={async () => {
+                  if (!refundTarget) return;
+                  const success = await handleRefund(refundTarget._id);
+                  if (success) setRefundTarget(null);
+                }}
+              >
+                {isMutating ? "Processing..." : "Confirm Refund"}
               </Button>
             </div>
           </div>

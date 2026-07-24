@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  getAllPendingOrders,
-  getAllPaidOrders,
-  approveOrder as apiApproveOrder,
-  cancelOrder as apiCancelOrder,
+  getAllPendingPaidOrdersV2,
+  approveOrderV2,
+  cancelOrderV2,
+  refundOrderV2,
 } from "@/features/orders/api/orders";
 import { useAuth } from "@/features/auth";
 import { normalizeCampus } from "@/features/auth/utils/campus";
@@ -42,7 +42,10 @@ export const useOrdersData = () => {
     user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
+    const timer = setTimeout(
+      () => setDebouncedSearch(search),
+      SEARCH_DEBOUNCE_MS
+    );
     return () => clearTimeout(timer);
   }, [search]);
 
@@ -51,7 +54,12 @@ export const useOrdersData = () => {
       const requestId = ++pendingRef.current;
       setPendingStatus("loading");
       try {
-        const result = await getAllPendingOrders({ page: requestedPage, limit: ROWS_PER_PAGE, search: debouncedSearch });
+        const result = await getAllPendingPaidOrdersV2({
+          status: "Pending",
+          page: requestedPage,
+          limit: ROWS_PER_PAGE,
+          search: debouncedSearch,
+        });
         if (requestId !== pendingRef.current) return;
         if (!result || !result.data) {
           setPendingData([]);
@@ -80,7 +88,12 @@ export const useOrdersData = () => {
       const requestId = ++paidRef.current;
       setPaidStatus("loading");
       try {
-        const result = await getAllPaidOrders({ page: requestedPage, limit: ROWS_PER_PAGE, search: debouncedSearch });
+        const result = await getAllPendingPaidOrdersV2({
+          status: "Paid",
+          page: requestedPage,
+          limit: ROWS_PER_PAGE,
+          search: debouncedSearch,
+        });
         if (requestId !== paidRef.current) return;
         if (!result || !result.data) {
           setPaidData([]);
@@ -129,7 +142,10 @@ export const useOrdersData = () => {
       }
       setIsMutating(true);
       try {
-        const success = await apiApproveOrder(payload as never);
+        const success = await approveOrderV2(
+          payload.order_id,
+          payload.cash || undefined
+        );
         if (success) {
           showToast("success", "Order approved successfully.");
           await fetchPending(page);
@@ -153,9 +169,8 @@ export const useOrdersData = () => {
       }
       setIsMutating(true);
       try {
-        const success = await apiCancelOrder(orderId);
+        const success = await cancelOrderV2(orderId);
         if (success) {
-          showToast("success", "Order cancelled successfully.");
           if (activeTab === "pending") {
             await fetchPending(page);
           } else {
@@ -163,13 +178,33 @@ export const useOrdersData = () => {
           }
           return true;
         }
-        showToast("error", "Failed to cancel order.");
         return false;
       } finally {
         setIsMutating(false);
       }
     },
     [isUcMainAdmin, activeTab, page, fetchPending, fetchPaid]
+  );
+
+  const handleRefund = useCallback(
+    async (orderId: string): Promise<boolean> => {
+      if (!isUcMainAdmin) {
+        showToast("error", "Unauthorized.");
+        return false;
+      }
+      setIsMutating(true);
+      try {
+        const success = await refundOrderV2(orderId);
+        if (success) {
+          await fetchPaid(page);
+          return true;
+        }
+        return false;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [isUcMainAdmin, page, fetchPaid]
   );
 
   const toggleSelection = useCallback((id: string) => {
@@ -190,8 +225,6 @@ export const useOrdersData = () => {
   }, []);
 
   const selectedCount = selectedIds.length;
-  const pendingCount = pendingTotal;
-  const paidCount = paidTotal;
 
   return {
     activeTab,
@@ -211,13 +244,12 @@ export const useOrdersData = () => {
     isMutating,
     selectedIds,
     selectedCount,
-    pendingCount,
-    paidCount,
     isUcMainAdmin,
     toggleSelection,
     toggleAllOnPage,
     handleApprove,
     handleCancel,
+    handleRefund,
     refetchPending: () => fetchPending(page),
     refetchPaid: () => fetchPaid(page),
   };
