@@ -141,12 +141,12 @@ class OrderService {
     const trimmedSearch = search.trim();
     const status = params.status;
 
-    const total = status === "paid" ? await this.getPaidCount() : await this.getPendingCount();
+    const total = status.toLowerCase() === "paid" ? await this.getPaidCount() : await this.getPendingCount();
     const result = await Orders.find({
       order_status: status,
       ...this.buildOrderSearchQuery(trimmedSearch),
     })
-      .sort(status === "paid" ? { transaction_date: -1 } : { order_date: -1 })
+      .sort(status.toLowerCase() === "paid" ? { transaction_date: -1 } : { order_date: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
     return {

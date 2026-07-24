@@ -40,8 +40,6 @@ export interface PaginatedOrdersResponse {
 
 export interface ApprovePayload {
   order_id: string;
-  reference_code: string;
-  cash: number;
-  transaction_date: string;
-  admin?: string;
+  reference_code?: string;
+  cash?: number;
 }

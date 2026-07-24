@@ -119,16 +119,11 @@ export const useOrdersData = () => {
 
   useEffect(() => {
     if (activeTab === "pending") {
-      if (pendingStatus === "idle") {
-        fetchPending(page);
-      }
+      fetchPending(page);
+    } else if (activeTab === "paid") {
+      fetchPaid(page);
     }
-    if (activeTab === "paid") {
-      if (paidStatus === "idle") {
-        fetchPaid(page);
-      }
-    }
-  }, [activeTab, page, pendingStatus, paidStatus, fetchPending, fetchPaid]);
+  }, [activeTab, page, fetchPending, fetchPaid]);
 
   useEffect(() => {
     setPage(1);

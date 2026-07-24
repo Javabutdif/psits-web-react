@@ -22,7 +22,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { showToast } from "@/utils/alertHelper";
 import { useOrdersData, ROWS_PER_PAGE } from "../hooks/useOrdersData";
-import { useAuth } from "@/features/auth";
 
 const formatDate = (value: string | Date) => {
   if (!value) return "-";
@@ -158,22 +157,19 @@ const ApproveOrderDialog = ({
   onClose,
   onSubmit,
   isLoading,
-  adminName,
 }: {
   order: OrderRowData | null;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (payload: {
     order_id: string;
-    reference_code: string;
+    reference_code?: string;
     cash: number;
-    transaction_date: string;
+    transaction_date?: string;
     admin?: string;
   }) => Promise<boolean>;
   isLoading: boolean;
-  adminName?: string;
 }) => {
-  const [refCode, setRefCode] = useState("");
   const [cash, setCash] = useState("");
 
   return (
@@ -212,17 +208,6 @@ const ApproveOrderDialog = ({
 
           <div className="space-y-4">
             <div>
-              <Label className="mb-1.5 block text-xs font-medium">
-                Reference Code
-              </Label>
-              <Input
-                value={refCode}
-                onChange={(e) => setRefCode(e.target.value)}
-                placeholder="Enter reference code"
-                className="h-10 rounded-lg border-[#ececec]"
-              />
-            </div>
-            <div>
               <Label className="mb-1.5 block text-xs font-medium">Cash</Label>
               <Input
                 type="number"
@@ -247,7 +232,7 @@ const ApproveOrderDialog = ({
             <Button
               type="button"
               className="h-10 min-w-32 rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
-              disabled={isLoading || !refCode.trim() || !cash}
+              disabled={isLoading || !cash}
               onClick={async () => {
                 if (!order) return;
                 const cashNum = Number(cash);
@@ -257,13 +242,9 @@ const ApproveOrderDialog = ({
                 }
                 const success = await onSubmit({
                   order_id: order._id,
-                  reference_code: refCode.trim(),
                   cash: cashNum,
-                  transaction_date: new Date().toISOString(),
-                  admin: adminName,
                 });
                 if (success) {
-                  setRefCode("");
                   setCash("");
                   onClose();
                 }
@@ -308,13 +289,12 @@ export const OrdersView = () => {
   const [approveOrder, setApproveOrder] = useState<OrderRowData | null>(null);
   const [cancelTarget, setCancelTarget] = useState<OrderRowData | null>(null);
   const [refundTarget, setRefundTarget] = useState<OrderRowData | null>(null);
+  const [detailOrder, setDetailOrder] = useState<OrderRowData | null>(null);
 
   const data = activeTab === "pending" ? pendingData : paidData;
   const totalPages = activeTab === "pending" ? pendingTotalPages : paidTotalPages;
   const status = activeTab === "pending" ? pendingStatus : paidStatus;
   const rowCount = activeTab === "pending" ? pendingData.length : paidData.length;
-
-  const { user } = useAuth();
 
   const tabs = [
     { key: "pending" as const, label: "Pending", icon: Clock3, count: pendingData.length },
@@ -478,7 +458,9 @@ export const OrdersView = () => {
                             <p className="truncate text-sm font-medium">{order.student_name}</p>
                           </div>
                         ) : (
-                          <span>{order.reference_code || "-"}</span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{order.student_name}</p>
+                          </div>
                         )}
                       </td>
                       <td className="px-2 py-3 text-left align-middle">{order.id_number}</td>
@@ -514,6 +496,17 @@ export const OrdersView = () => {
                             >
                               <Check className="mr-1 h-3.5 w-3.5" />
                               Approve
+                            </Button>
+                          )}
+                          {activeTab === "paid" && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-8 rounded-full border-[#e8e8e8] text-[#303030] hover:bg-gray-50"
+                              onClick={() => setDetailOrder(order)}
+                            >
+                              Details
                             </Button>
                           )}
                           {activeTab === "paid" && isUcMainAdmin && (
@@ -597,7 +590,6 @@ export const OrdersView = () => {
           return success;
         }}
         isLoading={isMutating}
-        adminName={user?.name}
       />
 
       {/* Cancel Confirm Dialog */}
@@ -705,6 +697,84 @@ export const OrdersView = () => {
                 }}
               >
                 {isMutating ? "Processing..." : "Confirm Refund"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Details Dialog */}
+      <Dialog open={!!detailOrder} onOpenChange={(open) => !open && setDetailOrder(null)}>
+        <DialogContent className="max-w-[560px] rounded-[24px] border-0 p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Order Details</DialogTitle>
+            <DialogDescription>
+              View order items for this student.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-6">
+            <div className="mb-5 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-medium">{detailOrder?.student_name}</h2>
+                <p className="mt-0.5 text-sm text-[#8f8f8f]">
+                  ID: {detailOrder?.id_number} &middot; {detailOrder?.course}{" "}
+                  {detailOrder?.year ? `- ${detailOrder.year}` : ""}
+                  {detailOrder?.reference_code && (
+                    <>&middot; Ref: {detailOrder.reference_code}</>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-[#f7f7f7] px-4 py-3 mb-5">
+              <p className="text-sm text-[#303030]">
+                Total: <span className="font-medium">{formatCurrency(detailOrder?.total || 0)}</span>
+              </p>
+              {detailOrder?.order_status === "Paid" && detailOrder?.transaction_date && (
+                <p className="mt-1 text-xs text-[#8a8a8a]">
+                  Transaction Date: {formatDate(detailOrder.transaction_date)}
+                </p>
+              )}
+            </div>
+
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#efefef] text-left text-xs text-[#2f2f2f]">
+                  <th className="px-3 py-2 font-medium">Product</th>
+                  <th className="px-3 py-2 font-medium text-right">Qty</th>
+                  <th className="px-3 py-2 font-medium text-right">Price</th>
+                  <th className="px-3 py-2 font-medium text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {detailOrder?.items?.map((item, idx) => (
+                  <tr key={idx} className="border-b border-[#ededed]">
+                    <td className="px-3 py-2">
+                      <span>{item.product_name}</span>
+                      {item.variation?.length ? (
+                        <span className="ml-2 text-xs text-[#8a8a8a]">
+                          ({item.variation.join(", ")})
+                        </span>
+                      ) : null}
+                      {item.sizes?.length ? (
+                        <span className="ml-1 text-xs text-[#8a8a8a]">[{item.sizes.join(", ")}]</span>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2 text-right">{item.quantity}</td>
+                    <td className="px-3 py-2 text-right">{formatCurrency(item.price)}</td>
+                    <td className="px-3 py-2 text-right">{formatCurrency(item.sub_total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="mt-6 flex justify-end">
+              <Button
+                type="button"
+                className="h-10 min-w-24 rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
+                onClick={() => setDetailOrder(null)}
+              >
+                Close
               </Button>
             </div>
           </div>
