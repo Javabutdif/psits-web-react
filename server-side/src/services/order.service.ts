@@ -42,13 +42,16 @@ class OrderService {
 
   //Pending Order Count
   getPendingCount = async () => {
-    const count = await Orders.countDocuments({
+    return Orders.countDocuments({
       order_status: "Pending",
     });
-    if (!count) {
-      throw new AppError("No pending orders count found!", 404);
-    }
-    return count;
+  };
+
+  //Paid Order Count
+  getPaidCount = async () => {
+    return Orders.countDocuments({
+      order_status: "Paid",
+    });
   };
   //Admin Daily Sales
   getDailySales = async () => {
@@ -136,18 +139,23 @@ class OrderService {
     const limit = Math.max(parseInt(params.query.limit as string, 10) || 50, 1);
     const search = (params.query.search as string) || "";
     const trimmedSearch = search.trim();
+    const status = params.status;
 
-    const total = await this.getPendingCount();
+    const total =
+      status.toLowerCase() === "paid"
+        ? await this.getPaidCount()
+        : await this.getPendingCount();
     const result = await Orders.find({
-      order_status: params.status,
+      order_status: status,
       ...this.buildOrderSearchQuery(trimmedSearch),
     })
-      .sort({ order_date: -1 })
+      .sort(
+        status.toLowerCase() === "paid"
+          ? { transaction_date: -1 }
+          : { order_date: -1 }
+      )
       .skip((page - 1) * limit)
       .limit(limit);
-    if (!result) {
-      throw new AppError("No orders found!", 404);
-    }
     return {
       data: result,
       total,
@@ -287,6 +295,33 @@ class OrderService {
 
     return {
       message: "Order cancelled successfully",
+    };
+  };
+
+  //Cancel Order Service with stock restore (V2 - full refund)
+  cancelOrderWithStockRestore = async (
+    _id: Types.ObjectId,
+    session: ClientSession
+  ) => {
+    const order = await Orders.findById(_id).session(session);
+    if (!order) {
+      throw new AppError("Order not found!", 404);
+    }
+
+    // Restore stock for each item
+    for (const item of order.items) {
+      await merchandiseService.restoreStocks(
+        item.product_id,
+        item.quantity,
+        session
+      );
+    }
+
+    // Delete the order
+    await Orders.findByIdAndDelete(_id, { session });
+
+    return {
+      message: "Order cancelled successfully. Stock restored.",
     };
   };
   //Approve Order Service

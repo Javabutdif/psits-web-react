@@ -208,33 +208,85 @@ export const approveOrder = async (
   }
 };
 
-export const getAllPendingOrders = async (): Promise<
-  OrderResponse[] | null
-> => {
+export const getAllPendingOrders = async ({
+  page = 1,
+  limit = 8,
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+} = {}): Promise<{
+  data: OrderResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+} | null> => {
   try {
-    const response: AxiosResponse<OrderResponse[]> = await axios.get(
+    const response: AxiosResponse = await axios.get(
       `${backendConnection()}/api/orders/get-all-pending-orders`,
-      { headers: createHeaders() }
+      {
+        params: { page, limit, search },
+        headers: createHeaders(),
+      }
     );
 
-    return response.status === 200 ? response.data : null;
+    console.log(response.data);
+
+    if (response.status === 200) {
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        page: response.data.page || page,
+        limit: response.data.limit || limit,
+        totalPages: response.data.totalPages || 0,
+      };
+    }
+    return null;
   } catch (error) {
     handleApiError(error, false);
-    return null;
+    return { data: [], total: 0, page, limit, totalPages: 0 };
   }
 };
 
-export const getAllPaidOrders = async (): Promise<OrderResponse[] | null> => {
+export const getAllPaidOrders = async ({
+  page = 1,
+  limit = 50,
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+} = {}): Promise<{
+  data: OrderResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+} | null> => {
   try {
-    const response: AxiosResponse<OrderResponse[]> = await axios.get(
+    const response: AxiosResponse = await axios.get(
       `${backendConnection()}/api/orders/get-all-paid-orders`,
-      { headers: createHeaders() }
+      {
+        params: { page, limit, search },
+        headers: createHeaders(),
+      }
     );
 
-    return response.status === 200 ? response.data : null;
+    if (response.status === 200) {
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        page: response.data.page || page,
+        limit: response.data.limit || limit,
+        totalPages: response.data.totalPages || 0,
+      };
+    }
+    return null;
   } catch (error) {
     handleApiError(error, false);
-    return null;
+    return { data: [], total: 0, page, limit, totalPages: 0 };
   }
 };
 
@@ -283,5 +335,102 @@ export const getMerchandiseById = async (
   } catch (error) {
     handleApiError(error, false);
     return null;
+  }
+};
+
+// ─── V2 Order APIs ─────────────────────────────────────────
+
+export const getAllPendingPaidOrdersV2 = async ({
+  status = "Pending",
+  page = 1,
+  limit = 8,
+  search = "",
+}: {
+  status?: "Pending" | "Paid";
+  page?: number;
+  limit?: number;
+  search?: string;
+} = {}): Promise<{
+  data: OrderResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+} | null> => {
+  try {
+    const response: AxiosResponse = await axios.get(
+      `${backendConnection()}/api/orders/v2/get-all-pending-paid-orders`,
+      {
+        params: { status, page, limit, search },
+        headers: createHeaders(),
+      }
+    );
+    console.log(response.data.data);
+    if (response.status === 200) {
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        page: response.data.page || page,
+        limit: response.data.limit || limit,
+        totalPages: response.data.totalPages || 0,
+      };
+    }
+    return null;
+  } catch (error) {
+    handleApiError(error, false);
+    return { data: [], total: 0, page, limit, totalPages: 0 };
+  }
+};
+
+export const approveOrderV2 = async (
+  order_id: string,
+  cash?: number
+): Promise<boolean> => {
+  try {
+    const response: AxiosResponse = await axios.put(
+      `${backendConnection()}/api/orders/v2/approve`,
+      { order_id, cash },
+      { headers: createHeaders() }
+    );
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error, false);
+    return false;
+  }
+};
+
+export const cancelOrderV2 = async (order_id: string): Promise<boolean> => {
+  try {
+    const response: AxiosResponse = await axios.put(
+      `${backendConnection()}/api/orders/v2/cancel`,
+      { _id: order_id },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) {
+      showToast("success", "Order cancelled successfully");
+      return true;
+    }
+    return false;
+  } catch (error) {
+    handleApiError(error);
+    return false;
+  }
+};
+
+export const refundOrderV2 = async (order_id: string): Promise<boolean> => {
+  try {
+    const response: AxiosResponse = await axios.post(
+      `${backendConnection()}/api/orders/v2/refund`,
+      { order_id },
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) {
+      showToast("success", "Refund processed successfully");
+      return true;
+    }
+    return false;
+  } catch (error) {
+    handleApiError(error);
+    return false;
   }
 };

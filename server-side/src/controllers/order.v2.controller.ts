@@ -25,6 +25,7 @@ import { AppError } from "../util/app.error.util";
 import { studentService } from "../services/student.service";
 import { promoService } from "../services/promo.service";
 import { reportService } from "../services/report.service";
+import { refundService } from "../services/refund.service";
 import { merchandiseService } from "../services/merchandise.service";
 import { IStudent } from "../models/student.interface";
 import {
@@ -66,10 +67,18 @@ class OrderController {
 
   */
   getAllPendingPaidOrders = async (req: Request, res: Response) => {
-    const result = await orderService.getAllOrdersDynamicStatus(req);
+    const result = await orderService.getAllOrdersDynamicStatus({
+      query: req.query,
+      status: (req.query.status as string) || "Pending",
+    });
+
     return res.status(200).json({
       message: "Successfully retrieved pending and paid orders",
-      data: result,
+      data: result.data,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
     });
   };
   //Create Order Controller
@@ -153,11 +162,23 @@ class OrderController {
   */
   cancelOrder = async (req: Request, res: Response) => {
     const { _id } = req.body;
-    const result = await orderService.cancelOrderService(_id);
-
-    return res.status(200).json({
-      message: result.message,
-    });
+    const session = await mongoose.startSession();
+    await session.startTransaction();
+    try {
+      const result = await orderService.cancelOrderWithStockRestore(
+        _id,
+        session
+      );
+      await session.commitTransaction();
+      session.endSession();
+      return res.status(200).json({
+        message: result.message,
+      });
+    } catch {
+      await session.abortTransaction();
+      session.endSession();
+      throw new AppError("Failed to cancel order", 500);
+    }
   };
   /*
     To approve an order, the admin will just need to provide the order id and then the system will check if the order is already approved or not, if it is already approved then the system will not allow to approve the order, if it is still pending then the system will approve the order and then return a message that the order is approved
@@ -165,7 +186,7 @@ class OrderController {
   approveOrder = async (req: Request, res: Response) => {
     const { order_id, cash } = req.body;
     const user = req.userV2;
-
+    console.log(order_id);
     const admin = await adminService.retrieveSpecific(user.idNumber);
 
     if (!admin) {
@@ -198,13 +219,14 @@ class OrderController {
     await merchandiseService.updateManyStocks(productArray, session);
     //Create a report data array
     const reportDataArray = result.items.map((item: any) => ({
-      order_id: result._id,
+      order_id: order_id,
       id_number: result.id_number,
       merch_id: item.product_id,
       item_count: item.quantity,
       total: item.sub_total,
-      date: result.order_date,
+      date: new Date(),
     }));
+    
     //Store the report data array to reports
     const processReports = await reportService.createReports(
       reportDataArray,
@@ -217,18 +239,50 @@ class OrderController {
     }
     //Create a receipt for the order
     const receipt: any = await orderService.generateOrderReceipt(
-      result,
+      result.order || result,
       admin.name,
       cash
     );
     //Call for order receipt service
-    await orderReceipt(receipt, result.email);
+    await orderReceipt(receipt, result.order?.email || result.email);
     //End session and commit transaction
     await session.commitTransaction();
     session.endSession();
     return res.status(200).json({
       message: "Successfully approved order",
     });
+  };
+
+  //Refund a paid order (V2)
+  processRefund = async (req: Request, res: Response) => {
+    const { order_id } = req.body;
+    const user = req.userV2;
+
+    const admin = await adminService.retrieveSpecific(user.idNumber);
+    if (!admin) {
+      throw new AppError("Admin not found", 404);
+    }
+
+    const session = await mongoose.startSession();
+    await session.startTransaction();
+
+    try {
+      const result = await refundService.processRefund(
+        order_id,
+        admin.name,
+        user.idNumber,
+        session
+      );
+      await session.commitTransaction();
+      session.endSession();
+      return res.status(200).json({
+        message: result.message,
+      });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      throw err;
+    }
   };
 }
 

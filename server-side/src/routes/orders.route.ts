@@ -9,14 +9,16 @@ import {
   approveOrderController,
   getAllPendingCountController,
   refund,
-  getAllRefund
+  getAllRefund,
 } from "../controllers/order.controller";
+import { orderController as orderV2Controller } from "../controllers/order.v2.controller";
 import {
   requireAccessTokenV2,
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2,
   adminAccessAuthenticateV2,
 } from "../middlewares/authV2.middleware";
+import { psits_roles } from "../enums/role.enums";
 const router = Router();
 
 //Get specific order via id_number
@@ -87,13 +89,49 @@ router.post(
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2(["admin", "finance"]),
   refund
-)
+);
 router.get(
   "/get-refund",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2(["admin", "finance"]),
   getAllRefund
-)
+);
+
+// ─── V2 Routes ─────────────────────────────────────────────
+
+// Consolidated pending/paid with status param + pagination + search
+router.get(
+  "/v2/get-all-pending-paid-orders",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  orderV2Controller.getAllPendingPaidOrders
+);
+
+// Cancel order (body: { _id }) — restores stock (V2)
+router.put(
+  "/v2/cancel",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  orderV2Controller.cancelOrder
+);
+
+// Approve order (body: { order_id, cash? }) (V2)
+router.put(
+  "/v2/approve",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  orderV2Controller.approveOrder
+);
+
+// Refund a paid order (V2)
+router.post(
+  "/v2/refund",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  orderV2Controller.processRefund
+);
 
 export default router;
