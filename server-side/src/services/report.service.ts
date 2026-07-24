@@ -87,66 +87,51 @@ const toLowerTrim = (value: unknown): string => {
   return String(value).trim().toLowerCase();
 };
 
-const buildAggregationPipeline = (
-  filters: MerchandiseReportFilters,
-  skip: number,
-  limit: number
-) => {
-  const matchStage: Record<string, any>[] = [];
+const buildBasePipeline = (filters: MerchandiseReportFilters) => {
+  const matchConditions: Record<string, any>[] = [];
 
   if (filters.search) {
-    const q = filters.search.trim().toLowerCase();
-    matchStage.push({
-      $match: {
-        $or: [
-          { id_number: { $regex: q, $options: "i" } },
-          { order_id: { $regex: q, $options: "i" } },
-        ],
-      },
+    const q = filters.search.trim();
+    matchConditions.push({
+      $or: [
+        { effective_id_number: { $regex: q, $options: "i" } },
+        { effective_reference_code: { $regex: q, $options: "i" } },
+        { effective_student_name: { $regex: q, $options: "i" } },
+        { "merch.name": { $regex: q, $options: "i" } },
+      ],
     });
   }
 
   if (filters.referenceCode) {
-    matchStage.push({
-      $match: {
-        order_id: { $regex: filters.referenceCode.trim(), $options: "i" },
-      },
+    matchConditions.push({
+      effective_reference_code: { $regex: filters.referenceCode.trim(), $options: "i" },
     });
   }
 
   if (filters.studentId) {
-    matchStage.push({
-      $match: {
-        id_number: { $regex: filters.studentId.trim(), $options: "i" },
-      },
+    matchConditions.push({
+      effective_id_number: { $regex: filters.studentId.trim(), $options: "i" },
     });
   }
 
   if (filters.course) {
-    matchStage.push({
-      $match: {
-        "order_id.course": { $regex: filters.course.trim(), $options: "i" },
-      },
+    matchConditions.push({
+      effective_course: { $regex: filters.course.trim(), $options: "i" },
     });
   }
 
   if (filters.year) {
-    matchStage.push({
-      $match: { "order_id.year": Number(filters.year) },
-    });
+    matchConditions.push({ effective_year: Number(filters.year) });
   }
 
   if (filters.dateFrom || filters.dateTo) {
     const dateFilter: Record<string, any> = {};
     if (filters.dateFrom) dateFilter.$gte = new Date(filters.dateFrom);
     if (filters.dateTo) dateFilter.$lte = new Date(filters.dateTo);
-    matchStage.push({ $match: { date: dateFilter } });
+    matchConditions.push({ date: dateFilter });
   }
 
-  const matchPipeline =
-    matchStage.length > 0 ? { $match: matchStage[0].$match } : {};
-
-  const pipeline: any[] = [
+   const pipeline: any[] = [
     {
       $lookup: {
         from: "orders",
@@ -165,7 +150,6 @@ const buildAggregationPipeline = (
       },
     },
     { $unwind: { path: "$merch", preserveNullAndEmptyArrays: true } },
-    ...(Object.keys(matchPipeline).length > 0 ? [matchPipeline] : []),
     {
       $addFields: {
         effective_id_number: {
@@ -180,42 +164,19 @@ const buildAggregationPipeline = (
             $filter: {
               input: "$order.items",
               as: "item",
-              cond: {
-                $eq: ["$$item.product_id", "$merch._id"],
-              },
+              cond: { $eq: ["$$item.product_id", "$merch._id"] },
             },
           },
         },
-        effective_reference_code: {
-          $cond: {
-            if: { $gt: [{ $ifNull: ["$order.reference_code", ""] }, ""] },
-            then: "$order.reference_code",
-            else: "",
-          },
-        },
-        effective_student_name: {
-          $cond: {
-            if: { $gt: [{ $ifNull: ["$order.student_name", ""] }, ""] },
-            then: "$order.student_name",
-            else: "",
-          },
-        },
-        effective_course: {
-          $cond: {
-            if: { $gt: [{ $ifNull: ["$order.course", ""] }, ""] },
-            then: "$order.course",
-            else: "",
-          },
-        },
-        effective_year: {
-          $cond: {
-            if: { $gt: [{ $ifNull: ["$order.year", null] }, null] },
-            then: "$order.year",
-            else: null,
-          },
-        },
+        effective_reference_code: { $ifNull: ["$order.reference_code", ""] },
+        effective_student_name: { $ifNull: ["$order.student_name", ""] },
+        effective_course: { $ifNull: ["$order.course", ""] },
+        effective_year: { $ifNull: ["$order.year", null] },
       },
     },
+    ...(matchConditions.length > 0
+      ? [{ $match: { $and: matchConditions } }]
+      : []),
     {
       $project: {
         _id: 1,
@@ -233,8 +194,6 @@ const buildAggregationPipeline = (
       },
     },
     { $sort: { date: -1 } },
-    { $skip: skip },
-    { $limit: limit },
   ];
 
   return pipeline;
@@ -306,18 +265,17 @@ export const getMerchandiseReport = async (
 ): Promise<MerchandiseReportResult> => {
   const page = normalizePage(params.page);
   const limit = normalizeLimit(params.limit);
-  const skip = (page - 1) * limit;
 
-  const pipeline = buildAggregationPipeline(params, skip, limit);
-  const results = await Report.aggregate(pipeline);
+  const pipeline = buildBasePipeline(params);
+  const dbMatched = await Report.aggregate(pipeline);
 
-  const filteredResults = applyPostMatchFilters(results, params);
-
-  const totalCount = await Report.countDocuments();
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
-
+  const filteredResults = applyPostMatchFilters(dbMatched, params);
   const rows = filteredResults.map(mapToRow);
+
+  const totalCount = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const skip = (page - 1) * limit;
+  const pagedRows = rows.slice(skip, skip + limit);
 
   const summary = rows.reduce(
     (acc, row) => {
@@ -329,14 +287,32 @@ export const getMerchandiseReport = async (
   );
 
   return {
-    rows,
-    data: rows,
+    rows: pagedRows,
+    data: pagedRows,
     total: totalCount,
     page,
     limit,
     totalPages,
     summary,
   };
+};
+
+export const getMerchandiseProductNames = async (): Promise<string[]> => {
+  const names = await Report.aggregate([
+    {
+      $lookup: {
+        from: "merches",
+        localField: "merch_id",
+        foreignField: "_id",
+        as: "merch",
+      },
+    },
+    { $unwind: { path: "$merch", preserveNullAndEmptyArrays: true } },
+    { $match: { "merch.name": { $ne: null } } },
+    { $group: { _id: "$merch.name" } },
+    { $sort: { _id: 1 } },
+  ]);
+  return names.map((n) => n._id).filter(Boolean);
 };
 
 export const getMerchandiseReportById = async (reportId: string) => {
@@ -418,32 +394,26 @@ export const createReports = async (
     date: payload.date ? new Date(payload.date) : new Date(),
   }));
 
-  const uniqueDocs = Array.from(
-    new Map(
-      docs.map((doc) => [
-        [
-          String(doc.order_id ?? ""),
-          String(doc.id_number ?? ""),
-          String(doc.merch_id ?? ""),
-          String(doc.item_count ?? 0),
-          String(doc.total ?? 0),
-          doc.date instanceof Date ? doc.date.toISOString() : String(doc.date),
-        ].join("|"),
-        doc,
-      ])
-    ).values()
-  );
+  if (!docs.length) {
+    return { success: true, report: [] };
+  }
 
-  const report = uniqueDocs.length
-    ? session
-      ? await Report.insertMany(uniqueDocs, { session })
-      : await Report.insertMany(uniqueDocs)
-    : [];
+  try {
+    const report = session
+      ? await Report.insertMany(docs, { session, ordered: false })
+      : await Report.insertMany(docs, { ordered: false });
 
-  return {
-    success: true,
-    report,
-  };
+    return { success: true, report };
+  } catch (err: any) {
+    if (err?.code === 11000) {
+      return {
+        success: true,
+        report: err.insertedDocs ?? [],
+        message: "One or more reports already existed and were skipped",
+      };
+    }
+    throw err;
+  }
 };
 
 export const reportService = {
@@ -451,6 +421,7 @@ export const reportService = {
   getMerchandiseReport,
   getMerchandiseReportById,
   deleteMerchandiseReportById,
+  getMerchandiseProductNames,
 };
 
 export default {
@@ -458,4 +429,5 @@ export default {
   getMerchandiseReport,
   getMerchandiseReportById,
   deleteMerchandiseReportById,
+  getMerchandiseProductNames,
 };

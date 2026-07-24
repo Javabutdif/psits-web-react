@@ -1,26 +1,49 @@
 import { useState, useMemo } from "react";
 import {
-  BadgeDollarSign, Download, Filter,
-  Package, Search, ShoppingBag,
-  Trash2, Wallet, X,
+  BadgeDollarSign,
+  Download,
+  Filter,
+  Package,
+  Search,
+  ShoppingBag,
+  Trash2,
+  Wallet,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog, DialogContent, DialogFooter,
-  DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useReportsData, ROWS_PER_PAGE } from "../hooks/useReportsData";
+import {
+  useReportsData,
+  ROWS_PER_PAGE,
+  DEFAULT_FILTERS,
+} from "../hooks/useReportsData";
 import { downloadCsv } from "../utils/exportCsv";
-import type { MerchandiseOrderDetail, ReportsFilters } from "../types/reports.types";
+import type {
+  MerchandiseOrderDetail,
+  ReportsFilters,
+} from "../types/reports.types";
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
@@ -39,29 +62,13 @@ const formatDate = (value: string | Date) => {
   });
 };
 
-const flattenVariant = (value: unknown): string[] => {
-  if (value == null) return [];
-  if (typeof value === "string") return value.trim() ? [value] : [];
-  if (Array.isArray(value)) return value.flatMap(flattenVariant);
-  if (typeof value === "object" && "$each" in (value as Record<string, unknown>)) {
-    return flattenVariant((value as { $each: unknown }).$each);
-  }
-  return [];
-};
-
-const normalizeDisplay = (value?: unknown): string => {
-  const items = flattenVariant(value);
-  return items.length > 0 ? items.join(", ") : "-";
-};
-
 interface ReportsFilterPopoverProps {
   activeTab: "membership" | "merchandise";
   filters: ReportsFilters;
   uniqueProductNames: string[];
-  getBatchesForProduct: (productName: string) => string[]; 
+  getBatchesForProduct: (productName: string) => string[];
   onApply: (filters: ReportsFilters) => void;
 }
-
 
 const ReportsFilterPopover = ({
   activeTab,
@@ -72,20 +79,6 @@ const ReportsFilterPopover = ({
 }: ReportsFilterPopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(filters);
-  const emptyFilters: ReportsFilters = {
-    id: "",
-    name: "",
-    rfid: "",
-    course: "",
-    year: "",
-    type: "",
-    productName: "",
-    batch: "",
-    size: "",
-    color: "",
-    dateFrom: "",
-    dateTo: "",
-  };
 
   const batchOptions = useMemo(
     () => getBatchesForProduct(draft.productName),
@@ -108,8 +101,8 @@ const ReportsFilterPopover = ({
   };
 
   const clearAppliedFilters = () => {
-    setDraft(emptyFilters);
-    onApply(emptyFilters);
+    setDraft(DEFAULT_FILTERS);
+    onApply(DEFAULT_FILTERS);
     setIsOpen(false);
   };
 
@@ -144,7 +137,7 @@ const ReportsFilterPopover = ({
             <button
               type="button"
               className="cursor-pointer text-xs text-red-500"
-              onClick={() => setDraft(emptyFilters)}
+              onClick={() => setDraft(DEFAULT_FILTERS)}
             >
               Reset Filter
             </button>
@@ -180,7 +173,10 @@ const ReportsFilterPopover = ({
             {activeTab === "membership" && (
               <div>
                 <Label className="mb-1.5 block text-xs font-medium">Type</Label>
-                <Select value={draft.type} onValueChange={(v) => update("type", v)}>
+                <Select
+                  value={draft.type}
+                  onValueChange={(v) => update("type", v)}
+                >
                   <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
                     <SelectValue placeholder="All" />
                   </SelectTrigger>
@@ -202,7 +198,7 @@ const ReportsFilterPopover = ({
                     value={draft.productName}
                     onValueChange={(v) => {
                       update("productName", v);
-                      setDraft((current) => ({ ...current, batch: "" })); 
+                      setDraft((current) => ({ ...current, batch: "" }));
                     }}
                   >
                     <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
@@ -218,8 +214,13 @@ const ReportsFilterPopover = ({
                   </Select>
                 </div>
                 <div>
-                  <Label className="mb-1.5 block text-xs font-medium">Size</Label>
-                  <Select value={draft.size} onValueChange={(v) => update("size", v)}>
+                  <Label className="mb-1.5 block text-xs font-medium">
+                    Size
+                  </Label>
+                  <Select
+                    value={draft.size}
+                    onValueChange={(v) => update("size", v)}
+                  >
                     <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
                       <SelectValue placeholder="All sizes" />
                     </SelectTrigger>
@@ -259,7 +260,10 @@ const ReportsFilterPopover = ({
 
             <div>
               <Label className="mb-1.5 block text-xs font-medium">Course</Label>
-              <Select value={draft.course} onValueChange={(v) => update("course", v)}>
+              <Select
+                value={draft.course}
+                onValueChange={(v) => update("course", v)}
+              >
                 <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
@@ -276,7 +280,10 @@ const ReportsFilterPopover = ({
               <Label className="mb-1.5 block text-xs font-medium">
                 Year Level
               </Label>
-              <Select value={draft.year} onValueChange={(v) => update("year", v)}>
+              <Select
+                value={draft.year}
+                onValueChange={(v) => update("year", v)}
+              >
                 <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
@@ -311,7 +318,12 @@ const ReportsFilterPopover = ({
             </div>
           </div>
           <div className="mt-6 flex justify-end gap-3">
-            <Button type="button" variant="ghost" className="h-9 px-4" onClick={handleCancel}>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-9 px-4"
+              onClick={handleCancel}
+            >
               Cancel
             </Button>
             <Button
@@ -358,7 +370,12 @@ interface PaginationFooterProps {
   onPageChange: (page: number) => void;
 }
 
-const PaginationFooter = ({ page, totalPages, total, onPageChange }: PaginationFooterProps) => {
+const PaginationFooter = ({
+  page,
+  totalPages,
+  total,
+  onPageChange,
+}: PaginationFooterProps) => {
   const visiblePages = pageRange(page, totalPages);
   return (
     <div className="mt-7 flex flex-col items-center justify-between gap-3 text-xs text-[#8a8a8a] sm:flex-row">
@@ -377,7 +394,9 @@ const PaginationFooter = ({ page, totalPages, total, onPageChange }: PaginationF
         </button>
         {visiblePages.map((item, index) => (
           <div key={`${item}-${index}`} className="flex items-center gap-1">
-            {index > 0 && item - visiblePages[index - 1] > 1 && <span className="px-1">...</span>}
+            {index > 0 && item - visiblePages[index - 1] > 1 && (
+              <span className="px-1">...</span>
+            )}
             <button
               type="button"
               onClick={() => onPageChange(item)}
@@ -445,7 +464,7 @@ export const ReportsView = () => {
     totalMembershipRows,
     totalMerchandiseRows,
     membershipSummary,
-    merchandiseSalesSummary,
+    merchandiseSummary,
     uniqueProductNames,
     getBatchesForProduct,
     canDeleteReports,
@@ -457,7 +476,8 @@ export const ReportsView = () => {
     refetchMerchandise,
   } = useReportsData();
 
-  const [deleteTarget, setDeleteTarget] = useState<MerchandiseOrderDetail | null>(null);
+  const [deleteTarget, setDeleteTarget] =
+    useState<MerchandiseOrderDetail | null>(null);
 
   const isMembership = activeTab === "membership";
   const status = isMembership ? membershipStatus : merchandiseStatus;
@@ -474,7 +494,7 @@ export const ReportsView = () => {
   };
 
   return (
-    <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:not(:disabled)]:cursor-pointer [&_button:disabled]:cursor-not-allowed">
+    <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
       <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <h1 className="text-2xl font-bold sm:text-3xl">Reports</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
@@ -543,19 +563,12 @@ export const ReportsView = () => {
                 <SummaryCard
                   icon={Package}
                   label="Units Sold (filtered)"
-                  value={Array.from(merchandiseSalesSummary.values())
-                    .reduce((sum, item) => sum + item.unitsSold, 0)
-                    .toLocaleString()}
+                  value={merchandiseSummary.unitsSold.toLocaleString()}
                 />
                 <SummaryCard
                   icon={BadgeDollarSign}
                   label="Total Revenue (filtered)"
-                  value={formatCurrency(
-                    Array.from(merchandiseSalesSummary.values()).reduce(
-                      (sum, item) => sum + item.totalRevenue,
-                      0
-                    )
-                  )}
+                  value={formatCurrency(merchandiseSummary.totalRevenue)}
                 />
               </>
             )}
@@ -564,7 +577,10 @@ export const ReportsView = () => {
 
         {status === "error" && (
           <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <span>Unable to load {isMembership ? "membership" : "merchandise"} report data.</span>
+            <span>
+              Unable to load {isMembership ? "membership" : "merchandise"}{" "}
+              report data.
+            </span>
             <Button
               type="button"
               size="sm"
@@ -611,11 +627,16 @@ export const ReportsView = () => {
           </div>
 
           {isMembership ? (
-            <MembershipTable rows={pagedMembership} isLoading={status === "loading"} />
+            <MembershipTable
+              rows={pagedMembership}
+              isLoading={status === "loading"}
+              hasError={status === "error"}
+            />
           ) : (
             <MerchandiseTable
               rows={pagedMerchandise}
               isLoading={status === "loading"}
+              hasError={status === "error"}
               canDelete={canDeleteReports}
               onRequestDelete={setDeleteTarget}
             />
@@ -630,16 +651,20 @@ export const ReportsView = () => {
         </section>
       </div>
 
-      <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
         <DialogContent className="max-w-sm rounded-[20px]">
           <DialogHeader>
             <DialogTitle>Delete this report entry?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-[#777]">
             This removes{" "}
-            <span className="font-medium">{deleteTarget?.product_name}</span> from{" "}
-            <span className="font-medium">{deleteTarget?.student_name}</span>'s order
-            record. This cannot be undone.
+            <span className="font-medium">{deleteTarget?.product_name}</span>{" "}
+            from{" "}
+            <span className="font-medium">{deleteTarget?.student_name}</span>'s
+            order record. This cannot be undone.
           </p>
           <DialogFooter className="mt-3">
             <Button
@@ -672,9 +697,11 @@ export const ReportsView = () => {
 const MembershipTable = ({
   rows,
   isLoading,
+  hasError,
 }: {
   rows: ReturnType<typeof useReportsData>["pagedMembership"];
   isLoading: boolean;
+  hasError: boolean;
 }) => (
   <div className="overflow-x-auto">
     <table className="w-full min-w-[920px] table-fixed border-collapse text-sm">
@@ -683,13 +710,21 @@ const MembershipTable = ({
           <th className="w-[14%] rounded-l-md px-2 py-2 text-left font-medium">
             Reference Code
           </th>
-          <th className="w-[11%] px-2 py-2 text-left font-medium">Student ID</th>
+          <th className="w-[11%] px-2 py-2 text-left font-medium">
+            Student ID
+          </th>
           <th className="w-[16%] px-2 py-2 text-left font-medium">Name</th>
-          <th className="w-[11%] px-2 py-2 text-left font-medium">Course &amp; Year</th>
+          <th className="w-[11%] px-2 py-2 text-left font-medium">
+            Course &amp; Year
+          </th>
           <th className="w-[11%] px-2 py-2 text-left font-medium">Date</th>
           <th className="w-[11%] px-2 py-2 text-left font-medium">Type</th>
-          <th className="w-[14%] px-2 py-2 text-left font-medium">Managed By</th>
-          <th className="w-[12%] rounded-r-md px-2 py-2 text-right font-medium">Total</th>
+          <th className="w-[14%] px-2 py-2 text-left font-medium">
+            Managed By
+          </th>
+          <th className="w-[12%] rounded-r-md px-2 py-2 text-right font-medium">
+            Total
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -703,9 +738,12 @@ const MembershipTable = ({
               ))}
             </tr>
           ))
-        ) : rows.length > 0 ? (
-          rows.map((row) => (
-            <tr key={row.reference_code} className="border-b border-[#ededed] text-[#303030]">
+        ) : hasError ? null : rows.length > 0 ? (
+          rows.map((row, index) => (
+            <tr
+              key={`${row.reference_code}-${row.id_number}-${index}`}
+              className="border-b border-[#ededed] text-[#303030]"
+            >
               <td className="truncate px-2 py-3">{row.reference_code}</td>
               <td className="px-2 py-3">{row.id_number}</td>
               <td className="truncate px-2 py-3">{row.name}</td>
@@ -715,14 +753,17 @@ const MembershipTable = ({
               <td className="px-2 py-3">{formatDate(row.date)}</td>
               <td className="truncate px-2 py-3">{row.type}</td>
               <td className="truncate px-2 py-3">{row.admin || "-"}</td>
-              <td className="whitespace-nowrap px-2 py-3 text-right font-medium">
+              <td className="px-2 py-3 text-right font-medium whitespace-nowrap">
                 {formatCurrency(row.total || 0)}
               </td>
             </tr>
           ))
         ) : (
           <tr>
-            <td colSpan={8} className="px-3 py-16 text-center text-sm text-[#777]">
+            <td
+              colSpan={8}
+              className="px-3 py-16 text-center text-sm text-[#777]"
+            >
               No membership records found.
             </td>
           </tr>
@@ -737,10 +778,12 @@ const MerchandiseTable = ({
   isLoading,
   canDelete,
   onRequestDelete,
+  hasError,
 }: {
   rows: MerchandiseOrderDetail[];
   isLoading: boolean;
   canDelete: boolean;
+  hasError: boolean;
   onRequestDelete: (detail: MerchandiseOrderDetail) => void;
 }) => (
   <div className="overflow-x-auto">
@@ -751,14 +794,20 @@ const MerchandiseTable = ({
             Reference Code
           </th>
           <th className="w-[16%] px-2 py-2 text-left font-medium">Product</th>
-          <th className="w-[12%] px-2 py-2 text-left font-medium">Student ID</th>
+          <th className="w-[12%] px-2 py-2 text-left font-medium">
+            Student ID
+          </th>
           <th className="w-[15%] px-2 py-2 text-left font-medium">Name</th>
-          <th className="w-[10%] px-2 py-2 text-left font-medium">Course &amp; Year</th>
+          <th className="w-[10%] px-2 py-2 text-left font-medium">
+            Course &amp; Year
+          </th>
           <th className="w-[8%] px-2 py-2 text-left font-medium">Size</th>
           <th className="w-[8%] px-2 py-2 text-left font-medium">Color</th>
           <th className="w-[6%] px-2 py-2 text-right font-medium">Qty</th>
           <th className="w-[8%] px-2 py-2 text-right font-medium">Total</th>
-          <th className={cn("px-2 py-2 text-right", canDelete ? "w-[8%]" : "w-4")} />
+          <th
+            className={cn("px-2 py-2 text-right", canDelete ? "w-[8%]" : "w-4")}
+          />
         </tr>
       </thead>
       <tbody>
@@ -772,9 +821,12 @@ const MerchandiseTable = ({
               ))}
             </tr>
           ))
-        ) : rows.length > 0 ? (
+        ) : hasError ? null : rows.length > 0 ? (
           rows.map((detail) => (
-            <tr key={detail._id} className="border-b border-[#ededed] text-[#303030]">
+            <tr
+              key={detail._id}
+              className="border-b border-[#ededed] text-[#303030]"
+            >
               <td className="truncate px-2 py-3">{detail.reference_code}</td>
               <td className="truncate px-2 py-3">{detail.product_name}</td>
               <td className="px-2 py-3">{detail.id_number}</td>
@@ -782,8 +834,14 @@ const MerchandiseTable = ({
               <td className="px-2 py-3">
                 {detail.course} {detail.year ? `- ${detail.year}` : ""}
               </td>
-              <td className="px-2 py-3">{normalizeDisplay(detail.size)}</td>
-              <td className="px-2 py-3">{normalizeDisplay(detail.variation)}</td>
+              <td className="px-2 py-3">
+                {detail.size.length > 0 ? detail.size.join(", ") : "-"}
+              </td>
+              <td className="px-2 py-3">
+                {detail.variation.length > 0
+                  ? detail.variation.join(", ")
+                  : "-"}
+              </td>
               <td className="px-2 py-3 text-right">{detail.quantity}</td>
               <td className="px-2 py-3 text-right font-medium">
                 {formatCurrency(detail.total || 0)}
