@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { IStudent } from "../models/student.interface";
 import { Student } from "../models/student.model";
 import { user_model } from "../model_template/model_data";
+import { orderService } from "../services/order.service";
+import { Refund } from "../models/refund.model";
 
 const escapeRegex = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -56,6 +58,43 @@ export const getStudentLookupForAdmin = async (
     return res.status(200).json({ data: user_model(student) });
   } catch (error) {
     console.error("Error fetching student lookup:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getStudentOrders = async (req: Request, res: Response) => {
+  try {
+    const { idNumber } = req.userV2;
+    const result = await orderService.getAllOrdersDynamicStatus({
+      query: req.query,
+      status: (req.query.status as string) || "Pending",
+    });
+
+    const studentOrders = (result.data as any[]).filter(
+      (o) => o.id_number === idNumber
+    );
+
+    return res.status(200).json({
+      message: "Successfully retrieved student orders",
+      data: studentOrders,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    });
+  } catch (error) {
+    console.error("Error fetching student orders:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getStudentRefund = async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    const refunds = await Refund.find({ order_id: orderId });
+    return res.status(200).json({ data: refunds });
+  } catch (error) {
+    console.error("Error fetching refund details:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

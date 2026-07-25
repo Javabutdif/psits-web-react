@@ -1,9 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getOrder, cancelOrder } from "@/features/orders/api/orders";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { cancelOrder } from "@/features/orders/api/orders";
+import { getStudentOrders, getRefundByOrderId } from "@/features/orders/api/orders";
+import type { OrdersTab, RefundDetail } from "@/features/orders/types/orders.types";
+import OrderDetailModal from "@/features/orders/components/OrderDetailModal";
+
+const ROWS_PER_PAGE = 8;
 
 interface OrderItem {
   id: string;
@@ -15,17 +29,79 @@ interface OrderItem {
 }
 
 interface Order {
-  orderId: string;
+  _id: string;
   items: OrderItem[];
   status: string;
   orderDate: string;
+  orderId: string;
+  student_name?: string;
+  course?: string;
+  year?: number;
+  reference_code?: string;
+  transaction_date?: string;
+  admin?: string;
+  total: number;
 }
+
+const mapApiToUi = (apiOrder: any): Order => {
+  const items = Array.isArray(apiOrder.items)
+    ? apiOrder.items.map((it: any) => ({
+        id: String(it.product_id ?? it._id ?? it.id ?? Math.random()),
+        title: it.product_name ?? it.name ?? it.title ?? "",
+        variant: Array.isArray(it.variation)
+          ? it.variation.join(", ")
+          : (it.variant ?? it.color ?? undefined),
+        price: Number(it.price ?? it.unit_price ?? it.sub_total ?? 0),
+        qty: Number(it.quantity ?? it.qty ?? it.units ?? 1),
+        image: it.imageUrl1 ?? it.image ?? it.img ?? undefined,
+      }))
+    : [];
+
+  const orderDate = apiOrder.order_date
+    ? new Date(apiOrder.order_date).toLocaleDateString()
+    : "";
+
+  return {
+    _id: apiOrder._id || apiOrder.id || Math.random().toString(),
+    orderId: String(
+      apiOrder._id ??
+        apiOrder.orderId ??
+        apiOrder.reference_code ??
+        Math.random()
+    ),
+    items,
+    status: apiOrder.order_status ?? apiOrder.status ?? "Pending",
+    orderDate,
+    student_name: apiOrder.student_name,
+    course: apiOrder.course,
+    year: apiOrder.year,
+    reference_code: apiOrder.reference_code,
+    transaction_date: apiOrder.transaction_date,
+    admin: apiOrder.admin,
+    total: Number(apiOrder.total ?? 0),
+  };
+};
 
 const OrderCard: React.FC<{
   order: Order;
   onCancel: (orderId: string) => void;
-}> = ({ order, onCancel }) => {
+  onViewDetails: (order: Order) => void;
+}> = ({ order, onCancel, onViewDetails }) => {
   const total = order.items.reduce((s, i) => s + i.price * i.qty, 0);
+
+  const statusColors: Record<string, string> = {
+    Pending: "bg-[#FF8E1D]/15 text-[#FF8E1D] border-transparent",
+    Paid: "bg-green-100 text-green-700 border-transparent",
+    Refunded: "bg-red-100 text-red-700 border-transparent",
+    Cancelled: "bg-gray-100 text-gray-600 border-transparent",
+  };
+
+  const dotColors: Record<string, string> = {
+    Pending: "bg-[#FF8E1D]",
+    Paid: "bg-green-500",
+    Refunded: "bg-red-500",
+    Cancelled: "bg-gray-400",
+  };
 
   return (
     <div className="mb-4 rounded-xl border border-gray-100 bg-white p-4">
@@ -33,38 +109,31 @@ const OrderCard: React.FC<{
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium">{order.orderId}</span>
           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-            Order Placed: {order.orderDate}
+            {order.orderDate}
           </span>
         </div>
 
         <div className="flex items-center gap-4">
-          {(() => {
-            const map: Record<string, string> = {
-              Pending: "bg-[#FF8E1D]/15 text-[#FF8E1D] border-transparent",
-              Paid: "bg-green-100 text-green-700 border-transparent",
-              Cancelled: "bg-red-100 text-red-700 border-transparent",
-            };
-
-            const dotMap: Record<string, string> = {
-              Pending: "bg-[#FF8E1D]",
-              Paid: "bg-green-500",
-              Cancelled: "bg-red-500",
-            };
-
-            const cls =
-              map[order.status] ??
-              "bg-gray-100 text-gray-700 border-transparent";
-            const dot = dotMap[order.status] ?? "bg-gray-400";
-
-            return (
-              <Badge className={cls}>
-                <span
-                  className={`mr-2 inline-block h-2 w-2 rounded-full ${dot}`}
-                />
-                {order.status}
-              </Badge>
-            );
-          })()}
+          <Badge
+            className={
+              statusColors[order.status] ??
+              "bg-gray-100 text-gray-700 border-transparent"
+            }
+          >
+            <span
+              className={`mr-2 inline-block h-2 w-2 rounded-full ${dotColors[order.status] ?? "bg-gray-400"}`}
+            />
+            {order.status}
+          </Badge>
+          {(order.status === "Paid" || order.status === "Refunded") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onViewDetails(order)}
+            >
+              Details
+            </Button>
+          )}
         </div>
       </div>
 
@@ -74,21 +143,12 @@ const OrderCard: React.FC<{
             key={item.id}
             className="flex flex-col items-start gap-4 rounded-xl border border-gray-100 bg-white p-4 sm:flex-row sm:items-center"
           >
-            <div className="h-40 w-full flex-shrink-0 overflow-hidden rounded-md bg-gray-100 sm:h-20 sm:w-20">
-              <img
-                src={item.image}
-                alt={item.title}
-                className="h-full w-full object-cover"
-              />
-            </div>
-
             <div className="w-full flex-1">
               <div className="flex w-full flex-col items-start justify-between sm:flex-row sm:items-center">
                 <div>
                   <div className="font-medium">{item.title}</div>
                   <div className="text-sm text-gray-600">{item.variant}</div>
                 </div>
-
                 <div className="mt-2 text-left sm:mt-0 sm:text-right">
                   <div className="font-medium text-[#1C9DDE]">
                     ₱{item.price.toFixed(2)}
@@ -108,181 +168,200 @@ const OrderCard: React.FC<{
 
       {order.status === "Pending" && (
         <div className="mt-4 flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            className="cursor-pointer rounded-2xl"
-            onClick={() => onCancel(order.orderId)}
-          >
-            Cancel Order
-          </Button>
+          <CancelConfirm
+            onConfirm={() => onCancel(order._id)}
+          />
         </div>
       )}
     </div>
   );
 };
 
-const EmptyState: React.FC<{
-  title?: string;
-  description?: string;
-  buttonText?: string;
-  href?: string;
-}> = ({
-  title = "Your cart is empty",
-  description = "Looks like you haven't added any items yet. Start shopping to add products to your cart.",
-  buttonText = "Shop products",
-  href = "/shop",
-}) => {
+const CancelConfirm: React.FC<{
+  onConfirm: () => void;
+}> = ({ onConfirm }) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="flex w-full flex-col items-center justify-center py-16">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-16 w-16 text-sky-500"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="cursor-pointer rounded-2xl"
+        onClick={() => setOpen(true)}
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 6h13m-9-6v6m4-6v6"
-        />
-      </svg>
+        Cancel Order
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Order?</DialogTitle>
+            <DialogDescription>
+              The order will be deleted and stock will be restored. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onConfirm();
+                setOpen(false);
+              }}
+            >
+              Confirm Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
 
-      <h3 className="mt-4 text-lg font-semibold">{title}</h3>
+const EmptyState: React.FC<{ title: string; description: string }> = ({
+  title,
+  description,
+}) => (
+  <div className="flex w-full flex-col items-center justify-center py-16">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="mb-4 h-16 w-16 text-sky-500"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 6h13m-9-6v6m4-6v6"
+      />
+    </svg>
+    <h3 className="mb-2 text-lg font-semibold">{title}</h3>
+    <p className="max-w-xl text-center text-sm text-gray-500">{description}</p>
+  </div>
+);
 
-      <p className="mt-2 max-w-xl text-center text-sm text-gray-500">
-        {description}
-      </p>
+const Pagination: React.FC<{
+  current: number;
+  total: number;
+  pageSize: number;
+  onChange: (page: number) => void;
+}> = ({ current, total, pageSize, onChange }) => {
+  const totalPages = Math.ceil(total / pageSize);
+  if (totalPages <= 1) return null;
 
-      <div className="mt-6">
-        <Button asChild>
-          <a href={href}>{buttonText}</a>
+  return (
+    <div className="mt-6 flex items-center justify-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={current <= 1}
+          onClick={() => onChange(current - 1)}
+        >
+          Previous
         </Button>
-      </div>
+        <span className="px-3 text-sm">
+          Page {current} of {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={current >= totalPages}
+          onClick={() => onChange(current + 1)}
+        >
+          Next
+        </Button>
     </div>
   );
 };
 
 const MyOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<OrdersTab>("pending");
+  const [page, setPage] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [_totalPages, setTotalPages] = useState(0);
 
-  const mapApiToUi = (apiOrder: any): Order => {
-    const items = Array.isArray(apiOrder.items)
-      ? apiOrder.items.map((it: any) => ({
-          id: String(it.product_id ?? it._id ?? it.id ?? Math.random()),
-          title: it.product_name ?? it.name ?? it.title ?? "",
-          variant: Array.isArray(it.variation)
-            ? it.variation.join(", ")
-            : (it.variant ?? it.color ?? undefined),
-          price: Number(it.price ?? it.unit_price ?? it.sub_total ?? 0),
-          qty: Number(it.quantity ?? it.qty ?? it.units ?? 1),
-          image: it.imageUrl1 ?? it.image ?? it.img ?? undefined,
-        }))
-      : [];
+  // Detail modal state
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [refundData, setRefundData] = useState<RefundDetail[]>([]);
 
-    const orderDate = apiOrder.order_date
-      ? new Date(apiOrder.order_date).toLocaleDateString()
-      : apiOrder.transaction_date
-        ? new Date(apiOrder.transaction_date).toLocaleDateString()
-        : "";
-
-    return {
-      orderId: String(
-        apiOrder._id ??
-          apiOrder.orderId ??
-          apiOrder.reference_code ??
-          Math.random()
-      ),
-      items,
-      status: apiOrder.order_status ?? apiOrder.status ?? "Pending",
-      orderDate,
-    };
-  };
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const possibleKeys = [
-        "id_number",
-        "IdNumber",
-        "idNumber",
-        "student_id",
-        "StudentId",
-        "user",
-      ];
-      let id_number: string | undefined;
-      for (const k of possibleKeys) {
-        const v = sessionStorage.getItem(k);
-        if (!v) continue;
-        if (k === "user" || v.trim().startsWith("{")) {
-          try {
-            const parsed = JSON.parse(v);
-            if (
-              parsed &&
-              (parsed.id_number || parsed.idNumber || parsed.student_id)
-            ) {
-              id_number =
-                parsed.id_number || parsed.idNumber || parsed.student_id;
-              break;
-            }
-          } catch (e) {
-            // not JSON
-          }
-        }
-        id_number = v;
-        if (id_number) break;
-      }
+      const result = await getStudentOrders({
+        status: activeTab === "pending" ? "Pending" : activeTab === "paid" ? "Paid" : "Refunded",
+        page,
+        limit: ROWS_PER_PAGE,
+      });
 
-      if (!id_number) {
+      if (result && result.data) {
+        const mapped = result.data.map(mapApiToUi);
+        setOrders(mapped);
+        setTotalOrders(result.total);
+        setTotalPages(result.totalPages);
+      } else {
         setOrders([]);
-        return;
+        setTotalOrders(0);
+        setTotalPages(0);
       }
-
-      const apiResult = await getOrder(id_number as string);
-      const apiOrders = Array.isArray(apiResult)
-        ? apiResult
-        : apiResult
-          ? [apiResult]
-          : [];
-      const mapped = apiOrders.map(mapApiToUi);
-      setOrders(mapped);
     } catch (error) {
       console.error("Failed to fetch orders", error);
       setOrders([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, page]);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as OrdersTab);
+    setPage(1);
+  };
 
   const handleCancelOrder = async (orderId: string) => {
     try {
       const ok = await cancelOrder(orderId);
       if (ok) {
-        setOrders((prev) =>
-          prev.map((o) =>
-            o.orderId === orderId ? { ...o, status: "Cancelled" } : o
-          )
-        );
+        fetchOrders();
       }
     } catch (err) {
       console.error("Cancel failed", err);
     }
   };
 
-  const pendingOrders = orders.filter((o) => o.status === "Pending");
-  const paidOrders = orders.filter((o) => o.status === "Paid");
-  const cancelledOrders = orders.filter((o) => o.status === "Cancelled");
+  const handleViewDetails = async (order: Order) => {
+    setDetailOrder(order);
+    setDetailOpen(true);
+    setRefundData([]);
+
+    if (order.status === "Refunded") {
+      try {
+        const refunds = await getRefundByOrderId(order._id);
+        if (refunds) {
+          setRefundData(refunds);
+        }
+      } catch (err) {
+        console.error("Failed to fetch refund", err);
+      }
+    }
+  };
+
+  const pendingCount = orders.filter((o) => o.status === "Pending").length;
+  const paidCount = orders.filter((o) => o.status === "Paid").length;
+  const refundedCount = orders.filter((o) => o.status === "Refunded").length;
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto">
+      <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-2xl font-semibold">My Orders</h2>
         </div>
@@ -293,46 +372,31 @@ const MyOrders: React.FC = () => {
           </CardHeader>
 
           <CardContent>
-            <Tabs defaultValue="pending">
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
               <div className="-mx-2 overflow-x-auto">
                 <div className="inline-block min-w-full">
                   <TabsList className="flex w-full cursor-pointer rounded-xl bg-white px-3 py-7">
-                    <TabsTrigger
-                      className="flex-1 cursor-pointer py-5 text-center"
-                      value="pending"
-                    >
+                    <TabsTrigger className="flex-1 cursor-pointer py-5 text-center" value="pending">
                       <div className="flex items-center justify-center gap-2">
                         <span>Pending</span>
-                        <span
-                          className={`ml-2 inline-block rounded-full px-2 py-1 text-xs ${pendingOrders.length > 0 ? "bg-[#1C9DDE] text-white" : "bg-gray-200 text-gray-600"}`}
-                        >
-                          {pendingOrders.length}
+                        <span className={`ml-2 inline-block rounded-full px-2 py-1 text-xs ${pendingCount > 0 ? "bg-[#1C9DDE] text-white" : "bg-gray-200 text-gray-600"}`}>
+                          {pendingCount}
                         </span>
                       </div>
                     </TabsTrigger>
-                    <TabsTrigger
-                      className="flex-1 cursor-pointer py-5 text-center"
-                      value="paid"
-                    >
+                    <TabsTrigger className="flex-1 cursor-pointer py-5 text-center" value="paid">
                       <div className="flex items-center justify-center gap-2">
                         <span>Paid</span>
-                        <span
-                          className={`ml-2 inline-block rounded-full px-2 py-1 text-xs ${paidOrders.length > 0 ? "bg-[#1C9DDE] text-white" : "bg-gray-200 text-gray-600"}`}
-                        >
-                          {paidOrders.length}
+                        <span className={`ml-2 inline-block rounded-full px-2 py-1 text-xs ${paidCount > 0 ? "bg-[#1C9DDE] text-white" : "bg-gray-200 text-gray-600"}`}>
+                          {paidCount}
                         </span>
                       </div>
                     </TabsTrigger>
-                    <TabsTrigger
-                      className="flex-1 cursor-pointer py-5 text-center"
-                      value="cancelled"
-                    >
+                    <TabsTrigger className="flex-1 cursor-pointer py-5 text-center" value="refunded">
                       <div className="flex items-center justify-center gap-2">
-                        <span>Cancelled</span>
-                        <span
-                          className={`ml-2 inline-block rounded-full px-2 py-1 text-xs ${cancelledOrders.length > 0 ? "bg-[#1C9DDE] text-white" : "bg-gray-200 text-gray-600"}`}
-                        >
-                          {cancelledOrders.length}
+                        <span>Refunded</span>
+                        <span className={`ml-2 inline-block rounded-full px-2 py-1 text-xs ${refundedCount > 0 ? "bg-[#1C9DDE] text-white" : "bg-gray-200 text-gray-600"}`}>
+                          {refundedCount}
                         </span>
                       </div>
                     </TabsTrigger>
@@ -342,66 +406,87 @@ const MyOrders: React.FC = () => {
 
               <div className="mt-6">
                 <TabsContent value="pending">
-                  {pendingOrders.length > 0 ? (
-                    pendingOrders.map((order) => (
+                  {loading ? (
+                    <div className="py-8 text-center text-gray-500">Loading...</div>
+                  ) : orders.length > 0 ? (
+                    orders.map((order) => (
                       <OrderCard
-                        key={order.orderId}
+                        key={order._id}
                         order={order}
                         onCancel={handleCancelOrder}
+                        onViewDetails={handleViewDetails}
                       />
                     ))
                   ) : (
                     <EmptyState
                       title="No pending orders"
-                      description="You don't have any pending orders right now."
-                      buttonText="Shop products"
-                      href="/shop"
+                      description="You don't have any pending orders right now. Start shopping to add items to your order."
                     />
                   )}
                 </TabsContent>
 
                 <TabsContent value="paid">
-                  {paidOrders.length > 0 ? (
-                    paidOrders.map((order) => (
+                  {loading ? (
+                    <div className="py-8 text-center text-gray-500">Loading...</div>
+                  ) : orders.length > 0 ? (
+                    orders.map((order) => (
                       <OrderCard
-                        key={order.orderId}
+                        key={order._id}
                         order={order}
                         onCancel={handleCancelOrder}
+                        onViewDetails={handleViewDetails}
                       />
                     ))
                   ) : (
                     <EmptyState
                       title="No paid orders"
                       description="You have no paid orders yet. Browse products to place an order."
-                      buttonText="Shop products"
-                      href="/shop"
                     />
                   )}
                 </TabsContent>
 
-                <TabsContent value="cancelled">
-                  {cancelledOrders.length > 0 ? (
-                    cancelledOrders.map((order) => (
+                <TabsContent value="refunded">
+                  {loading ? (
+                    <div className="py-8 text-center text-gray-500">Loading...</div>
+                  ) : orders.length > 0 ? (
+                    orders.map((order) => (
                       <OrderCard
-                        key={order.orderId}
+                        key={order._id}
                         order={order}
                         onCancel={handleCancelOrder}
+                        onViewDetails={handleViewDetails}
                       />
                     ))
                   ) : (
                     <EmptyState
-                      title="No cancelled orders"
-                      description="You haven't cancelled any orders."
-                      buttonText="Shop products"
-                      href="/shop"
+                      title="No refunded orders"
+                      description="You have no refunded orders."
                     />
                   )}
                 </TabsContent>
               </div>
             </Tabs>
+
+            {/* Pagination */}
+            {!loading && totalOrders > ROWS_PER_PAGE && (
+              <Pagination
+                current={page}
+                total={totalOrders}
+                pageSize={ROWS_PER_PAGE}
+                onChange={(newPage) => setPage(newPage)}
+              />
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Detail Modal */}
+      <OrderDetailModal
+        isOpen={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        order={detailOrder}
+        refunds={refundData}
+      />
     </div>
   );
 };

@@ -53,6 +53,14 @@ class OrderService {
       order_status: "Paid",
     });
   };
+
+  //Refunded Order Count
+  getRefundedCount = async () => {
+    return Orders.countDocuments({
+      order_status: "Refunded",
+    });
+  };
+
   //Admin Daily Sales
   getDailySales = async () => {
     const currentDate = new Date();
@@ -141,16 +149,19 @@ class OrderService {
     const trimmedSearch = search.trim();
     const status = params.status;
 
+    const statusLower = status.toLowerCase();
     const total =
-      status.toLowerCase() === "paid"
+      statusLower === "paid"
         ? await this.getPaidCount()
-        : await this.getPendingCount();
+        : statusLower === "refunded"
+          ? await this.getRefundedCount()
+          : await this.getPendingCount();
     const result = await Orders.find({
       order_status: status,
       ...this.buildOrderSearchQuery(trimmedSearch),
     })
       .sort(
-        status.toLowerCase() === "paid"
+        statusLower === "paid"
           ? { transaction_date: -1 }
           : { order_date: -1 }
       )

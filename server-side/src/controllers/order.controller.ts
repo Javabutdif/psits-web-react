@@ -445,7 +445,7 @@ export const cancelOrderController = async (req: Request, res: Response) => {
       }
 
       const newStocks = merch.stocks + item.quantity;
-      if (order.promo.promo_discount) {
+      if (order.promo && order.promo.promo_discount) {
         await PromoUsage.deleteOne({
           promo_id: order.promo._id,
           order_id: order._id,
