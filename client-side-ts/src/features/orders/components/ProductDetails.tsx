@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
+import { useAuth } from "@/features/auth";
 import { addToCartApi } from "../../student/api/student";
 import { getMerchandiseById, type MerchandiseItem } from "../api/orders";
 
@@ -21,6 +22,9 @@ interface Product {
   sizes?: string[];
   colors?: string[];
   stock?: number;
+  start_date?: string | Date;
+  end_date?: string | Date;
+  selectedSizes?: Record<string, { custom: boolean; price: string }>;
 }
 
 interface ProductDetailsProps {
@@ -29,18 +33,35 @@ interface ProductDetailsProps {
 }
 
 // Transform API merchandise to display product
-const transformMerchandise = (item: MerchandiseItem): Product => ({
-  id: item._id,
-  name: item.name || item.product_name || "Unknown Product",
-  price: item.price,
-  image: item.imageUrl?.[0] || item.imageUrl1 || fallbackImage,
-  isSoldOut: (item.stocks ?? item.stock ?? 0) <= 0,
-  category: item.category || "Merchandise",
-  description: item.description,
-  sizes: item.sizes,
-  colors: item.colors || item.variation,
-  stock: item.stocks ?? item.stock,
-});
+const transformMerchandise = (item: MerchandiseItem): Product => {
+  let sizesFromSelectedSizes: string[] | undefined;
+
+  if (item.selectedSizes) {
+    const obj = item.selectedSizes as Record<string, unknown>;
+    if (typeof (obj as any).entries === "function") {
+      const mapEntries = Array.from((obj as any).entries() as IterableIterator<[string, unknown]>);
+      sizesFromSelectedSizes = mapEntries.map(([key]) => key);
+    } else {
+      sizesFromSelectedSizes = Object.keys(obj);
+    }
+  }
+
+  return {
+    id: item._id,
+    name: item.name || item.product_name || "Unknown Product",
+    price: item.price,
+    image: item.imageUrl?.[0] || item.imageUrl1 || fallbackImage,
+    isSoldOut: (item.stocks ?? item.stock ?? 0) <= 0,
+    category: item.category || "Merchandise",
+    description: item.description,
+    sizes: item.sizes || sizesFromSelectedSizes,
+    colors: item.colors || item.variation,
+    stock: item.stocks ?? item.stock,
+    start_date: item.start_date,
+    end_date: item.end_date,
+    selectedSizes: item.selectedSizes as Record<string, { custom: boolean; price: string }> | undefined,
+  };
+};
 
 const ADD_TO_CART_TOAST_STYLE = {
   background: "#1DA1F2",
@@ -127,6 +148,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   disabled = false,
 }) => {
   const { addItem } = useCart();
+  const { user } = useAuth();
 
   const handleAdd = React.useCallback(() => {
     if (disabled) return;
@@ -147,44 +169,14 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     });
     try {
       const token = sessionStorage.getItem("Token");
-      if (token) {
-        // try to find an id_number in sessionStorage under common keys
-        const possibleKeys = [
-          "id_number",
-          "IdNumber",
-          "idNumber",
-          "student_id",
-          "StudentId",
-          "user",
-        ];
-        let id_number: string | undefined = undefined;
-        for (const k of possibleKeys) {
-          const v = sessionStorage.getItem(k);
-          if (!v) continue;
-          if (k === "user" || k === "User" || v.trim().startsWith("{")) {
-            try {
-              const parsed = JSON.parse(v);
-              if (
-                parsed &&
-                (parsed.id_number || parsed.idNumber || parsed.student_id)
-              ) {
-                id_number =
-                  parsed.id_number || parsed.idNumber || parsed.student_id;
-                break;
-              }
-            } catch (e) {}
-          }
-          if (!id_number) id_number = v;
-          if (id_number) break;
-        }
-
+      if (token && user?.idNumber) {
         const payload: any = {
           product_id: product.id,
           sizes: selectedSize,
           variation: selectedColor,
           quantity,
+          id_number: user.idNumber,
         };
-        if (id_number) payload.id_number = id_number;
 
         addToCartApi(payload).catch((e) =>
           console.error("addToCartApi failed", e)
@@ -201,6 +193,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     selectedCourse,
     quantity,
     disabled,
+    user,
   ]);
 
   const baseClass =
@@ -367,6 +360,26 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
       : ["White", "Purple"];
   const stockCount = currentProduct.stock ?? 0;
 
+  const getDisplayPrice = (): number => {
+    if (currentProduct.selectedSizes && selectedSize) {
+      const sizeConfig = currentProduct.selectedSizes[selectedSize];
+      if (sizeConfig?.custom && sizeConfig?.price) {
+        return parseFloat(sizeConfig.price);
+      }
+    }
+    return currentProduct.price;
+  };
+
+  const displayPrice = getDisplayPrice();
+
+  const now = new Date();
+  const startDate = currentProduct.start_date ? new Date(currentProduct.start_date) : null;
+  const endDate = currentProduct.end_date ? new Date(currentProduct.end_date) : null;
+  const isNotStarted = startDate ? now < startDate : false;
+  const isExpired = endDate ? now > endDate : false;
+  const isOutOfActiveWindow = isNotStarted || isExpired;
+  const purchaseDisabled = currentProduct.isSoldOut || isOutOfActiveWindow;
+
   return (
     <div className="animate-in fade-in slide-in-from-right-4 mx-auto mt-16 min-h-screen max-w-6xl bg-transparent p-4 font-sans duration-500 sm:mt-20 sm:p-6 lg:p-12">
       {/* Breadcrumbs / Back Button */}
@@ -412,8 +425,18 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
               {currentProduct.name}
             </h1>
             <p className="text-xl font-bold text-[#1c9dde] sm:text-2xl">
-              ₱ {currentProduct.price.toFixed(2)}
+              ₱ {displayPrice.toFixed(2)}
             </p>
+            {isNotStarted && (
+              <p className="mt-2 text-sm font-medium text-orange-600">
+                Available starting: {startDate?.toLocaleDateString()}
+              </p>
+            )}
+            {isExpired && (
+              <p className="mt-2 text-sm font-medium text-red-600">
+                This item is no longer available
+              </p>
+            )}
           </div>
 
           <div className="space-y-6 sm:space-y-10">
@@ -550,7 +573,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                 selectedSize={selectedSize}
                 selectedCourse={selectedCourse}
                 quantity={quantity}
-                disabled={currentProduct.isSoldOut}
+                disabled={purchaseDisabled}
               />
               <AddToCartButton
                 product={currentProduct}
@@ -558,7 +581,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                 selectedSize={selectedSize}
                 selectedCourse={selectedCourse}
                 quantity={quantity}
-                disabled={currentProduct.isSoldOut}
+                disabled={purchaseDisabled}
               />
             </div>
           </div>

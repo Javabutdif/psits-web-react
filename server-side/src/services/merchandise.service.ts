@@ -77,13 +77,13 @@ class MerchandiseService {
   ) => {
     const result = await Merch.updateOne(
       {
-        product_id,
+        _id: product_id,
         stocks: {
           $gte: quantity,
         },
       },
       {
-        $set: {
+        $inc: {
           stocks: -quantity,
         },
       }

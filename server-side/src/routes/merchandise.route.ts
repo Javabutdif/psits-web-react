@@ -2,17 +2,10 @@ import { Router, Request } from "express";
 import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
+import { merchandiseController } from "../controllers/merchandise.v2.controller";
 import {
-  createMerchandiseController,
-  retrieveActiveMerchandiseController,
-  retrieveSpecificMerchandiseController,
-  retrieveMerchAdminController,
-  deleteReportController,
-  updateMerchandiseController,
-  softDeleteMerchandiseController,
-  publishMerchandiseController,
-  retrieveActiveAndPublishMerchandiseController,
   retrieveReportController,
+  deleteReportController,
 } from "../controllers/merchandise.controller";
 import dotenv from "dotenv";
 import {
@@ -23,34 +16,41 @@ import {
 } from "../middlewares/authV2.middleware";
 const router = Router();
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "ap-southeast-1",
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
   },
 });
 
-const upload = multer({
-  storage: multerS3({
-    s3: s3Client,
-    bucket: process.env.AWS_BUCKET_NAME!,
-    metadata: (
-      req: Request,
-      file: Express.Multer.File,
-      cb: (error: any, metadata?: any) => void
-    ) => {
-      cb(null, { fieldName: file.fieldname });
-    },
-    key: (
-      req: Request,
-      file: Express.Multer.File,
-      cb: (error: any, key?: string) => void
-    ) => {
-      cb(null, `merchandise/${Date.now()}_${file.originalname}`);
-    },
-  }),
-});
+const getUpload = () => {
+  const bucket = process.env.R2_BUCKET_NAME;
+  if (!bucket) {
+    return multer();
+  }
+  return multer({
+    storage: multerS3({
+      s3: r2Client,
+      bucket: bucket,
+      metadata: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, metadata?: any) => void
+      ) => {
+        cb(null, { fieldName: file.fieldname });
+      },
+      key: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, key?: string) => void
+      ) => {
+        cb(null, `merchandise/${Date.now()}_${file.originalname}`);
+      },
+    }),
+  });
+};
 
 //Create Merchandise Route
 router.post(
@@ -58,35 +58,35 @@ router.post(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2(["admin", "finance"]),
-  upload.array("images", 3),
-  createMerchandiseController
+  getUpload().array("images", 3),
+  merchandiseController.create
 );
 //Retrieve All Active Merchandise
 router.get(
   "/retrieve",
   requireAccessTokenV2,
-  roleAuthenticateV2(["admin", "student"]),
-  retrieveActiveMerchandiseController
+  roleAuthenticateV2(["admin"]),
+  merchandiseController.retrieveActive
 );
 router.get(
   "/retrieve-publish-merchandise",
   requireAccessTokenV2,
-  roleAuthenticateV2(["admin", "student"]),
-  retrieveActiveAndPublishMerchandiseController
+  roleAuthenticateV2(["student"]),
+  merchandiseController.retrievePublished
 );
 //Retrieve Specific Merchandise
 router.get(
   "/retrieve/:id",
   requireAccessTokenV2,
-  roleAuthenticateV2(["admin", "student"]),
-  retrieveSpecificMerchandiseController
+  roleAuthenticateV2(["student"]),
+  merchandiseController.retrieveById
 );
 
 router.get(
   "/retrieve-admin",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  retrieveMerchAdminController
+  merchandiseController.retrieveAll
 );
 //Delete Report in Merchandise
 router.delete(
@@ -102,8 +102,8 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2(["admin", "finance"]),
-  upload.array("images", 3),
-  updateMerchandiseController
+  getUpload().array("images", 3),
+  merchandiseController.update
 );
 
 // DELETE merch by id (soft)
@@ -112,7 +112,7 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2(["admin", "finance"]),
-  softDeleteMerchandiseController
+  merchandiseController.softDelete
 );
 
 // Publish merch
@@ -121,7 +121,7 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2(["admin", "finance"]),
-  publishMerchandiseController
+  merchandiseController.publish
 );
 router.get(
   "/reports",

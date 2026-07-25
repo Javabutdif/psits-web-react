@@ -37,16 +37,23 @@ interface Product {
 
 // Transform API merchandise to display product
 const transformMerchandise = (item: MerchandiseItem): Product => {
+  let sizesFromSelectedSizes: string[] | undefined;
+
+  if (item.selectedSizes) {
+    const obj = item.selectedSizes as Record<string, unknown>;
+    if (typeof (obj as any).entries === "function") {
+      const mapEntries = Array.from((obj as any).entries() as IterableIterator<[string, unknown]>);
+      sizesFromSelectedSizes = mapEntries.map(([key]) => key);
+    } else {
+      sizesFromSelectedSizes = Object.keys(obj);
+    }
+  }
+
   // Backend uses 'name' field, but we also check 'product_name' for compatibility
   const productName = item.name || item.product_name || "Unknown Product";
 
   // Backend uses imageUrl array, get first image
   const productImage = item.imageUrl?.[0] || item.imageUrl1 || fallbackImage;
-
-  // Get sizes from selectedSizes map or sizes array
-  const sizes =
-    item.sizes ||
-    (item.selectedSizes ? Object.keys(item.selectedSizes) : undefined);
 
   // Get variations/colors
   const colors = item.colors || item.selectedVariations || item.variation;
@@ -59,7 +66,7 @@ const transformMerchandise = (item: MerchandiseItem): Product => {
     isSoldOut: (item.stocks ?? item.stock ?? 0) <= 0,
     category: item.category || "Merchandise",
     description: item.description,
-    sizes,
+    sizes: sizesFromSelectedSizes,
     colors,
     stock: item.stocks ?? item.stock,
   };

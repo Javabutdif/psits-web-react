@@ -134,4 +134,12 @@ router.post(
   orderV2Controller.processRefund
 );
 
+// Create order (student) — uses V2 service + JWT identity (V2)
+router.post(
+  "/v2/create",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["student"]),
+  orderV2Controller.createOrder
+);
+
 export default router;

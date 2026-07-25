@@ -106,13 +106,9 @@ class OrderController {
     const { promo_id, items } = req.body;
     const user = req.userV2;
     //Check user availability
-    const student = await studentService.getSpecific(user.idNumber);
-    const admin = await adminService.retrieveSpecific(user.idNumber);
+    const student = await studentService.getSpecific({ id_number: user.idNumber });
     if (!student) {
       throw new AppError("No student found!", 404);
-    }
-    if (!admin) {
-      throw new AppError("No admin found!", 404);
     }
     //Start to do transaction case in database
     const session = await mongoose.startSession();
@@ -186,7 +182,7 @@ class OrderController {
   approveOrder = async (req: Request, res: Response) => {
     const { order_id, cash } = req.body;
     const user = req.userV2;
-    console.log(order_id);
+    
     const admin = await adminService.retrieveSpecific(user.idNumber);
 
     if (!admin) {

@@ -123,8 +123,8 @@ const handleApiError = (error: unknown, showUserError = true): void => {
 export const makeOrder = async (formData: OrderFormData): Promise<boolean> => {
   try {
     const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/orders/student-order`,
-      formData,
+      `${backendConnection()}/api/orders/v2/create`,
+      { items: formData.items },
       { headers: createHeaders() }
     );
 
