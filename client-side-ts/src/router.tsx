@@ -22,6 +22,7 @@ import Students from "./pages/admin/Students";
 import Reports from "./pages/admin/Reports";
 import Orders from "./pages/admin/Orders";
 import Settings from "./pages/admin/Settings";
+import { PromoDashboard } from "./features/admin/promo";
 import SetNewPassword from "./pages/auth/SetNewPassword";
 import { ErrorPage } from "./pages/ErrorPage";
 import { Events } from "./pages/events";
@@ -139,6 +140,7 @@ const router = createBrowserRouter([
                   { path: "reports", Component: Reports },
                   { path: "orders", Component: Orders },
                   { path: "settings", Component: Settings },
+                  { path: "promo", Component: PromoDashboard },
                 ],
               },
               {

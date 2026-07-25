@@ -14,6 +14,7 @@ import {
   Settings,
   ShoppingBag,
   Users,
+  Tag,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -394,6 +395,38 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   {collapsed && (
                     <TooltipContent side="right">
                       <p>Reports</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass(
+                        "/admin/promo",
+                        !isUcMainAdmin
+                      )}
+                      asChild
+                    >
+                      <Link
+                        to={isUcMainAdmin ? "/admin/promo" : "#"}
+                        onClick={(e) => {
+                          if (!isUcMainAdmin) {
+                            e.preventDefault();
+                            showToast("error", "Unauthorized.");
+                          }
+                        }}
+                      >
+                        <Tag className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>Promo</span>}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>Promo</p>
                     </TooltipContent>
                   )}
                 </Tooltip>
