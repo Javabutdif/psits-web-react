@@ -24,6 +24,11 @@ router.post(
   ...authChain,
   devtoolsController.resendSingleEmail
 );
+router.get(
+  "/email-export",
+  ...authChain,
+  devtoolsController.exportEmailQueueCsv
+);
 
 // Health
 router.get("/health", ...authChain, devtoolsController.getHealth);
@@ -76,6 +81,39 @@ router.post(
   "/test-endpoint",
   ...sessionAuthChain,
   devtoolsController.testEndpoint
+);
+
+// Cron monitor
+router.get(
+  "/cron-status",
+  ...authChain,
+  devtoolsController.getCronStatus
+);
+
+// Env inspector
+router.get(
+  "/env-status",
+  ...authChain,
+  devtoolsController.getEnvStatus
+);
+
+// Rate limiter
+router.get(
+  "/rate-limit-stats",
+  ...authChain,
+  devtoolsController.getRateLimitStats
+);
+
+// DB performance
+router.get(
+  "/db-performance",
+  ...authChain,
+  devtoolsController.getDbPerformance
+);
+router.post(
+  "/db/rebuild-indexes",
+  ...sessionAuthChain,
+  devtoolsController.rebuildDbIndexes
 );
 
 export default router;

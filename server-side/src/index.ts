@@ -9,6 +9,7 @@ import express from "express";
 
 import { checkPromos } from "./custom_function/check_promo";
 import { resendPendingEmails } from "./services/email.resend.service";
+import { logCronExecution } from "./services/devtools.service";
 import devtoolsRoutes from "./routes/devtools.v2.route";
 import { orderService } from "./services/order.service";
 import adminRoutes from "./routes/admin.route";
@@ -106,20 +107,84 @@ async function startServer() {
       console.log(`Server started, listening at port ${port}`);
     });
 
-    cron.schedule("0 0 * * *", async () => {
+    const promoJob = cron.schedule("0 0 * * *", async () => {
       console.log("Running daily promo check...");
-      await checkPromos();
+      const startedAt = new Date();
+      try {
+        await checkPromos();
+        await logCronExecution({
+          jobName: "promo-check",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: true,
+        });
+      } catch (err: any) {
+        await logCronExecution({
+          jobName: "promo-check",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: false,
+          errorMessage: err.message,
+        });
+      }
     });
 
-    cron.schedule("0 1 * * *", async () => {
+    const emailJob = cron.schedule("0 1 * * *", async () => {
       console.log("[1AM PH] Running daily email resend job...");
-      await resendPendingEmails();
+      const startedAt = new Date();
+      try {
+        await resendPendingEmails();
+        await logCronExecution({
+          jobName: "email-resend",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: true,
+        });
+      } catch (err: any) {
+        await logCronExecution({
+          jobName: "email-resend",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: false,
+          errorMessage: err.message,
+        });
+      }
     }, { timezone: "Asia/Manila" });
 
-    cron.schedule("0 0 1 * *", async () => {
+    const orderJob = cron.schedule("0 0 1 * *", async () => {
       console.log("[Monthly 1st] Running expired orders cleanup...");
-      const result = await orderService.cancelExpiredOrders();
-      console.log(`[Monthly] Cancelled ${result.cancelledCount} orders, restored ${result.restoredItems} items`);
+      const startedAt = new Date();
+      try {
+        const result = await orderService.cancelExpiredOrders();
+        console.log(`[Monthly] Cancelled ${result.cancelledCount} orders, restored ${result.restoredItems} items`);
+        await logCronExecution({
+          jobName: "cancel-expired-orders",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: true,
+          metadata: { cancelledCount: result.cancelledCount, restoredItems: result.restoredItems },
+        });
+      } catch (err: any) {
+        await logCronExecution({
+          jobName: "cancel-expired-orders",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: false,
+          errorMessage: err.message,
+        });
+      }
     }, { timezone: "Asia/Manila" });
   } catch (error) {
     console.error("Startup failed:", error);

@@ -2,10 +2,16 @@ import { Request, Response } from "express";
 import { catchAsync } from "../util/catch.async.util";
 import {
   getEmailQueueEntries,
+  getEmailQueueCount,
   resendSingleEmail,
   getHealthStats,
   getDatabaseCounts,
   checkMongoConnection,
+  getCronExecutionLogs,
+  getEnvStatus,
+  getRateLimitStats as getRateLimitStatsService,
+  getCollectionStats,
+  rebuildIndexes,
 } from "../services/devtools.service";
 import { emailService } from "../services/email.service";
 import { resendPendingEmails } from "../services/email.resend.service";
@@ -20,12 +26,47 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
+    const { status, subtype, limit, skip } = req.query;
+    const entries = await getEmailQueueEntries({
+      status: status as string,
+      subtype: subtype as string,
+      limit: limit ? parseInt(limit as string) : 100,
+      skip: skip ? parseInt(skip as string) : 0,
+    });
+    const total = await getEmailQueueCount({
+      status: status as string,
+      subtype: subtype as string,
+    });
+    res.status(200).json({ data: entries, total });
+  });
+
+  exportEmailQueueCsv = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
     const { status, subtype } = req.query;
     const entries = await getEmailQueueEntries({
       status: status as string,
       subtype: subtype as string,
+      limit: 10000,
+      skip: 0,
     });
-    res.status(200).json({ data: entries });
+
+    const headers = ["id", "type", "subtype", "email", "status", "referenceCode", "retryCount", "timestamp"];
+    const csvRows = [headers.join(",")];
+
+    for (const entry of entries) {
+      const row = headers.map((h) => {
+        const val = (entry as any)[h];
+        const str = val === undefined || val === null ? "" : String(val);
+        return str.includes(",") || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+      });
+      csvRows.push(row.join(","));
+    }
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename=email-queue-${new Date().toISOString().split("T")[0]}.csv`);
+    res.status(200).send(csvRows.join("\n"));
   });
 
   resendSingleEmail = catchAsync(async (req: Request, res: Response) => {
@@ -56,31 +97,45 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const { admin_model } = await import("../model_template/model_data");
+    const { role, campus } = req.query;
+
     const admins = await require("../models/admin.model").Admin.find({
       currentRefreshToken: { $exists: true, $ne: null },
     }).lean();
+
     const students = await require("../models/student.model").Student.find({
       currentRefreshToken: { $exists: true, $ne: null },
     }).lean();
 
-    const sessions = [
-      ...admins.map((a: any) => ({
-        id: a._id.toString(),
-        name: a.name,
-        idNumber: a.id_number,
-        role: "admin",
-        campus: a.campus,
-        position: a.position,
-      })),
-      ...students.map((s: any) => ({
-        id: s._id.toString(),
-        name: `${s.first_name} ${s.last_name}`,
-        idNumber: s.id_number,
-        role: "student",
-        campus: s.campus,
-      })),
-    ];
+    let adminList = admins.map((a: any) => ({
+      id: a._id.toString(),
+      name: a.name,
+      idNumber: a.id_number,
+      role: "admin",
+      campus: a.campus,
+      position: a.position,
+    }));
+
+    let studentList = students.map((s: any) => ({
+      id: s._id.toString(),
+      name: `${s.first_name} ${s.last_name}`,
+      idNumber: s.id_number,
+      role: "student",
+      campus: s.campus,
+    }));
+
+    if (role === "admin") {
+      adminList = adminList.filter((a: any) => !campus || a.campus === campus);
+    } else if (role === "student") {
+      studentList = studentList.filter((s: any) => !campus || s.campus === campus);
+    } else {
+      if (campus) {
+        adminList = adminList.filter((a: any) => a.campus === campus);
+        studentList = studentList.filter((s: any) => s.campus === campus);
+      }
+    }
+
+    const sessions = [...adminList, ...studentList];
 
     res.status(200).json({ data: sessions });
   });
@@ -177,6 +232,50 @@ class DevToolsController {
       message: `${result.cancelledCount} expired order(s) cancelled`,
       data: result,
     });
+  });
+
+  getCronStatus = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { jobName } = req.query;
+    const logs = await getCronExecutionLogs(
+      jobName as string | undefined,
+      parseInt((req.query.limit as string) || "20")
+    );
+    res.status(200).json({ data: logs });
+  });
+
+  getEnvStatus = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const status = getEnvStatus();
+    res.status(200).json({ data: status });
+  });
+
+  getRateLimitStats = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const stats = getRateLimitStatsService();
+    res.status(200).json({ data: stats });
+  });
+
+  getDbPerformance = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const stats = await getCollectionStats();
+    res.status(200).json({ data: stats });
+  });
+
+  rebuildDbIndexes = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const result = await rebuildIndexes();
+    res.status(200).json({ message: result.message, data: result.collections });
   });
 
   testEndpoint = catchAsync(async (req: Request, res: Response) => {

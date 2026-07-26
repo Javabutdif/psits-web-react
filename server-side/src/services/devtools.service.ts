@@ -9,9 +9,30 @@ import ejs from "ejs";
 import path from "path";
 import fs from "fs/promises";
 import os from "os";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 export const getEmailQueueEntries = async ({
+  status,
+  subtype,
+  limit = 100,
+  skip = 0,
+}: {
+  status?: string;
+  subtype?: string;
+  limit?: number;
+  skip?: number;
+} = {}) => {
+  const query: Record<string, unknown> = {};
+  if (status) query.status = status;
+  if (subtype) query.subtype = subtype;
+
+  return await EmailQueue.find(query)
+    .sort({ timestamp: -1 })
+    .skip(skip)
+    .limit(limit);
+};
+
+export const getEmailQueueCount = async ({
   status,
   subtype,
 }: {
@@ -22,7 +43,7 @@ export const getEmailQueueEntries = async ({
   if (status) query.status = status;
   if (subtype) query.subtype = subtype;
 
-  return await EmailQueue.find(query).sort({ timestamp: -1 }).limit(100);
+  return await EmailQueue.countDocuments(query);
 };
 
 export const resendSingleEmail = async (id: string) => {
@@ -172,4 +193,188 @@ export const checkMongoConnection = async (): Promise<boolean> => {
   } catch {
     return false;
   }
+};
+
+const cronExecutionLogCache: { data: any[]; timestamp: number } | null = null;
+
+export const getCronExecutionLogs = async (jobName?: string, limit = 20) => {
+  const { CronExecutionLog } = await import("../models/cronExecutionLog.model");
+  const query: Record<string, unknown> = {};
+  if (jobName) query.jobName = jobName;
+
+  return await CronExecutionLog.find(query)
+    .sort({ startedAt: -1 })
+    .limit(limit)
+    .lean();
+};
+
+export const logCronExecution = async (data: {
+  jobName: string;
+  scheduledAt: Date;
+  startedAt: Date;
+  completedAt?: Date;
+  durationMs?: number;
+  success: boolean;
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+}) => {
+  const { CronExecutionLog } = await import("../models/cronExecutionLog.model");
+  await new CronExecutionLog({
+    ...data,
+    createdAt: new Date(),
+  }).save();
+};
+
+export const getEnvStatus = () => {
+  const vars = [
+    { key: "EMAIL", value: process.env.EMAIL, secret: false },
+    { key: "RESEND_API_KEY", value: process.env.RESEND_API_KEY, secret: true },
+    { key: "BASE_URL", value: process.env.BASE_URL, secret: false },
+    { key: "MONGO_URI", value: process.env.MONGO_URI, secret: true },
+    { key: "R2_BUCKET_NAME", value: process.env.R2_BUCKET_NAME, secret: false },
+    { key: "R2_ACCOUNT_ID", value: process.env.R2_ACCOUNT_ID, secret: false },
+    { key: "AWS_BUCKET_NAME", value: process.env.AWS_BUCKET_NAME, secret: false },
+    { key: "AWS_REGION", value: process.env.AWS_REGION, secret: false },
+  ];
+
+  return vars.map((v) => ({
+    key: v.key,
+    configured: !!v.value,
+    value: v.secret ? "****" : v.value || null,
+  }));
+};
+
+const rateLimitBlockedCounters: { count: number; day: string } = { count: 0, day: "" };
+
+export const getRateLimitStats = () => {
+  const today = new Date().toISOString().split("T")[0];
+  if (rateLimitBlockedCounters.day !== today) {
+    rateLimitBlockedCounters.count = 0;
+    rateLimitBlockedCounters.day = today;
+  }
+
+  return {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: process.env.NODE_ENV !== "production" ? 100 : 20,
+    blockedToday: rateLimitBlockedCounters.count,
+  };
+};
+
+export const incrementRateLimitBlocked = () => {
+  const today = new Date().toISOString().split("T")[0];
+  if (rateLimitBlockedCounters.day !== today) {
+    rateLimitBlockedCounters.count = 0;
+    rateLimitBlockedCounters.day = today;
+  }
+  rateLimitBlockedCounters.count++;
+};
+
+interface CollectionStat {
+  name: string;
+  docs: number;
+  avgObjSize: number;
+  storageSize: number;
+  indexes: number;
+  warning?: string;
+}
+
+let dbPerfCacheData: CollectionStat[] | null = null;
+let dbPerfCacheTime = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+const collectionIndexMap: Record<string, string[]> = {
+  Orders: ["order_status", "order_date"],
+  EmailQueue: ["status", "type"],
+  Merch: ["is_active"],
+  Admin: ["currentRefreshToken"],
+  Student: ["currentRefreshToken"],
+};
+
+export const getCollectionStats = async (): Promise<CollectionStat[]> => {
+  if (dbPerfCacheData && Date.now() - dbPerfCacheTime < CACHE_TTL_MS) {
+    return dbPerfCacheData;
+  }
+
+  const db = mongoose.connection.db;
+  if (!db) return [];
+
+  const collections = await db.listCollections().toArray();
+  const stats: CollectionStat[] = [];
+
+  for (const coll of collections) {
+    const name = coll.name;
+    if (name.startsWith("system.")) continue;
+
+    try {
+      const model = mongoose.model(name);
+      const docCount = await model.countDocuments();
+
+      let info: any;
+      try {
+        info = await (db as any).collection(name).stats();
+      } catch {
+        info = { avgObjSize: 0, storageSize: 0 };
+      }
+
+      const expectedIndexes = collectionIndexMap[name] || [];
+      let warning: string | undefined;
+
+      if (expectedIndexes.length > 0) {
+        try {
+          const indexes = await (model.collection as any).indexes();
+          const indexedFields = indexes.flatMap((idx: any) =>
+            Object.keys(idx.key).filter((f: string) => expectedIndexes.includes(f))
+          );
+          const missing = expectedIndexes.filter((f: string) => !indexedFields.includes(f));
+          if (missing.length > 0) {
+            warning = `Missing indexes on: ${missing.join(", ")}`;
+          }
+        } catch {
+          // Skip index check if unavailable
+        }
+      }
+
+      stats.push({
+        name,
+        docs: docCount,
+        avgObjSize: Math.round(info.avgObjSize || 0),
+        storageSize: Math.round((info.storageSize || 0) / 1024),
+        indexes: 0,
+        warning,
+      });
+    } catch {
+      // Skip collections that can't be accessed
+    }
+  }
+
+  dbPerfCacheData = stats.map((s) => ({ ...s, indexes: s.indexes || 0 }));
+  dbPerfCacheTime = Date.now();
+
+  return dbPerfCacheData;
+};
+
+export const rebuildIndexes = async (): Promise<{
+  message: string;
+  collections: string[];
+}> => {
+  const collectionsToRebuild = ["Orders", "EmailQueue", "Merch", "Admin", "Student"];
+  const rebuilt: string[] = [];
+
+  for (const collName of collectionsToRebuild) {
+    try {
+      const model = mongoose.model(collName);
+      await (model.collection as any).reIndex();
+      rebuilt.push(collName);
+    } catch {
+      // Skip failed rebuilds
+    }
+  }
+
+  dbPerfCacheTime = 0;
+  dbPerfCacheData = null;
+
+  return {
+    message: `Rebuilt indexes on ${rebuilt.length} collection(s)`,
+    collections: rebuilt,
+  };
 };
