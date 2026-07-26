@@ -10,6 +10,7 @@ import { IOrderReceipt } from "../mail_template/mail.interface";
 import { orderSearch } from "../utils/search.pending.orders";
 import { orderSort, ISort } from "../utils/sort.pending.orders";
 import { Promo } from "../models/promo.model";
+import { PromoUsage } from "../models/promo.usage.model";
 //Initialize
 import mongoose, { Types } from "mongoose";
 import dotenv from "dotenv";
@@ -46,11 +47,22 @@ export const getSpecificOrdersController = async (
   req: Request,
   res: Response
 ) => {
-  const { id_number } = req.query;
+  const claims = req.userV2;
+  let id_number: string | undefined;
+
+  if (claims.role === "admin") {
+    id_number = (req.query.id_number as string) || claims.idNumber;
+  } else {
+    id_number = claims.idNumber;
+  }
+
+  if (!id_number) {
+    return res.status(400).json({ message: "Missing id_number" });
+  }
 
   try {
     const orders: IOrders[] = await Orders.find({
-      id_number: id_number,
+      id_number,
     }).sort({ order_date: -1 });
     if (orders.length > 0) {
       res.status(200).json(orders);
@@ -227,6 +239,12 @@ export const studentAndAdminOrderController = async (
 
     let finalMembershipDiscount = false;
     let promo;
+    const promoUsageRecords: {
+      promo_id: Types.ObjectId;
+      merch_id: Types.ObjectId;
+      id_number: string;
+      promo_used: Date;
+    }[] = [];
     for (let item of itemsArray) {
       const productId = new Types.ObjectId(item.product_id);
 
@@ -292,23 +310,13 @@ export const studentAndAdminOrderController = async (
               .status(404)
               .json({ message: `Promo Code out of Stocks` });
           }
-          await Promo.updateOne(
-            {
-              promo_name,
-              "selected_merchandise._id": item.product_id,
-              "selected_merchandise.items.id_number": { $ne: both.id_number },
-            },
-            {
-              $push: {
-                "selected_merchandise.$.items": {
-                  id_number: both.id_number,
-                  promo_used: new Date(),
-                },
-              },
-              $inc: { quantity: -1 },
-            }
-          );
           orderTotal = orderTotal - orderTotal * (promo.discount / 100);
+          promoUsageRecords.push({
+            promo_id: promo._id as Types.ObjectId,
+            merch_id: productId,
+            id_number: both.id_number,
+            promo_used: new Date(),
+          });
         }
       }
       const processedItem = {
@@ -351,6 +359,15 @@ export const studentAndAdminOrderController = async (
 
     const newOrder = new Orders(finalOrder);
     await newOrder.save({ session });
+
+    if (promoUsageRecords.length > 0) {
+      const orderId = newOrder._id as Types.ObjectId;
+      const promoUsages = promoUsageRecords.map((usage) => ({
+        ...usage,
+        order_id: orderId,
+      }));
+      await PromoUsage.create(promoUsages, { session });
+    }
 
     for (let i = 0; i < itemsArray.length; i++) {
       const item = itemsArray[i];
@@ -439,19 +456,22 @@ export const cancelOrderController = async (req: Request, res: Response) => {
       }
 
       const newStocks = merch.stocks + item.quantity;
-      if (order.promo.promo_discount) {
+      if (order.promo && order.promo.promo_discount) {
+        await PromoUsage.deleteOne({
+          promo_id: order.promo._id,
+          order_id: order._id,
+          merch_id: merchId,
+          id_number: order.id_number,
+        }).session(session);
+
         await Promo.updateOne(
           {
-            promo_name: order.promo.promo_name,
-            "selected_merchandise._id": item.product_id,
+            _id: order.promo._id,
           },
           {
-            $pull: {
-              "selected_merchandise.$.items": { id_number: order.id_number },
-            },
             $inc: { quantity: 1 },
           }
-        );
+        ).session(session);
       }
 
       await Merch.updateOne(
@@ -688,7 +708,7 @@ export const approveOrderController = async (req: Request, res: Response) => {
         }
       }
 
-      const data: IOrderReceipt = {
+      const data: any = {
         reference_code: successfulOrder.reference_code,
         transaction_date: format(
           new Date(successfulOrder.transaction_date),

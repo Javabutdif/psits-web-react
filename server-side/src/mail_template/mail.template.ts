@@ -1,6 +1,7 @@
 import ejs from "ejs";
 import path from "path";
-import nodemailer from "nodemailer";
+import fs from "fs/promises";
+import { Resend } from "resend";
 import {
   IMembershipRequest,
   IOrderReceipt,
@@ -12,84 +13,139 @@ import {
 import dotenv from "dotenv";
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD_APP_EMAIL,
-  },
-});
+import { emailService } from "../services/email.service";
+
+const getResendClient = () => {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not configured");
+  }
+
+  return new Resend(apiKey);
+};
+
+type SendEmailOptions = {
+  to: string;
+  subject: string;
+  html: string;
+  attachments?: Array<{
+    filename?: string;
+    path?: string;
+    content?: string | Buffer;
+    contentType?: string;
+    contentId?: string;
+  }>;
+};
+
+const sendEmail = async ({
+  to,
+  subject,
+  html,
+  attachments,
+}: SendEmailOptions) => {
+  const from = process.env.EMAIL;
+
+  if (!from) {
+    throw new Error("EMAIL is not configured");
+  }
+
+  const resend = getResendClient();
+
+  const { error } = await resend.emails.send({
+    from,
+    to,
+    subject,
+    html,
+    attachments,
+  });
+
+  if (error) {
+    throw new Error(`Error sending email: ${error.message}`);
+  }
+};
 
 export const membershipRequestReceipt = async (
   data: IMembershipRequest,
-  studenteEmail: string
+  studenteEmail: string,
+  studentId?: any,
+  referenceCode?: string
 ) => {
+  if (!studenteEmail || !studentId || !referenceCode) {
+    return;
+  }
+
   const emailTemplate = await ejs.renderFile(
     path.join(__dirname, "../assets/appr-membership-receipt.ejs"),
     data
   );
 
-  const mailOptions = {
-    from: process.env.EMAIL,
-    to: studenteEmail,
-    subject: "Your Receipt from PSITS - UC Main",
-    html: emailTemplate,
-    attachments: [
-      {
-        filename: "psits.jpg",
-        path: path.join(__dirname, "../assets/psits.jpg"),
-        cid: "logo",
-      },
-    ],
-  };
+  const logoPath = path.join(__dirname, "../assets/psits.jpg");
+  const logoBuffer = await fs.readFile(logoPath);
 
-  // Send the email
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error("Error sending email:", error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-  });
+  try {
+    let queueEntry: any;
+    queueEntry = await emailService.createByEmail("receipt", studenteEmail, "membership", referenceCode);
+
+    await sendEmail({
+      to: studenteEmail,
+      subject: "Your Receipt from PSITS - UC Main",
+      html: emailTemplate,
+      attachments: [
+        {
+          filename: "psits.jpg",
+          content: logoBuffer,
+          contentType: "image/jpeg",
+          contentId: "logo",
+        },
+      ],
+    });
+
+    await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+  } catch (err: any) {
+    console.error("Failed to send membership request receipt email:", err.message);
+  }
 };
 
 export const orderReceipt = async (
   data: IOrderReceipt,
-  studentEmail: string
+  studentEmail: string,
+  studentId?: any,
+  referenceCode?: string
 ) => {
+  if (!studentEmail || !studentId || !referenceCode) {
+    return;
+  }
+
   const emailTemplate = await ejs.renderFile(
     path.join(__dirname, "../assets/appr-order-receipt.ejs"),
     data
   );
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD_APP_EMAIL,
-    },
-  });
+  const logoPath = path.join(__dirname, "../assets/psits.jpg");
+  const logoBuffer = await fs.readFile(logoPath);
 
-  const mailOptions = {
-    from: process.env.EMAIL,
-    to: studentEmail,
-    subject: "Your Order Receipt from PSITS - UC Main",
-    html: emailTemplate,
-    attachments: [
-      {
-        filename: "psits.jpg",
-        path: path.join(__dirname, "../assets/psits.jpg"),
-        cid: "logo",
-      },
-    ],
-  };
+  try {
+    let queueEntry: any;
+    queueEntry = await emailService.createByEmail("receipt", studentEmail, "order", referenceCode);
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error("Error sending email:", error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-  });
+    await sendEmail({
+      to: studentEmail,
+      subject: "Your Order Receipt from PSITS - UC Main",
+      html: emailTemplate,
+      attachments: [
+        {
+          filename: "psits.jpg",
+          content: logoBuffer,
+          contentType: "image/jpeg",
+          contentId: "logo",
+        },
+      ],
+    });
+
+    await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+  } catch (err: any) {
+    console.error("Failed to send order receipt email:", err.message);
+  }
 };
 
 export const attendeeRegistrationMail = async (data: {
@@ -100,8 +156,7 @@ export const attendeeRegistrationMail = async (data: {
   studentId: string;
   password: string;
 }): Promise<void> => {
-  const mailOptions = {
-    from: process.env.EMAIL,
+  await sendEmail({
     to: data.studentEmail,
     subject: `PSITS - Event Registration Confirmation`,
     html: `
@@ -127,9 +182,7 @@ export const attendeeRegistrationMail = async (data: {
         <p style="color: #555; font-size: 16px;">The PSITS Team</p>
       </div>
     `,
-  };
-
-  await transporter.sendMail(mailOptions);
+  });
 };
 
 export const forgotPasswordMail = async (
@@ -137,8 +190,7 @@ export const forgotPasswordMail = async (
   url: string,
   token: string
 ) => {
-  const mailOptions = {
-    from: process.env.EMAIL,
+  await sendEmail({
     to: studentMail,
     subject: "Reset Your Password",
     html: `
@@ -168,16 +220,9 @@ export const forgotPasswordMail = async (
               <p style="color: #555; font-size: 16px;">The Support Team</p>
             </div>
           `,
-  };
-
-  transporter.sendMail(mailOptions, (err, info) => {
-    if (err) {
-      console.error("Error sending email:", err.message);
-      return { status: false, message: "Error sending email" };
-    }
-    console.log("Success sent email for ", studentMail);
-    return { status: true, message: "Email Sent" };
   });
+
+  return { status: true, message: "Email Sent" };
 };
 
 /**
@@ -207,8 +252,7 @@ export const certificateOfParticipationEmail = async (
 
     const fileName = `${parsedData.student_name}-CERT.pdf`.toUpperCase();
 
-    const mailOptions = {
-      from: process.env.EMAIL,
+    await sendEmail({
       to: studentEmail,
       subject: `Congratulations for Attending ${parsedData.event_name}!`,
       html: emailTemplate,
@@ -219,21 +263,12 @@ export const certificateOfParticipationEmail = async (
           contentType: "application/pdf",
         },
       ],
-    };
-
-    return new Promise((resolve, reject) => {
-      transporter.sendMail(mailOptions, (err, info) => {
-        if (err) {
-          console.error("Error sending email:", err.message);
-          resolve({ status: false, message: "Error sending email" });
-        } else {
-          resolve({
-            status: true,
-            message: `Cert of participation for ${parsedData.student_name} Sent`,
-          });
-        }
-      });
     });
+
+    return {
+      status: true,
+      message: `Cert of participation for ${parsedData.student_name} Sent`,
+    };
   } catch (err: any) {
     console.error(
       "Unexpected errors when attempting to send/process certificate email: ",

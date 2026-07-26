@@ -188,6 +188,51 @@ interface DailySalesData {
   totalSubtotal: number;
 }
 
+interface MerchandiseReportOrderDetail {
+  _id: string;
+  product_id: string;
+  reference_code: string;
+  student_name: string;
+  id_number: string;
+  course: string;
+  year: string | number;
+  product_name: string;
+  batch?: string;
+  size?: string | string[];
+  variation?: string | string[];
+  quantity: number;
+  total: number;
+  transaction_date: string;
+  rfid?: string;
+}
+
+export interface MerchandiseReportsResult {
+  data: MerchandiseReportOrderDetail[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  message?: string;
+  summary: { unitsSold: number; totalRevenue: number };
+  productNames: string[];
+}
+
+export interface MerchandiseReportsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  referenceCode?: string;
+  studentId?: string;
+  name?: string;
+  course?: string;
+  year?: string;
+  productName?: string;
+  size?: string;
+  color?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
 type DailySalesResponse = DailySalesData[] | { data: DailySalesData[] };
 
 interface DashboardPaidOrder {
@@ -220,13 +265,14 @@ interface Officer extends Member {
   position: string;
   department?: string;
   isSuspended?: boolean;
-  access?: string | string[];
+  access?: string;
   password?: string;
   confirm_password?: string;
 }
 
 interface AdminLog {
   _id: string;
+  admin: string;
   admin_id: string;
   action: string;
   target?: string;
@@ -292,9 +338,6 @@ interface AdminRequest extends Member {
   createdAt: string;
 }
 
-interface MembershipPriceData {
-  membership_price: number;
-}
 
 interface MembershipApprovalPayload {
   reference_code: string;
@@ -590,6 +633,49 @@ export const deleteMerchandise = async (
   }
 };
 
+export const merchandiseReports = async ({
+  page = 1,
+  limit = 10,
+  search,
+  referenceCode,
+  studentId,
+  name,
+  course,
+  year,
+  productName,
+  size,
+  color,
+  dateFrom,
+  dateTo,
+}: MerchandiseReportsParams = {}): Promise<MerchandiseReportsResult | void> => {
+  try {
+    const response: AxiosResponse<MerchandiseReportsResult> = await axios.get(
+      `${backendConnection()}/api/reports`,
+      {
+        headers: createHeaders(),
+        params: {
+          page,
+          limit,
+          search,
+          referenceCode,
+          studentId,
+          name,
+          course,
+          year,
+          productName,
+          size,
+          color,
+          dateFrom,
+          dateTo,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    handleApiError(error, false);
+  }
+};
+
 export const publishMerchandise = async (
   _id: string
 ): Promise<boolean | void> => {
@@ -765,21 +851,20 @@ export const getPromoLogs = async (): Promise<PromoLogItem[] | void> => {
   }
 };
 
-export const getDashboardStats = async (): Promise<
-  DashboardStatsResponse | void
-> => {
-  try {
-    const response: AxiosResponse<DashboardStatsResponse> = await axios.get(
-      `${backendConnection()}/api/admin/dashboard-stats`,
-      {
-        headers: createHeaders(),
-      }
-    );
-    return response.data;
-  } catch (error) {
-    handleApiError(error, false);
-  }
-};
+export const getDashboardStats =
+  async (): Promise<DashboardStatsResponse | void> => {
+    try {
+      const response: AxiosResponse<DashboardStatsResponse> = await axios.get(
+        `${backendConnection()}/api/admin/dashboard-stats`,
+        {
+          headers: createHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      handleApiError(error, false);
+    }
+  };
 
 export const getDailySales = async (): Promise<DailySalesData[] | void> => {
   try {
@@ -859,12 +944,13 @@ export const getAllMembers = async (): Promise<Member[] | void> => {
   }
 };
 
-export const getAllOfficers = async (): Promise<Officer[] | void> => {
+export const getAllOfficers = async (roleFilter?: string): Promise<Officer[] | void> => {
   try {
     const response: AxiosResponse<{ data: Officer[] }> = await axios.get(
       `${backendConnection()}/api/admin/get-all-officers`,
       {
         headers: createHeaders(),
+        params: roleFilter && roleFilter !== "all" ? { role_filter: roleFilter } : {},
       }
     );
     return response.status === 200 ? response.data.data : [];
@@ -1183,39 +1269,6 @@ export const getStudentMembershipHistory = async (
     return response.data.data;
   } catch (error) {
     handleApiError(error, false);
-  }
-};
-
-export const membershipPrice = async (): Promise<number | false> => {
-  try {
-    const response: AxiosResponse<{ data: MembershipPriceData }> =
-      await axios.get(`${backendConnection()}/api/admin/get-membership-price`, {
-        headers: createHeaders(),
-      });
-    return response.status === 200
-      ? response.data.data.membership_price
-      : false;
-  } catch {
-    return false;
-  }
-};
-
-export const changeMembershipPrice = async (
-  price: string | number
-): Promise<boolean> => {
-  const newPriceFormData = new FormData();
-  newPriceFormData.set("price", String(price));
-  try {
-    const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/admin/change-membership-price`,
-      newPriceFormData,
-      { headers: createHeaders() }
-    );
-    if (response.status === 200) showToast("success", response.data.message);
-    return response.status === 200;
-  } catch (error) {
-    handleApiError(error);
-    return false;
   }
 };
 

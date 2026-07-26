@@ -765,5 +765,3 @@ export const tutorials = {
     },
   ],
 };
-
-

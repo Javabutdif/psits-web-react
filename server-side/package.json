@@ -7,7 +7,8 @@
     "build": "tsc && npm run copy-assets",
     "copy-assets": "node -e \"const fs=require('fs'); fs.cpSync('src/assets','dist/assets',{recursive:true}); \"",
     "start": "node dist/index.js",
-    "migrate:old-enums": "ts-node src/scripts/migrate-old-enums.ts"
+    "migrate:old-enums": "ts-node src/scripts/migrate-old-enums.ts",
+    "migrate:merch-order-details": "ts-node src/scripts/migrate-merch-order-details-to-report.ts"
   },
   "keywords": [],
   "author": "",
@@ -38,6 +39,7 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.1",
     "puppeteer": "^24.42.0",
+    "resend": "^6.18.0",
     "sharp": "^0.33.5",
     "zod": "^4.3.6"
   },
@@ -49,6 +51,7 @@
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.23.1",
     "typescript": "^5.9.2"
   }
 }

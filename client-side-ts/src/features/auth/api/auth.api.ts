@@ -18,33 +18,9 @@ const authAxios = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-type LegacyLoginResponse = {
-  role: string;
-  campus: string;
-  token: string;
-  message: string;
-};
-
 const extractAccessToken = (data: Record<string, unknown>): string | null => {
   const token = data.accessToken ?? data.token;
   return typeof token === "string" && token.length > 0 ? token : null;
-};
-
-const syncLegacySessionToken = async (payload: LoginPayload): Promise<void> => {
-  try {
-    const { data } = await authAxios.post<LegacyLoginResponse>(
-      "/api/login",
-      payload
-    );
-
-    const legacyToken = extractAccessToken(data as Record<string, unknown>);
-    console.log("Legacy login response:", data);
-    if (legacyToken) {
-      sessionStorage.setItem("Token", legacyToken);
-    }
-  } catch {
-    // Legacy sync is best-effort; don't block login if it fails
-  }
 };
 
 /**
@@ -68,13 +44,6 @@ export const loginUser = async (
 
   setAccessToken(accessToken);
   sessionStorage.setItem("Token", accessToken);
-  try {
-    await syncLegacySessionToken(payload);
-  } catch (error) {
-    clearAccessToken();
-    sessionStorage.removeItem("Token");
-    throw error;
-  }
 
   return data;
 };

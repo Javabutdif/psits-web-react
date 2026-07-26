@@ -1,19 +1,7 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
-import { IPromo, ISelectMerchandise, IItemsAvail } from "./promo.interface";
+import mongoose, { Schema, Document } from "mongoose";
+import { IPromo, ISelectMerchandise } from "./promo.interface";
 
 export interface IPromoDocument extends IPromo, Document {}
-
-const ItemsAvailSchema = new Schema<IItemsAvail>({
-  id_number: {
-    type: String,
-    ref: "Student",
-    required: true,
-  },
-  promo_used: {
-    type: Date,
-    default: new Date(),
-  },
-});
 
 const SelectMerchandiseSchema = new Schema<ISelectMerchandise>(
   {
@@ -26,7 +14,6 @@ const SelectMerchandiseSchema = new Schema<ISelectMerchandise>(
       type: String,
       required: true,
     },
-    items: [ItemsAvailSchema],
   },
   { _id: false }
 );
@@ -50,6 +37,14 @@ const promoSchema = new Schema<IPromoDocument>({
   },
   selected_audience: [String],
   selected_specific_students: [String],
+  selected_categories: {
+    type: [String],
+    default: [],
+  },
+  promo_scope: {
+    type: String,
+    default: "merchandise",
+  },
   discount: {
     type: Number,
     required: true,

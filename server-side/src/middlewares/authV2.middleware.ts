@@ -62,7 +62,7 @@ import { account_status } from "../enums/status.enums";
 declare global {
   namespace Express {
     interface Request {
-      userV2?: AccessTokenClaims;
+      userV2: AccessTokenClaims;
     }
   }
 }

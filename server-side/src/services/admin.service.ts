@@ -68,15 +68,16 @@ class AdminService {
   //Get all admin accounts , used in Settings and AllOfficers.jsx
   getAll = async (req: any) => {
     const access = req.admin.access;
+    const roleFilter = req.query.role_filter;
 
     const officers = await Admin.find({ status: account_status.ACTIVE });
     if (!officers) {
       throw new AppError("No officer found!", 404);
     }
-    const users = officers.map((officer) => admin_model(officer));
+    let users = officers.map((officer) => admin_model(officer));
 
     const data =
-      access === psits_roles.HEAD_FINANCE || psits_roles.FINANCE
+      access === psits_roles.HEAD_FINANCE || access === psits_roles.FINANCE
         ? users.filter(
             (user) =>
               user.access !== psits_roles.EXECUTIVE &&
@@ -85,6 +86,14 @@ class AdminService {
         : access === psits_roles.EXECUTIVE
           ? users.filter((user) => user.access !== psits_roles.ADMIN)
           : users;
+
+    if (roleFilter && typeof roleFilter === "string" && roleFilter !== "all") {
+      return data.filter(
+        (user) =>
+          user.access ===
+          psits_roles[roleFilter.toUpperCase() as keyof typeof psits_roles]
+      );
+    }
 
     return data;
   };
@@ -263,7 +272,7 @@ class AdminService {
   restore = async (req: Request) => {
     const { id_number } = req.body;
 
-    const admin = await this.access(req.body.id_number);
+    const admin = await this.retrieveSpecific(req.body.id_number);
 
     if (!admin) {
       throw new AppError("No admin found!", 404);
@@ -420,7 +429,7 @@ class AdminService {
       req.body;
 
     //Check if id number existed
-    const admin = await this.access(id_number);
+    const admin = await this.retrieveSpecific(id_number);
     if (admin) {
       throw new AppError("Already have an account!", 404);
     }
@@ -507,30 +516,55 @@ class AdminService {
       return { status: false, message: "id_number and newAccess are required" };
     }
 
-    const adminToUpdate = await this.access(id_number);
+    let accessValue: string | undefined;
+
+    if (Array.isArray(newAccess)) {
+      if (newAccess.length === 0) {
+        return { status: false, message: "newAccess cannot be empty" };
+      }
+      const normalized = newAccess[0].trim().toUpperCase();
+      accessValue = normalized as keyof typeof psits_roles;
+
+      if (!accessValue) {
+        return { status: false, message: "Invalid access level" };
+      }
+    } else if (typeof newAccess === "string") {
+      const upper = newAccess.toUpperCase();
+      accessValue = psits_roles[upper as keyof typeof psits_roles];
+      if (!accessValue) {
+        return { status: false, message: "Invalid access level" };
+      }
+    } else {
+      return {
+        status: false,
+        message: "newAccess must be a string or array of strings",
+      };
+    }
+
+    const adminToUpdate = await this.retrieveSpecific(id_number);
 
     if (!adminToUpdate) {
       throw new AppError("Admin not found!", 404);
     }
 
-    adminToUpdate.access = newAccess;
+    adminToUpdate.access = accessValue;
     await adminToUpdate.save();
 
     const log_params = {
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: logs_action.CHANGE_ACCESS,
-      target: "Change Access to " + newAccess,
+      target: "Change Access to " + accessValue,
       target_model: "Admin",
     };
     //Runs Log
     await logService.create(log_params);
 
-    return { status: false, message: "Access updated successfully" };
+    return { status: true, message: "Access updated successfully" };
   };
   //
   //Retrive Specific Admin
-  access = async (id_number: String) => {
+  retrieveSpecific = async (id_number: String) => {
     const admin = await Admin.findOne({ id_number });
     if (!admin) {
       throw new AppError("No admin found!", 404);

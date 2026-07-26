@@ -191,7 +191,10 @@ interface OrganizationTableProps {
   sortField: OrganizationSortField;
   total: number;
   totalPages: number;
-  onAction: (action: OrganizationAction, records: OrganizationAccount[]) => void;
+  onAction: (
+    action: OrganizationAction,
+    records: OrganizationAccount[]
+  ) => void;
   onChangePassword: (account: OrganizationAccount) => void;
   onEdit: (account: OrganizationAccount) => void;
   onPageChange: (page: number) => void;
@@ -268,7 +271,9 @@ const OrganizationTable = ({
             <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
               <th className="w-10 rounded-l-md px-2 py-2 text-left">
                 <Checkbox
-                  checked={isPageSelected || (isSomePageSelected && "indeterminate")}
+                  checked={
+                    isPageSelected || (isSomePageSelected && "indeterminate")
+                  }
                   onCheckedChange={onSelectPage}
                   className="border-[#a7a7a7] data-[state=checked]:border-[#1c9dde] data-[state=checked]:bg-[#1c9dde]"
                   aria-label="Select visible rows"
@@ -376,7 +381,8 @@ const OrganizationTable = ({
                   </td>
                   <td className="px-2 py-3">{account.id_number}</td>
                   <td className="px-2 py-3">
-                    {account.course || "-"} {account.year ? `- ${account.year}` : ""}
+                    {account.course || "-"}{" "}
+                    {account.year ? `- ${account.year}` : ""}
                   </td>
                   <td className="truncate px-2 py-3">{account.role || "-"}</td>
                   <td className="px-2 py-3">
@@ -424,7 +430,10 @@ const OrganizationTable = ({
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5">
+                        <DropdownMenuContent
+                          align="end"
+                          className="w-52 rounded-xl p-1.5"
+                        >
                           {activeTab === "admins" && (
                             <>
                               <DropdownMenuItem
@@ -485,7 +494,10 @@ const OrganizationTable = ({
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-3 py-16 text-center text-sm text-[#777]">
+                <td
+                  colSpan={7}
+                  className="px-3 py-16 text-center text-sm text-[#777]"
+                >
                   No organization records found.
                 </td>
               </tr>
@@ -610,131 +622,131 @@ const OrganizationFilterPopover = ({
           collisionPadding={24}
           className="w-[330px] rounded-2xl border-[#eeeeee] p-5 shadow-xl"
         >
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-base font-medium">Filter</h3>
-          <button
-            type="button"
-            className="text-xs text-red-500"
-            onClick={resetFilter}
-          >
-            Reset Filter
-          </button>
-        </div>
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2 text-xs font-medium">Course</p>
-            <div className="flex flex-wrap gap-2">
-              {courses.map((course) => (
-                <button
-                  type="button"
-                  key={course}
-                  onClick={() =>
-                    setDraft((current) => ({
-                      ...current,
-                      courses: toggleFilterItem(current.courses, course),
-                    }))
-                  }
-                  className={cn(
-                    "rounded-full border px-4 py-1.5 text-xs",
-                    draft.courses.includes(course)
-                      ? "border-[#1c9dde] bg-[#1c9dde]/10 text-[#1c9dde]"
-                      : "border-[#e5e5e5] text-[#5f5f5f]"
-                  )}
-                >
-                  {course}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 text-xs font-medium">Year Level</p>
-            <div className="flex flex-wrap gap-2">
-              {years.map((year) => (
-                <button
-                  type="button"
-                  key={year}
-                  onClick={() =>
-                    setDraft((current) => ({
-                      ...current,
-                      years: toggleFilterItem(current.years, year),
-                    }))
-                  }
-                  className={cn(
-                    "rounded-full border px-4 py-1.5 text-xs",
-                    draft.years.includes(year)
-                      ? "border-[#1c9dde] bg-[#1c9dde]/10 text-[#1c9dde]"
-                      : "border-[#e5e5e5] text-[#5f5f5f]"
-                  )}
-                >
-                  {formatYear(year)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 text-xs font-medium">Role</p>
-            <Select
-              value={draft.role}
-              onValueChange={(role) =>
-                setDraft((current) => ({ ...current, role }))
-              }
+          <div className="mb-5 flex items-center justify-between">
+            <h3 className="text-base font-medium">Filter</h3>
+            <button
+              type="button"
+              className="text-xs text-red-500"
+              onClick={resetFilter}
             >
-              <SelectTrigger className="h-9 w-full rounded-lg border-[#e5e5e5]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {roleOptions.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              Reset Filter
+            </button>
           </div>
-          <div>
-            <p className="mb-2 text-xs font-medium">Campus</p>
-            <div className="flex flex-wrap gap-2">
-              {campuses.map((campus) => (
-                <button
-                  type="button"
-                  key={campus}
-                  onClick={() =>
-                    setDraft((current) => ({
-                      ...current,
-                      campuses: toggleFilterItem(current.campuses, campus),
-                    }))
-                  }
-                  className={cn(
-                    "rounded-full border px-4 py-1.5 text-xs",
-                    draft.campuses.includes(campus)
-                      ? "border-[#1c9dde] bg-[#1c9dde]/10 text-[#1c9dde]"
-                      : "border-[#e5e5e5] text-[#5f5f5f]"
-                  )}
-                >
-                  {campus.replace("UC-", "UC ")}
-                </button>
-              ))}
+          <div className="space-y-5">
+            <div>
+              <p className="mb-2 text-xs font-medium">Course</p>
+              <div className="flex flex-wrap gap-2">
+                {courses.map((course) => (
+                  <button
+                    type="button"
+                    key={course}
+                    onClick={() =>
+                      setDraft((current) => ({
+                        ...current,
+                        courses: toggleFilterItem(current.courses, course),
+                      }))
+                    }
+                    className={cn(
+                      "rounded-full border px-4 py-1.5 text-xs",
+                      draft.courses.includes(course)
+                        ? "border-[#1c9dde] bg-[#1c9dde]/10 text-[#1c9dde]"
+                        : "border-[#e5e5e5] text-[#5f5f5f]"
+                    )}
+                  >
+                    {course}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-medium">Year Level</p>
+              <div className="flex flex-wrap gap-2">
+                {years.map((year) => (
+                  <button
+                    type="button"
+                    key={year}
+                    onClick={() =>
+                      setDraft((current) => ({
+                        ...current,
+                        years: toggleFilterItem(current.years, year),
+                      }))
+                    }
+                    className={cn(
+                      "rounded-full border px-4 py-1.5 text-xs",
+                      draft.years.includes(year)
+                        ? "border-[#1c9dde] bg-[#1c9dde]/10 text-[#1c9dde]"
+                        : "border-[#e5e5e5] text-[#5f5f5f]"
+                    )}
+                  >
+                    {formatYear(year)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-medium">Role</p>
+              <Select
+                value={draft.role}
+                onValueChange={(role) =>
+                  setDraft((current) => ({ ...current, role }))
+                }
+              >
+                <SelectTrigger className="h-9 w-full rounded-lg border-[#e5e5e5]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {roleOptions.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-medium">Campus</p>
+              <div className="flex flex-wrap gap-2">
+                {campuses.map((campus) => (
+                  <button
+                    type="button"
+                    key={campus}
+                    onClick={() =>
+                      setDraft((current) => ({
+                        ...current,
+                        campuses: toggleFilterItem(current.campuses, campus),
+                      }))
+                    }
+                    className={cn(
+                      "rounded-full border px-4 py-1.5 text-xs",
+                      draft.campuses.includes(campus)
+                        ? "border-[#1c9dde] bg-[#1c9dde]/10 text-[#1c9dde]"
+                        : "border-[#e5e5e5] text-[#5f5f5f]"
+                    )}
+                  >
+                    {campus.replace("UC-", "UC ")}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            className="rounded-full px-5"
-            onClick={handleCancel}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            className="rounded-full bg-[#1c9dde] px-5 hover:bg-[#168bc7]"
-            onClick={handleApply}
-          >
-            Apply Filter
-          </Button>
-        </div>
+          <div className="mt-6 flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-full px-5"
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-full bg-[#1c9dde] px-5 hover:bg-[#168bc7]"
+              onClick={handleApply}
+            >
+              Apply Filter
+            </Button>
+          </div>
         </PopoverContent>
       </Popover>
       {hasActiveFilters && (
@@ -774,8 +786,10 @@ const AccountFormDialog = ({
   const [values, setValues] = useState(() => getFormInitialValues(account));
   const isCreate = mode === "create";
 
-  const updateValue = (field: keyof OrganizationAccountFormValues, value: string) =>
-    setValues((current) => ({ ...current, [field]: value }));
+  const updateValue = (
+    field: keyof OrganizationAccountFormValues,
+    value: string
+  ) => setValues((current) => ({ ...current, [field]: value }));
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -785,7 +799,10 @@ const AccountFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[520px] rounded-[20px] p-0" showCloseButton={false}>
+      <DialogContent
+        className="max-w-[520px] rounded-[20px] p-0"
+        showCloseButton={false}
+      >
         <form onSubmit={handleSubmit} className="p-6">
           <DialogHeader className="mb-5">
             <div className="flex items-start justify-between">
@@ -822,7 +839,9 @@ const AccountFormDialog = ({
               <Label className="text-xs font-medium">Student ID Number</Label>
               <Input
                 value={values.id_number}
-                onChange={(event) => updateValue("id_number", event.target.value)}
+                onChange={(event) =>
+                  updateValue("id_number", event.target.value)
+                }
                 className="mt-1 h-10 rounded-lg border-[#eeeeee] bg-[#f1f1f1]"
                 disabled={!isCreate}
                 required
@@ -945,7 +964,9 @@ const AccountFormDialog = ({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium">Confirm Password</Label>
+                  <Label className="text-xs font-medium">
+                    Confirm Password
+                  </Label>
                   <Input
                     type="password"
                     value={values.confirm_password || ""}
@@ -1017,7 +1038,10 @@ const PasswordDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[420px] rounded-[20px] p-0" showCloseButton={false}>
+      <DialogContent
+        className="max-w-[420px] rounded-[20px] p-0"
+        showCloseButton={false}
+      >
         <form onSubmit={handleSubmit} className="p-6">
           <DialogHeader className="mb-6">
             <div className="flex items-start justify-between">
@@ -1065,12 +1089,18 @@ const PasswordDialog = ({
                   className="absolute top-1/2 right-3 -translate-y-1/2 text-[#777]"
                   onClick={() => setShowPassword((current) => !current)}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
             <div>
-              <Label className="text-xs font-medium">Re-enter your new password</Label>
+              <Label className="text-xs font-medium">
+                Re-enter your new password
+              </Label>
               <div className="relative mt-1">
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
@@ -1085,7 +1115,11 @@ const PasswordDialog = ({
                   className="absolute top-1/2 right-3 -translate-y-1/2 text-[#777]"
                   onClick={() => setShowConfirmPassword((current) => !current)}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -1137,7 +1171,8 @@ const RoleRequestDialog = ({
     setIsSearching(true);
     const account = await onSearch(idNumber);
     setResult(account);
-    if (!account) showToast("error", "No student found or it is already added.");
+    if (!account)
+      showToast("error", "No student found or it is already added.");
     setIsSearching(false);
   };
 
@@ -1258,10 +1293,16 @@ const ConfirmActionDialog = ({
           <DialogTitle>{actionLabel} account?</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-[#777]">
-          This will apply to {count} selected {count === 1 ? "record" : "records"}.
+          This will apply to {count} selected{" "}
+          {count === 1 ? "record" : "records"}.
         </p>
         <DialogFooter className="mt-3">
-          <Button type="button" variant="outline" className="rounded-full" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full"
+            onClick={onCancel}
+          >
             Cancel
           </Button>
           <Button
@@ -1317,7 +1358,9 @@ export const OrganizationView = () => {
     updatePassword,
   } = useOrganizationData();
   const [formMode, setFormMode] = useState<"create" | "edit">("edit");
-  const [formAccount, setFormAccount] = useState<OrganizationAccount | null>(null);
+  const [formAccount, setFormAccount] = useState<OrganizationAccount | null>(
+    null
+  );
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [passwordAccount, setPasswordAccount] =
     useState<OrganizationAccount | null>(null);
@@ -1366,7 +1409,7 @@ export const OrganizationView = () => {
   const showAddButton = activeTab === "admins" || activeTab === "members";
 
   return (
-    <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_a]:cursor-pointer [&_button:not(:disabled)]:cursor-pointer [&_button:disabled]:pointer-events-auto [&_button:disabled]:cursor-not-allowed [&_[role=menuitem]]:cursor-pointer [&_[role=option]]:cursor-pointer [&_[data-disabled]]:pointer-events-auto [&_[data-disabled]]:cursor-not-allowed [&_[role=menuitem][data-disabled]]:cursor-not-allowed">
+    <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_[data-disabled]]:pointer-events-auto [&_[data-disabled]]:cursor-not-allowed [&_[role=menuitem]]:cursor-pointer [&_[role=menuitem][data-disabled]]:cursor-not-allowed [&_[role=option]]:cursor-pointer [&_a]:cursor-pointer [&_button:disabled]:pointer-events-auto [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
       <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <h1 className="text-2xl font-bold sm:text-3xl">Organization</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
@@ -1442,9 +1485,7 @@ export const OrganizationView = () => {
             sortField={sort.field}
             total={total}
             totalPages={totalPages}
-            onAction={(action, records) =>
-              setConfirmState({ action, records })
-            }
+            onAction={(action, records) => setConfirmState({ action, records })}
             onChangePassword={(account) => {
               setPasswordAccount(account);
               setIsPasswordOpen(true);
@@ -1476,7 +1517,10 @@ export const OrganizationView = () => {
               (activeTab !== "members" && !isAdminAccess)
             }
             onClick={() =>
-              setConfirmState({ action: selectedAction, records: selectedAccounts })
+              setConfirmState({
+                action: selectedAction,
+                records: selectedAccounts,
+              })
             }
           >
             {selectedAction === "removeRole" ? (

@@ -7,12 +7,12 @@ import {
   getCountStudent,
   getDashboardActiveStudents,
   getStudentMembershipHistory,
-  membershipPrice,
   membershipRequest,
   studentDeletion,
   studentRestore,
   updateStudent,
 } from "@/features/admin/api/admin";
+import { membershipPrice } from "@/features/admin/settings/api/settings.endpoints";
 import { useAuth } from "@/features/auth";
 import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
@@ -75,25 +75,31 @@ const normalizeName = (record: StudentApiRecord) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const normalizeStudent = (record: StudentApiRecord): AdminStudent => ({
-  id: String(record._id || record.id_number || crypto.randomUUID()),
-  id_number: String(record.id_number || ""),
-  rfid: String(record.rfid || ""),
-  first_name: String(record.first_name || ""),
-  middle_name: String(record.middle_name || ""),
-  last_name: String(record.last_name || ""),
-  name: normalizeName(record) || "Unnamed Student",
-  email: String(record.email || ""),
-  course: String(record.course || ""),
-  year: String(record.year || ""),
-  membershipStatus: String(record.membershipStatus || "MEMBERSHIP_NONE"),
-  status: String(record.status || ""),
-  applied: String(record.applied || ""),
-  deletedBy: String(record.deletedBy || ""),
-  deletedDate: String(record.deletedDate || ""),
-  isFirstApplication: Boolean(record.isFirstApplication),
-  campus: String(record.campus || ""),
-});
+const normalizeStudent = (record: StudentApiRecord): AdminStudent => {
+  const membershipStatus = (record.membershipStatus || "")
+    .replace(/^MEMBERSHIP_/, "")
+    .replace(/^STATUS_/, "")
+    .trim();
+  return {
+    id: String(record._id || record.id_number || crypto.randomUUID()),
+    id_number: String(record.id_number || ""),
+    rfid: String(record.rfid || ""),
+    first_name: String(record.first_name || ""),
+    middle_name: String(record.middle_name || ""),
+    last_name: String(record.last_name || ""),
+    name: normalizeName(record) || "Unnamed Student",
+    email: String(record.email || ""),
+    course: String(record.course || ""),
+    year: String(record.year || ""),
+    membershipStatus: membershipStatus || "NONE",
+    status: String(record.status || "").replace(/^STATUS_/, "").trim() || "",
+    applied: String(record.applied || ""),
+    deletedBy: String(record.deletedBy || ""),
+    deletedDate: String(record.deletedDate || ""),
+    isFirstApplication: Boolean(record.isFirstApplication),
+    campus: String(record.campus || ""),
+  };
+};
 
 const searchableText = (student: AdminStudent) =>
   [

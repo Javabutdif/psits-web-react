@@ -1,5 +1,5 @@
 // Shared admin components
-export * from './components';
+export * from "./components";
 
 // Admin subfeatures
 export * from './dashboard';
@@ -9,4 +9,4 @@ export * from './organization';
 export * from './students';
 
 // Admin API
-export * from './api/admin';
+export * from "./api/admin";

@@ -8,6 +8,10 @@ import bodyParser from "body-parser";
 import express from "express";
 
 import { checkPromos } from "./custom_function/check_promo";
+import { resendPendingEmails } from "./services/email.resend.service";
+import { logCronExecution } from "./services/devtools.service";
+import devtoolsRoutes from "./routes/devtools.v2.route";
+import { orderService } from "./services/order.service";
 import adminRoutes from "./routes/admin.route";
 import authV2Routes from "./routes/authV2.route";
 import cartRoutes from "./routes/cart.route";
@@ -23,6 +27,7 @@ import promoRoutes from "./routes/promo.route";
 import studentRoutes from "./routes/students.route";
 import studentV2Routes from "./routes/studentsV2.route";
 import indexV2Routes from "./routes/index.v2.route";
+import reportV2Routes from "./routes/report.v2.route";
 import eligibleCertificateRoutes from "./routes/eligibleCertificate.route";
 import certificateRoutes from "./routes/certificate.route";
 import { errorHandler } from "./util/errors.util";
@@ -66,6 +71,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/logs", logRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/promo", promoRoutes);
+app.use("/api/reports", reportV2Routes);
 app.use("/api", privateRoutes);
 app.use("/api/docs", documentationRoutes);
 app.use("/api/v2/auth", authV2Routes);
@@ -73,6 +79,7 @@ app.use("/api/v2/events", eventsV2Routes);
 app.use("/api/v2/students", studentV2Routes);
 app.use("/api/admin/eligible-certificates", eligibleCertificateRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/v2/dev", devtoolsRoutes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);
@@ -100,10 +107,85 @@ async function startServer() {
       console.log(`Server started, listening at port ${port}`);
     });
 
-    cron.schedule("0 0 * * *", async () => {
+    const promoJob = cron.schedule("0 0 * * *", async () => {
       console.log("Running daily promo check...");
-      await checkPromos();
+      const startedAt = new Date();
+      try {
+        await checkPromos();
+        await logCronExecution({
+          jobName: "promo-check",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: true,
+        });
+      } catch (err: any) {
+        await logCronExecution({
+          jobName: "promo-check",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: false,
+          errorMessage: err.message,
+        });
+      }
     });
+
+    const emailJob = cron.schedule("0 1 * * *", async () => {
+      console.log("[1AM PH] Running daily email resend job...");
+      const startedAt = new Date();
+      try {
+        await resendPendingEmails();
+        await logCronExecution({
+          jobName: "email-resend",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: true,
+        });
+      } catch (err: any) {
+        await logCronExecution({
+          jobName: "email-resend",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: false,
+          errorMessage: err.message,
+        });
+      }
+    }, { timezone: "Asia/Manila" });
+
+    const orderJob = cron.schedule("0 0 1 * *", async () => {
+      console.log("[Monthly 1st] Running expired orders cleanup...");
+      const startedAt = new Date();
+      try {
+        const result = await orderService.cancelExpiredOrders();
+        console.log(`[Monthly] Cancelled ${result.cancelledCount} orders, restored ${result.restoredItems} items`);
+        await logCronExecution({
+          jobName: "cancel-expired-orders",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: true,
+          metadata: { cancelledCount: result.cancelledCount, restoredItems: result.restoredItems },
+        });
+      } catch (err: any) {
+        await logCronExecution({
+          jobName: "cancel-expired-orders",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: false,
+          errorMessage: err.message,
+        });
+      }
+    }, { timezone: "Asia/Manila" });
   } catch (error) {
     console.error("Startup failed:", error);
     process.exit(1);

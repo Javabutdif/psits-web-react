@@ -20,6 +20,10 @@ import OTPCode from "./pages/auth/OtpCode";
 import Dashboard from "./pages/admin/Dashboard";
 import Organization from "./pages/admin/Organization";
 import Students from "./pages/admin/Students";
+import Reports from "./pages/admin/Reports";
+import Orders from "./pages/admin/Orders";
+import Settings from "./pages/admin/Settings";
+import { PromoDashboard } from "./features/admin/promo";
 import SetNewPassword from "./pages/auth/SetNewPassword";
 import { ErrorPage } from "./pages/ErrorPage";
 import { Events } from "./pages/events";
@@ -35,6 +39,8 @@ import MyOrders from "./pages/student/MyOrders";
 import CertificatesPage from "./pages/CertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
+import { LogsView } from "./features/admin/logs";
+import { DevToolsPage } from "./features/admin/devtools/components/DevToolsPage";
 
 const router = createBrowserRouter([
   {
@@ -133,8 +139,33 @@ const router = createBrowserRouter([
                   },
                 ],
               },
+              {
+                element: (
+                  <AdminCampusRouteGuard
+                    allowedCampuses={["UC-MAIN"]}
+                    campusUnauthorizedToastMessage="Unauthorized"
+                  />
+                ),
+                children: [
+                  { path: "reports", Component: Reports },
+                  { path: "orders", Component: Orders },
+                  { path: "settings", Component: Settings },
+                  { path: "promo", Component: PromoDashboard },
+                ],
+              },
+              {
+                element: (
+                  <AdminCampusRouteGuard
+                    allowedCampuses={["UC-MAIN"]}
+                    campusUnauthorizedToastMessage="Unauthorized"
+                  />
+                ),
+                children: [
+                  { path: "logs", Component: LogsView },
+                  { path: "devtools", Component: DevToolsPage },
+                ],
+              },
               // TODO: Remove this sample
-              // Example of a general admin page with campus-specific component
               { path: "general", Component: GeneralAdminPage },
             ],
           },
