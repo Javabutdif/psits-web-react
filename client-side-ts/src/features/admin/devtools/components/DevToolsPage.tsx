@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Code, Mail, Activity, Users, Zap } from "lucide-react";
+import { Code, Mail, Activity, Users, Zap, Clock, Shield, Database } from "lucide-react";
 import { EmailQueuePanel } from "../components/EmailQueuePanel";
 import { HealthStatsPanel } from "../components/HealthStatsPanel";
 import { SessionManagerPanel } from "../components/SessionManagerPanel";
 import { QuickActionsPanel } from "../components/QuickActionsPanel";
 import { ApiTesterPanel } from "../components/ApiTesterPanel";
+import { CronMonitorPanel } from "../components/CronMonitorPanel";
+import { EnvInspectorPanel } from "../components/EnvInspectorPanel";
+import { RateLimitPanel } from "../components/RateLimitPanel";
+import { DbPerformancePanel } from "../components/DbPerformancePanel";
 
 const tabs = [
   { key: "email", label: "Email Queue", icon: Mail },
@@ -13,6 +17,10 @@ const tabs = [
   { key: "sessions", label: "Sessions", icon: Users },
   { key: "actions", label: "Quick Actions", icon: Zap },
   { key: "tester", label: "API Tester", icon: Code },
+  { key: "cron", label: "Cron Monitor", icon: Clock },
+  { key: "env", label: "Env Inspector", icon: Shield },
+  { key: "ratelimit", label: "Rate Limiter", icon: Shield },
+  { key: "dbperf", label: "DB Performance", icon: Database },
 ];
 
 export const DevToolsPage = () => {
@@ -28,13 +36,13 @@ export const DevToolsPage = () => {
       </header>
 
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="mb-5 flex w-full border-b border-[#eeeeee] sm:w-auto sm:gap-8">
+        <div className="mb-5 flex w-full border-b border-[#eeeeee] sm:w-auto sm:gap-8 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`relative flex flex-1 cursor-pointer items-center justify-center gap-2 pb-3 text-sm ${
+              className={`relative flex shrink-0 cursor-pointer items-center justify-center gap-2 pb-3 text-sm ${
                 activeTab === tab.key
                   ? "font-medium text-[#1c9dde]"
                   : "text-[#858585]"
@@ -65,6 +73,18 @@ export const DevToolsPage = () => {
             </TabsContent>
             <TabsContent value="tester" className="mt-0">
               <ApiTesterPanel />
+            </TabsContent>
+            <TabsContent value="cron" className="mt-0">
+              <CronMonitorPanel />
+            </TabsContent>
+            <TabsContent value="env" className="mt-0">
+              <EnvInspectorPanel />
+            </TabsContent>
+            <TabsContent value="ratelimit" className="mt-0">
+              <RateLimitPanel />
+            </TabsContent>
+            <TabsContent value="dbperf" className="mt-0">
+              <DbPerformancePanel />
             </TabsContent>
           </Tabs>
         </section>

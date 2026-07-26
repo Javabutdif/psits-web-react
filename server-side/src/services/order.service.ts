@@ -1,4 +1,5 @@
 import { Orders } from "../models/orders.model";
+import { Merch } from "../models/merch.model";
 import { IOrders } from "../models/orders.interface";
 import { startOfDay, endOfDay } from "date-fns";
 import { AppError } from "../util/app.error.util";
@@ -419,6 +420,35 @@ class OrderService {
       return { result, status: false, message: "Order is not paid" };
     }
     return { result, status: true, message: "Order is paid" };
+  };
+
+  getExpiredPendingOrders = async () => {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    return await Orders.find({
+      order_status: "Pending",
+      order_date: { $lt: oneMonthAgo },
+    }).sort({ order_date: 1 });
+  };
+
+  cancelExpiredOrders = async () => {
+    const expired = await this.getExpiredPendingOrders();
+    let cancelledCount = 0;
+    let restoredItems = 0;
+
+    for (const order of expired) {
+      for (const item of order.items) {
+        await Merch.updateOne(
+          { _id: item.product_id },
+          { $inc: { stocks: item.quantity } }
+        );
+        restoredItems += item.quantity;
+      }
+      await Orders.findByIdAndDelete(order._id);
+      cancelledCount++;
+    }
+
+    return { cancelledCount, restoredItems };
   };
 }
 

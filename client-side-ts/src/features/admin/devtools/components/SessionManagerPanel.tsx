@@ -19,11 +19,14 @@ export const SessionManagerPanel = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [invalidating, setInvalidating] = useState(false);
+  const [roleFilter, setRoleFilter] = useState("");
 
   const fetchSessions = async () => {
     setLoading(true);
     try {
-      const data = await getSessions();
+      const params: Record<string, string> = {};
+      if (roleFilter) params.role = roleFilter;
+      const data = await getSessions(Object.keys(params).length > 0 ? params : undefined);
       setSessions(data);
     } catch {
       showToast("error", "Failed to load sessions");
@@ -34,7 +37,7 @@ export const SessionManagerPanel = () => {
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [roleFilter]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -68,6 +71,24 @@ export const SessionManagerPanel = () => {
     }
   };
 
+  const handleInvalidateAll = async (role: "admin" | "student") => {
+    const roleSessions = sessions.filter((s) => s.role === role);
+    if (roleSessions.length === 0) return;
+
+    setInvalidating(true);
+    try {
+      await invalidateBulkSessions(roleSessions.map((s) => s.id));
+      showToast("success", `${roleSessions.length} ${role}(s) session(s) invalidated`);
+      setSelected(new Set());
+      fetchSessions();
+    } catch {
+      showToast("error", `Failed to invalidate all ${role} sessions`);
+    } finally {
+      setInvalidating(false);
+      setConfirmOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-2">
@@ -84,7 +105,7 @@ export const SessionManagerPanel = () => {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="text-sm text-[#8a8a8a]">{sessions.length} active session(s)</span>
           {selected.size > 0 && (
@@ -94,18 +115,35 @@ export const SessionManagerPanel = () => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {selected.size > 0 && (
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              className="rounded-full"
-              onClick={() => setConfirmOpen(true)}
-              disabled={invalidating}
-            >
-              Invalidate Selected ({selected.size})
-            </Button>
-          )}
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="h-9 rounded-lg border-[#ececec] bg-white px-3 text-sm"
+          >
+            <option value="">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="student">Student</option>
+          </select>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => handleInvalidateAll("student")}
+            disabled={invalidating}
+          >
+            Invalidate All Students
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => handleInvalidateAll("admin")}
+            disabled={invalidating}
+          >
+            Invalidate All Admins
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -133,8 +171,8 @@ export const SessionManagerPanel = () => {
               <th className="w-[15%] px-2 py-2 text-left font-medium">ID Number</th>
               <th className="w-[12%] px-2 py-2 text-left font-medium">Role</th>
               <th className="w-[15%] px-2 py-2 text-left font-medium">Campus</th>
-              <th className="w-[15%] px-2 py-2 text-left font-medium">Position</th>
-              <th className="w-[13%] rounded-r-md px-2 py-2 text-right font-medium">Actions</th>
+              <th className="w-[13%] px-2 py-2 text-left font-medium">Position</th>
+              <th className="w-[10%] rounded-r-md px-2 py-2 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
