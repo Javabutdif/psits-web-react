@@ -89,7 +89,9 @@ class MembershipController {
       };
 
       // Call the reusable receipt function
-      await membershipRequestReceipt(data, student?.email ?? "");
+      if (student?.email) {
+        await membershipRequestReceipt(data, student.email, (student as any)._id, reference_code);
+      }
 
       return res
         .status(200)

@@ -106,7 +106,9 @@ class OrderController {
     const { promo_id, items } = req.body;
     const user = req.userV2;
     //Check user availability
-    const student = await studentService.getSpecific({ id_number: user.idNumber });
+    const student = await studentService.getSpecific({
+      id_number: user.idNumber,
+    });
     if (!student) {
       throw new AppError("No student found!", 404);
     }
@@ -182,7 +184,7 @@ class OrderController {
   approveOrder = async (req: Request, res: Response) => {
     const { order_id, cash } = req.body;
     const user = req.userV2;
-    
+
     const admin = await adminService.retrieveSpecific(user.idNumber);
 
     if (!admin) {
@@ -222,7 +224,7 @@ class OrderController {
       total: item.sub_total,
       date: new Date(),
     }));
-    
+
     //Store the report data array to reports
     const processReports = await reportService.createReports(
       reportDataArray,
@@ -239,11 +241,26 @@ class OrderController {
       admin.name,
       cash
     );
-    //Call for order receipt service
-    await orderReceipt(receipt, result.order?.email || result.email);
+    //Fetch for email
+    const userEmail = await studentService.getIdSession(
+      result.id_number,
+      session
+    );
     //End session and commit transaction
     await session.commitTransaction();
     session.endSession();
+    if (!userEmail?.email) {
+      return res.status(200).json({
+        message: "Successfully approved order (email not sent - no email on file)",
+      });
+    }
+    //Send email outside of transaction
+    await orderReceipt(
+      receipt,
+      userEmail.email,
+      userEmail._id,
+      receipt.reference_code
+    );
     return res.status(200).json({
       message: "Successfully approved order",
     });

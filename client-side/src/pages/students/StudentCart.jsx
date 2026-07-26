@@ -55,11 +55,15 @@ const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
     }
   };
 
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50"
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50 p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -67,67 +71,94 @@ const OrderModal = ({ isVisible, total, onClose, items, onConfirm }) => {
         >
           <motion.div
             ref={modalRef}
-            className="bg-white rounded-lg shadow-lg w-full mx-4 max-w-lg"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.8 }}
+            className="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            {/* Updated Header */}
-            <div className="bg-navy text-white p-4 rounded-t-lg">
-              <h2 className="text-xl font-semibold">Review Your Items</h2>
+            {/* Header */}
+            <div className="bg-navy text-white px-6 py-4 rounded-t-xl flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-semibold">Review Your Order</h2>
+              <button
+                type="button"
+                className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                onClick={handleClose}
+                aria-label="Close modal"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
             {/* Body */}
-            <div className="p-4 space-y-4">
-              <div className="grid grid-cols-3 gap-4 font-semibold">
-                <span className="flex items-center justify-start">Product</span>
-                <span className="flex items-center justify-center">
-                  Quantity
-                </span>
-                <span className="flex items-center justify-end">Price</span>
-              </div>
-              {items.map((item) => (
-                <div
-                  key={item._id}
-                  className="grid grid-cols-3 gap-4 items-center"
-                >
-                  <div className="flex items-center space-x-2">
-                    <img
-                      src={item.imageUrl1}
-                      alt={item.product_name}
-                      className="w-12 h-12"
-                    />
-                    <div>
-                      <h3 className="text-sm font-medium">
-                        {item.product_name}
-                      </h3>
-                      <p className="text-xs text-gray-500">{`₱${item.price}`}</p>
+            <div className="p-6 overflow-y-auto flex-1">
+              {items.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No items selected.</p>
+              ) : (
+                <>
+                  {/* Column Headers */}
+                  <div className="grid grid-cols-12 gap-2 pb-3 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <span className="col-span-6 sm:col-span-5">Product</span>
+                    <span className="col-span-2 text-center">Qty</span>
+                    <span className="col-span-2 text-center hidden sm:block">Subtotal</span>
+                    <span className="col-span-2 text-right">Total</span>
+                  </div>
+
+                  {/* Item List */}
+                  <div className="space-y-4 mt-4">
+                    {items.map((item) => (
+                      <div
+                        key={item._id}
+                        className="grid grid-cols-12 gap-2 items-center"
+                      >
+                        <div className="col-span-6 sm:col-span-5 flex items-center gap-3 min-w-0">
+                          <img
+                            src={item.imageUrl1}
+                            alt={item.product_name}
+                            className="w-14 h-14 object-cover rounded-lg flex-shrink-0 border border-gray-200"
+                            onError={(e) => {
+                              e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' fill='%23d1d5db' viewBox='0 0 16 16'%3E%3Cpath d='M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z'/%3E%3Cpath d='M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.86.431L2.97 13.03A9.01 9.01 0 0 1 1 13.5V3a1 1 0 0 1 1-1h12z'/%3E%3C/svg%3E";
+                            }}
+                          />
+                          <div className="min-w-0">
+                            <h3 className="text-sm font-medium text-gray-800 truncate">{item.product_name}</h3>
+                            <p className="text-xs text-gray-500">{`₱${item.price.toLocaleString()} each`}</p>
+                          </div>
+                        </div>
+                        <p className="col-span-2 text-center text-sm font-semibold text-gray-700">{item.quantity}</p>
+                        <p className="col-span-2 text-center text-xs text-gray-500 hidden sm:block">{`₱${(item.price * item.quantity).toLocaleString()}`}</p>
+                        <p className="col-span-2 text-right text-sm font-semibold text-gray-800">{`₱${(item.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Total */}
+                  <div className="mt-6 pt-4 border-t-2 border-navy/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-semibold text-gray-700">Total</span>
+                      <span className="text-xl font-bold text-navy">{`₱${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</span>
                     </div>
                   </div>
-                  <p className="text-sm text-center">{item.quantity}</p>
-                  <p className="text-sm text-right">{`₱${(
-                    item.price * item.quantity
-                  ).toFixed(2)}`}</p>
-                </div>
-              ))}
-              <div className="grid grid-cols-3 gap-4 font-semibold mt-4">
-                <span>Total Price:</span>
-                <span></span>
-                <span className="text-right">₱{total.toFixed(2)}</span>
-              </div>
+                </>
+              )}
             </div>
 
-            {/* Updated Footer */}
-            <div className="p-4 flex justify-end space-x-4 bg-gray-100 rounded-b-lg border-t">
+            {/* Footer */}
+            <div className="px-6 pb-6 pt-2 flex flex-col-reverse sm:flex-row gap-3 flex-shrink-0">
               <button
+                type="button"
                 onClick={onClose}
-                className="px-5 py-2 text-gray-500 hover:text-gray-700 transition-all focus:outline-none rounded-md border border-gray-300 hover:border-gray-400"
+                className="w-full sm:w-auto px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-all focus:outline-none focus:ring-2 focus:ring-gray-300 rounded-xl font-medium"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={onConfirm}
-                className="ml-3 px-6 py-2 bg-gradient-to-r bg-navy text-white rounded-md hover:shadow-lg hover:from-primary hover:to-navy focus:outline-none transition-all duration-300 ease-in-out"
+                disabled={items.length === 0}
+                className="w-full sm:w-auto px-8 py-3 bg-navy text-white rounded-xl font-semibold hover:bg-[#053a5c] focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
               >
                 Confirm Order
               </button>

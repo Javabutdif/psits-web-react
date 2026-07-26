@@ -47,11 +47,22 @@ export const getSpecificOrdersController = async (
   req: Request,
   res: Response
 ) => {
-  const { id_number } = req.query;
+  const claims = req.userV2;
+  let id_number: string | undefined;
+
+  if (claims.role === "admin") {
+    id_number = (req.query.id_number as string) || claims.idNumber;
+  } else {
+    id_number = claims.idNumber;
+  }
+
+  if (!id_number) {
+    return res.status(400).json({ message: "Missing id_number" });
+  }
 
   try {
     const orders: IOrders[] = await Orders.find({
-      id_number: id_number,
+      id_number,
     }).sort({ order_date: -1 });
     if (orders.length > 0) {
       res.status(200).json(orders);
