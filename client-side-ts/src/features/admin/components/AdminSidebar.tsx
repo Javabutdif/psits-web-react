@@ -308,11 +308,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={restrictedNavButtonClass}
+                      className={getNavButtonClass(
+                        "/admin/merchandise",
+                        !isUcMainAdmin
+                      )}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/merchandise/products" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -334,6 +337,32 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     </TooltipContent>
                   )}
                 </Tooltip>
+                {!collapsed && isUcMainAdmin && (
+                  <div className="mt-1 ml-9 space-y-1">
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "h-8 w-full justify-start px-2 text-sm font-normal",
+                        isActivePath("/admin/merchandise/products") &&
+                          "text-[#1C9DDE]"
+                      )}
+                      asChild
+                    >
+                      <Link to="/admin/merchandise/products">Products</Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "h-8 w-full justify-start px-2 text-sm font-normal",
+                        isActivePath("/admin/merchandise/promo-code") &&
+                          "text-[#1C9DDE]"
+                      )}
+                      asChild
+                    >
+                      <Link to="/admin/merchandise/promo-code">Promo Code</Link>
+                    </Button>
+                  </div>
+                )}
               </li>
               <li>
                 <Tooltip>
