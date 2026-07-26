@@ -190,7 +190,7 @@ export const requireAccessTokenWithDBCheck = async (
       req.admin = admin_model(admin);
     } else {
       const student = await Student.findById(claims.sub);
-      if (!student || student.status !== "True") {
+      if (!student || (student.status !== "True" && student.status !== account_status.ACTIVE)) {
         return res.status(403).json({
           error: "ACCOUNT_INACTIVE",
           message: "Account no longer active",

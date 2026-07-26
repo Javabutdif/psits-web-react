@@ -156,13 +156,13 @@ class MerchandiseController {
           "name price stocks batch description selectedVariations selectedSizes selectedAudience control created_by start_date end_date is_active category type imageUrl"
         )
         .lean();
-      if (!merches) {
-        res.status(400).json({ message: "No Available Merchandise" });
+      if (!merches || merches.length === 0) {
+        return res.status(400).json({ message: "No Available Merchandise" });
       }
-      res.status(200).json(merches);
+      res.status(200).json({ data: merches });
     } catch (error) {
       console.error("Error fetching merches:", error);
-      res.status(500).send(error);
+      res.status(500).json({ message: "Server Error" });
     }
   }
 
@@ -175,13 +175,13 @@ class MerchandiseController {
           "name price stocks batch description selectedVariations selectedSizes selectedAudience control created_by start_date end_date category type imageUrl"
         )
         .lean();
-      if (!merches) {
-        res.status(400).json({ message: "No Available Merchandise" });
+      if (!merches || merches.length === 0) {
+        return res.status(400).json({ message: "No Available Merchandise" });
       }
-      res.status(200).json(merches);
+      res.status(200).json({ data: merches });
     } catch (error) {
       console.error("Error fetching merches:", error);
-      res.status(500).send(error);
+      res.status(500).json({ message: "Server Error" });
     }
   }
 
@@ -194,10 +194,10 @@ class MerchandiseController {
         return res.status(404).json({ message: "Merchandise not found" });
       }
 
-      res.status(200).json(merch);
+      res.status(200).json({ data: merch });
     } catch (error) {
       console.error("Error fetching merch:", error);
-      res.status(500).send(error);
+      res.status(500).json({ message: "Server Error" });
     }
   }
 
@@ -464,6 +464,31 @@ class MerchandiseController {
     } catch (error) {
       console.error("Error publishing merch:", error);
       res.status(500).send("Error publishing merch");
+    }
+  }
+
+  async retrievePublished(req: Request, res: Response) {
+    try {
+      const now = new Date();
+
+      const merches = await Merch.find({
+        is_active: true,
+        start_date: { $lte: now },
+        $or: [{ end_date: { $gt: now } }, { end_date: null }],
+      })
+        .select(
+          "name price stocks batch description selectedVariations selectedSizes selectedAudience control created_by start_date end_date category type imageUrl"
+        )
+        .lean();
+
+      if (!merches || merches.length === 0) {
+        return res.status(400).json({ message: "No Available Merchandise" });
+      }
+
+      res.status(200).json({ data: merches });
+    } catch (error) {
+      console.error("Error retrieving published merchandise:", error);
+      res.status(500).json({ message: "Server Error" });
     }
   }
 

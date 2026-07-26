@@ -1,115 +1,123 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-      }
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-      }
-      h2 {
-        text-align: center;
-        color: #333;
-      }
-      .details {
-        margin-bottom: 20px;
-      }
-      .details div {
-        margin-bottom: 10px;
-      }
-      .details label {
-        font-weight: bold;
-      }
-      .footer {
-        text-align: center;
-        font-size: 12px;
-        color: #777;
-      }
-      .logo-container {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      .logo-container img {
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="logo-container">
-        <img src="cid:logo" alt="Logo" />
-      </div>
-      <h2>Order Receipt</h2>
-      <div class="details">
-        <div><label>Order ID:</label> <%= reference_code %></div>
-        <div><label>Transaction Date:</label> <%= transaction_date %></div>
-        <div><label>Student Name:</label> <%= student_name || 'N/A' %></div>
-        <div><label>Course:</label> <%= course || 'N/A' %></div>
-        <div><label>Year:</label> <%= year || 'N/A' %></div>
-        <div><label>Admin:</label> <%= admin || 'N/A' %></div>
-      </div>
-      <h3>Order Details</h3>
-      <table style="width: 100%; border-collapse: collapse">
-        <thead>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:0;font-family:'Inter',Arial,sans-serif;background:#f4f4f4;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#f4f4f4">
+    <tr>
+      <td align="center" style="padding:32px 16px">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background:#fff;border-radius:22px;overflow:hidden;max-width:600px;width:100%">
+
+          <!-- Header -->
           <tr>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
-              Product Name
-            </th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
-              Batch
-            </th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
-              Size
-            </th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
-              Variation
-            </th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
-              Quantity
-            </th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left">
-              Total
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <% items.forEach(item => { %>
-          <tr>
-            <td style="border: 1px solid #ddd; padding: 8px">
-              <%= item.product_name %>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px">
-              <%= item.batch %>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px">
-              <%= item.sizes %>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px">
-              <%= item.variation %>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px">
-              <%= item.quantity %>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px">
-              ₱<%= item.sub_total %>
+            <td style="padding:32px 32px 24px;text-align:center;border-bottom:2px solid #1c9dde">
+              <img src="cid:logo" alt="PSITS" width="48" height="48" style="display:block;border-radius:50%;width:48px;height:48px;object-fit:cover;margin:0 auto 12px" />
+              <h1 style="margin:0;font-size:20px;font-weight:700;color:#121212;letter-spacing:-.3px">Order Receipt</h1>
+              <span style="display:inline-block;margin-top:8px;padding:4px 12px;background:#f0fafd;color:#1c9dde;border-radius:9999px;font-size:11px;font-weight:600;letter-spacing:.3px">#<%= reference_code %></span>
             </td>
           </tr>
-          <% }); %>
-        </tbody>
-      </table>
-      <div class="details">
-        <div><label>Total:</label> ₱<%= total || 'N/A' %></div>
-        <div><label>Cash Given:</label> ₱<%= cash || 'N/A' %></div>
-        <div><label>Change:</label> ₱<%= (cash - total) || 'N/A' %></div>
-      </div>
-      <div class="footer">Thank you for your purchase!</div>
-    </div>
-  </body>
+
+          <!-- Student Info -->
+          <tr>
+            <td style="padding:24px 32px 16px">
+              <div style="background:#f7f7f7;border-radius:12px;padding:16px 20px">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td width="45%" style="padding:4px 0;font-size:12px;color:#8a8a8a">Student Name</td>
+                    <td width="55%" style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= student_name || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;font-size:12px;color:#8a8a8a">ID Number</td>
+                    <td style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= id_number || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;font-size:12px;color:#8a8a8a">Course & Year</td>
+                    <td style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= course || 'N/A' %> <%= year ? '- ' + year : '' %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;font-size:12px;color:#8a8a8a">Transaction Date</td>
+                    <td style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= transaction_date %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;font-size:12px;color:#8a8a8a">Managed By</td>
+                    <td style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= admin || 'N/A' %></td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Items Section Title -->
+          <tr>
+            <td style="padding:20px 32px 12px">
+              <p style="margin:0;font-size:13px;font-weight:600;color:#121212;letter-spacing:.2px">Items</p>
+            </td>
+          </tr>
+
+          <!-- Items Table -->
+          <tr>
+            <td style="padding:0 32px 20px">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:separate;border-spacing:0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden">
+                <thead>
+                  <tr style="background:#efefef">
+                    <th align="left" style="padding:10px 14px;font-size:11px;font-weight:600;color:#2f2f2f;text-transform:uppercase;letter-spacing:.5px">Product</th>
+                    <th align="left" style="padding:10px 14px;font-size:11px;font-weight:600;color:#2f2f2f;text-transform:uppercase;letter-spacing:.5px">Batch</th>
+                    <th align="left" style="padding:10px 14px;font-size:11px;font-weight:600;color:#2f2f2f;text-transform:uppercase;letter-spacing:.5px">Size</th>
+                    <th align="left" style="padding:10px 14px;font-size:11px;font-weight:600;color:#2f2f2f;text-transform:uppercase;letter-spacing:.5px">Variation</th>
+                    <th align="center" style="padding:10px 14px;font-size:11px;font-weight:600;color:#2f2f2f;text-transform:uppercase;letter-spacing:.5px">Qty</th>
+                    <th align="right" style="padding:10px 14px;font-size:11px;font-weight:600;color:#2f2f2f;text-transform:uppercase;letter-spacing:.5px">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% items.forEach(function(item) { %>
+                  <tr style="border-bottom:1px solid #ededed">
+                    <td style="padding:12px 14px;font-size:12px;color:#303030"><%= item.product_name %></td>
+                    <td style="padding:12px 14px;font-size:12px;color:#303030"><%= item.batch %></td>
+                    <td style="padding:12px 14px;font-size:12px;color:#303030"><%= item.sizes %></td>
+                    <td style="padding:12px 14px;font-size:12px;color:#303030"><%= Array.isArray(item.variation) ? item.variation.join(', ') : item.variation %></td>
+                    <td align="center" style="padding:12px 14px;font-size:12px;color:#303030"><%= item.quantity %></td>
+                    <td align="right" style="padding:12px 14px;font-size:12px;font-weight:600;color:#1c9dde">&#8369;<%= item.sub_total %></td>
+                  </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Totals -->
+          <tr>
+            <td style="padding:0 32px 28px">
+              <div style="background:#f7f7f7;border-radius:12px;padding:16px 20px">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td width="50%" align="right" style="padding:5px 0;font-size:13px;color:#8a8a8a">Cash Given</td>
+                    <td width="50%" align="right" style="padding:5px 0;font-size:13px;color:#303030">&#8369;<%= cash %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:5px 0;font-size:13px;color:#8a8a8a">Change</td>
+                    <td align="right" style="padding:5px 0;font-size:13px;color:#303030">&#8369;<%= (cash - total) %></td>
+                  </tr>
+                  <tr style="border-top:2px solid #e5e5e5">
+                    <td style="padding:10px 0 4px;font-size:14px;font-weight:600;color:#121212">Total</td>
+                    <td align="right" style="padding:10px 0 4px;font-size:18px;font-weight:700;color:#1c9dde">&#8369;<%= total %></td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 32px 32px;text-align:center;border-top:1px solid #eeeeee">
+              <p style="margin:0 0 4px;font-size:12px;color:#8a8a8a">Thank you for your purchase!</p>
+              <p style="margin:0;font-size:11px;color:#c9c9c9">&copy; <%= new Date().getFullYear() %> PSITS - University of Cebu Main Campus</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
 </html>

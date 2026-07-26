@@ -9,6 +9,7 @@ import { PromoLog } from "../models/promo.log.model";
 import { membership_status } from "../enums/status.enums";
 import { promoCodeGenerator } from "../custom_function/code_generator";
 import { IUserItems } from "./order.service.inteface";
+import { IOrderPromoEligibility, ICheckPromoEligibityResult } from "./promo.service.interface";
 import { IStudent } from "../models/student.interface";
 
 class PromoService {
@@ -302,10 +303,17 @@ class PromoService {
 
   //Verify promo against order items before final order processing
   verifyOrderPromoEligibility = async (
-    promoId: Types.ObjectId,
+    promoId: Types.ObjectId | undefined | null,
     requestor: IStudent,
     items: IUserItems[]
-  ) => {
+  ): Promise<IOrderPromoEligibility> => {
+    if (!promoId) {
+      return {
+        promo: {} as IPromo,
+        promoDiscount: { discount: 0, verfied: false },
+      };
+    }
+
     const promo = await this.fetchPromoById(promoId);
 
     if (this.isExpired(promo)) {

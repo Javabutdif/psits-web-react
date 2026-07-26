@@ -1,4 +1,4 @@
-export type OrdersTab = "pending" | "paid";
+export type OrdersTab = "pending" | "paid" | "refunded";
 export type OrdersStatus = "idle" | "loading" | "error" | "success";
 
 export interface OrderRow {
@@ -42,4 +42,15 @@ export interface ApprovePayload {
   order_id: string;
   reference_code?: string;
   cash?: number;
+}
+
+export interface RefundDetail {
+  _id: string;
+  refund_id: string;
+  order_id: string;
+  order_reference: string;
+  product_name: string;
+  refund_price: number;
+  refund_admin: string;
+  refund_date: string | Date;
 }

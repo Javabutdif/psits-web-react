@@ -10,6 +10,7 @@ import {
   roleAuthenticateV2,
   adminAccessAuthenticateV2,
 } from "../middlewares/authV2.middleware";
+import { psits_roles } from "../enums/role.enums";
 dotenv.config();
 
 const router = Router();
@@ -48,7 +49,7 @@ router.post(
   "/",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  adminAccessAuthenticateV2(["admin", "finance"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
   upload.array("images", 3),
   merchandiseController.create
 );
@@ -78,7 +79,7 @@ router.put(
   "/update/:_id",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  adminAccessAuthenticateV2(["admin", "finance"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
   upload.array("images", 3),
   merchandiseController.update
 );
@@ -87,7 +88,7 @@ router.put(
   "/delete-soft",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  adminAccessAuthenticateV2(["admin", "finance"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
   merchandiseController.softDelete
 );
 
@@ -95,8 +96,15 @@ router.put(
   "/publish",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  adminAccessAuthenticateV2(["admin", "finance"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
   merchandiseController.publish
+);
+
+router.get(
+  "/retrieve-published",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["student"]),
+  merchandiseController.retrievePublished
 );
 
 export default router;

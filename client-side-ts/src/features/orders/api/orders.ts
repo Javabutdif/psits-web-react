@@ -123,8 +123,8 @@ const handleApiError = (error: unknown, showUserError = true): void => {
 export const makeOrder = async (formData: OrderFormData): Promise<boolean> => {
   try {
     const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/orders/student-order`,
-      formData,
+      `${backendConnection()}/api/orders/v2/create`,
+      { items: formData.items },
       { headers: createHeaders() }
     );
 
@@ -432,5 +432,59 @@ export const refundOrderV2 = async (order_id: string): Promise<boolean> => {
   } catch (error) {
     handleApiError(error);
     return false;
+  }
+};
+
+// ─── Student Order APIs (V2) ─────────────────────────────────────────
+
+export const getStudentOrders = async ({
+  status = "Pending",
+  page = 1,
+  limit = 8,
+}: {
+  status?: "Pending" | "Paid" | "Refunded";
+  page?: number;
+  limit?: number;
+} = {}): Promise<{
+  data: any[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+} | null> => {
+  try {
+    const response: AxiosResponse = await axios.get(
+      `${backendConnection()}/api/v2/students/orders`,
+      {
+        params: { status, page, limit },
+        headers: createHeaders(),
+      }
+    );
+    if (response.status === 200) {
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        page: response.data.page || page,
+        limit: response.data.limit || limit,
+        totalPages: response.data.totalPages || 0,
+      };
+    }
+    return null;
+  } catch (error) {
+    handleApiError(error, false);
+    return { data: [], total: 0, page, limit, totalPages: 0 };
+  }
+};
+
+export const getRefundByOrderId = async (orderId: string) => {
+  try {
+    const response: AxiosResponse = await axios.get(
+      `${backendConnection()}/api/v2/students/refund/${orderId}`,
+      { headers: createHeaders() }
+    );
+    return response.status === 200 ? response.data.data : null;
+  } catch (error) {
+    console.error("Failed to fetch refund details", error);
+    return null;
   }
 };

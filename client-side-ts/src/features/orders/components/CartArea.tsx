@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Minus, Plus, Trash } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useTransactions } from "@/lib/transactions";
+import { useAuth } from "@/features/auth";
 import { toast } from "sonner";
 import { makeOrder } from "../api/orders";
 
@@ -43,41 +44,13 @@ export const Cart: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const getIdNumber = (): string | null => {
-    try {
-      const possibleKeys = [
-        "id_number",
-        "IdNumber",
-        "idNumber",
-        "student_id",
-        "StudentId",
-        "user",
-      ];
-      for (const k of possibleKeys) {
-        const v = sessionStorage.getItem(k);
-        if (!v) continue;
-        if (k === "user" || k === "User" || v.trim().startsWith("{")) {
-          try {
-            const parsed = JSON.parse(v);
-            if (
-              parsed &&
-              (parsed.id_number || parsed.idNumber || parsed.student_id)
-            ) {
-              return parsed.id_number || parsed.idNumber || parsed.student_id;
-            }
-          } catch (e) {}
-        }
-        return v;
-      }
-    } catch (e) {}
-    return null;
-  };
+  const { user } = useAuth();
 
   const handlePlaceOrder = async () => {
     const selected = items.filter((i) => selectedIds.has(i.uid));
     if (selected.length === 0) return;
 
-    const idNumber = getIdNumber();
+    const idNumber = user?.idNumber || null;
     if (!idNumber) {
       toast.error("Please log in to place an order", {
         style: ERROR_TOAST_STYLE,
