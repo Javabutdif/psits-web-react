@@ -9,6 +9,7 @@ import express from "express";
 
 import { checkPromos } from "./custom_function/check_promo";
 import { resendPendingEmails } from "./services/email.resend.service";
+import devtoolsRoutes from "./routes/devtools.v2.route";
 import adminRoutes from "./routes/admin.route";
 import authV2Routes from "./routes/authV2.route";
 import cartRoutes from "./routes/cart.route";
@@ -76,6 +77,7 @@ app.use("/api/v2/events", eventsV2Routes);
 app.use("/api/v2/students", studentV2Routes);
 app.use("/api/admin/eligible-certificates", eligibleCertificateRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/v2/dev", devtoolsRoutes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);

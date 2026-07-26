@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   BookOpen,
   ChevronDown,
-  ClipboardList,
   Grid,
   Calendar,
   BarChart3,
@@ -15,6 +14,7 @@ import {
   ShoppingBag,
   Users,
   Tag,
+  Code,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -32,6 +32,7 @@ import { useCampusCheck } from "@/features/auth/hooks/useCampusCheck";
 import { logAdminAction } from "@/features/admin/api/admin";
 import { showToast } from "@/utils/alertHelper";
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import { PSITS_ROLES } from "@/features/admin/constants/adminAccess";
 
 interface AdminSidebarProps {
   userName?: string;
@@ -351,22 +352,45 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={getNavButtonClass("/admin/orders")}
+                      className={getNavButtonClass("/admin/logs")}
                       asChild
                     >
-                      <Link to="/admin/orders">
-                        <ClipboardList className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>Orders</span>}
+                      <Link to="/admin/logs">
+                        <FileText className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>Logs</span>}
                       </Link>
                     </Button>
                   </TooltipTrigger>
                   {collapsed && (
                     <TooltipContent side="right">
-                      <p>Orders</p>
+                      <p>Logs</p>
                     </TooltipContent>
                   )}
                 </Tooltip>
               </li>
+              {user?.access === PSITS_ROLES.DEVELOPER || user?.access === PSITS_ROLES.ADMIN ? (
+                <li>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={getNavButtonClass("/admin/devtools")}
+                        asChild
+                      >
+                        <Link to="/admin/devtools">
+                          <Code className="h-5 w-5 shrink-0" />
+                          {!collapsed && <span>Developer Tools</span>}
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    {collapsed && (
+                      <TooltipContent side="right">
+                        <p>Developer Tools</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </li>
+              ) : null}
               <li>
                 <Tooltip>
                   <TooltipTrigger asChild>

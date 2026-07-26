@@ -39,6 +39,7 @@ import CertificatesPage from "./pages/CertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
 import { LogsView } from "./features/admin/logs";
+import { DevToolsPage } from "./features/admin/devtools/components/DevToolsPage";
 
 const router = createBrowserRouter([
   {
@@ -150,7 +151,10 @@ const router = createBrowserRouter([
                     campusUnauthorizedToastMessage="Unauthorized"
                   />
                 ),
-                children: [{ path: "logs", Component: LogsView }],
+                children: [
+                  { path: "logs", Component: LogsView },
+                  { path: "devtools", Component: DevToolsPage },
+                ],
               },
               // TODO: Remove this sample
               { path: "general", Component: GeneralAdminPage },
