@@ -10,6 +10,7 @@ import {
 import { emailService } from "../services/email.service";
 import { resendPendingEmails } from "../services/email.resend.service";
 import { checkPromos } from "../custom_function/check_promo";
+import { orderService } from "../services/order.service";
 import { campus_type } from "../enums/campus.enums";
 
 const ALLOWED_CAMPUS = [campus_type.MAIN] as string[];
@@ -157,6 +158,25 @@ class DevToolsController {
     } else {
       res.status(400).json({ message: "Invalid cron type" });
     }
+  });
+
+  getExpiredOrders = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const orders = await orderService.getExpiredPendingOrders();
+    res.status(200).json({ data: orders });
+  });
+
+  cancelExpiredOrders = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const result = await orderService.cancelExpiredOrders();
+    res.status(200).json({
+      message: `${result.cancelledCount} expired order(s) cancelled`,
+      data: result,
+    });
   });
 
   testEndpoint = catchAsync(async (req: Request, res: Response) => {

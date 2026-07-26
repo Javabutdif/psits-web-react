@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { triggerCron } from "../api/devtools.api";
+import { triggerCron, cancelExpiredOrders } from "../api/devtools.api";
 import { Button } from "@/components/ui/button";
 import { showToast } from "@/utils/alertHelper";
 import {
@@ -36,6 +36,14 @@ const actions: ActionButton[] = [
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m20.59 13.41-7.67 7.67a2 2 0 0 1-2.83 0l-5-5a2 2 0 0 1 0-2.83L8.59 5.59"/><path d="m16 8 8 8"/></svg>
     ),
   },
+  {
+    key: "cancel-expired",
+    label: "Cancel Expired Orders",
+    description: "Delete pending orders older than 1 month and restore stock",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    ),
+  },
 ];
 
 export const QuickActionsPanel = () => {
@@ -45,14 +53,24 @@ export const QuickActionsPanel = () => {
   const handleAction = async (key: string) => {
     setLoading(key);
     try {
-      await triggerCron(key);
-      showToast("success", "Action completed successfully");
+      if (key === "cancel-expired") {
+        const result = await cancelExpiredOrders();
+        showToast("success", `${result.data.cancelledCount} order(s) cancelled, ${result.data.restoredItems} item(s) restored`);
+      } else {
+        await triggerCron(key);
+        showToast("success", "Action completed successfully");
+      }
     } catch {
       showToast("error", "Failed to execute action");
     } finally {
       setLoading(null);
       setConfirmAction(null);
     }
+  };
+
+  const getLoadingText = (key: string) => {
+    if (key === "cancel-expired") return "Cancelling...";
+    return "Running...";
   };
 
   return (
@@ -82,7 +100,7 @@ export const QuickActionsPanel = () => {
             disabled={loading !== null}
             onClick={() => setConfirmAction(action.key)}
           >
-            {loading === action.key ? "Running..." : "Run Now"}
+            {loading === action.key ? getLoadingText(action.key) : "Run Now"}
           </Button>
         </div>
       ))}

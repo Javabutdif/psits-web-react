@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   BookOpen,
   ChevronDown,
+  ClipboardList,
   Grid,
   Calendar,
   BarChart3,
@@ -352,18 +353,18 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={getNavButtonClass("/admin/logs")}
+                      className={getNavButtonClass("/admin/orders")}
                       asChild
                     >
-                      <Link to="/admin/logs">
-                        <FileText className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>Logs</span>}
+                      <Link to="/admin/orders">
+                        <ClipboardList className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>Orders</span>}
                       </Link>
                     </Button>
                   </TooltipTrigger>
                   {collapsed && (
                     <TooltipContent side="right">
-                      <p>Logs</p>
+                      <p>Orders</p>
                     </TooltipContent>
                   )}
                 </Tooltip>

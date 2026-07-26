@@ -10,6 +10,7 @@ import express from "express";
 import { checkPromos } from "./custom_function/check_promo";
 import { resendPendingEmails } from "./services/email.resend.service";
 import devtoolsRoutes from "./routes/devtools.v2.route";
+import { orderService } from "./services/order.service";
 import adminRoutes from "./routes/admin.route";
 import authV2Routes from "./routes/authV2.route";
 import cartRoutes from "./routes/cart.route";
@@ -113,6 +114,12 @@ async function startServer() {
     cron.schedule("0 1 * * *", async () => {
       console.log("[1AM PH] Running daily email resend job...");
       await resendPendingEmails();
+    }, { timezone: "Asia/Manila" });
+
+    cron.schedule("0 0 1 * *", async () => {
+      console.log("[Monthly 1st] Running expired orders cleanup...");
+      const result = await orderService.cancelExpiredOrders();
+      console.log(`[Monthly] Cancelled ${result.cancelledCount} orders, restored ${result.restoredItems} items`);
     }, { timezone: "Asia/Manila" });
   } catch (error) {
     console.error("Startup failed:", error);

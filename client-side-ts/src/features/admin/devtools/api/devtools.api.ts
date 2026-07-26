@@ -59,3 +59,17 @@ export const triggerCron = async (type: string) => {
     { headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {} }
   );
 };
+
+export const getExpiredOrders = async () => {
+  const { data } = await api.get<{ data: any[] }>("/api/v2/dev/expired-orders", {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const cancelExpiredOrders = async () => {
+  const { data } = await api.post<{ data: { cancelledCount: number; restoredItems: number } }>("/api/v2/dev/actions/cancel-expired", {}, {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data;
+};

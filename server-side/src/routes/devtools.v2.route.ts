@@ -59,6 +59,18 @@ router.post(
   devtoolsController.triggerCron
 );
 
+// Expired orders
+router.get(
+  "/expired-orders",
+  ...authChain,
+  devtoolsController.getExpiredOrders
+);
+router.post(
+  "/actions/cancel-expired",
+  ...sessionAuthChain,
+  devtoolsController.cancelExpiredOrders
+);
+
 // Tester
 router.post(
   "/test-endpoint",
