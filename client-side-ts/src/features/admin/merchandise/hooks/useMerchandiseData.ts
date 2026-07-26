@@ -17,11 +17,13 @@ import {
   type PromoLogItem,
   type PromoMerchandiseItem,
 } from "@/features/admin/api/admin";
+import { PSITS_ROLES } from "@/features/admin/constants/adminAccess";
 import { useAuth } from "@/features/auth";
 import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
 import type {
   AdminPromoCode,
+  MerchandiseSection,
   MerchandiseSort,
   ProductFilters,
   ProductFormValues,
@@ -398,7 +400,8 @@ export const useMerchandiseData = () => {
 
   const canManageMerchandise =
     normalizeCampus(user?.campus) === "UC-MAIN" &&
-    (user?.access === "admin" || user?.access === "finance");
+    (user?.access === PSITS_ROLES.ADMIN ||
+      user?.access === PSITS_ROLES.FINANCE);
 
   const refreshProducts = useCallback(async () => {
     const [productResult, publishedResult] = await Promise.all([
@@ -485,6 +488,14 @@ export const useMerchandiseData = () => {
 
   const productTotalPages = Math.max(1, Math.ceil(filteredProducts.length / ROWS_PER_PAGE));
   const promoTotalPages = Math.max(1, Math.ceil(filteredPromos.length / ROWS_PER_PAGE));
+
+  const tabCounts = useMemo<Record<MerchandiseSection, number>>(
+    () => ({
+      products: products.length,
+      "promo-code": promos.length,
+    }),
+    [products.length, promos.length]
+  );
 
   const productRows = filteredProducts.slice(
     (productPage - 1) * ROWS_PER_PAGE,
@@ -669,6 +680,7 @@ export const useMerchandiseData = () => {
     setPromoFilters,
     setPromoPage,
     setPromoSearch,
+    tabCounts,
     toggleProductSort,
   };
 };

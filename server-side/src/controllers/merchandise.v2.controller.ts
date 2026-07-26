@@ -157,7 +157,7 @@ class MerchandiseController {
         )
         .lean();
       if (!merches || merches.length === 0) {
-        return res.status(400).json({ message: "No Available Merchandise" });
+        return res.status(200).json({ data: [] });
       }
       res.status(200).json({ data: merches });
     } catch (error) {
@@ -176,7 +176,7 @@ class MerchandiseController {
         )
         .lean();
       if (!merches || merches.length === 0) {
-        return res.status(400).json({ message: "No Available Merchandise" });
+        return res.status(200).json({ data: [] });
       }
       res.status(200).json({ data: merches });
     } catch (error) {
@@ -482,7 +482,7 @@ class MerchandiseController {
         .lean();
 
       if (!merches || merches.length === 0) {
-        return res.status(400).json({ message: "No Available Merchandise" });
+        return res.status(200).json({ data: [] });
       }
 
       res.status(200).json({ data: merches });

@@ -55,6 +55,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const location = useLocation();
   const isUcMainAdmin = useCampusCheck(["UC-MAIN"]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [merchandiseOpen, setMerchandiseOpen] = useState(
+    location.pathname.startsWith("/admin/merchandise")
+  );
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isActivePath = (path: string) =>
@@ -320,28 +323,31 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="ghost"
                       className={getNavButtonClass(
                         "/admin/merchandise",
                         !isUcMainAdmin
                       )}
-                      asChild
+                      aria-expanded={!collapsed && merchandiseOpen}
+                      onClick={() => {
+                        if (!isUcMainAdmin) {
+                          showToast("error", "Unauthorized.");
+                          return;
+                        }
+                        setMerchandiseOpen((current) => !current);
+                      }}
                     >
-                      <Link
-                        to={isUcMainAdmin ? "/admin/merchandise/products" : "#"}
-                        onClick={(e) => {
-                          if (!isUcMainAdmin) {
-                            e.preventDefault();
-                            showToast("error", "Unauthorized.");
-                          }
-                        }}
-                      >
-                        <ShoppingBag className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>Merchandise</span>}
-                        {!collapsed && (
-                          <ChevronDown className="ml-auto h-4 w-4" />
-                        )}
-                      </Link>
+                      <ShoppingBag className="h-5 w-5 shrink-0" />
+                      {!collapsed && <span>Merchandise</span>}
+                      {!collapsed && (
+                        <ChevronDown
+                          className={cn(
+                            "ml-auto h-4 w-4 transition-transform",
+                            merchandiseOpen && "rotate-180"
+                          )}
+                        />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   {collapsed && (
@@ -350,7 +356,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     </TooltipContent>
                   )}
                 </Tooltip>
-                {!collapsed && isUcMainAdmin && (
+                {!collapsed && isUcMainAdmin && merchandiseOpen && (
                   <div className="mt-1 ml-9 space-y-1">
                     <Button
                       variant="ghost"

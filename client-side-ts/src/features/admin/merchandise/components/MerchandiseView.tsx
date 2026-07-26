@@ -844,6 +844,7 @@ const ProductsPage = () => {
     setProductFilters,
     setProductPage,
     setProductSearch,
+    tabCounts,
     toggleProductSort,
   } = useMerchandiseData();
   const [selectedProduct, setSelectedProduct] = useState<MerchandiseItem | null>(null);
@@ -878,6 +879,7 @@ const ProductsPage = () => {
         title="Merchandise"
         description="Control merchandise listings and discounts"
         activeSection="products"
+        tabCounts={tabCounts}
         action={
           canManageMerchandise && (
             <Button
@@ -953,6 +955,7 @@ interface MerchandiseHeaderProps {
   title: string;
   description: string;
   activeSection: MerchandiseSection;
+  tabCounts: Record<MerchandiseSection, number>;
   action?: ReactNode;
 }
 
@@ -960,15 +963,16 @@ const MerchandiseHeader = ({
   title,
   description,
   activeSection,
+  tabCounts,
   action,
 }: MerchandiseHeaderProps) => (
   <div className="mb-8">
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
       <div>
-        <h1 className="text-[32px] leading-tight font-semibold tracking-normal text-[#333333]">
-          {title}
-        </h1>
-        <p className="mt-2 text-base text-[#9a9a9a]">{description}</p>
+        <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+          {description}
+        </p>
       </div>
       {action}
     </div>
@@ -986,7 +990,10 @@ const MerchandiseHeader = ({
             )}
           >
             <Icon className="h-4 w-4" />
-            {tab.label}
+            <span>{tab.label}</span>
+            <span className="text-xs text-current/70">
+              ({tabCounts[tab.key].toLocaleString()})
+            </span>
           </Link>
         );
       })}
@@ -1660,6 +1667,7 @@ const PromoPage = () => {
     setPromoFilters,
     setPromoPage,
     setPromoSearch,
+    tabCounts,
   } = useMerchandiseData();
   const [activePromo, setActivePromo] = useState<PromoCodeItem | null>(null);
   const [promoFormOpen, setPromoFormOpen] = useState(false);
@@ -1673,6 +1681,7 @@ const PromoPage = () => {
         title="Merchandise"
         description="Control merchandise listings and discounts"
         activeSection="promo-code"
+        tabCounts={tabCounts}
         action={
           canManageMerchandise && (
             <Button
@@ -2442,14 +2451,14 @@ export const MerchandiseView = () => {
 
   if (isProductForm) {
     return (
-      <main className="min-h-screen bg-white px-6 py-6 sm:px-10 lg:px-14">
+      <main className="min-h-screen bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <ProductFormPage productId={params.productId} />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white px-6 py-6 sm:px-10 lg:px-14">
+    <main className="min-h-screen bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
       {isPromo ? <PromoPage /> : <ProductsPage />}
     </main>
   );

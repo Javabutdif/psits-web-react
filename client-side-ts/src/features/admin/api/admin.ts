@@ -361,6 +361,8 @@ const createHeaders = () => ({
   ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
 });
 
+const merchandiseV2BaseUrl = () => `${backendConnection()}/api/v2/merchandise`;
+
 const handleApiError = (error: unknown, showUser = true): void => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
@@ -578,7 +580,7 @@ const normalizePromoLogResponse = (payload: PromoLogResponse) =>
 export const merchandise = async (): Promise<MerchandiseItem[] | void> => {
   try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-      `${backendConnection()}/api/merch/retrieve`,
+      `${merchandiseV2BaseUrl()}/active`,
       {
         headers: createHeaders(),
       }
@@ -594,7 +596,7 @@ export const activePublishMerchandise = async (): Promise<
 > => {
   try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-      `${backendConnection()}/api/merch/retrieve-publish-merchandise`,
+      `${merchandiseV2BaseUrl()}/retrieve-published`,
       { headers: createHeaders() }
     );
     return normalizeMerchandiseResponse(response.data);
@@ -607,7 +609,7 @@ export const activePublishMerchandise = async (): Promise<
 export const merchandiseAdmin = async (): Promise<MerchandiseItem[] | void> => {
   try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-      `${backendConnection()}/api/merch/retrieve-admin`,
+      merchandiseV2BaseUrl(),
       {
         headers: createHeaders(),
       }
@@ -623,7 +625,7 @@ export const deleteMerchandise = async (
 ): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/merch/delete-soft`,
+      `${merchandiseV2BaseUrl()}/delete-soft`,
       { _id },
       { headers: createHeaders() }
     );
@@ -681,7 +683,7 @@ export const publishMerchandise = async (
 ): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/merch/publish`,
+      `${merchandiseV2BaseUrl()}/publish`,
       { _id },
       { headers: createHeaders() }
     );
@@ -739,7 +741,7 @@ export const addMerchandise = async (formData: FormData): Promise<boolean> => {
   try {
     const token = getAuthToken();
     const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/merch`,
+      merchandiseV2BaseUrl(),
       formData,
       {
         headers: {
@@ -763,7 +765,7 @@ export const updateMerchandise = async (
   try {
     const token = getAuthToken();
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/merch/update/${id}`,
+      `${merchandiseV2BaseUrl()}/update/${id}`,
       formData,
       {
         headers: {
