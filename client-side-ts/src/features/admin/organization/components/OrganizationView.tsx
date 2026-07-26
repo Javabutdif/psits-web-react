@@ -79,7 +79,14 @@ const tabs: Array<{
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
-const campuses = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"];
+const campuses = [
+  "UC_MAIN",
+  "UC_BANILAD",
+  "UC_LM",
+  "UC_PT",
+  "UC_JONES",
+  "OTHER_CAMPUS",
+];
 const adminRoles = [
   "President",
   "Vice-President Internal",

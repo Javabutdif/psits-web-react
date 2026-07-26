@@ -429,7 +429,7 @@ class AdminService {
       req.body;
 
     //Check if id number existed
-    const admin = await this.retrieveSpecific(id_number);
+    const admin = await Admin.findOne({ id_number });
     if (admin) {
       throw new AppError("Already have an account!", 404);
     }

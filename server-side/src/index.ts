@@ -43,6 +43,7 @@ const allowedOrigins = [
   process.env.CORS3,
 ].filter((origin): origin is string => Boolean(origin));
 
+
 app.use(
   helmet({
     crossOriginResourcePolicy: false,

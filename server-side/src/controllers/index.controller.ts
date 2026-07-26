@@ -13,7 +13,7 @@ const token_key = process.env.JWT_SECRET ?? "Default_Token";
 const url =
   process.env.DB_NAME !== "psits-test"
     ? "https://psits.vercel.app/reset-password/"
-    : "https://psits-staging.vercel.app/reset-password/";
+    : "https://staging-v2.psits.org/auth/reset-password?token=";
 
 export const loginController = async (req: Request, res: Response) => {
   const { id_number, password } = req.body;

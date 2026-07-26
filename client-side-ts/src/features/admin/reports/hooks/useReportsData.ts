@@ -140,6 +140,9 @@ export const useReportsData = () => {
           dateFrom: filters.dateFrom,
           dateTo: filters.dateTo,
         });
+
+        
+
         if (requestId !== merchandiseRequestRef.current) return;
         if (!result) throw new Error("No merchandise reports returned");
 

@@ -70,6 +70,7 @@ export interface MerchandiseReportResult {
   limit: number;
   totalPages: number;
   summary: MerchandiseReportSummary;
+  productNames: string[];
 }
 
 const normalizePage = (value?: number) => {
@@ -289,6 +290,8 @@ export const getMerchandiseReport = async (
     { unitsSold: 0, totalRevenue: 0 }
   );
 
+  const productNames = await getMerchandiseProductNames();
+
   return {
     rows: pagedRows,
     data: pagedRows,
@@ -297,6 +300,7 @@ export const getMerchandiseReport = async (
     limit,
     totalPages,
     summary,
+    productNames,
   };
 };
 

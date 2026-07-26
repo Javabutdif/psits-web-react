@@ -205,6 +205,7 @@ const ReportsFilterPopover = ({
                       <SelectValue placeholder="All products" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="all">All products</SelectItem>
                       {uniqueProductNames.map((name) => (
                         <SelectItem key={name} value={name}>
                           {name}
