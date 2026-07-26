@@ -8,91 +8,74 @@
   <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#f4f4f4">
     <tr>
       <td align="center" style="padding:32px 16px">
-        <!-- Card -->
-        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid #ddd;max-width:600px;width:100%">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background:#fff;border-radius:22px;overflow:hidden;max-width:600px;width:100%">
 
           <!-- Header -->
           <tr>
-            <td align="center" style="padding:32px 24px 24px;background:#fafafa;border-bottom:1px solid #ddd">
-              <img src="cid:logo" alt="PSITS" width="56" style="display:block;border-radius:50%;width:56px;height:56px;object-fit:cover;margin:0 auto" />
-              <h1 style="margin:16px 0 4px;font-size:22px;font-weight:700;color:#121212;letter-spacing:-.3px">Official Receipt</h1>
-              <p style="margin:0;font-size:13px;color:#b8b8b8;text-transform:uppercase;letter-spacing:.8px">PSITS &bull; UC Main</p>
+            <td style="padding:32px 32px 24px;text-align:center;border-bottom:2px solid #1c9dde">
+              <img src="cid:logo" alt="PSITS" width="48" height="48" style="display:block;border-radius:50%;width:48px;height:48px;object-fit:cover;margin:0 auto 12px" />
+              <h1 style="margin:0;font-size:20px;font-weight:700;color:#121212;letter-spacing:-.3px">Official Receipt</h1>
+              <span style="display:inline-block;margin-top:8px;padding:4px 12px;background:#f0fafd;color:#1c9dde;border-radius:9999px;font-size:11px;font-weight:600;letter-spacing:.3px">#<%= reference_code %></span>
             </td>
           </tr>
 
-          <!-- Details -->
+          <!-- Student Info -->
           <tr>
-            <td style="padding:28px 32px 8px;color:#333;font-size:14px;line-height:1.6">
-              <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td width="50%" style="padding:4px 0;color:#b8b8b8;font-size:13px">Name</td>
-                  <td width="50%" style="padding:4px 0;color:#121212;font-weight:600;font-size:13px"><%= name %></td>
-                </tr>
-                <tr>
-                  <td width="50%" style="padding:4px 0;color:#b8b8b8;font-size:13px">Course & Year</td>
-                  <td width="50%" style="padding:4px 0;color:#121212;font-weight:600;font-size:13px"><%= course %> - <%= year %></td>
-                </tr>
-                <tr>
-                  <td width="50%" style="padding:4px 0;color:#b8b8b8;font-size:13px">Item</td>
-                  <td width="50%" style="padding:4px 0;color:#121212;font-weight:600;font-size:13px">Membership</td>
-                </tr>
-                <tr>
-                  <td width="50%" style="padding:4px 0;color:#b8b8b8;font-size:13px">Quantity</td>
-                  <td width="50%" style="padding:4px 0;color:#121212;font-weight:600;font-size:13px">1</td>
-                </tr>
-              </table>
+            <td style="padding:24px 32px 16px">
+              <div style="background:#f7f7f7;border-radius:12px;padding:16px 20px">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td width="45%" style="padding:4px 0;font-size:12px;color:#8a8a8a">Name</td>
+                    <td width="55%" style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= name %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;font-size:12px;color:#8a8a8a">Course & Year</td>
+                    <td style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= course %> - <%= year %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;font-size:12px;color:#8a8a8a">Item</td>
+                    <td style="padding:4px 0;font-size:12px;color:#303030;font-weight:500">Membership</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;font-size:12px;color:#8a8a8a">Date</td>
+                    <td style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= date %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;font-size:12px;color:#8a8a8a">Managed By</td>
+                    <td style="padding:4px 0;font-size:12px;color:#303030;font-weight:500"><%= admin %></td>
+                  </tr>
+                </table>
+              </div>
             </td>
           </tr>
 
           <!-- Totals -->
           <tr>
-            <td style="padding:16px 32px 28px">
-              <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td width="50%" align="right" style="padding:4px 0;font-size:14px;color:#565656">Total</td>
-                  <td width="50%" align="right" style="padding:4px 0;font-size:18px;font-weight:700;color:#1C9DDE">₱<%= total %></td>
-                </tr>
-                <tr>
-                  <td width="50%" align="right" style="padding:4px 0;font-size:14px;color:#565656">Cash</td>
-                  <td width="50%" align="right" style="padding:4px 0;font-size:14px;color:#121212">₱<%= cash %></td>
-                </tr>
-                <tr>
-                  <td width="50%" align="right" style="padding:4px 0;font-size:14px;color:#565656">Change</td>
-                  <td width="50%" align="right" style="padding:4px 0;font-size:14px;color:#121212">₱<%= change %></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Divider -->
-          <tr>
-            <td style="padding:0 32px;border-top:1px solid #ddd"></td>
-          </tr>
-
-          <!-- Footer Info -->
-          <tr>
-            <td style="padding:16px 32px 28px">
-              <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td width="50%" style="padding:4px 0;color:#b8b8b8;font-size:13px">Reference Code</td>
-                  <td width="50%" style="padding:4px 0;color:#121212;font-weight:600;font-size:13px"><%= reference_code %></td>
-                </tr>
-                <tr>
-                  <td width="50%" style="padding:4px 0;color:#b8b8b8;font-size:13px">Date</td>
-                  <td width="50%" style="padding:4px 0;color:#121212;font-weight:600;font-size:13px"><%= date %></td>
-                </tr>
-                <tr>
-                  <td width="50%" style="padding:4px 0;color:#b8b8b8;font-size:13px">Managed by</td>
-                  <td width="50%" style="padding:4px 0;color:#121212;font-weight:600;font-size:13px"><%= admin %></td>
-                </tr>
-              </table>
+            <td style="padding:0 32px 28px">
+              <div style="background:#f7f7f7;border-radius:12px;padding:16px 20px">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td width="50%" align="right" style="padding:5px 0;font-size:13px;color:#8a8a8a">Cash</td>
+                    <td width="50%" align="right" style="padding:5px 0;font-size:13px;color:#303030">&#8369;<%= cash %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:5px 0;font-size:13px;color:#8a8a8a">Change</td>
+                    <td align="right" style="padding:5px 0;font-size:13px;color:#303030">&#8369;<%= change %></td>
+                  </tr>
+                  <tr style="border-top:2px solid #e5e5e5">
+                    <td style="padding:10px 0 4px;font-size:14px;font-weight:600;color:#121212">Total</td>
+                    <td align="right" style="padding:10px 0 4px;font-size:18px;font-weight:700;color:#1c9dde">&#8369;<%= total %></td>
+                  </tr>
+                </table>
+              </div>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td align="center" style="padding:0 32px 32px;font-size:12px;color:#b8b8b8">
-              <p style="margin:0">Thank you for your membership payment!</p>
+            <td style="padding:20px 32px 32px;text-align:center;border-top:1px solid #eeeeee">
+              <p style="margin:0 0 4px;font-size:12px;color:#8a8a8a">Thank you for your membership payment!</p>
+              <p style="margin:0;font-size:11px;color:#c9c9c9">&copy; <%= new Date().getFullYear() %> PSITS - University of Cebu Main Campus</p>
             </td>
           </tr>
         </table>

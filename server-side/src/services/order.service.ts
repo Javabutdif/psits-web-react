@@ -387,7 +387,11 @@ class OrderService {
       admin,
       items: order.items.map((item) => ({
         product_name: item.product_name,
-        price: item.price,
+        batch: item.batch,
+        sizes: item.sizes,
+        variation: item.variation,
+        quantity: item.quantity,
+        sub_total: item.sub_total,
       })),
       cash,
       total: order.total,
