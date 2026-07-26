@@ -55,6 +55,20 @@ class EmailService {
       { new: true }
     );
   };
+  //Increment retry count
+  incrementRetry = async (id: string) => {
+    return await EmailQueue.findByIdAndUpdate(id, {
+      $inc: { retryCount: 1 },
+    });
+  };
+  //Mark as failed
+  markAsFailed = async (id: string) => {
+    return await EmailQueue.findByIdAndUpdate(
+      id,
+      { $set: { status: "failed" } },
+      { new: true }
+    );
+  };
   //Fetch emailqueue by receipt type
   fetchByReceipt = async () => {
     return await EmailQueue.find({

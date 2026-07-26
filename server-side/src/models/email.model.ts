@@ -22,6 +22,7 @@ const emailSchema = new Schema<IEmailDocument>({
   status: { type: String, default: "pending", required: true },
   subtype: { type: String },
   referenceCode: { type: String },
+  retryCount: { type: Number, default: 0 },
 });
 
 export const EmailQueue = mongoose.model<IEmailDocument>(

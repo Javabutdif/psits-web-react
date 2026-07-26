@@ -8,6 +8,7 @@ import bodyParser from "body-parser";
 import express from "express";
 
 import { checkPromos } from "./custom_function/check_promo";
+import { resendPendingEmails } from "./services/email.resend.service";
 import adminRoutes from "./routes/admin.route";
 import authV2Routes from "./routes/authV2.route";
 import cartRoutes from "./routes/cart.route";
@@ -106,6 +107,11 @@ async function startServer() {
       console.log("Running daily promo check...");
       await checkPromos();
     });
+
+    cron.schedule("0 1 * * *", async () => {
+      console.log("[1AM PH] Running daily email resend job...");
+      await resendPendingEmails();
+    }, { timezone: "Asia/Manila" });
   } catch (error) {
     console.error("Startup failed:", error);
     process.exit(1);

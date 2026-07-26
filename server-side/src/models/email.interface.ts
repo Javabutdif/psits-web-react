@@ -7,4 +7,5 @@ export interface IEmail {
   status: "pending" | "sent";
   subtype?: string;
   referenceCode?: string;
+  retryCount?: number;
 }
