@@ -1,4 +1,7 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
+import multer from "multer";
+import multerS3 from "multer-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import {
   requireAccessTokenV2,
   requireAccessTokenWithDBCheck,
@@ -9,6 +12,7 @@ import {
 import {
   addAttendeeV2Controller,
   changeAttendeePasswordV2Controller,
+  createEventV2Controller,
   drawEventRaffleWinnerController,
   editAttendeeV2Controller,
   getAllEventsV2Controller,
@@ -24,12 +28,68 @@ import {
 
 const router = Router();
 
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+  },
+});
+
+const getUpload = () => {
+  const bucket = process.env.R2_BUCKET_NAME;
+  if (!bucket) return multer();
+
+  return multer({
+    storage: multerS3({
+      s3: r2Client,
+      bucket,
+      metadata: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, metadata?: any) => void,
+      ) => {
+        cb(null, { fieldName: file.fieldname });
+      },
+      key: (req: Request, file: Express.Multer.File, cb: (error: any, key?: string) => void) => {
+        cb(null, `events/${Date.now()}_${file.originalname}`);
+      },
+    }),
+  });
+};
+
+// POST: Create a new Event via V2
+router.post(
+  "/",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  getUpload().array("images", 3),
+  (err: unknown, req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({
+        error: "UPLOAD_ERROR",
+        message: err.message,
+      });
+    }
+    if (err) {
+      console.error("Event V2 upload failed:", err);
+      return res.status(500).json({
+        error: "UPLOAD_ERROR",
+        message: "Image upload failed",
+      });
+    }
+    next();
+  },
+  createEventV2Controller,
+);
+
 // GET all events
 router.get(
   "/get-all-event",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin", "student"]),
-  getAllEventsV2Controller
+  getAllEventsV2Controller,
 );
 
 // GET all events the student is attended in,
@@ -39,7 +99,7 @@ router.get(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["student"]),
   requireActiveStudentMembershipV2,
-  getMyEventsController
+  getMyEventsController,
 );
 
 // GET specific event
@@ -47,7 +107,7 @@ router.get(
   "/:eventId",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin", "student"]),
-  getEventByIdV2Controller
+  getEventByIdV2Controller,
 );
 
 // GET paginated attendees for specific event
@@ -55,7 +115,7 @@ router.get(
   "/:eventId/attendees",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getEventAttendeesV2Controller
+  getEventAttendeesV2Controller,
 );
 
 // GET statistics for specific event
@@ -63,7 +123,7 @@ router.get(
   "/:eventId/statistics",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getEventStatisticsV2Controller
+  getEventStatisticsV2Controller,
 );
 
 // POST add attendee (creates user account if needed + registers as attendee)
@@ -71,7 +131,7 @@ router.post(
   "/:eventId/attendees",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  addAttendeeV2Controller
+  addAttendeeV2Controller,
 );
 
 // PUT mark attendance for a specific attendee in an event
@@ -79,7 +139,7 @@ router.put(
   "/:eventId/attendance/:idNumber",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  markAttendanceV2Controller
+  markAttendanceV2Controller,
 );
 
 // GET editable attendee data (includes student name components)
@@ -87,7 +147,7 @@ router.get(
   "/:eventId/attendees/:idNumber/editable",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  getEditableAttendeeV2Controller
+  getEditableAttendeeV2Controller,
 );
 
 // PUT edit attendee details
@@ -95,7 +155,7 @@ router.put(
   "/:eventId/attendees/:idNumber",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  editAttendeeV2Controller
+  editAttendeeV2Controller,
 );
 
 // PUT change attendee password
@@ -103,7 +163,7 @@ router.put(
   "/:eventId/attendees/:idNumber/password",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  changeAttendeePasswordV2Controller
+  changeAttendeePasswordV2Controller,
 );
 
 // GET eligible raffle participants
@@ -111,7 +171,7 @@ router.get(
   "/raffle/:eventId/",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  getEligibleAttendeesRaffleV2Controller
+  getEligibleAttendeesRaffleV2Controller,
 );
 
 // POST draw raffle winner
@@ -119,7 +179,7 @@ router.post(
   "/raffle/:eventId/draw",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  drawEventRaffleWinnerController
+  drawEventRaffleWinnerController,
 );
 
 // POST undo raffle winner
@@ -127,6 +187,7 @@ router.post(
   "/raffle/:eventId/undo/:attendeeId",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  undoEventRaffleWinnerController
+  undoEventRaffleWinnerController,
 );
+
 export default router;

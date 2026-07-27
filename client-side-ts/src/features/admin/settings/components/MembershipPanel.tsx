@@ -19,7 +19,7 @@ interface MembershipPanelProps {
   setConfirmPrice: (v: boolean) => void;
   confirmRevoke: boolean;
   setConfirmRevoke: (v: boolean) => void;
-  isAdminAccess: boolean;
+  isPriceAdminAccess: boolean; // renamed from isAdminAccess
   onSavePrice: () => void;
   onRevoke: () => void;
 }
@@ -34,7 +34,7 @@ export const MembershipPanel = ({
   setConfirmPrice,
   confirmRevoke,
   setConfirmRevoke,
-  isAdminAccess,
+  isPriceAdminAccess, // renamed from isAdminAccess
   onSavePrice,
   onRevoke,
 }: MembershipPanelProps) => (
@@ -55,8 +55,8 @@ export const MembershipPanel = ({
         </div>
         {!priceEditMode ? (
           <Button
-            onClick={() => isAdminAccess && setPriceEditMode(true)}
-            disabled={!isAdminAccess}
+            onClick={() => isPriceAdminAccess && setPriceEditMode(true)}
+            disabled={!isPriceAdminAccess}
             className="h-10 rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
           >
             Edit
@@ -90,9 +90,9 @@ export const MembershipPanel = ({
       <p className="mb-4 text-sm text-[#8a8a8a]">
         This will revoke all active student memberships. Use with caution.
       </p>
-      <Button
-        onClick={() => isAdminAccess && setConfirmRevoke(true)}
-        disabled={!isAdminAccess}
+       <Button
+         onClick={() => isPriceAdminAccess && setConfirmRevoke(true)}
+        disabled={!isPriceAdminAccess}
         variant="destructive"
         className="rounded-full"
       >

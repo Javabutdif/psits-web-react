@@ -226,21 +226,21 @@ export const logCronExecution = async (data: {
 };
 
 export const getEnvStatus = () => {
-  const vars = [
-    { key: "EMAIL", value: process.env.EMAIL, secret: false },
-    { key: "RESEND_API_KEY", value: process.env.RESEND_API_KEY, secret: true },
-    { key: "BASE_URL", value: process.env.BASE_URL, secret: false },
-    { key: "MONGO_URI", value: process.env.MONGO_URI, secret: true },
-    { key: "R2_BUCKET_NAME", value: process.env.R2_BUCKET_NAME, secret: false },
-    { key: "R2_ACCOUNT_ID", value: process.env.R2_ACCOUNT_ID, secret: false },
-    { key: "AWS_BUCKET_NAME", value: process.env.AWS_BUCKET_NAME, secret: false },
-    { key: "AWS_REGION", value: process.env.AWS_REGION, secret: false },
+  const vars: Array<{ key: string; required: boolean }> = [
+    { key: "EMAIL", required: true },
+    { key: "RESEND_API_KEY", required: true },
+    { key: "BASE_URL", required: true },
+    { key: "MONGO_URI", required: true },
+    { key: "R2_BUCKET_NAME", required: false },
+    { key: "R2_ACCOUNT_ID", required: false },
+    { key: "AWS_BUCKET_NAME", required: false },
+    { key: "AWS_REGION", required: false },
   ];
 
   return vars.map((v) => ({
     key: v.key,
-    configured: !!v.value,
-    value: v.secret ? "****" : v.value || null,
+    configured: Boolean(process.env[v.key]),
+    required: v.required,
   }));
 };
 

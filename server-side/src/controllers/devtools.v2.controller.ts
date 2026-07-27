@@ -18,6 +18,8 @@ import { resendPendingEmails } from "../services/email.resend.service";
 import { checkPromos } from "../custom_function/check_promo";
 import { orderService } from "../services/order.service";
 import { campus_type } from "../enums/campus.enums";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
 
 const ALLOWED_CAMPUS = [campus_type.MAIN] as string[];
 
@@ -76,6 +78,13 @@ class DevToolsController {
     const { id } = req.params;
     await resendSingleEmail(id);
     await emailService.updateStatusById(id, "sent");
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.RESEND_EMAIL,
+      target: id,
+      target_model: "Order",
+    });
     res.status(200).json({ message: "Email resent successfully" });
   });
 
@@ -148,14 +157,24 @@ class DevToolsController {
     const { Student } = await import("../models/student.model");
     const now = new Date();
 
-    await Admin.updateMany(
+    const adminResult = await Admin.updateMany(
       { currentRefreshToken: { $exists: true }, updatedAt: { $lt: now } },
       { $set: { currentRefreshToken: null } }
     );
-    await Student.updateMany(
+    const studentResult = await Student.updateMany(
       { currentRefreshToken: { $exists: true }, updatedAt: { $lt: now } },
       { $set: { currentRefreshToken: null } }
     );
+    const invalidatedCount =
+      (adminResult.modifiedCount || 0) + (studentResult.modifiedCount || 0);
+
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.CLEAR_EXPIRED_SESSIONS,
+      target: `Cleared ${invalidatedCount} expired sessions`,
+      target_model: "Admin",
+    });
 
     res.status(200).json({ message: "Expired sessions cleared" });
   });
@@ -170,6 +189,14 @@ class DevToolsController {
 
     await Admin.findByIdAndUpdate(userId, { currentRefreshToken: null });
     await Student.findByIdAndUpdate(userId, { currentRefreshToken: null });
+
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.INVALIDATE_SESSION,
+      target: `Invalidated session for ${userId}`,
+      target_model: "Admin",
+    });
 
     res.status(200).json({ message: "Session invalidated" });
   });
@@ -195,6 +222,14 @@ class DevToolsController {
       { $set: { currentRefreshToken: null } }
     );
 
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.INVALIDATE_SESSION_BULK,
+      target: `Bulk invalidated ${userIds.length} sessions`,
+      target_model: "Admin",
+    });
+
     res.status(200).json({ message: `${userIds.length} session(s) invalidated` });
   });
 
@@ -206,9 +241,23 @@ class DevToolsController {
 
     if (type === "email-resend") {
       await resendPendingEmails();
+      await logService.create({
+        admin: req.admin.name,
+        admin_id: req.admin._id,
+        action: logs_action.TRIGGER_CRON,
+        target: `Triggered cron job: ${type}`,
+        target_model: "Order",
+      });
       res.status(200).json({ message: "Email resend job triggered" });
     } else if (type === "promo-check") {
       await checkPromos();
+      await logService.create({
+        admin: req.admin.name,
+        admin_id: req.admin._id,
+        action: logs_action.TRIGGER_CRON,
+        target: `Triggered cron job: ${type}`,
+        target_model: "Merchandise",
+      });
       res.status(200).json({ message: "Promo check triggered" });
     } else {
       res.status(400).json({ message: "Invalid cron type" });
@@ -228,6 +277,13 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const result = await orderService.cancelExpiredOrders();
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.CANCEL_EXPIRED_ORDERS,
+      target: `Cancelled ${result.cancelledCount} expired order(s), restored ${result.restoredItems} item(s)`,
+      target_model: "Order",
+    });
     res.status(200).json({
       message: `${result.cancelledCount} expired order(s) cancelled`,
       data: result,
@@ -275,6 +331,13 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const result = await rebuildIndexes();
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.REBUILD_DB_INDEXES,
+      target: `Rebuilt indexes for ${result.collections?.length || 0} collection(s)`,
+      target_model: "Admin",
+    });
     res.status(200).json({ message: result.message, data: result.collections });
   });
 
@@ -288,15 +351,16 @@ class DevToolsController {
       return res.status(400).json({ message: "path and method are required" });
     }
 
-    const allowedPaths = [
-      "/api/v2/auth/login",
-      "/api/v2/students",
-      "/api/v2/orders",
-      "/api/v2/events",
-    ];
+    const allowedEndpoints: Record<string, "GET" | "POST"> = {
+      "/api/v2/auth/login": "POST",
+      "/api/v2/students": "GET",
+      "/api/v2/orders": "GET",
+      "/api/v2/events": "GET",
+    };
 
-    if (!allowedPaths.includes(endpointPath)) {
-      return res.status(400).json({ message: "Endpoint not allowed for testing" });
+    const normalizedMethod = method.toUpperCase() as "GET" | "POST";
+    if (!allowedEndpoints[endpointPath] || allowedEndpoints[endpointPath] !== normalizedMethod) {
+      return res.status(400).json({ message: "Endpoint/method not allowed for testing" });
     }
 
     const axios = (await import("axios")).default;

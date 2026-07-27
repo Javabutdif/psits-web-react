@@ -17,6 +17,10 @@ import {
   markAttendance,
 } from "../services/attendance.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
+import {
+  parseCampusLimitsPayload,
+  parseSessionConfigPayload,
+} from "../dtos/events.dto";
 
 /**
  * Returns a Date object representing the start of the day (00:00:00)
@@ -1296,8 +1300,16 @@ export const getMyEventsController = async (req: Request, res: Response) => {
       .sort({ eventDate: 1 })
       .lean();
 
+    // Drop malformed records so a single bad event cannot break the student list.
+    const validEvents = events.filter((event) => {
+      if (!event.eventDate) return false;
+      const date =
+        event.eventDate instanceof Date ? event.eventDate : new Date(String(event.eventDate));
+      return !Number.isNaN(date.getTime());
+    });
+
     // Just filter attendees
-    const filteredEvents = events.map((event) => ({
+    const filteredEvents = validEvents.map((event) => ({
       ...event,
       attendees: (event.attendees || []).filter((att) => {
         if (!campus) {
@@ -2194,6 +2206,125 @@ export const changeAttendeePasswordV2Controller = async (
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Internal server error",
+    });
+  }
+};
+
+// ── V2 Event Creation ────────────────────────────────────────────────────────
+
+interface CreateEventV2Body {
+  eventName?: string;
+  eventDescription?: string;
+  eventDate?: string;
+  attendanceType?: string;
+  status?: string;
+  sessionConfig?: unknown;
+  limit?: unknown;
+}
+
+const parseManilaMidnightDate = (value: string): Date | null => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const parsed = new Date(`${value}T16:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+};
+
+export const createEventV2Controller = async (req: Request, res: Response) => {
+  const body = req.body as CreateEventV2Body;
+
+  const eventName =
+    typeof body.eventName === "string" ? body.eventName.trim() : "";
+  const eventDate =
+    typeof body.eventDate === "string" ? body.eventDate.trim() : "";
+
+  if (!eventName) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: "Event name is required",
+    });
+  }
+
+  if (eventName.length > 120) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: "Event name must be at most 120 characters",
+    });
+  }
+
+  const parsedDate = parseManilaMidnightDate(eventDate);
+  if (!parsedDate) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: "Event date must be a valid yyyy-MM-dd calendar date",
+    });
+  }
+
+  const attendanceType =
+    body.attendanceType === "ticketed" ? "ticketed" : "open";
+
+  const status =
+    body.status === "Upcoming" ||
+    body.status === "Ended" ||
+    body.status === "Cancelled"
+      ? body.status
+      : "Ongoing";
+
+  const parsedSessionConfigResult = parseSessionConfigPayload(body.sessionConfig);
+  if ("error" in parsedSessionConfigResult) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: parsedSessionConfigResult.error,
+    });
+  }
+
+  const parsedLimitResult = parseCampusLimitsPayload(body.limit);
+  if ("error" in parsedLimitResult) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: parsedLimitResult.error,
+    });
+  }
+
+  try {
+    const imageUrl = (req.files as Express.MulterS3.File[] | undefined)?.map(
+      (file) => file.location,
+    ) ?? [];
+
+    const createdBy =
+      req.admin?.name ??
+      (typeof req.userV2?.sub === "string" ? req.userV2.sub : "unknown-admin");
+
+    const eventFields: Record<string, unknown> = {
+      eventId: new mongoose.Types.ObjectId(),
+      eventName,
+      eventImage: imageUrl,
+      eventDate: parsedDate,
+      eventDescription:
+        typeof body.eventDescription === "string" ? body.eventDescription : "",
+      attendanceType,
+      status,
+      sessionConfig: parsedSessionConfigResult,
+      createdBy,
+      attendees: [],
+    };
+
+    if (parsedLimitResult.length > 0) {
+      eventFields.limit = parsedLimitResult;
+    }
+
+    const newEvent = new Event(eventFields);
+
+    await newEvent.save();
+
+    return res.status(201).json({
+      message: "Event created successfully",
+      data: newEvent.toObject(),
+    });
+  } catch (error) {
+    console.error("Error creating event:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Failed to create event",
     });
   }
 };

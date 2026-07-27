@@ -8,6 +8,7 @@ import { orderService } from "../services/order.service";
 import { user_model } from "../model_template/model_data";
 import { catchAsync } from "../util/catch.async.util";
 import { account_status, membership_status } from "../enums/status.enums";
+import { psits_roles } from "../enums/role.enums";
 
 class AdminController {
   getSearchStudentByIdController = catchAsync(
@@ -222,6 +223,17 @@ class AdminController {
   );
   setNewAdminAccessController = catchAsync(
     async (req: Request, res: Response) => {
+      const { id_number, newAccess } = req.body;
+      const normalized = Array.isArray(newAccess) ? newAccess[0] : newAccess;
+      if (
+        req.admin &&
+        id_number === req.admin.id_number &&
+        normalized !== psits_roles.ADMIN
+      ) {
+        return res
+          .status(403)
+          .json({ message: "Cannot downgrade own access" });
+      }
       const result = await adminService.changeAccess(req);
       if (!result.status) {
         return res.status(400).json({ message: result.message });

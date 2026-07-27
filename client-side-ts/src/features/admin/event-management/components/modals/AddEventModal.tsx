@@ -8,134 +8,153 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { EventInfoTab } from "./EventInfoTab";
 import { SessionSetupTab } from "./SessionSetupTab";
-
-interface AddEventModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onAddEvent?: (event: any) => void;
-}
+import type { CanonicalSessionConfig } from "@/features/events/types/event.types";
+import { createEventV2 } from "@/features/events/api/eventService";
+import { showToast } from "@/utils/alertHelper";
+import { format } from "date-fns";
 
 export interface EventFormData {
   eventName: string;
   eventDescription: string;
-  eventSchedule: Date | undefined;
-  location: string;
+  eventSchedule?: Date;
+  attendanceType: "open" | "ticketed";
   image: File | null;
-  sessions: SessionData[];
+  sessionConfig: CanonicalSessionConfig;
 }
 
-export interface SessionData {
-  date: string;
-  morningSession: {
-    enabled: boolean;
-    startTime: string;
-    endTime: string;
-  };
-  afternoonSession: {
-    enabled: boolean;
-    startTime: string;
-    endTime: string;
-  };
-  eveningSession: {
-    enabled: boolean;
-    startTime: string;
-    endTime: string;
-  };
+interface AddEventModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
+
+const defaultSessionConfig: CanonicalSessionConfig = {
+  morning: { enabled: true, timeRange: "07:30 - 12:00" },
+  afternoon: { enabled: false, timeRange: "13:00 - 15:00" },
+  evening: { enabled: false, timeRange: "18:00 - 20:00" },
+};
+
+const emptyFormData = (): EventFormData => ({
+  eventName: "",
+  eventDescription: "",
+  eventSchedule: undefined,
+  attendanceType: "open",
+  image: null,
+  sessionConfig: defaultSessionConfig,
+});
+
+const formatDateKey = (date: Date): string => format(date, "yyyy-MM-dd");
+
+const parseMinutes = (hhmm: string): number => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+};
+
+const validateSessions = (
+  config: CanonicalSessionConfig,
+): string | null => {
+  const enabled = ["morning", "afternoon", "evening"] as const;
+  const ranges: Array<{ name: string; start: number; end: number }> = [];
+
+  for (const name of enabled) {
+    const entry = config[name];
+    if (!entry.enabled) continue;
+    const [start, end] = entry.timeRange.split(" - ");
+    if (!start || !end) return `${name} session needs a full time range`;
+    const startMinutes = parseMinutes(start);
+    const endMinutes = parseMinutes(end);
+    if (!(endMinutes > startMinutes)) {
+      return `${name} session end time must be after start time`;
+    }
+    ranges.push({ name, start: startMinutes, end: endMinutes });
+  }
+
+  if (ranges.length === 0) return "Enable at least one session";
+
+  ranges.sort((a, b) => a.start - b.start);
+  for (let i = 1; i < ranges.length; i++) {
+    if (ranges[i].start <= ranges[i - 1].end) {
+      return `${ranges[i - 1].name} and ${ranges[i].name} sessions overlap`;
+    }
+  }
+
+  return null;
+};
 
 export const AddEventModal: React.FC<AddEventModalProps> = ({
   open,
   onOpenChange,
-  onAddEvent,
+  onSuccess,
 }) => {
   const [activeTab, setActiveTab] = useState("event-info");
-  const [formData, setFormData] = useState<EventFormData>({
-    eventName: "",
-    eventDescription: "",
-    eventSchedule: undefined,
-    location: "",
-    image: null,
-    sessions: [],
-  });
+  const [formData, setFormData] = useState<EventFormData>(emptyFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    // Map formData to Event type
-    const eventDate = formData.eventSchedule || new Date();
-    const newEvent = {
-      id: Date.now().toString(),
-      title: formData.eventName,
-      date: eventDate.toLocaleDateString(),
-      image: formData.image
-        ? URL.createObjectURL(formData.image)
-        : "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&h=600&fit=crop",
-      status: "view" as const,
-      description: formData.eventDescription,
-      location: formData.location,
-      locationAddress: formData.location,
-      startDate: eventDate.toLocaleDateString("en-US", {
-        weekday: "short",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      startTime: formData.sessions[0]?.morningSession.startTime || "8:00 AM",
-      endDate: eventDate.toLocaleDateString("en-US", {
-        weekday: "short",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      endTime:
-        formData.sessions[formData.sessions.length - 1]?.eveningSession
-          .endTime || "5:00 PM",
-      venues: [formData.location],
-    };
-    if (onAddEvent) onAddEvent(newEvent);
-    // Reset form
-    setFormData({
-      eventName: "",
-      eventDescription: "",
-      eventSchedule: undefined,
-      location: "",
-      image: null,
-      sessions: [],
-    });
-    setActiveTab("event-info");
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    const dateError = validateSessions(formData.sessionConfig);
+    if (dateError) {
+      showToast("error", dateError);
+      return;
+    }
+
+    if (!formData.eventName.trim()) {
+      showToast("error", "Event name is required");
+      return;
+    }
+
+    if (!formData.eventSchedule) {
+      showToast("error", "Event schedule is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await createEventV2({
+        eventName: formData.eventName,
+        eventDescription: formData.eventDescription,
+        eventDate: formatDateKey(formData.eventSchedule),
+        attendanceType: formData.attendanceType,
+        status: "Ongoing",
+        sessionConfig: formData.sessionConfig,
+        images: formData.image ? [formData.image] : [],
+      });
+
+      if (result) {
+        showToast("success", "Event created successfully");
+        onOpenChange(false);
+        setActiveTab("event-info");
+        setFormData(emptyFormData());
+        onSuccess?.();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
-    // Reset form data
-    setFormData({
-      eventName: "",
-      eventDescription: "",
-      eventSchedule: undefined,
-      location: "",
-      image: null,
-      sessions: [],
-    });
-    setActiveTab("event-info");
     onOpenChange(false);
+    setActiveTab("event-info");
+    setFormData(emptyFormData());
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="flex max-h-[80vh] w-full max-w-4xl flex-col gap-0 overflow-y-auto rounded-lg p-0 sm:max-w-2xl sm:rounded-xl"
-        showCloseButton={false}
-      >
+      <DialogContent className="flex max-h-[80vh] w-full max-w-4xl flex-col gap-0 overflow-y-auto rounded-lg p-0 sm:max-w-2xl sm:rounded-xl">
         <DialogHeader className="border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl leading-6 font-semibold">
+            <DialogTitle className="text-xl font-semibold leading-6">
               Add Event
             </DialogTitle>
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={handleCancel}
-              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full"
+              disabled={isSubmitting}
+              className="h-8 w-8 cursor-pointer rounded-full"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -156,7 +175,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             </TabsTrigger>
             <TabsTrigger
               value="session-setup"
-              className="border-blue data-[state=active]:border-b[#1C9DDE] cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
+              className="border-blue cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
             >
               Session Setup
             </TabsTrigger>
@@ -166,7 +185,6 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             <TabsContent value="event-info" className="mt-0 h-full">
               <EventInfoTab formData={formData} setFormData={setFormData} />
             </TabsContent>
-
             <TabsContent value="session-setup" className="mt-0 h-full">
               <SessionSetupTab formData={formData} setFormData={setFormData} />
             </TabsContent>
@@ -176,15 +194,18 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             <Button
               variant="outline"
               onClick={handleCancel}
+              disabled={isSubmitting}
               className="cursor-pointer"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
+              disabled={isSubmitting}
               className="cursor-pointer bg-[#1C9DDE] hover:bg-[#1C9DDE]"
             >
-              Add Event
+              {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : null}
+              Create Event
             </Button>
           </div>
         </Tabs>

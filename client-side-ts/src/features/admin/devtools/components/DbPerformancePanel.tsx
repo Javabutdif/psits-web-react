@@ -5,11 +5,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { showToast } from "@/utils/alertHelper";
 import { Database, AlertTriangle, RefreshCw } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const DbPerformancePanel = () => {
   const [stats, setStats] = useState<CollectionStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [rebuilding, setRebuilding] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -35,8 +43,9 @@ export const DbPerformancePanel = () => {
       fetchStats();
     } catch {
       showToast("error", "Failed to rebuild indexes");
-    } finally {
+    }     finally {
       setRebuilding(false);
+      setConfirmOpen(false);
     }
   };
 
@@ -79,17 +88,32 @@ export const DbPerformancePanel = () => {
             size="sm"
             className="rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
             disabled={rebuilding}
-            onClick={() => {
-              if (window.confirm("This will rebuild indexes on all collections. Continue?")) {
-                handleRebuild();
-              }
-            }}
+            onClick={() => setConfirmOpen(true)}
           >
             <RefreshCw className={`mr-1 h-3 w-3 ${rebuilding ? "animate-spin" : ""}`} />
             Rebuild Indexes
           </Button>
         </div>
       </div>
+
+      {confirmOpen && (
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent className="max-w-sm rounded-[20px]">
+            <DialogHeader>
+              <DialogTitle>Rebuild Indexes Confirmation</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-gray-500">This will rebuild indexes on all collections (Orders, EmailQueue, Merch, Admin, Student). This operation may be resource-intensive.</p>
+            <DialogFooter className="mt-3">
+              <Button type="button" variant="outline" className="rounded-full" onClick={() => setConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" className="rounded-full bg-red-500 hover:bg-red-600" onClick={handleRebuild}>
+                Rebuild
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[800px] table-fixed border-collapse text-sm">

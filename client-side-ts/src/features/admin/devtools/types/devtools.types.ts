@@ -45,7 +45,7 @@ export interface CronExecutionLog {
 export interface EnvStatusItem {
   key: string;
   configured: boolean;
-  value: string | null;
+  required?: boolean;
 }
 
 export interface RateLimitStats {

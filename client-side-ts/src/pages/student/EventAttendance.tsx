@@ -20,6 +20,7 @@ import type {
   EventData,
   SessionConfig,
 } from "@/features/events";
+import { getManilaStartOfDay } from "@/utils/date-manila";
 import { EventCard, getMyEvents } from "@/features/events";
 import React, { useEffect, useState } from "react";
 import { InfinitySpin } from "react-loader-spinner";
@@ -27,7 +28,7 @@ import { InfinitySpin } from "react-loader-spinner";
 // ─── Mapper: Raw Event → Frontend EventData ───────────────────────────────────
 // The event already has `attendees` pre-filtered to the requesting student
 // (0 or 1 records) — handled server-side
-const mapEventToEventData = (event: Event): EventData => {
+const mapEventToEventData = (event: Event): EventData | null => {
   let imageUrl: string | undefined = undefined;
   if (Array.isArray(event.eventImage) && event.eventImage.length > 0) {
     imageUrl = event.eventImage[0];
@@ -45,37 +46,33 @@ const mapEventToEventData = (event: Event): EventData => {
     })
   );
 
+  const dateValue =
+    typeof event.eventDate === "string" ? new Date(event.eventDate) : event.eventDate;
+  if (!dateValue || Number.isNaN(dateValue.getTime())) return null;
+
   return {
     id: (event.eventId || event._id) as string,
     title: event.eventName,
     description: event.eventDescription || "No description available",
     imageUrl,
     location: "University of Cebu Main Campus",
-    date: new Date(event.eventDate),
+    date: getManilaStartOfDay(dateValue),
     attendanceType: event.attendanceType || "open",
     attendees: parsedAttendees,
     sessionConfig: event.sessionConfig as SessionConfig | undefined,
   };
 };
 
-const isUpcoming = (date: Date): boolean => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return date >= today;
-};
+const isUpcoming = (date: Date): boolean => date >= getManilaStartOfDay();
 
-const isPast = (date: Date): boolean => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return date < today;
-};
+const isPast = (date: Date): boolean => date < getManilaStartOfDay();
 
 const EventAttendance: React.FC = () => {
   const { user } = useAuth();
   const [upcomingEvents, setUpcomingEvents] = useState<EventData[]>([]);
   const [pastEvents, setPastEvents] = useState<EventData[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>(
-    new Date().getFullYear().toString()
+    getManilaStartOfDay().getFullYear().toString(),
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,9 +94,9 @@ const EventAttendance: React.FC = () => {
         setError(null);
 
         // Single call — backend filters attendees to the requesting student via JWT.
-        const transformedEvents: EventData[] = (await getMyEvents()).map(
-          mapEventToEventData
-        );
+        const transformedEvents: EventData[] = (await getMyEvents())
+          .map(mapEventToEventData)
+          .filter((event): event is EventData => event !== null);
 
         if (!isMounted) return;
 

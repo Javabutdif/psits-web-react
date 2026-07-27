@@ -6,10 +6,10 @@ export interface Event {
   eventId?: string;
   eventName: string;
   eventImage?: string[];
-  eventDate: string | Date;
+  eventDate?: string | Date | null;
   eventDescription?: string;
   attendanceType?: string;
-  sessionConfig?: Record<string, unknown>;
+  sessionConfig?: CanonicalSessionConfig | Record<string, unknown>;
   createdBy?: string;
   attendees?: Attendee[];
   status?: string;
@@ -38,6 +38,12 @@ export interface SessionConfigEntry {
   timeRange: string;
 }
 
+export interface CanonicalSessionConfig {
+  morning: SessionConfigEntry;
+  afternoon: SessionConfigEntry;
+  evening: SessionConfigEntry;
+}
+
 export type SessionConfig = Record<string, SessionConfigEntry>;
 
 // ─── Attendee Data for Frontend ──────────────────────────────────────────────
@@ -55,7 +61,7 @@ export interface EventData {
   description: string;
   imageUrl?: string;
   location?: string;
-  date: Date;
+  date?: Date;
   attendanceType: string;
   attendees: AttendeeData[];
   sessionConfig?: SessionConfig;
@@ -226,12 +232,38 @@ export interface StatisticsData {
   [key: string]: unknown;
 }
 
+export type AttendanceType = "open" | "ticketed";
+export type EventStatus = "Ongoing" | "Upcoming" | "Ended" | "Cancelled";
+
+export interface CampusLimit {
+  campus: "UC-Main" | "UC-Banilad" | "UC-LM" | "UC-PT" | "UC-CS";
+  limit: number;
+}
+
+export interface CreateEventV2Payload {
+  eventName: string;
+  eventDescription?: string;
+  eventDate: string;
+  attendanceType: AttendanceType;
+  status?: EventStatus;
+  sessionConfig: CanonicalSessionConfig;
+  images?: File[];
+  limit?: CampusLimit[];
+}
+
+export interface CreateEventV2Response {
+  message: string;
+  data: Event;
+}
+
+/** @deprecated Use CreateEventV2Payload instead */
 export interface CreateEventData {
   name: string;
   date: string;
   [key: string]: unknown;
 }
 
+/** @deprecated Use CreateEventV2Response instead */
 export interface CreateEventResponse {
   message: string;
   eventId?: string;

@@ -14,4 +14,11 @@ export const logs_action = Object.freeze({
   APPROVE_ADMIN: "Approved Admin Account",
   DECLINE_ADMIN: "Decline Admin Account",
   CHANGE_ACCESS: "Change Access",
+  RESEND_EMAIL: "Resent Email",
+  CLEAR_EXPIRED_SESSIONS: "Cleared Expired Sessions",
+  INVALIDATE_SESSION: "Invalidated Session",
+  INVALIDATE_SESSION_BULK: "Bulk Session Invalidation",
+  TRIGGER_CRON: "Triggered Cron Job",
+  CANCEL_EXPIRED_ORDERS: "Cancelled Expired Orders",
+  REBUILD_DB_INDEXES: "Rebuilt Database Indexes",
 });
