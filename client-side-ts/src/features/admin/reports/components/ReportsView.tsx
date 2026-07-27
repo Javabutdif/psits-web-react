@@ -462,6 +462,7 @@ export const ReportsView = () => {
     totalPages,
     pagedMembership,
     pagedMerchandise,
+    tabCounts,
     totalMembershipRows,
     totalMerchandiseRows,
     membershipSummary,
@@ -516,7 +517,10 @@ export const ReportsView = () => {
             onClick={() => setActiveTab("membership")}
           >
             <Wallet className="h-4 w-4 shrink-0" />
-            Membership
+            <span>Membership</span>
+            <span className="text-xs text-current/70">
+              ({tabCounts.membership.toLocaleString()})
+            </span>
             {isMembership && (
               <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-[#1c9dde]" />
             )}
@@ -531,7 +535,10 @@ export const ReportsView = () => {
             onClick={() => setActiveTab("merchandise")}
           >
             <ShoppingBag className="h-4 w-4 shrink-0" />
-            Merchandise
+            <span>Merchandise</span>
+            <span className="text-xs text-current/70">
+              ({tabCounts.merchandise.toLocaleString()})
+            </span>
             {!isMembership && (
               <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-[#1c9dde]" />
             )}

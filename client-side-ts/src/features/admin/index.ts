@@ -2,10 +2,11 @@
 export * from "./components";
 
 // Admin subfeatures
-export * from "./dashboard";
-export * from "./event-management";
-export * from "./organization";
-export * from "./students";
+export * from './dashboard';
+export * from './event-management';
+export * from './merchandise';
+export * from './organization';
+export * from './students';
 
 // Admin API
 export * from "./api/admin";
