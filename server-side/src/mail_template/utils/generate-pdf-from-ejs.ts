@@ -24,10 +24,8 @@ const getBrowser = async (): Promise<Browser> => {
     const browserlessUrl = process.env.BROWSERLESS_URL;
     
     if (browserlessUrl) {
-      console.log("Connecting to Browserless...");
       browserInstance = await puppeteer.connect({ browserWSEndpoint: browserlessUrl });
     } else {
-      console.log("Launching local Puppeteer browser...");
       browserInstance = await puppeteer.launch({ 
         headless: true,
         args: ["--no-sandbox", "--disable-setuid-sandbox"]

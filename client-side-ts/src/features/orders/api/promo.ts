@@ -90,8 +90,6 @@ const handleApiError = (error: unknown): void => {
 export const createPromoCode = async (
   data: PromoCodeData
 ): Promise<boolean> => {
-  console.log(data);
-
   try {
     const response: AxiosResponse<ApiResponse> = await axios.post(
       `${backendConnection()}/api/promo/create`,
@@ -115,8 +113,6 @@ export const createPromoCode = async (
 export const updatePromoCode = async (
   data: PromoCodeData
 ): Promise<boolean> => {
-  console.log(data);
-
   try {
     const response: AxiosResponse<ApiResponse> = await axios.post(
       `${backendConnection()}/api/promo/update`,

@@ -61,7 +61,6 @@ class PromoController {
       if (!promos || promos.length === 0) {
         return res.status(404).json({ message: "No Promo Codes" });
       }
-      console.log(promos);
       res.status(200).json({ promo: promos });
     } catch (error: unknown) {
       if (error instanceof AppError) {

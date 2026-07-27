@@ -95,7 +95,6 @@ export const getAllPromoCodes = async () => {
       `${backendConnection()}/api/promo/fetch`,
       { headers: createHeaders() }
     );
-    console.log(response);
     if (response.status === 200) {
       return response.data.promo;
     }

@@ -384,8 +384,7 @@ const EventManagement: React.FC = () => {
     showToast("error", UNDER_CONSTRUCTION_MESSAGE);
   };
 
-  const handleSaveAttendeeLimits = (limits: Record<string, number>) => {
-    console.warn("Save attendee limits:", limits);
+  const handleSaveAttendeeLimits = (_limits: Record<string, number>) => {
   };
 
   const retryFetch = () => {
