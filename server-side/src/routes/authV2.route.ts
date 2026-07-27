@@ -3,6 +3,7 @@ import {
   loginV2Controller,
   refreshV2Controller,
   logoutV2Controller,
+  signupV2Controller,
 } from "../controllers/authV2.controller";
 import loginLimiter from "../util/limiter.util";
 
@@ -25,5 +26,11 @@ router.post("/refresh", refreshV2Controller);
  * Clear refresh token cookie (stateless; token remains valid until expiry)
  */
 router.post("/logout", logoutV2Controller);
+
+/**
+ * POST /v2/auth/signup
+ * Create a new student account using studentService.create, respond with success/failure
+ */
+router.post("/signup", signupV2Controller);
 
 export default router;

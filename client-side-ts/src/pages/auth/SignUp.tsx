@@ -1,14 +1,35 @@
 import { SignupForm, type SignupCredentials } from "@/features/auth";
 import { Link } from "react-router";
 import { ArrowLeft } from "lucide-react";
-
+import sidePhoto from "@/assets/side_photo_forms.png";
+import { useNavigate } from "react-router";
 const courses = ["BSIT", "BSCS"];
+import { showToast } from "@/utils/alertHelper";
 
 export default function Signup() {
-  const handleSignup = (_values: SignupCredentials) => {
-    // insert signup here
+  const navigate = useNavigate();
+  const handleSignup = async (values: SignupCredentials) => {
+    try {
+      const res = await fetch("/api/v2/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(
+          "error",
+          data.message || "Something went wrong. Please try again."
+        );
+        console.error(data.message);
+        return;
+      }
+      showToast("success", "Welcome! Your PSITS account is ready.");
+      navigate("/auth/login");
+    } catch (err) {
+      console.error(err);
+    }
   };
-
   return (
     <div className="relative flex h-screen w-screen flex-row bg-gray-300">
       {/* Back to Home */}
@@ -22,6 +43,14 @@ export default function Signup() {
 
       <div className="flex w-full items-center justify-center bg-white md:w-1/2">
         <SignupForm onSignup={handleSignup} courses={courses} />
+      </div>
+      {/* Right Side: Image */}
+      <div className="hidden h-full w-1/2 md:flex">
+        <img
+          src={sidePhoto}
+          alt="Login visual"
+          className="h-full w-full object-cover"
+        />
       </div>
     </div>
   );
