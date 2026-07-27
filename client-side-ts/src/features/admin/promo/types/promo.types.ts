@@ -3,7 +3,7 @@ export interface SelectedMerchandise {
   name: string;
 }
 
-export type PromoType = "Members" | "Students" | "All Students" | "Specific";
+export type PromoType = "Members" | "Students" | "All Students" | "Specific" | "Membership";
 
 export type PromoScope = "Merchandise" | "Category" | "Both";
 

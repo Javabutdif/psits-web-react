@@ -1,10 +1,9 @@
 import type {
   MerchandiseItem,
-  PromoCodeItem,
   PromoMerchandiseItem,
 } from "@/features/admin/api/admin";
 
-export type MerchandiseSection = "products" | "promo-code";
+export type MerchandiseSection = "products";
 
 export type ProductStatus = "Published" | "Inactive" | "Out of Stock";
 
@@ -90,6 +89,4 @@ export interface PromoFormValues {
 }
 
 export type AdminMerchandiseProduct = MerchandiseItem;
-
-export type AdminPromoCode = PromoCodeItem;
 

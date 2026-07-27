@@ -1,28 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  activePublishMerchandise,
   addMerchandise,
-  createPromoCodeAdmin,
   deleteMerchandise,
-  deletePromoCodeAdmin,
   fetchStudentName,
-  getAllPromoCodes,
-  getPromoLogs,
   merchandiseAdmin,
   publishMerchandise,
   updateMerchandise,
-  updatePromoCodeAdmin,
   type MerchandiseItem,
-  type PromoCodeRequest,
-  type PromoLogItem,
-  type PromoMerchandiseItem,
 } from "@/features/admin/api/admin";
 import { PSITS_ROLES } from "@/features/admin/constants/adminAccess";
 import { useAuth } from "@/features/auth";
 import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
 import type {
-  AdminPromoCode,
   MerchandiseSection,
   MerchandiseSort,
   ProductFilters,
@@ -30,8 +20,6 @@ import type {
   ProductImageState,
   ProductSortField,
   ProductStatus,
-  PromoFilters,
-  PromoFormValues,
 } from "../types/merchandise.types";
 
 const ROWS_PER_PAGE = 8;
@@ -128,11 +116,6 @@ export const EMPTY_PRODUCT_FILTERS: ProductFilters = {
   confirmedOn: "",
 };
 
-export const EMPTY_PROMO_FILTERS: PromoFilters = {
-  statuses: [],
-  types: [],
-  limitTypes: [],
-};
 
 export const EMPTY_PRODUCT_FORM: ProductFormValues = {
   name: "",
@@ -167,20 +150,6 @@ export const EMPTY_PRODUCT_IMAGES: ProductImageState = {
   removedUrls: [],
 };
 
-export const EMPTY_PROMO_FORM: PromoFormValues = {
-  promoName: "",
-  audienceType: "",
-  studentType: "",
-  limitType: "Limited",
-  singleStudent: "no",
-  selectedMembers: [],
-  selectedStudents: [],
-  selectedMerchandise: [],
-  startDate: "",
-  endDate: "",
-  quantity: "0",
-  discount: "0",
-};
 
 const formatDateKey = (value?: string) => {
   if (!value) return "";
@@ -217,32 +186,6 @@ const productSearchText = (product: MerchandiseItem) =>
     .join(" ")
     .toLowerCase();
 
-const promoSearchText = (promo: AdminPromoCode) =>
-  [
-    promo.promo_name,
-    promo.type,
-    promo.limit_type,
-    promo.discount,
-    promo.quantity,
-    promo.created_by,
-    getPromoStatus(promo),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-export const getPromoStatus = (promo: AdminPromoCode) => {
-  if (promo.status === "Deleted") return "Deleted";
-  const now = new Date();
-  const startDate = new Date(promo.start_date);
-  const endDate = new Date(promo.end_date);
-  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-    return promo.status || "Active";
-  }
-  if (now < startDate) return "Upcoming";
-  if (now > endDate) return "Expired";
-  return "Active";
-};
 
 const productSortValue = (
   product: MerchandiseItem,
@@ -296,32 +239,6 @@ const productFormFromRecord = (product?: MerchandiseItem | null): ProductFormVal
   };
 };
 
-const promoFormFromRecord = (promo?: AdminPromoCode | null): PromoFormValues => {
-  if (!promo) return EMPTY_PROMO_FORM;
-
-  const isStudentPromo = promo.type === "Specific" || promo.type === "All Students";
-
-  return {
-    promoId: promo._id,
-    promoName: promo.promo_name,
-    audienceType: isStudentPromo ? "Students" : "Members",
-    studentType: isStudentPromo
-      ? promo.type === "Specific"
-        ? "Specific"
-        : "All Students"
-      : "",
-    limitType: promo.limit_type === "Unlimited" ? "Unlimited" : "Limited",
-    singleStudent: promo.one_person_limit ? "yes" : "no",
-    selectedMembers: promo.selected_audience || [],
-    selectedStudents: promo.selected_specific_students || [],
-    selectedMerchandise: promo.selected_merchandise || [],
-    startDate: formatDateKey(promo.start_date),
-    endDate: formatDateKey(promo.end_date),
-    quantity: String(promo.quantity || 0),
-    discount: String(promo.discount || 0),
-  };
-};
-
 const appendProductFormData = (
   values: ProductFormValues,
   images: ProductImageState,
@@ -353,47 +270,17 @@ const appendProductFormData = (
   return formData;
 };
 
-const buildPromoPayload = (values: PromoFormValues): PromoCodeRequest => {
-  const selectedAudience =
-    values.audienceType === "Members"
-      ? values.selectedMembers
-      : values.studentType === "Specific"
-        ? values.selectedStudents
-        : "All Students";
-
-  return {
-    ...(values.promoId ? { promoId: values.promoId } : {}),
-    promoName: values.promoName,
-    type: values.audienceType === "Members" ? "Members" : values.studentType,
-    limitType: values.limitType,
-    singleStudent: values.singleStudent,
-    selectedAudience: JSON.stringify(selectedAudience),
-    discount: values.discount,
-    quantity: values.quantity,
-    startDate: values.startDate,
-    endDate: values.endDate,
-    selectedMerchandise: JSON.stringify(values.selectedMerchandise),
-  };
-};
-
 export const useMerchandiseData = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<MerchandiseItem[]>([]);
-  const [publishedProducts, setPublishedProducts] = useState<MerchandiseItem[]>([]);
-  const [promos, setPromos] = useState<AdminPromoCode[]>([]);
-  const [promoLogs, setPromoLogs] = useState<PromoLogItem[]>([]);
   const [productSearch, setProductSearch] = useState("");
-  const [promoSearch, setPromoSearch] = useState("");
   const [productFilters, setProductFilters] =
     useState<ProductFilters>(EMPTY_PRODUCT_FILTERS);
-  const [promoFilters, setPromoFilters] =
-    useState<PromoFilters>(EMPTY_PROMO_FILTERS);
   const [productSort, setProductSort] = useState<MerchandiseSort<ProductSortField>>({
     field: "name",
     direction: "asc",
   });
   const [productPage, setProductPage] = useState(1);
-  const [promoPage, setPromoPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -404,23 +291,8 @@ export const useMerchandiseData = () => {
       user?.access === PSITS_ROLES.FINANCE);
 
   const refreshProducts = useCallback(async () => {
-    const [productResult, publishedResult] = await Promise.all([
-      merchandiseAdmin(),
-      activePublishMerchandise(),
-    ]);
-
+    const productResult = await merchandiseAdmin();
     setProducts(productResult || []);
-    setPublishedProducts(publishedResult || []);
-  }, []);
-
-  const refreshPromos = useCallback(async () => {
-    const [promoResult, logResult] = await Promise.all([
-      getAllPromoCodes(),
-      getPromoLogs(),
-    ]);
-
-    setPromos(promoResult || []);
-    setPromoLogs(logResult || []);
   }, []);
 
   const refreshAll = useCallback(async () => {
@@ -428,13 +300,13 @@ export const useMerchandiseData = () => {
     setError(null);
 
     try {
-      await Promise.all([refreshProducts(), refreshPromos()]);
+      await refreshProducts();
     } catch {
       setError("Unable to load merchandise data.");
     } finally {
       setIsLoading(false);
     }
-  }, [refreshProducts, refreshPromos]);
+  }, [refreshProducts]);
 
   useEffect(() => {
     void refreshAll();
@@ -468,51 +340,23 @@ export const useMerchandiseData = () => {
     );
   }, [productFilters, productSearch, productSort, products]);
 
-  const filteredPromos = useMemo(() => {
-    const query = promoSearch.trim().toLowerCase();
-    return promos.filter((promo) => {
-      const status = getPromoStatus(promo);
-      const queryMatch = !query || promoSearchText(promo).includes(query);
-      const statusMatch =
-        promoFilters.statuses.length === 0 ||
-        promoFilters.statuses.includes(status);
-      const typeMatch =
-        promoFilters.types.length === 0 || promoFilters.types.includes(promo.type);
-      const limitMatch =
-        promoFilters.limitTypes.length === 0 ||
-        promoFilters.limitTypes.includes(promo.limit_type);
-
-      return queryMatch && statusMatch && typeMatch && limitMatch;
-    });
-  }, [promoFilters, promoSearch, promos]);
-
-  const productTotalPages = Math.max(1, Math.ceil(filteredProducts.length / ROWS_PER_PAGE));
-  const promoTotalPages = Math.max(1, Math.ceil(filteredPromos.length / ROWS_PER_PAGE));
-
   const tabCounts = useMemo<Record<MerchandiseSection, number>>(
     () => ({
       products: products.length,
-      "promo-code": promos.length,
     }),
-    [products.length, promos.length]
+    [products.length]
   );
 
   const productRows = filteredProducts.slice(
     (productPage - 1) * ROWS_PER_PAGE,
     productPage * ROWS_PER_PAGE
   );
-  const promoRows = filteredPromos.slice(
-    (promoPage - 1) * ROWS_PER_PAGE,
-    promoPage * ROWS_PER_PAGE
-  );
+
+  const productTotalPages = Math.max(1, Math.ceil(filteredProducts.length / ROWS_PER_PAGE));
 
   useEffect(() => {
     setProductPage(1);
   }, [productFilters, productSearch]);
-
-  useEffect(() => {
-    setPromoPage(1);
-  }, [promoFilters, promoSearch]);
 
   const toggleProductSort = (field: ProductSortField) => {
     setProductSort((current) =>
@@ -587,32 +431,6 @@ export const useMerchandiseData = () => {
     }
   };
 
-  const savePromo = async (values: PromoFormValues) => {
-    setIsMutating(true);
-    try {
-      const payload = buildPromoPayload(values);
-      const succeeded = values.promoId
-        ? await updatePromoCodeAdmin(payload)
-        : await createPromoCodeAdmin(payload);
-
-      if (succeeded) await refreshPromos();
-      return succeeded;
-    } finally {
-      setIsMutating(false);
-    }
-  };
-
-  const deletePromo = async (id: string) => {
-    setIsMutating(true);
-    try {
-      const succeeded = await deletePromoCodeAdmin(id);
-      if (succeeded) await refreshPromos();
-      return succeeded;
-    } finally {
-      setIsMutating(false);
-    }
-  };
-
   const searchStudent = async (idNumber: string) => {
     const result = await fetchStudentName(idNumber);
     if (!result?.data?.id_number) {
@@ -634,25 +452,12 @@ export const useMerchandiseData = () => {
     [products]
   );
 
-  const promoMerchandiseOptions = useMemo<PromoMerchandiseItem[]>(
-    () =>
-      publishedProducts.map((product) => ({
-        _id: product._id,
-        name: product.name,
-        items: [],
-      })),
-    [publishedProducts]
-  );
-
   return {
     canManageMerchandise,
     deleteProduct,
-    deletePromo,
     error,
     filteredProducts,
-    filteredPromos,
     getProductFormValues: productFormFromRecord,
-    getPromoFormValues: promoFormFromRecord,
     isLoading,
     isMutating,
     productBatches,
@@ -662,24 +467,13 @@ export const useMerchandiseData = () => {
     productSearch,
     productTotalPages,
     products,
-    promoFilters,
-    promoLogs,
-    promoMerchandiseOptions,
-    promoPage,
-    promoRows,
-    promoSearch,
-    promoTotalPages,
     publishProduct,
     refreshAll,
     saveProduct,
-    savePromo,
     searchStudent,
     setProductFilters,
     setProductPage,
     setProductSearch,
-    setPromoFilters,
-    setPromoPage,
-    setPromoSearch,
     tabCounts,
     toggleProductSort,
   };

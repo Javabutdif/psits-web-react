@@ -534,6 +534,18 @@ export const OrdersView = () => {
                               Approve
                             </Button>
                           )}
+                          {activeTab === "pending" && isUcMainAdmin && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-8 rounded-full border-red-300 text-red-600 hover:bg-red-50"
+                              onClick={() => setCancelTarget(order)}
+                            >
+                              <X className="mr-1 h-3.5 w-3.5" />
+                              Cancel
+                            </Button>
+                          )}
                           {activeTab === "paid" && (
                             <Button
                               type="button"
