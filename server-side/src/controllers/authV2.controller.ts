@@ -87,7 +87,6 @@ export const loginV2Controller = async (
   const password =
     typeof req.body?.password === "string" ? req.body.password : "";
 
-  console.log(`Login attempt for ID: ${id_number}`);
   try {
     if (!id_number || !password) {
       throw new AuthError(AuthErrorCodes.InvalidCredentials);
@@ -280,9 +279,6 @@ export const refreshV2Controller = async (
       }
 
       clearRefreshCookie(res);
-      console.warn(
-        `Refresh token reuse detected for user ${claims.idNumber} (${role}). All sessions invalidated.`
-      );
       throw new AuthError(AuthErrorCodes.TokenInvalidated);
     }
 
@@ -355,7 +351,6 @@ export const logoutV2Controller = async (
         }
       } catch (error) {
         // Token might be expired or invalid, but we still clear the cookie
-        console.debug("Could not verify token during logout:", error);
       }
     }
 

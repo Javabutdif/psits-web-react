@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  requireAccessTokenV2,
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2,
   adminAccessAuthenticateV2,
@@ -10,9 +9,9 @@ import { psits_roles } from "../enums/role.enums";
 
 const router = Router();
 
-// All routes: authenticated admin with PSITS_DEV access
+// All routes: DB-checked admin with PSITS_ADMIN or PSITS_DEV access, campus=MAIN
 const authChain = [
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.DEVELOPER]),
 ];
@@ -33,34 +32,28 @@ router.get(
 // Health
 router.get("/health", ...authChain, devtoolsController.getHealth);
 
-// Sessions (dangerous operations need DB check)
-const sessionAuthChain = [
-  requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["admin"]),
-  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.DEVELOPER]),
-];
-
+// Sessions
 router.get("/sessions", ...authChain, devtoolsController.getSessions);
 router.delete(
   "/sessions/expired",
-  ...sessionAuthChain,
+  ...authChain,
   devtoolsController.clearExpiredSessions
 );
 router.post(
   "/sessions/invalidate",
-  ...sessionAuthChain,
+  ...authChain,
   devtoolsController.invalidateSession
 );
 router.post(
   "/sessions/invalidate-bulk",
-  ...sessionAuthChain,
+  ...authChain,
   devtoolsController.invalidateBulkSessions
 );
 
 // Actions
 router.post(
   "/actions/cron",
-  ...sessionAuthChain,
+  ...authChain,
   devtoolsController.triggerCron
 );
 
@@ -72,14 +65,14 @@ router.get(
 );
 router.post(
   "/actions/cancel-expired",
-  ...sessionAuthChain,
+  ...authChain,
   devtoolsController.cancelExpiredOrders
 );
 
 // Tester
 router.post(
   "/test-endpoint",
-  ...sessionAuthChain,
+  ...authChain,
   devtoolsController.testEndpoint
 );
 
@@ -112,7 +105,7 @@ router.get(
 );
 router.post(
   "/db/rebuild-indexes",
-  ...sessionAuthChain,
+  ...authChain,
   devtoolsController.rebuildDbIndexes
 );
 

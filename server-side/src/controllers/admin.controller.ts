@@ -328,8 +328,6 @@ export const getAllAdminAccountsController = async (
 ) => {
   try {
     const access = req.admin.access;
-    console.log("Admin access level:", req.admin);
-
     const officers = await Admin.find({ status: "Active" });
     const users = officers.map((officer) => admin_model(officer));
 

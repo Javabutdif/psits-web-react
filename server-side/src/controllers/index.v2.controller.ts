@@ -91,7 +91,6 @@ export const loginController = catchAsync(
         await logService.create(params);
       }
     }
-    console.log({ role, token, campus });
     return res.status(200).json({
       message: "Signed in successfully",
       role,

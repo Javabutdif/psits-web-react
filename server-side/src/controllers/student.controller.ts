@@ -266,22 +266,34 @@ export const editStudentController = async (req: Request, res: Response) => {
 };
 export const changeStudentPassword = async (req: Request, res: Response) => {
   try {
+    const { id_number, password } = req.body;
+
+    if (typeof id_number !== "string" || !id_number.trim()) {
+      return res.status(400).json({ message: "Student ID is required" });
+    }
+
+    if (typeof password !== "string" || !password.trim()) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
     const getStudent: IStudentDocument | null = await Student.findOne({
-      id_number: req.body.id_number,
+      id_number: id_number.trim(),
     });
 
     if (!getStudent) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    getStudent.password = hashedPassword;
-    await getStudent.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await Student.updateOne(
+      { _id: getStudent._id },
+      { $set: { password: hashedPassword } }
+    );
 
     // Log the password change action
     const log = new Log({
-      admin: req.admin.name,
-      admin_id: req.admin._id,
+      admin: req.admin?.name ?? req.userV2?.idNumber ?? "Admin",
+      admin_id: req.admin?._id,
       action: "Changed Student Password",
       target: `${getStudent.id_number} - ${getStudent.first_name} ${getStudent.middle_name} ${getStudent.last_name}`,
       target_id: getStudent._id,

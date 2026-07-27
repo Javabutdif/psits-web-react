@@ -5,8 +5,15 @@ import {
   getStudentProfile,
   getStudentOrders,
   getStudentRefund,
+  getStudentMembershipStatusV2,
+  requestStudentMembershipV2,
 } from "../controllers/studentV2.controller";
-import { requireAccessTokenV2, roleAuthenticateV2 } from "../middlewares/authV2.middleware";
+import {
+  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2,
+  requireActiveStudentMembershipV2,
+} from "../middlewares/authV2.middleware";
 
 const router = Router();
 
@@ -23,16 +30,32 @@ router.get("/profile/:id_number",
   getStudentProfile);
 
 router.get(
-  "/orders",
-  requireAccessTokenV2,
+  "/membership-status",
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["student"]),
+  getStudentMembershipStatusV2
+);
+
+router.put(
+  "/membership-request",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["student"]),
+  requestStudentMembershipV2
+);
+
+router.get(
+  "/orders",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["student"]),
+  requireActiveStudentMembershipV2,
   getStudentOrders
 );
 
 router.get(
   "/refund/:orderId",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["student"]),
+  requireActiveStudentMembershipV2,
   getStudentRefund
 );
 

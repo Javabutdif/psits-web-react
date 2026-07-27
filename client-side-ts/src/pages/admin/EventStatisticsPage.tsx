@@ -37,17 +37,13 @@ import type {
   Event as ApiEvent,
   EventStatisticsData,
 } from "@/features/events/types/event.types";
+import { formatEventDateLabel } from "@/utils/date-manila";
 
 const formatEventDate = (value: unknown): string => {
   if (!value) return "TBA";
   const date = new Date(String(value));
   if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
+  return formatEventDateLabel(date);
 };
 
 const normalizeStatus = (value: unknown): string => {

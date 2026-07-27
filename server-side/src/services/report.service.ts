@@ -355,7 +355,6 @@ export const getMerchandiseReportById = async (reportId: string) => {
     selectedVariations?: unknown;
   } | null;
 
-  console.log(order?.items);
   return {
     _id: String(report._id),
     reference_code: order?.reference_code || "-",
@@ -391,7 +390,6 @@ export const createReports = async (
     : rawPayload
       ? [rawPayload]
       : [];
-  console.log(payloadArray);
   const docs = payloadArray.map((payload) => ({
     order_id: payload.orderId ?? payload.order_id,
     id_number: payload.idNumber ?? payload.id_number,

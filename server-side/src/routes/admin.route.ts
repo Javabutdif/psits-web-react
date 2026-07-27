@@ -223,7 +223,7 @@ router.put(
   "/change-membership-price",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.HEAD_FINANCE, psits_roles.FINANCE]),
   membershipController.changeMemberPriceController
 );
 

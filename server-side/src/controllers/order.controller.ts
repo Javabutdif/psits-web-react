@@ -99,18 +99,10 @@ export const getAllPendingOrdersController = async (
     const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit as string, 10) || 50, 1);
     const search = (req.query.search as string) || "";
-    const trimmedSearch = search.trim();
-
     const query = {
       order_status: "Pending",
       ...buildOrderSearchQuery(search),
     };
-
-    console.log("[getAllPendingOrdersController] Fetching pending orders", {
-      page,
-      limit,
-      search: trimmedSearch || null,
-    });
 
     const total = await Orders.countDocuments(query);
     const orders: IOrders[] = await Orders.find(query)
@@ -119,14 +111,6 @@ export const getAllPendingOrdersController = async (
       })
       .skip((page - 1) * limit)
       .limit(limit);
-
-    console.log("[getAllPendingOrdersController] Pending orders fetched", {
-      total,
-      returned: orders.length,
-      page,
-      limit,
-      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
-    });
 
     res.status(200).json({
       data: orders,
@@ -149,18 +133,10 @@ export const getAllPaidOrdersController = async (
     const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit as string, 10) || 50, 1);
     const search = (req.query.search as string) || "";
-    const trimmedSearch = search.trim();
-
     const query = {
       order_status: "Paid",
       ...buildOrderSearchQuery(search),
     };
-
-    console.log("[getAllPaidOrdersController] Fetching paid orders", {
-      page,
-      limit,
-      search: trimmedSearch || null,
-    });
 
     const total = await Orders.countDocuments(query);
     const orders: IOrders[] = await Orders.find(query)
@@ -169,14 +145,6 @@ export const getAllPaidOrdersController = async (
       })
       .skip((page - 1) * limit)
       .limit(limit);
-
-    console.log("[getAllPaidOrdersController] Paid orders fetched", {
-      total,
-      returned: orders.length,
-      page,
-      limit,
-      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
-    });
 
     res.status(200).json({
       data: orders,
@@ -276,8 +244,10 @@ export const studentAndAdminOrderController = async (
           ? item.sizes[0]
           : item.sizes;
         const sizeConfig = findMerch.selectedSizes.get(selectedSize);
-        if (sizeConfig && sizeConfig.price) {
-          actualPrice = parseFloat(sizeConfig.price);
+        const sizePrice = Number(sizeConfig?.price);
+
+        if (sizeConfig?.custom && Number.isFinite(sizePrice)) {
+          actualPrice = sizePrice;
         }
       }
 
@@ -528,7 +498,6 @@ export const approveOrderController = async (req: Request, res: Response) => {
           err.errorLabels?.includes("TransientTransactionError") &&
           attempt < 2
         ) {
-          console.warn(`Retrying transaction (attempt ${attempt + 1})...`);
           continue;
         }
         throw err;
@@ -654,7 +623,7 @@ export const approveOrderController = async (req: Request, res: Response) => {
                       : selectedSizesMap[selectedSize];
 
                   const parsedSizePrice = Number(sizeConfig?.price);
-                  if (Number.isFinite(parsedSizePrice)) {
+                  if (sizeConfig?.custom && Number.isFinite(parsedSizePrice)) {
                     resolvedShirtPrice = parsedSizePrice;
                   }
                 }
@@ -761,7 +730,6 @@ export const getAllPendingCountController = async (
     try {
       sortParam = JSON.parse(sort as string);
     } catch (err) {
-      console.warn("Invalid sort param, using default");
     }
 
     // Fetch all pending orders
@@ -832,8 +800,6 @@ export const refund = async (req: Request, res: Response) => {
   session.startTransaction();
 
   const { order_id } = req.body;
-  console.log(order_id);
-
   if (!order_id) {
     return res.status(400).json({ message: "Order ID is required" });
   }

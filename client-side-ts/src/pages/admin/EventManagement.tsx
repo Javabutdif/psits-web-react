@@ -86,20 +86,7 @@ interface EventSessionConfig {
 
 type EventStatus = EventDetails["status"];
 
-const formatEventDateLabel = (value: unknown): string => {
-  if (!value) return "TBA";
-
-  const date = new Date(String(value));
-  if (Number.isNaN(date.getTime())) return String(value);
-
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
-};
+import { formatEventDateLabel } from "@/utils/date-manila";
 
 const normalizeStatus = (value: unknown): EventStatus => {
   const normalized = String(value ?? "")
@@ -397,8 +384,7 @@ const EventManagement: React.FC = () => {
     showToast("error", UNDER_CONSTRUCTION_MESSAGE);
   };
 
-  const handleSaveAttendeeLimits = (limits: Record<string, number>) => {
-    console.warn("Save attendee limits:", limits);
+  const handleSaveAttendeeLimits = (_limits: Record<string, number>) => {
   };
 
   const retryFetch = () => {

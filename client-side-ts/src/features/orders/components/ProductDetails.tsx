@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/features/auth";
-import { addToCartApi } from "../../student/api/student";
+import { addToCartApi, useMembershipGate } from "@/features/student";
 import { getMerchandiseById, type MerchandiseItem } from "../api/orders";
 
 // Fallback image for products without images
@@ -89,9 +89,11 @@ const BuyNowButton: React.FC<AddToCartButtonProps> = ({
 }) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const { ensureActiveMembership } = useMembershipGate();
 
-  const handleBuyNow = React.useCallback(() => {
+  const handleBuyNow = React.useCallback(async () => {
     if (disabled) return;
+    if (!(await ensureActiveMembership())) return;
 
     const uid = addItem({
       id: product.id,
@@ -118,6 +120,7 @@ const BuyNowButton: React.FC<AddToCartButtonProps> = ({
     quantity,
     disabled,
     navigate,
+    ensureActiveMembership,
   ]);
 
   const baseClass =
@@ -149,9 +152,11 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
 }) => {
   const { addItem } = useCart();
   const { user } = useAuth();
+  const { ensureActiveMembership } = useMembershipGate();
 
-  const handleAdd = React.useCallback(() => {
+  const handleAdd = React.useCallback(async () => {
     if (disabled) return;
+    if (!(await ensureActiveMembership())) return;
 
     addItem({
       id: product.id,
@@ -194,6 +199,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     quantity,
     disabled,
     user,
+    ensureActiveMembership,
   ]);
 
   const baseClass =
@@ -371,6 +377,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   };
 
   const displayPrice = getDisplayPrice();
+  const selectedPriceProduct = { ...currentProduct, price: displayPrice };
 
   const now = new Date();
   const startDate = currentProduct.start_date ? new Date(currentProduct.start_date) : null;
@@ -568,7 +575,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
             {/* Final Action */}
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:gap-4">
               <BuyNowButton
-                product={currentProduct}
+                product={selectedPriceProduct}
                 selectedColor={selectedColor}
                 selectedSize={selectedSize}
                 selectedCourse={selectedCourse}
@@ -576,7 +583,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                 disabled={purchaseDisabled}
               />
               <AddToCartButton
-                product={currentProduct}
+                product={selectedPriceProduct}
                 selectedColor={selectedColor}
                 selectedSize={selectedSize}
                 selectedCourse={selectedCourse}

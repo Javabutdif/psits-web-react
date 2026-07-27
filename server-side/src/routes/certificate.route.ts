@@ -3,14 +3,30 @@ import {
   generateCertificate,
   getEligibleCertificatesForStudent 
 } from "../controllers/certificate.controller";
-import { requireAccessTokenV2, roleAuthenticateV2 } from "../middlewares/authV2.middleware";
+import {
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2,
+  requireActiveStudentMembershipV2,
+} from "../middlewares/authV2.middleware";
 
 const router = Router();
 
 // Get eligible certificates for authenticated student
-router.get("/eligible", requireAccessTokenV2, roleAuthenticateV2(["student"]), getEligibleCertificatesForStudent);
+router.get(
+  "/eligible",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["student"]),
+  requireActiveStudentMembershipV2,
+  getEligibleCertificatesForStudent
+);
 
 // Generate certificate - requires student authentication
-router.post("/generate", requireAccessTokenV2, roleAuthenticateV2(["student"]), generateCertificate);
+router.post(
+  "/generate",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["student"]),
+  requireActiveStudentMembershipV2,
+  generateCertificate
+);
 
 export default router;

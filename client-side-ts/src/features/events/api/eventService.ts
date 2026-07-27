@@ -11,6 +11,8 @@ import type {
   ChangeAttendeePasswordV2Response,
   CreateEventData,
   CreateEventResponse,
+  CreateEventV2Payload,
+  CreateEventV2Response,
   DrawRaffleWinnerResponse,
   EditableAttendeeResponse,
   EditAttendeeV2Payload,
@@ -108,6 +110,47 @@ export const getEventById = async (eventId: string): Promise<Event | false> => {
     return response.data.data;
   } catch (error) {
     return handleApiError(error);
+  }
+};
+
+export const createEventV2 = async (
+  payload: CreateEventV2Payload,
+): Promise<CreateEventV2Response | false> => {
+  try {
+    const formData = new FormData();
+    formData.append("eventName", payload.eventName);
+    formData.append("eventDescription", payload.eventDescription ?? "");
+    formData.append("eventDate", payload.eventDate);
+    formData.append("attendanceType", payload.attendanceType);
+    if (payload.status) formData.append("status", payload.status);
+    formData.append(
+      "sessionConfig",
+      JSON.stringify(payload.sessionConfig),
+    );
+    if (payload.limit && payload.limit.length > 0) {
+      formData.append("limit", JSON.stringify(payload.limit));
+    }
+    payload.images?.forEach((file) => formData.append("images", file));
+
+    const response = await api.post<CreateEventV2Response>(
+      "/api/v2/events",
+      formData,
+      { headers: { "Content-Type": undefined } },
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to create event";
+      showToast("error", String(message));
+    } else {
+      console.error("Error creating event:", error);
+      showToast("error", "Failed to create event");
+    }
+    return false;
   }
 };
 

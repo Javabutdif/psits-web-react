@@ -97,14 +97,8 @@ export const resendPendingEmails = async () => {
   const pendingEntries = await emailService.fetchByReceipt();
 
   if (pendingEntries.length === 0) {
-    console.log("[1AM PH] No pending emails to resend.");
     return;
   }
-
-  console.log(`[1AM PH] Found ${pendingEntries.length} pending email(s).`);
-
-  let successCount = 0;
-  let failedCount = 0;
 
   for (const rawEntry of pendingEntries) {
     const entry = toPendingEntry(rawEntry);
@@ -112,10 +106,6 @@ export const resendPendingEmails = async () => {
     try {
       if (entry.retryCount >= MAX_RETRIES) {
         await emailService.markAsFailed(entry._id);
-        console.log(
-          `[1AM PH] Max retries reached for ${entry.referenceCode}. Marked as failed.`
-        );
-        failedCount++;
         continue;
       }
 
@@ -126,25 +116,16 @@ export const resendPendingEmails = async () => {
       }
 
       await emailService.updateStatusById(entry._id, "sent");
-      successCount++;
-      console.log(
-        `[1AM PH] Successfully resent ${entry.subtype} receipt for ${entry.referenceCode}`
-      );
     } catch (err: any) {
       console.error(
         `[1AM PH] Failed to resend ${entry.subtype} receipt (${entry.referenceCode}):`,
         err.message
       );
       await emailService.incrementRetry(entry._id);
-      failedCount++;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-
-  console.log(
-    `[1AM PH] Resend complete. Success: ${successCount}, Failed: ${failedCount}`
-  );
 };
 
 const resendMembership = async (entry: PendingEntry) => {

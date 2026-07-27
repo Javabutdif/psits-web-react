@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from "react";
-import { Upload, Calendar as CalendarIcon, MapPin } from "lucide-react";
+import React, { useState } from "react";
+import { Upload, Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -39,23 +39,22 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
     }
   };
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
-  }, []);
+  };
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-  }, []);
+  };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-
     const file = e.dataTransfer.files[0];
     handleFileChange(file);
-  }, []);
+  };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -119,25 +118,6 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
               </label>
             </>
           )}
-        </div>
-
-        {/* Location (placed below image upload per request) */}
-        <div className="mt-4">
-          <Label htmlFor="location" className="text-sm font-medium">
-            Location
-          </Label>
-          <div className="relative">
-            <MapPin className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-            <Input
-              id="location"
-              placeholder="Enter event location"
-              value={formData.location}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, location: e.target.value }))
-              }
-              className="w-full pl-10"
-            />
-          </div>
         </div>
       </div>
 

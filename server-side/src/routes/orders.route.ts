@@ -17,6 +17,7 @@ import {
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2,
   adminAccessAuthenticateV2,
+  requireActiveStudentMembershipV2,
 } from "../middlewares/authV2.middleware";
 import { psits_roles } from "../enums/role.enums";
 const router = Router();
@@ -57,6 +58,7 @@ router.post(
   "/student-order",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin", "student"]),
+  requireActiveStudentMembershipV2,
   studentAndAdminOrderController
 );
 
@@ -139,6 +141,7 @@ router.post(
   "/v2/create",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["student"]),
+  requireActiveStudentMembershipV2,
   orderV2Controller.createOrder
 );
 
