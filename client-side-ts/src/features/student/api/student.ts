@@ -7,6 +7,7 @@ import type { AxiosResponse } from "axios";
 import axios, { AxiosError } from "axios";
 import backendConnection from "../../../api/backendApi";
 import { showToast } from "../../../utils/alertHelper";
+import type { MembershipGateStatus } from "../utils/membership";
 
 interface ApiErrorResponse {
   message?: string;
@@ -29,8 +30,11 @@ interface Student {
 }
 
 interface MembershipStatusResponse {
-  status: string;
+  message?: string;
+  status: MembershipGateStatus;
+  rawStatus?: string;
   isFirstApplication: boolean;
+  membershipPrice?: number;
 }
 
 interface DeleteItemRequest {
@@ -50,59 +54,51 @@ interface CartItemFormData {
 
 const getToken = (): string | null => sessionStorage.getItem("Token");
 
-const handleApiError = (error: unknown): string => {
+const handleApiError = (error: unknown, showUserError = true): string => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
     const errorMessage =
       axiosError.response?.data?.message ?? "An error occurred";
     console.error("Error:", errorMessage);
-    showToast("error", errorMessage);
+    if (showUserError) showToast("error", errorMessage);
     return errorMessage;
   } else {
     const errorMessage = "An error occurred";
     console.error("Error:", error);
-    showToast("error", errorMessage);
+    if (showUserError) showToast("error", errorMessage);
     return errorMessage;
   }
 };
 
-export const requestMembership = async (id_number: string): Promise<void> => {
+export const requestMembership = async (): Promise<
+  MembershipStatusResponse | undefined
+> => {
   try {
-    const token = getToken();
-    const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/students/request`,
-      { id_number },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      }
+    const response = await api.put<MembershipStatusResponse>(
+      "/api/v2/students/membership-request"
     );
 
     if (response.status === 200) {
-      showToast("success", response.data.message);
-    } else {
-      showToast("error", response.data.message);
+      showToast(
+        "success",
+        response.data.message ?? "Membership request submitted successfully."
+      );
+      return response.data;
     }
+    return undefined;
   } catch (error: any) {
     handleApiError(error);
+    return undefined;
   }
 };
 
 export const getMembershipStatusStudents = async (
-  id_number: string
+  _id_number?: string,
+  showUserError = true
 ): Promise<MembershipStatusResponse | undefined> => {
   try {
-    const token = getToken();
-    const response: AxiosResponse<MembershipStatusResponse> = await axios.get(
-      `${backendConnection()}/api/students/get-membership-status/${id_number}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      }
+    const response = await api.get<MembershipStatusResponse>(
+      "/api/v2/students/membership-status"
     );
 
     if (response.status === 200) {
@@ -110,7 +106,7 @@ export const getMembershipStatusStudents = async (
     }
     return undefined;
   } catch (error: unknown) {
-    handleApiError(error);
+    handleApiError(error, showUserError);
     return undefined;
   }
 };

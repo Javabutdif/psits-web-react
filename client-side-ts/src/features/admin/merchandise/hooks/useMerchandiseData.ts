@@ -216,7 +216,7 @@ const productFormFromRecord = (product?: MerchandiseItem | null): ProductFormVal
       size,
       {
         custom: Boolean(details.custom),
-        price: String(details.price || product.price || "0"),
+        price: details.custom ? String(details.price || "") : "",
       },
     ])
   );
@@ -239,6 +239,19 @@ const productFormFromRecord = (product?: MerchandiseItem | null): ProductFormVal
   };
 };
 
+const sanitizeSelectedSizes = (
+  selectedSizes: ProductFormValues["selectedSizes"]
+) =>
+  Object.fromEntries(
+    Object.entries(selectedSizes).map(([size, details]) => [
+      size,
+      {
+        custom: Boolean(details.custom),
+        price: details.custom ? String(details.price || "") : "",
+      },
+    ])
+  );
+
 const appendProductFormData = (
   values: ProductFormValues,
   images: ProductImageState,
@@ -255,7 +268,10 @@ const appendProductFormData = (
   formData.append("batch", values.batch);
   formData.append("description", values.description);
   formData.append("selectedVariations", values.selectedVariations.join(","));
-  formData.append("selectedSizes", JSON.stringify(values.selectedSizes));
+  formData.append(
+    "selectedSizes",
+    JSON.stringify(sanitizeSelectedSizes(values.selectedSizes))
+  );
   formData.append("selectedAudience", values.selectedAudience);
   formData.append("created_by", createdBy);
   formData.append("start_date", values.start_date);

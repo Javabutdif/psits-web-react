@@ -54,6 +54,10 @@ import { Student } from "../models/student.model";
 import { Admin } from "../models/admin.model";
 import { admin_model } from "../model_template/model_data";
 import { account_status } from "../enums/status.enums";
+import {
+  hasActiveMembership,
+  normalizeMembershipStatus,
+} from "../util/membership.util";
 
 /**
  * Extend Express Request to include v2 auth user claims from access token.
@@ -347,4 +351,37 @@ export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
       return res.status(500).json({ message: "Authorization check failed" });
     }
   };
+};
+
+export const requireActiveStudentMembershipV2 = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.userV2 || req.userV2.role !== "student") {
+    return next();
+  }
+
+  try {
+    const student = await Student.findById(req.userV2.sub)
+      .select("membershipStatus")
+      .lean();
+    const rawStatus = student?.membershipStatus ?? req.userV2.membershipStatus;
+    const status = normalizeMembershipStatus(rawStatus);
+
+    if (hasActiveMembership(rawStatus)) {
+      req.userV2.membershipStatus = rawStatus;
+      return next();
+    }
+
+    return res.status(403).json({
+      error: "MEMBERSHIP_REQUIRED",
+      message: "Active membership is required to access this feature.",
+      status,
+      rawStatus,
+    });
+  } catch (error) {
+    console.error("Membership access check error:", error);
+    return res.status(500).json({ message: "Membership check failed" });
+  }
 };

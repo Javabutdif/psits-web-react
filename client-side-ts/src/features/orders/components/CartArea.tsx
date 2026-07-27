@@ -9,6 +9,7 @@ import { Minus, Plus, Trash, Tag, X } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useTransactions } from "@/lib/transactions";
 import { useAuth } from "@/features/auth";
+import { useMembershipGate } from "@/features/student";
 import { toast } from "sonner";
 import { makeOrder } from "../api/orders";
 import { getEligiblePromos, type PromoOption } from "../api/promo";
@@ -48,6 +49,7 @@ export const Cart: React.FC = () => {
   const navigate = useNavigate();
 
   const { user } = useAuth();
+  const { ensureActiveMembership } = useMembershipGate();
 
   const fetchEligiblePromos = useCallback(async () => {
     const selectedItems = items.filter((i) => selectedIds.has(i.uid));
@@ -74,6 +76,8 @@ export const Cart: React.FC = () => {
   const handlePlaceOrder = async () => {
     const selected = items.filter((i) => selectedIds.has(i.uid));
     if (selected.length === 0) return;
+
+    if (!(await ensureActiveMembership())) return;
 
     const idNumber = user?.idNumber || null;
     if (!idNumber) {

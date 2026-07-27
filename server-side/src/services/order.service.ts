@@ -225,8 +225,9 @@ class OrderService {
           ? item.sizes[0]
           : item.sizes;
         const sizeConfig = findMerch.data.selectedSizes.get(selectedSize);
-        if (sizeConfig && sizeConfig.price) {
-          actualPrice = parseFloat(sizeConfig.price);
+        const sizePrice = Number(sizeConfig?.price);
+        if (sizeConfig?.custom && Number.isFinite(sizePrice)) {
+          actualPrice = sizePrice;
         }
       }
       //Process for subtotal

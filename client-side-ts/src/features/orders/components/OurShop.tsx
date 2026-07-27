@@ -33,6 +33,7 @@ interface Product {
   sizes?: string[];
   colors?: string[];
   stock?: number;
+  selectedSizes?: Record<string, { custom: boolean; price: string }>;
 }
 
 // Transform API merchandise to display product
@@ -69,6 +70,7 @@ const transformMerchandise = (item: MerchandiseItem): Product => {
     sizes: sizesFromSelectedSizes,
     colors,
     stock: item.stocks ?? item.stock,
+    selectedSizes: item.selectedSizes,
   };
 };
 
