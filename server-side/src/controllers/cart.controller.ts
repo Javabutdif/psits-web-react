@@ -64,9 +64,10 @@ export const addCartController = async (req: Request, res: Response) => {
     if (sizes && sizes.length > 0 && product.selectedSizes) {
       const selectedSize = Array.isArray(sizes[0]) ? sizes[0] : sizes;
       const sizeConfig = product.selectedSizes.get(selectedSize);
+      const sizePrice = Number(sizeConfig?.price);
 
-      if (sizeConfig && sizeConfig.price) {
-        actualPrice = parseFloat(sizeConfig.price);
+      if (sizeConfig?.custom && Number.isFinite(sizePrice)) {
+        actualPrice = sizePrice;
       }
     }
 

@@ -8,6 +8,7 @@ import {
   requireAccessTokenV2,
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2,
+  requireActiveStudentMembershipV2,
 } from "../middlewares/authV2.middleware";
 const router = Router();
 
@@ -16,13 +17,15 @@ router.post(
   "/add-cart",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["student"]),
+  requireActiveStudentMembershipV2,
   addCartController
 );
 //Student View Cart
 router.get(
   "/view-cart",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["student"]),
+  requireActiveStudentMembershipV2,
   viewStudentCartController
 );
 //Student Delete Cart Item

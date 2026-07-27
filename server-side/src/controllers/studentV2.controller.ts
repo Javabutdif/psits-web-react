@@ -4,6 +4,9 @@ import { Student } from "../models/student.model";
 import { user_model } from "../model_template/model_data";
 import { orderService } from "../services/order.service";
 import { Refund } from "../models/refund.model";
+import { Settings } from "../models/settings.model";
+import { membership_status } from "../enums/status.enums";
+import { normalizeMembershipStatus } from "../util/membership.util";
 
 const escapeRegex = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -58,6 +61,76 @@ export const getStudentLookupForAdmin = async (
     return res.status(200).json({ data: user_model(student) });
   } catch (error) {
     console.error("Error fetching student lookup:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getStudentMembershipStatusV2 = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const student = await Student.findById(req.userV2.sub).select(
+      "id_number membershipStatus isFirstApplication"
+    );
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const settings = await Settings.findOne().select("membership_price").lean();
+    const rawStatus = student.membershipStatus;
+
+    return res.status(200).json({
+      status: normalizeMembershipStatus(rawStatus),
+      rawStatus,
+      isFirstApplication: student.isFirstApplication,
+      membershipPrice: settings?.membership_price ?? 0,
+    });
+  } catch (error) {
+    console.error("Error fetching student membership status:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const requestStudentMembershipV2 = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const student = await Student.findById(req.userV2.sub).select(
+      "membershipStatus isFirstApplication"
+    );
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const status = normalizeMembershipStatus(student.membershipStatus);
+
+    if (status === "active") {
+      return res.status(400).json({ message: "Membership is already active." });
+    }
+
+    if (status === "pending") {
+      return res
+        .status(400)
+        .json({ message: "You already have a pending membership request." });
+    }
+
+    await Student.updateOne(
+      { _id: student._id },
+      { $set: { membershipStatus: membership_status.PENDING } }
+    );
+
+    return res.status(200).json({
+      message: "Membership request submitted successfully.",
+      status: "pending",
+      rawStatus: membership_status.PENDING,
+      isFirstApplication: student.isFirstApplication,
+    });
+  } catch (error) {
+    console.error("Error submitting membership request:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
