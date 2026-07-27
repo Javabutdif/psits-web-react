@@ -17,7 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { showToast } from "@/utils/alertHelper";
-import { updatePromoCode } from "../api/promo.api";
+import { updatePromoCode, type UpdatePromoPayload } from "../api/promo.api";
 import { fetchStudentName } from "@/features/admin/api/admin";
 import { activePublishMerchandise } from "@/features/admin/api/admin";
 import { TEAM_ROLES } from "../types/promo.types";
@@ -52,6 +52,7 @@ export const PromoEditModal = ({ data, onClose }: PromoEditModalProps) => {
       (data.promo_scope as "Merchandise" | "Category" | "Both") ||
       "Merchandise",
   });
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
   const [activeMerchandise, setActiveMerchandise] = useState<
     SelectedMerchandise[]
   >([]);
@@ -155,18 +156,40 @@ export const PromoEditModal = ({ data, onClose }: PromoEditModalProps) => {
   };
 
   const handleSubmit = async () => {
-    if (form.promoName.trim() === "") {
-      showToast("error", "Promo name cannot be empty.");
+    const errors: Record<string, boolean> = {};
+    if (!form.type) errors.type = true;
+    if (form.discount <= 0) errors.discount = true;
+    if (!form.startDate) errors.startDate = true;
+    if (!form.endDate) errors.endDate = true;
+    if (form.startDate && form.endDate && form.startDate > form.endDate) errors.dateOrder = true;
+    if (form.limitType === "Limited" && form.quantity <= 0) errors.quantity = true;
+    if (
+      form.promoScope !== "Category" &&
+      form.selectedMerchandise.length === 0 &&
+      form.selectedCategories.length === 0
+    ) {
+      errors.merchandise = true;
+    }
+    if (form.promoScope === "Category" && form.selectedCategories.length === 0) {
+      errors.categories = true;
+    }
+
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      const messages = [];
+      if (errors.type) messages.push("Type is required");
+      if (errors.discount) messages.push("Discount must be greater than 0");
+      if (errors.startDate) messages.push("Start date is required");
+      if (errors.endDate) messages.push("End date is required");
+      if (errors.dateOrder) messages.push("Start date must be before end date");
+      if (errors.quantity) messages.push("Quantity is required for limited promos");
+      if (errors.merchandise) messages.push("Select at least one merchandise");
+      if (errors.categories) messages.push("Select at least one category");
+      showToast("error", messages.join(". "));
       return;
     }
-    if (!form.type) {
-      showToast("error", "Type is required.");
-      return;
-    }
-    if (form.discount <= 0) {
-      showToast("error", "Discount must be greater than 0.");
-      return;
-    }
+
+    setValidationErrors({});
 
     const audience =
       form.type === "Members"
@@ -177,29 +200,24 @@ export const PromoEditModal = ({ data, onClose }: PromoEditModalProps) => {
             ? "All Students"
             : form.selectedStudents;
 
-    const formData = new FormData();
-    formData.append("promoId", data._id);
-    formData.append("promoName", form.promoName);
-    formData.append("type", form.type);
-    formData.append("limitType", form.limitType);
-    formData.append("singleStudent", form.singleStudent);
-    formData.append("selectedAudience", JSON.stringify(audience));
-    formData.append(
-      "selectedMerchandise",
-      JSON.stringify(form.selectedMerchandise)
-    );
-    formData.append(
-      "selectedCategories",
-      JSON.stringify(form.selectedCategories)
-    );
-    formData.append("promoScope", form.promoScope);
-    formData.append("discount", String(form.discount));
-    formData.append("startDate", form.startDate);
-    formData.append("endDate", form.endDate);
-    formData.append("quantity", String(form.quantity));
+    const payload: UpdatePromoPayload = {
+      promoName: form.promoName,
+      type: form.type,
+      limitType: form.limitType,
+      singleStudent: form.singleStudent,
+      selectedAudience: audience,
+      selectedMerchandise: form.selectedMerchandise,
+      selectedCategories: form.selectedCategories,
+      promoScope: form.promoScope,
+      discount: form.discount,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      quantity: form.limitType === "Limited" ? form.quantity : 0,
+      promoId: data._id,
+    };
 
     setIsSubmitting(true);
-    const result = await updatePromoCode(formData);
+    const result = await updatePromoCode(payload);
     setIsSubmitting(false);
     if (result) {
       onClose();
@@ -258,15 +276,16 @@ export const PromoEditModal = ({ data, onClose }: PromoEditModalProps) => {
           <Label className="text-xs font-medium">Type</Label>
           <Select
             value={form.type}
-            onValueChange={(v) => updateField("type", v)}
+            onValueChange={(v) => { updateField("type", v); setValidationErrors((prev) => ({ ...prev, type: false })); }}
           >
-            <SelectTrigger className="mt-1 h-10 w-full rounded-lg border-[#eeeeee]">
+            <SelectTrigger className={`mt-1 h-10 w-full rounded-lg border-[#eeeeee] ${validationErrors.type ? "border-red-500" : ""}`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Members">Members</SelectItem>
               <SelectItem value="Students">Students</SelectItem>
               <SelectItem value="All Students">All Students</SelectItem>
+              <SelectItem value="Membership">Membership</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -408,10 +427,11 @@ export const PromoEditModal = ({ data, onClose }: PromoEditModalProps) => {
               <Input
                 type="number"
                 value={form.quantity}
-                onChange={(e) =>
-                  updateField("quantity", parseInt(e.target.value) || 0)
-                }
-                className="mt-1 h-10 rounded-lg border-[#eeeeee]"
+                onChange={(e) => {
+                  updateField("quantity", parseInt(e.target.value) || 0);
+                  setValidationErrors((prev) => ({ ...prev, quantity: false }));
+                }}
+                className={`mt-1 h-10 rounded-lg border-[#eeeeee] ${validationErrors.quantity ? "border-red-500" : ""}`}
               />
             </div>
           </>
@@ -433,8 +453,11 @@ export const PromoEditModal = ({ data, onClose }: PromoEditModalProps) => {
             <Input
               type="date"
               value={form.endDate}
-              onChange={(e) => updateField("endDate", e.target.value)}
-              className="mt-1 h-10 rounded-lg border-[#eeeeee]"
+              onChange={(e) => {
+                updateField("endDate", e.target.value);
+                setValidationErrors((prev) => ({ ...prev, startDate: false, endDate: false, dateOrder: false }));
+              }}
+              className={`mt-1 h-10 rounded-lg border-[#eeeeee] ${validationErrors.endDate ? "border-red-500" : ""}`}
             />
           </div>
           <div>
@@ -442,10 +465,11 @@ export const PromoEditModal = ({ data, onClose }: PromoEditModalProps) => {
             <Input
               type="number"
               value={form.discount}
-              onChange={(e) =>
-                updateField("discount", parseFloat(e.target.value) || 0)
-              }
-              className="mt-1 h-10 rounded-lg border-[#eeeeee]"
+              onChange={(e) => {
+                updateField("discount", parseFloat(e.target.value) || 0);
+                setValidationErrors((prev) => ({ ...prev, discount: false }));
+              }}
+              className={`mt-1 h-10 rounded-lg border-[#eeeeee] ${validationErrors.discount ? "border-red-500" : ""}`}
             />
           </div>
         </div>

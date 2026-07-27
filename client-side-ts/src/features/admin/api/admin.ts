@@ -100,60 +100,6 @@ export interface PromoMerchandiseItem {
   }>;
 }
 
-export interface PromoCodeItem {
-  _id: string;
-  promo_name: string;
-  type: string;
-  limit_type: "Limited" | "Unlimited" | string;
-  one_person_limit?: boolean;
-  selected_audience?: string[];
-  selected_specific_students?: string[];
-  discount: number;
-  quantity: number;
-  start_date: string;
-  end_date: string;
-  status?: string;
-  selected_merchandise?: PromoMerchandiseItem[];
-  created_by?: string;
-}
-
-type PromoCodeResponse =
-  | PromoCodeItem[]
-  | {
-      promo?: PromoCodeItem[];
-      message?: string;
-    };
-
-export interface PromoLogItem {
-  _id: string;
-  promo_name?: string;
-  action?: string;
-  admin?: string;
-  date?: string;
-  [key: string]: unknown;
-}
-
-type PromoLogResponse =
-  | PromoLogItem[]
-  | {
-      log?: PromoLogItem[];
-      message?: string;
-    };
-
-export interface PromoCodeRequest {
-  promoId?: string;
-  promoName: string;
-  type: string;
-  limitType: string;
-  singleStudent: string;
-  selectedAudience: string;
-  discount: string;
-  quantity: string;
-  startDate: string;
-  endDate: string;
-  selectedMerchandise: string;
-}
-
 interface RenewStudentData {
   id_number: string;
   first_name: string;
@@ -571,12 +517,6 @@ export const membershipHistory = async (): Promise<
 const normalizeMerchandiseResponse = (payload: MerchandiseResponse) =>
   Array.isArray(payload) ? payload : payload.data || [];
 
-const normalizePromoResponse = (payload: PromoCodeResponse) =>
-  Array.isArray(payload) ? payload : payload.promo || [];
-
-const normalizePromoLogResponse = (payload: PromoLogResponse) =>
-  Array.isArray(payload) ? payload : payload.log || [];
-
 export const merchandise = async (): Promise<MerchandiseItem[] | void> => {
   try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
@@ -778,78 +718,6 @@ export const updateMerchandise = async (
   } catch (error) {
     handleApiError(error);
     return false;
-  }
-};
-
-export const getAllPromoCodes = async (): Promise<PromoCodeItem[] | void> => {
-  try {
-    const response: AxiosResponse<PromoCodeResponse> = await axios.get(
-      `${backendConnection()}/api/promo/fetch`,
-      { headers: createHeaders() }
-    );
-    return normalizePromoResponse(response.data);
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
-export const createPromoCodeAdmin = async (
-  payload: PromoCodeRequest
-): Promise<boolean> => {
-  try {
-    const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/promo/create`,
-      payload,
-      { headers: createHeaders() }
-    );
-    if (response.status === 200) showToast("success", response.data.message);
-    return response.status === 200;
-  } catch (error) {
-    handleApiError(error);
-    return false;
-  }
-};
-
-export const updatePromoCodeAdmin = async (
-  payload: PromoCodeRequest
-): Promise<boolean> => {
-  try {
-    const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/promo/update`,
-      payload,
-      { headers: createHeaders() }
-    );
-    if (response.status === 200) showToast("success", response.data.message);
-    return response.status === 200;
-  } catch (error) {
-    handleApiError(error);
-    return false;
-  }
-};
-
-export const deletePromoCodeAdmin = async (id: string): Promise<boolean> => {
-  try {
-    const response: AxiosResponse = await axios.delete(
-      `${backendConnection()}/api/promo/delete/${id}`,
-      { headers: createHeaders() }
-    );
-    if (response.status === 200) showToast("success", response.data.message);
-    return response.status === 200;
-  } catch (error) {
-    handleApiError(error);
-    return false;
-  }
-};
-
-export const getPromoLogs = async (): Promise<PromoLogItem[] | void> => {
-  try {
-    const response: AxiosResponse<PromoLogResponse> = await axios.get(
-      `${backendConnection()}/api/promo/log`,
-      { headers: createHeaders() }
-    );
-    return normalizePromoLogResponse(response.data);
-  } catch (error) {
-    handleApiError(error, false);
   }
 };
 

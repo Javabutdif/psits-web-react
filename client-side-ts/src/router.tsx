@@ -118,7 +118,6 @@ const router = createBrowserRouter([
                 path: "merchandise/products/:productId/edit",
                 Component: Merchandise,
               },
-              { path: "merchandise/promo-code", Component: Merchandise },
               { path: "events", Component: EventsPage },
               { path: "events/:eventId", Component: EventManagement },
               {

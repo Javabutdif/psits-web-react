@@ -120,11 +120,15 @@ const handleApiError = (error: unknown, showUserError = true): void => {
   }
 };
 
-export const makeOrder = async (formData: OrderFormData): Promise<boolean> => {
+export const makeOrder = async (formData: OrderFormData & { promo_id?: string }): Promise<boolean> => {
   try {
+    const payload: Record<string, unknown> = { items: formData.items };
+    if (formData.promo_id) {
+      payload.promo_id = formData.promo_id;
+    }
     const response: AxiosResponse = await axios.post(
       `${backendConnection()}/api/orders/v2/create`,
-      { items: formData.items },
+      payload,
       { headers: createHeaders() }
     );
 

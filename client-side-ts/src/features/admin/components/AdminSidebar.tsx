@@ -369,17 +369,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     >
                       <Link to="/admin/merchandise/products">Products</Link>
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "h-8 w-full justify-start px-2 text-sm font-normal",
-                        isActivePath("/admin/merchandise/promo-code") &&
-                          "text-[#1C9DDE]"
-                      )}
-                      asChild
-                    >
-                      <Link to="/admin/merchandise/promo-code">Promo Code</Link>
-                    </Button>
                   </div>
                 )}
               </li>

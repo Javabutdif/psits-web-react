@@ -2,7 +2,9 @@ import { Request, Response } from "express";
 import mongoose, { Types } from "mongoose";
 import { Promo } from "../models/promo.model";
 import { PromoLog } from "../models/promo.log.model";
+import { PromoUsage } from "../models/promo.usage.model";
 import { promoService } from "../services/promo.service";
+import { Merch } from "../models/merch.model";
 import { AppError } from "../util/app.error.util";
 
 class PromoController {
@@ -126,6 +128,88 @@ class PromoController {
         res.status(error.statusCode).json({ message: error.message });
       } else {
         res.status(500).json({ message: "Server error!" });
+      }
+    }
+  };
+
+  // Get eligible promos for a list of merchandise IDs (student-facing)
+  getEligiblePromos = async (req: Request, res: Response) => {
+    try {
+      const { merch_ids } = req.query;
+      if (!merch_ids || typeof merch_ids !== "string") {
+        return res
+          .status(400)
+          .json({ message: "Missing merch_ids query parameter" });
+      }
+
+      const merchIdList = merch_ids.split(",").map((id) => id.trim());
+      if (merchIdList.length === 0) {
+        return res.status(200).json({ promos: [] });
+      }
+
+      // Fetch cart merchandise data to get categories
+      const cartMerches = await Merch.find({
+        _id: { $in: merchIdList.map((id) => new Types.ObjectId(id)) },
+      }).select("_id category").lean();
+
+      const merchIdSet = new Set(merchIdList);
+      const merchCategoryMap = new Map<string, string>();
+      for (const m of cartMerches) {
+        merchCategoryMap.set(m._id.toString(), m.category || "");
+      }
+
+      const allPromos = await promoService.fetchAll();
+      if (!allPromos || allPromos.length === 0) {
+        return res.status(200).json({ promos: [] });
+      }
+
+      const eligiblePromos = [];
+      for (const promo of allPromos) {
+        if (promoService.isExpired(promo)) continue;
+        if (promoService.checkStocks(promo)) continue;
+
+        let hasMatchingItem = false;
+        for (const merchId of merchIdList) {
+          if (promoService.verifyMerchPromo(promo, merchId)) {
+            hasMatchingItem = true;
+            break;
+          }
+
+          const category = merchCategoryMap.get(merchId);
+          if (category && promoService.verifyCategoryPromo(promo, category)) {
+            hasMatchingItem = true;
+            break;
+          }
+        }
+
+        if (!hasMatchingItem) continue;
+
+        const promoDiscount = promoService.checkPromoType(promo, req.userV2);
+        if (!promoDiscount || promoDiscount.discount <= 0) continue;
+
+        const hasAlreadyUsed = await PromoUsage.findOne({
+          promo_id: promo._id,
+          id_number: req.userV2.idNumber,
+        });
+        if (hasAlreadyUsed) continue;
+
+        eligiblePromos.push({
+          _id: (promo._id as any).toString(),
+          promo_name: promo.promo_name,
+          discount: promo.discount,
+          type: promo.type,
+          limit_type: promo.limit_type,
+        });
+      }
+
+      return res.status(200).json({ promos: eligiblePromos });
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({ message: error.message });
+      } else {
+        res
+          .status(500)
+          .json({ message: "Server error! " + (error as Error).message });
       }
     }
   };

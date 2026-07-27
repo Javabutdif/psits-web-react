@@ -219,3 +219,33 @@ export const getPromoLog = async (): Promise<
     return undefined;
   }
 };
+
+export interface PromoOption {
+  _id: string;
+  promo_name: string;
+  discount: number;
+  type: string;
+  limit_type: string;
+}
+
+export const getEligiblePromos = async (
+  merchIds: string[]
+): Promise<PromoOption[] | null> => {
+  try {
+    if (merchIds.length === 0) return [];
+    const response: AxiosResponse = await axios.get(
+      `${backendConnection()}/api/promo/eligible`,
+      {
+        params: { merch_ids: merchIds.join(",") },
+        headers: createHeaders(),
+      }
+    );
+    if (response.status === 200) {
+      return response.data.promos || [];
+    }
+    return [];
+  } catch (error) {
+    handleApiError(error);
+    return null;
+  }
+};
