@@ -1,3 +1,5 @@
+import sidePhoto from "@/assets/side_photo_forms.png";
+
 import {
   ForgotPasswordForm,
   type ForgotPasswordCredentials,
@@ -13,6 +15,15 @@ export default function ForgotPassword() {
     <div className="flex h-screen w-screen flex-row bg-gray-300">
       <div className="flex w-full items-center justify-center bg-white md:w-1/2">
         <ForgotPasswordForm onSubmit={handleForgotPassword} />
+      </div>
+
+      {/* Right Side: Image */}
+      <div className="hidden h-full w-1/2 md:flex">
+        <img
+          src={sidePhoto}
+          alt="Login visual"
+          className="h-full w-full object-cover"
+        />
       </div>
     </div>
   );

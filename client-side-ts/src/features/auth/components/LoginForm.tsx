@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -205,7 +206,7 @@ export default function LoginForm({ onLogin, isSubmitting }: LoginFormProps) {
           </form>
         </CardContent>
 
-        {/* <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-500">
             Don't have an account?{" "}
             <Link
@@ -215,7 +216,7 @@ export default function LoginForm({ onLogin, isSubmitting }: LoginFormProps) {
               Sign up
             </Link>
           </p>
-        </CardFooter> */}
+        </CardFooter>
       </Card>
     </div>
   );

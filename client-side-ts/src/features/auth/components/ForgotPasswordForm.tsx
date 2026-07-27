@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
+import logo from "@/assets/logo_forms_100x100.png";
 
 const formSchema = z.object({
   id: z.string().min(8, "ID Number must at least be 8 digits."),
@@ -46,7 +47,11 @@ export default function ForgotPasswordForm({
 
   return (
     <Card className="w-full border-none shadow-none sm:max-w-md">
-      <CardHeader>
+      <CardHeader className="mb-[12px] flex flex-col items-center space-y-2 text-center">
+        {/* Logo Placeholder */}
+        <div className="mb-4 flex h-18 w-18 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+          <img src={logo} alt="Logo" className="h-full w-full object-cover" />
+        </div>
         <CardTitle className="text-4xl font-semibold">
           Forgot Password
         </CardTitle>
