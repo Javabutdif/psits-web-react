@@ -2,7 +2,11 @@ import { createBrowserRouter, Outlet } from "react-router-dom";
 import { AdminHomeRedirect } from "./components/common/AdminHomeRedirect";
 import { AdminCampusRouteGuard } from "./components/common/AdminCampusRouteGuard";
 import { PublicShopCampusGuard } from "./components/common/PublicShopCampusGuard";
-import { AdminRouteGuard } from "./components/common/RouteGuards";
+import { StudentMembershipRouteGuard } from "./components/common/StudentMembershipRouteGuard";
+import {
+  AdminRouteGuard,
+  StudentRouteGuard,
+} from "./components/common/RouteGuards";
 import { StudentCampusRouteGuard } from "./components/common/StudentCampusRouteGuard";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { MainLayout } from "./layouts/MainLayout";
@@ -36,6 +40,8 @@ import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import AccountSettings from "./pages/student/AccountSettings";
 import EventAttendance from "./pages/student/EventAttendance";
 import MyOrders from "./pages/student/MyOrders";
+import MembershipPending from "./pages/student/MembershipPending";
+import MembershipRequired from "./pages/student/MembershipRequired";
 import CertificatesPage from "./pages/CertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
@@ -61,22 +67,42 @@ const router = createBrowserRouter([
             children: [
               { path: "shop", Component: Shop },
               { path: "shop/:id", Component: ProductDetailsPage },
-              { path: "cart", Component: Cart },
+              {
+                element: <StudentMembershipRouteGuard />,
+                children: [{ path: "cart", Component: Cart }],
+              },
             ],
           },
           {
             path: "student",
-            Component: StudentLayout,
+            Component: StudentRouteGuard,
             children: [
-              { index: true, Component: AccountSettings },
-              { path: "event-attendance", Component: EventAttendance },
-              { path: "account-settings", Component: AccountSettings },
-              { path: "certificates", Component: CertificatesPage },
               {
-                element: (
-                  <StudentCampusRouteGuard allowedCampuses={["UC-MAIN"]} />
-                ),
-                children: [{ path: "my-orders", Component: MyOrders }],
+                Component: StudentLayout,
+                children: [
+                  { index: true, Component: AccountSettings },
+                  { path: "account-settings", Component: AccountSettings },
+                  {
+                    path: "membership-required",
+                    Component: MembershipRequired,
+                  },
+                  { path: "membership-pending", Component: MembershipPending },
+                  {
+                    element: <StudentMembershipRouteGuard />,
+                    children: [
+                      { path: "event-attendance", Component: EventAttendance },
+                      { path: "certificates", Component: CertificatesPage },
+                      {
+                        element: (
+                          <StudentCampusRouteGuard
+                            allowedCampuses={["UC-MAIN"]}
+                          />
+                        ),
+                        children: [{ path: "my-orders", Component: MyOrders }],
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
