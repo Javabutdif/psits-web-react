@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentType,
+  type FormEvent,
+} from "react";
 import {
   Ban,
   Check,
@@ -946,7 +952,8 @@ const PasswordDialog = ({
   const [values, setValues] =
     useState<StudentPasswordValues>(emptyPasswordValues);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!account) return;
     if (!values.password || values.password !== values.confirm_password) {
       showToast("error", "Passwords do not match.");
@@ -964,7 +971,7 @@ const PasswordDialog = ({
         <DialogDescription className="sr-only">
           Change the selected student's account password.
         </DialogDescription>
-        <div className="p-6">
+        <form className="p-6" onSubmit={handleSubmit}>
           <div className="mb-6">
             <h2 className="text-lg font-medium">{account?.name}</h2>
             <p className="text-sm text-[#8f8f8f]">{account?.email}</p>
@@ -976,6 +983,7 @@ const PasswordDialog = ({
               </Label>
               <Input
                 type="password"
+                autoComplete="new-password"
                 value={values.password}
                 onChange={(event) =>
                   setValues((current) => ({
@@ -993,6 +1001,7 @@ const PasswordDialog = ({
               </Label>
               <Input
                 type="password"
+                autoComplete="new-password"
                 value={values.confirm_password}
                 onChange={(event) =>
                   setValues((current) => ({
@@ -1015,15 +1024,14 @@ const PasswordDialog = ({
               Cancel
             </Button>
             <Button
-              type="button"
+              type="submit"
               className="h-10 min-w-32 rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
               disabled={isSaving}
-              onClick={handleSubmit}
             >
               Save changes
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

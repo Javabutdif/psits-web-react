@@ -3,6 +3,7 @@ import {
   requireAccessTokenV2,
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2,
+  requireActiveStudentMembershipV2,
 } from "../middlewares/authV2.middleware";
 
 import {
@@ -35,8 +36,9 @@ router.get(
 // with their attendance record filtered per event
 router.get(
   "/my-events",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["student"]),
+  requireActiveStudentMembershipV2,
   getMyEventsController
 );
 

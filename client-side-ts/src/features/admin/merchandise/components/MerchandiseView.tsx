@@ -640,6 +640,13 @@ const ProductDetailsDialog = ({
 
   const variations = product.selectedVariations || [];
   const sizes = Object.keys(product.selectedSizes || {});
+  const sizeLabels = sizes.map((size) => {
+    const sizeConfig = product.selectedSizes?.[size];
+    if (sizeConfig?.custom && sizeConfig.price) {
+      return `${size} - ${formatCurrency(sizeConfig.price)}`;
+    }
+    return size;
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -696,7 +703,7 @@ const ProductDetailsDialog = ({
               colorValue={variations[0]}
             />
           )}
-          {sizes.length > 0 && <TagList label="Size" values={sizes} />}
+          {sizeLabels.length > 0 && <TagList label="Size" values={sizeLabels} />}
 
           <div className="mt-6 flex items-center justify-between border-t border-[#eeeeee] pt-4">
             <div className="flex items-center gap-3">
@@ -1084,11 +1091,46 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
       } else {
         nextSizes[size] = {
           custom: false,
-          price: current.price || "0",
+          price: "",
         };
       }
       return { ...current, selectedSizes: nextSizes };
     });
+  };
+
+  const setSizeCustomPriceEnabled = (size: string, custom: boolean) => {
+    setFormValues((current) => {
+      const currentSize = current.selectedSizes[size] || {
+        custom: false,
+        price: "",
+      };
+
+      return {
+        ...current,
+        selectedSizes: {
+          ...current.selectedSizes,
+          [size]: {
+            ...currentSize,
+            custom,
+            price: custom ? currentSize.price : "",
+          },
+        },
+      };
+    });
+  };
+
+  const setSizeCustomPrice = (size: string, price: string) => {
+    setFormValues((current) => ({
+      ...current,
+      selectedSizes: {
+        ...current.selectedSizes,
+        [size]: {
+          ...(current.selectedSizes[size] || { custom: true, price: "" }),
+          custom: true,
+          price,
+        },
+      },
+    }));
   };
 
   const save = async () => {
@@ -1104,13 +1146,23 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
       showToast("error", "Start date and end date are required");
       return;
     }
+    const invalidSizePrice = Object.entries(formValues.selectedSizes).find(
+      ([, details]) => {
+        const price = Number(details.price);
+        return details.custom && (!details.price || !Number.isFinite(price) || price <= 0);
+      }
+    );
+    if (invalidSizePrice) {
+      showToast("error", `Enter a valid custom price for ${invalidSizePrice[0]}`);
+      return;
+    }
 
     const succeeded = await saveProduct(formValues, imageState, productId);
     if (succeeded) navigate("/admin/merchandise/products");
   };
 
   const typeOptions = PRODUCT_TYPES[formValues.category] || [];
-  const selectedSizes = Object.keys(formValues.selectedSizes);
+  const selectedSizes = PRODUCT_SIZES.filter((size) => formValues.selectedSizes[size]);
 
   return (
     <div>
@@ -1442,6 +1494,77 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                           </button>
                         ))}
                       </div>
+                      {selectedSizes.length > 0 && (
+                        <div className="mt-4 space-y-3 rounded-xl border border-[#eeeeee] bg-[#fafafa] p-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-medium text-[#333333]">
+                                Optional size pricing
+                              </p>
+                              <p className="mt-0.5 text-[11px] text-[#8a8a8a]">
+                                Leave custom off to use the base price.
+                              </p>
+                            </div>
+                            <span className="rounded-full bg-white px-2.5 py-1 text-[11px] text-[#777777]">
+                              Base {formatCurrency(formValues.price)}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            {selectedSizes.map((size) => {
+                              const sizeConfig = formValues.selectedSizes[size];
+                              return (
+                                <div
+                                  key={size}
+                                  className="grid gap-2 rounded-lg bg-white p-2 sm:grid-cols-[52px_120px_1fr] sm:items-center"
+                                >
+                                  <span className="text-sm font-medium text-[#333333]">
+                                    {size}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    aria-pressed={sizeConfig.custom}
+                                    className={cn(
+                                      "h-9 cursor-pointer rounded-full border px-3 text-xs font-medium transition-colors",
+                                      sizeConfig.custom
+                                        ? "border-[#1C9DDE] bg-[#e5f5fd] text-[#1C9DDE]"
+                                        : "border-[#e0e0e0] text-[#777777]"
+                                    )}
+                                    onClick={() =>
+                                      setSizeCustomPriceEnabled(
+                                        size,
+                                        !sizeConfig.custom
+                                      )
+                                    }
+                                  >
+                                    {sizeConfig.custom ? "Custom price" : "Base price"}
+                                  </button>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    disabled={!sizeConfig.custom}
+                                    className={cn(
+                                      fieldClass,
+                                      !sizeConfig.custom &&
+                                        "bg-[#f5f5f5] text-[#a0a0a0]"
+                                    )}
+                                    value={sizeConfig.price}
+                                    placeholder={
+                                      sizeConfig.custom
+                                        ? "Exact price for this size"
+                                        : "Uses base price"
+                                    }
+                                    onChange={(event) =>
+                                      setSizeCustomPrice(size, event.target.value)
+                                    }
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -276,8 +276,10 @@ export const studentAndAdminOrderController = async (
           ? item.sizes[0]
           : item.sizes;
         const sizeConfig = findMerch.selectedSizes.get(selectedSize);
-        if (sizeConfig && sizeConfig.price) {
-          actualPrice = parseFloat(sizeConfig.price);
+        const sizePrice = Number(sizeConfig?.price);
+
+        if (sizeConfig?.custom && Number.isFinite(sizePrice)) {
+          actualPrice = sizePrice;
         }
       }
 
@@ -654,7 +656,7 @@ export const approveOrderController = async (req: Request, res: Response) => {
                       : selectedSizesMap[selectedSize];
 
                   const parsedSizePrice = Number(sizeConfig?.price);
-                  if (Number.isFinite(parsedSizePrice)) {
+                  if (sizeConfig?.custom && Number.isFinite(parsedSizePrice)) {
                     resolvedShirtPrice = parsedSizePrice;
                   }
                 }

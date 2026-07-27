@@ -24,6 +24,33 @@ const r2Client = new S3Client({
 
 const r2Endpoint = `https://${process.env.R2_BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
 
+type SelectedSizePricing = {
+  custom?: boolean;
+  price?: string | number | null;
+};
+
+const getCustomSizePrice = (
+  selectedSizes: unknown,
+  sizes: unknown
+): number | null => {
+  const selectedSize = Array.isArray(sizes) ? sizes[0] : sizes;
+  if (!selectedSize || !selectedSizes) return null;
+
+  const sizeConfig =
+    selectedSizes instanceof Map
+      ? selectedSizes.get(String(selectedSize))
+      : typeof selectedSizes === "object"
+        ? (selectedSizes as Record<string, SelectedSizePricing>)[
+            String(selectedSize)
+          ]
+        : undefined;
+
+  const parsedPrice = Number(sizeConfig?.price);
+  return sizeConfig?.custom && Number.isFinite(parsedPrice) && parsedPrice > 0
+    ? parsedPrice
+    : null;
+};
+
 class MerchandiseController {
   async create(req: Request, res: Response) {
     const {
@@ -46,7 +73,7 @@ class MerchandiseController {
       sessionConfig,
     } = req.body;
 
-    let parsedSelectedSizes;
+    let parsedSelectedSizes: Record<string, SelectedSizePricing> | undefined;
     if (typeof selectedSizes === "string") {
       try {
         parsedSelectedSizes = JSON.parse(selectedSizes);
@@ -54,6 +81,8 @@ class MerchandiseController {
         console.error("Invalid JSON format for selectedSizes:", selectedSizes);
         return res.status(400).json({ error: "Invalid selectedSizes format" });
       }
+    } else if (selectedSizes && typeof selectedSizes === "object") {
+      parsedSelectedSizes = selectedSizes as Record<string, SelectedSizePricing>;
     }
 
     let parsedSessionConfig;
@@ -225,7 +254,7 @@ class MerchandiseController {
         (req.files as Express.MulterS3.File[] | undefined)?.map(
           (file) => file.location
         ) || [];
-      let parsedSelectedSizes;
+      let parsedSelectedSizes: Record<string, SelectedSizePricing> | undefined;
       if (typeof selectedSizes === "string") {
         try {
           parsedSelectedSizes = JSON.parse(selectedSizes);
@@ -233,6 +262,11 @@ class MerchandiseController {
           console.error("Invalid JSON format for selectedSizes:", selectedSizes);
           return res.status(400).json({ error: "Invalid selectedSizes format" });
         }
+      } else if (selectedSizes && typeof selectedSizes === "object") {
+        parsedSelectedSizes = selectedSizes as Record<
+          string,
+          SelectedSizePricing
+        >;
       }
 
       const imagesToRemove = Array.isArray(removeImage)
@@ -311,14 +345,18 @@ class MerchandiseController {
         : { "cart.product_id": id, role: { $in: selectedAudienceArray } };
 
       const students = await Student.find(query);
+      const basePrice = Number(price);
+      const getUpdatedItemPrice = (sizes: unknown) =>
+        getCustomSizePrice(parsedSelectedSizes, sizes) ?? basePrice;
 
       if (students) {
         for (const student of students) {
           for (let item of student.cart) {
             if (item.product_id.toString() === id) {
+              const itemPrice = getUpdatedItemPrice(item.sizes);
               item.product_name = name;
-              item.price = price;
-              item.sub_total = price * item.quantity;
+              item.price = itemPrice;
+              item.sub_total = itemPrice * item.quantity;
               item.imageUrl1 = imageUrl[0];
               item.start_date = start_date;
               item.end_date = end_date;
@@ -349,12 +387,13 @@ class MerchandiseController {
 
           for (let item of order.items) {
             if (item.product_id.toString() === id) {
+              const itemPrice = getUpdatedItemPrice(item.sizes);
               item.product_name = name;
-              item.price = price;
+              item.price = itemPrice;
               item.batch = batch;
               item.limited = control === "limited-purchase" ? true : false;
               item.quantity = control === "limited-purchase" ? 1 : item.quantity;
-              item.sub_total = price * item.quantity;
+              item.sub_total = itemPrice * item.quantity;
             }
 
             newTotal += item.sub_total;

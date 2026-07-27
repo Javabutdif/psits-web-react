@@ -1,5 +1,6 @@
 import { CampusView } from "@/components/common/CampusView";
 import { useAuth } from "@/features/auth";
+import { normalizeMembershipStatus } from "@/features/student";
 import React from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
@@ -9,6 +10,12 @@ export const StudentLayout: React.FC = () => {
   const location = useLocation();
   const isIndexRoute =
     location.pathname === "/student" || location.pathname === "/student/";
+  const isMembershipRoute = location.pathname.startsWith(
+    "/student/membership"
+  );
+  const showMembershipLink =
+    user?.role === "student" &&
+    normalizeMembershipStatus(user.membershipStatus) !== "active";
 
   return (
     <div className="w-full">
@@ -70,6 +77,18 @@ export const StudentLayout: React.FC = () => {
                 Account Settings
               </NavLink>
             </li>
+            {showMembershipLink && (
+              <li>
+                <NavLink
+                  to="membership-required"
+                  className={() =>
+                    `pb-3 ${isMembershipRoute ? "border-b-4 border-sky-400" : "border-b-4 border-transparent"}`
+                  }
+                >
+                  Membership
+                </NavLink>
+              </li>
+            )}
           </ul>
         </nav>
       </div>
