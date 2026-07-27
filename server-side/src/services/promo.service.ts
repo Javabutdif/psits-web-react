@@ -138,7 +138,6 @@ class PromoService {
   isAlreadyUsed = async (promo: any, merchId: string, id_number: string) => {
     const result = await PromoUsage.findOne({
       promo_id: promo._id,
-      merch_id: new Types.ObjectId(merchId),
       id_number: id_number,
     });
 
@@ -150,25 +149,37 @@ class PromoService {
       case "All Students":
         return { discount: promo.discount, verfied: true };
 
-      case "Organization Members":
-        if (promo.selected_audience.includes(requestor.role)) {
-          return { discount: promo.discount, verfied: true };
+      case "Members":
+        if (
+          Array.isArray(promo.selected_audience) &&
+          promo.selected_audience.length > 0
+        ) {
+          const userRole = (requestor as any).orgRole;
+          if (userRole && promo.selected_audience.includes(userRole)) {
+            return { discount: promo.discount, verfied: true };
+          }
         }
         break;
-      case "Membership Holders":
+
+      case "Students":
         if (
-          requestor.membershipStatus === membership_status.ACTIVE ||
-          requestor.membershipStatus === membership_status.RENEWED
+          Array.isArray(promo.selected_specific_students) &&
+          promo.selected_specific_students.includes(requestor.idNumber)
         ) {
           return { discount: promo.discount, verfied: true };
         }
         break;
 
-      case "Students":
-        if (promo.selected_specific_students.includes(requestor.id_number)) {
+      case "Membership":
+        const membershipStatus = (requestor as any).membershipStatus;
+        if (
+          membershipStatus === membership_status.ACTIVE ||
+          membershipStatus === membership_status.RENEWED
+        ) {
           return { discount: promo.discount, verfied: true };
         }
         break;
+
       default:
         return {
           discount: 0,
@@ -184,8 +195,11 @@ class PromoService {
       data.selectedCategories ?? data.selectedCategory
     );
 
-    if (this.inputValidation(data)) {
-      throw new AppError("All required fields must be filled", 404);
+    if (this.validatePromoData(data).errors.length > 0) {
+      throw new AppError(
+        this.validatePromoData(data).errors.join("; "),
+        400
+      );
     }
     const uniqueMerchandise = this.filterUniqueMerchandise(parsedMerchandise);
     const uniqueCategories = Array.from(
@@ -216,7 +230,7 @@ class PromoService {
       selected_categories: uniqueCategories,
       promo_scope: promoScope,
       selected_audience:
-        data.type === "Organization Members" ? parsedAudience : [],
+        data.type === "Members" ? parsedAudience : [],
       selected_specific_students:
         data.type === "Students" ? parsedAudience : [],
       quantity: data.quantity,
@@ -224,22 +238,60 @@ class PromoService {
     }).save();
   };
   //Input validation
-  inputValidation = (data: any): boolean => {
+  validatePromoData = (data: any): { valid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    if (!data.promoName || !String(data.promoName).trim()) {
+      errors.push("Promo name is required");
+    }
+    if (!data.type) {
+      errors.push("Type is required");
+    }
+    if (!data.limitType) {
+      errors.push("Limit type is required");
+    }
+    if (
+      data.discount === undefined ||
+      data.discount === null ||
+      isNaN(Number(data.discount)) ||
+      Number(data.discount) <= 0
+    ) {
+      errors.push("Discount must be greater than 0");
+    }
+    if (!data.startDate) {
+      errors.push("Start date is required");
+    }
+    if (!data.endDate) {
+      errors.push("End date is required");
+    }
+    if (data.startDate && data.endDate && data.startDate > data.endDate) {
+      errors.push("Start date must be before end date");
+    }
+
     const hasMerchandise =
       this.parseListInput(data.selectedMerchandise).length > 0;
     const hasCategories =
       this.parseListInput(data.selectedCategories ?? data.selectedCategory)
         .length > 0;
 
-    return (
-      !data.promoName ||
-      !data.type ||
-      !data.limitType ||
-      data.discount === undefined ||
-      !data.startDate ||
-      !data.endDate ||
-      (!hasMerchandise && !hasCategories)
-    );
+    if (!hasMerchandise && !hasCategories) {
+      errors.push(
+        "At least one merchandise or category must be selected"
+      );
+    }
+
+    if (data.limitType === "Limited") {
+      if (
+        data.quantity === undefined ||
+        data.quantity === null ||
+        isNaN(Number(data.quantity)) ||
+        Number(data.quantity) <= 0
+      ) {
+        errors.push("Quantity is required for limited promos");
+      }
+    }
+
+    return { valid: errors.length === 0, errors };
   };
   //Filter unique merchandise in promo
   filterUniqueMerchandise = (merchandise: any[]) => {
@@ -262,8 +314,11 @@ class PromoService {
     const parsedCategories = this.parseListInput(
       data.selectedCategories ?? data.selectedCategory
     );
-    if (this.inputValidation(data)) {
-      throw new AppError("All required fields must be filled", 404);
+    if (this.validatePromoData(data).errors.length > 0) {
+      throw new AppError(
+        this.validatePromoData(data).errors.join("; "),
+        400
+      );
     }
     const uniqueMerchandise = this.filterUniqueMerchandise(parsedMerchandise);
     const uniqueCategories = this.filterUniqueCategories(parsedCategories);
@@ -288,7 +343,7 @@ class PromoService {
     promo.selected_categories = uniqueCategories;
     promo.promo_scope = promoScope;
     promo.selected_audience =
-      data.type === "Organization Members" ? parsedAudience : [];
+      data.type === "Members" ? parsedAudience : [];
     promo.selected_specific_students =
       data.type === "Students" || data.type === "Specific"
         ? parsedAudience
@@ -329,9 +384,19 @@ class PromoService {
       throw new AppError("Promo is not eligible for this user", 403);
     }
 
-    const eligibleItems = items.filter((item) =>
-      this.verifyMerchPromo(promo, String(item.product_id))
-    );
+    const eligibleItems = items.filter((item) => {
+      const matchesMerch = this.verifyMerchPromo(promo, String(item.product_id));
+      if (matchesMerch) return true;
+      if (promo.promo_scope !== "merchandise" && Array.isArray(promo.selected_categories)) {
+        const itemCategory = (item as any).category;
+        if (itemCategory) {
+          return promo.selected_categories.some(
+            (cat: string) => cat.toLowerCase() === itemCategory.toLowerCase()
+          );
+        }
+      }
+      return false;
+    });
 
     if (eligibleItems.length === 0) {
       throw new AppError("Promo does not apply to the selected items", 403);

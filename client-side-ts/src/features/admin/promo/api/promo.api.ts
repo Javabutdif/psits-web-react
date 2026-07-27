@@ -30,18 +30,27 @@ const handleApiError = (error: unknown, showUser = true): void => {
   }
 };
 
-export const createPromoCode = async (formData: FormData): Promise<boolean> => {
+export interface CreatePromoPayload {
+  promoName: string;
+  type: string;
+  limitType: string;
+  singleStudent: string;
+  selectedAudience: string[] | "All Students";
+  selectedMerchandise: Array<{ _id: string; name: string }>;
+  selectedCategories: string[];
+  promoScope: "Merchandise" | "Category" | "Both";
+  discount: number;
+  startDate: string;
+  endDate: string;
+  quantity: number;
+}
+
+export const createPromoCode = async (data: CreatePromoPayload): Promise<boolean> => {
   try {
-    const token = getAuthToken();
     const response: AxiosResponse = await axios.post(
       `${backendConnection()}/api/promo/create`,
-      formData,
-      {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      data,
+      { headers: createHeaders() }
     );
     if (response.status === 200) {
       showToast("success", response.data.message);
@@ -56,18 +65,16 @@ export const createPromoCode = async (formData: FormData): Promise<boolean> => {
   }
 };
 
-export const updatePromoCode = async (formData: FormData): Promise<boolean> => {
+export interface UpdatePromoPayload extends CreatePromoPayload {
+  promoId: string;
+}
+
+export const updatePromoCode = async (data: UpdatePromoPayload): Promise<boolean> => {
   try {
-    const token = getAuthToken();
     const response: AxiosResponse = await axios.post(
       `${backendConnection()}/api/promo/update`,
-      formData,
-      {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      data,
+      { headers: createHeaders() }
     );
     if (response.status === 200) {
       showToast("success", response.data.message);

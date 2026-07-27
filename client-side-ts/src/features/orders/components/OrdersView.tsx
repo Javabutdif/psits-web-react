@@ -269,9 +269,11 @@ export const OrdersView = () => {
     page,
     setPage,
     pendingData,
+    pendingTotal,
     pendingTotalPages,
     pendingStatus,
     paidData,
+    paidTotal,
     paidTotalPages,
     paidStatus,
     isMutating,
@@ -304,13 +306,13 @@ export const OrdersView = () => {
       key: "pending" as const,
       label: "Pending",
       icon: Clock3,
-      count: pendingData.length,
+      count: pendingTotal,
     },
     {
       key: "paid" as const,
       label: "Paid",
       icon: Check,
-      count: paidData.length,
+      count: paidTotal,
     },
   ];
 
@@ -530,6 +532,18 @@ export const OrdersView = () => {
                             >
                               <Check className="mr-1 h-3.5 w-3.5" />
                               Approve
+                            </Button>
+                          )}
+                          {activeTab === "pending" && isUcMainAdmin && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-8 rounded-full border-red-300 text-red-600 hover:bg-red-50"
+                              onClick={() => setCancelTarget(order)}
+                            >
+                              <X className="mr-1 h-3.5 w-3.5" />
+                              Cancel
                             </Button>
                           )}
                           {activeTab === "paid" && (

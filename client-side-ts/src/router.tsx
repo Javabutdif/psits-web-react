@@ -11,6 +11,7 @@ import EventManagement from "./pages/admin/EventManagement";
 import EventsPage from "./pages/admin/EventsPage";
 import EventStatisticsPage from "./pages/admin/EventStatisticsPage";
 import EventRafflePage from "./pages/admin/EventRafflePage";
+import Merchandise from "./pages/admin/Merchandise";
 import GeneralAdminPage from "./pages/admin/GeneralAdminPage";
 import { MainCampusFinancePage } from "./pages/admin/MainCampusFinancePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -110,6 +111,13 @@ const router = createBrowserRouter([
               { path: "dashboard", Component: Dashboard },
               { path: "organization", Component: Organization },
               { path: "students", Component: Students },
+              { path: "merchandise", Component: Merchandise },
+              { path: "merchandise/products", Component: Merchandise },
+              { path: "merchandise/products/new", Component: Merchandise },
+              {
+                path: "merchandise/products/:productId/edit",
+                Component: Merchandise,
+              },
               { path: "events", Component: EventsPage },
               { path: "events/:eventId", Component: EventManagement },
               {

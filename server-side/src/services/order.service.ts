@@ -1,5 +1,7 @@
 import { Orders } from "../models/orders.model";
 import { Merch } from "../models/merch.model";
+import { Promo } from "../models/promo.model";
+import { PromoUsage } from "../models/promo.usage.model";
 import { IOrders } from "../models/orders.interface";
 import { startOfDay, endOfDay } from "date-fns";
 import { AppError } from "../util/app.error.util";
@@ -318,6 +320,26 @@ class OrderService {
     const order = await Orders.findById(_id).session(session);
     if (!order) {
       throw new AppError("Order not found!", 404);
+    }
+
+    // Restore promo usage records and quantity if order used a promo
+    if (order.promo && order.promo.promo_discount) {
+      const promoId = order.promo._id;
+      if (promoId) {
+        const promoUsageRecords = await PromoUsage.find({
+          order_id: _id,
+        }).session(session);
+
+        for (const record of promoUsageRecords) {
+          await PromoUsage.deleteOne({ _id: record._id }).session(session);
+        }
+
+        await Promo.findByIdAndUpdate(
+          new Types.ObjectId(promoId),
+          { $inc: { quantity: 1 } },
+          { session }
+        );
+      }
     }
 
     // Restore stock for each item

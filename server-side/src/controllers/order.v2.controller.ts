@@ -145,6 +145,43 @@ class OrderController {
     const newOrder = new Orders(finalOrder);
     await newOrder.save({ session });
 
+    // Create PromoUsage records and decrement quantity if promo was used
+    if (promo_id && validation.promoDiscount.discount > 0) {
+      const orderId = newOrder._id as Types.ObjectId;
+      const eligibleItems = processOrder.orderItems.filter((item: any) => {
+        const matchesMerch = promoService.verifyMerchPromo(validation.promo, String(item.product_id));
+        if (matchesMerch) return true;
+        if (validation.promo.promo_scope !== "merchandise" && Array.isArray(validation.promo.selected_categories)) {
+          const itemCategory = (item as any).category;
+          if (itemCategory) {
+            return validation.promo.selected_categories.some(
+              (cat: string) => cat.toLowerCase() === itemCategory.toLowerCase()
+            );
+          }
+        }
+        return false;
+      });
+
+      if (eligibleItems.length > 0) {
+        const promoUsageRecords = eligibleItems.map((item: any) => ({
+          promo_id: new Types.ObjectId(promo_id),
+          order_id: orderId,
+          merch_id: new Types.ObjectId(String(item.product_id)),
+          id_number: student.id_number,
+          promo_used: new Date(),
+        }));
+        await PromoUsage.create(promoUsageRecords, { session });
+
+        if (validation.promo.limit_type === "Limited") {
+          await Promo.findByIdAndUpdate(
+            new Types.ObjectId(promo_id),
+            { $inc: { quantity: -1 } },
+            { session }
+          );
+        }
+      }
+    }
+
     //Commit Transaction
     await session.commitTransaction();
     session.endSession();

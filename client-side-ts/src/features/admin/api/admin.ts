@@ -56,19 +56,48 @@ type MembershipRequestResponse =
   | MembershipRequestData[]
   | { data: MembershipRequestData[] };
 
-interface MerchandiseItem {
-  _id: string;
-  product_name: string;
-  price: number;
-  stock: number;
-  image?: string;
-  isPublished?: boolean;
-  isDeleted?: boolean;
+export interface MerchandiseSizeOption {
+  custom?: boolean;
+  price?: string;
 }
 
-interface MerchandiseResponse {
-  data: MerchandiseItem[];
-  message?: string;
+export interface MerchandiseItem {
+  _id: string;
+  name: string;
+  price: number;
+  stocks: number;
+  batch?: string;
+  description?: string;
+  selectedVariations?: string[];
+  selectedSizes?: Record<string, MerchandiseSizeOption>;
+  selectedAudience?: string;
+  control?: string;
+  created_by?: string;
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
+  category?: string;
+  type?: string;
+  imageUrl?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+type MerchandiseResponse =
+  | MerchandiseItem[]
+  | {
+      data?: MerchandiseItem[];
+      message?: string;
+    };
+
+export interface PromoMerchandiseItem {
+  _id: string;
+  name: string;
+  items?: Array<{
+    _id?: string;
+    id_number: string;
+    promo_used?: string;
+  }>;
 }
 
 interface RenewStudentData {
@@ -278,6 +307,8 @@ const createHeaders = () => ({
   ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
 });
 
+const merchandiseV2BaseUrl = () => `${backendConnection()}/api/v2/merchandise`;
+
 const handleApiError = (error: unknown, showUser = true): void => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
@@ -483,55 +514,58 @@ export const membershipHistory = async (): Promise<
   }
 };
 
-export const merchandise = async (): Promise<MerchandiseResponse | void> => {
+const normalizeMerchandiseResponse = (payload: MerchandiseResponse) =>
+  Array.isArray(payload) ? payload : payload.data || [];
+
+export const merchandise = async (): Promise<MerchandiseItem[] | void> => {
   try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-      `${backendConnection()}/api/merch/retrieve`,
+      `${merchandiseV2BaseUrl()}/active`,
       {
         headers: createHeaders(),
       }
     );
-    return response.data;
+    return normalizeMerchandiseResponse(response.data);
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const activePublishMerchandise =
-  async (): Promise<MerchandiseResponse | void> => {
-    try {
-      const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-        `${backendConnection()}/api/merch/retrieve-publish-merchandise`,
-        { headers: createHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  };
+export const activePublishMerchandise = async (): Promise<
+  MerchandiseItem[] | void
+> => {
+  try {
+    const response: AxiosResponse<MerchandiseResponse> = await axios.get(
+      `${merchandiseV2BaseUrl()}/retrieve-published`,
+      { headers: createHeaders() }
+    );
+    return normalizeMerchandiseResponse(response.data);
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};
 
-export const merchandiseAdmin =
-  async (): Promise<MerchandiseResponse | void> => {
-    try {
-      const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-        `${backendConnection()}/api/merch/retrieve-admin`,
-        {
-          headers: createHeaders(),
-        }
-      );
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-    }
-  };
+export const merchandiseAdmin = async (): Promise<MerchandiseItem[] | void> => {
+  try {
+    const response: AxiosResponse<MerchandiseResponse> = await axios.get(
+      merchandiseV2BaseUrl(),
+      {
+        headers: createHeaders(),
+      }
+    );
+    return normalizeMerchandiseResponse(response.data);
+  } catch (error) {
+    handleApiError(error);
+  }
+};
 
 export const deleteMerchandise = async (
   _id: string
 ): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/merch/delete-soft`,
+      `${merchandiseV2BaseUrl()}/delete-soft`,
       { _id },
       { headers: createHeaders() }
     );
@@ -589,7 +623,7 @@ export const publishMerchandise = async (
 ): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/merch/publish`,
+      `${merchandiseV2BaseUrl()}/publish`,
       { _id },
       { headers: createHeaders() }
     );
@@ -647,11 +681,34 @@ export const addMerchandise = async (formData: FormData): Promise<boolean> => {
   try {
     const token = getAuthToken();
     const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/merch`,
+      merchandiseV2BaseUrl(),
       formData,
       {
         headers: {
           // allow axios to set the correct multipart boundary when sending FormData
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error);
+    return false;
+  }
+};
+
+export const updateMerchandise = async (
+  id: string,
+  formData: FormData
+): Promise<boolean> => {
+  try {
+    const token = getAuthToken();
+    const response: AxiosResponse = await axios.put(
+      `${merchandiseV2BaseUrl()}/update/${id}`,
+      formData,
+      {
+        headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           "Content-Type": "multipart/form-data",
         },

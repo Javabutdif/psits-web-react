@@ -55,4 +55,12 @@ router.post(
   promoController.update
 );
 
+// Get eligible promos for cart items — admin or student
+router.get(
+  "/eligible",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin", "student"]),
+  promoController.getEligiblePromos
+);
+
 export default router;

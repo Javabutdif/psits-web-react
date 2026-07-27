@@ -15,7 +15,15 @@ dotenv.config();
 
 import { emailService } from "../services/email.service";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const getResendClient = () => {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not configured");
+  }
+
+  return new Resend(apiKey);
+};
 
 type SendEmailOptions = {
   to: string;
@@ -42,9 +50,7 @@ const sendEmail = async ({
     throw new Error("EMAIL is not configured");
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not configured");
-  }
+  const resend = getResendClient();
 
   const { error } = await resend.emails.send({
     from,

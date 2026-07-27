@@ -62,7 +62,10 @@ import { account_status } from "../enums/status.enums";
 declare global {
   namespace Express {
     interface Request {
-      userV2: AccessTokenClaims;
+      userV2: AccessTokenClaims & {
+        role?: string;
+        membershipStatus?: string;
+      };
     }
   }
 }
@@ -174,7 +177,10 @@ export const requireAccessTokenWithDBCheck = async (
     // Verify user still exists and is active
     if (claims.role === "admin") {
       const admin = await Admin.findById(claims.sub);
-      if (!admin || admin.status !== account_status.ACTIVE) {
+      const isActive =
+        admin?.status === account_status.ACTIVE || admin?.status === "Active";
+
+      if (!admin || !isActive) {
         return res.status(403).json({
           error: "ACCOUNT_INACTIVE",
           message: "Account no longer active",
@@ -190,7 +196,12 @@ export const requireAccessTokenWithDBCheck = async (
       req.admin = admin_model(admin);
     } else {
       const student = await Student.findById(claims.sub);
-      if (!student || (student.status !== "True" && student.status !== account_status.ACTIVE)) {
+      const isActive =
+        student?.status === account_status.ACTIVE ||
+        student?.status === "Active" ||
+        student?.status === "True";
+
+      if (!student || !isActive) {
         return res.status(403).json({
           error: "ACCOUNT_INACTIVE",
           message: "Account no longer active",
@@ -204,7 +215,17 @@ export const requireAccessTokenWithDBCheck = async (
       }
     }
 
-    req.userV2 = claims;
+    req.userV2 = claims as typeof claims & {
+      orgRole?: string;
+      membershipStatus?: string;
+    };
+    if (claims.role === "student") {
+      const student = await Student.findById(claims.sub);
+      if (student) {
+        (req.userV2 as any).orgRole = student.role;
+        (req.userV2 as any).membershipStatus = student.membershipStatus;
+      }
+    }
     next();
   } catch (error) {
     const message =

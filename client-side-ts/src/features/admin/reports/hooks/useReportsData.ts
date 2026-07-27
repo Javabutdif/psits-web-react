@@ -272,6 +272,14 @@ export const useReportsData = () => {
 
   const pagedMerchandise = merchandiseDetails;
 
+  const tabCounts = useMemo<Record<ReportsTab, number>>(
+    () => ({
+      membership: membershipData.length,
+      merchandise: merchandiseTotal,
+    }),
+    [membershipData.length, merchandiseTotal]
+  );
+
   const deleteMerchandiseReportItem = async (
     detail: MerchandiseOrderDetail
   ): Promise<boolean> => {
@@ -336,6 +344,7 @@ export const useReportsData = () => {
     totalPages,
     pagedMembership,
     pagedMerchandise,
+    tabCounts,
     totalMembershipRows: filteredMembership.length,
     totalMerchandiseRows: merchandiseTotal,
     membershipSummary,

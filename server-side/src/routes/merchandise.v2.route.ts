@@ -24,33 +24,40 @@ const r2Client = new S3Client({
   },
 });
 
-const upload = multer({
-  storage: multerS3({
-    s3: r2Client,
-    bucket: process.env.R2_BUCKET_NAME!,
-    metadata: (
-      req: Request,
-      file: Express.Multer.File,
-      cb: (error: any, metadata?: any) => void
-    ) => {
-      cb(null, { fieldName: file.fieldname });
-    },
-    key: (
-      req: Request,
-      file: Express.Multer.File,
-      cb: (error: any, key?: string) => void
-    ) => {
-      cb(null, `merchandise/${Date.now()}_${file.originalname}`);
-    },
-  }),
-});
+const getUpload = () => {
+  const bucket = process.env.R2_BUCKET_NAME;
+  if (!bucket) {
+    return multer();
+  }
+
+  return multer({
+    storage: multerS3({
+      s3: r2Client,
+      bucket,
+      metadata: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, metadata?: any) => void
+      ) => {
+        cb(null, { fieldName: file.fieldname });
+      },
+      key: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, key?: string) => void
+      ) => {
+        cb(null, `merchandise/${Date.now()}_${file.originalname}`);
+      },
+    }),
+  });
+};
 
 router.post(
   "/",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
-  upload.array("images", 3),
+  getUpload().array("images", 3),
   merchandiseController.create
 );
 
@@ -69,6 +76,13 @@ router.get(
 );
 
 router.get(
+  "/retrieve-published",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin", "student"]),
+  merchandiseController.retrievePublished
+);
+
+router.get(
   "/:id",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin", "student"]),
@@ -80,7 +94,7 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
-  upload.array("images", 3),
+  getUpload().array("images", 3),
   merchandiseController.update
 );
 
@@ -98,13 +112,6 @@ router.put(
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
   merchandiseController.publish
-);
-
-router.get(
-  "/retrieve-published",
-  requireAccessTokenV2,
-  roleAuthenticateV2(["student"]),
-  merchandiseController.retrievePublished
 );
 
 export default router;
