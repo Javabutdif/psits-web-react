@@ -107,11 +107,15 @@ export const EventCard: React.FC<EventCardProps> = ({ event, studentId }) => {
 
   const formatDate = (eventDate?: Date | string): string => {
     if (!eventDate) return "Date TBA";
+    const date =
+      typeof eventDate === "string" ? new Date(eventDate) : eventDate;
+    if (!date || Number.isNaN(date.getTime())) return "Date TBA";
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-    }).format(new Date(eventDate));
+      timeZone: "Asia/Manila",
+    }).format(date);
   };
 
   const sessions = useMemo(() => {

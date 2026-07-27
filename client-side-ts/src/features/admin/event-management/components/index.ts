@@ -7,4 +7,4 @@ export { AttendeesTable } from "./AttendeesTable";
 
 // Modals
 export { AddEventModal } from "./modals";
-export type { EventFormData, SessionData } from "./modals";
+export type { EventFormData } from "./modals";

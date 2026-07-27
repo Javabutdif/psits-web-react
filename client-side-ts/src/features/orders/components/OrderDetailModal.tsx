@@ -44,7 +44,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           <DialogTitle>Order Details</DialogTitle>
         </DialogHeader>
 
-        {/* 订单基本信息 */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div>
             <span className="text-gray-500">Order ID:</span>
@@ -96,7 +95,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           </div>
         </div>
 
-        {/* 商品列表 */}
         <h4 className="mt-6 mb-2 text-base font-semibold">Items</h4>
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
@@ -129,7 +127,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           </table>
         </div>
 
-        {/* 合计 */}
         <div className="mt-4 flex items-center justify-end gap-4 text-lg">
           <span className="font-medium">Total:</span>
           <span className="text-2xl font-bold text-[#1C9DDE]">
@@ -137,7 +134,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           </span>
         </div>
 
-        {/* 退款信息 */}
         {refunds.length > 0 && (
           <>
             <h4 className="mt-6 mb-2 text-base font-semibold">Refund Details</h4>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   EventsHeader,
@@ -9,8 +9,6 @@ import {
 } from "@/features/admin/event-management";
 
 import { getEvents } from "@/features/events/api/eventService";
-
-// Alias the API Event type
 import type { Event as ApiEvent } from "@/features/events/types/event.types";
 
 const EventsPage: React.FC = () => {
@@ -20,22 +18,19 @@ const EventsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<ApiEvent[]>([]);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
+  const fetchEvents = async () => {
+    setIsLoading(true);
+    try {
       const data = await getEvents();
       setEvents(Array.isArray(data) ? data : []);
-
+    } finally {
       setIsLoading(false);
-    };
+    }
+  };
 
+  React.useEffect(() => {
     fetchEvents();
   }, []);
-
-  // Event handlers
-  // const handleAddEvent = () => {
-  //   setIsAddEventModalOpen(true);
-  // };
 
   const handleManageEvent = (eventId: string) => {
     const getEventId = (event: ApiEvent): string =>
@@ -56,7 +51,7 @@ const EventsPage: React.FC = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <EventsHeader />
+      <EventsHeader onAddEvent={() => setIsAddEventModalOpen(true)} />
 
       <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
 
@@ -67,8 +62,6 @@ const EventsPage: React.FC = () => {
           events={events}
           viewMode={viewMode}
           onManageEvent={handleManageEvent}
-          // onUpdateEvent={handleUpdateEvent}
-          // onDeleteEvent={handleDeleteEvent}
           onViewStatistics={handleViewStatistics}
           onViewRaffle={handleViewRaffle}
         />
@@ -77,9 +70,9 @@ const EventsPage: React.FC = () => {
       <AddEventModal
         open={isAddEventModalOpen}
         onOpenChange={setIsAddEventModalOpen}
-        onAddEvent={() => {}}
+        onSuccess={fetchEvents}
       />
-    </div>
+   </div>
   );
 };
 

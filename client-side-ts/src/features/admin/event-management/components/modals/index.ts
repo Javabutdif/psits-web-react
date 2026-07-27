@@ -1,7 +1,7 @@
 export { AddEventModal } from "./AddEventModal";
+export type { EventFormData } from "./AddEventModal";
 export { EventInfoTab } from "./EventInfoTab";
 export { SessionSetupTab } from "./SessionSetupTab";
-export type { EventFormData, SessionData } from "./AddEventModal";
 
 export { FilterSheet } from "./FilterSheet";
 export type { FilterOptions } from "./FilterSheet";
