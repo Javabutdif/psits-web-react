@@ -31,7 +31,6 @@ export interface SetNewPasswordFormProps {
   onBack?: () => void;
 }
 
-// Matches LoginForm.tsx / SignupForm.tsx exactly
 const inputClasses =
   "peer h-12 rounded-xl border-gray-200 bg-transparent px-3 text-gray-900 placeholder-transparent focus:border-sky-500 focus:outline-none focus-visible:border-sky-500 focus-visible:ring-0";
 
