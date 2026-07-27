@@ -36,7 +36,6 @@ export const loginUser = async (
     "/api/v2/auth/login",
     payload
   );
-  console.log(data);
   const accessToken = extractAccessToken(data as Record<string, unknown>);
   if (!accessToken) {
     throw new Error("Login response did not include an access token.");
