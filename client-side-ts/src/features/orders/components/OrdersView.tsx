@@ -269,9 +269,11 @@ export const OrdersView = () => {
     page,
     setPage,
     pendingData,
+    pendingTotal,
     pendingTotalPages,
     pendingStatus,
     paidData,
+    paidTotal,
     paidTotalPages,
     paidStatus,
     isMutating,
@@ -304,13 +306,13 @@ export const OrdersView = () => {
       key: "pending" as const,
       label: "Pending",
       icon: Clock3,
-      count: pendingData.length,
+      count: pendingTotal,
     },
     {
       key: "paid" as const,
       label: "Paid",
       icon: Check,
-      count: paidData.length,
+      count: paidTotal,
     },
   ];
 

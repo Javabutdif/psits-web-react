@@ -382,6 +382,16 @@ export const pastEventsData = {
         "On November 16, 2024, the CCS Acquaintance Party brought together students, faculty, and alumni at SM Seaside City Cebu for a night inspired by the timeless allure of the Old Money theme. The event was a celebration of camaraderie, elegance, and the rich heritage of the College of Computer Studies (CCS) community.",
       image: CCSAcquaintance,
     },
+    {
+      id: 10,
+      title: "fatima kho",
+      location: "University of Cebu Main Campus",
+      year: 2025,
+      date: { month: "August", day: "20" },
+      description:
+        "The College of Computer Studies (CCS) at the University of Cebu Main Campus warmly welcomed its new batch of students during the CCS Orientation 2025 held on August 20, 2025. The event was designed to introduce freshmen to the college's programs, faculty, and student organizations.",
+      image: Orientation,
+    },
   ],
 };
 // --- Organization Section Data ---

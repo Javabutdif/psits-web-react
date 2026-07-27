@@ -12,19 +12,19 @@ export const login = async (formData) => {
         headers: {
           "Content-Type": "application/json",
         },
+        withCredentials: true,
       }
     );
     if (response.status === 200) {
-      sessionStorage.setItem(
-        "Token",
-        response.status === 200 ? response.data.token : ""
-      );
+      const { accessToken, user, message } = response.data;
+
+      sessionStorage.setItem("Token", accessToken);
 
       return {
-        role: response.data.role,
-        campus: response.data.campus,
-        token: response.data.token,
-        message: response.data.message,
+        role: user.role === "admin" ? "Admin" : "Student",
+        campus: user.campus,
+        token: accessToken,
+        message,
       };
     } else {
       showToast("error", response.data.message);
@@ -68,7 +68,7 @@ export const register = async (formData) => {
 export const handleLogouts = async () => {
   try {
     const response = await axios.post(
-      `${backendConnection()}/api/logout`,
+      `${backendConnection()}/api/v2/auth/logout`,
       {},
       {
         headers: {

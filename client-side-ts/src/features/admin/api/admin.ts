@@ -56,19 +56,102 @@ type MembershipRequestResponse =
   | MembershipRequestData[]
   | { data: MembershipRequestData[] };
 
-interface MerchandiseItem {
-  _id: string;
-  product_name: string;
-  price: number;
-  stock: number;
-  image?: string;
-  isPublished?: boolean;
-  isDeleted?: boolean;
+export interface MerchandiseSizeOption {
+  custom?: boolean;
+  price?: string;
 }
 
-interface MerchandiseResponse {
-  data: MerchandiseItem[];
-  message?: string;
+export interface MerchandiseItem {
+  _id: string;
+  name: string;
+  price: number;
+  stocks: number;
+  batch?: string;
+  description?: string;
+  selectedVariations?: string[];
+  selectedSizes?: Record<string, MerchandiseSizeOption>;
+  selectedAudience?: string;
+  control?: string;
+  created_by?: string;
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
+  category?: string;
+  type?: string;
+  imageUrl?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+type MerchandiseResponse =
+  | MerchandiseItem[]
+  | {
+      data?: MerchandiseItem[];
+      message?: string;
+    };
+
+export interface PromoMerchandiseItem {
+  _id: string;
+  name: string;
+  items?: Array<{
+    _id?: string;
+    id_number: string;
+    promo_used?: string;
+  }>;
+}
+
+export interface PromoCodeItem {
+  _id: string;
+  promo_name: string;
+  type: string;
+  limit_type: "Limited" | "Unlimited" | string;
+  one_person_limit?: boolean;
+  selected_audience?: string[];
+  selected_specific_students?: string[];
+  discount: number;
+  quantity: number;
+  start_date: string;
+  end_date: string;
+  status?: string;
+  selected_merchandise?: PromoMerchandiseItem[];
+  created_by?: string;
+}
+
+type PromoCodeResponse =
+  | PromoCodeItem[]
+  | {
+      promo?: PromoCodeItem[];
+      message?: string;
+    };
+
+export interface PromoLogItem {
+  _id: string;
+  promo_name?: string;
+  action?: string;
+  admin?: string;
+  date?: string;
+  [key: string]: unknown;
+}
+
+type PromoLogResponse =
+  | PromoLogItem[]
+  | {
+      log?: PromoLogItem[];
+      message?: string;
+    };
+
+export interface PromoCodeRequest {
+  promoId?: string;
+  promoName: string;
+  type: string;
+  limitType: string;
+  singleStudent: string;
+  selectedAudience: string;
+  discount: string;
+  quantity: string;
+  startDate: string;
+  endDate: string;
+  selectedMerchandise: string;
 }
 
 interface RenewStudentData {
@@ -278,6 +361,8 @@ const createHeaders = () => ({
   ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
 });
 
+const merchandiseV2BaseUrl = () => `${backendConnection()}/api/v2/merchandise`;
+
 const handleApiError = (error: unknown, showUser = true): void => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
@@ -483,55 +568,64 @@ export const membershipHistory = async (): Promise<
   }
 };
 
-export const merchandise = async (): Promise<MerchandiseResponse | void> => {
+const normalizeMerchandiseResponse = (payload: MerchandiseResponse) =>
+  Array.isArray(payload) ? payload : payload.data || [];
+
+const normalizePromoResponse = (payload: PromoCodeResponse) =>
+  Array.isArray(payload) ? payload : payload.promo || [];
+
+const normalizePromoLogResponse = (payload: PromoLogResponse) =>
+  Array.isArray(payload) ? payload : payload.log || [];
+
+export const merchandise = async (): Promise<MerchandiseItem[] | void> => {
   try {
     const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-      `${backendConnection()}/api/merch/retrieve`,
+      `${merchandiseV2BaseUrl()}/active`,
       {
         headers: createHeaders(),
       }
     );
-    return response.data;
+    return normalizeMerchandiseResponse(response.data);
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const activePublishMerchandise =
-  async (): Promise<MerchandiseResponse | void> => {
-    try {
-      const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-        `${backendConnection()}/api/merch/retrieve-publish-merchandise`,
-        { headers: createHeaders() }
-      );
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  };
+export const activePublishMerchandise = async (): Promise<
+  MerchandiseItem[] | void
+> => {
+  try {
+    const response: AxiosResponse<MerchandiseResponse> = await axios.get(
+      `${merchandiseV2BaseUrl()}/retrieve-published`,
+      { headers: createHeaders() }
+    );
+    return normalizeMerchandiseResponse(response.data);
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};
 
-export const merchandiseAdmin =
-  async (): Promise<MerchandiseResponse | void> => {
-    try {
-      const response: AxiosResponse<MerchandiseResponse> = await axios.get(
-        `${backendConnection()}/api/merch/retrieve-admin`,
-        {
-          headers: createHeaders(),
-        }
-      );
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-    }
-  };
+export const merchandiseAdmin = async (): Promise<MerchandiseItem[] | void> => {
+  try {
+    const response: AxiosResponse<MerchandiseResponse> = await axios.get(
+      merchandiseV2BaseUrl(),
+      {
+        headers: createHeaders(),
+      }
+    );
+    return normalizeMerchandiseResponse(response.data);
+  } catch (error) {
+    handleApiError(error);
+  }
+};
 
 export const deleteMerchandise = async (
   _id: string
 ): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/merch/delete-soft`,
+      `${merchandiseV2BaseUrl()}/delete-soft`,
       { _id },
       { headers: createHeaders() }
     );
@@ -589,7 +683,7 @@ export const publishMerchandise = async (
 ): Promise<boolean | void> => {
   try {
     const response: AxiosResponse = await axios.put(
-      `${backendConnection()}/api/merch/publish`,
+      `${merchandiseV2BaseUrl()}/publish`,
       { _id },
       { headers: createHeaders() }
     );
@@ -647,7 +741,7 @@ export const addMerchandise = async (formData: FormData): Promise<boolean> => {
   try {
     const token = getAuthToken();
     const response: AxiosResponse = await axios.post(
-      `${backendConnection()}/api/merch`,
+      merchandiseV2BaseUrl(),
       formData,
       {
         headers: {
@@ -661,6 +755,101 @@ export const addMerchandise = async (formData: FormData): Promise<boolean> => {
   } catch (error) {
     handleApiError(error);
     return false;
+  }
+};
+
+export const updateMerchandise = async (
+  id: string,
+  formData: FormData
+): Promise<boolean> => {
+  try {
+    const token = getAuthToken();
+    const response: AxiosResponse = await axios.put(
+      `${merchandiseV2BaseUrl()}/update/${id}`,
+      formData,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error);
+    return false;
+  }
+};
+
+export const getAllPromoCodes = async (): Promise<PromoCodeItem[] | void> => {
+  try {
+    const response: AxiosResponse<PromoCodeResponse> = await axios.get(
+      `${backendConnection()}/api/promo/fetch`,
+      { headers: createHeaders() }
+    );
+    return normalizePromoResponse(response.data);
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const createPromoCodeAdmin = async (
+  payload: PromoCodeRequest
+): Promise<boolean> => {
+  try {
+    const response: AxiosResponse = await axios.post(
+      `${backendConnection()}/api/promo/create`,
+      payload,
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error);
+    return false;
+  }
+};
+
+export const updatePromoCodeAdmin = async (
+  payload: PromoCodeRequest
+): Promise<boolean> => {
+  try {
+    const response: AxiosResponse = await axios.post(
+      `${backendConnection()}/api/promo/update`,
+      payload,
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error);
+    return false;
+  }
+};
+
+export const deletePromoCodeAdmin = async (id: string): Promise<boolean> => {
+  try {
+    const response: AxiosResponse = await axios.delete(
+      `${backendConnection()}/api/promo/delete/${id}`,
+      { headers: createHeaders() }
+    );
+    if (response.status === 200) showToast("success", response.data.message);
+    return response.status === 200;
+  } catch (error) {
+    handleApiError(error);
+    return false;
+  }
+};
+
+export const getPromoLogs = async (): Promise<PromoLogItem[] | void> => {
+  try {
+    const response: AxiosResponse<PromoLogResponse> = await axios.get(
+      `${backendConnection()}/api/promo/log`,
+      { headers: createHeaders() }
+    );
+    return normalizePromoLogResponse(response.data);
+  } catch (error) {
+    handleApiError(error, false);
   }
 };
 

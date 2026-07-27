@@ -4,6 +4,7 @@ import {
   refreshV2Controller,
   logoutV2Controller,
 } from "../controllers/authV2.controller";
+import loginLimiter from "../util/limiter.util";
 
 const router: Router = Router();
 
@@ -11,7 +12,7 @@ const router: Router = Router();
  * POST /v2/auth/login
  * Authenticate user with id_number + password, issue tokens, set refresh cookie
  */
-router.post("/login", loginV2Controller);
+router.post("/login", loginLimiter, loginV2Controller);
 
 /**
  * POST /v2/auth/refresh

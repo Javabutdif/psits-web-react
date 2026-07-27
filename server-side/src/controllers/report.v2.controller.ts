@@ -29,6 +29,7 @@ class ReportController {
       limit: result.limit,
       totalPages: result.totalPages,
       summary: result.summary,
+      productNames: result.productNames,
     });
   });
 }

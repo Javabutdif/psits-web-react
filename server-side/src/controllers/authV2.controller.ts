@@ -81,17 +81,32 @@ export const loginV2Controller = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { id_number, password } = req.body;
+  const id_number =
+    typeof req.body?.id_number === "string" ? req.body.id_number.trim() : "";
+  const password =
+    typeof req.body?.password === "string" ? req.body.password : "";
 
   console.log(`Login attempt for ID: ${id_number}`);
   try {
+    if (!id_number || !password) {
+      throw new AuthError(AuthErrorCodes.InvalidCredentials);
+    }
+
     let user: IAdminDocument | IStudentDocument | null = null;
     let role: "admin" | "student";
     let accessLevel: string | undefined;
 
     // Check if admin login (id_number contains "-admin")
     if (id_number.includes("-admin")) {
-      const admin = await Admin.findOne({ id_number });
+      let admin = await Admin.findOne({ id_number });
+
+      // Some legacy admin records store only the base eight-digit ID.
+      if (!admin && id_number.endsWith("-admin")) {
+        admin = await Admin.findOne({
+          id_number: id_number.slice(0, -"-admin".length),
+        });
+      }
+
       if (!admin) {
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
@@ -101,11 +116,17 @@ export const loginV2Controller = async (
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
-      if (admin.status === account_status.SUSPENDED) {
+      const isSuspended =
+        admin.status === account_status.SUSPENDED ||
+        admin.status === "Suspend" ||
+        admin.status === "Suspended";
+      if (isSuspended) {
         throw new AuthError(AuthErrorCodes.AccountSuspended);
       }
 
-      if (admin.status !== account_status.ACTIVE) {
+      const isActive =
+        admin.status === account_status.ACTIVE || admin.status === "Active";
+      if (!isActive) {
         throw new AuthError(AuthErrorCodes.AccountNotActive);
       }
 
@@ -132,11 +153,19 @@ export const loginV2Controller = async (
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
-      if (student.status === account_status.DELETED) {
+      const isDeleted =
+        student.status === account_status.DELETED ||
+        student.status === "Deleted" ||
+        student.status === "False";
+      if (isDeleted) {
         throw new AuthError(AuthErrorCodes.AccountDeleted);
       }
 
-      if (student.status !== account_status.ACTIVE) {
+      const isActive =
+        student.status === account_status.ACTIVE ||
+        student.status === "Active" ||
+        student.status === "True";
+      if (!isActive) {
         throw new AuthError(AuthErrorCodes.AccountNotActive);
       }
 

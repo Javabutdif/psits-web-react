@@ -66,6 +66,39 @@ interface OrganizationApiRecord {
   adminRequest?: string;
 }
 
+const ORGANIZATION_TABS: OrganizationTab[] = [
+  "admins",
+  "members",
+  "suspended",
+  "memberRequests",
+  "adminRequests",
+];
+
+const EMPTY_TAB_COUNTS: Record<OrganizationTab, number> = {
+  admins: 0,
+  members: 0,
+  suspended: 0,
+  memberRequests: 0,
+  adminRequests: 0,
+};
+
+const fetchRecordsForTab = async (
+  tab: OrganizationTab
+): Promise<OrganizationApiRecord[]> => {
+  const result =
+    tab === "admins"
+      ? await getAllOfficers()
+      : tab === "members"
+        ? await getAllMembers()
+        : tab === "suspended"
+          ? await getSuspendOfficers()
+          : tab === "memberRequests"
+            ? await fetchAllStudentRequestRole()
+            : await getRequestAdminAccount();
+
+  return (result || []) as OrganizationApiRecord[];
+};
+
 const formatRole = (value?: string) => {
   if (!value) return "";
   return value
@@ -166,6 +199,8 @@ export const useOrganizationData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tabCounts, setTabCounts] =
+    useState<Record<OrganizationTab, number>>(EMPTY_TAB_COUNTS);
 
   const isUcMainAdmin =
     user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
@@ -180,22 +215,16 @@ export const useOrganizationData = () => {
     setError(null);
 
     try {
-      const result =
-        activeTab === "admins"
-          ? await getAllOfficers()
-          : activeTab === "members"
-            ? await getAllMembers()
-            : activeTab === "suspended"
-              ? await getSuspendOfficers()
-              : activeTab === "memberRequests"
-                ? await fetchAllStudentRequestRole()
-                : await getRequestAdminAccount();
-
-      setAccounts(
-        ((result || []) as OrganizationApiRecord[]).map((record) =>
-          normalizeAccount(record, activeTab)
-        )
+      const records = await fetchRecordsForTab(activeTab);
+      const normalizedRecords = records.map((record) =>
+        normalizeAccount(record, activeTab)
       );
+
+      setAccounts(normalizedRecords);
+      setTabCounts((currentCounts) => ({
+        ...currentCounts,
+        [activeTab]: normalizedRecords.length,
+      }));
     } catch {
       setAccounts([]);
       setError("Unable to load organization data.");
@@ -204,9 +233,36 @@ export const useOrganizationData = () => {
     }
   }, [activeTab]);
 
+  const fetchTabCounts = useCallback(async () => {
+    const countEntries = await Promise.all(
+      ORGANIZATION_TABS.map(async (tab) => {
+        try {
+          const records = await fetchRecordsForTab(tab);
+          return [tab, records.length] as const;
+        } catch {
+          return [tab, 0] as const;
+        }
+      })
+    );
+
+    setTabCounts(
+      countEntries.reduce<Record<OrganizationTab, number>>(
+        (nextCounts, [tab, count]) => ({
+          ...nextCounts,
+          [tab]: count,
+        }),
+        { ...EMPTY_TAB_COUNTS }
+      )
+    );
+  }, []);
+
   useEffect(() => {
     fetchAccounts();
   }, [fetchAccounts]);
+
+  useEffect(() => {
+    void fetchTabCounts();
+  }, [fetchTabCounts]);
 
   useEffect(() => {
     setSelectedIds([]);
@@ -330,7 +386,7 @@ export const useOrganizationData = () => {
       });
 
       if (result) {
-        await fetchAccounts();
+        await Promise.all([fetchAccounts(), fetchTabCounts()]);
         return true;
       }
       return false;
@@ -362,7 +418,7 @@ export const useOrganizationData = () => {
       });
 
       if (result) {
-        await fetchAccounts();
+        await Promise.all([fetchAccounts(), fetchTabCounts()]);
         return true;
       }
       return false;
@@ -399,7 +455,7 @@ export const useOrganizationData = () => {
         user?.name || ""
       );
       if (result) {
-        await fetchAccounts();
+        await Promise.all([fetchAccounts(), fetchTabCounts()]);
       }
       return Boolean(result);
     } finally {
@@ -439,7 +495,7 @@ export const useOrganizationData = () => {
         if (action === "suspend") showToast("success", "Account suspended.");
         if (action === "restore") showToast("success", "Account restored.");
         if (action === "removeRole") showToast("success", "Role removed.");
-        await fetchAccounts();
+        await Promise.all([fetchAccounts(), fetchTabCounts()]);
         clearSelection();
       }
 
@@ -465,6 +521,7 @@ export const useOrganizationData = () => {
     selectedAccounts,
     selectedIds,
     sort,
+    tabCounts,
     total: filteredAccounts.length,
     totalPages,
     clearSelection,

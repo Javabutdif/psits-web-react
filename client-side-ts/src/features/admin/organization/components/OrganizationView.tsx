@@ -79,7 +79,14 @@ const tabs: Array<{
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
-const campuses = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"];
+const campuses = [
+  "UC_MAIN",
+  "UC_BANILAD",
+  "UC_LM",
+  "UC_PT",
+  "UC_JONES",
+  "OTHER_CAMPUS",
+];
 const adminRoles = [
   "President",
   "Vice-President Internal",
@@ -1340,6 +1347,7 @@ export const OrganizationView = () => {
     selectedAccounts,
     selectedIds,
     sort,
+    tabCounts,
     total,
     totalPages,
     clearSelection,
@@ -1430,7 +1438,10 @@ export const OrganizationView = () => {
               onClick={() => setActiveTab(tab.key)}
             >
               <tab.icon className="h-4 w-4" />
-              {tab.label}
+              <span>{tab.label}</span>
+              <span className="text-xs text-current/70">
+                ({tabCounts[tab.key].toLocaleString()})
+              </span>
               {activeTab === tab.key && (
                 <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-[#1c9dde]" />
               )}
