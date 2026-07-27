@@ -1,7 +1,7 @@
 import { PSITS_ROLES } from "@/features/admin/constants/adminAccess";
 import type { PsitsRole } from "@/features/admin/constants/adminAccess";
 
-export type SettingsTab = "officer" | "membership" | "account";
+export type SettingsTab = "membership" | "account";
 
 export interface Officer {
   _id?: string;

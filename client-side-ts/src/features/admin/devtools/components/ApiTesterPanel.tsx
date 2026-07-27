@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,16 +10,24 @@ import {
 } from "@/components/ui/select";
 import { showToast } from "@/utils/alertHelper";
 
-const allowedPaths = [
-  "/api/v2/auth/login",
-  "/api/v2/students",
-  "/api/v2/orders",
-  "/api/v2/events",
-];
+const allowedEndpoints: Record<string, string[]> = {
+  "/api/v2/auth/login": ["POST"],
+  "/api/v2/students": ["GET"],
+};
+
+const allMethods = Object.values(allowedEndpoints).flat();
 
 export const ApiTesterPanel = () => {
   const [method, setMethod] = useState("GET");
   const [path, setPath] = useState("");
+  const availableMethods = allowedEndpoints[path] || allMethods;
+
+  useEffect(() => {
+    if (availableMethods.length > 0 && !availableMethods.includes(method)) {
+      setMethod(availableMethods[0]);
+    }
+  }, [availableMethods, method]);
+
   const [body, setBody] = useState("");
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,6 +35,10 @@ export const ApiTesterPanel = () => {
   const handleTest = async () => {
     if (!path) {
       showToast("error", "Please enter an endpoint path");
+      return;
+    }
+    if (!allowedEndpoints[path]?.includes(method)) {
+      showToast("error", `Method ${method} is not allowed for this endpoint`);
       return;
     }
 
@@ -40,7 +52,11 @@ export const ApiTesterPanel = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${sessionStorage.getItem("Token")}`,
         },
-        body: JSON.stringify({ path, method, body: body ? JSON.parse(body) : undefined }),
+        body: JSON.stringify({
+          path,
+          method,
+          body: body ? JSON.parse(body) : undefined,
+        }),
       });
 
       const data = await res.json();
@@ -62,7 +78,7 @@ export const ApiTesterPanel = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {["GET", "POST", "PUT", "DELETE"].map((m) => (
+              {availableMethods.map((m) => (
                 <SelectItem key={m} value={m}>
                   {m}
                 </SelectItem>
@@ -71,13 +87,15 @@ export const ApiTesterPanel = () => {
           </Select>
         </div>
         <div>
-          <Label className="mb-1.5 block text-xs font-medium">Endpoint Path</Label>
+          <Label className="mb-1.5 block text-xs font-medium">
+            Endpoint Path
+          </Label>
           <Select value={path} onValueChange={setPath}>
             <SelectTrigger className="h-9 rounded-lg border-[#ececec]">
               <SelectValue placeholder="Select or type path" />
             </SelectTrigger>
             <SelectContent>
-              {allowedPaths.map((p) => (
+              {Object.keys(allowedEndpoints).map((p) => (
                 <SelectItem key={p} value={p}>
                   {p}
                 </SelectItem>
@@ -88,12 +106,14 @@ export const ApiTesterPanel = () => {
       </div>
 
       <div>
-        <Label className="mb-1.5 block text-xs font-medium">Request Body (JSON)</Label>
+        <Label className="mb-1.5 block text-xs font-medium">
+          Request Body (JSON)
+        </Label>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder='{"key": "value"}'
-          className="h-24 w-full resize-none rounded-lg border border-[#ececec] bg-white p-3 text-sm font-mono"
+          className="h-24 w-full resize-none rounded-lg border border-[#ececec] bg-white p-3 font-mono text-sm"
         />
       </div>
 
@@ -109,7 +129,7 @@ export const ApiTesterPanel = () => {
       {response && (
         <div>
           <Label className="mb-1.5 block text-xs font-medium">Response</Label>
-          <pre className="rounded-lg border border-[#ececec] bg-[#f7f7f7] p-4 text-xs font-mono text-[#303030]">
+          <pre className="rounded-lg border border-[#ececec] bg-[#f7f7f7] p-4 font-mono text-xs text-[#303030]">
             {response}
           </pre>
         </div>

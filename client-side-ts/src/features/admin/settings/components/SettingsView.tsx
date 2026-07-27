@@ -1,12 +1,10 @@
-import { Users, Wallet, User } from "lucide-react";
+import { Wallet, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsData } from "../hooks/useSettingsData";
-import { OfficerTable } from "./OfficerTable";
 import { MembershipPanel } from "./MembershipPanel";
 import { AccountPanel } from "./AccountPanel";
 
 const tabConfig = [
-  { key: "officer" as const, label: "Officer Access", icon: Users },
   { key: "membership" as const, label: "Membership", icon: Wallet },
   { key: "account" as const, label: "Account", icon: User },
 ];
@@ -15,11 +13,6 @@ export const SettingsView = () => {
   const {
     activeTab,
     setActiveTab,
-    officers,
-    officerLoading,
-    isAdminAccess,
-    roleFilter,
-    setRoleFilter,
     membershipPrice,
     priceDraft,
     setPriceDraft,
@@ -29,9 +22,9 @@ export const SettingsView = () => {
     setConfirmPrice,
     confirmRevoke,
     setConfirmRevoke,
-    currentAccess,
-    handleUpdateAccess,
-    handleSavePrice,
+     isPriceAdminAccess, // for membership price edits
+     isAdminAccess, // for account panel and other admin checks
+     handleSavePrice,
     handleRevoke,
   } = useSettingsData();
 
@@ -40,7 +33,7 @@ export const SettingsView = () => {
       <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <h1 className="text-2xl font-bold sm:text-3xl">Settings</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-          Manage admin access and membership settings
+          Manage membership settings and your admin profile
         </p>
       </header>
 
@@ -68,18 +61,6 @@ export const SettingsView = () => {
         </div>
 
         <section className="rounded-[22px] border border-[#e5e5e5] bg-white px-4 py-5 sm:px-6">
-          {activeTab === "officer" && (
-            <OfficerTable
-              officers={officers}
-              isLoading={officerLoading}
-              isAdminAccess={isAdminAccess}
-              currentAccess={currentAccess}
-              onAccessChange={handleUpdateAccess}
-              roleFilter={roleFilter}
-              onRoleFilterChange={setRoleFilter}
-            />
-          )}
-
           {activeTab === "membership" && (
             <MembershipPanel
               membershipPrice={membershipPrice}
@@ -91,7 +72,7 @@ export const SettingsView = () => {
               setConfirmPrice={setConfirmPrice}
               confirmRevoke={confirmRevoke}
               setConfirmRevoke={setConfirmRevoke}
-              isAdminAccess={isAdminAccess}
+              isPriceAdminAccess={isPriceAdminAccess}
               onSavePrice={handleSavePrice}
               onRevoke={handleRevoke}
             />
