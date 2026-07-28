@@ -31,6 +31,7 @@ import indexV2Routes from "./routes/index.v2.route";
 import reportV2Routes from "./routes/report.v2.route";
 import eligibleCertificateRoutes from "./routes/eligibleCertificate.route";
 import certificateRoutes from "./routes/certificate.route";
+import recruitmentRoutes from "./routes/recruitment.route";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 
@@ -83,6 +84,7 @@ app.use("/api/v2/students", studentV2Routes);
 app.use("/api/admin/eligible-certificates", eligibleCertificateRoutes);
 app.use("/api/certificates", certificateRoutes);
 app.use("/api/v2/dev", devtoolsRoutes);
+app.use("/api/v2/recruitment", recruitmentRoutes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);
