@@ -406,8 +406,7 @@ export const OrdersView = () => {
                 <col className="w-[14%]" />
                 <col className="w-[18%]" />
                 <col className="w-[12%]" />
-                <col className="w-[12%]" />
-                <col className="w-20" />
+                <col className={activeTab === "pending" ? "w-[190px]" : "w-24"} />
               </colgroup>
               <thead>
                 <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
