@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../../api/client';
-import type { Application, Interview, StatusHistoryItem } from '../../types/recruitment';
+import type { Application } from '../../types/recruitment';
 import ApplicationTimeline from '@/components/ui/application-timeline';
 
 const StudentApplicationDetails = () => {
@@ -149,7 +149,7 @@ const StudentApplicationDetails = () => {
                   </svg>
                   <div>
                     <div className="font-medium text-gray-900">Resume</div>
-                    <div className="text-xs text-gray-500">{application.documents.resume.filename}</div>
+                    <div className="text-xs text-gray-500">{application.documents.resume.originalFilename}</div>
                   </div>
                 </div>
                 <svg className="w-5 h-5 text-primary opacity-70 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +169,7 @@ const StudentApplicationDetails = () => {
                   </svg>
                   <div>
                     <div className="font-medium text-gray-900">Application Letter</div>
-                    <div className="text-xs text-gray-500">{application.documents.applicationLetter.filename}</div>
+                    <div className="text-xs text-gray-500">{application.documents.applicationLetter.originalFilename}</div>
                   </div>
                  </div>
                  <svg className="w-5 h-5 text-primary opacity-70 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">

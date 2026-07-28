@@ -5,14 +5,14 @@ import { cn } from '@/lib/utils';
 
 const Card = ({ className, children, ...props }: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) => {
   return (
-    <div className={cn("bg-white rounded-xl border shadow-sm overflow-hidden", className)} {...props}>
+    <div className={cn("surface overflow-hidden", className)} {...props}>
       {children}
     </div>
   );
 };
 
 Card.Header = ({ className, children, ...props }: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) => (
-  <div className={cn("px-6 py-4 border-b border-gray-100", className)} {...props}>
+  <div className={cn("border-b border-gray-100 px-6 py-5", className)} {...props}>
     {children}
   </div>
 );
@@ -36,7 +36,7 @@ Card.Content = ({ className, children, ...props }: HTMLAttributes<HTMLDivElement
 );
 
 Card.Footer = ({ className, children, ...props }: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) => (
-  <div className={cn("px-6 py-4 border-t border-gray-100", className)} {...props}>
+  <div className={cn("border-t border-gray-100 px-6 py-5", className)} {...props}>
     {children}
   </div>
 );

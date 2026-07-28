@@ -15,17 +15,17 @@ const Badge = ({
   ...props 
 }: BadgeProps) => {
   const variantClasses = {
-    primary: 'bg-primary text-white',
+    primary: 'bg-primary text-white shadow-sm shadow-primary/20',
     secondary: 'bg-gray-100 text-gray-800',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    danger: 'bg-red-100 text-red-800',
+    success: 'bg-emerald-100 text-emerald-800',
+    warning: 'bg-amber-100 text-amber-800',
+    danger: 'bg-rose-100 text-rose-800',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-3 py-1 text-sm font-medium',
+        'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase',
         variantClasses[variant],
         className
       )}

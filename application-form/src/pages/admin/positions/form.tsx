@@ -1,64 +1,81 @@
-// src/pages/admin/positions/form.tsx
-
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate, useParams as useParamsRouter, Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../../api/client';
+
+type HiringStatus = 'DRAFT' | 'OPEN' | 'CLOSED';
+
+type PositionFormState = {
+  title: string;
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  hiringStatus: HiringStatus;
+  isActive: boolean;
+  applicationDeadline: string;
+  sortOrder: number;
+};
 
 const AdminPositionsForm = () => {
   const navigate = useNavigate();
-  const { id } = useParamsRouter();
-  const isEditing = !!id;
-  
-  const [position, setPosition] = useState({
+  const { id } = useParams();
+  const isEditing = Boolean(id);
+
+  const [position, setPosition] = useState<PositionFormState>({
     title: '',
     description: '',
     responsibilities: [''],
-    requirements: ['', ''],
-    hiringStatus: 'OPEN' as const,
+    requirements: [''],
+    hiringStatus: 'OPEN',
     isActive: true,
     applicationDeadline: '',
     sortOrder: 0,
   });
   const [loading, setLoading] = useState(false);
 
-  // Fetch existing position if editing
   useEffect(() => {
     if (isEditing) {
-      // In practice, fetch position data from API
-      // setPosition({...});
+      // Placeholder for future edit hydration.
     }
   }, [isEditing]);
 
-  const handleChange = (field: string, value: any) => {
-    setPosition(prev => ({ ...prev, [field]: value }));
+  const updateField = <K extends keyof PositionFormState>(
+    field: K,
+    value: PositionFormState[K]
+  ) => {
+    setPosition((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleArrayItemChange = (arrayField: 'responsibilities' | 'requirements', index: number, value: string) => {
-    setPosition(prev => {
-      const updatedArray = [...prev[arrayField]];
-      updatedArray[index] = value;
-      return { ...prev, [arrayField]: updatedArray };
+  const updateArrayField = (
+    field: 'responsibilities' | 'requirements',
+    index: number,
+    value: string
+  ) => {
+    setPosition((prev) => {
+      const nextValues = [...prev[field]];
+      nextValues[index] = value;
+      return { ...prev, [field]: nextValues };
     });
   };
 
-  const handleRemoveArrayItem = (arrayField: 'responsibilities' | 'requirements', index: number) => {
-    setPosition(prev => {
-      const updatedArray = prev[arrayField].filter((_, i) => i !== index);
-      return { ...prev, [arrayField]: updatedArray };
-    });
-  };
-
-  const handleAddArrayItem = (arrayField: 'responsibilities' | 'requirements') => {
-    setPosition(prev => ({
+  const addArrayItem = (field: 'responsibilities' | 'requirements') => {
+    setPosition((prev) => ({
       ...prev,
-      [arrayField]: [...prev[arrayField], '']
+      [field]: [...prev[field], ''],
     }));
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const removeArrayItem = (field: 'responsibilities' | 'requirements', index: number) => {
+    setPosition((prev) => ({
+      ...prev,
+      [field]: prev[field].filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setLoading(true);
+
     try {
       if (isEditing) {
         await api.patch(`/recruitment/positions/${id}`, position);
@@ -74,50 +91,57 @@ const AdminPositionsForm = () => {
   };
 
   return (
-    <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6">{isEditing ? 'Edit Position' : 'Create Position'}</h1>
-      
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg shadow-sm border p-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          {isEditing ? 'Edit Position' : 'Create Position'}
+        </h1>
+        <p className="mt-1 text-sm text-gray-600">
+          Configure recruitment details, visibility, and deadlines.
+        </p>
+      </header>
+
+      <form onSubmit={handleSubmit} className="surface space-y-6 p-6">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-900">Title *</label>
           <input
             type="text"
             value={position.title}
-            onChange={(e) => handleChange('title', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary"
-            placeholder="Position Title"
+            onChange={(e) => updateField('title', e.target.value)}
+            className="flex w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+            placeholder="Position title"
             required
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-900">Description *</label>
           <textarea
             value={position.description}
-            onChange={(e) => handleChange('description', e.target.value)}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary"
+            onChange={(e) => updateField('description', e.target.value)}
+            rows={5}
+            className="flex w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
             placeholder="Job description"
             required
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Responsibilities</label>
-          <div className="space-y-2">
-            {position.responsibilities.map((resp, idx) => (
-              <div key={idx} className="flex gap-2">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-3">
+            <div className="text-sm font-semibold text-gray-900">Responsibilities</div>
+            {position.responsibilities.map((responsibility, index) => (
+              <div key={index} className="flex gap-2">
                 <input
                   type="text"
-                  value={resp}
-                  onChange={(e) => handleArrayItemChange('responsibilities', idx, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary"
-                  placeholder={`Responsibility ${idx + 1}`}
+                  value={responsibility}
+                  onChange={(e) => updateArrayField('responsibilities', index, e.target.value)}
+                  className="flex-1 rounded-full border border-gray-200 px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+                  placeholder={`Responsibility ${index + 1}`}
                 />
-                <button 
+                <button
                   type="button"
-                  onClick={() => handleRemoveArrayItem('responsibilities', idx)}
-                  className="px-3 py-2 text-red-600 hover:text-red-900"
+                  onClick={() => removeArrayItem('responsibilities', index)}
+                  className="rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50"
                 >
                   Remove
                 </button>
@@ -125,30 +149,28 @@ const AdminPositionsForm = () => {
             ))}
             <button
               type="button"
-              onClick={() => handleAddArrayItem('responsibilities')}
-              className="text-sm text-primary hover:text-primary-dark"
+              onClick={() => addArrayItem('responsibilities')}
+              className="text-sm font-semibold text-primary transition-colors hover:text-primary-dark"
             >
               Add Responsibility
             </button>
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Requirements</label>
-          <div className="space-y-2">
-            {position.requirements.map((req, idx) => (
-              <div key={idx} className="flex gap-2">
+          <div className="space-y-3">
+            <div className="text-sm font-semibold text-gray-900">Requirements</div>
+            {position.requirements.map((requirement, index) => (
+              <div key={index} className="flex gap-2">
                 <input
                   type="text"
-                  value={req}
-                  onChange={(e) => handleArrayItemChange('requirements', idx, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary"
-                  placeholder={`Requirement ${idx + 1}`}
+                  value={requirement}
+                  onChange={(e) => updateArrayField('requirements', index, e.target.value)}
+                  className="flex-1 rounded-full border border-gray-200 px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+                  placeholder={`Requirement ${index + 1}`}
                 />
-                <button 
+                <button
                   type="button"
-                  onClick={() => handleRemoveArrayItem('requirements', idx)}
-                  className="px-3 py-2 text-red-600 hover:text-red-900"
+                  onClick={() => removeArrayItem('requirements', index)}
+                  className="rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50"
                 >
                   Remove
                 </button>
@@ -156,21 +178,21 @@ const AdminPositionsForm = () => {
             ))}
             <button
               type="button"
-              onClick={() => handleAddArrayItem('requirements')}
-              className="text-sm text-primary hover:text-primary-dark"
+              onClick={() => addArrayItem('requirements')}
+              className="text-sm font-semibold text-primary transition-colors hover:text-primary-dark"
             >
               Add Requirement
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Hiring Status *</label>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-900">Hiring Status *</label>
             <select
               value={position.hiringStatus}
-              onChange={(e) => handleChange('hiringStatus', e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary"
+              onChange={(e) => updateField('hiringStatus', e.target.value as HiringStatus)}
+              className="flex w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
             >
               <option value="DRAFT">Draft</option>
               <option value="OPEN">Open</option>
@@ -178,49 +200,54 @@ const AdminPositionsForm = () => {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Active</label>
-            <label className="flex items-center">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-900">Active</label>
+            <label className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
               <input
                 type="checkbox"
                 checked={position.isActive}
-                onChange={(e) => handleChange('isActive', e.target.checked)}
-                className="mr-2"
+                onChange={(e) => updateField('isActive', e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/40"
               />
-              <span className="text-sm">Make position visible</span>
+              Make position visible
             </label>
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
-          <input
-            type="datetime-local"
-            value={position.applicationDeadline}
-            onChange={(e) => handleChange('applicationDeadline', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary"
-          />
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-900">Application Deadline</label>
+            <input
+              type="datetime-local"
+              value={position.applicationDeadline}
+              onChange={(e) => updateField('applicationDeadline', e.target.value)}
+              className="flex w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-900">Sort Order</label>
+            <input
+              type="number"
+              value={position.sortOrder}
+              onChange={(e) => updateField('sortOrder', Number(e.target.value) || 0)}
+              className="flex w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
-          <input
-            type="number"
-            value={position.sortOrder}
-            onChange={(e) => handleChange('sortOrder', parseInt(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary"
-          />
-        </div>
-
-        <div className="pt-4 flex space-x-4">
+        <div className="flex flex-wrap gap-3 pt-2">
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50"
+            className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Saving...' : 'Save Position'}
           </button>
-          <Link to="/admin/positions" className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50">
+          <Link
+            to="/admin/positions"
+            className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+          >
             Cancel
           </Link>
         </div>

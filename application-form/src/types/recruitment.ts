@@ -18,7 +18,7 @@ export interface StatusHistoryItem {
   status: Application['status'];
   changedAt: string;
   changedBy: string;
-  notes?: string;
+  note?: string;
 }
 
 export interface Application {
@@ -30,17 +30,24 @@ export interface Application {
   status: 'SUBMITTED' | 'INTERVIEW_SCHEDULED' | 'INTERVIEWING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
   documents: {
     resume: {
-      filename: string;
+      originalFilename: string;
       storageKey: string;
+      mimeType: string;
+      size: number;
+      uploadTimestamp: string;
     };
     applicationLetter: {
-      filename: string;
+      originalFilename: string;
       storageKey: string;
+      mimeType: string;
+      size: number;
+      uploadTimestamp: string;
     };
   };
   interview?: Interview;
   statusHistory?: StatusHistoryItem[];
-  reviewerId?: string;
+  reviewer?: string;
+  internalNotes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,4 +83,10 @@ export interface ApplicantFilters {
 export interface ApiResponse<T> {
   message: string;
   data: T;
+}
+
+// Refresh token response for auth API
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
 }

@@ -1,6 +1,5 @@
 // src/components/ui/application-timeline.tsx
 
-import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import type { Application } from '../../types/recruitment';
 
@@ -48,7 +47,7 @@ const ApplicationTimeline = ({ application, className }: ApplicationTimelineProp
     timelineItems.push({
       status: application.status,
       changedAt: application.createdAt || new Date().toISOString(),
-      changedBy: application.reviewerId || 'System',
+      changedBy: application.reviewer || 'System',
       notes: '',
     });
   }
@@ -80,11 +79,16 @@ const ApplicationTimeline = ({ application, className }: ApplicationTimelineProp
 
               {/* Timeline dot */}
               <div className="absolute left-0 top-2 w-4 h-4 rounded-full border-2 bg-white z-10">
-                <div className="w-3 h-3 rounded-full mx-auto mt-3 {getStatusColor(item.status)}"></div>
+                <div
+                  className={cn(
+                    'mx-auto mt-0.5 h-3 w-3 rounded-full border border-white shadow-sm',
+                    getStatusColor(item.status)
+                  )}
+                />
               </div>
 
               {/* Timeline item */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="rounded-2xl border border-gray-200 bg-white/90 p-4 shadow-sm">
                 <div className="flex justify-between items-start mb-2">
                   <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
                     {item.status}

@@ -1,13 +1,30 @@
 // src/features/auth/auth.context.ts
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { getAccessToken, clearToken } from '../../api/client';
+import {
+  clearRecruitmentToken,
+  getRecruitmentAccessToken,
+} from '../../api/client';
+
+type AuthUser = {
+  id: string;
+  idNumber: string;
+  role: 'admin' | 'student';
+  campus: string;
+  name?: string;
+  email?: string;
+  course?: string;
+  year?: number | string;
+  membershipStatus?: string;
+  position?: string;
+  access?: string;
+};
 
 interface UserContextType {
-  user: { id: string; role: string; campus: string } | null;
+  user: AuthUser | null;
   loading: boolean;
-  setUser: (user: any) => void;
+  setUser: (user: AuthUser | null) => void;
   logout: () => void;
 }
 
@@ -23,11 +40,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const token = getAccessToken();
         if (token) {
-          // Decode token to get user info (or fetch from /me endpoint)
           const decoded = parseJwt(token);
           if (decoded) {
             setUserState({
               id: decoded.sub,
+              idNumber: decoded.idNumber ?? '',
               role: decoded.role,
               campus: decoded.campus || '',
             });
@@ -43,12 +60,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initialize();
   }, []);
 
-  const setUser = (user: any) => {
-    setUserState(user);
+  const setUser = (nextUser: AuthUser | null) => {
+    setUserState(nextUser);
   };
 
   const logout = () => {
-    clearToken();
+    clearRecruitmentToken();
     setUserState(null);
   };
 
@@ -68,12 +85,19 @@ export const useAuth = () => {
 };
 
 // Helper to decode JWT (simple client-side decoding without crypto)
-function parseJwt(token: string): any | null {
+type JwtPayload = {
+  sub: string;
+  idNumber?: string;
+  role: 'admin' | 'student';
+  campus?: string;
+};
+
+function parseJwt(token: string): JwtPayload | null {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const json = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-    return JSON.parse(json);
+    return JSON.parse(json) as JwtPayload;
   } catch (error) {
     return null;
   }

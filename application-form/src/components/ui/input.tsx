@@ -11,7 +11,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const Input = ({ className, prepend, append, ...props }: InputProps) => {
   const inputClasses = cn(
-    "flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm file:border-0 file:bg-transparent file:font-medium file:text-primary placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+    "flex w-full rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:font-medium file:text-primary placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2",
     prepend && 'pl-8',
     append && 'pr-8',
     className
