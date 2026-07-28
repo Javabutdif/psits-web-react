@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initialize = async () => {
       try {
-        const token = getAccessToken();
+        const token = getRecruitmentAccessToken();
         if (token) {
           const decoded = parseJwt(token);
           if (decoded) {
