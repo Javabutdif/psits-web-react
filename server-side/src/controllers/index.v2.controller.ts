@@ -24,6 +24,7 @@ import { adminService } from "../services/admin.service";
 import { indexService } from "../services/index.service";
 import { logService } from "../services/log.service";
 import { catchAsync } from "../util/catch.async.util";
+import { emailService } from "../services/email.service";
 
 export const loginController = catchAsync(
   async (req: Request, res: Response) => {
@@ -146,6 +147,13 @@ export const forgotPasswordController = catchAsync(
       console.error(`User with email ${req.body.email} not found`);
       return res.status(404).json({
         message: `The id number you entered is found but appears to be the email is incorrect.`,
+      }); 
+    }
+
+    const resetCount = await emailService.countBySubtypeToday(req.body.email, "password_reset");
+    if (resetCount >= 2) {
+      return res.status(429).json({
+        message: "You've reached today's limit for password reset requests. Please try again tomorrow.",
       });
     }
 

@@ -76,6 +76,17 @@ class EmailService {
       status: "pending",
     });
   };
+
+  countBySubtypeToday = async (email: string, subtype: string) => {
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date());
+    const startOfDay = new Date(`${today}T00:00:00+08:00`);
+
+    return await EmailQueue.countDocuments({
+      email,
+      subtype,
+      timestamp: { $gte: startOfDay },
+    });
+  };
 }
 
 export const emailService = new EmailService();
