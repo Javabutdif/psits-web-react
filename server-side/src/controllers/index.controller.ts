@@ -13,7 +13,7 @@ const token_key = process.env.JWT_SECRET ?? "Default_Token";
 const url =
   process.env.DB_NAME !== "psits-test"
     ? "https://psits.vercel.app/reset-password/"
-    : "https://staging-v2.psits.org/auth/reset-password?token=";
+    : "https://psits-staging.vercel.app/reset-password/";
 
 export const loginController = async (req: Request, res: Response) => {
   const { id_number, password } = req.body;
@@ -160,7 +160,6 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
       email: req.body.email,
       id_number: req.body.id_number,
     });
-    
     if (userAdmin) {
       user = userAdmin;
     } else if (getUser) {
@@ -187,13 +186,10 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
     const token = jwt.sign({ userId: user._id }, token_key, {
       expiresIn: "10m",
     });
-
     await forgotPasswordMail(req.body.email, url, token);
-
-    res.status(200).json({ message: "Email sent successfully! Please check your email for further instructions." });
   } catch (err) {
     console.error("Server error during forgot password process:", err);
-    res.status(500).send({ message: "Internal Server Error" });
+    res.status(500).send({ message: err });
   }
 };
 
@@ -235,7 +231,6 @@ export const resetPasswordController = async (req: Request, res: Response) => {
     res.status(200).send({ message: "Password updated" });
   } catch (err) {
     // Send error response if any error occurs
-    console.error("Server error during reset password process:", err);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).send({ message: err });
   }
 };

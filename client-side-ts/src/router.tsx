@@ -47,6 +47,7 @@ import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
 import { LogsView } from "./features/admin/logs";
 import { DevToolsPage } from "./features/admin/devtools/components/DevToolsPage";
+import SignUp from "./pages/auth/SignUp";
 
 const router = createBrowserRouter([
   {
@@ -116,7 +117,7 @@ const router = createBrowserRouter([
         path: "auth",
         children: [
           { path: "login", Component: Login },
-          { path: "signup", Component: UnderConstruction },
+          { path: "signup", Component: SignUp },
           { path: "forgot-password", Component: ForgotPassword },
           { path: "otp", Component: OTPCode },
           { path: "reset-password", Component: SetNewPassword },

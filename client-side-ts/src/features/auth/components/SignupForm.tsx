@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import * as z from "zod";
+import { Eye, EyeOff, Check } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -24,38 +25,71 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router";
+import logo from "@/assets/logo_forms_100x100.png";
 
-const formSchema = z
-  .object({
-    id: z.string().min(8, "ID Number must at least be 8 digits."),
-    lname: z.string().min(1, "Last name is required"),
-    mname: z.string().optional(),
-    fname: z.string().min(1, "First name is required"),
-    email: z.email({ error: "Invalid email address" }),
-    course: z.string().min(1, "Course is required"),
-    year: z.string().min(1, "Year level is required"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
+const baseSchema = z.object({
+  id: z.string().min(8, "ID Number must at least be 8 digits."),
+  lname: z.string().min(1, "Last name is required"),
+  mname: z.string().optional(),
+  fname: z.string().min(1, "First name is required"),
+  email: z.email({ error: "Invalid email address" }),
+  course: z.string().min(1, "Course is required"),
+  year: z.string().min(1, "Year level is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
+});
+
+const formSchema = baseSchema.refine(
+  (data) => data.password === data.confirmPassword,
+  {
     message: "Passwords don't match",
-    path: ["confirmPassword"], // This sets where the error appears
-  });
+    path: ["confirmPassword"],
+  }
+);
 
 export type SignupCredentials = z.infer<typeof formSchema>;
 
+const STEPS = ["name", "id-email", "course-year", "password"] as const;
+type Step = (typeof STEPS)[number];
+
+const STEP_FIELDS: Record<Step, (keyof SignupCredentials)[]> = {
+  name: ["lname", "fname"],
+  "id-email": ["id", "email"],
+  "course-year": ["course", "year"],
+  password: ["password", "confirmPassword"],
+};
+
 export interface SignupFormProps {
   courses?: string[];
-  years?: number[];
+  years?: string[];
   onSignup?: (values: SignupCredentials) => void;
 }
+
+const inputClasses =
+  "peer h-12 rounded-xl border-gray-200 bg-transparent px-3 text-gray-900 placeholder-transparent focus:border-sky-500 focus:outline-none focus-visible:border-sky-500 focus-visible:ring-0";
+
+const floatingLabelClasses =
+  "pointer-events-none absolute top-0 left-3 -translate-y-1/2 cursor-text bg-white px-1 text-xs text-sky-500 transition-all duration-200 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-0 peer-focus:-translate-y-1/2 peer-focus:text-xs peer-focus:text-sky-500";
 
 export default function SignupForm({
   onSignup,
   courses = [],
-  years = [1, 2, 3, 4],
+  years = ["1st Year", "2nd Year", "3rd Year", "4th Year"],
 }: SignupFormProps) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const step: Step = STEPS[stepIndex];
+  const isLastStep = stepIndex === STEPS.length - 1;
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const [attemptedSteps, setAttemptedSteps] = useState<Record<Step, boolean>>({
+    name: false,
+    "id-email": false,
+    "course-year": false,
+    password: false,
+  });
+
   const form = useForm({
     defaultValues: {
       id: "",
@@ -74,297 +108,529 @@ export default function SignupForm({
       onSignup && onSignup(value),
   });
 
+  const goNext = async () => {
+    const fields = STEP_FIELDS[step];
+
+    const results = await Promise.all(
+      fields.map((name) => form.validateField(name, "submit"))
+    );
+
+    let confirmMismatch = false;
+    if (step === "password") {
+      const pw = form.getFieldValue("password");
+      const confirm = form.getFieldValue("confirmPassword");
+      confirmMismatch = pw !== confirm;
+    }
+
+    setAttemptedSteps((prev) => ({ ...prev, [step]: true }));
+
+    fields.forEach((name) =>
+      form.setFieldMeta(name, (prev) => ({ ...prev, isTouched: true }))
+    );
+
+    const hasEmptyOrInvalid = fields.some((name) => {
+      const value = form.getFieldValue(name);
+      return value === "" || value === undefined;
+    });
+
+    const hasErrors =
+      results.some((errs) => errs && errs.length > 0) ||
+      hasEmptyOrInvalid ||
+      confirmMismatch;
+
+    if (!hasErrors) {
+      setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
+    }
+  };
+
+  const goBack = () => setStepIndex((i) => Math.max(i - 1, 0));
+
   return (
     <Card className="w-full border-none shadow-none sm:max-w-md">
-      <CardHeader>
-        <CardTitle className="text-4xl font-semibold">Sign Up</CardTitle>
-        <CardDescription>Become a part of the PSITS Community</CardDescription>
+      <CardHeader className="mb-[12px] flex flex-col items-center space-y-2 text-center">
+        <div className="mb-4 flex h-18 w-18 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+          <img src={logo} alt="Logo" className="h-full w-full object-cover" />
+        </div>
+        <CardTitle className="text-4xl font-semibold tracking-tight text-gray-900">
+          {step === "name" && "Create an account"}
+          {step === "id-email" && "Create an account"}
+          {step === "course-year" && "Academic Details"}
+          {step === "password" && "Set a Password"}
+        </CardTitle>
+        <CardDescription className="text-base text-gray-500">
+          {step === "name" && "Enter your name"}
+          {step === "id-email" &&
+            "Enter your student ID number and email address to get started"}
+          {step === "course-year" &&
+            "Select your course and current year level"}
+          {step === "password" && "Choose a secure password"}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-0">
         <form
           id="signup-form"
           onSubmit={(e) => {
             e.preventDefault();
+            if (!isLastStep) {
+              goNext();
+              return;
+            }
             form.handleSubmit();
           }}
+          className="space-y-6"
         >
           <FieldGroup>
             <FieldSet>
-              {/* Student ID Number */}
-              <form.Field
-                name="id"
-                children={(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Student ID Number
-                      </FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={isInvalid}
-                        placeholder="Enter your student ID number"
-                        autoComplete="off"
-                      />
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  );
-                }}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                {/* Last Name */}
-                <form.Field
-                  name="lname"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>Last Name</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
-                          placeholder="Enter last name"
-                          autoComplete="off"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-                {/* Middle Name */}
-                <form.Field
-                  name="mname"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          Middle Name
-                        </FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
-                          placeholder="Enter middle name"
-                          autoComplete="off"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-              </div>
-              {/* First Name */}
-              <form.Field
-                name="fname"
-                children={(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>First Name</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={isInvalid}
-                        placeholder="Enter your first name"
-                        autoComplete="off"
-                      />
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  );
-                }}
-              />
-              {/* Email Address */}
-              <form.Field
-                name="email"
-                children={(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Email Address
-                      </FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={isInvalid}
-                        placeholder="Enter your email"
-                        autoComplete="off"
-                      />
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  );
-                }}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                {/* Course */}
-                <form.Field
-                  name="course"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel>Course</FieldLabel>
-                        <Select
-                          name={field.name}
-                          value={field.state.value}
-                          onValueChange={(value) => field.handleChange(value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose course" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {courses.map((course, index) => (
-                              <SelectItem key={index} value={course}>
-                                {course}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-                {/* Year */}
-                <form.Field
-                  name="year"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel>Year</FieldLabel>
-                        <Select
-                          name={field.name}
-                          value={field.state.value}
-                          onValueChange={(value) => field.handleChange(value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose year" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {years.map((year, index) => (
-                              <SelectItem key={index} value={year.toString()}>
-                                {year}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-                {/* Password */}
-                <form.Field
-                  name="password"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          type="password"
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
-                          placeholder="Enter password"
-                          autoComplete="off"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-                {/* Password */}
-                <form.Field
-                  name="confirmPassword"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          Confirm Password
-                        </FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          type="password"
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
-                          placeholder="Enter password again"
-                          autoComplete="off"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-              </div>
+              {step === "name" && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Last Name */}
+                    <form.Field
+                      name="lname"
+                      validators={{ onSubmit: baseSchema.shape.lname }}
+                      children={(field) => {
+                        const isInvalid =
+                          (field.state.meta.isTouched ||
+                            attemptedSteps[step]) &&
+                          !field.state.meta.isValid;
+                        return (
+                          <Field data-invalid={isInvalid} className="space-y-0">
+                            <div className="relative">
+                              <Input
+                                id={field.name}
+                                name={field.name}
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(e.target.value)
+                                }
+                                aria-invalid={isInvalid}
+                                placeholder=" "
+                                autoComplete="off"
+                                className={inputClasses}
+                              />
+                              <label
+                                htmlFor={field.name}
+                                className={floatingLabelClasses}
+                              >
+                                Last Name
+                              </label>
+                            </div>
+                            {isInvalid && (
+                              <FieldError errors={field.state.meta.errors} />
+                            )}
+                          </Field>
+                        );
+                      }}
+                    />
+                    {/* Middle Name */}
+                    <form.Field
+                      name="mname"
+                      children={(field) => {
+                        return (
+                          <Field className="space-y-0">
+                            <div className="relative">
+                              <Input
+                                id={field.name}
+                                name={field.name}
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(e.target.value)
+                                }
+                                placeholder=" "
+                                autoComplete="off"
+                                className={inputClasses}
+                              />
+                              <label
+                                htmlFor={field.name}
+                                className={floatingLabelClasses}
+                              >
+                                Middle Name
+                              </label>
+                            </div>
+                          </Field>
+                        );
+                      }}
+                    />
+                  </div>
+                  {/* First Name */}
+                  <form.Field
+                    name="fname"
+                    validators={{ onSubmit: baseSchema.shape.fname }}
+                    children={(field) => {
+                      const isInvalid =
+                        (field.state.meta.isTouched || attemptedSteps[step]) &&
+                        !field.state.meta.isValid;
+                      return (
+                        <Field data-invalid={isInvalid} className="space-y-0">
+                          <div className="relative">
+                            <Input
+                              id={field.name}
+                              name={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              aria-invalid={isInvalid}
+                              placeholder=" "
+                              autoComplete="off"
+                              className={inputClasses}
+                            />
+                            <label
+                              htmlFor={field.name}
+                              className={floatingLabelClasses}
+                            >
+                              First Name
+                            </label>
+                          </div>
+                          {isInvalid && (
+                            <FieldError errors={field.state.meta.errors} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                </>
+              )}
+
+              {step === "id-email" && (
+                <>
+                  {/* Student ID Number */}
+                  <form.Field
+                    name="id"
+                    validators={{ onSubmit: baseSchema.shape.id }}
+                    children={(field) => {
+                      const isInvalid =
+                        (field.state.meta.isTouched || attemptedSteps[step]) &&
+                        !field.state.meta.isValid;
+                      return (
+                        <Field data-invalid={isInvalid} className="space-y-0">
+                          <div className="relative">
+                            <Input
+                              id={field.name}
+                              name={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              aria-invalid={isInvalid}
+                              placeholder=" "
+                              autoComplete="off"
+                              className={inputClasses}
+                            />
+                            <label
+                              htmlFor={field.name}
+                              className={floatingLabelClasses}
+                            >
+                              Student ID Number
+                            </label>
+                          </div>
+                          {isInvalid && (
+                            <FieldError errors={field.state.meta.errors} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                  {/* Email Address */}
+                  <form.Field
+                    name="email"
+                    validators={{ onSubmit: baseSchema.shape.email }}
+                    children={(field) => {
+                      const isInvalid =
+                        (field.state.meta.isTouched || attemptedSteps[step]) &&
+                        !field.state.meta.isValid;
+                      return (
+                        <Field data-invalid={isInvalid} className="space-y-0">
+                          <div className="relative">
+                            <Input
+                              id={field.name}
+                              name={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              aria-invalid={isInvalid}
+                              placeholder=" "
+                              autoComplete="off"
+                              className={inputClasses}
+                            />
+                            <label
+                              htmlFor={field.name}
+                              className={floatingLabelClasses}
+                            >
+                              Email Address
+                            </label>
+                          </div>
+                          {isInvalid && (
+                            <FieldError errors={field.state.meta.errors} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                </>
+              )}
+
+              {step === "course-year" && (
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Course */}
+                  <form.Field
+                    name="course"
+                    validators={{ onSubmit: baseSchema.shape.course }}
+                    children={(field) => {
+                      const isInvalid =
+                        (field.state.meta.isTouched || attemptedSteps[step]) &&
+                        !field.state.meta.isValid;
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel>Course</FieldLabel>
+                          <Select
+                            name={field.name}
+                            value={field.state.value}
+                            onValueChange={(value) => field.handleChange(value)}
+                          >
+                            <SelectTrigger className="h-12 w-full rounded-xl border-gray-200">
+                              <SelectValue placeholder="Choose course" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {courses.map((course, index) => (
+                                <SelectItem key={index} value={course}>
+                                  {course}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {isInvalid && (
+                            <FieldError errors={field.state.meta.errors} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                  {/* Year */}
+                  <form.Field
+                    name="year"
+                    validators={{ onSubmit: baseSchema.shape.year }}
+                    children={(field) => {
+                      const isInvalid =
+                        (field.state.meta.isTouched || attemptedSteps[step]) &&
+                        !field.state.meta.isValid;
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel>Year</FieldLabel>
+                          <Select
+                            name={field.name}
+                            value={field.state.value}
+                            onValueChange={(value) => field.handleChange(value)}
+                          >
+                            <SelectTrigger className="h-12 w-full rounded-xl border-gray-200">
+                              <SelectValue placeholder="Choose year" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {years.map((year, index) => (
+                                <SelectItem key={index} value={year.toString()}>
+                                  {year}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {isInvalid && (
+                            <FieldError errors={field.state.meta.errors} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                </div>
+              )}
+
+              {step === "password" && (
+                <div className="space-y-4">
+                  {/* Password */}
+                  <form.Field
+                    name="password"
+                    validators={{ onSubmit: baseSchema.shape.password }}
+                    children={(field) => {
+                      const isInvalid =
+                        (field.state.meta.isTouched || attemptedSteps[step]) &&
+                        !field.state.meta.isValid;
+                      return (
+                        <Field data-invalid={isInvalid} className="space-y-0">
+                          <div className="relative">
+                            <Input
+                              id={field.name}
+                              name={field.name}
+                              type={showPassword ? "text" : "password"}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              aria-invalid={isInvalid}
+                              placeholder=" "
+                              autoComplete="off"
+                              className={`${inputClasses} pr-10`}
+                            />
+                            <label
+                              htmlFor={field.name}
+                              className={floatingLabelClasses}
+                            >
+                              Password
+                            </label>
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              onClick={() => setShowPassword((s) => !s)}
+                              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-5 w-5" />
+                              ) : (
+                                <Eye className="h-5 w-5" />
+                              )}
+                            </button>
+                          </div>
+                          {isInvalid && (
+                            <FieldError errors={field.state.meta.errors} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                  {/* Confirm Password */}
+                  <form.Field
+                    name="confirmPassword"
+                    validators={{
+                      onSubmit: ({ value, fieldApi }) => {
+                        if (!value)
+                          return { message: "Please confirm your password" };
+                        const pw = fieldApi.form.getFieldValue("password");
+                        return value !== pw
+                          ? { message: "Passwords don't match" }
+                          : undefined;
+                      },
+                    }}
+                    children={(field) => {
+                      const isInvalid =
+                        (field.state.meta.isTouched || attemptedSteps[step]) &&
+                        !field.state.meta.isValid;
+                      return (
+                        <Field data-invalid={isInvalid} className="space-y-0">
+                          <div className="relative">
+                            <Input
+                              id={field.name}
+                              name={field.name}
+                              type={showConfirm ? "text" : "password"}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              aria-invalid={isInvalid}
+                              placeholder=" "
+                              autoComplete="off"
+                              className={`${inputClasses} pr-10`}
+                            />
+                            <label
+                              htmlFor={field.name}
+                              className={floatingLabelClasses}
+                            >
+                              Confirm Password
+                            </label>
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              onClick={() => setShowConfirm((s) => !s)}
+                              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                              {showConfirm ? (
+                                <EyeOff className="h-5 w-5" />
+                              ) : (
+                                <Eye className="h-5 w-5" />
+                              )}
+                            </button>
+                          </div>
+                          {isInvalid && (
+                            <FieldError errors={field.state.meta.errors} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                  <form.Subscribe selector={(state) => state.values.password}>
+                    {(password) => {
+                      const requirements = [
+                        {
+                          label: "At least 8 characters",
+                          met: password.length >= 8,
+                        },
+                        {
+                          label: "At least one small letter",
+                          met: /[a-z]/.test(password),
+                        },
+                        {
+                          label: "At least one capital letter",
+                          met: /[A-Z]/.test(password),
+                        },
+                        {
+                          label: "At least one number or symbol",
+                          met: /[\d\W]/.test(password),
+                        },
+                      ];
+
+                      return (
+                        <div className="mt-2 flex flex-col gap-1 text-sm text-gray-600">
+                          {requirements.map((req) => (
+                            <div
+                              key={req.label}
+                              className="flex items-center gap-2"
+                            >
+                              <Check
+                                className={`h-4 w-4 ${req.met ? "text-green-500" : "text-gray-300"}`}
+                              />
+                              <p
+                                className={`text-xs ${req.met ? "text-green-600" : "text-gray-500"}`}
+                              >
+                                {req.label}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }}
+                  </form.Subscribe>
+                </div>
+              )}
             </FieldSet>
+
             <Field orientation="vertical">
-              <Button type="submit">Sign Up</Button>
+              <div className="flex gap-2">
+                {stepIndex > 0 && !isLastStep && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={goBack}
+                    className="h-11 flex-1 rounded-full"
+                  >
+                    Back
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  className="h-11 flex-1 rounded-full bg-[#1C9DDE] text-base font-semibold shadow-sm hover:bg-sky-600"
+                >
+                  {isLastStep ? "Sign Up" : "Next"}
+                </Button>
+              </div>
             </Field>
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="mt-2 flex w-full flex-row items-center justify-center text-sm font-extralight text-gray-300">
-          Remember your password?&nbsp;
-          <Link to="/auth/login" className="text-black">
-            Sign in
-          </Link>
-        </p>
-      </CardFooter>
     </Card>
   );
 }
