@@ -80,6 +80,13 @@ Do not commit generated output from `client-side/dist/`, `client-side/node_modul
   - running commands that require user-owned access, authentication, approvals, or devices
   - verifying behavior that depends on external systems not available to the agent
 
+## Secrets and Sensitive Files
+
+- Never read `.env`, `.env.*`, private keys, certificates, or credential files unless the user explicitly requests it.
+- Never ask the user to paste API keys, passwords, tokens, or secrets into the conversation.
+- Assume secrets already exist and reference them only by environment variable name (e.g., `process.env.OPENAI_API_KEY`).
+- If a required secret is missing, instruct the user to add it manually rather than requesting its value.
+
 - When such a blocker exists:
   1. Do not guess.
   2. Do not create workaround code unless the user explicitly asked for an alternative approach.
@@ -180,7 +187,7 @@ do **not** force the implementation response format. Respond in the format most 
 Keep explanations concise, practical, and focused on helping the developer quickly verify and move forward.
 Avoid unnecessary verbosity or theoretical explanations.
 
---- 
+---
 
 # OpenCode Agent Workspace Configuration
 
