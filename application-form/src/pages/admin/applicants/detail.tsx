@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import api from '../../../api/client';
 import type { Application } from '../../../types/recruitment';
+import Badge from '@/components/ui/badge';
+import { ArrowLeft, Download, Calendar, User, Briefcase, FileText } from 'lucide-react';
 
 type AdminApplicationDetail = Application & {
   positionHiringStatus?: 'OPEN' | 'DRAFT' | 'CLOSED';
@@ -31,7 +33,7 @@ const AdminApplicantDetails = () => {
   useEffect(() => {
     const fetchApp = async () => {
       try {
-        const response = await api.get(`/recruitment/applications/${id}`);
+        const response = await api.get(`/v2/recruitment/applications/${id}`);
         const nextApplication = response.data.data as AdminApplicationDetail;
         setApplication(nextApplication);
         setStatus(nextApplication.status);
@@ -43,16 +45,13 @@ const AdminApplicantDetails = () => {
       }
     };
 
-    if (id) {
-      fetchApp();
-    }
+    if (id) fetchApp();
   }, [id]);
 
   const handleStatusUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     try {
-      await api.patch(`/recruitment/applications/${id}/status`, { status, note });
+      await api.patch(`/v2/recruitment/applications/${id}/status`, { status, note });
       toast.success('Status updated successfully');
       setShowStatusForm(false);
       setNote('');
@@ -62,51 +61,46 @@ const AdminApplicantDetails = () => {
     }
   };
 
-  const getStatusClass = (currentStatus: Application['status']) => {
+  const getBadgeVariant = (currentStatus: Application['status']): 'primary' | 'success' | 'warning' | 'danger' => {
     switch (currentStatus) {
-      case 'APPROVED':
-        return 'bg-emerald-100 text-emerald-800';
-      case 'REJECTED':
-        return 'bg-rose-100 text-rose-800';
+      case 'APPROVED': return 'success';
+      case 'REJECTED': return 'danger';
       case 'INTERVIEW_SCHEDULED':
-        return 'bg-purple-100 text-purple-800';
-      case 'INTERVIEWING':
-        return 'bg-indigo-100 text-indigo-800';
-      default:
-        return 'bg-blue-100 text-blue-800';
+      case 'INTERVIEWING': return 'warning';
+      default: return 'primary';
     }
   };
 
   if (loading) {
-    return <div className="py-16 text-center text-gray-600">Loading...</div>;
+    return <div className="py-16 text-center text-sm text-gray-600">Loading...</div>;
   }
 
   if (!application) {
-    return <div className="py-16 text-center text-gray-600">Application not found.</div>;
+    return <div className="py-16 text-center text-sm text-gray-600">Application not found.</div>;
   }
 
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Application Details
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Review applicant information, documents, and status history.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Application Details</h1>
+          <p className="mt-1 text-sm text-gray-600">Review applicant information, documents, and status history.</p>
         </div>
         <Link
           to="/admin/applicants"
-          className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:bg-gray-100 hover:text-gray-900"
+          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
+          <ArrowLeft className="h-4 w-4" />
           Back to Applicants
         </Link>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="surface p-6">
-          <h2 className="text-lg font-bold text-gray-900">Position</h2>
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+            <Briefcase className="h-5 w-5 text-primary" />
+            Position
+          </h2>
           <div className="mt-4 space-y-3 text-sm text-gray-700">
             <p>
               <span className="font-semibold text-gray-900">Title:</span>{' '}
@@ -114,8 +108,10 @@ const AdminApplicantDetails = () => {
             </p>
             <p>
               <span className="font-semibold text-gray-900">Hiring Status:</span>{' '}
-              <span className={`ml-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(application.status)}`}>
-                {application.positionHiringStatus ?? 'OPEN'}
+              <span className="ml-2">
+                <Badge variant={getBadgeVariant(application.status)}>
+                  {application.positionHiringStatus ?? 'OPEN'}
+                </Badge>
               </span>
             </p>
             <p>
@@ -123,10 +119,13 @@ const AdminApplicantDetails = () => {
               {application.applicationDeadline || 'TBD'}
             </p>
           </div>
-        </section>
+        </div>
 
-        <section className="surface p-6">
-          <h2 className="text-lg font-bold text-gray-900">Applicant</h2>
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+            <User className="h-5 w-5 text-primary" />
+            Applicant
+          </h2>
           <div className="mt-4 space-y-3 text-sm text-gray-700">
             <p>
               <span className="font-semibold text-gray-900">Name:</span>{' '}
@@ -145,36 +144,37 @@ const AdminApplicantDetails = () => {
               {application.course || 'N/A'}
             </p>
           </div>
-        </section>
+        </div>
       </div>
 
-      <section className="surface p-6">
-        <h2 className="text-lg font-bold text-gray-900">Documents</h2>
+      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+          <FileText className="h-5 w-5 text-primary" />
+          Documents
+        </h2>
         <div className="mt-4 space-y-3 text-sm">
           <a
             href={`/api/documents/${application.documents.resume.storageKey}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-medium text-primary transition-colors hover:bg-gray-100"
+            className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-medium text-primary transition-colors hover:bg-gray-100"
           >
             <span>Download Resume ({application.documents.resume.originalFilename})</span>
-            <span>Open</span>
+            <Download className="h-4 w-4" />
           </a>
           <a
             href={`/api/documents/${application.documents.applicationLetter.storageKey}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-medium text-primary transition-colors hover:bg-gray-100"
+            className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-medium text-primary transition-colors hover:bg-gray-100"
           >
-            <span>
-              Download Application Letter ({application.documents.applicationLetter.originalFilename})
-            </span>
-            <span>Open</span>
+            <span>Download Application Letter ({application.documents.applicationLetter.originalFilename})</span>
+            <Download className="h-4 w-4" />
           </a>
         </div>
-      </section>
+      </div>
 
-      <section className="surface p-6">
+      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-gray-900">Application Status</h2>
           {!showStatusForm ? (
@@ -195,9 +195,9 @@ const AdminApplicantDetails = () => {
         </div>
 
         <div className="mt-4">
-          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(application.status)}`}>
+          <Badge variant={getBadgeVariant(application.status)}>
             {application.status}
-          </span>
+          </Badge>
         </div>
 
         {showStatusForm && (
@@ -223,7 +223,7 @@ const AdminApplicantDetails = () => {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={4}
-                className="flex w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+                className="flex w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
                 placeholder="Add internal notes..."
               />
             </div>
@@ -245,10 +245,13 @@ const AdminApplicantDetails = () => {
             </div>
           </form>
         )}
-      </section>
+      </div>
 
-      <section className="surface p-6">
-        <h2 className="text-lg font-bold text-gray-900">Interview</h2>
+      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+          <Calendar className="h-5 w-5 text-primary" />
+          Interview
+        </h2>
         {application.interview ? (
           <div className="mt-4 space-y-3 text-sm text-gray-700">
             <p>
@@ -265,7 +268,7 @@ const AdminApplicantDetails = () => {
             </p>
             {application.interview.notes && (
               <p className="italic text-gray-600">
-                <span className="font-semibold text-gray-900 not-italic">Notes:</span>{' '}
+                <span className="font-semibold not-italic text-gray-900">Notes:</span>{' '}
                 {application.interview.notes}
               </p>
             )}
@@ -273,7 +276,7 @@ const AdminApplicantDetails = () => {
         ) : (
           <p className="mt-4 text-sm text-gray-500">No interview scheduled</p>
         )}
-      </section>
+      </div>
     </div>
   );
 };

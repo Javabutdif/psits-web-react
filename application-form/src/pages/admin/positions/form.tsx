@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../../api/client';
+import { toast } from 'sonner';
+import type { ApiResponse, RecruitmentPosition } from '../../../types/recruitment';
 
 type HiringStatus = 'DRAFT' | 'OPEN' | 'CLOSED';
 
@@ -16,28 +18,84 @@ type PositionFormState = {
   sortOrder: number;
 };
 
+const emptyPosition: PositionFormState = {
+  title: '',
+  description: '',
+  responsibilities: [''],
+  requirements: [''],
+  hiringStatus: 'OPEN',
+  isActive: true,
+  applicationDeadline: '',
+  sortOrder: 0,
+};
+
+const toDateTimeLocalValue = (value?: string) => {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+};
+
+const normalizeListField = (values: string[]) => {
+  return values.length > 0 ? values : [''];
+};
+
 const AdminPositionsForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
 
-  const [position, setPosition] = useState<PositionFormState>({
-    title: '',
-    description: '',
-    responsibilities: [''],
-    requirements: [''],
-    hiringStatus: 'OPEN',
-    isActive: true,
-    applicationDeadline: '',
-    sortOrder: 0,
-  });
+  const [position, setPosition] = useState<PositionFormState>(emptyPosition);
+  const [fetchingPosition, setFetchingPosition] = useState(isEditing);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isEditing) {
-      // Placeholder for future edit hydration.
+    if (!isEditing || !id) {
+      setFetchingPosition(false);
+      setPosition(emptyPosition);
+      return;
     }
-  }, [isEditing]);
+
+    let cancelled = false;
+
+    const fetchPosition = async () => {
+      setFetchingPosition(true);
+      try {
+        const response = await api.get<ApiResponse<RecruitmentPosition>>(
+          `/v2/recruitment/positions/${id}`
+        );
+        const currentPosition = response.data.data;
+
+        if (cancelled) return;
+
+        setPosition({
+          title: currentPosition.title,
+          description: currentPosition.description,
+          responsibilities: normalizeListField(currentPosition.responsibilities),
+          requirements: normalizeListField(currentPosition.requirements),
+          hiringStatus: currentPosition.hiringStatus,
+          isActive: currentPosition.isActive,
+          applicationDeadline: toDateTimeLocalValue(currentPosition.applicationDeadline),
+          sortOrder: currentPosition.sortOrder,
+        });
+      } catch (error) {
+        console.error('Error fetching position:', error);
+        toast.error('Failed to load position details');
+        navigate('/admin/positions', { replace: true });
+      } finally {
+        if (!cancelled) setFetchingPosition(false);
+      }
+    };
+
+    fetchPosition();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isEditing, navigate]);
 
   const updateField = <K extends keyof PositionFormState>(
     field: K,
@@ -77,18 +135,24 @@ const AdminPositionsForm = () => {
     setLoading(true);
 
     try {
-      if (isEditing) {
-        await api.patch(`/recruitment/positions/${id}`, position);
+      if (isEditing && id) {
+        await api.patch(`/v2/recruitment/positions/${id}`, position);
       } else {
-        await api.post('/recruitment/positions', position);
+        await api.post('/v2/recruitment/positions', position);
       }
+      toast.success('Position saved successfully');
       navigate('/admin/positions', { replace: true });
     } catch (error) {
       console.error('Error saving position:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save position');
     } finally {
       setLoading(false);
     }
   };
+
+  if (fetchingPosition) {
+    return <div className="py-12 text-center text-sm text-gray-600">Loading position...</div>;
+  }
 
   return (
     <div className="space-y-6">

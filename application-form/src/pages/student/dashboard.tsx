@@ -1,9 +1,11 @@
-// src/pages/student/dashboard.tsx
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/client';
 import type { Application } from '../../types/recruitment';
+import Badge from '@/components/ui/badge';
+import EmptyState from '@/components/ui/empty-state';
+import { extractList } from '@/lib/utils';
+import { Download, Eye, Send } from 'lucide-react';
 
 const StudentDashboard = () => {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -12,8 +14,8 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const response = await api.get('/recruitment/applications/me');
-        setApplications(response.data.data || []);
+        const response = await api.get('/v2/recruitment/applications/me');
+        setApplications(extractList<Application>(response.data.data));
       } catch (error) {
         console.error('Error fetching applications:', error);
       } finally {
@@ -24,90 +26,86 @@ const StudentDashboard = () => {
     fetchApplications();
   }, []);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-lg text-gray-600">Loading your applications...</div></div>;
+  if (loading) return <div className="flex min-h-[50vh] items-center justify-center"><div className="text-sm text-gray-600">Loading your applications...</div></div>;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="mx-auto max-w-4xl py-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
-        <p className="text-gray-600 mt-2">View and manage your submitted applications</p>
+        <p className="mt-2 text-gray-600">View and manage your submitted applications</p>
       </header>
 
       {applications.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="inline-block p-8 bg-white rounded-xl shadow-sm border border-gray-100">
-            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">No Applications Yet</h2>
-            <p className="text-gray-600 mb-6">Your first application gets you closer to your dream job.</p>
-            <Link to="/" className="inline-flex items-center px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors shadow-sm">
-              Browse Open Positions
-              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </div>
+        <EmptyState
+          icon={<Send className="h-8 w-8" />}
+          title="No Applications Yet"
+          description="Your first application gets you closer to your dream job."
+          action={{
+            label: 'Browse Open Positions',
+            onClick: () => window.location.href = '/',
+          }}
+        />
       ) : (
         <section>
           <div className="space-y-4">
             {applications.map((app) => {
               const date = new Date(app.createdAt);
-              const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-              
-               const getStatusLabel = (status: Application['status']): string => {
-                 switch (status) {
-                   case 'APPROVED': return 'Approved';
-                   case 'REJECTED': return 'Rejected';
-                   case 'INTERVIEW_SCHEDULED': return 'Interview Scheduled';
-                   case 'INTERVIEWING': return 'Interviewing';
-                   case 'WITHDRAWN': return 'Withdrawn';
-                   default: return status;
-                 }
-               };
+              const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
-               const getStatusBadgeClasses = (status: Application['status']): string => {
-                 switch (status) {
-                   case 'APPROVED': return 'bg-green-100 text-green-800 border-green-200';
-                   case 'REJECTED': return 'bg-red-100 text-red-800 border-red-200';
-                   case 'INTERVIEW_SCHEDULED': return 'bg-purple-100 text-purple-800 border-purple-200';
-                   case 'INTERVIEWING': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
-                   case 'WITHDRAWN': return 'bg-gray-100 text-gray-800 border-gray-200';
-                   default: return 'bg-blue-100 text-blue-800 border-blue-200';
-                 }
-               };
+              const getBadgeVariant = (status: Application['status']): 'primary' | 'success' | 'warning' | 'danger' => {
+                switch (status) {
+                  case 'APPROVED': return 'success';
+                  case 'REJECTED': return 'danger';
+                  case 'INTERVIEW_SCHEDULED':
+                  case 'INTERVIEWING': return 'warning';
+                  default: return 'primary';
+                }
+              };
+
+              const getStatusLabel = (status: Application['status']): string => {
+                switch (status) {
+                  case 'APPROVED': return 'Approved';
+                  case 'REJECTED': return 'Rejected';
+                  case 'INTERVIEW_SCHEDULED': return 'Interview Scheduled';
+                  case 'INTERVIEWING': return 'Interviewing';
+                  case 'WITHDRAWN': return 'Withdrawn';
+                  default: return status;
+                }
+              };
 
               return (
-                <div key={app._id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <div
+                  key={app._id}
+                  className="rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-md"
+                >
                   <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-gray-900 truncate">{app.positionTitle}</h3>
-                        <p className="text-sm text-gray-500 mt-1 whitespace-nowrap">
-                          Submitted: {formattedDate}
-                        </p>
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-lg font-bold text-gray-900">{app.positionTitle}</h3>
+                        <p className="mt-1 text-sm text-gray-500">Submitted: {formattedDate}</p>
                       </div>
-                      <span className={`px-4 py-2 text-sm font-semibold rounded-full border ${getStatusBadgeClasses(app.status)}`}>
+                      <Badge variant={getBadgeVariant(app.status)}>
                         {getStatusLabel(app.status)}
-                      </span>
+                      </Badge>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-100 flex gap-4">
-                      <Link 
-                        to={`/application/${app._id}`} 
-                        className="flex-1 inline-flex justify-center px-4 py-2.5 bg-gray-50 text-gray-700 font-medium rounded-md hover:bg-gray-100 transition-colors border border-transparent"
+                    <div className="flex gap-4 border-t border-gray-100 pt-4">
+                      <Link
+                        to={`/application/${app._id}`}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
                       >
+                        <Eye className="h-4 w-4" />
                         View Details
                       </Link>
                       {app.documents.resume && (
-                        <a 
-                          href={`/api/documents/${app.documents.resume.storageKey}`} 
+                        <a
+                          href={`/api/documents/${app.documents.resume.storageKey}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50 transition-colors white-space-nowrap"
+                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
                         >
-                          Download Resume
+                          <Download className="h-4 w-4" />
+                          Resume
                         </a>
                       )}
                     </div>

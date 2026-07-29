@@ -2,10 +2,9 @@
 
 import api from './client';
 import type { ApplicantFilters, Application, RecruitmentPosition } from '../types/recruitment';
-import type { AxiosRequestConfig } from 'axios';
 
 // Base URL prefix for recruitment routes
-const BASE_PATH = '/api/v2/recruitment';
+const BASE_PATH = '/v2/recruitment';
 
 type PositionListParams = {
   search?: string;

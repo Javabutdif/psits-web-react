@@ -1,11 +1,13 @@
-// src/features/auth/auth.context.ts
+// src/features/auth/auth.context.tsx
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import {
   clearRecruitmentToken,
-  getRecruitmentAccessToken,
+  setRecruitmentAccessToken,
+  refreshAccessToken,
 } from '../../api/client';
+import api from '../../api/client';
 
 type AuthUser = {
   id: string;
@@ -21,11 +23,17 @@ type AuthUser = {
   access?: string;
 };
 
+type LoginResponse = {
+  accessToken: string;
+  user: AuthUser;
+};
+
 interface UserContextType {
   user: AuthUser | null;
   loading: boolean;
   setUser: (user: AuthUser | null) => void;
   logout: () => void;
+  login: (idNumber: string, password: string) => Promise<AuthUser | null>;
 }
 
 const AuthContext = createContext<UserContextType | undefined>(undefined);
@@ -34,44 +42,82 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<UserContextType['user']>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize user from token on mount
+  // Silent session restoration on mount
   useEffect(() => {
-    const initialize = async () => {
+    let cancelled = false;
+
+    const restoreSession = async () => {
       try {
-        const token = getRecruitmentAccessToken();
-        if (token) {
-          const decoded = parseJwt(token);
-          if (decoded) {
-            setUserState({
-              id: decoded.sub,
-              idNumber: decoded.idNumber ?? '',
-              role: decoded.role,
-              campus: decoded.campus || '',
-            });
-          }
+        const restoredSession = await refreshAccessToken();
+
+        if (restoredSession && !cancelled) {
+          setUserState(restoredSession.user);
+          return;
         }
+
+        clearRecruitmentToken();
+        setUserState(null);
       } catch (error) {
         console.error('Auth initialization error:', error);
+        clearRecruitmentToken();
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    initialize();
+    restoreSession();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const setUser = (nextUser: AuthUser | null) => {
+  const setUser = useCallback((nextUser: AuthUser | null) => {
     setUserState(nextUser);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/v2/auth/logout');
+    } catch (error) {
+      console.error('Logout API error:', error);
+    }
     clearRecruitmentToken();
     setUserState(null);
-  };
+    window.localStorage.removeItem('redirectPath');
+  }, []);
+
+  const login = useCallback(async (idNumber: string, password: string) => {
+    const response = await api.post<LoginResponse>('/v2/auth/login', {
+      id_number: idNumber,
+      password: password,
+    });
+
+    const { accessToken, user: userData } = response.data;
+    setRecruitmentAccessToken(accessToken);
+
+    const user: AuthUser = {
+      id: userData.id || '',
+      idNumber,
+      role: userData.role || 'student',
+      campus: userData.campus || 'UC-Main',
+    };
+    setUser(user);
+
+    window.localStorage.removeItem('redirectPath');
+    return user;
+  }, [setUser]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Signing in...
+      </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{ user, loading, setUser, logout }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, loading, setUser, logout, login }}>
+      {children}
     </AuthContext.Provider>
   );
 };
@@ -83,22 +129,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-// Helper to decode JWT (simple client-side decoding without crypto)
-type JwtPayload = {
-  sub: string;
-  idNumber?: string;
-  role: 'admin' | 'student';
-  campus?: string;
-};
-
-function parseJwt(token: string): JwtPayload | null {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const json = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-    return JSON.parse(json) as JwtPayload;
-  } catch (error) {
-    return null;
-  }
-}

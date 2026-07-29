@@ -1,21 +1,24 @@
-// src/components/ui/button.tsx
-
-import { type ButtonHTMLAttributes, ReactNode } from 'react';
+import { type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { Slot } from '@radix-ui/react-slot';
 import { cn } from '@/lib/utils';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'destructive';
   size?: 'sm' | 'normal' | 'lg';
   children: ReactNode;
+  asChild?: boolean;
 }
 
-const Button = ({ 
-  className, 
-  variant = 'primary', 
-  size = 'normal', 
-  children, 
-  ...props 
+const Button = ({
+  className,
+  variant = 'primary',
+  size = 'normal',
+  children,
+  asChild = false,
+  ...props
 }: ButtonProps) => {
+  const Comp = asChild ? Slot : 'button';
+
   const variantClasses = {
     primary: 'bg-primary hover:bg-primary-dark text-white shadow-sm shadow-primary/20',
     secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900',
@@ -30,9 +33,9 @@ const Button = ({
   };
 
   return (
-    <button
+    <Comp
       className={cn(
-        'rounded-full font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]',
+        'inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]',
         variantClasses[variant],
         sizeClasses[size],
         className
@@ -40,7 +43,7 @@ const Button = ({
       {...props}
     >
       {children}
-    </button>
+    </Comp>
   );
 };
 

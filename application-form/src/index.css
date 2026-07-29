@@ -105,9 +105,6 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-image:
-      radial-gradient(circle at top left, rgba(28, 157, 222, 0.12), transparent 30%),
-      radial-gradient(circle at bottom right, rgba(28, 157, 222, 0.08), transparent 24%);
   }
 
   h1,
@@ -124,6 +121,18 @@
   .heading-3 {
     @apply mb-2 text-2xl font-bold;
   }
+
+  .sub-heading {
+    @apply text-darker text-lg font-semibold;
+  }
+
+  .body-text {
+    @apply text-darker text-base leading-relaxed;
+  }
+
+  .info-text {
+    @apply text-dark text-sm;
+  }
 }
 
 @layer components {
@@ -132,6 +141,6 @@
   }
 
   .surface {
-    @apply rounded-2xl border border-white/70 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-md;
+    @apply rounded-xl border border-gray-100 bg-white;
   }
 }

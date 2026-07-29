@@ -1,11 +1,9 @@
-// src/components/ui/card.tsx
-
 import { type ReactNode, type HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 const Card = ({ className, children, ...props }: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) => {
   return (
-    <div className={cn("surface overflow-hidden", className)} {...props}>
+    <div className={cn("rounded-xl border border-gray-100 bg-white", className)} {...props}>
       {children}
     </div>
   );

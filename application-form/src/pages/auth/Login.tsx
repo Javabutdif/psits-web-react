@@ -1,36 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { ArrowLeft, ShieldCheck, Sparkles } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import api, { setRecruitmentAccessToken } from '../../api/client';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/auth.context';
 import { toast } from 'sonner';
 
-type LoginResponse = {
-  accessToken: string;
-  user: {
-    role: 'admin' | 'student';
-    id: string;
-  };
-};
-
-const getLandingPath = (role: LoginResponse['user']['role']) => {
+const getLandingPath = (role: 'admin' | 'student') => {
   return role === 'admin' ? '/admin' : '/applications';
 };
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, loading, setUser } = useAuth();
-  const redirectPath = window.localStorage.getItem('redirectPath');
+  const { login, user } = useAuth();
 
   const [formData, setFormData] = useState({ idNumber: '', password: '' });
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!loading && user) {
-      navigate(getLandingPath(user.role), { replace: true });
-    }
-  }, [loading, navigate, user]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -41,29 +25,18 @@ const Login = () => {
     setSubmitting(true);
 
     try {
-      const response = await api.post<LoginResponse>('/v2/auth/login', {
-        id_number: formData.idNumber,
-        password: formData.password,
-      });
-
-      const { accessToken, user: signedInUser } = response.data;
-      setRecruitmentAccessToken(accessToken);
-      setUser({
-        id: signedInUser.id,
-        idNumber: formData.idNumber,
-        role: signedInUser.role,
-        campus: 'UC-Main',
-      });
-
-      window.localStorage.removeItem('redirectPath');
+      const loggedInUser = await login(formData.idNumber, formData.password);
       toast.success('Signed in successfully');
 
-      const targetPath =
-        redirectPath && redirectPath !== '/login'
-          ? redirectPath
-          : getLandingPath(signedInUser.role);
-
-      navigate(targetPath, { replace: true });
+      if (loggedInUser) {
+        const redirect = window.localStorage.getItem('redirectPath');
+        if (redirect) {
+          window.localStorage.removeItem('redirectPath');
+          navigate(redirect, { replace: true });
+        } else {
+          navigate(getLandingPath(loggedInUser.role), { replace: true });
+        }
+      }
     } catch (error) {
       const message =
         error instanceof Error
@@ -74,6 +47,10 @@ const Login = () => {
       setSubmitting(false);
     }
   };
+
+  if (user) {
+    return <Navigate to={getLandingPath(user.role)} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
