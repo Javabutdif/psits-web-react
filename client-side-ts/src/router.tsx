@@ -176,7 +176,7 @@ const router = createBrowserRouter([
                   { path: "reports", Component: Reports },
                   { path: "orders", Component: Orders },
                   { path: "settings", Component: Settings },
-                  { path: "promo", Component: PromoDashboard },
+                  { path: "merchandise/promo", Component: PromoDashboard },
                 ],
               },
               {
