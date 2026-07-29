@@ -215,6 +215,7 @@ export class RecruitmentService {
           mimeType: resume.mimetype,
           size: resume.size,
           uploadTimestamp: new Date(),
+          location: resume.location,
         },
         applicationLetter: {
           storageKey: letterStorageKey,
@@ -222,6 +223,7 @@ export class RecruitmentService {
           mimeType: applicationLetter.mimetype,
           size: applicationLetter.size,
           uploadTimestamp: new Date(),
+          location: applicationLetter.location,
         },
       },
       status: applicationStatus.SUBMITTED,

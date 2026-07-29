@@ -11,6 +11,7 @@ export interface IDocumentMetadata {
   mimeType: string;
   size: number;
   uploadTimestamp: Date;
+  location?: string;
 }
 
 export interface IInterview {
@@ -57,22 +58,24 @@ const ApplicationSchema = new Schema<IApplication>( {
      idNumber: { type: String, required: true },
      email: { type: String, required: true },
    },
-   documents: {
-     resume: {
-       storageKey: { type: String, required: true },
-       originalFilename: { type: String, required: true },
-       mimeType: { type: String, required: true },
-       size: { type: Number, required: true },
-       uploadTimestamp: { type: Date, required: true },
-     },
-     applicationLetter: {
-       storageKey: { type: String, required: true },
-       originalFilename: { type: String, required: true },
-       mimeType: { type: String, required: true },
-       size: { type: Number, required: true },
-       uploadTimestamp: { type: Date, required: true },
-     },
-   },
+documents: {
+      resume: {
+        storageKey: { type: String, required: true },
+        originalFilename: { type: String, required: true },
+        mimeType: { type: String, required: true },
+        size: { type: Number, required: true },
+        uploadTimestamp: { type: Date, required: true },
+        location: { type: String },
+      },
+      applicationLetter: {
+        storageKey: { type: String, required: true },
+        originalFilename: { type: String, required: true },
+        mimeType: { type: String, required: true },
+        size: { type: Number, required: true },
+        uploadTimestamp: { type: Date, required: true },
+        location: { type: String },
+      },
+    },
    status: {
      type: String,
      enum: ['SUBMITTED', 'INTERVIEW_SCHEDULED', 'INTERVIEWING', 'APPROVED', 'REJECTED', 'WITHDRAWN'],
