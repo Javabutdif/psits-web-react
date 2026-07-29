@@ -5,7 +5,7 @@ import DocumentUploadField from '@/components/ui/document-upload-field';
 import Button from '@/components/ui/button';
 import { toast } from 'sonner';
 import { ArrowLeft, FileText, Briefcase } from 'lucide-react';
-import api from '@/api/client';
+import { submitApplication } from '@/api/recruitment.api';
 
 interface PreviewFormData {
   positionId?: string;
@@ -17,6 +17,27 @@ interface PreviewFormData {
   resumeName?: string;
   letterName?: string;
 }
+
+const base64ToFile = (
+  dataUrl: string | undefined,
+  fileName: string,
+  fallbackMimeType = 'application/pdf'
+): File | null => {
+  if (!dataUrl) return null;
+
+  const [, base64Data] = dataUrl.includes(',') ? dataUrl.split(',') : [undefined, dataUrl];
+  const mimeTypeMatch = dataUrl.match(/^data:([^;]+);base64,/);
+  const mimeType = mimeTypeMatch?.[1] || fallbackMimeType;
+
+  const binaryString = window.atob(base64Data);
+  const bytes = new Uint8Array(binaryString.length);
+
+  for (let index = 0; index < binaryString.length; index += 1) {
+    bytes[index] = binaryString.charCodeAt(index);
+  }
+
+  return new File([bytes], fileName, { type: mimeType });
+};
 
 const StudentPreview = () => {
   const navigate = useNavigate();
@@ -60,12 +81,27 @@ const StudentPreview = () => {
       return;
     }
 
+    const resumeFile = base64ToFile(
+      previewData.resumeBase64,
+      previewData.resumeName || 'resume.pdf'
+    );
+    const letterFile = base64ToFile(
+      previewData.letterBase64,
+      previewData.letterName || 'application-letter.pdf'
+    );
+
+    if (!resumeFile || !letterFile) {
+      toast.error('Uploaded documents are missing. Please go back and re-upload them.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('positionId', previewData.positionId);
+      formData.append('resume', resumeFile);
+      formData.append('applicationLetter', letterFile);
 
-      await api.post(`/v2/recruitment/positions/${previewData.positionId}/applications`, formData);
+      await submitApplication(previewData.positionId, formData);
 
       const key = `previewFormData_${previewData.positionId}`;
       sessionStorage.removeItem(key);

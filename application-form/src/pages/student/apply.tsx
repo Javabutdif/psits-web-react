@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
+import { submitApplication } from '@/api/recruitment.api';
 import DocumentUploadField from '@/components/ui/document-upload-field';
 import Button from '@/components/ui/button';
 import Card from '@/components/ui/card';
@@ -52,7 +53,7 @@ const StudentApply = () => {
       formData.append('resume', resume);
       formData.append('applicationLetter', letter);
 
-      await api.post(`/v2/recruitment/positions/${positionId}/applications`, formData);
+      await submitApplication(positionId, formData);
 
       toast.success('Application submitted successfully!');
       navigate('/applications', { replace: true });

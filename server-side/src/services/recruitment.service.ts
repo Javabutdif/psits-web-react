@@ -179,15 +179,26 @@ export class RecruitmentService {
     const student = await Student.findById(studentId).select('name id_number email').lean();
     if (!student) throw new AppError("Student not found.", 404);
 
-    // Extract document metadata from request files (multer middleware)
-    const { resume, applicationLetter } = req.files as any;
+    // Extract document metadata from request files (multer.fields middleware)
+    const uploadedFiles = (req.files ?? {}) as Record<
+      string,
+      Express.Multer.File[] | Express.Multer.File | undefined
+    >;
+
+    const resume = Array.isArray(uploadedFiles.resume)
+      ? uploadedFiles.resume[0]
+      : uploadedFiles.resume;
+    const applicationLetter = Array.isArray(uploadedFiles.applicationLetter)
+      ? uploadedFiles.applicationLetter[0]
+      : uploadedFiles.applicationLetter;
+
     if (!resume || !applicationLetter) {
       throw new AppError("Resume and application letter are required.", 400);
     }
 
-// Generate simple storage keys based on identifiers
-const resumeStorageKey = `recruitment/${positionId}/resume/${studentId}_${Date.now()}.pdf`;
-const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.now()}.pdf`;
+    // Generate simple storage keys based on identifiers
+    const resumeStorageKey = `recruitment/${positionId}/resume/${studentId}_${Date.now()}.pdf`;
+    const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.now()}.pdf`;
 
     const application = new Application({
       position: positionId,
