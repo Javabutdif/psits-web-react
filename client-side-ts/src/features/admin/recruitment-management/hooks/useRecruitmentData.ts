@@ -18,6 +18,7 @@ import {
   updateApplicationStatus,
   createInterview,
   updateInterview,
+  getResumeUrl,
 } from "../../../../api/recruitment.api";
 
 export const ROWS_PER_PAGE = 8;
@@ -34,10 +35,6 @@ const DEFAULT_SORT: RecruitmentSort = {
   direction: "asc",
 };
 
-// Raw shape returned by the API before mapping to RecruitmentApplicant.
-// Loosely typed on purpose — the backend's populated/unpopulated shapes
-// differ (see mapApplication note below) — but this at least gets us out
-// of `any` for the lint rule.
 interface RawApplicantRecord {
   id?: string;
   _id?: string;
@@ -66,43 +63,51 @@ interface RawApplicantRecord {
   interviewEnd?: string;
   interviewOfficer?: string;
   interviewType?: string;
-  // Populated variant returned by getApplicationDetails, where applicant
-  // fields live under `applicant` rather than flat on the record.
-  applicant?: {
+  // Populated variant returned by getApplicationDetails
+  applicantSnapshot?: {
     name?: string;
-    id_number?: string;
+    idNumber?: string;
+    email?: string;
+  };
+  applicant?: {
     email?: string;
     course?: string;
     year?: string;
   };
+  documents?: {
+    resume?: {
+      storageKey?: string;
+      originalFilename?: string;
+      mimeType?: string;
+      size?: number;
+      uploadTimestamp?: string;
+      url?: string;
+    };
+  };
 }
 
-/**
- * TODO: verify this mapping against your actual `Application` /
- * `RecruitmentPosition` backend types. This is the ONLY place that needs to
- * change if field names differ from what's assumed below.
- *
- * NOTE: getApplicationDetails returns a populated `applicant` sub-object
- * (see RecruitmentService.getApplicationDetails on the backend) rather than
- * flat fields — the `raw.applicant?.x ?? raw.x` fallbacks below handle both
- * that shape and the flatter shape from getApplicants/mutations.
- */
 function mapApplication(raw: RawApplicantRecord): RecruitmentApplicant {
   return {
     id: raw.id ?? raw._id ?? "",
-    id_number: raw.applicant?.id_number ?? raw.id_number ?? raw.studentId ?? "",
+    id_number:
+      raw.applicantSnapshot?.idNumber ?? raw.id_number ?? raw.studentId ?? "",
     name:
-      raw.applicant?.name ??
+      raw.applicantSnapshot?.name ??
       raw.name ??
       `${raw.firstName ?? ""} ${raw.lastName ?? ""}`.trim(),
-    email: raw.applicant?.email ?? raw.email ?? "",
+    email: raw.applicantSnapshot?.email ?? raw.email ?? "",
     course: raw.applicant?.course ?? raw.course ?? "",
     year: raw.applicant?.year ?? raw.year ?? "",
     roleApplied:
       raw.roleApplied ?? raw.position?.title ?? raw.positionTitle ?? "",
     campus: raw.campus ?? "",
     status: raw.status as RecruitmentApplicant["status"],
-    resume: raw.resume ?? raw.resumeUrl,
+    resume:
+      raw.documents?.resume?.url ??
+      raw.documents?.resume?.storageKey ??
+      raw.resume ??
+      raw.resumeUrl,
+    resumeFilename: raw.documents?.resume?.originalFilename,
     aiSummary: raw.aiSummary,
     interviewDate: raw.interview?.scheduledAt ?? raw.interviewDate,
     interviewStart: raw.interviewStart,
@@ -169,6 +174,29 @@ export const useRecruitmentData = () => {
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
 
   const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  // ── Resume download state ──────────────────────────────────────────────
+  // Signed URLs expire quickly (5 min), so we never cache one — always
+  // fetch a fresh one right when the user tries to view/download.
+  const [isResumeLoading, setIsResumeLoading] = useState(false);
+
+  const [resumeError, setResumeError] = useState<string | null>(null);
+
+  const downloadResume = useCallback(async (id: string) => {
+    setIsResumeLoading(true);
+    setResumeError(null);
+    try {
+      const res = await getResumeUrl(id);
+      const url = res.data.data.url;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setResumeError(
+        err instanceof Error ? err.message : "Failed to load resume"
+      );
+    } finally {
+      setIsResumeLoading(false);
+    }
+  }, []);
 
   const fetchApplicants = useCallback(async () => {
     setIsLoading(true);
@@ -556,5 +584,8 @@ export const useRecruitmentData = () => {
     detailsError,
     viewApplicantDetails,
     closeApplicantDetails,
+    downloadResume,
+    isResumeLoading,
+    resumeError,
   };
 };

@@ -67,9 +67,15 @@ export const resendSingleEmail = async (id: string) => {
     const history = await MembershipHistory.findOne({
       reference_code: entry.referenceCode,
     });
-    if (!history) throw new Error(`Membership history not found for ${entry.referenceCode}`);
+    if (!history)
+      throw new Error(
+        `Membership history not found for ${entry.referenceCode}`
+      );
 
-    const templatePath = path.join(__dirname, "../../assets/appr-membership-receipt.ejs");
+    const templatePath = path.join(
+      __dirname,
+      "../../assets/appr-membership-receipt.ejs"
+    );
     const cash = history.total;
     html = await ejs.renderFile(templatePath, {
       name: history.name,
@@ -93,7 +99,10 @@ export const resendSingleEmail = async (id: string) => {
     });
     if (!order) throw new Error(`Order not found for ${entry.referenceCode}`);
 
-    const templatePath = path.join(__dirname, "../../assets/appr-order-receipt.ejs");
+    const templatePath = path.join(
+      __dirname,
+      "../../assets/appr-order-receipt.ejs"
+    );
     html = await ejs.renderFile(templatePath, {
       reference_code: order.reference_code,
       transaction_date: order.transaction_date
@@ -152,7 +161,7 @@ export const resendSingleEmail = async (id: string) => {
     throw new Error(error.message);
   }
 
-  await emailService.updateStatusById(entry._id.toString(), "sent");
+  await emailService.updateStatusById(String(entry._id), "sent");
 
   return { success: true };
 };
@@ -179,15 +188,22 @@ export const getHealthStats = async () => {
 };
 
 export const getDatabaseCounts = async () => {
-  const [students, orders, merch, events, membershipHistory] = await Promise.all([
-    Student.countDocuments(),
-    Orders.countDocuments({ order_status: "Pending" }),
-    Merch.countDocuments({ is_active: true }),
-    Event.countDocuments(),
-    MembershipHistory.countDocuments(),
-  ]);
+  const [students, orders, merch, events, membershipHistory] =
+    await Promise.all([
+      Student.countDocuments(),
+      Orders.countDocuments({ order_status: "Pending" }),
+      Merch.countDocuments({ is_active: true }),
+      Event.countDocuments(),
+      MembershipHistory.countDocuments(),
+    ]);
 
-  return { students, pendingOrders: orders, merchItems: merch, activeEvents: events, memberships: membershipHistory };
+  return {
+    students,
+    pendingOrders: orders,
+    merchItems: merch,
+    activeEvents: events,
+    memberships: membershipHistory,
+  };
 };
 
 export const checkMongoConnection = async (): Promise<boolean> => {
@@ -248,7 +264,10 @@ export const getEnvStatus = () => {
   }));
 };
 
-const rateLimitBlockedCounters: { count: number; day: string } = { count: 0, day: "" };
+const rateLimitBlockedCounters: { count: number; day: string } = {
+  count: 0,
+  day: "",
+};
 
 export const getRateLimitStats = () => {
   const today = new Date().toISOString().split("T")[0];
@@ -327,9 +346,13 @@ export const getCollectionStats = async (): Promise<CollectionStat[]> => {
         try {
           const indexes = await (model.collection as any).indexes();
           const indexedFields = indexes.flatMap((idx: any) =>
-            Object.keys(idx.key).filter((f: string) => expectedIndexes.includes(f))
+            Object.keys(idx.key).filter((f: string) =>
+              expectedIndexes.includes(f)
+            )
           );
-          const missing = expectedIndexes.filter((f: string) => !indexedFields.includes(f));
+          const missing = expectedIndexes.filter(
+            (f: string) => !indexedFields.includes(f)
+          );
           if (missing.length > 0) {
             warning = `Missing indexes on: ${missing.join(", ")}`;
           }
@@ -361,7 +384,13 @@ export const rebuildIndexes = async (): Promise<{
   message: string;
   collections: string[];
 }> => {
-  const collectionsToRebuild = ["Orders", "EmailQueue", "Merch", "Admin", "Student"];
+  const collectionsToRebuild = [
+    "Orders",
+    "EmailQueue",
+    "Merch",
+    "Admin",
+    "Student",
+  ];
   const rebuilt: string[] = [];
 
   for (const collName of collectionsToRebuild) {

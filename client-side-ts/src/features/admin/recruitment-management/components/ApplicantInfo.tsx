@@ -1,6 +1,6 @@
 import { Download, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { RecruitmentApplicant } from "../types/Recruitment.types";
 
@@ -11,16 +11,9 @@ interface ApplicantInfoDialogProps {
   error: string | null;
   onClose: () => void;
   onSetSchedule: () => void;
-}
-
-function getFilenameFromUrl(url?: string) {
-  if (!url) return "resume.pdf";
-  try {
-    const clean = url.split("?")[0];
-    return decodeURIComponent(clean.substring(clean.lastIndexOf("/") + 1));
-  } catch {
-    return "resume.pdf";
-  }
+  onDownloadResume: (id: string) => void;
+  isResumeLoading: boolean;
+  resumeError: string | null;
 }
 
 const Field = ({ label, value }: { label: string; value?: string }) => (
@@ -39,6 +32,9 @@ export const ApplicantInfoDialog = ({
   error,
   onClose,
   onSetSchedule,
+  onDownloadResume,
+  isResumeLoading,
+  resumeError,
 }: ApplicantInfoDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -47,9 +43,9 @@ export const ApplicantInfoDialog = ({
         showCloseButton={false}
       >
         <div className="flex items-center justify-between border-b border-[#f0f0f0] px-6 py-5">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <DialogTitle className="text-lg font-semibold text-slate-900">
             Applicant Information
-          </h2>
+          </DialogTitle>
           <button
             type="button"
             onClick={onClose}
@@ -85,7 +81,7 @@ export const ApplicantInfoDialog = ({
                     <div className="rounded-md border border-[#ececec] bg-slate-50 px-3 py-2 text-sm text-slate-700">
                       {applicant.name}
                     </div>
-                    <div className="rounded-md border border-[#ececec] bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    <div className="truncate rounded-md border border-[#ececec] bg-slate-50 px-3 py-2 text-sm text-slate-700">
                       {applicant.email}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -112,21 +108,26 @@ export const ApplicantInfoDialog = ({
                         <FileText className="h-4 w-4" />
                       </span>
                       <span className="truncate text-sm text-slate-700">
-                        {getFilenameFromUrl(applicant.resume)}
+                        {applicant.resumeFilename ?? "resume.pdf"}
                       </span>
                     </div>
-                    href={applicant.resume}
-                    download target="_blank" rel="noopener noreferrer"
-                    className="shrink-0 rounded-full p-1.5 text-slate-500
-                    hover:bg-slate-100" aria-label="Download resume"
-                    <a>
+                    <button
+                      type="button"
+                      onClick={() => onDownloadResume(applicant.id)}
+                      disabled={isResumeLoading}
+                      className="shrink-0 rounded-full p-1.5 text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label="Download resume"
+                    >
                       <Download className="h-4 w-4" />
-                    </a>
+                    </button>
                   </div>
                 ) : (
                   <div className="rounded-md border border-dashed border-[#ececec] px-3 py-2 text-sm text-slate-400">
                     No resume uploaded
                   </div>
+                )}
+                {resumeError && (
+                  <p className="text-xs text-red-600">{resumeError}</p>
                 )}
 
                 <div className="h-[168px] overflow-y-auto rounded-md border border-[#ececec] px-3 py-2 text-sm text-slate-600">

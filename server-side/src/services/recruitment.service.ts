@@ -12,6 +12,17 @@ import {
   interviewStatus,
 } from "../enums/recruitment.enums";
 import { verifyAccessToken } from "../util/jwt.util";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+  },
+});
 
 export class RecruitmentService {
   /** Create a new recruitment position */
@@ -227,7 +238,7 @@ export class RecruitmentService {
 
     // Get student snapshot for historical record
     const student = await Student.findById(studentId)
-      .select("name id_number email")
+      .select("first_name last_name id_number email")
       .lean();
     if (!student) throw new AppError("Student not found.", 404);
 
@@ -243,9 +254,16 @@ export class RecruitmentService {
     // throw new AppError("Resume and application letter are required.", 400);
     //}
 
-    // Generate simple storage keys based on identifiers
-    const resumeStorageKey = `recruitment/${positionId}/resume/${studentId}_${Date.now()}.pdf`;
-    const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.now()}.pdf`;
+    // Use the key multer-s3 actually uploaded the file to — do NOT
+    // regenerate this, since any mismatch means the DB points at an
+    // object that doesn't exist in the bucket (NoSuchKey on download).
+    const resumeStorageKey = resume.key;
+    if (!resumeStorageKey) {
+      throw new AppError(
+        "Resume upload succeeded but no storage key was returned.",
+        500
+      );
+    }
 
     console.log("req.files =", req.files);
     console.log("resume =", resume);
@@ -364,6 +382,31 @@ export class RecruitmentService {
     if (!app) throw new AppError("Application not found.", 404);
 
     return app;
+  }
+
+  /** Admin: Get a short-lived signed URL to view/download an applicant's resume */
+  async getResumeUrl(id: string) {
+    const app = await Application.findById(id).select("documents.resume");
+    if (!app) throw new AppError("Application not found.", 404);
+
+    const storageKey = app.documents?.resume?.storageKey;
+    if (!storageKey) {
+      throw new AppError("No resume on file for this application.", 404);
+    }
+
+    const bucket = process.env.R2_BUCKET_NAME;
+    if (!bucket) {
+      throw new AppError("Resume storage is not configured.", 500);
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: storageKey,
+    });
+
+    const url = await getSignedUrl(r2Client, command, { expiresIn: 300 }); // 5 minutes
+
+    return { url, expiresIn: 300 };
   }
 
   /** Update application status (admin only) */

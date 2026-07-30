@@ -28,36 +28,22 @@ export type RecruitmentStatus =
 
 export interface RecruitmentApplicant {
   id: string;
-
   id_number: string;
-
   name: string;
-
   email: string;
-
   course: string;
-
   year: string;
-
   roleApplied: string;
-
   campus: string;
-
   status: RecruitmentStatus;
-
   resume?: string;
-
   aiSummary?: string;
-
   interviewDate?: string;
-
   interviewStart?: string;
-
   interviewEnd?: string;
-
   interviewOfficer?: string;
-
   interviewType?: string;
+  resumeFilename?: string;
 }
 
 export interface RecruitmentFilters {

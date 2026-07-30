@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   ArrowUpDown,
-  IdCard,
+  UserPen,
   MoreHorizontal,
   Search,
   SlidersHorizontal,
@@ -35,6 +35,7 @@ import type {
 } from "../types/Recruitment.types";
 import { ApplicantInfoDialog } from "./ApplicantInfo";
 import { InterviewSchedulingDialog } from "./InterviewSchedulingDialog";
+import OpenRole from "./OpenRole";
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
@@ -298,10 +299,14 @@ export const RecuitmentViews = () => {
     viewApplicantDetails,
     closeApplicantDetails,
     scheduleInterview,
+    downloadResume,
+    isResumeLoading,
+    resumeError,
   } = useRecruitmentData();
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [isOpenRoleOpen, setIsOpenRoleOpen] = useState(false);
 
   const counts = useMemo(() => {
     return {
@@ -446,7 +451,13 @@ export const RecuitmentViews = () => {
               >
                 Verifications
               </button>
-
+              <Button
+                type="button"
+                className="h-9 rounded-full bg-[#1c9dde] px-4 hover:bg-[#168bc7]"
+                onClick={() => setIsOpenRoleOpen(true)}
+              >
+                New Opening
+              </Button>
               <Select
                 value={filters.roles[0] ?? "all"}
                 onValueChange={(v) =>
@@ -630,11 +641,11 @@ export const RecuitmentViews = () => {
                           type="button"
                           size="icon-sm"
                           variant="ghost"
-                          title="View applicant"
-                          className="h-7 w-7 rounded-full text-slate-500 hover:bg-slate-100"
+                          title="Check application form"
+                          className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"
                           onClick={() => viewApplicantDetails(applicant.id)}
                         >
-                          <IdCard className="h-4 w-4" />
+                          <UserPen className="h-4 w-4" />
                         </Button>
                       </td>
                       <td className="px-3 py-3 text-right">
@@ -748,6 +759,9 @@ export const RecuitmentViews = () => {
         error={detailsError}
         onClose={closeApplicantDetails}
         onSetSchedule={() => setIsScheduleOpen(true)}
+        onDownloadResume={downloadResume}
+        isResumeLoading={isResumeLoading}
+        resumeError={resumeError}
       />
 
       <InterviewSchedulingDialog
@@ -758,6 +772,16 @@ export const RecuitmentViews = () => {
           if (!selectedApplicant) return;
           await scheduleInterview(selectedApplicant.id, values);
           setIsScheduleOpen(false);
+        }}
+      />
+      <OpenRole
+        open={isOpenRoleOpen}
+        isSubmitting={isMutating}
+        onClose={() => setIsOpenRoleOpen(false)}
+        onConfirm={async (data) => {
+          // TODO: no backend call for this yet — see below
+          console.log("new opening", data);
+          setIsOpenRoleOpen(false);
         }}
       />
     </div>

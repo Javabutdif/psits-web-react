@@ -86,7 +86,13 @@ const REJECTED_STEP: StatusStep = {
     "Thank you for your interest. We encourage you to apply again in the future.",
 };
 
-const ApplicationStatus = ({ application }: { application: Application }) => {
+const ApplicationStatus = ({
+  application,
+  onReapply,
+}: {
+  application: Application;
+  onReapply?: () => void;
+}) => {
   const isRejected = application.status === "REJECTED";
 
   let currentStep = 0;
@@ -200,6 +206,14 @@ const ApplicationStatus = ({ application }: { application: Application }) => {
           );
         })}
       </div>
+
+      {isRejected && onReapply && (
+        <div className="mt-6 flex justify-center border-t border-gray-100 pt-5">
+          <Button type="button" onClick={onReapply} className="w-full max-w-xs">
+            Apply Again
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
@@ -213,6 +227,11 @@ export const ApplicationPage = () => {
   const [existingApplication, setExistingApplication] =
     useState<Application | null>(null);
   const [applicationsLoading, setApplicationsLoading] = useState(true);
+
+  // When a rejected applicant chooses to reapply, we keep
+  // `existingApplication` around (still REJECTED) but show the form
+  // instead of the status page until they submit a new application.
+  const [reapplying, setReapplying] = useState(false);
 
   const [selectedPositionId, setSelectedPositionId] = useState("");
   const [subPosition, setSubPosition] = useState("");
@@ -380,6 +399,7 @@ export const ApplicationPage = () => {
 
       const res = await submitApplication(selectedPositionId, formData);
       setExistingApplication(res.data.data);
+      setReapplying(false);
       toast.success("Application submitted!");
     } catch (err) {
       console.error("Submission failed:", err);
@@ -399,13 +419,22 @@ export const ApplicationPage = () => {
     );
   }
 
-  if (existingApplication) {
+  // Show the status page whenever there's an existing application, unless
+  // it's REJECTED and the student has chosen to reapply (`reapplying`).
+  if (existingApplication && !reapplying) {
     return (
       <div className="mx-auto max-w-4xl">
         <h1 className="mb-6 text-2xl font-light text-gray-800">
           Submit PSITS membership application
         </h1>
-        <ApplicationStatus application={existingApplication} />
+        <ApplicationStatus
+          application={existingApplication}
+          onReapply={
+            existingApplication.status === "REJECTED"
+              ? () => setReapplying(true)
+              : undefined
+          }
+        />
       </div>
     );
   }

@@ -7,6 +7,10 @@ import { Student } from "../models/student.model";
 
 export interface IDocumentMetadata {
   storageKey: string;
+  // Not stored anymore — resume URLs are short-lived signed URLs
+  // generated on demand (see RecruitmentService.getResumeUrl), so this
+  // can't be required/guaranteed to exist on the saved document.
+  url?: string;
   originalFilename: string;
   mimeType: string;
   size: number;
@@ -61,6 +65,10 @@ const ApplicationSchema = new Schema<IApplication>(
     documents: {
       resume: {
         storageKey: { type: String, required: true },
+        // Not stored anymore — resume URLs are short-lived signed URLs
+        // generated on demand (see RecruitmentService.getResumeUrl), so
+        // this can't be required at save time.
+        url: { type: String, required: false },
         originalFilename: { type: String, required: true },
         mimeType: { type: String, required: true },
         size: { type: Number, required: true },
@@ -123,8 +131,22 @@ const ApplicationSchema = new Schema<IApplication>(
   { timestamps: true }
 );
 
-// Unique compound index: one active application per position per applicant
-ApplicationSchema.index({ position: 1, applicant: 1 }, { unique: true });
+// Unique compound index: one ACTIVE application per position per applicant.
+// This is a partial index — REJECTED and WITHDRAWN applications are
+// excluded from the uniqueness check, since submitApplication's app-level
+// logic explicitly allows reapplying after rejection. Without the
+// partialFilterExpression, MongoDB enforces uniqueness across ALL
+// documents regardless of status, which silently blocked every
+// reapplication attempt with an E11000 duplicate key error.
+ApplicationSchema.index(
+  { position: 1, applicant: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $nin: ["REJECTED", "WITHDRAWN"] },
+    },
+  }
+);
 
 // Indexes for admin querying
 ApplicationSchema.index({ status: 1 });

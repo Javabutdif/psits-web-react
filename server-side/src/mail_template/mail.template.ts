@@ -84,7 +84,12 @@ export const membershipRequestReceipt = async (
   const logoBuffer = await fs.readFile(logoPath);
 
   try {
-    const queueEntry = await emailService.createByEmail("receipt", studenteEmail, "membership", referenceCode);
+    const queueEntry = await emailService.createByEmail(
+      "receipt",
+      studenteEmail,
+      "membership",
+      referenceCode
+    );
 
     await sendEmail({
       to: studenteEmail,
@@ -100,9 +105,12 @@ export const membershipRequestReceipt = async (
       ],
     });
 
-    await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+    await emailService.updateStatusById(String(queueEntry._id), "sent");
   } catch (err: unknown) {
-    console.error("Failed to send membership request receipt email:", err instanceof Error ? err.message : err);
+    console.error(
+      "Failed to send membership request receipt email:",
+      err instanceof Error ? err.message : err
+    );
   }
 };
 
@@ -124,7 +132,12 @@ export const orderReceipt = async (
   const logoBuffer = await fs.readFile(logoPath);
 
   try {
-    const queueEntry = await emailService.createByEmail("receipt", studentEmail, "order", referenceCode);
+    const queueEntry = await emailService.createByEmail(
+      "receipt",
+      studentEmail,
+      "order",
+      referenceCode
+    );
 
     await sendEmail({
       to: studentEmail,
@@ -140,9 +153,12 @@ export const orderReceipt = async (
       ],
     });
 
-    await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+    await emailService.updateStatusById(String(queueEntry._id), "sent");
   } catch (err: unknown) {
-    console.error("Failed to send order receipt email:", err instanceof Error ? err.message : err);
+    console.error(
+      "Failed to send order receipt email:",
+      err instanceof Error ? err.message : err
+    );
   }
 };
 
@@ -197,10 +213,10 @@ export const forgotPasswordMail = async (
       "password_reset",
       token.slice(0, 8)
     );
-  await sendEmail({
-    to: studentMail,
-    subject: "Reset Your Password",
-    html: `
+    await sendEmail({
+      to: studentMail,
+      subject: "Reset Your Password",
+      html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
               <h1 style="color: #333; text-align: center; margin-bottom: 30px;">PSITS - Reset Your Password</h1>
               <p style="color: #555; font-size: 16px;">Hello,</p>
@@ -227,9 +243,9 @@ export const forgotPasswordMail = async (
               <p style="color: #555; font-size: 16px;">The Support Team</p>
             </div>
           `,
-  });
+    });
 
-  await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+    await emailService.updateStatusById(queueEntry._id.toString(), "sent");
 
     return { status: true, message: "Email Sent" };
   } catch (err: any) {

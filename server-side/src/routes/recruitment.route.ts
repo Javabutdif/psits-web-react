@@ -1,11 +1,77 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { recruitmentController } from "../controllers/recruitment.v2.controller";
 import {
   requireAccessTokenV2,
   roleAuthenticateV2,
 } from "../middlewares/authV2.middleware";
 import multer from "multer";
+import multerS3 from "multer-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import path from "path";
+
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+  },
+});
+
+const getResumeUpload = () => {
+  const bucket = process.env.R2_BUCKET_NAME;
+  if (!bucket) {
+    return multer();
+  }
+
+  return multer({
+    storage: multerS3({
+      s3: r2Client,
+      bucket,
+      metadata: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, metadata?: any) => void
+      ) => {
+        cb(null, { fieldName: file.fieldname });
+      },
+      contentType: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, contentType?: string) => void
+      ) => {
+        cb(null, file.mimetype);
+      },
+      key: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, key?: string) => void
+      ) => {
+        const ext = path.extname(file.originalname);
+        const positionId = req.params.id ?? "unknown";
+        cb(
+          null,
+          `recruitment/${positionId}/resume/${Date.now()}_${Math.random()
+            .toString(36)
+            .slice(2)}${ext}`
+        );
+      },
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (
+      req: Request,
+      file: Express.Multer.File,
+      cb: multer.FileFilterCallback
+    ) => {
+      const allowed = ["application/pdf"];
+      if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Only PDF resumes are allowed"));
+      }
+    },
+  });
+};
 
 const router = Router();
 
@@ -43,40 +109,25 @@ router.patch(
   recruitmentController.toggleHiringStatus
 );
 
-/** Student endpoints - applications submission and retrieval */
-// Note: POST requires multer middleware for multipart form data
-const upload = multer({
-  dest: "tmp/uploads/",
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB per file
-  },
-  fileFilter: (req, file, cb) => {
-    // Only allow PDF files
-    if (
-      file.mimetype === "application/pdf" ||
-      path.extname(file.originalname).toLowerCase() === ".pdf"
-    ) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only PDF files are allowed."));
-    }
-  },
-});
-
 router.post(
   "/positions/:id/applications",
   requireAccessTokenV2,
   roleAuthenticateV2(["student"]),
-  upload.fields([
-    { name: "resume", maxCount: 1 },
-
-    // NOTE:
-    // Application letter upload is temporarily disabled because the current
-    // recruitment form only requires a resume. Uncomment the code below
-    // when the application letter feature is reintroduced.
-
-    //{ name: "applicationLetter", maxCount: 1 }
-  ]),
+  getResumeUpload().fields([{ name: "resume", maxCount: 1 }]),
+  (err: unknown, req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof multer.MulterError) {
+      return res
+        .status(400)
+        .json({ error: "UPLOAD_ERROR", message: err.message });
+    }
+    if (err) {
+      console.error("Resume upload failed:", err);
+      return res
+        .status(500)
+        .json({ error: "UPLOAD_ERROR", message: "Resume upload failed" });
+    }
+    next();
+  },
   recruitmentController.submitApplication
 );
 
@@ -94,6 +145,12 @@ router.get(
   recruitmentController.getApplicationForUser
 );
 
+router.get(
+  "/applications/:id/resume-url",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  recruitmentController.getResumeUrl
+);
 /** Admin endpoints - applicant management */
 router.get(
   "/applicants",

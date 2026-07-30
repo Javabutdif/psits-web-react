@@ -1,102 +1,105 @@
-  import api from "./client";
-  import type {
-    ApplicantFilters,
-    Application,
+import api from "./client";
+import type {
+  ApplicantFilters,
+  Application,
+  RecruitmentPosition,
+} from "../types/recruitment";
+
+// Base path for recruitment routes — matches your existing /api/v2 pattern
+const BASE_PATH = "/v2/recruitment";
+
+type PositionListParams = {
+  search?: string;
+  page?: number;
+  limit?: number;
+  status?: RecruitmentPosition["hiringStatus"];
+};
+
+type ApplicationPayload = FormData;
+
+type PositionPayload = Partial<
+  Pick<
     RecruitmentPosition,
-  } from "../types/recruitment";
+    | "title"
+    | "description"
+    | "responsibilities"
+    | "requirements"
+    | "hiringStatus"
+    | "isActive"
+    | "applicationDeadline"
+    | "sortOrder"
+  >
+>;
 
-  // Base path for recruitment routes — matches your existing /api/v2 pattern
-  const BASE_PATH = "/v2/recruitment";
+type StatusUpdatePayload = {
+  status: Application["status"];
+  note?: string;
+};
 
-  type PositionListParams = {
-    search?: string;
-    page?: number;
-    limit?: number;
-    status?: RecruitmentPosition["hiringStatus"];
-  };
+type InterviewPayload = {
+  scheduledAt: string;
+  location: string;
+  notes?: string;
+};
 
-  type ApplicationPayload = FormData;
+// ── Public endpoints ────────────────────────────────────────────────────
+export const listPositions = (params: PositionListParams) =>
+  api.get(`${BASE_PATH}/positions`, { params });
 
-  type PositionPayload = Partial<
-    Pick<
-      RecruitmentPosition,
-      | "title"
-      | "description"
-      | "responsibilities"
-      | "requirements"
-      | "hiringStatus"
-      | "isActive"
-      | "applicationDeadline"
-      | "sortOrder"
-    >
-  >;
+export const getPositionById = (id: string) =>
+  api.get(`${BASE_PATH}/positions/${id}`);
 
-  type StatusUpdatePayload = {
-    status: Application["status"];
-    note?: string;
-  };
+// ── Student endpoints ───────────────────────────────────────────────────
+export const submitApplication = (
+  positionId: string,
+  formData: ApplicationPayload
+) =>
+  api.post(`${BASE_PATH}/positions/${positionId}/applications`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 
-  type InterviewPayload = {
-    scheduledAt: string;
-    location: string;
-    notes?: string;
-  };
+export const getApplicationsForUser = () =>
+  api.get(`${BASE_PATH}/applications/me`);
 
-  // ── Public endpoints ────────────────────────────────────────────────────
-  export const listPositions = (params: PositionListParams) =>
-    api.get(`${BASE_PATH}/positions`, { params });
+export const getApplicationForUser = (id: string) =>
+  api.get(`${BASE_PATH}/applications/me/${id}`);
 
-  export const getPositionById = (id: string) =>
-    api.get(`${BASE_PATH}/positions/${id}`);
+// ── Admin endpoints ─────────────────────────────────────────────────────
+export const createPosition = (data: PositionPayload) =>
+  api.post(`${BASE_PATH}/positions`, data);
 
-  // ── Student endpoints ───────────────────────────────────────────────────
-  export const submitApplication = (
-    positionId: string,
-    formData: ApplicationPayload
-  ) =>
-    api.post(`${BASE_PATH}/positions/${positionId}/applications`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+export const updatePosition = (id: string, data: PositionPayload) =>
+  api.patch(`${BASE_PATH}/positions/${id}`, data);
 
-  export const getApplicationsForUser = () =>
-    api.get(`${BASE_PATH}/applications/me`);
+export const toggleHiringStatus = (id: string, status: string) =>
+  api.patch(`${BASE_PATH}/positions/${id}/hiring-status`, { status });
 
-  export const getApplicationForUser = (id: string) =>
-    api.get(`${BASE_PATH}/applications/me/${id}`);
+export const deletePosition = (id: string) =>
+  api.delete(`${BASE_PATH}/positions/${id}`);
 
-  // ── Admin endpoints ─────────────────────────────────────────────────────
-  export const createPosition = (data: PositionPayload) =>
-    api.post(`${BASE_PATH}/positions`, data);
+export const getApplicants = (params: ApplicantFilters) =>
+  api.get(`${BASE_PATH}/applicants`, { params });
 
-  export const updatePosition = (id: string, data: PositionPayload) =>
-    api.patch(`${BASE_PATH}/positions/${id}`, data);
+export const getApplicationDetails = (id: string) =>
+  api.get(`${BASE_PATH}/applications/${id}`);
 
-  export const toggleHiringStatus = (id: string, status: string) =>
-    api.patch(`${BASE_PATH}/positions/${id}/hiring-status`, { status });
+export const getResumeUrl = (applicationId: string) =>
+  api.get(`${BASE_PATH}/applications/${applicationId}/resume-url`);
 
-  export const deletePosition = (id: string) =>
-    api.delete(`${BASE_PATH}/positions/${id}`);
+export const updateApplicationStatus = (
+  id: string,
+  data: StatusUpdatePayload
+) => api.patch(`${BASE_PATH}/applications/${id}/status`, data);
 
-  export const getApplicants = (params: ApplicantFilters) =>
-    api.get(`${BASE_PATH}/applicants`, { params });
+export const createInterview = (
+  applicationId: string,
+  data: InterviewPayload
+) => api.post(`${BASE_PATH}/applications/${applicationId}/interview`, data);
 
-  export const getApplicationDetails = (id: string) =>
-    api.get(`${BASE_PATH}/applications/${id}`);
+export const updateInterview = (
+  applicationId: string,
+  data: InterviewPayload
+) => api.patch(`${BASE_PATH}/applications/${applicationId}/interview`, data);
 
-  export const updateApplicationStatus = (
-    id: string,
-    data: StatusUpdatePayload
-  ) => api.patch(`${BASE_PATH}/applications/${id}/status`, data);
-
-  export const createInterview = (
-    applicationId: string,
-    data: InterviewPayload
-  ) => api.post(`${BASE_PATH}/applications/${applicationId}/interview`, data);
-
-  export const updateInterview = (
-    applicationId: string,
-    data: InterviewPayload
-  ) => api.patch(`${BASE_PATH}/applications/${applicationId}/interview`, data);
-
-  export const cancelInterview = (applicationId: string) =>
-    api.delete(`${BASE_PATH}/applications/${applicationId}/interview`);
+export const cancelInterview = (applicationId: string) =>
+  api.delete(`${BASE_PATH}/applications/${applicationId}/interview`);
