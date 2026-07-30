@@ -46,7 +46,7 @@ export const getStudentLookupForAdmin = async (
   res: Response
 ) => {
   try {
-    const { id_number } = req.params;
+    const id_number = req.params.id_number as string;
 
     if (!id_number?.trim()) {
       return res.status(400).json({ message: "Student ID is required" });

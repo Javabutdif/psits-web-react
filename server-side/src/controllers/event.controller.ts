@@ -177,15 +177,12 @@ export const getAllEventsAndAttendeesController = async (
   req: Request,
   res: Response
 ) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
-    // Try to find the Event by its _id first (frontend should pass event._id)
     let eventDoc = await Event.findById(id).lean();
 
-    // Defensive fallback: if not found, the client may have sent a different id (e.g., EligibleCertificate._id or event.eventId). Try to resolve.
     if (!eventDoc) {
-      // If id looks like an ObjectId, try to resolve as EligibleCertificate._id -> derive eventId
       if (Types.ObjectId.isValid(id)) {
         try {
           const eligible = await (await import('../models/eligibleCertificate.model')).EligibleCertificate.findById(id).lean();
@@ -193,19 +190,16 @@ export const getAllEventsAndAttendeesController = async (
             eventDoc = await Event.findById(eligible.eventId).lean();
           }
         } catch (e) {
-          // ignore and proceed to next fallback
         }
       }
     }
 
-    // Final fallback: maybe the client passed event.eventId (custom field). Try finding by eventId field.
     if (!eventDoc) {
       try {
         if (Types.ObjectId.isValid(id)) {
           eventDoc = await Event.findOne({ eventId: new Types.ObjectId(id) }).lean();
         }
       } catch (e) {
-        // ignore
       }
     }
 
@@ -242,8 +236,8 @@ export const updateAttendancePerSessionController = async (
 
   try {
     const result = await markAttendance({
-      eventId: event_id,
-      attendeeIdNumber: id_number,
+      eventId: event_id as string,
+      attendeeIdNumber: id_number as string,
       attendeeName,
       campus,
       course: course || "Unknown",
@@ -276,7 +270,7 @@ export const checkLimitPerCampusController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId } = req.params;
+  const eventId = req.params.eventId as string;
 
   const event_id = new Types.ObjectId(eventId);
   try {
@@ -296,7 +290,7 @@ export const updateLimitSettingsController = async (
   res: Response
 ) => {
   const { banilad, pt, lm, cs } = req.body;
-  const event_id = new Types.ObjectId(req.params.eventId);
+  const event_id = new Types.ObjectId(req.params.eventId as string);
 
   try {
     const response = await Event.findOneAndUpdate(
@@ -333,7 +327,7 @@ export const getEligibleAttendeesRaffleController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId } = req.params;
+  const eventId = req.params.eventId as string;
 
   try {
     const event_id = new Types.ObjectId(eventId);
@@ -343,7 +337,6 @@ export const getEligibleAttendeesRaffleController = async (
       return res.status(404).json({ message: "Event not found" });
     }
 
-    // Filter eligible attendees
     const eligibleAttendees = event.attendees.filter(
       (attendee) => !attendee.raffleIsWinner && !attendee.raffleIsRemoved
     );
@@ -365,7 +358,8 @@ export const setAttendeeAsRaffleWinnerController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId, attendeeId } = req.params;
+  const eventId = req.params.eventId as string;
+  const attendeeId = req.params.attendeeId as string;
   const { attendeeName } = req.body;
 
   try {
@@ -413,7 +407,8 @@ export const removeAttendeeInRaffleController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId, attendeeId } = req.params;
+  const eventId = req.params.eventId as string;
+  const attendeeId = req.params.attendeeId as string;
   const { attendeeName } = req.body;
 
   try {
@@ -543,7 +538,7 @@ export const getEventStatisticsController = async (
   res: Response
 ) => {
   try {
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
     const event_id = new Types.ObjectId(eventId);
     const event = await Event.findOne({ eventId: event_id });
     if (!event) {

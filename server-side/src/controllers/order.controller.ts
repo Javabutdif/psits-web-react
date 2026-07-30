@@ -400,7 +400,7 @@ export const studentAndAdminOrderController = async (
 export const cancelOrderController = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  const { product_id } = req.params;
+  const product_id = req.params.product_id as string;
 
   if (!product_id) {
     return res.status(400).json({ message: "Product ID is required" });

@@ -199,7 +199,7 @@ export interface jwtPayload {
 
 export const resetPasswordController = async (req: Request, res: Response) => {
   try {
-    const decodedToken = jwt.verify(req.params.token, token_key) as jwtPayload;
+    const decodedToken = jwt.verify(req.params.token as string, token_key) as unknown as jwtPayload;
 
     if (!decodedToken) {
       return res.status(401).send({ message: "Invalid token" });

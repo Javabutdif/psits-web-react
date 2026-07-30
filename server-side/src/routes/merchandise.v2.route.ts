@@ -1,7 +1,8 @@
-import { Router, Request } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
+import path from "path";
 import { merchandiseController } from "../controllers/merchandise.v2.controller";
 import dotenv from "dotenv";
 import {
@@ -41,14 +42,35 @@ const getUpload = () => {
       ) => {
         cb(null, { fieldName: file.fieldname });
       },
+      contentType: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, contentType?: string) => void
+      ) => {
+        cb(null, file.mimetype);
+      },
       key: (
         req: Request,
         file: Express.Multer.File,
         cb: (error: any, key?: string) => void
       ) => {
-        cb(null, `merchandise/${Date.now()}_${file.originalname}`);
+        const ext = path.extname(file.originalname);
+        cb(null, `merchandise/${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`);
       },
     }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (
+      req: Request,
+      file: Express.Multer.File,
+      cb: multer.FileFilterCallback
+    ) => {
+      const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Only JPEG, PNG, WebP, GIF images are allowed"));
+      }
+    },
   });
 };
 
@@ -58,6 +80,16 @@ router.post(
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
   getUpload().array("images", 3),
+  (err: unknown, req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: "UPLOAD_ERROR", message: err.message });
+    }
+    if (err) {
+      console.error("Merchandise V2 upload failed:", err);
+      return res.status(500).json({ error: "UPLOAD_ERROR", message: "Image upload failed" });
+    }
+    next();
+  },
   merchandiseController.create
 );
 
@@ -95,6 +127,16 @@ router.put(
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
   getUpload().array("images", 3),
+  (err: unknown, req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: "UPLOAD_ERROR", message: err.message });
+    }
+    if (err) {
+      console.error("Merchandise V2 upload failed:", err);
+      return res.status(500).json({ error: "UPLOAD_ERROR", message: "Image upload failed" });
+    }
+    next();
+  },
   merchandiseController.update
 );
 
@@ -112,6 +154,14 @@ router.put(
   roleAuthenticateV2(["admin"]),
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
   merchandiseController.publish
+);
+
+router.delete(
+  "/hard-delete",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  merchandiseController.hardDelete
 );
 
 export default router;

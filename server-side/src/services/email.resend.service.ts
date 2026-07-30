@@ -6,6 +6,7 @@ import { Orders } from "../models/orders.model";
 import { MembershipHistory } from "../models/history.model";
 import { orderService } from "./order.service";
 import { format } from "date-fns";
+import { Resend } from "resend";
 
 const MAX_RETRIES = 3;
 
@@ -72,12 +73,13 @@ const sendWithResend = async ({
   to,
   subject,
   html,
+  attachments,
 }: {
   to: string;
   subject: string;
   html: string;
+  attachments?: Array<{ filename?: string; content?: Buffer; contentType?: string; contentId?: string }>;
 }) => {
-  const { Resend } = await import("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
   const from = process.env.EMAIL;
 
@@ -88,10 +90,13 @@ const sendWithResend = async ({
     to,
     subject,
     html,
+    attachments,
   });
 
   if (error) throw new Error(error.message);
 };
+
+const RESEND_BATCH_LIMIT = 50;
 
 export const resendPendingEmails = async () => {
   const pendingEntries = await emailService.fetchByReceipt();
@@ -100,7 +105,9 @@ export const resendPendingEmails = async () => {
     return;
   }
 
-  for (const rawEntry of pendingEntries) {
+  const batch = pendingEntries.slice(0, RESEND_BATCH_LIMIT);
+
+  for (const rawEntry of batch) {
     const entry = toPendingEntry(rawEntry);
 
     try {
@@ -154,14 +161,7 @@ const resendMembership = async (entry: PendingEntry) => {
   const logoPath = path.join(__dirname, "../assets/psits.jpg");
   const logoBuffer = await fs.readFile(logoPath);
 
-  const { Resend } = await import("resend");
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const from = process.env.EMAIL;
-
-  if (!from) throw new Error("EMAIL is not configured");
-
-  const { error } = await resend.emails.send({
-    from,
+  await sendWithResend({
     to: entry.email,
     subject: "Your Receipt from PSITS - UC Main",
     html,
@@ -174,8 +174,6 @@ const resendMembership = async (entry: PendingEntry) => {
       },
     ],
   });
-
-  if (error) throw new Error(error.message);
 };
 
 const resendOrder = async (entry: PendingEntry) => {
@@ -214,14 +212,7 @@ const resendOrder = async (entry: PendingEntry) => {
   const logoPath = path.join(__dirname, "../assets/psits.jpg");
   const logoBuffer = await fs.readFile(logoPath);
 
-  const { Resend } = await import("resend");
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const from = process.env.EMAIL;
-
-  if (!from) throw new Error("EMAIL is not configured");
-
-  const { error } = await resend.emails.send({
-    from,
+  await sendWithResend({
     to: entry.email,
     subject: "Your Order Receipt from PSITS - UC Main",
     html,
@@ -234,6 +225,4 @@ const resendOrder = async (entry: PendingEntry) => {
       },
     ],
   });
-
-  if (error) throw new Error(error.message);
 };
