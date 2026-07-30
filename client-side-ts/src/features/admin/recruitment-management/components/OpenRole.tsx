@@ -38,8 +38,9 @@ const DEFAULT_ROLES: Role[] = [
     positions: [
       { id: "frontend", name: "Frontend", enabled: false },
       { id: "backend", name: "Backend", enabled: false },
-      { id: "mobile", name: "Mobile", enabled: false },
+      { id: "fullstack", name: "Full stack", enabled: false },
       { id: "uiux", name: "UI / UX", enabled: false },
+      { id: "qa", name: "QA Tester", enabled: false },
     ],
   },
   {
@@ -47,9 +48,10 @@ const DEFAULT_ROLES: Role[] = [
     title: "Media Creative",
     enabled: false,
     positions: [
-      { id: "graphics", name: "Graphic Designer", enabled: false },
-      { id: "video", name: "Video Editor", enabled: false },
-      { id: "photo", name: "Photographer", enabled: false },
+      { id: "video", name: "Videographer", enabled: false },
+      { id: "photo", name: "Photojournalist", enabled: false },
+      { id: "creatives", name: "Creatives", enabled: false },
+      { id: "techwrite", name: "Technical Writer", enabled: false },
     ],
   },
   {
@@ -240,16 +242,14 @@ function RoleCard({
   return (
     <div className="mb-0">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 px-6">
         <Switch
           checked={role.enabled}
           onCheckedChange={onToggleRole}
-          className="scale-75 data-[state=checked]:bg-[#1C9DDE]"
+          className="scale-85 data-[state=checked]:bg-[ #1C9DDE]"
         />
 
-        <span className="text-[18px] font-medium text-[#202020]">
-          {role.title}
-        </span>
+        <span className="text-[16px] font-normal">{role.title}</span>
       </div>
 
       {role.enabled && role.positions.length > 0 && (

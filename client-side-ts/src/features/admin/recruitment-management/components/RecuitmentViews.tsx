@@ -340,13 +340,22 @@ export const RecuitmentViews = () => {
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
-      <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-        <h1 className="text-2xl font-bold sm:text-3xl">Applications</h1>
-        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-          Manage applicants and their details
-        </p>
-      </header>
+      <header className="flex items-start justify-between gap-4 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <div>
+          <h1 className="text-2xl font-bold sm:text-3xl">Applications</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            Manage applicants and their details
+          </p>
+        </div>
 
+        <Button
+          type="button"
+          className="h-10 shrink-0 rounded-full bg-[#1c9dde] px-5 hover:bg-[#168bc7]"
+          onClick={() => setIsOpenRoleOpen(true)}
+        >
+          + Open Role Application
+        </Button>
+      </header>
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
         {/* Stat cards */}
         {isLoading ? (
@@ -451,13 +460,6 @@ export const RecuitmentViews = () => {
               >
                 Verifications
               </button>
-              <Button
-                type="button"
-                className="h-9 rounded-full bg-[#1c9dde] px-4 hover:bg-[#168bc7]"
-                onClick={() => setIsOpenRoleOpen(true)}
-              >
-                + Open Role Application
-              </Button>
               <Select
                 value={filters.roles[0] ?? "all"}
                 onValueChange={(v) =>
