@@ -659,7 +659,7 @@ export const getEligibleAttendeesRaffleV2Controller = async (
         .json({ message: "Only UC-Main admins can access raffle controls" });
     }
 
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ message: "Invalid event ID format" });
     }
@@ -721,7 +721,7 @@ export const drawEventRaffleWinnerController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId } = req.params;
+  const eventId = req.params.eventId as string;
 
   try {
     const claims = req.userV2;
@@ -811,7 +811,8 @@ export const undoEventRaffleWinnerController = async (
         .json({ message: "Only UC-Main admins can access raffle controls" });
     }
 
-    const { eventId, attendeeId } = req.params;
+    const eventId = req.params.eventId as string;
+    const attendeeId = req.params.attendeeId as string;
 
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ message: "Invalid event ID format" });
@@ -960,7 +961,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     }
 
     // ── Event ID param ──────────────────────────────────────────────────
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -1405,10 +1406,10 @@ export const markAttendanceV2Controller = async (
       });
     }
 
-    const { eventId, idNumber } = req.params;
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
     const { campus, attendeeName, course, year } = req.body;
 
-    // Basic body validation
     if (!idNumber?.trim()) {
       return res
         .status(400)
@@ -1425,7 +1426,6 @@ export const markAttendanceV2Controller = async (
         .json({ error: "VALIDATION", message: "Campus is required" });
     }
 
-    // Resolve admin display name for confirmedBy
     const admin = await Admin.findById(claims.sub).select("name");
     const adminName = admin?.name ?? claims.idNumber;
 
@@ -1494,7 +1494,8 @@ export const getEditableAttendeeV2Controller = async (
       });
     }
 
-    const { eventId, idNumber } = req.params;
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -1522,7 +1523,6 @@ export const getEditableAttendeeV2Controller = async (
       : [];
 
     const attendee = attendeeList.find((a) => a.id_number === idNumber.trim());
-
     if (!attendee) {
       return res.status(404).json({
         error: "ATTENDEE_NOT_FOUND",
@@ -1762,7 +1762,8 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
     }
 
     // ── Find event and attendee ─────────────────────────────────────────
-    const { eventId, idNumber } = req.params;
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -2118,8 +2119,8 @@ export const changeAttendeePasswordV2Controller = async (
       return res.status(400).json({ error: "VALIDATION", message: pwdErr });
     }
 
-    // ── Find event and attendee ─────────────────────────────────────────
-    const { eventId, idNumber } = req.params;
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({

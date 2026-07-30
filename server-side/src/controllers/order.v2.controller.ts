@@ -295,7 +295,7 @@ class OrderController {
     await orderReceipt(
       receipt,
       userEmail.email,
-      userEmail._id,
+      userEmail._id.toString(),
       receipt.reference_code
     );
     return res.status(200).json({

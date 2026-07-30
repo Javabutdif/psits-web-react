@@ -17,7 +17,7 @@ class RecruitmentController {
 
   /** Public: Get single position by ID */
   getPositionById = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const position = await recruitmentService.getPositionById(id);
     return res.status(200).json({ message: "Position retrieved successfully", data: position });
   });
@@ -30,28 +30,28 @@ class RecruitmentController {
 
   /** Admin: Update a position */
   updatePosition = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const position = await recruitmentService.updatePosition(id, req);
     return res.status(200).json({ message: "Position updated successfully", data: position });
   });
 
   /** Admin: Toggle hiring status */
   toggleHiringStatus = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const position = await recruitmentService.toggleHiringStatus(id, req);
     return res.status(200).json({ message: "Hiring status updated successfully", data: position });
   });
 
   /** Admin: Delete/archive position */
   deletePosition = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await recruitmentService.deletePosition(id);
     return res.status(200).json({ message: "Position archived successfully" });
   });
 
   /** Student: Submit application with multipart files */
   submitApplication = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const application = await recruitmentService.submitApplication(id, req);
     return res.status(201).json({ message: "Application submitted successfully", data: application });
   });
@@ -64,7 +64,7 @@ class RecruitmentController {
 
   /** Student: Get specific application (owner only) */
   getApplicationForUser = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const app = await recruitmentService.getApplicationForUser(id, req);
     return res.status(200).json({ message: "Application retrieved successfully", data: app });
   });
@@ -77,35 +77,35 @@ class RecruitmentController {
 
   /** Admin: Get full application details */
   getApplicationDetails = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const app = await recruitmentService.getApplicationDetails(id);
     return res.status(200).json({ message: "Application details retrieved", data: app });
   });
 
   /** Admin: Update application status */
   updateApplicationStatus = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const app = await recruitmentService.updateApplicationStatus(id, req);
     return res.status(200).json({ message: "Application status updated successfully", data: app });
   });
 
   /** Admin: Schedule interview */
   createInterview = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const app = await recruitmentService.createInterview(id, req);
     return res.status(201).json({ message: "Interview scheduled successfully", data: app });
   });
 
   /** Admin: Reschedule/update interview */
   updateInterview = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const app = await recruitmentService.updateInterview(id, req);
     return res.status(200).json({ message: "Interview updated successfully", data: app });
   });
 
   /** Admin: Cancel interview */
   cancelInterview = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const app = await recruitmentService.deleteInterview(id);
     return res.status(200).json({ message: "Interview cancelled successfully", data: app });
   });

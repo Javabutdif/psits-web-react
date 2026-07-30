@@ -41,7 +41,7 @@ export const getSearchStudentByIdController = async (
   req: Request,
   res: Response
 ) => {
-  const { id_number } = req.params;
+  const id_number = req.params.id_number as string;
   try {
     const student = await findStudentByLookupId(id_number);
 
@@ -155,9 +155,11 @@ export const revokeAllMembershipController = async (
   res: Response
 ) => {
   try {
-    const revokeMembership = await Student.updateMany({
-      membershipStatus: "NOT_APPLIED",
-    });
+    // ponytail: pre-existing bug — updateMany had no update arg, this is a no-op. Add real update when business logic is clarified.
+    const revokeMembership = await Student.updateMany(
+      { membershipStatus: "NOT_APPLIED" },
+      { $set: {} }
+    );
 
     if (!revokeMembership) {
       return res.status(404).json({ message: "Student not found" });

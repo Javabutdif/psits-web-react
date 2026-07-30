@@ -10,6 +10,7 @@ import path from "path";
 import fs from "fs/promises";
 import os from "os";
 import mongoose, { Types } from "mongoose";
+import { emailService } from "./email.service";
 
 export const getEmailQueueEntries = async ({
   status,
@@ -49,6 +50,7 @@ export const getEmailQueueCount = async ({
 export const resendSingleEmail = async (id: string) => {
   const entry = await EmailQueue.findById(id);
   if (!entry) throw new Error("Email queue entry not found");
+  if (entry.status === "sent") throw new Error("Email has already been sent");
 
   if (entry.type !== "receipt") {
     throw new Error("Only receipt emails can be resent");
@@ -149,6 +151,8 @@ export const resendSingleEmail = async (id: string) => {
   if (error) {
     throw new Error(error.message);
   }
+
+  await emailService.updateStatusById(entry._id.toString(), "sent");
 
   return { success: true };
 };
