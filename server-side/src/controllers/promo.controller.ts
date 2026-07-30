@@ -149,7 +149,7 @@ export const getAllPromoCode = async (req: Request, res: Response) => {
 
 export const deletePromo = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid promo ID" });
@@ -173,7 +173,8 @@ export const deletePromo = async (req: Request, res: Response) => {
 };
 export const verifyPromo = async (req: Request, res: Response) => {
   try {
-    const { promo_code, merchId } = req.params;
+    const promo_code = req.params.promo_code as string;
+    const merchId = req.params.merchId as string;
 
     const student = req.both;
     const currentDate = new Date();

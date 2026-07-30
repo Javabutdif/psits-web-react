@@ -10,7 +10,8 @@ import { AppError } from "../util/app.error.util";
 class PromoController {
   // Verify promo (student-facing)
   verifyPromo = async (req: Request, res: Response) => {
-    const { promo_id, merchId } = req.params;
+    const promo_id = req.params.promo_id as string;
+    const merchId = req.params.merchId as string;
     const id_number = req.userV2.idNumber;
 
     const result = await promoService.fetchPromo(promo_id);
@@ -90,7 +91,7 @@ class PromoController {
   // Soft delete promo
   softDelete = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       if (!Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid promo ID" });
       }

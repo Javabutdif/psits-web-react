@@ -3,11 +3,11 @@ import { EmailQueue } from "../models/email.model";
 import { Types } from "mongoose";
 import { studentService } from "./student.service";
 import { AppError } from "../util/app.error.util";
-import { Type } from "@aws-sdk/client-s3";
+
 
 class EmailService {
   //Create Queue email service
-  create = async (type: String, studentId: Types.ObjectId) => {
+  create = async (type: string, studentId: Types.ObjectId) => {
     const student = await studentService.getSpecific({ _id: studentId });
 
     if (!student) {
@@ -28,7 +28,7 @@ class EmailService {
   createByEmail = async (type: string, email: string, subtype?: string, referenceCode?: string) => {
     return await new EmailQueue({
       type,
-      studentId: new Types.ObjectId(),
+      studentId: null,
       email,
       status: "pending",
       subtype,
@@ -36,7 +36,7 @@ class EmailService {
     }).save();
   };
   //Update Email
-  update = async (studentId: Types.ObjectId, status: String) => {
+  update = async (studentId: Types.ObjectId, status: string) => {
     await EmailQueue.findOneAndUpdate(
       { studentId },
       {
@@ -74,7 +74,7 @@ class EmailService {
     return await EmailQueue.find({
       type: "receipt",
       status: "pending",
-    });
+    }).sort({ createdAt: 1, retryCount: 1 });
   };
 
   countBySubtypeToday = async (email: string, subtype: string) => {
