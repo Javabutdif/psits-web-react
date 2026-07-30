@@ -228,7 +228,8 @@ export const forgotPasswordMail = async (
  */
 export const certificateOfParticipationEmail = async (
   data: TCertificateData,
-  studentEmail: string
+  studentEmail: string,
+  templateRelativePath: string = "templates/certificates/certificate.ejs"
 ) => {
   try {
     const { CertificateDataSchema } = await import("./mail.schema");
@@ -238,7 +239,7 @@ export const certificateOfParticipationEmail = async (
     const parsedData = CertificateDataSchema.parse(data);
 
     const pdfBuffer = await generatePDFFromEJS(
-      "ejs/pdf-ejs/certificate.ejs",
+      templateRelativePath,
       parsedData
     );
 

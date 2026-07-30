@@ -85,6 +85,20 @@ export const getEvents = async (): Promise<Event[] | false> => {
     return handleApiError(error, true);
   }
 };
+
+export const getAllEventsRaw = async (): Promise<Event[] | false> => {
+  try {
+    const response = await api.get<EventApiResponse>(
+      "/api/v2/events/get-all-events-raw"
+    );
+
+    const eventsArray = response.data.data;
+
+    return Array.isArray(eventsArray) ? eventsArray : [];
+  } catch (error) {
+    return handleApiError(error, true);
+  }
+};
 /**
  * GET /api/v2/events/my-events
  *

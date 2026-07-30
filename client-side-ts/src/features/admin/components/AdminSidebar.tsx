@@ -16,6 +16,7 @@ import {
   Users,
   Tag,
   Code,
+  Award,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -305,6 +306,29 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   {collapsed && (
                     <TooltipContent side="right">
                       <p>Events</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass("/admin/certificates")}
+                      asChild
+                    >
+                      <Link to="/admin/certificates">
+                        <Award className="h-5 w-5 shrink-0" />
+                        {!collapsed && (
+                          <span className="font-medium">Certificates</span>
+                        )}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>Certificates</p>
                     </TooltipContent>
                   )}
                 </Tooltip>

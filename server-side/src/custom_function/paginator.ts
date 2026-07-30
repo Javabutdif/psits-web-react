@@ -1,0 +1,148 @@
+import { Model, FilterQuery, SortOrder } from "mongoose";
+
+/**
+ * Query parameters used by `PaginatedList.createAsync` to load a page from a Mongoose model.
+ *
+ * @typeParam T - The document/lean type for the Mongoose model (the item type returned).
+ * @property model - Mongoose `Model<T>` used to run the queries.
+ * @property filter - Mongo filter passed to `model.find(...)`.
+ * @property select - Projection applied via `.select(...)`.
+ * @property sort - Sort descriptor passed to `.sort(...)`.
+ *
+ * @example
+ * const q: IPaginationQuery<User> = {
+ *   model: UserModel,
+ *   filter: { active: true },
+ *   select: 'name email',
+ *   sort: { createdAt: -1 }
+ * };
+ */
+interface IPaginationQuery<T> {
+  model: Model<T>;
+  filter?: FilterQuery<T>;
+  select?:
+    | string
+    | string[]
+    | Record<string, string | number | boolean | object>;
+  sort?: Record<string, SortOrder>;
+}
+
+/**
+ * Generic container representing a single page of results.
+ *
+ * @typeParam T - Item type stored in `items`.
+ *
+ * @remarks
+ * - `items` contains the page items (type `T[]`).
+ * - `totalCount` is the total number of matching documents across all pages.
+ * - `pageNumber` is 1-based.
+ * - `totalPages` is computed as `Math.ceil(totalCount / pageSize)`.
+ * - `hasPreviousPage` and `hasNextPage` indicate adjacent page availability.
+ *
+ * @example
+ * const page = new PaginatedList<User>(users, totalCount, 2, 20);
+ */
+class PaginatedList<T> {
+  /** Page items (typed array). */
+  public items: T[];
+  /** Total number of items across all pages. */
+  public totalCount: number;
+  /** Current 1-based page number. */
+  public pageNumber: number;
+  /** Total computed pages for the supplied `pageSize`. */
+  public totalPages: number;
+  /** Whether a previous page exists. */
+  public hasPreviousPage: boolean;
+  /** Whether a next page exists. */
+  public hasNextPage: boolean;
+
+  /**
+   * Construct a new paginated result.
+   *
+   * @param items - Array of page items (type `T[]`).
+   * @param count - Total number of matching items across all pages.
+   * @param pageNumber - Current 1-based page number.
+   * @param pageSize - Items per page (used to compute `totalPages`).
+   */
+  constructor(
+    items: T[] = [],
+    count: number = 0,
+    pageNumber: number = 1,
+    pageSize: number = 1
+  ) {
+    this.totalCount = count;
+    this.totalPages = pageSize > 0 ? Math.ceil(count / pageSize) : 1;
+    this.pageNumber = Math.min(
+      Math.max(1, pageNumber),
+      Math.max(1, this.totalPages)
+    );
+    this.items = items;
+    this.hasPreviousPage = this.pageNumber > 1;
+    this.hasNextPage = this.pageNumber < this.totalPages;
+  }
+
+  /**
+   * Create a paginated list from an in-memory array of items.
+   *
+   * @param source - The array of items to paginate.
+   * @param pageNumber - 1-based page number to load.
+   * @param pageSize - Number of items per page.
+   */
+  public static create<T>(
+    source: T[],
+    pageNumber: number = 1,
+    pageSize: number = 50
+  ): PaginatedList<T> {
+    const validPageNumber = Math.max(1, Math.floor(Number(pageNumber) || 1));
+    const validPageSize = Math.max(1, Math.floor(Number(pageSize) || 50));
+    const count = source.length;
+    const startIndex = (validPageNumber - 1) * validPageSize;
+    const items = source.slice(startIndex, startIndex + validPageSize);
+
+    return new PaginatedList<T>(items, count, validPageNumber, validPageSize);
+  }
+
+  /**
+   * Load a page from the database and return a typed `PaginatedList<T>`.
+   *
+   * @typeParam T - The result type expected from the model query (use `lean<T>()` if you want POJOs).
+   * @param query - `IPaginationQuery<T>` describing `model`, `filter`, `select`, and `sort`.
+   * @param pageNumber - 1-based page number to load.
+   * @param pageSize - Number of items per page.
+   * @returns Promise resolving to `PaginatedList<T>` containing the loaded items and pagination metadata.
+   *
+   * @remarks
+   * - The method calls `model.countDocuments(filter)` and `model.find(filter).select(select).sort(sort).skip(...).limit(...).lean<T>()`.
+   * - Use `lean<T>()` when you only need plain objects (better performance). If you need Mongoose `Document` behavior, remove `lean()` and adjust types accordingly.
+   */
+  public static async createAsync<T>(
+    query: IPaginationQuery<T>,
+    pageNumber: number = 1,
+    pageSize: number = 50
+  ): Promise<PaginatedList<T>> {
+    const { model, filter, select, sort } = query;
+    const validPageNumber = Math.max(1, Math.floor(Number(pageNumber) || 1));
+    const validPageSize = Math.max(1, Math.floor(Number(pageSize) || 50));
+
+    let queryBuilder = model.find(filter ?? {});
+    if (select) {
+      queryBuilder = queryBuilder.select(select);
+    }
+    if (sort) {
+      queryBuilder = queryBuilder.sort(sort);
+    }
+
+    const [count, items] = await Promise.all([
+      model.countDocuments(filter ?? {}),
+      queryBuilder
+        .skip((validPageNumber - 1) * validPageSize)
+        .limit(validPageSize)
+        .lean<T[]>(),
+    ]);
+
+    return new PaginatedList<T>(items, count, validPageNumber, validPageSize);
+  }
+}
+
+export { PaginatedList, IPaginationQuery };
+

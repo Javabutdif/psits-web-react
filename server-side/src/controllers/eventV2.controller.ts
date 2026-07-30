@@ -2265,8 +2265,8 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
 
   const status =
     body.status === "Upcoming" ||
-    body.status === "Ended" ||
-    body.status === "Cancelled"
+      body.status === "Ended" ||
+      body.status === "Cancelled"
       ? body.status
       : "Ongoing";
 
@@ -2326,6 +2326,26 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Failed to create event",
-    });
+    })
   }
-};
+}
+
+export const getAllEventsRawController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    // Fetches raw events, using the Event model's custom 'eventId' rather than '_id'
+    const events = await Event.find({}, "eventId eventName eventImage -_id").lean();
+    return res.status(200).json({
+      data: events,
+      message: "Fetched raw events successfully",
+    });
+  } catch (error) {
+    console.error("Error in getAllEventsRawController:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Internal server error",
+    })
+  }
+}
