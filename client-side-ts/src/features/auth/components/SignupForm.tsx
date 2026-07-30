@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import * as z from "zod";
-import { Eye, EyeOff, Check } from "lucide-react";
+import { Eye, EyeOff, Check, Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -63,6 +63,7 @@ export interface SignupFormProps {
   courses?: string[];
   years?: string[];
   onSignup?: (values: SignupCredentials) => void;
+  isSubmitting?: boolean;
 }
 
 const inputClasses =
@@ -75,6 +76,7 @@ export default function SignupForm({
   onSignup,
   courses = [],
   years = ["1st Year", "2nd Year", "3rd Year", "4th Year"],
+  isSubmitting = false,
 }: SignupFormProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const step: Step = STEPS[stepIndex];
@@ -171,6 +173,7 @@ export default function SignupForm({
           id="signup-form"
           onSubmit={(e) => {
             e.preventDefault();
+            if (isSubmitting) return;
             if (!isLastStep) {
               goNext();
               return;
@@ -615,6 +618,7 @@ export default function SignupForm({
                     type="button"
                     variant="outline"
                     onClick={goBack}
+                    disabled={isSubmitting}
                     className="h-11 flex-1 rounded-full"
                   >
                     Back
@@ -622,9 +626,19 @@ export default function SignupForm({
                 )}
                 <Button
                   type="submit"
-                  className="h-11 flex-1 rounded-full bg-[#1C9DDE] text-base font-semibold shadow-sm hover:bg-sky-600"
+                  disabled={isSubmitting}
+                  className="h-11 flex-1 rounded-full bg-[#1C9DDE] text-base font-semibold shadow-sm hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {isLastStep ? "Sign Up" : "Next"}
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Creating account...
+                    </span>
+                  ) : isLastStep ? (
+                    "Sign Up"
+                  ) : (
+                    "Next"
+                  )}
                 </Button>
               </div>
             </Field>

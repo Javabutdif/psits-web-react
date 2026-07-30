@@ -411,7 +411,7 @@ export const PromoDashboard = () => {
 
       {/* Add Modal */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="max-w-[620px] rounded-[20px] p-0" showCloseButton={false}>
+        <DialogContent className="max-w-[760px] rounded-[20px] p-0" showCloseButton={false}>
           <PromoAddModal
             onClose={() => {
               setIsAddModalOpen(false);

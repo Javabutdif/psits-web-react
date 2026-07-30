@@ -188,6 +188,15 @@ export const forgotPasswordMail = async (
   url: string,
   token: string
 ) => {
+  let queueEntry: any;
+
+  try {
+    queueEntry = await emailService.createByEmail(
+      "auth",
+      studentMail,
+      "password_reset",
+      token.slice(0, 8)
+    );
   await sendEmail({
     to: studentMail,
     subject: "Reset Your Password",
@@ -220,7 +229,16 @@ export const forgotPasswordMail = async (
           `,
   });
 
-  return { status: true, message: "Email Sent" };
+  await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+
+    return { status: true, message: "Email Sent" };
+  } catch (err: any) {
+    console.error("Failed to send forgot password email:", err.message);
+    if (queueEntry) {
+      await emailService.updateStatusById(queueEntry._id.toString(), "failed");
+    }
+    throw err; // let the caller know the reset email actually failed
+  }
 };
 
 /**
