@@ -48,6 +48,8 @@ import { UnderConstruction } from "./pages/UnderConstruction";
 import { LogsView } from "./features/admin/logs";
 import { DevToolsPage } from "./features/admin/devtools/components/DevToolsPage";
 import SignUp from "./pages/auth/SignUp";
+import ApplicationPage from "./pages/student/ApplicationPage";
+import Recruitment from "./features/admin/recruitment-management/components/RecuitmentViews";
 
 const router = createBrowserRouter([
   {
@@ -88,6 +90,7 @@ const router = createBrowserRouter([
                     Component: MembershipRequired,
                   },
                   { path: "membership-pending", Component: MembershipPending },
+                  { path: "application", Component: ApplicationPage },
                   {
                     element: <StudentMembershipRouteGuard />,
                     children: [
@@ -137,6 +140,7 @@ const router = createBrowserRouter([
             children: [
               { path: "dashboard", Component: Dashboard },
               { path: "organization", Component: Organization },
+              { path: "recuitment-management", Component: Recruitment },
               { path: "students", Component: Students },
               { path: "merchandise", Component: Merchandise },
               { path: "merchandise/products", Component: Merchandise },

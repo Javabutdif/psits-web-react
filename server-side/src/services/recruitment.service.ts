@@ -6,17 +6,32 @@ import { Application } from "../models/application.model";
 import { Student } from "../models/student.model";
 import { Admin } from "../models/admin.model";
 import { AppError } from "../util/app.error.util";
-import { hiringStatus, applicationStatus, interviewStatus } from "../enums/recruitment.enums";
+import {
+  hiringStatus,
+  applicationStatus,
+  interviewStatus,
+} from "../enums/recruitment.enums";
 import { verifyAccessToken } from "../util/jwt.util";
 
 export class RecruitmentService {
   /** Create a new recruitment position */
   async createPosition(req: any) {
-    const { title, description, responsibilities, requirements, isActive, applicationDeadline, sortOrder } = req.body;
+    const {
+      title,
+      description,
+      responsibilities,
+      requirements,
+      isActive,
+      applicationDeadline,
+      sortOrder,
+    } = req.body;
 
     // Validate required fields
     if (!title || !description || !responsibilities || !requirements) {
-      throw new AppError("Title, description, responsibilities, and requirements are required.", 400);
+      throw new AppError(
+        "Title, description, responsibilities, and requirements are required.",
+        400
+      );
     }
 
     // Validate deadline if provided
@@ -28,7 +43,9 @@ export class RecruitmentService {
       // Prevent opening with expired deadline
       const now = Date.now();
       if (isActive && deadline.getTime() < now) {
-        throw new AppError("Application deadline must be in future for open positions.");
+        throw new AppError(
+          "Application deadline must be in future for open positions."
+        );
       }
     }
 
@@ -54,7 +71,7 @@ export class RecruitmentService {
     const query: any = {};
 
     // Public API defaults to only active/open positions unless filtered
-    if (req.path.startsWith('/public')) {
+    if (req.path.startsWith("/public")) {
       query.isActive = true;
       query.hiringStatus = hiringStatus.OPEN;
     } else {
@@ -63,8 +80,8 @@ export class RecruitmentService {
 
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -93,7 +110,16 @@ export class RecruitmentService {
     const position = await RecruitmentPosition.findById(id);
     if (!position) throw new AppError("Position not found.", 404);
 
-    const { title, description, responsibilities, requirements, hiringStatus, isActive, applicationDeadline, sortOrder } = req.body;
+    const {
+      title,
+      description,
+      responsibilities,
+      requirements,
+      hiringStatus,
+      isActive,
+      applicationDeadline,
+      sortOrder,
+    } = req.body;
 
     if (title) position.title = title;
     if (description) position.description = description;
@@ -101,16 +127,26 @@ export class RecruitmentService {
     if (requirements) position.requirements = requirements;
     if (hiringStatus !== undefined) position.hiringStatus = hiringStatus;
     if (isActive !== undefined) position.isActive = isActive;
-    if (applicationDeadline) position.applicationDeadline = new Date(applicationDeadline);
+    if (applicationDeadline)
+      position.applicationDeadline = new Date(applicationDeadline);
     if (sortOrder !== undefined) position.sortOrder = sortOrder;
 
-      // Validate deadline if position is being opened
-      if (position.isActive && position.hiringStatus === hiringStatus.OPEN && position.applicationDeadline) {
-        const now = Date.now();
-        if (position.applicationDeadline && position.applicationDeadline.getTime() < now) {
-          throw new AppError("Application deadline must be in future for open positions.");
-        }
+    // Validate deadline if position is being opened
+    if (
+      position.isActive &&
+      position.hiringStatus === hiringStatus.OPEN &&
+      position.applicationDeadline
+    ) {
+      const now = Date.now();
+      if (
+        position.applicationDeadline &&
+        position.applicationDeadline.getTime() < now
+      ) {
+        throw new AppError(
+          "Application deadline must be in future for open positions."
+        );
       }
+    }
 
     await position.save();
     return position;
@@ -137,11 +173,16 @@ export class RecruitmentService {
     if (!position) throw new AppError("Position not found.", 404);
 
     // Check if there are existing applications - soft disable rather than hard delete
-    const hasApplications = await Application.countDocuments({ position: id }).exec();
+    const hasApplications = await Application.countDocuments({
+      position: id,
+    }).exec();
     if (hasApplications > 0) {
       position.isActive = false;
       await position.save();
-      throw new AppError("Cannot delete position with existing applications. Archive instead.", 400);
+      throw new AppError(
+        "Cannot delete position with existing applications. Archive instead.",
+        400
+      );
     }
 
     await position.deleteOne();
@@ -156,11 +197,17 @@ export class RecruitmentService {
     // Validate position exists and is open
     if (!position) throw new AppError("Position not found.", 404);
     if (!position.isActive || position.hiringStatus !== hiringStatus.OPEN) {
-      throw new AppError("Position is not currently accepting applications.", 400);
+      throw new AppError(
+        "Position is not currently accepting applications.",
+        400
+      );
     }
 
     // Validate deadline not expired
-    if (position.applicationDeadline && position.applicationDeadline < new Date()) {
+    if (
+      position.applicationDeadline &&
+      position.applicationDeadline < new Date()
+    ) {
       throw new AppError("Application deadline has passed.", 400);
     }
 
@@ -172,23 +219,39 @@ export class RecruitmentService {
     }).exec();
 
     if (existingApp) {
-      throw new AppError("You have already submitted an application for this position.", 400);
+      throw new AppError(
+        "You have already submitted an application for this position.",
+        400
+      );
     }
 
     // Get student snapshot for historical record
-    const student = await Student.findById(studentId).select('name id_number email').lean();
+    const student = await Student.findById(studentId)
+      .select("name id_number email")
+      .lean();
     if (!student) throw new AppError("Student not found.", 404);
 
     // Extract document metadata from request files (multer middleware)
-    const { resume, applicationLetter } = req.files as any;
-    if (!resume || !applicationLetter) {
-      throw new AppError("Resume and application letter are required.", 400);
+    const files = req.files as any;
+    const resume = files.resume?.[0];
+    if (!resume) {
+      throw new AppError("Resume is required.", 400);
     }
 
-// Generate simple storage keys based on identifiers
-const resumeStorageKey = `recruitment/${positionId}/resume/${studentId}_${Date.now()}.pdf`;
-const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.now()}.pdf`;
+    //Future feature: enable when application letters are required.
+    //if (!resume || !applicationLetter) {
+    // throw new AppError("Resume and application letter are required.", 400);
+    //}
 
+    // Generate simple storage keys based on identifiers
+    const resumeStorageKey = `recruitment/${positionId}/resume/${studentId}_${Date.now()}.pdf`;
+    const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.now()}.pdf`;
+
+    console.log("req.files =", req.files);
+    console.log("resume =", resume);
+    console.log("resume.originalname =", resume?.originalname);
+    console.log("resume.mimetype =", resume?.mimetype);
+    console.log("resume.size =", resume?.size);
     const application = new Application({
       position: positionId,
       applicant: studentId,
@@ -205,28 +268,31 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
           size: resume.size,
           uploadTimestamp: new Date(),
         },
-        applicationLetter: {
-          storageKey: letterStorageKey,
-          originalFilename: applicationLetter.originalname,
-          mimeType: applicationLetter.mimetype,
-          size: applicationLetter.size,
-          uploadTimestamp: new Date(),
-        },
+        //applicationLetter: {
+        //storageKey: letterStorageKey,
+        // originalFilename: applicationLetter.originalname,
+        // mimeType: applicationLetter.mimetype,
+        //size: applicationLetter.size,
+        //uploadTimestamp: new Date(),
+        // },
       },
       status: applicationStatus.SUBMITTED,
-      statusHistory: [{
-        status: applicationStatus.SUBMITTED,
-        changedAt: new Date(),
-        changedBy: studentId,
-      }],
+      statusHistory: [
+        {
+          status: applicationStatus.SUBMITTED,
+          changedAt: new Date(),
+          changedBy: studentId,
+        },
+      ],
     });
 
     try {
       await application.save();
-      // TODO: Upload documents to storage/S3 after saving application to maintain consistency
-      // If upload fails, clean up partial application
       return application;
     } catch (error) {
+      console.error("Application Save Error:");
+      console.error(error);
+
       throw new AppError("Failed to save application.", 500);
     }
   }
@@ -235,16 +301,16 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
   async getApplicationsForUser(req: any) {
     const studentId = req.userV2.sub;
     const applications = await Application.find({ applicant: studentId })
-      .populate('position', 'title hiringStatus')
+      .populate("position", "title hiringStatus")
       .sort({ createdAt: -1 });
 
     // Sanitize response - never expose internalNotes or reviewer info to students
-    return applications.map(app => {
-        const obj = app.toObject();
-        delete obj.internalNotes;
-        delete obj.reviewer;
-        return obj;
-      });
+    return applications.map((app) => {
+      const obj = app.toObject();
+      delete obj.internalNotes;
+      delete obj.reviewer;
+      return obj;
+    });
   }
 
   /** Get a specific application by owner (student) */
@@ -252,7 +318,11 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
     const studentId = req.userV2.sub;
     const app = await Application.findOne({ _id: id, applicant: studentId });
 
-    if (!app) throw new AppError("Application not found or you do not have access.", 404);
+    if (!app)
+      throw new AppError(
+        "Application not found or you do not have access.",
+        404
+      );
 
     return app;
   }
@@ -264,14 +334,15 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
 
     if (positionId) query.position = positionId;
     if (status) query.status = status;
-    if (search) query.$or = [
-      { 'applicantSnapshot.name': { $regex: search, $options: 'i' } },
-      { 'applicantSnapshot.idNumber': { $regex: search, $options: 'i' } },
-    ];
+    if (search)
+      query.$or = [
+        { "applicantSnapshot.name": { $regex: search, $options: "i" } },
+        { "applicantSnapshot.idNumber": { $regex: search, $options: "i" } },
+      ];
 
     const applicants = await Application.find(query)
-      .populate('position', 'title')
-      .populate('applicant', 'name id_number email')
+      .populate("position", "title")
+      .populate("applicant", "name id_number email course year")
       .sort({ createdAt: -1 })
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit));
@@ -287,8 +358,8 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
   /** Admin: Get full application details */
   async getApplicationDetails(id: string) {
     const app = await Application.findById(id)
-      .populate('position', 'title description responsibilities requirements')
-      .populate('applicant', 'name id_number email course year');
+      .populate("position", "title description responsibilities requirements")
+      .populate("applicant", "name id_number email course year");
 
     if (!app) throw new AppError("Application not found.", 404);
 
@@ -298,7 +369,8 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
   /** Update application status (admin only) */
   async updateApplicationStatus(id: string, req: any) {
     const { status, note } = req.body;
-    const adminId = req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
+    const adminId =
+      req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
 
     if (!adminId) throw new AppError("Authentication required.", 401);
 
@@ -306,14 +378,35 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
     if (!app) throw new AppError("Application not found.", 404);
 
     // Validate allowed transition
-    const allowedTransitions = {
-      [applicationStatus.SUBMITTED]: [applicationStatus.INTERVIEW_SCHEDULED, applicationStatus.REJECTED],
-      [applicationStatus.INTERVIEW_SCHEDULED]: [applicationStatus.INTERVIEWING, applicationStatus.REJECTED],
-      [applicationStatus.INTERVIEWING]: [applicationStatus.APPROVED, applicationStatus.REJECTED],
+    const allowedTransitions: Record<string, string[]> = {
+      [applicationStatus.SUBMITTED]: [
+        applicationStatus.INTERVIEW_SCHEDULED,
+        applicationStatus.APPROVED,
+        applicationStatus.REJECTED,
+      ],
+      [applicationStatus.INTERVIEW_SCHEDULED]: [
+        applicationStatus.INTERVIEWING,
+        applicationStatus.APPROVED,
+        applicationStatus.REJECTED,
+      ],
+      [applicationStatus.INTERVIEWING]: [
+        applicationStatus.APPROVED,
+        applicationStatus.REJECTED,
+      ],
     };
 
-    if (!(status in allowedTransitions[app.status])) {
-      throw new AppError(`Invalid status transition from ${app.status} to ${status}.`, 400);
+    // app.status may be a terminal state (APPROVED/REJECTED/WITHDRAWN) that
+    // isn't a key in allowedTransitions at all — default to [] instead of
+    // letting `allowedTransitions[app.status]` come back undefined.
+    const allowedNextStatuses = allowedTransitions[app.status] ?? [];
+
+    // `.includes()` checks values; the old `status in allowedTransitions[...]`
+    // was checking array indices, which is not what was intended.
+    if (!allowedNextStatuses.includes(status)) {
+      throw new AppError(
+        `Invalid status transition from ${app.status} to ${status}.`,
+        400
+      );
     }
 
     app.status = status;
@@ -324,7 +417,9 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
       note,
     });
     app.reviewer = adminId;
-    app.internalNotes = (app.internalNotes || '') + `\n[${new Date().toISOString()}] ${note || ''}`;
+    app.internalNotes =
+      (app.internalNotes || "") +
+      `\n[${new Date().toISOString()}] ${note || ""}`;
 
     await app.save();
     return app;
@@ -332,7 +427,8 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
 
   /** Schedule an interview */
   async createInterview(applicationId: string, req: any) {
-    const adminId = req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
+    const adminId =
+      req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
     if (!adminId) throw new AppError("Authentication required.", 401);
 
     const app = await Application.findById(applicationId);
@@ -340,7 +436,8 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
 
     const { scheduledAt, location, notes } = req.body;
 
-    if (!scheduledAt) throw new AppError("Scheduled date/time is required.", 400);
+    if (!scheduledAt)
+      throw new AppError("Scheduled date/time is required.", 400);
 
     const interviewDate = new Date(scheduledAt);
     if (interviewDate < new Date()) {
@@ -349,8 +446,8 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
 
     app.interview = {
       scheduledAt: interviewDate,
-      location: location || '',
-      notes: notes || '',
+      location: location || "",
+      notes: notes || "",
       status: "SCHEDULED" as const,
       scheduledBy: adminId,
       createdAt: new Date(),
@@ -363,13 +460,15 @@ const letterStorageKey = `recruitment/${positionId}/letter/${studentId}_${Date.n
 
   /** Update/reschedule an interview */
   async updateInterview(applicationId: string, req: any) {
-    const adminId = req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
+    const adminId =
+      req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
     if (!adminId) throw new AppError("Authentication required.", 401);
 
     const app = await Application.findById(applicationId);
     if (!app) throw new AppError("Application not found.", 404);
 
-    if (!app.interview) throw new AppError("No interview scheduled for this application.", 400);
+    if (!app.interview)
+      throw new AppError("No interview scheduled for this application.", 400);
 
     const { scheduledAt, location, notes, status } = req.body;
 

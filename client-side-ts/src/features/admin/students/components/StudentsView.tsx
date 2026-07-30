@@ -1128,7 +1128,7 @@ const HistoryDialog = ({
                 ) : (
                   <tr>
                     <td
-                      colSpan={5}
+                       colSpan={5}
                       className="px-3 py-12 text-center text-[#777]"
                     >
                       No membership history found.

@@ -49,58 +49,79 @@ export interface IApplication extends Document {
   updatedAt: Date;
 }
 
-const ApplicationSchema = new Schema<IApplication>( {
-   position: { type: String, required: true, ref: "RecruitmentPosition" },
-   applicant: { type: String, required: true, ref: "Student" },
-   applicantSnapshot: {
-     name: { type: String, required: true },
-     idNumber: { type: String, required: true },
-     email: { type: String, required: true },
-   },
-   documents: {
-     resume: {
-       storageKey: { type: String, required: true },
-       originalFilename: { type: String, required: true },
-       mimeType: { type: String, required: true },
-       size: { type: Number, required: true },
-       uploadTimestamp: { type: Date, required: true },
-     },
-     applicationLetter: {
-       storageKey: { type: String, required: true },
-       originalFilename: { type: String, required: true },
-       mimeType: { type: String, required: true },
-       size: { type: Number, required: true },
-       uploadTimestamp: { type: Date, required: true },
-     },
-   },
-   status: {
-     type: String,
-     enum: ['SUBMITTED', 'INTERVIEW_SCHEDULED', 'INTERVIEWING', 'APPROVED', 'REJECTED', 'WITHDRAWN'],
-     default: 'SUBMITTED',
-     required: true,
-   },
-   statusHistory: [{
-     status: { 
-       type: String, 
-       enum: ['SUBMITTED', 'INTERVIEW_SCHEDULED', 'INTERVIEWING', 'APPROVED', 'REJECTED', 'WITHDRAWN'],
-       required: true 
-     },
-     changedAt: { type: Date, default: Date.now },
-     changedBy: String,
-     note: String,
-   }],
-   interview: {
-     scheduledAt: { type: Date },
-     location: { type: String },
-     notes: { type: String },
-     status: { type: String },
-     scheduledBy: { type: String },
-     createdAt: { type: Date },
-     updatedAt: { type: Date },
-   },
-   reviewer: String,
-   internalNotes: String,
-}, { timestamps: true });
+const ApplicationSchema = new Schema<IApplication>(
+  {
+    position: { type: String, required: true, ref: "RecruitmentPosition" },
+    applicant: { type: String, required: true, ref: "Student" },
+    applicantSnapshot: {
+      name: { type: String, required: true },
+      idNumber: { type: String, required: true },
+      email: { type: String, required: true },
+    },
+    documents: {
+      resume: {
+        storageKey: { type: String, required: true },
+        originalFilename: { type: String, required: true },
+        mimeType: { type: String, required: true },
+        size: { type: Number, required: true },
+        uploadTimestamp: { type: Date, required: true },
+      },
+      // Future feature: Application Letter
+
+      //applicationLetter: {
+      // storageKey: { type: String, required: true },
+      // originalFilename: { type: String, required: true },
+      // mimeType: { type: String, required: true },
+      // size: { type: Number, required: true },
+      // uploadTimestamp: { type: Date, required: true },
+      //},
+    },
+    status: {
+      type: String,
+      enum: [
+        "SUBMITTED",
+        "INTERVIEW_SCHEDULED",
+        "INTERVIEWING",
+        "APPROVED",
+        "REJECTED",
+        "WITHDRAWN",
+      ],
+      default: "SUBMITTED",
+      required: true,
+    },
+    statusHistory: [
+      {
+        status: {
+          type: String,
+          enum: [
+            "SUBMITTED",
+            "INTERVIEW_SCHEDULED",
+            "INTERVIEWING",
+            "APPROVED",
+            "REJECTED",
+            "WITHDRAWN",
+          ],
+          required: true,
+        },
+        changedAt: { type: Date, default: Date.now },
+        changedBy: String,
+        note: String,
+      },
+    ],
+    interview: {
+      scheduledAt: { type: Date },
+      location: { type: String },
+      notes: { type: String },
+      status: { type: String },
+      scheduledBy: { type: String },
+      createdAt: { type: Date },
+      updatedAt: { type: Date },
+    },
+    reviewer: String,
+    internalNotes: String,
+  },
+  { timestamps: true }
+);
 
 // Unique compound index: one active application per position per applicant
 ApplicationSchema.index({ position: 1, applicant: 1 }, { unique: true });
