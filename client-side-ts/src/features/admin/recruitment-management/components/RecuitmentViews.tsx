@@ -781,9 +781,29 @@ export const RecuitmentViews = () => {
         isSubmitting={isMutating}
         onClose={() => setIsOpenRoleOpen(false)}
         onConfirm={async (data) => {
-          // TODO: no backend call for this yet — see below
-          console.log("new opening", data);
-          setIsOpenRoleOpen(false);
+          try {
+            const response = await fetch(
+              "/api/recruitment/positions/bulk-open",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(data),
+              }
+            );
+
+            if (!response.ok) {
+              const body = await response.json().catch(() => ({}));
+              throw new Error(
+                body.message ?? "Failed to open role application."
+              );
+            }
+
+            await refetch();
+            setIsOpenRoleOpen(false);
+          } catch (err) {
+            console.error("Failed to create recruitment opening:", err);
+          }
         }}
       />
     </div>

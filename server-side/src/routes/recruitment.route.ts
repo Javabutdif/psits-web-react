@@ -88,6 +88,13 @@ router.post(
   recruitmentController.createPosition
 );
 
+router.post(
+  "/positions/bulk-open",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  recruitmentController.createPositionsFromOpening
+);
+
 router.patch(
   "/positions/:id",
   requireAccessTokenV2,

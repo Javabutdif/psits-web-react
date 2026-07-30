@@ -37,6 +37,18 @@ class RecruitmentController {
       .json({ message: "Position created successfully", data: position });
   });
 
+  /** Admin: Create positions in bulk from the Open Role Application modal */
+  createPositionsFromOpening = catchAsync(
+    async (req: Request, res: Response) => {
+      const positions =
+        await recruitmentService.createPositionsFromOpening(req);
+      return res.status(201).json({
+        message: "Positions opened successfully",
+        data: positions,
+      });
+    }
+  );
+
   /** Admin: Update a position */
   updatePosition = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;

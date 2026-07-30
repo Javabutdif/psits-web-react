@@ -76,6 +76,83 @@ export class RecruitmentService {
     return position;
   }
 
+  /** Admin: bulk-create positions from the "Open Role Application" modal */
+  async createPositionsFromOpening(req: any) {
+    const { startDate, endDate, startTime, endTime, roles } = req.body;
+
+    if (
+      !startDate ||
+      !endDate ||
+      !startTime ||
+      !endTime ||
+      !Array.isArray(roles)
+    ) {
+      throw new AppError("Missing required fields.", 400);
+    }
+
+    const combineDateAndTime = (dateIso: string, time24: string) => {
+      const date = new Date(dateIso);
+      const [hours, minutes] = time24.split(":").map(Number);
+      date.setHours(hours, minutes, 0, 0);
+      return date;
+    };
+
+    const applicationOpensAt = combineDateAndTime(startDate, startTime);
+    const applicationDeadline = combineDateAndTime(endDate, endTime);
+
+    if (applicationDeadline < new Date()) {
+      throw new AppError(
+        "Application deadline must be in future for open positions.",
+        400
+      );
+    }
+
+    const createdBy = req.userV2?.sub || req.admin?._id.toString();
+    const docs: any[] = [];
+    let sortOrder = 0;
+
+    for (const role of roles) {
+      if (!role.enabled) continue;
+
+      const enabledSubPositions = (role.positions || []).filter(
+        (p: any) => p.enabled
+      );
+
+      if (enabledSubPositions.length === 0) {
+        // e.g. "Volunteer" — enabled with no sub-positions
+        docs.push({
+          title: role.title,
+          hiringStatus: hiringStatus.OPEN,
+          isActive: true,
+          applicationOpensAt,
+          applicationDeadline,
+          sortOrder: sortOrder++,
+          createdBy,
+        });
+        continue;
+      }
+
+      for (const position of enabledSubPositions) {
+        docs.push({
+          title: `${role.title} - ${position.name}`,
+          hiringStatus: hiringStatus.OPEN,
+          isActive: true,
+          slots: position.slots ?? undefined,
+          applicationOpensAt,
+          applicationDeadline,
+          sortOrder: sortOrder++,
+          createdBy,
+        });
+      }
+    }
+
+    if (docs.length === 0) {
+      throw new AppError("No roles or positions were selected.", 400);
+    }
+
+    return RecruitmentPosition.insertMany(docs);
+  }
+
   /** Get all positions with filtering */
   async listPositions(req: any) {
     const { search, status, page = 1, limit = 10 } = req.query;

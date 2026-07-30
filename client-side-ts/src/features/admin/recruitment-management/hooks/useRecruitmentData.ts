@@ -19,6 +19,8 @@ import {
   createInterview,
   updateInterview,
   getResumeUrl,
+  listPositions,
+  createOpening,
 } from "../../../../api/recruitment.api";
 
 export const ROWS_PER_PAGE = 8;
@@ -141,28 +143,19 @@ const STATUS = {
 
 export const useRecruitmentData = () => {
   const [activeTab, setActiveTab] = useState<RecruitmentTab>("applications");
-
   const [applicants, setApplicants] = useState<RecruitmentApplicant[]>([]);
-
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
   const [search, setSearch] = useState("");
-
   const [filters, setFilters] = useState<RecruitmentFilters>(DEFAULT_FILTERS);
-
   const [sort, setSort] = useState<RecruitmentSort>(DEFAULT_SORT);
-
   const [page, setPage] = useState(1);
-
   const [isLoading, setIsLoading] = useState(true);
-
   const [isMutating, setIsMutating] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
+  const [positions, setPositions] = useState<any[]>([]);
+  const [isPositionsLoading, setIsPositionsLoading] = useState(true);
+  const [positionsError, setPositionsError] = useState<string | null>(null);
 
-  // Surfaces failures from approve/reject/schedule actions without
-  // clearing already-loaded table data (unlike `error`, which is for the
-  // initial fetch and blanks the table on failure).
   const [mutationError, setMutationError] = useState<string | null>(null);
 
   const clearMutationError = useCallback(() => setMutationError(null), []);
@@ -214,6 +207,25 @@ export const useRecruitmentData = () => {
       setIsLoading(false);
     }
   }, []);
+
+  const fetchPositions = useCallback(async () => {
+    setIsPositionsLoading(true);
+    setPositionsError(null);
+    try {
+      const res = await listPositions({});
+      setPositions(res.data.data.positions);
+    } catch (err) {
+      setPositionsError(
+        err instanceof Error ? err.message : "Failed to load positions"
+      );
+    } finally {
+      setIsPositionsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPositions();
+  }, [fetchPositions]);
 
   useEffect(() => {
     let cancelled = false;
@@ -521,6 +533,28 @@ export const useRecruitmentData = () => {
     }
   };
 
+  const openRoleApplication = async (data: {
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    endTime: string;
+    roles: unknown[];
+  }) => {
+    setIsMutating(true);
+    setMutationError(null);
+    try {
+      await createOpening(data);
+      await fetchPositions();
+    } catch (err) {
+      setMutationError(
+        err instanceof Error ? err.message : "Failed to open role application"
+      );
+      throw err;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
   // Update an existing interview for an applicant (uses updateInterview API)
   const rescheduleInterview = async (
     id: string,
@@ -587,5 +621,9 @@ export const useRecruitmentData = () => {
     downloadResume,
     isResumeLoading,
     resumeError,
+    positions,
+    isPositionsLoading,
+    positionsError,
+    openRoleApplication,
   };
 };

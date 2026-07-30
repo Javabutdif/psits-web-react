@@ -68,6 +68,14 @@ export const getApplicationForUser = (id: string) =>
 export const createPosition = (data: PositionPayload) =>
   api.post(`${BASE_PATH}/positions`, data);
 
+export const createOpening = (data: {
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  roles: unknown[];
+}) => api.post(`${BASE_PATH}/positions/bulk-open`, data);
+
 export const updatePosition = (id: string, data: PositionPayload) =>
   api.patch(`${BASE_PATH}/positions/${id}`, data);
 
