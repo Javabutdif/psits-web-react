@@ -20,7 +20,6 @@ import {
 import { Slider } from "@/components/ui/slider";
 import type { ScheduleInterviewValues } from "../types/Recruitment.types";
 
-// TODO: replace with a real admin/officer list (e.g. an admin lookup endpoint).
 const OFFICER_OPTIONS = [
   "President",
   "Vice President - Internal",
@@ -242,7 +241,7 @@ export const InterviewSchedulingDialog = ({
           <div className="space-y-4">
             <div className="relative">
               <CalendarIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <div className="mt-7 flex h-9 items-center rounded-lg pl-9 text-sm text-slate-700">
+              <div className="mt-7 flex h-9 items-center rounded-lg border border-[#ececec] pl-9 text-sm text-slate-700">
                 {formatDateDisplay(date) || (
                   <span className="text-slate-400">Date</span>
                 )}
@@ -255,7 +254,6 @@ export const InterviewSchedulingDialog = ({
                 placeholder="From"
                 onChange={(v) => {
                   setStartTime(v);
-                  // Clear an end time that's no longer after the new start
                   if (endTime && endTime <= v) setEndTime("");
                 }}
               />
