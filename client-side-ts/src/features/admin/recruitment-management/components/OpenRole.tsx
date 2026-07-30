@@ -520,7 +520,7 @@ export default function OpenRole({
         </div>
 
         {/* FOOTER */}
-        <div className="flex justify-center border-t border-[#ECECEC] py-6">
+        <div className="flex justify-center py-6">
           <Button
             disabled={!isValid || isSubmitting}
             onClick={handleConfirm}

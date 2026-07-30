@@ -456,7 +456,7 @@ export const RecuitmentViews = () => {
                 className="h-9 rounded-full bg-[#1c9dde] px-4 hover:bg-[#168bc7]"
                 onClick={() => setIsOpenRoleOpen(true)}
               >
-                New Opening
+                + Open Role Application
               </Button>
               <Select
                 value={filters.roles[0] ?? "all"}
