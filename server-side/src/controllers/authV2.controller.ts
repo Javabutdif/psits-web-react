@@ -15,6 +15,7 @@ import { Log } from "../models/log.model";
 import { AuthError, AuthErrorCodes } from "../util/errors.util";
 import { account_status } from "../enums/status.enums";
 import { campus_type } from "../enums/campus.enums";
+import { studentService } from "../services/student.service";
 
 /**
  * Shared user response type for frontend
@@ -356,6 +357,57 @@ export const logoutV2Controller = async (
     clearRefreshCookie(res);
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /v2/auth/signup
+ * Creates a new student account using the existing studentService.create logic.
+ */
+export const signupV2Controller = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const yearMap: Record<string, number> = {
+      "1st Year": 1,
+      "2nd Year": 2,
+      "3rd Year": 3,
+      "4th Year": 4,
+    };
+
+    req.body = {
+      id_number: req.body.id,
+      password: req.body.password,
+      first_name: req.body.fname,
+      middle_name: req.body.mname,
+      last_name: req.body.lname,
+      email: req.body.email,
+      course: req.body.course,
+      year: yearMap[req.body.year] ?? Number(req.body.year),
+    };
+
+    const result = await studentService.create(req);
+
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+
+    return res.status(201).json({ message: result.message });
+  } catch (error: any) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue || {})[0];
+      return res.status(409).json({
+        message:
+          field === "id_number"
+            ? "This Student ID is already registered."
+            : field === "email"
+              ? "This email is already registered."
+              : "This account already exists.",
+      });
+    }
     next(error);
   }
 };

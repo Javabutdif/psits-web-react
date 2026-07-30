@@ -76,8 +76,8 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const { id } = req.params;
-    await resendSingleEmail(id);
-    await emailService.updateStatusById(id, "sent");
+    await resendSingleEmail(id as string);
+    await emailService.updateStatusById(id as string, "sent");
     await logService.create({
       admin: req.admin.name,
       admin_id: req.admin._id,

@@ -221,7 +221,7 @@ export const getEligibleCertificatesByEvent = async (
   next: NextFunction
 ) => {
   try {
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
 
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({

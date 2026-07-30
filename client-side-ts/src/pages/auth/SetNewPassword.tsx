@@ -1,3 +1,5 @@
+import sidePhoto from "@/assets/side_photo_forms.png";
+
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -70,6 +72,15 @@ export default function SetNewPassword() {
           )}
           <SetNewPasswordForm onResetPassword={handleSetNewPassword} />
         </div>
+      </div>
+
+      {/* Right Side: Image */}
+      <div className="hidden h-full w-1/2 md:flex">
+        <img
+          src={sidePhoto}
+          alt="Login visual"
+          className="h-full w-full object-cover"
+        />
       </div>
     </div>
   );

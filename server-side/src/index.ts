@@ -32,6 +32,7 @@ import reportV2Routes from "./routes/report.v2.route";
 import eligibleCertificateRoutes from "./routes/eligibleCertificate.route";
 import certificateRoutes from "./routes/certificate.route";
 import recruitmentRoutes from "./routes/recruitment.route";
+import { hardDeleteSoftDeletedMerch } from "./controllers/merchandise.v2.controller";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 
@@ -182,6 +183,36 @@ async function startServer() {
       } catch (err: any) {
         await logCronExecution({
           jobName: "cancel-expired-orders",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: false,
+          errorMessage: err.message,
+        });
+      }
+    }, { timezone: "Asia/Manila" });
+
+    const merchCleanupJob = cron.schedule("0 2 * * *", async () => {
+      console.log("[2AM PH] Running soft-deleted merch cleanup...");
+      const startedAt = new Date();
+      try {
+        const result = await hardDeleteSoftDeletedMerch();
+        if (result.deletedCount > 0) {
+          console.log(`[2AM PH] Permanently deleted ${result.deletedCount} expired soft-deleted merchandise`);
+        }
+        await logCronExecution({
+          jobName: "merch-cleanup",
+          scheduledAt: startedAt,
+          startedAt,
+          completedAt: new Date(),
+          durationMs: Date.now() - startedAt.getTime(),
+          success: true,
+          metadata: { deletedCount: result.deletedCount },
+        });
+      } catch (err: any) {
+        await logCronExecution({
+          jobName: "merch-cleanup",
           scheduledAt: startedAt,
           startedAt,
           completedAt: new Date(),

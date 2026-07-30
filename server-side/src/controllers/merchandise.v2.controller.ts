@@ -8,10 +8,9 @@ import mongoose, { Types } from "mongoose";
 import { IMerch } from "../models/merch.interface";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { Request, Response } from "express";
-import dotenv from "dotenv";
+import path from "path";
 import { S3Client } from "@aws-sdk/client-s3";
 import { expiryStatus } from "../custom_function/conditional_dates";
-dotenv.config();
 
 const r2Client = new S3Client({
   region: "auto",
@@ -22,7 +21,9 @@ const r2Client = new S3Client({
   },
 });
 
-const r2Endpoint = `https://${process.env.R2_BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+const r2BucketName = process.env.R2_BUCKET_NAME;
+if (!r2BucketName) throw new Error("R2_BUCKET_NAME is not configured");
+const r2Endpoint = `https://${r2BucketName}.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
 
 type SelectedSizePricing = {
   custom?: boolean;
@@ -276,7 +277,19 @@ class MerchandiseController {
           : [];
 
       const imageKeys = imagesToRemove.length
-        ? imagesToRemove.map((url) => url.replace(`${r2Endpoint}/`, ""))
+        ? imagesToRemove.map((url) => {
+            try {
+              const p = new URL(url).pathname.replace(/^\//, "");
+              if (!p.startsWith("merchandise/")) {
+                console.error("Unexpected image key prefix:", p);
+                return null;
+              }
+              return p;
+            } catch (e) {
+              console.error("Invalid image URL:", url);
+              return null;
+            }
+          }).filter((k): k is string => k !== null)
         : [];
 
       await Promise.all(
@@ -303,11 +316,6 @@ class MerchandiseController {
       if (updatedImages) {
         updatedImages = [...updatedImages, ...imageUrl];
       }
-
-      await Merch.updateOne(
-        { _id: id },
-        { imageUrl: imagesToRemove }
-      );
 
       const updateFields = {
         name: name,
@@ -466,6 +474,59 @@ class MerchandiseController {
     }
   }
 
+  async hardDelete(req: Request, res: Response) {
+    const { _id } = req.body;
+
+    try {
+      const product_id = new Types.ObjectId(_id);
+
+      const merch = await Merch.findById(product_id);
+      if (!merch) {
+        return res.status(404).json({ message: "Merch not found" });
+      }
+      if (merch.is_active) {
+        return res.status(400).json({ message: "Merch must be soft-deleted first before hard delete" });
+      }
+
+      // Delete images from R2
+      if (merch.imageUrl && merch.imageUrl.length > 0) {
+        const imageKeys = merch.imageUrl.map((url) => {
+          try {
+            return new URL(String(url)).pathname.replace(/^\//, "");
+          } catch {
+            return null;
+          }
+        }).filter((key): key is string => key !== null);
+
+        await Promise.all(imageKeys.map((key) =>
+          r2Client.send(new DeleteObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: key,
+          }))
+        ));
+      }
+
+      await Merch.findByIdAndDelete(product_id);
+
+      if (req.admin) {
+        const log = new Log({
+          admin: req.admin.name,
+          admin_id: req.admin._id,
+          action: "Hard Deleted Merchandise",
+          target: merch.name,
+          target_id: merch._id,
+          target_model: "Merchandise",
+        });
+        await log.save();
+      }
+
+      res.status(200).json({ message: "Merch permanently deleted" });
+    } catch (error) {
+      console.error("Error hard deleting merch:", error);
+      res.status(500).send("Error hard deleting merch");
+    }
+  }
+
   async publish(req: Request, res: Response) {
     const { _id } = req.body;
 
@@ -551,3 +612,43 @@ class MerchandiseController {
 }
 
 export const merchandiseController = new MerchandiseController();
+
+export const hardDeleteSoftDeletedMerch = async (): Promise<{ deletedCount: number }> => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const expiredSoftDeleted = await Merch.find({
+    is_active: false,
+    updatedAt: { $lt: thirtyDaysAgo },
+  }).lean();
+
+  let deletedCount = 0;
+  for (const merch of expiredSoftDeleted) {
+    try {
+      // Delete images from R2
+      if (merch.imageUrl && merch.imageUrl.length > 0) {
+        const imageKeys = merch.imageUrl.map((url) => {
+          try {
+            return new URL(String(url)).pathname.replace(/^\//, "");
+          } catch {
+            return null;
+          }
+        }).filter((key): key is string => key !== null);
+
+        await Promise.all(imageKeys.map((key) =>
+          r2Client.send(new DeleteObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: key,
+          }))
+        ));
+      }
+
+      await Merch.findByIdAndDelete(merch._id);
+      deletedCount++;
+    } catch (error) {
+      console.error(`Failed to hard-delete merch ${merch._id}:`, error);
+    }
+  }
+
+  return { deletedCount };
+};

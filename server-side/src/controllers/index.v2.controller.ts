@@ -17,7 +17,7 @@ const token_key = process.env.JWT_SECRET ?? "Default_Token";
 const url =
   process.env.DB_NAME !== "psits-test"
     ? "https://psits.vercel.app/reset-password/"
-    : "http://localhost:5173/auth/reset-password?token=";
+    : "https://staging-v2.psits.org/auth/reset-password?token=";
 
 import { studentService } from "../services/student.service";
 import { adminService } from "../services/admin.service";
@@ -168,7 +168,8 @@ export interface jwtPayload {
 
 export const resetPasswordController = async (req: Request, res: Response) => {
   try {
-    const decodedToken = jwt.verify(req.params.token, token_key) as jwtPayload;
+    const decodedToken = jwt.verify(req.params.token as string, token_key) as unknown as jwtPayload;
+
     if (!decodedToken) {
       return res.status(401).send({ message: "Invalid token" });
     }

@@ -244,15 +244,6 @@ export const Header = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/profile"
-                    className="flex cursor-pointer items-center gap-2"
-                  >
-                    <UserCircle size={16} />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="flex cursor-pointer items-center gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"

@@ -68,7 +68,7 @@ const sendEmail = async ({
 export const membershipRequestReceipt = async (
   data: IMembershipRequest,
   studenteEmail: string,
-  studentId?: any,
+  studentId?: string | null,
   referenceCode?: string
 ) => {
   if (!studenteEmail || !studentId || !referenceCode) {
@@ -84,8 +84,7 @@ export const membershipRequestReceipt = async (
   const logoBuffer = await fs.readFile(logoPath);
 
   try {
-    let queueEntry: any;
-    queueEntry = await emailService.createByEmail("receipt", studenteEmail, "membership", referenceCode);
+    const queueEntry = await emailService.createByEmail("receipt", studenteEmail, "membership", referenceCode);
 
     await sendEmail({
       to: studenteEmail,
@@ -102,15 +101,15 @@ export const membershipRequestReceipt = async (
     });
 
     await emailService.updateStatusById(queueEntry._id.toString(), "sent");
-  } catch (err: any) {
-    console.error("Failed to send membership request receipt email:", err.message);
+  } catch (err: unknown) {
+    console.error("Failed to send membership request receipt email:", err instanceof Error ? err.message : err);
   }
 };
 
 export const orderReceipt = async (
   data: IOrderReceipt,
   studentEmail: string,
-  studentId?: any,
+  studentId?: string | null,
   referenceCode?: string
 ) => {
   if (!studentEmail || !studentId || !referenceCode) {
@@ -125,8 +124,7 @@ export const orderReceipt = async (
   const logoBuffer = await fs.readFile(logoPath);
 
   try {
-    let queueEntry: any;
-    queueEntry = await emailService.createByEmail("receipt", studentEmail, "order", referenceCode);
+    const queueEntry = await emailService.createByEmail("receipt", studentEmail, "order", referenceCode);
 
     await sendEmail({
       to: studentEmail,
@@ -143,8 +141,8 @@ export const orderReceipt = async (
     });
 
     await emailService.updateStatusById(queueEntry._id.toString(), "sent");
-  } catch (err: any) {
-    console.error("Failed to send order receipt email:", err.message);
+  } catch (err: unknown) {
+    console.error("Failed to send order receipt email:", err instanceof Error ? err.message : err);
   }
 };
 

@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
+import path from "path";
 import {
   requireAccessTokenV2,
   requireAccessTokenWithDBCheck,
@@ -52,10 +53,31 @@ const getUpload = () => {
       ) => {
         cb(null, { fieldName: file.fieldname });
       },
+      contentType: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, contentType?: string) => void,
+      ) => {
+        cb(null, file.mimetype);
+      },
       key: (req: Request, file: Express.Multer.File, cb: (error: any, key?: string) => void) => {
-        cb(null, `events/${Date.now()}_${file.originalname}`);
+        const ext = path.extname(file.originalname);
+        cb(null, `events/${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`);
       },
     }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (
+      req: Request,
+      file: Express.Multer.File,
+      cb: multer.FileFilterCallback
+    ) => {
+      const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Only JPEG, PNG, WebP, GIF images are allowed"));
+      }
+    },
   });
 };
 
