@@ -182,18 +182,7 @@ export const getAllEventsAndAttendeesController = async (
   try {
     let eventDoc = await Event.findById(id).lean();
 
-    if (!eventDoc) {
-      if (Types.ObjectId.isValid(id)) {
-        try {
-          const eligible = await (await import('../models/eligibleCertificate.model')).EligibleCertificate.findById(id).lean();
-          if (eligible && eligible.eventId) {
-            eventDoc = await Event.findById(eligible.eventId).lean();
-          }
-        } catch (e) {
-        }
-      }
-    }
-
+    // Final fallback: maybe the client passed event.eventId (custom field). Try finding by eventId field.
     if (!eventDoc) {
       try {
         if (Types.ObjectId.isValid(id)) {

@@ -3,6 +3,7 @@ import { Outlet } from "react-router";
 import { Menu } from "lucide-react";
 import { AdminSidebar } from "../features/admin/components";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 export const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -67,6 +68,7 @@ export const AdminLayout = () => {
           <Outlet />
         </div>
       </main>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

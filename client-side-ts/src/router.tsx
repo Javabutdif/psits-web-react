@@ -16,6 +16,7 @@ import EventsPage from "./pages/admin/EventsPage";
 import EventStatisticsPage from "./pages/admin/EventStatisticsPage";
 import EventRafflePage from "./pages/admin/EventRafflePage";
 import Merchandise from "./pages/admin/Merchandise";
+import CertificatesPage from "./pages/admin/CertificatesPage";
 import GeneralAdminPage from "./pages/admin/GeneralAdminPage";
 import { MainCampusFinancePage } from "./pages/admin/MainCampusFinancePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -42,7 +43,6 @@ import EventAttendance from "./pages/student/EventAttendance";
 import MyOrders from "./pages/student/MyOrders";
 import MembershipPending from "./pages/student/MembershipPending";
 import MembershipRequired from "./pages/student/MembershipRequired";
-import CertificatesPage from "./pages/CertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
 import { LogsView } from "./features/admin/logs";
@@ -92,7 +92,6 @@ const router = createBrowserRouter([
                     element: <StudentMembershipRouteGuard />,
                     children: [
                       { path: "event-attendance", Component: EventAttendance },
-                      { path: "certificates", Component: CertificatesPage },
                       {
                         element: (
                           <StudentCampusRouteGuard
@@ -147,6 +146,7 @@ const router = createBrowserRouter([
               },
               { path: "events", Component: EventsPage },
               { path: "events/:eventId", Component: EventManagement },
+              { path: "certificates", Component: CertificatesPage },
               {
                 path: "events/:eventId/statistics",
                 Component: EventStatisticsPage,

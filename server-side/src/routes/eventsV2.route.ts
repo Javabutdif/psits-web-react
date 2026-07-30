@@ -25,6 +25,7 @@ import {
   getMyEventsController,
   markAttendanceV2Controller,
   undoEventRaffleWinnerController,
+  getAllEventsRawController,
 } from "../controllers/eventV2.controller";
 
 const router = Router();
@@ -112,6 +113,14 @@ router.get(
   requireAccessTokenV2,
   roleAuthenticateV2(["admin", "student"]),
   getAllEventsV2Controller,
+);
+
+// GET all events raw (eventId and eventName only)
+router.get(
+  "/get-all-events-raw",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  getAllEventsRawController
 );
 
 // GET all events the student is attended in,
