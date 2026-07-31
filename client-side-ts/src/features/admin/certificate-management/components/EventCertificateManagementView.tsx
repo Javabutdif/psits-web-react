@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, Upload, ArrowUpDown, ChevronUp, ChevronDown, X, HelpCircle } from "lucide-react";
+import { ArrowLeft, Search, Upload, ArrowUpDown, ChevronUp, ChevronDown, X, HelpCircle, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { getEventById } from "../../events/api/eventService";
-import { getEventAttendeesRaw, updateStudentEligibility, uploadEligibilityFile } from "../api/certificate.api";
+import { getEventById, updateEventDetails } from "../../../events/api/eventService";
+import { getEventAttendeesRaw, updateStudentEligibility, uploadEligibilityFile } from "../../../certificate/api/certificate.api";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -18,8 +19,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Event } from "../../events/types/event.types";
-import type { AttendeeRaw } from "../types/certificate.types";
+import type { Event } from "../../../events/types/event.types";
+import type { AttendeeRaw } from "../../../certificate/types/certificate.types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -53,6 +54,139 @@ const toTitleCase = (str?: string): string => {
     .join(" ");
 };
 
+interface EditOptionalDetailsModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  event: Event;
+  onSave: (updatedEvent: any) => void;
+}
+
+const EditOptionalDetailsModal: React.FC<EditOptionalDetailsModalProps> = ({
+  open,
+  onOpenChange,
+  event,
+  onSave,
+}) => {
+  const [eventTheme, setEventTheme] = useState("");
+  const [eventVenue, setEventVenue] = useState("");
+  const [eventVenueSpecific, setEventVenueSpecific] = useState("");
+  const [eventStartTime, setEventStartTime] = useState("");
+  const [eventEndTime, setEventEndTime] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (open && event) {
+      setEventTheme(event.eventTheme || "");
+      setEventVenue(event.eventVenue || "");
+      setEventVenueSpecific(event.eventVenueSpecific || "");
+      setEventStartTime(event.eventStartTime || "");
+      setEventEndTime(event.eventEndTime || "");
+    }
+  }, [open, event]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const toastId = toast.loading("Saving changes...");
+    try {
+      const res = await updateEventDetails(event.eventId, {
+        eventTheme,
+        eventVenue,
+        eventVenueSpecific,
+        eventStartTime,
+        eventEndTime,
+      });
+      if (res) {
+        toast.success("Event details updated successfully", { id: toastId });
+        onSave(res.data || res);
+        onOpenChange(false);
+      } else {
+        toast.error("Failed to update event details", { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update event details", { id: toastId });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md w-full rounded-xl bg-white p-6 shadow-lg border border-gray-100">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold text-gray-900">Edit Optional Event Details</DialogTitle>
+          <DialogDescription className="text-sm text-gray-500">
+            Modify details used specifically for generating student certificates.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 my-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-gray-700">Event Theme</Label>
+            <Input
+              placeholder="e.g. Innovating the Future"
+              value={eventTheme}
+              onChange={(e) => setEventTheme(e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-700">General Venue / Campus</Label>
+              <Input
+                placeholder="e.g. UC Main Campus"
+                value={eventVenue}
+                onChange={(e) => setEventVenue(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-700">Specific Room / Hall</Label>
+              <Input
+                placeholder="e.g. IT Lab 4"
+                value={eventVenueSpecific}
+                onChange={(e) => setEventVenueSpecific(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-700">Start Time</Label>
+              <Input
+                type="time"
+                value={eventStartTime}
+                onChange={(e) => setEventStartTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-700">End Time</Label>
+              <Input
+                type="time"
+                value={eventEndTime}
+                onChange={(e) => setEventEndTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+        </div>
+
+        <DialogFooter className="flex items-center justify-end gap-2 border-t pt-4">
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            className="bg-[#1c9dde] hover:bg-[#198fca] text-white"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export const EventCertificateManagementView: React.FC<EventCertificateManagementViewProps> = ({ eventId, onBack }) => {
   const [event, setEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<AttendeeRaw[]>([]);
@@ -71,11 +205,21 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const [importResults, setImportResults] = useState<{ studentId: string; name: string; isAttendee: boolean; status: string }[]>([]);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isFileProcessing, setIsFileProcessing] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
   const [dialogSearchQuery, setDialogSearchQuery] = useState("");
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formatTimeToAMPM = (timeStr?: string): string => {
+    if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) return timeStr || "TBA";
+    const [hourStr, minStr] = timeStr.split(":");
+    const hour = parseInt(hourStr, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+    return `${formattedHour}:${minStr} ${ampm}`;
+  };
 
   const eligibleIds = React.useMemo(() => {
     return new Set(event?.eligibleStudentsForCertificate || []);
@@ -169,8 +313,6 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
         r.studentId.toLowerCase().includes(lowerQuery)
     );
   }, [importResults, dialogSearchQuery]);
-
-
 
   const renderSortIcon = (field: "id_number" | "name" | "course" | "status") => {
     if (sortField !== field) {
@@ -320,6 +462,99 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
           <p className="text-sm text-muted-foreground">Manage Certificate Eligibility</p>
         </div>
       </div>
+
+      {event && (
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 space-y-4">
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex gap-5 items-start">
+              {/* Event Image */}
+              {((Array.isArray(event.eventImage) && event.eventImage.length > 0 && event.eventImage[0]) ||
+                (typeof event.eventImage === "string" && event.eventImage.trim() !== "")) && (
+                <div className="w-24 h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 border border-gray-200">
+                  <img
+                    src={
+                      Array.isArray(event.eventImage)
+                        ? event.eventImage[0]
+                        : event.eventImage
+                    }
+                    alt={event.eventName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-gray-900">{event.eventName}</h3>
+                {event.eventDescription && (
+                  <p className="text-sm text-gray-500 max-w-2xl line-clamp-2">
+                    {event.eventDescription}
+                  </p>
+                )}
+                {event.eventTheme && (
+                  <p className="text-sm font-semibold text-gray-800 italic">
+                    Theme: "{event.eventTheme}"
+                  </p>
+                )}
+                
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 font-medium pt-1">
+                  {event.eventVenue && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold">Venue:</span>
+                      <span>
+                        {event.eventVenue}
+                        {event.eventVenueSpecific && ` (${event.eventVenueSpecific})`}
+                      </span>
+                    </div>
+                  )}
+                  {(event.eventStartTime || event.eventEndTime) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold">Time:</span>
+                      <span>
+                        {event.eventStartTime ? formatTimeToAMPM(event.eventStartTime) : "TBA"} -{" "}
+                        {event.eventEndTime ? formatTimeToAMPM(event.eventEndTime) : "TBA"}
+                      </span>
+                    </div>
+                  )}
+                  {event.eventDate && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold">Date:</span>
+                      <span>
+                        {new Date(event.eventDate).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditOpen(true)}
+              className="text-[#146f9e] hover:text-[#1c9dde] hover:bg-[#e8f5fc] transition-all flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-bold flex-shrink-0"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit Details
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {event && (
+        <EditOptionalDetailsModal
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          event={event}
+          onSave={(updatedEvent: any) => {
+            const rawEvent = updatedEvent.data || updatedEvent;
+            setEvent(rawEvent);
+            setRefetchTrigger((prev) => prev + 1);
+          }}
+        />
+      )}
 
       <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
         <div className="flex items-center gap-2">

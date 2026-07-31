@@ -12,6 +12,7 @@ import {
   previewTemplate,
   getEventAttendeesRaw,
   getAssetFileTree,
+  getStudentCertificateEvents,
 } from "../controllers/certificateV2.controller";
 import {
   requireAccessTokenV2,
@@ -110,6 +111,14 @@ router.patch(
 // =======================
 // Student Routes
 // =======================
+
+// Get student eligible and other certificate events
+router.get(
+  "/student/events",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["student"]),
+  getStudentCertificateEvents
+);
 
 // Generate and download a certificate (PDF)
 router.get(

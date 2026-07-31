@@ -43,6 +43,7 @@ import EventAttendance from "./pages/student/EventAttendance";
 import MyOrders from "./pages/student/MyOrders";
 import MembershipPending from "./pages/student/MembershipPending";
 import MembershipRequired from "./pages/student/MembershipRequired";
+import StudentCertificatesPage from "./pages/student/StudentCertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
 import { LogsView } from "./features/admin/logs";
@@ -92,6 +93,7 @@ const router = createBrowserRouter([
                     element: <StudentMembershipRouteGuard />,
                     children: [
                       { path: "event-attendance", Component: EventAttendance },
+                      { path: "certificates", Component: StudentCertificatesPage },
                       {
                         element: (
                           <StudentCampusRouteGuard

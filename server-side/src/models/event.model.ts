@@ -99,6 +99,11 @@ const eventSchema = new Schema<IEventDocument>({
   isGenerateCertificate: { type: Boolean, default: false },
   certificateTemplate: { type: Schema.Types.ObjectId, ref: "CertificateTemplate" },
   eligibleStudentsForCertificate: { type: [String], default: [] },
+  eventVenue: { type: String, default: "" },
+  eventTheme: { type: String, default: "" },
+  eventVenueSpecific: { type: String, default: "" },
+  eventStartTime: { type: String, default: "" },
+  eventEndTime: { type: String, default: "" },
 });
 
 export const Event = mongoose.model<IEventDocument>("event", eventSchema);

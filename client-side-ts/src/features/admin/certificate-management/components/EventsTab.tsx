@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { getAllEventsRaw } from "../../events/api/eventService";
-import { getEventsWithCertificates } from "../api/certificate.api";
-import type { Event } from "../../events/types/event.types";
+import { getAllEventsRaw } from "../../../events/api/eventService";
+import { getEventsWithCertificates } from "../../../certificate/api/certificate.api";
+import type { Event } from "../../../events/types/event.types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,7 +128,9 @@ export const EventsTab: React.FC<EventsTabProps> = ({ onEventSelect }) => {
                     <CardTitle>{event.eventName}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">Event ID: {event.eventId}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
+                      {event.eventDescription || "No description available."}
+                    </p>
                   </CardContent>
                 </Card>
               );
@@ -160,7 +162,9 @@ export const EventsTab: React.FC<EventsTabProps> = ({ onEventSelect }) => {
                     <CardTitle>{event.eventName}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">Event ID: {event.eventId}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
+                      {event.eventDescription || "No description available."}
+                    </p>
                   </CardContent>
                 </Card>
               );

@@ -159,3 +159,34 @@ export const uploadEligibilityFile = async (
   }
 };
 
+export interface StudentCertificateEventsResponse {
+  success: boolean;
+  eligible: any[];
+  other: any[];
+}
+
+export const getStudentCertificateEvents = async (): Promise<StudentCertificateEventsResponse | null> => {
+  try {
+    const response = await api.get(`${BASE_URL}/student/events`);
+    return response.data;
+  } catch (error) {
+    handleApiError(error, true);
+    return null;
+  }
+};
+
+export const downloadStudentCertificate = async (
+  eventId: string,
+  studentId: string
+): Promise<Blob | null> => {
+  try {
+    const response = await api.get(`${BASE_URL}/${eventId}/generate/${studentId}`, {
+      responseType: "arraybuffer",
+    });
+    return new Blob([response.data], { type: "application/pdf" });
+  } catch (error) {
+    handleApiError(error, true);
+    return null;
+  }
+};
+
