@@ -126,7 +126,7 @@ const initialFormValues: OrganizationAccountFormValues = {
   course: "BSIT",
   year: "3",
   position: "Developer",
-  campus: "UC-Main",
+  campus: "UC_MAIN",
   password: "",
   confirm_password: "",
 };
@@ -142,7 +142,7 @@ const getFormInitialValues = (
         course: account.course || "BSIT",
         year: account.year || "3",
         position: account.position || account.role || "Developer",
-        campus: account.campus || "UC-Main",
+        campus: account.campus || "UC_MAIN",
         password: "",
         confirm_password: "",
       }
@@ -157,7 +157,7 @@ const formatYear = (year: string) => {
 };
 
 const shortCampus = (campus: string) =>
-  campus.replace("UC-", "UC - ").replace("UC-Main", "UC - Main");
+  campus.replace("UC_", "UC - ").replace("MAIN", "Main");
 
 const getInitials = (name: string) =>
   name

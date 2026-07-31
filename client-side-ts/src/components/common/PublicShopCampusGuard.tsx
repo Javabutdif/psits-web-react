@@ -5,7 +5,7 @@ import type { Campus } from "@/features/auth/types/auth.types";
 import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
 
-const SHOP_ALLOWED_CAMPUSES: Campus[] = ["UC-MAIN", "UC-CS"];
+const SHOP_ALLOWED_CAMPUSES: Campus[] = ["UC_MAIN", "UC_CS"];
 
 export const PublicShopCampusGuard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -28,7 +28,7 @@ export const PublicShopCampusGuard = () => {
       hasShownToastRef.current = true;
       showToast(
         "error",
-        `Shop and cart are currently available for UC-MAIN and UC-CS accounts only. Your account is registered to: ${userCampus || "Unknown"}`
+        `Shop and cart are currently available for UC_MAIN and UC_CS accounts only. Your account is registered to: ${userCampus || "Unknown"}`
       );
     }
   }, [isBlocked, userCampus]);

@@ -10,7 +10,7 @@ interface CampusRouteGuardProps {
  * of the specified campuses.
  *
  * @example
- * <Route element={<StudentCampusRouteGuard allowedCampuses={["UC-Main"]} />}>
+ * <Route element={<StudentCampusRouteGuard allowedCampuses={["UC_MAIN"]} />}>
  *   <Route path="student-uc-main-only" element={SomeStudentPage} />
  * </Route>
  */

@@ -85,6 +85,10 @@ const EditOptionalDetailsModal: React.FC<EditOptionalDetailsModalProps> = ({
   }, [open, event]);
 
   const handleSave = async () => {
+    if (!event.eventId) {
+      toast.error("Missing event ID. Cannot save changes.");
+      return;
+    }
     setIsSaving(true);
     const toastId = toast.loading("Saving changes...");
     try {

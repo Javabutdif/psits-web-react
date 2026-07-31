@@ -61,17 +61,17 @@ interface EventDetails {
 }
 
 const CAMPUS_CODE_TO_NAME: Record<Campus, string> = {
-  "UC-MAIN": "University of Cebu Main Campus",
-  "UC-BANILAD": "University of Cebu Banilad Campus",
-  "UC-LM": "University of Cebu Lapu-Lapu & Mandaue",
-  "UC-PT": "University of Cebu Pardo & Talisay",
-  "UC-CS": "University of Cebu Main Campus",
+  UC_MAIN: "University of Cebu Main Campus",
+  UC_BANILAD: "University of Cebu Banilad Campus",
+  UC_LM: "University of Cebu Lapu-Lapu & Mandaue",
+  UC_PT: "University of Cebu Pardo & Talisay",
+  UC_CS: "University of Cebu Main Campus",
 };
 
-const DEFAULT_CAMPUSES: Campus[] = ["UC-MAIN", "UC-BANILAD", "UC-LM", "UC-PT"];
+const DEFAULT_CAMPUSES: Campus[] = ["UC_MAIN", "UC_BANILAD", "UC_LM", "UC_PT"];
 
 const normalizeCampusForFilter = (campus: Campus): Campus =>
-  campus === "UC-CS" ? "UC-MAIN" : campus;
+  campus === "UC_CS" ? "UC_MAIN" : campus;
 
 const UNDER_CONSTRUCTION_MESSAGE =
   "This is under construction, visit legacy website to access this functionality.";
@@ -207,7 +207,7 @@ const mapApiEventToEventDetails = (
 
   const normalizedCampusCodes = Array.from(
     new Set<Campus>([
-      "UC-MAIN",
+      "UC_MAIN",
       ...(mappedCampusCodes.length > 0 ? mappedCampusCodes : DEFAULT_CAMPUSES),
     ])
   );
@@ -264,8 +264,7 @@ const EventManagement: React.FC = () => {
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const isAdmin = user?.role === "admin";
-  const isUcMainAdmin =
-    isAdmin && (user?.campus === "UC-MAIN" || user?.campus === "UC_MAIN");
+  const isUcMainAdmin = isAdmin && user?.campus === "UC_MAIN";
 
   const availableCampusCodes = useMemo(() => {
     const eventCampusCodes = eventDetails?.campusCodes ?? DEFAULT_CAMPUSES;

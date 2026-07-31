@@ -5,7 +5,7 @@ export interface ApiErrorResponse {
 export interface Event {
   eventId?: string;
   eventName: string;
-  eventImage?: string[];
+  eventImage?: string[] | string;
   eventDate?: string | Date | null;
   eventDescription?: string;
   attendanceType?: string;
@@ -244,7 +244,7 @@ export type AttendanceType = "open" | "ticketed";
 export type EventStatus = "Ongoing" | "Upcoming" | "Ended" | "Cancelled";
 
 export interface CampusLimit {
-  campus: "UC-Main" | "UC-Banilad" | "UC-LM" | "UC-PT" | "UC-CS";
+  campus: "UC_MAIN" | "UC_BANILAD" | "UC_LM" | "UC_PT" | "UC_CS";
   limit: number;
 }
 

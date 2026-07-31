@@ -1,9 +1,9 @@
 export const CAMPUS_OPTIONS = [
-  "UC-Main",
-  "UC-Banilad",
-  "UC-LM",
-  "UC-PT",
-  "UC-CS",
+  "UC_MAIN",
+  "UC_BANILAD",
+  "UC_LM",
+  "UC_PT",
+  "UC_CS",
 ] as const;
 
 export type CampusOption = (typeof CAMPUS_OPTIONS)[number];

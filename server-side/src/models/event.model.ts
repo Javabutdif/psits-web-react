@@ -16,7 +16,7 @@ export interface IEventDocument extends IEvent, Document {}
 const salesDataSchema = new Schema<ISalesDataDocument>({
   campus: {
     type: String,
-    enum: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"],
+    enum: ["UC_MAIN", "UC_BANILAD", "UC_LM", "UC_PT", "UC_CS"],
     required: true,
   },
   unitsSold: { type: Number, default: 0 },
@@ -70,28 +70,28 @@ const eventSchema = new Schema<IEventDocument>({
       {
         campus: {
           type: String,
-          enum: ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT", "UC-CS"],
+          enum: ["UC_MAIN", "UC_BANILAD", "UC_LM", "UC_PT", "UC_CS"],
           required: true,
         },
         limit: { type: Number, required: true },
       },
     ],
     default: [
-      { campus: "UC-Main", limit: 0 },
-      { campus: "UC-Banilad", limit: 0 },
-      { campus: "UC-LM", limit: 0 },
-      { campus: "UC-PT", limit: 0 },
-      { campus: "UC-CS", limit: 0 },
+      { campus: "UC_MAIN", limit: 0 },
+      { campus: "UC_BANILAD", limit: 0 },
+      { campus: "UC_LM", limit: 0 },
+      { campus: "UC_PT", limit: 0 },
+      { campus: "UC_CS", limit: 0 },
     ],
   },
   sales_data: {
     type: [salesDataSchema],
     default: [
-      { campus: "UC-Main", unitsSold: 0, totalRevenue: 0 },
-      { campus: "UC-Banilad", unitsSold: 0, totalRevenue: 0 },
-      { campus: "UC-LM", unitsSold: 0, totalRevenue: 0 },
-      { campus: "UC-PT", unitsSold: 0, totalRevenue: 0 },
-      { campus: "UC-CS", unitsSold: 0, totalRevenue: 0 },
+      { campus: "UC_MAIN", unitsSold: 0, totalRevenue: 0 },
+      { campus: "UC_BANILAD", unitsSold: 0, totalRevenue: 0 },
+      { campus: "UC_LM", unitsSold: 0, totalRevenue: 0 },
+      { campus: "UC_PT", unitsSold: 0, totalRevenue: 0 },
+      { campus: "UC_CS", unitsSold: 0, totalRevenue: 0 },
     ],
   },
   totalUnitsSold: { type: Number, default: 0 },

@@ -23,7 +23,7 @@ export const useOfficerAccess = () => {
   const [updating, setUpdating] = useState<string | null>(null);
 
   const isUcMainAdmin =
-    user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
+    user?.role === "admin" && normalizeCampus(user.campus) === "UC_MAIN";
 
   const isAdminAccess = isUcMainAdmin && user?.access === PSITS_ROLES.ADMIN;
 

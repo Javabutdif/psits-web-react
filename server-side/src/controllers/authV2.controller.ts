@@ -62,7 +62,7 @@ const toUserResponse = (
       id: admin._id.toString(),
       idNumber: admin.id_number,
       role: "admin",
-      campus: admin.campus || "UC-Main",
+      campus: admin.campus || campus_type.MAIN,
       name: admin.name,
       email: admin.email,
       course: admin.course,

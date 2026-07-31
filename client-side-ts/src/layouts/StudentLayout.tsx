@@ -43,7 +43,7 @@ export const StudentLayout: React.FC = () => {
                 Event Attendance
               </NavLink>
             </li>
-            <CampusView allowedCampuses={["UC-MAIN"]} role="student">
+            <CampusView allowedCampuses={["UC_MAIN"]} role="student">
               <li>
                 <NavLink
                   to="my-orders"

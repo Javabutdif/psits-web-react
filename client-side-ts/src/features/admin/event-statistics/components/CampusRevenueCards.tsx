@@ -18,11 +18,11 @@ interface CampusRevenueCardsProps {
 }
 
 const CAMPUS_COLORS: Record<string, string> = {
-  "UC-Main": "#0E4A67",
-  "UC-LM": "#1E7AA8",
-  "UC-Banilad": "#2E9AD1",
-  "UC-PT": "#8ABFDB",
-  "UC-CS": "#B8D9EC",
+  "UC_MAIN": "#0E4A67",
+  "UC_LM": "#1E7AA8",
+  "UC_BANILAD": "#2E9AD1",
+  "UC_PT": "#8ABFDB",
+  "UC_CS": "#B8D9EC",
 };
 
 const DEFAULT_COLOR = "#9AAFC2";
@@ -33,7 +33,7 @@ export const CampusRevenueCards: React.FC<CampusRevenueCardsProps> = ({
   const chartData = campusBreakdown.map((entry) => ({
     ...entry,
     label:
-      entry.campus === "UC-CS"
+      entry.campus === "UC_CS"
         ? "UC Main CS"
         : entry.campus.replace("UC-", "UC "),
     color: CAMPUS_COLORS[entry.campus] || DEFAULT_COLOR,

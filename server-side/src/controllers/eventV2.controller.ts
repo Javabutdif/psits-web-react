@@ -596,13 +596,13 @@ type RaffleAttendee = IAttendee & {
 };
 
 const RAFFLE_FILTERABLE_CAMPUSES = [
-  "UC-Main",
-  "UC-Banilad",
-  "UC-LM",
-  "UC-PT",
+  "UC_MAIN",
+  "UC_BANILAD",
+  "UC_LM",
+  "UC_PT",
 ];
 
-const RAFFLE_ELIGIBLE_CAMPUSES = [...RAFFLE_FILTERABLE_CAMPUSES, "UC-CS"];
+const RAFFLE_ELIGIBLE_CAMPUSES = [...RAFFLE_FILTERABLE_CAMPUSES, "UC_CS"];
 
 const buildRaffleCampusFilter = (
   campusParam: string | undefined
@@ -610,8 +610,8 @@ const buildRaffleCampusFilter = (
   if (!campusParam) return null;
 
   const normalized = campusParam.trim();
-  if (normalized === "UC-Main") {
-    return ["UC-Main", "UC-CS"];
+  if (normalized === "UC_MAIN") {
+    return ["UC_MAIN", "UC_CS"];
   }
 
   return [normalized];
@@ -650,10 +650,10 @@ export const getEligibleAttendeesRaffleV2Controller = async (
     if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
     const eventId = req.params.eventId as string;
@@ -726,10 +726,10 @@ export const drawEventRaffleWinnerController = async (
     if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
@@ -802,10 +802,10 @@ export const undoEventRaffleWinnerController = async (
     if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
     const eventId = req.params.eventId as string;
@@ -860,13 +860,13 @@ const V_EMAIL_REGEX =
 const V_PWD_MIN = 8;
 const V_STUDENT_ID_REGEX = /^\d{8}$/;
 const V_VALID_COURSES = ["BSIT", "BSCS", "ACT"];
-const V_VALID_CAMPUSES = ["UC-Banilad", "UC-LM", "UC-PT"];
-const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC-Main", "UC-CS"];
+const V_VALID_CAMPUSES = ["UC_BANILAD", "UC_LM", "UC_PT"];
+const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC_MAIN", "UC_CS"];
 
 const CAMPUS_ID_SUFFIX: Record<string, string> = {
-  "UC-Banilad": "ucb",
-  "UC-LM": "uclm",
-  "UC-PT": "ucpt",
+  "UC_BANILAD": "ucb",
+  "UC_LM": "uclm",
+  "UC_PT": "ucpt",
 };
 
 const buildCampusScopedStudentId = (rawStudentId: string, campus: string) => {
@@ -1350,7 +1350,7 @@ export const getEventStatisticsV2Controller = async (
     }
 
     const requesterCampus = claims.campus;
-    const isUcMainAdmin = requesterCampus === "UC-Main";
+    const isUcMainAdmin = requesterCampus === campus_type.MAIN;
     const campusScope = isUcMainAdmin ? "all" : requesterCampus;
 
     const event = await Event.findOne(query)
@@ -2357,7 +2357,7 @@ export const updateEventV2Controller = async (
     if (claims.role !== "admin" || claims.campus !== campus_type.MAIN) {
       return res.status(403).json({
         error: "FORBIDDEN",
-        message: "Only UC-MAIN Admins can edit events",
+        message: "Only UC_MAIN admins can edit events",
       });
     }
 

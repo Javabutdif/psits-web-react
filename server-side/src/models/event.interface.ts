@@ -27,7 +27,7 @@ export interface IEvent {
 }
 
 export interface ISalesData {
-  campus: "UC-Main" | "UC-Banilad" | "UC-LM" | "UC-PT" | "UC-CS";
+  campus: "UC_MAIN" | "UC_BANILAD" | "UC_LM" | "UC_PT" | "UC_CS";
   unitsSold: number;
   totalRevenue: number;
 }
@@ -44,6 +44,6 @@ export interface ISessionConfig {
 }
 
 export interface ICampusLimit {
-  campus: "UC-Main" | "UC-Banilad" | "UC-LM" | "UC-PT" | "UC-CS";
+  campus: "UC_MAIN" | "UC_BANILAD" | "UC_LM" | "UC_PT" | "UC_CS";
   limit: number;
 }
