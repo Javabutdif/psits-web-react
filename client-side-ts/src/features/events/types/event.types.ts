@@ -18,6 +18,14 @@ export interface Event {
   totalUnitsSold?: number;
   totalRevenueAll?: number;
   merch?: EventMerchMeta | null;
+  isGenerateCertificate?: boolean;
+  certificateTemplate?: string | unknown;
+  eligibleStudentsForCertificate?: string[];
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
   [key: string]: unknown;
 }
 

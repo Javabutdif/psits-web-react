@@ -16,6 +16,14 @@ export interface IEvent {
   sales_data: ISalesData[];
   totalUnitsSold: number;
   totalRevenueAll: number;
+  isGenerateCertificate?: boolean;
+  certificateTemplate?: Types.ObjectId;
+  eligibleStudentsForCertificate?: string[];
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 export interface ISalesData {

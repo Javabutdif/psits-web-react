@@ -63,7 +63,7 @@ export const StudentLayout: React.FC = () => {
                   `pb-3 ${isActive ? "border-b-4 border-sky-400" : "border-b-4 border-transparent"}`
                 }
               >
-                Event Certificates
+                Certificates
               </NavLink>
             </li>
 

@@ -5,7 +5,7 @@ import {
   logoutV2Controller,
   signupV2Controller,
 } from "../controllers/authV2.controller";
-import loginLimiter from "../util/limiter.util";
+import loginLimiter, { signupLimiter } from "../util/limiter.util";
 
 const router: Router = Router();
 

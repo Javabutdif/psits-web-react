@@ -19,4 +19,20 @@ const loginLimiter = rateLimit({
   },
 });
 
+export const signupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDevelopment ? 100 : 5,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    incrementRateLimitBlocked();
+    res.status(429).json({
+      message:
+        "Too many signup attempts from this IP, please try again after 15 minutes.",
+    });
+  },
+});
+
+
 export default loginLimiter;

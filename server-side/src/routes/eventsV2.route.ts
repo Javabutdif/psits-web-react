@@ -25,6 +25,8 @@ import {
   getMyEventsController,
   markAttendanceV2Controller,
   undoEventRaffleWinnerController,
+  getAllEventsRawController,
+  updateEventV2Controller,
 } from "../controllers/eventV2.controller";
 
 const router = Router();
@@ -114,6 +116,14 @@ router.get(
   getAllEventsV2Controller,
 );
 
+// GET all events raw (eventId and eventName only)
+router.get(
+  "/get-all-events-raw",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  getAllEventsRawController
+);
+
 // GET all events the student is attended in,
 // with their attendance record filtered per event
 router.get(
@@ -130,6 +140,14 @@ router.get(
   requireAccessTokenV2,
   roleAuthenticateV2(["admin", "student"]),
   getEventByIdV2Controller,
+);
+
+// PATCH edit event details
+router.patch(
+  "/:eventId",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  updateEventV2Controller,
 );
 
 // GET paginated attendees for specific event

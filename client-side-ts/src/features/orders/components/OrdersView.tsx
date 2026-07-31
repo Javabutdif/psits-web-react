@@ -406,7 +406,7 @@ export const OrdersView = () => {
                 <col className="w-[14%]" />
                 <col className="w-[18%]" />
                 <col className="w-[12%]" />
-                <col className={activeTab === "pending" ? "w-[190px]" : "w-24"} />
+                <col className="w-[190px]" />
               </colgroup>
               <thead>
                 <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
@@ -515,9 +515,16 @@ export const OrdersView = () => {
                         )}
                       </td>
                       <td className="px-2 py-3 text-left align-middle">
-                        {activeTab === "pending"
-                          ? formatDate(order.order_date)
-                          : order.admin}
+                        {activeTab === "pending" ? (
+                          formatDate(order.order_date)
+                        ) : (
+                          <span
+                            className="block max-w-full truncate"
+                            title={order.admin}
+                          >
+                            {order.admin}
+                          </span>
+                        )}
                       </td>
 
                       <td className="px-2 py-3 text-right align-middle">

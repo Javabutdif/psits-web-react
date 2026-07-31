@@ -16,7 +16,9 @@ import {
   hydrateEventsAttendance,
   markAttendance,
 } from "../services/attendance.service";
+import { EventV2Service } from "../services/eventV2.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
+import { campus_type } from "../enums/campus.enums";
 import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
@@ -495,24 +497,19 @@ export const getEventAttendeesV2Controller = async (
     }
 
     const params = normalizeAttendeeQueryParams(req);
-    const requesterCampus = claims.campus;
-    const isUcMainAdmin = requesterCampus === "UC-Main";
 
-    const effectiveCampus = isUcMainAdmin ? params.campus : requesterCampus;
+    const isUcMainAdmin = claims.campus === campus_type.MAIN;
+    const effectiveCampus = isUcMainAdmin ? params.campus : claims.campus;
 
-    const event = await Event.findOne(query).select("_id attendees eventId").lean();
-
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+    let hydratedAttendees;
+    try {
+      hydratedAttendees = await EventV2Service.getEventAttendees(eventId);
+    } catch (err: any) {
+      if (err.message === "Event not found") {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      throw err;
     }
-
-    const attendeeList = Array.isArray(event.attendees)
-      ? (event.attendees as unknown as IAttendee[])
-      : [];
-    const hydratedAttendees = await hydrateAttendeesAttendance(
-      event._id,
-      attendeeList
-    );
 
     const filteredAttendees = filterAttendees(hydratedAttendees, {
       ...params,
@@ -2265,8 +2262,8 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
 
   const status =
     body.status === "Upcoming" ||
-    body.status === "Ended" ||
-    body.status === "Cancelled"
+      body.status === "Ended" ||
+      body.status === "Cancelled"
       ? body.status
       : "Ongoing";
 
@@ -2326,6 +2323,84 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Failed to create event",
+    })
+  }
+}
+
+export const getAllEventsRawController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const events = await EventV2Service.getAllEventsRaw();
+    return res.status(200).json({
+      data: events,
+      message: "Fetched raw events successfully",
+    });
+  } catch (error) {
+    console.error("Error in getAllEventsRawController:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Internal server error",
+    })
+  }
+}
+
+export const updateEventV2Controller = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const eventId = req.params.eventId as string;
+    const claims = (req as any).userV2;
+
+    if (claims.role !== "admin" || claims.campus !== campus_type.MAIN) {
+      return res.status(403).json({
+        error: "FORBIDDEN",
+        message: "Only UC-MAIN Admins can edit events",
+      });
+    }
+
+    const {
+      eventName,
+      eventDescription,
+      eventDate,
+      eventVenue,
+      eventTheme,
+      eventVenueSpecific,
+      eventStartTime,
+      eventEndTime,
+      eventImage,
+    } = req.body;
+
+    const updatedEvent = await EventV2Service.updateEvent(eventId, {
+      eventName,
+      eventDescription,
+      eventDate,
+      eventVenue,
+      eventTheme,
+      eventVenueSpecific,
+      eventStartTime,
+      eventEndTime,
+      eventImage,
+    });
+
+    if (!updatedEvent) {
+      return res.status(404).json({
+        error: "NOT_FOUND",
+        message: "Event not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Event updated successfully",
+      data: updatedEvent,
+    });
+  } catch (error: any) {
+    console.error("Error in updateEventV2Controller:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: error.message,
     });
   }
 };

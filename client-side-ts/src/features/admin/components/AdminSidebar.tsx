@@ -14,8 +14,8 @@ import {
   Settings,
   ShoppingBag,
   Users,
-  Tag,
   Code,
+  Award,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -309,6 +309,29 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   )}
                 </Tooltip>
               </li>
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass("/admin/certificates")}
+                      asChild
+                    >
+                      <Link to="/admin/certificates">
+                        <Award className="h-5 w-5 shrink-0" />
+                        {!collapsed && (
+                          <span className="font-medium">Certificates</span>
+                        )}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>Certificates</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
             </ul>
           </div>
 
@@ -369,6 +392,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     >
                       <Link to="/admin/merchandise/products">Products</Link>
                     </Button>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "h-8 w-full justify-start px-2 text-sm font-normal",
+                        isActivePath("/admin/merchandise/promo") &&
+                          "text-[#1C9DDE]"
+                      )}
+                      asChild
+                    >
+                      <Link to="/admin/merchandise/promo">Promo</Link>
+                    </Button>
                   </div>
                 )}
               </li>
@@ -393,7 +427,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   )}
                 </Tooltip>
               </li>
-              {user?.access === PSITS_ROLES.DEVELOPER || user?.access === PSITS_ROLES.ADMIN ? (
+              {user?.access === PSITS_ROLES.DEVELOPER ||
+              user?.access === PSITS_ROLES.ADMIN ? (
                 <li>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -444,38 +479,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   {collapsed && (
                     <TooltipContent side="right">
                       <p>Reports</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </li>
-              <li>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClass(
-                        "/admin/promo",
-                        !isUcMainAdmin
-                      )}
-                      asChild
-                    >
-                      <Link
-                        to={isUcMainAdmin ? "/admin/promo" : "#"}
-                        onClick={(e) => {
-                          if (!isUcMainAdmin) {
-                            e.preventDefault();
-                            showToast("error", "Unauthorized.");
-                          }
-                        }}
-                      >
-                        <Tag className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>Promo</span>}
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  {collapsed && (
-                    <TooltipContent side="right">
-                      <p>Promo</p>
                     </TooltipContent>
                   )}
                 </Tooltip>
