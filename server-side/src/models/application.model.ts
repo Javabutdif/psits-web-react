@@ -1,6 +1,6 @@
 // src/models/application.model.ts
 
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 import { applicationStatus, interviewStatus } from "../enums/recruitment.enums";
 import { Admin } from "../models/admin.model";
 import { Student } from "../models/student.model";
@@ -29,11 +29,13 @@ export interface IInterview {
 
 export interface IApplication extends Document {
   position: string; // Reference to RecruitmentPosition
-  applicant: string; // Reference to Student
+  applicant: string | Types.ObjectId; // Reference to Student
   applicantSnapshot: {
     name: string;
     idNumber: string;
     email: string;
+    course?: string;
+    year?: string | number;
   };
   documents: {
     resume: IDocumentMetadata;
@@ -56,11 +58,17 @@ export interface IApplication extends Document {
 const ApplicationSchema = new Schema<IApplication>(
   {
     position: { type: String, required: true, ref: "RecruitmentPosition" },
-    applicant: { type: String, required: true, ref: "Student" },
+    applicant: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "Student",
+    },
     applicantSnapshot: {
       name: { type: String, required: true },
       idNumber: { type: String, required: true },
       email: { type: String, required: true },
+      course: { type: String, required: false },
+      year: { type: Schema.Types.Mixed, required: false },
     },
     documents: {
       resume: {

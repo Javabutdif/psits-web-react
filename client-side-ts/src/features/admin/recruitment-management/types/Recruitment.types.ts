@@ -8,7 +8,7 @@ export type {
 } from "../../../../types/recruitment";
 
 export type RecruitmentTab =
-  "applications" | "verification" | "interviews" | "approved";
+  "applications" | "applicants" | "verification" | "interviews" | "approved";
 
 export type RecruitmentSortField =
   "name" | "id_number" | "courseYear" | "roleApplied" | "status";
@@ -42,6 +42,12 @@ export interface RecruitmentApplicant {
   interviewOfficer?: string;
   interviewType?: string;
   resumeFilename?: string;
+  volunteerAccount?: VolunteerAccountCredentials;
+}
+
+export interface VolunteerAccountCredentials {
+  username: string;
+  tempPassword: string;
 }
 
 export interface RecruitmentFilters {

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   ArrowUpDown,
   Ban,
+  Check,
   MoreHorizontal,
   Pencil,
   Search,
@@ -35,12 +36,15 @@ import {
 import type {
   RecruitmentFilters,
   RecruitmentPosition,
-  RecruitmentStatus,
+  RecruitmentSort,
+  RecruitmentSortField,
 } from "../types/Recruitment.types";
 import { ApplicantInfoDialog } from "./ApplicantInfo";
 import { InterviewSchedulingDialog } from "./InterviewSchedulingDialog";
 import OpenRole from "./OpenRole";
 import PositionEditDialog from "./PositionEditDialog";
+import { Verification } from "./Verification";
+import { AccountVerifiedDialog } from "./AccountVerifiedDialog";
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
@@ -82,6 +86,39 @@ interface RecruitmentFilterPopoverProps {
   roleOptions: string[];
   onApply: (filters: RecruitmentFilters) => void;
 }
+
+interface SortableHeaderProps {
+  label: string;
+  field: RecruitmentSortField;
+  className?: string;
+  sort: RecruitmentSort;
+  onSort: (field: RecruitmentSortField) => void;
+}
+
+const SortableHeader = ({
+  label,
+  field,
+  className,
+  sort,
+  onSort,
+}: SortableHeaderProps) => (
+  <button
+    type="button"
+    onClick={() => onSort(field)}
+    className={cn(
+      "flex cursor-pointer items-center gap-1 font-medium",
+      className
+    )}
+  >
+    {label}
+    <ArrowUpDown
+      className={cn(
+        "h-3.5 w-3.5",
+        sort.field === field ? "text-[#1c9dde]" : "text-slate-400"
+      )}
+    />
+  </button>
+);
 
 const RecruitmentFilterPopover = ({
   filters,
@@ -250,32 +287,13 @@ const RecruitmentFilterPopover = ({
   );
 };
 
-const StatCard = ({
-  label,
-  value,
-  active,
-  onClick,
-}: {
-  label: string;
-  value: number;
-  active: boolean;
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={cn(
-      "cursor-pointer rounded-2xl border bg-white px-5 py-4 text-left transition-colors",
-      active
-        ? "border-[#1c9dde] ring-1 ring-[#1c9dde]"
-        : "border-[#e5e5e5] hover:border-[#c9c9c9]"
-    )}
-  >
-    <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+const StatCard = ({ label, value }: { label: string; value: number }) => (
+  <div className="rounded-2xl border border-[#e5e5e5] bg-white px-5 py-4 text-left">
+    <span className="text-muted-foreground text-xs font-medium tracking-[0.18em] uppercase">
       {label}
     </span>
     <p className="mt-1 text-2xl font-semibold text-[#2b2b2b]">{value}</p>
-  </button>
+  </div>
 );
 
 export const RecuitmentViews = () => {
@@ -287,10 +305,12 @@ export const RecuitmentViews = () => {
     filteredApplicants,
     selectedIds,
     toggleApplicantSelection,
+    clearSelection,
     search,
     setSearch,
     filters,
     setFilters,
+    sort,
     roleOptions,
     toggleSort,
     currentPage,
@@ -319,6 +339,10 @@ export const RecuitmentViews = () => {
     positionsError,
     updatePosition,
     closePosition,
+    verificationApplicants,
+    verifyApplicant,
+    verifiedAccount,
+    clearVerifiedAccount,
   } = useRecruitmentData();
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -339,26 +363,19 @@ export const RecuitmentViews = () => {
     };
   }, [applicants]);
 
-  const activeStatusCard =
-    filters.status === "Pending"
-      ? "pending"
-      : filters.status === "Approved"
-        ? "approved"
-        : filters.status === "For Verification"
-          ? "verifications"
-          : null;
-
-  const toggleStatusCard = (
-    card: "pending" | "approved" | "verifications",
-    status: RecruitmentStatus
-  ) => {
-    setFilters((current) => ({
-      ...current,
-      status: activeStatusCard === card ? "all" : status,
-    }));
-  };
-
   const total = filteredApplicants.length;
+
+  const allOnPageSelected =
+    pagedApplicants.length > 0 &&
+    pagedApplicants.every((a) => selectedIds.includes(a.id));
+
+  const toggleSelectAllOnPage = () => {
+    pagedApplicants.forEach((a) => {
+      const isSelected = selectedIds.includes(a.id);
+      if (allOnPageSelected && isSelected) toggleApplicantSelection(a.id);
+      if (!allOnPageSelected && !isSelected) toggleApplicantSelection(a.id);
+    });
+  };
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
@@ -389,26 +406,9 @@ export const RecuitmentViews = () => {
           </div>
         ) : (
           <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard
-              label="Pending"
-              value={counts.pending}
-              active={activeStatusCard === "pending"}
-              onClick={() => toggleStatusCard("pending", "Pending")}
-            />
-            <StatCard
-              label="Approved"
-              value={counts.approved}
-              active={activeStatusCard === "approved"}
-              onClick={() => toggleStatusCard("approved", "Approved")}
-            />
-            <StatCard
-              label="Verifications"
-              value={counts.verifications}
-              active={activeStatusCard === "verifications"}
-              onClick={() =>
-                toggleStatusCard("verifications", "For Verification")
-              }
-            />
+            <StatCard label="Pending" value={counts.pending} />
+            <StatCard label="Approved" value={counts.approved} />
+            <StatCard label="Verifications" value={counts.verifications} />
           </div>
         )}
 
@@ -430,7 +430,7 @@ export const RecuitmentViews = () => {
         )}
 
         {/* Action failures (reject/approve/etc) surface here without hiding
-            already-loaded data, unlike the load-error banner above. */}
+              already-loaded data, unlike the load-error banner above. */}
         {mutationError && (
           <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             <span>{mutationError}</span>
@@ -459,6 +459,18 @@ export const RecuitmentViews = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab("applicants")}
+                className={cn(
+                  "cursor-pointer rounded-full px-3 py-1.5 text-sm",
+                  activeTab === "applicants"
+                    ? "bg-[#1c9dde] text-white"
+                    : "bg-slate-100 text-slate-600"
+                )}
+              >
+                Applicants
+              </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("applications")}
@@ -542,7 +554,7 @@ export const RecuitmentViews = () => {
             </div>
           </div>
 
-          {/* Table */}
+          {/* Table / Verification cards */}
           {activeTab === "applications" ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[820px] table-fixed border-collapse text-sm">
@@ -682,75 +694,84 @@ export const RecuitmentViews = () => {
                 </tbody>
               </table>
             </div>
-          ) : (
+          ) : activeTab === "applicants" ? (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[880px] table-fixed border-collapse text-sm">
+              {selectedIds.length > 0 && (
+                <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <span>{selectedIds.length} selected</span>
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                    className="cursor-pointer font-medium text-[#1c9dde] hover:underline"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+              )}
+              <table className="w-full min-w-[900px] table-fixed border-collapse text-sm">
                 <thead>
                   <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                    <th className="w-[4%] rounded-l-md px-3 py-2 text-left font-medium">
+                    <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
                       <input
                         type="checkbox"
-                        checked={
-                          pagedApplicants.length > 0 &&
-                          pagedApplicants.every((a) =>
-                            selectedIds.includes(a.id)
-                          )
-                        }
-                        onChange={() => {
-                          pagedApplicants.forEach((a) =>
-                            toggleApplicantSelection(a.id)
-                          );
-                        }}
+                        checked={allOnPageSelected}
+                        onChange={toggleSelectAllOnPage}
+                        aria-label="Select all on page"
+                        className="h-4 w-4 cursor-pointer"
                       />
                     </th>
-                    <th className="w-[22%] px-3 py-2 text-left font-medium">
-                      Name
-                    </th>
-                    <th
-                      className="w-[13%] cursor-pointer px-3 py-2 text-left font-medium select-none"
-                      onClick={() => toggleSort("id_number")}
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        Student ID <ArrowUpDown className="h-3 w-3" />
-                      </span>
-                    </th>
-                    <th
-                      className="w-[15%] cursor-pointer px-3 py-2 text-left font-medium select-none"
-                      onClick={() => toggleSort("courseYear")}
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        Course &amp; Year <ArrowUpDown className="h-3 w-3" />
-                      </span>
+                    <th className="w-[24%] px-3 py-2 text-left">
+                      <SortableHeader
+                        label="Applicant"
+                        field="name"
+                        sort={sort}
+                        onSort={toggleSort}
+                      />
                     </th>
                     <th className="w-[14%] px-3 py-2 text-left font-medium">
-                      Role Applied
+                      ID Number
                     </th>
-                    <th
-                      className="w-[15%] cursor-pointer px-3 py-2 text-left font-medium select-none"
-                      onClick={() => toggleSort("status")}
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        Status <ArrowUpDown className="h-3 w-3" />
-                      </span>
+                    <th className="w-[14%] px-3 py-2 text-left">
+                      <SortableHeader
+                        label="Course / Year"
+                        field="courseYear"
+                        sort={sort}
+                        onSort={toggleSort}
+                      />
                     </th>
-                    <th className="w-[8%] px-3 py-2" />
-                    <th className="w-[9%] rounded-r-md px-3 py-2 text-right font-medium">
-                      Details
+                    <th className="w-[16%] px-3 py-2 text-left">
+                      <SortableHeader
+                        label="Role Applied"
+                        field="roleApplied"
+                        sort={sort}
+                        onSort={toggleSort}
+                      />
+                    </th>
+                    <th className="w-[14%] px-3 py-2 text-left">
+                      <SortableHeader
+                        label="Status"
+                        field="status"
+                        sort={sort}
+                        onSort={toggleSort}
+                      />
+                    </th>
+                    <th className="w-[14%] rounded-r-md px-3 py-2 text-right font-medium">
+                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
-                    Array.from({ length: ROWS_PER_PAGE }, (_, index) => (
+                    Array.from({ length: 5 }, (_, index) => (
                       <tr key={index} className="border-b border-[#ededed]">
-                        {Array.from({ length: 8 }, (_, cell) => (
+                        {Array.from({ length: 7 }, (_, cell) => (
                           <td key={cell} className="px-3 py-3">
                             <Skeleton className="h-4 w-full rounded-full" />
                           </td>
                         ))}
                       </tr>
                     ))
-                  ) : error ? null : pagedApplicants.length > 0 ? (
+                  ) : pagedApplicants.length > 0 ? (
                     pagedApplicants.map((applicant) => (
                       <tr
                         key={applicant.id}
@@ -763,34 +784,40 @@ export const RecuitmentViews = () => {
                             onChange={() =>
                               toggleApplicantSelection(applicant.id)
                             }
+                            aria-label={`Select ${applicant.name}`}
+                            className="h-4 w-4 cursor-pointer"
                           />
                         </td>
                         <td className="px-3 py-3">
-                          <div className="flex items-center gap-2">
-                            <div
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
                               className={cn(
-                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white",
-                                getAvatarColor(applicant.name)
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white",
+                                getAvatarColor(applicant.name || "?")
                               )}
                             >
                               {getInitial(applicant.name)}
-                            </div>
+                            </span>
                             <div className="min-w-0">
-                              <div className="truncate font-medium text-slate-900">
-                                {applicant.name}
-                              </div>
-                              <div className="truncate text-xs text-slate-500">
+                              <p className="truncate font-medium text-slate-900">
+                                {applicant.name || "—"}
+                              </p>
+                              <p className="truncate text-xs text-[#8a8a8a]">
                                 {applicant.email}
-                              </div>
+                              </p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-3">{applicant.id_number}</td>
-                        <td className="px-3 py-3">
-                          {applicant.course} - {applicant.year}
+                        <td className="truncate px-3 py-3">
+                          {applicant.id_number || "—"}
                         </td>
                         <td className="truncate px-3 py-3">
-                          {applicant.roleApplied}
+                          {[applicant.course, applicant.year]
+                            .filter(Boolean)
+                            .join(" • ") || "—"}
+                        </td>
+                        <td className="truncate px-3 py-3">
+                          {applicant.roleApplied || "—"}
                         </td>
                         <td className="px-3 py-3">
                           <span
@@ -802,18 +829,6 @@ export const RecuitmentViews = () => {
                           >
                             {applicant.status}
                           </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <Button
-                            type="button"
-                            size="icon-sm"
-                            variant="ghost"
-                            title="Check application form"
-                            className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"
-                            onClick={() => viewApplicantDetails(applicant.id)}
-                          >
-                            <UserPen className="h-4 w-4" />
-                          </Button>
                         </td>
                         <td className="px-3 py-3 text-right">
                           <Popover
@@ -828,34 +843,52 @@ export const RecuitmentViews = () => {
                                 size="icon-sm"
                                 variant="ghost"
                                 disabled={isMutating}
-                                className="h-7 w-7 rounded-full text-slate-500 hover:bg-slate-100"
+                                className="h-7 w-7 rounded-full border text-slate-500 hover:bg-slate-100"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent
                               align="end"
-                              className="w-44 rounded-xl border-[#ececec] p-1 shadow-lg"
+                              className="w-52 rounded-xl border-[#ececec] p-1.5 shadow-lg"
                             >
                               <button
                                 type="button"
                                 onClick={() => {
-                                  approveApplicant(applicant.id);
+                                  viewApplicantDetails(applicant.id);
                                   setOpenMenuId(null);
                                 }}
-                                className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50"
+                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50"
                               >
-                                Approve Application
+                                <UserPen className="h-4 w-4 text-slate-500" />
+                                View Details
                               </button>
                               <button
                                 type="button"
+                                disabled={
+                                  applicant.status === "Approved" ||
+                                  applicant.status === "Rejected"
+                                }
+                                onClick={() => {
+                                  approveApplicant(applicant.id);
+                                  setOpenMenuId(null);
+                                }}
+                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                              >
+                                <Check className="h-4 w-4" />
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                disabled={applicant.status === "Rejected"}
                                 onClick={() => {
                                   rejectApplicant(applicant.id);
                                   setOpenMenuId(null);
                                 }}
-                                className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
+                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
                               >
-                                Reject Application
+                                <X className="h-4 w-4" />
+                                Reject
                               </button>
                             </PopoverContent>
                           </Popover>
@@ -865,7 +898,7 @@ export const RecuitmentViews = () => {
                   ) : (
                     <tr>
                       <td
-                        colSpan={8}
+                        colSpan={7}
                         className="px-3 py-16 text-center text-sm text-[#777]"
                       >
                         No applicants found.
@@ -875,48 +908,81 @@ export const RecuitmentViews = () => {
                 </tbody>
               </table>
             </div>
+          ) : (
+            <div>
+              <h2 className="mb-4 text-center text-base font-medium text-slate-700">
+                Verification Required
+              </h2>
+              {isLoading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {Array.from({ length: 4 }, (_, i) => (
+                    <Skeleton key={i} className="h-56 rounded-2xl" />
+                  ))}
+                </div>
+              ) : verificationApplicants.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {verificationApplicants.map((applicant) => (
+                    <Verification
+                      key={applicant.id}
+                      applicant={applicant}
+                      isApproving={isMutating}
+                      onApprove={verifyApplicant}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="py-16 text-center text-sm text-[#777]">
+                  No applicants awaiting verification.
+                </p>
+              )}
+            </div>
           )}
 
-          {/* Pagination */}
-          <div className="mt-7 flex flex-col items-center justify-between gap-3 text-xs text-[#8a8a8a] sm:flex-row">
-            <span>
-              Showing {total > 0 ? (currentPage - 1) * ROWS_PER_PAGE + 1 : 0} to{" "}
-              {Math.min(currentPage * ROWS_PER_PAGE, total)} of {total}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-1 disabled:cursor-not-allowed disabled:text-[#c9c9c9]"
-                disabled={currentPage <= 1}
-                onClick={() => setPage(Math.max(1, currentPage - 1))}
-              >
-                Previous
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          {/* Pagination (applicants tab only — the positions and
+              verification tabs aren't paginated with these controls) */}
+          {activeTab === "applicants" && (
+            <div className="mt-7 flex flex-col items-center justify-between gap-3 text-xs text-[#8a8a8a] sm:flex-row">
+              <span>
+                Showing {total > 0 ? (currentPage - 1) * ROWS_PER_PAGE + 1 : 0}{" "}
+                to {Math.min(currentPage * ROWS_PER_PAGE, total)} of {total}
+              </span>
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={cn(
-                    "h-7 min-w-7 cursor-pointer rounded-full px-2",
-                    p === currentPage
-                      ? "bg-[#1c9dde] text-white"
-                      : "border border-[#eeeeee] bg-white text-[#696969]"
-                  )}
+                  className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-1 disabled:cursor-not-allowed disabled:text-[#c9c9c9]"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage(Math.max(1, currentPage - 1))}
                 >
-                  {p}
+                  Previous
                 </button>
-              ))}
-              <button
-                type="button"
-                className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-1 disabled:cursor-not-allowed disabled:text-[#c9c9c9]"
-                disabled={currentPage >= totalPages}
-                onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
-              >
-                Next
-              </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (p) => (
+                    <button
+                      type="button"
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={cn(
+                        "h-7 min-w-7 cursor-pointer rounded-full px-2",
+                        p === currentPage
+                          ? "bg-[#1c9dde] text-white"
+                          : "border border-[#eeeeee] bg-white text-[#696969]"
+                      )}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+                <button
+                  type="button"
+                  className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-1 disabled:cursor-not-allowed disabled:text-[#c9c9c9]"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </section>
       </div>
 
@@ -969,6 +1035,10 @@ export const RecuitmentViews = () => {
             // mutationError is already set by the hook
           }
         }}
+      />
+      <AccountVerifiedDialog
+        result={verifiedAccount}
+        onClose={clearVerifiedAccount}
       />
     </div>
   );

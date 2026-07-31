@@ -25,6 +25,7 @@ import {
   createOpening,
   updatePosition as updatePositionApi,
   toggleHiringStatus,
+  verifyApplicantAccount,
 } from "../../../../api/recruitment.api";
 
 export const ROWS_PER_PAGE = 8;
@@ -51,7 +52,7 @@ interface RawApplicantRecord {
   lastName?: string;
   email?: string;
   course?: string;
-  year?: string;
+  year?: string | number;
   roleApplied?: string;
   position?: { title?: string };
   positionTitle?: string;
@@ -74,11 +75,13 @@ interface RawApplicantRecord {
     name?: string;
     idNumber?: string;
     email?: string;
+    course?: string;
+    year?: string | number;
   };
   applicant?: {
     email?: string;
     course?: string;
-    year?: string;
+    year?: string | number;
   };
   documents?: {
     resume?: {
@@ -111,8 +114,12 @@ function mapApplication(raw: RawApplicantRecord): RecruitmentApplicant {
       raw.name ??
       `${raw.firstName ?? ""} ${raw.lastName ?? ""}`.trim(),
     email: raw.applicantSnapshot?.email ?? raw.email ?? "",
-    course: raw.applicant?.course ?? raw.course ?? "",
-    year: raw.applicant?.year ?? raw.year ?? "",
+    course: String(
+      raw.applicantSnapshot?.course ?? raw.applicant?.course ?? raw.course ?? ""
+    ),
+    year: String(
+      raw.applicantSnapshot?.year ?? raw.applicant?.year ?? raw.year ?? ""
+    ),
     roleApplied:
       raw.roleApplied ?? raw.position?.title ?? raw.positionTitle ?? "",
     campus: raw.campus ?? "",
@@ -157,7 +164,7 @@ const STATUS = {
 } as const;
 
 export const useRecruitmentData = () => {
-  const [activeTab, setActiveTab] = useState<RecruitmentTab>("applications");
+  const [activeTab, setActiveTab] = useState<RecruitmentTab>("applicants");
   const [applicants, setApplicants] = useState<RecruitmentApplicant[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -554,7 +561,10 @@ export const useRecruitmentData = () => {
     setIsMutating(true);
     setMutationError(null);
     try {
-      await createOpening(data);
+      await createOpening({
+        ...data,
+        roleRequirements: data.roleRequirements ?? "",
+      });
       await fetchPositions();
     } catch (err) {
       setMutationError(
@@ -636,6 +646,61 @@ export const useRecruitmentData = () => {
     }
   };
 
+  // ── Verification (approve → auto-create volunteer account) ────────────
+  // "For Verification" applicants are Approved applicants who don't have a
+  // volunteerAccount yet. PLACEHOLDER: there's no backend endpoint for this
+  // yet — swap the simulated delay + generated credentials below for a real
+  // call once one exists, e.g.
+  //   const res = await verifyApplicantAccount(id);
+  //   const account = res.data.data;
+  const [verifiedAccount, setVerifiedAccount] = useState<{
+    name: string;
+    role: string;
+    username: string;
+    tempPassword: string;
+  } | null>(null);
+
+  const verificationApplicants = useMemo(
+    () =>
+      applicants.filter((a) => a.status === "Approved" && !a.volunteerAccount),
+    [applicants]
+  );
+
+  const verifyApplicant = useCallback(
+    async (id: string) => {
+      setIsMutating(true);
+      setMutationError(null);
+      try {
+        const applicant = applicants.find((a) => a.id === id);
+        if (!applicant) throw new Error("Applicant not found");
+
+        const res = await verifyApplicantAccount(id);
+        const account = res.data.data; // { username, tempPassword } from backend
+
+        setApplicants((current) =>
+          current.map((a) =>
+            a.id === id ? { ...a, volunteerAccount: account } : a
+          )
+        );
+        setVerifiedAccount({
+          name: applicant.name,
+          role: applicant.roleApplied,
+          username: account.username,
+          tempPassword: account.tempPassword,
+        });
+      } catch (err) {
+        setMutationError(
+          err instanceof Error ? err.message : "Failed to verify applicant"
+        );
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [applicants]
+  );
+
+  const clearVerifiedAccount = useCallback(() => setVerifiedAccount(null), []);
+
   return {
     activeTab,
     setActiveTab,
@@ -683,5 +748,9 @@ export const useRecruitmentData = () => {
     openRoleApplication,
     updatePosition,
     closePosition,
+    verificationApplicants,
+    verifyApplicant,
+    verifiedAccount,
+    clearVerifiedAccount,
   };
 };

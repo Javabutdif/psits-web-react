@@ -113,3 +113,6 @@ export const updateInterview = (
 
 export const cancelInterview = (applicationId: string) =>
   api.delete(`${BASE_PATH}/applications/${applicationId}/interview`);
+
+export const verifyApplicantAccount = (id: string) =>
+  api.post(`/recruitment/applications/${id}/verify`);

@@ -223,7 +223,7 @@ export class RecruitmentService {
     if (description) position.description = description;
     if (responsibilities) position.responsibilities = responsibilities;
     if (requirements) position.requirements = requirements;
-    if (hiringStatus !== undefined) position.hiringStatus = hiringStatus;
+    if (newHiringStatus !== undefined) position.hiringStatus = newHiringStatus;
     if (isActive !== undefined) position.isActive = isActive;
     if (applicationDeadline)
       position.applicationDeadline = new Date(applicationDeadline);
@@ -365,6 +365,8 @@ export class RecruitmentService {
         name: `${student.first_name} ${student.last_name}`.trim(),
         idNumber: student.id_number,
         email: student.email,
+        course: student.course,
+        year: student.year,
       },
       documents: {
         resume: {
