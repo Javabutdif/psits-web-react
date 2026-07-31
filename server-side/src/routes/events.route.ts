@@ -23,45 +23,50 @@ import {
   removeEventController,
   removeAttendanceController,
 } from "../controllers/event.controller";
-import dotenv from "dotenv";
-dotenv.config();
 
 const router = Router();
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "ap-southeast-1",
+
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
   },
 });
 
-const upload = multer({
-  storage: multerS3({
-    s3: s3Client,
-    bucket: process.env.AWS_BUCKET_NAME!,
-    metadata: (
-      req: Request,
-      file: Express.Multer.File,
-      cb: (error: any, metadata?: any) => void
-    ) => {
-      cb(null, { fieldName: file.fieldname });
-    },
-    key: (
-      req: Request,
-      file: Express.Multer.File,
-      cb: (error: any, key?: string) => void
-    ) => {
-      cb(null, `event/${Date.now()}_${file.originalname}`);
-    },
-  }),
-});
+const getUpload = () => {
+  const bucket = process.env.R2_BUCKET_NAME;
+  if (!bucket) return multer();
+
+  return multer({
+    storage: multerS3({
+      s3: r2Client,
+      bucket,
+      metadata: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, metadata?: any) => void
+      ) => {
+        cb(null, { fieldName: file.fieldname });
+      },
+      key: (
+        req: Request,
+        file: Express.Multer.File,
+        cb: (error: any, key?: string) => void
+      ) => {
+        cb(null, `events/${Date.now()}_${file.originalname}`);
+      },
+    }),
+  });
+};
 
 // POST: Create a new Event
 router.post(
   "/create-event",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  upload.array("images", 3),
+  getUpload().array("images", 3),
   createManualEventController
 );
 
