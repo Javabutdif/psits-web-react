@@ -16,6 +16,8 @@ interface MappedEvent {
   eventDate: string;
   eventImage?: string[];
   isEligible: boolean;
+  eventVenue?: string;
+  eventVenueSpecific?: string;
 }
 
 export const StudentCertificateDashboard: React.FC = () => {
@@ -57,12 +59,27 @@ export const StudentCertificateDashboard: React.FC = () => {
       return;
     }
 
+    const lastDownloadKey = `cert-limit-${studentId}-${eventId}`;
+    const lastDownloadTime = localStorage.getItem(lastDownloadKey);
+    if (lastDownloadTime) {
+      const elapsed = Date.now() - parseInt(lastDownloadTime, 10);
+      const cooldownMs = 5 * 60 * 1000; // 5 minutes
+      if (elapsed < cooldownMs) {
+        const remainingMs = cooldownMs - elapsed;
+        const minutes = Math.floor(remainingMs / 60000);
+        const seconds = Math.ceil((remainingMs % 60000) / 1000);
+        toast.error(`Please wait ${minutes}m ${seconds}s before downloading this certificate again.`);
+        return;
+      }
+    }
+
     setDownloadingId(eventId);
     const toastId = toast.loading(`Generating certificate for ${eventName}...`);
 
     try {
       const blob = await downloadStudentCertificate(eventId, studentId);
       if (blob) {
+        localStorage.setItem(lastDownloadKey, Date.now().toString());
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -180,7 +197,11 @@ export const StudentCertificateDashboard: React.FC = () => {
                   <div className="flex flex-col gap-2 text-xs text-gray-500 font-medium">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{event.location || "TBA"}</span>
+                      <span>
+                        {event.eventVenueSpecific
+                          ? `${event.eventVenueSpecific} (${event.location})`
+                          : event.location}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-400" />
@@ -271,7 +292,11 @@ export const StudentCertificateDashboard: React.FC = () => {
                   <div className="flex flex-col gap-2 text-xs text-gray-500 font-medium">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{event.location || "TBA"}</span>
+                      <span>
+                        {event.eventVenueSpecific
+                          ? `${event.eventVenueSpecific} (${event.location})`
+                          : event.location}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-400" />

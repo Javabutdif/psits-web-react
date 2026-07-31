@@ -128,7 +128,9 @@ export const EventsTab: React.FC<EventsTabProps> = ({ onEventSelect }) => {
                     <CardTitle>{event.eventName}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">Event ID: {event.eventId}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
+                      {event.eventDescription || "No description available."}
+                    </p>
                   </CardContent>
                 </Card>
               );
@@ -160,7 +162,9 @@ export const EventsTab: React.FC<EventsTabProps> = ({ onEventSelect }) => {
                     <CardTitle>{event.eventName}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">Event ID: {event.eventId}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
+                      {event.eventDescription || "No description available."}
+                    </p>
                   </CardContent>
                 </Card>
               );

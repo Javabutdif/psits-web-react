@@ -56,8 +56,12 @@ export class CertificateServiceV2 {
         eventDate: event.eventDate,
         eventImage: event.eventImage,
         eventDescription: event.eventDescription,
-        eventTheme: (event.certificateTemplate as any)?.description || "",
-        location: "TBA",
+        eventTheme: event.eventTheme || (event.certificateTemplate as any)?.description || "",
+        eventVenue: event.eventVenue || "TBA",
+        eventVenueSpecific: event.eventVenueSpecific || "",
+        eventStartTime: event.eventStartTime || "",
+        eventEndTime: event.eventEndTime || "",
+        location: event.eventVenue || "TBA",
         isEligible: isEligible,
       };
 
@@ -202,7 +206,11 @@ export class CertificateServiceV2 {
       student_name: `${student.first_name} ${student.last_name}`,
       event_name: event.eventName,
       event_date: event.eventDate
-        ? new Date(event.eventDate).toLocaleDateString()
+        ? new Date(event.eventDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
         : "TBA",
       event_start_time: formatTimeToAMPM((event as any).eventStartTime),
       event_end_time: formatTimeToAMPM((event as any).eventEndTime),

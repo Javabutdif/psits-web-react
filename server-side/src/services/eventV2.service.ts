@@ -10,7 +10,7 @@ export class EventV2Service {
   static async getAllEventsRaw() {
     return await Event.find(
       {},
-      "eventId eventName eventImage eventDate eventDescription isGenerateCertificate -_id"
+      "eventId eventName eventImage eventDate eventDescription isGenerateCertificate eligibleStudentsForCertificate eventVenue eventTheme eventVenueSpecific eventStartTime eventEndTime -_id"
     ).lean();
   }
 

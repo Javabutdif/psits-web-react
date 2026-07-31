@@ -2370,6 +2370,7 @@ export const updateEventV2Controller = async (
       eventVenueSpecific,
       eventStartTime,
       eventEndTime,
+      eventImage,
     } = req.body;
 
     const updatedEvent = await EventV2Service.updateEvent(eventId, {
@@ -2381,6 +2382,7 @@ export const updateEventV2Controller = async (
       eventVenueSpecific,
       eventStartTime,
       eventEndTime,
+      eventImage,
     });
 
     if (!updatedEvent) {
