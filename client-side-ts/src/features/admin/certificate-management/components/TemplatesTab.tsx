@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import type { ICertificateTemplate } from "../types/certificate.types";
-import { getActiveTemplates, getTemplatePreview } from "../api/certificate.api";
+import type { ICertificateTemplate } from "../../../certificate/types/certificate.types";
+import { getActiveTemplates, getTemplatePreview } from "../../../certificate/api/certificate.api";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -1,5 +1,5 @@
 import React from "react";
-import { CertificateDashboard } from "../../features/certificate/components/CertificateDashboard";
+import { CertificateDashboard } from "../../features/admin/certificate-management";
 
 const CertificatesPage: React.FC = () => {
   return (

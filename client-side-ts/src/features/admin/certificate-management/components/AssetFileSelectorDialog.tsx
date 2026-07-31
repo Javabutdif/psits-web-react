@@ -8,8 +8,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getAssetFileTree } from "../api/certificate.api";
-import type { AssetTreeNode } from "../types/certificate.types";
+import { getAssetFileTree } from "../../../certificate/api/certificate.api";
+import type { AssetTreeNode } from "../../../certificate/types/certificate.types";
 import {
   Folder,
   FolderOpen,

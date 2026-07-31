@@ -27,6 +27,44 @@ export class CertificateServiceV2 {
     return await Event.find({ isGenerateCertificate: true }).populate("certificateTemplate");
   }
 
+  // 1.5.5 getStudentCertificateEvents
+  static async getStudentCertificateEvents(studentId: string) {
+    const events = await Event.find({ isGenerateCertificate: true })
+      .populate("certificateTemplate")
+      .lean();
+
+    const eligibleList: any[] = [];
+    const otherList: any[] = [];
+
+    for (const event of events) {
+      const isEligible = Array.isArray(event.eligibleStudentsForCertificate) &&
+        event.eligibleStudentsForCertificate.includes(studentId);
+
+      const mappedEvent = {
+        _id: event._id,
+        eventId: event.eventId,
+        eventName: event.eventName,
+        eventDate: event.eventDate,
+        eventImage: event.eventImage,
+        eventDescription: event.eventDescription,
+        eventTheme: (event.certificateTemplate as any)?.description || "",
+        location: "TBA",
+        isEligible: isEligible,
+      };
+
+      if (isEligible) {
+        eligibleList.push(mappedEvent);
+      } else {
+        otherList.push(mappedEvent);
+      }
+    }
+
+    return {
+      eligible: eligibleList,
+      other: otherList,
+    };
+  }
+
   // 1.6 getEventAttendeesRaw (bypasses campus filter for cert management)
   static async getEventAttendeesRaw(eventId: string) {
     if (!Types.ObjectId.isValid(eventId)) {

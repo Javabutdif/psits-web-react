@@ -11,9 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, FolderOpen } from "lucide-react";
-import { createTemplate, updateTemplate } from "../api/certificate.api";
+import { createTemplate, updateTemplate } from "../../../certificate/api/certificate.api";
 import { showToast } from "@/utils/alertHelper";
-import type { ICertificateTemplate } from "../types/certificate.types";
+import type { ICertificateTemplate } from "../../../certificate/types/certificate.types";
 import { AssetFileSelectorDialog } from "./AssetFileSelectorDialog";
 
 interface CreateTemplateDialogProps {

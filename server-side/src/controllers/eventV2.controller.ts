@@ -2336,7 +2336,10 @@ export const getAllEventsRawController = async (
 ): Promise<any> => {
   try {
     // Fetches raw events, using the Event model's custom 'eventId' rather than '_id'
-    const events = await Event.find({}, "eventId eventName eventImage -_id").lean();
+    const events = await Event.find(
+      {},
+      "eventId eventName eventImage eventDate eventDescription isGenerateCertificate -_id"
+    ).lean();
     return res.status(200).json({
       data: events,
       message: "Fetched raw events successfully",

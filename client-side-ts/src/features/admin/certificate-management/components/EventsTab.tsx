@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { getAllEventsRaw } from "../../events/api/eventService";
-import { getEventsWithCertificates } from "../api/certificate.api";
-import type { Event } from "../../events/types/event.types";
+import { getAllEventsRaw } from "../../../events/api/eventService";
+import { getEventsWithCertificates } from "../../../certificate/api/certificate.api";
+import type { Event } from "../../../events/types/event.types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

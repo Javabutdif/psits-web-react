@@ -15,10 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { configureEventCertificate, getActiveTemplates } from "../api/certificate.api";
+import { configureEventCertificate, getActiveTemplates } from "../../../certificate/api/certificate.api";
 import { showToast } from "@/utils/alertHelper";
-import type { Event } from "../../events/types/event.types";
-import type { ICertificateTemplate } from "../types/certificate.types";
+import type { Event } from "../../../events/types/event.types";
+import type { ICertificateTemplate } from "../../../certificate/types/certificate.types";
 
 interface ConfigureEventDialogProps {
   isOpen: boolean;

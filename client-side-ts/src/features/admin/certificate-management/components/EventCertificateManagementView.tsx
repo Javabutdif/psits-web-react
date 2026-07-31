@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Search, Upload, ArrowUpDown, ChevronUp, ChevronDown, X, HelpCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { getEventById } from "../../events/api/eventService";
-import { getEventAttendeesRaw, updateStudentEligibility, uploadEligibilityFile } from "../api/certificate.api";
+import { getEventById } from "../../../events/api/eventService";
+import { getEventAttendeesRaw, updateStudentEligibility, uploadEligibilityFile } from "../../../certificate/api/certificate.api";
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Event } from "../../events/types/event.types";
-import type { AttendeeRaw } from "../types/certificate.types";
+import type { Event } from "../../../events/types/event.types";
+import type { AttendeeRaw } from "../../../certificate/types/certificate.types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -169,8 +169,6 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
         r.studentId.toLowerCase().includes(lowerQuery)
     );
   }, [importResults, dialogSearchQuery]);
-
-
 
   const renderSortIcon = (field: "id_number" | "name" | "course" | "status") => {
     if (sortField !== field) {
