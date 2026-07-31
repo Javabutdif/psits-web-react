@@ -9,6 +9,8 @@ import type {
   RecruitmentSortField,
   RecruitmentTab,
   ScheduleInterviewValues,
+  RecruitmentPosition,
+  OpenRecruitmentValues,
 } from "../types/Recruitment.types";
 
 // Adjust this path if your actual file structure differs
@@ -21,6 +23,8 @@ import {
   getResumeUrl,
   listPositions,
   createOpening,
+  updatePosition as updatePositionApi,
+  toggleHiringStatus,
 } from "../../../../api/recruitment.api";
 
 export const ROWS_PER_PAGE = 8;
@@ -52,7 +56,7 @@ interface RawApplicantRecord {
   position?: { title?: string };
   positionTitle?: string;
   campus?: string;
-  status?: RecruitmentApplicant["status"];
+  status?: string;
   resume?: string;
   resumeUrl?: string;
   aiSummary?: string;
@@ -88,6 +92,15 @@ interface RawApplicantRecord {
   };
 }
 
+const STATUS_LABELS: Record<string, RecruitmentApplicant["status"]> = {
+  SUBMITTED: "Pending",
+  INTERVIEW_SCHEDULED: "Interview Scheduled",
+  INTERVIEWING: "Interview Completed",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  WITHDRAWN: "Rejected",
+};
+
 function mapApplication(raw: RawApplicantRecord): RecruitmentApplicant {
   return {
     id: raw.id ?? raw._id ?? "",
@@ -103,7 +116,9 @@ function mapApplication(raw: RawApplicantRecord): RecruitmentApplicant {
     roleApplied:
       raw.roleApplied ?? raw.position?.title ?? raw.positionTitle ?? "",
     campus: raw.campus ?? "",
-    status: raw.status as RecruitmentApplicant["status"],
+    status:
+      STATUS_LABELS[raw.status as string] ??
+      (raw.status as RecruitmentApplicant["status"]),
     resume:
       raw.documents?.resume?.url ??
       raw.documents?.resume?.storageKey ??
@@ -152,7 +167,7 @@ export const useRecruitmentData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [positions, setPositions] = useState<any[]>([]);
+  const [positions, setPositions] = useState<RecruitmentPosition[]>([]);
   const [isPositionsLoading, setIsPositionsLoading] = useState(true);
   const [positionsError, setPositionsError] = useState<string | null>(null);
 
@@ -224,6 +239,7 @@ export const useRecruitmentData = () => {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; fetchPositions is also used for refetch, so its internal setIsPositionsLoading/setPositionsError calls are needed there
     fetchPositions();
   }, [fetchPositions]);
 
@@ -255,6 +271,7 @@ export const useRecruitmentData = () => {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; setIsLoading/setError also serve the exposed refetch() path
     setPage(1);
   }, [filters, search]);
 
@@ -533,13 +550,7 @@ export const useRecruitmentData = () => {
     }
   };
 
-  const openRoleApplication = async (data: {
-    startDate: string;
-    endDate: string;
-    startTime: string;
-    endTime: string;
-    roles: unknown[];
-  }) => {
+  const openRoleApplication = async (data: OpenRecruitmentValues) => {
     setIsMutating(true);
     setMutationError(null);
     try {
@@ -550,6 +561,51 @@ export const useRecruitmentData = () => {
         err instanceof Error ? err.message : "Failed to open role application"
       );
       throw err;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const updatePosition = async (
+    id: string,
+    data: Partial<
+      Pick<
+        RecruitmentPosition,
+        "title" | "slots" | "applicationDeadline" | "requirements"
+      >
+    >
+  ) => {
+    setIsMutating(true);
+    setMutationError(null);
+    try {
+      const res = await updatePositionApi(id, data);
+      const updated = res.data.data;
+      setPositions((current) =>
+        current.map((p) => (p._id === id ? updated : p))
+      );
+    } catch (err) {
+      setMutationError(
+        err instanceof Error ? err.message : "Failed to update position"
+      );
+      throw err;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const closePosition = async (id: string) => {
+    setIsMutating(true);
+    setMutationError(null);
+    try {
+      const res = await toggleHiringStatus(id, "CLOSED");
+      const updated = res.data.data;
+      setPositions((current) =>
+        current.map((p) => (p._id === id ? updated : p))
+      );
+    } catch (err) {
+      setMutationError(
+        err instanceof Error ? err.message : "Failed to close role"
+      );
     } finally {
       setIsMutating(false);
     }
@@ -625,5 +681,7 @@ export const useRecruitmentData = () => {
     isPositionsLoading,
     positionsError,
     openRoleApplication,
+    updatePosition,
+    closePosition,
   };
 };
