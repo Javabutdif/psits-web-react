@@ -11,6 +11,7 @@ interface ApplicantInfoDialogProps {
   error: string | null;
   onClose: () => void;
   onSetSchedule: () => void;
+  onViewResume: (id: string) => void;
   onDownloadResume: (id: string) => void;
   isResumeLoading: boolean;
   resumeError: string | null;
@@ -34,6 +35,7 @@ export const ApplicantInfoDialog = ({
   error,
   onClose,
   onSetSchedule,
+  onViewResume,
   onDownloadResume,
   isResumeLoading,
   resumeError,
@@ -107,7 +109,7 @@ export const ApplicantInfoDialog = ({
                             {applicant.resumeFilename ?? "Resume.pdf"}
                           </p>
                           <p className="text-xs text-slate-500">
-                            Opened in new tab
+                            Download ready
                           </p>
                         </div>
                       </div>
@@ -124,7 +126,7 @@ export const ApplicantInfoDialog = ({
 
                     <button
                       type="button"
-                      onClick={() => onDownloadResume(applicant.id)}
+                      onClick={() => onViewResume(applicant.id)}
                       disabled={isResumeLoading}
                       className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#73b8f1] bg-[#eaf5ff] px-4 py-2 text-sm font-semibold text-[#1c9dde] transition hover:bg-[#dff1ff]"
                     >
@@ -137,8 +139,8 @@ export const ApplicantInfoDialog = ({
                         <BadgeCheck className="h-4 w-4" />
                       </span>
                       <span>
-                        The resume will open in a new tab. You can view or
-                        download it there.
+                        Use the download icon to save a copy, or open the resume
+                        directly with View Resume.
                       </span>
                     </p>
                   </div>

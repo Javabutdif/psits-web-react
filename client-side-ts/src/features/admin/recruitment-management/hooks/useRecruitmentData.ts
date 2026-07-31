@@ -21,6 +21,7 @@ import {
   createInterview,
   updateInterview,
   getResumeUrl,
+  downloadResumeFile,
   listPositions,
   createOpening,
   updatePosition as updatePositionApi,
@@ -197,13 +198,51 @@ export const useRecruitmentData = () => {
 
   const [resumeError, setResumeError] = useState<string | null>(null);
 
-  const downloadResume = useCallback(async (id: string) => {
+  const viewResume = useCallback(async (id: string) => {
     setIsResumeLoading(true);
     setResumeError(null);
     try {
       const res = await getResumeUrl(id);
       const url = res.data.data.url;
       window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setResumeError(
+        err instanceof Error ? err.message : "Failed to load resume"
+      );
+    } finally {
+      setIsResumeLoading(false);
+    }
+  }, []);
+
+  const downloadResume = useCallback(async (id: string) => {
+    setIsResumeLoading(true);
+    setResumeError(null);
+    try {
+      const res = await downloadResumeFile(id);
+      const disposition = res.headers["content-disposition"] as
+        string | undefined;
+      const defaultFileName = "resume.pdf";
+      const match = disposition?.match(/filename\*?=(?:UTF-8'')?([^;]+)/i);
+      const fileName = match
+        ? decodeURIComponent(match[1].replace(/"/g, ""))
+        : defaultFileName;
+
+      const contentTypeHeader = res.headers["content-type"];
+      const blob = new Blob([res.data], {
+        type:
+          typeof contentTypeHeader === "string"
+            ? contentTypeHeader
+            : "application/octet-stream",
+      });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+
+      anchor.href = downloadUrl;
+      anchor.download = fileName || defaultFileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (err) {
       setResumeError(
         err instanceof Error ? err.message : "Failed to load resume"
@@ -739,6 +778,7 @@ export const useRecruitmentData = () => {
     detailsError,
     viewApplicantDetails,
     closeApplicantDetails,
+    viewResume,
     downloadResume,
     isResumeLoading,
     resumeError,

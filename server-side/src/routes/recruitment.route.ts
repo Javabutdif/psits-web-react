@@ -153,6 +153,13 @@ router.get(
 );
 
 router.get(
+  "/applications/:id/resume",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  recruitmentController.downloadResume
+);
+
+router.get(
   "/applications/:id/resume-url",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),

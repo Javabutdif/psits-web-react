@@ -329,6 +329,7 @@ export const RecuitmentViews = () => {
     detailsError,
     viewApplicantDetails,
     closeApplicantDetails,
+    viewResume,
     scheduleInterview,
     downloadResume,
     isResumeLoading,
@@ -993,6 +994,7 @@ export const RecuitmentViews = () => {
         error={detailsError}
         onClose={closeApplicantDetails}
         onSetSchedule={() => setIsScheduleOpen(true)}
+        onViewResume={viewResume}
         onDownloadResume={downloadResume}
         isResumeLoading={isResumeLoading}
         resumeError={resumeError}

@@ -128,6 +128,21 @@ class RecruitmentController {
       .json({ message: "Resume URL generated successfully", data: result });
   });
 
+  /** Admin: Download an applicant's resume as a file attachment */
+  downloadResume = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const result = await recruitmentService.getResumeDownload(id);
+
+    res.setHeader("Content-Type", result.contentType);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${result.fileName}"`
+    );
+    res.setHeader("Content-Length", String(result.contentLength));
+
+    return result.body.pipe(res);
+  });
+
   /** Admin: Update application status */
   updateApplicationStatus = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;

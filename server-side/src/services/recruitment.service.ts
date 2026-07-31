@@ -499,6 +499,36 @@ export class RecruitmentService {
     return { url, expiresIn: 300 };
   }
 
+  /** Admin: Stream an applicant's resume as an attachment download */
+  async getResumeDownload(id: string) {
+    const app = await Application.findById(id).select("documents.resume");
+    if (!app) throw new AppError("Application not found.", 404);
+
+    const storageKey = app.documents?.resume?.storageKey;
+    if (!storageKey) {
+      throw new AppError("No resume on file for this application.", 404);
+    }
+
+    const bucket = process.env.R2_BUCKET_NAME;
+    if (!bucket) {
+      throw new AppError("Resume storage is not configured.", 500);
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: storageKey,
+    });
+
+    const object = await r2Client.send(command);
+
+    return {
+      body: object.Body as NodeJS.ReadableStream,
+      fileName: app.documents?.resume?.originalFilename ?? "resume.pdf",
+      contentType: object.ContentType ?? "application/octet-stream",
+      contentLength: object.ContentLength ?? 0,
+    };
+  }
+
   /** Update application status (admin only) */
   async updateApplicationStatus(id: string, req: any) {
     const { status, note } = req.body;

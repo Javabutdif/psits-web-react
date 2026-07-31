@@ -96,6 +96,11 @@ export const getApplicationDetails = (id: string) =>
 export const getResumeUrl = (applicationId: string) =>
   api.get(`${BASE_PATH}/applications/${applicationId}/resume-url`);
 
+export const downloadResumeFile = (applicationId: string) =>
+  api.get(`${BASE_PATH}/applications/${applicationId}/resume`, {
+    responseType: "blob",
+  });
+
 export const updateApplicationStatus = (
   id: string,
   data: StatusUpdatePayload
