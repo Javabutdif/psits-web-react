@@ -16,6 +16,15 @@ export interface AssetTreeNode {
   children?: AssetTreeNode[];
 }
 
+function formatTimeToAMPM(timeStr?: string): string {
+  if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) return timeStr || "TBA";
+  const [hourStr, minStr] = timeStr.split(":");
+  const hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${formattedHour}:${minStr} ${ampm}`;
+}
+
 export class CertificateServiceV2 {
   // 1. getAllActiveTemplates
   static async getAllActiveTemplates() {
@@ -195,11 +204,11 @@ export class CertificateServiceV2 {
       event_date: event.eventDate
         ? new Date(event.eventDate).toLocaleDateString()
         : "TBA",
-      event_start_time: "TBA",
-      event_end_time: "TBA",
-      event_venue_specific: "TBA",
-      event_venue: "TBA",
-      event_theme: "",
+      event_start_time: formatTimeToAMPM((event as any).eventStartTime),
+      event_end_time: formatTimeToAMPM((event as any).eventEndTime),
+      event_venue_specific: (event as any).eventVenueSpecific || "TBA",
+      event_venue: (event as any).eventVenue || "TBA",
+      event_theme: (event as any).eventTheme || "",
       signees: template.defaultSignees || [],
       images: template.defaultImages
         ? Object.fromEntries(template.defaultImages)

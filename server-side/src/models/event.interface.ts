@@ -19,6 +19,11 @@ export interface IEvent {
   isGenerateCertificate?: boolean;
   certificateTemplate?: Types.ObjectId;
   eligibleStudentsForCertificate?: string[];
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 export interface ISalesData {

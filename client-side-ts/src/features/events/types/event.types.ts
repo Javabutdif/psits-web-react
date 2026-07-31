@@ -21,6 +21,11 @@ export interface Event {
   isGenerateCertificate?: boolean;
   certificateTemplate?: string | unknown;
   eligibleStudentsForCertificate?: string[];
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
   [key: string]: unknown;
 }
 

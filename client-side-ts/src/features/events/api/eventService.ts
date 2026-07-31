@@ -726,3 +726,11 @@ export const changeAttendeePasswordV2 = async (
     return false;
   }
 };
+
+export const updateEventDetails = async (
+  eventId: string,
+  payload: any
+): Promise<any> => {
+  const response = await api.patch(`/api/v2/events/${eventId}`, payload);
+  return response.data;
+};
