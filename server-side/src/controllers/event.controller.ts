@@ -287,10 +287,10 @@ export const updateLimitSettingsController = async (
       {
         $set: {
           limit: [
-            { campus: "UC-Banilad", limit: banilad },
-            { campus: "UC-PT", limit: pt },
-            { campus: "UC-LM", limit: lm },
-            { campus: "UC-CS", limit: cs },
+            { campus: "UC_BANILAD", limit: banilad },
+            { campus: "UC_PT", limit: pt },
+            { campus: "UC_LM", limit: lm },
+            { campus: "UC_CS", limit: cs },
           ],
         },
       },
@@ -574,13 +574,13 @@ export const getEventStatisticsController = async (
     };
 
     const yearLevelsByCampus = [
-      "UC-Main",
-      "UC-Banilad",
-      "UC-LM",
-      "UC-PT",
-      "UC-CS",
+      "UC_MAIN",
+      "UC_BANILAD",
+      "UC_LM",
+      "UC_PT",
+      "UC_CS",
     ].map((campus) => {
-      const campusWord = campus.split("-")[1];
+      const campusWord = campus.split("_")[1];
       return {
         campus: campusWord,
         yearLevels: [1, 2, 3, 4].reduce<YearLevels>(
@@ -602,13 +602,13 @@ export const getEventStatisticsController = async (
     });
 
     const campuses = [
-      "UC-Main",
-      "UC-Banilad",
-      "UC-LM",
-      "UC-PT",
-      "UC-CS",
+      "UC_MAIN",
+      "UC_BANILAD",
+      "UC_LM",
+      "UC_PT",
+      "UC_CS",
     ].reduce<Record<string, number>>((acc, campus) => {
-      const campusWord = campus.split("-")[1];
+      const campusWord = campus.split("_")[1];
       acc[campusWord] = attendees.filter(
         (attendee) => attendee.campus === campus && attendee.shirtPrice !== 0
       ).length;
@@ -616,13 +616,13 @@ export const getEventStatisticsController = async (
     }, {});
 
     const campusesAttended = [
-      "UC-Main",
-      "UC-Banilad",
-      "UC-LM",
-      "UC-PT",
-      "UC-CS",
+      "UC_MAIN",
+      "UC_BANILAD",
+      "UC_LM",
+      "UC_PT",
+      "UC_CS",
     ].reduce<Record<string, number>>((acc, campus) => {
-      const campusWord = campus.split("-")[1];
+      const campusWord = campus.split("_")[1];
       acc[campusWord] = attendees.filter(
         (attendee) => attendee.campus === campus && attendee.shirtPrice !== 0
       ).length;

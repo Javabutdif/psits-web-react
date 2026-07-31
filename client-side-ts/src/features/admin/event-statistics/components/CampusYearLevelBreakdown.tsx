@@ -33,7 +33,7 @@ export const CampusYearLevelBreakdown: React.FC<
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {campusBreakdown.map((entry) => {
           const displayName =
-            entry.campus === "UC-CS" ? "UC-Main CS" : entry.campus;
+            entry.campus === "UC_CS" ? "UC_MAIN CS" : entry.campus;
           const chartData = [
             {
               year: "1st",

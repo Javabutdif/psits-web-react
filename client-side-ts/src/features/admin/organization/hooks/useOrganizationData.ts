@@ -203,7 +203,7 @@ export const useOrganizationData = () => {
     useState<Record<OrganizationTab, number>>(EMPTY_TAB_COUNTS);
 
   const isUcMainAdmin =
-    user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
+    user?.role === "admin" && normalizeCampus(user.campus) === "UC_MAIN";
   const isAdminAccess = isUcMainAdmin && user?.access === PSITS_ROLES.ADMIN;
   const isExecutiveAccess =
     isUcMainAdmin &&

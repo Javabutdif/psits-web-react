@@ -97,7 +97,7 @@ const router = createBrowserRouter([
                       {
                         element: (
                           <StudentCampusRouteGuard
-                            allowedCampuses={["UC-MAIN"]}
+                            allowedCampuses={["UC_MAIN"]}
                           />
                         ),
                         children: [{ path: "my-orders", Component: MyOrders }],
@@ -156,7 +156,7 @@ const router = createBrowserRouter([
               {
                 element: (
                   <AdminCampusRouteGuard
-                    allowedCampuses={["UC-MAIN"]}
+                    allowedCampuses={["UC_MAIN"]}
                     campusUnauthorizedToastMessage="Unauthorized"
                   />
                 ),
@@ -170,7 +170,7 @@ const router = createBrowserRouter([
               {
                 element: (
                   <AdminCampusRouteGuard
-                    allowedCampuses={["UC-MAIN"]}
+                    allowedCampuses={["UC_MAIN"]}
                     campusUnauthorizedToastMessage="Unauthorized"
                   />
                 ),
@@ -184,7 +184,7 @@ const router = createBrowserRouter([
               {
                 element: (
                   <AdminCampusRouteGuard
-                    allowedCampuses={["UC-MAIN"]}
+                    allowedCampuses={["UC_MAIN"]}
                     campusUnauthorizedToastMessage="Unauthorized"
                   />
                 ),
@@ -201,7 +201,7 @@ const router = createBrowserRouter([
           // Example of a campus-specific route
           {
             path: "finances",
-            element: <AdminCampusRouteGuard allowedCampuses={["UC-MAIN"]} />,
+            element: <AdminCampusRouteGuard allowedCampuses={["UC_MAIN"]} />,
             children: [{ index: true, Component: MainCampusFinancePage }],
           },
         ],

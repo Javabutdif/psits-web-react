@@ -4,11 +4,11 @@ import { ISalesData } from "../models/event.interface";
 // ── Constants ───────────────────────────────────────────────────
 
 const ALL_CAMPUSES = [
-  "UC-Main",
-  "UC-Banilad",
-  "UC-LM",
-  "UC-PT",
-  "UC-CS",
+  "UC_MAIN",
+  "UC_BANILAD",
+  "UC_LM",
+  "UC_PT",
+  "UC_CS",
 ] as const;
 
 const YEAR_LEVEL_KEYS = ["1st", "2nd", "3rd", "4th"] as const;
@@ -132,7 +132,7 @@ const formatDateInTimeZone = (
  *
  * @param attendees  - The attendees array from the event document
  * @param salesData  - The sales_data array from the event document
- * @param campusScope - "all" for UC-Main admins, or a specific campus code
+ * @param campusScope - "all" for UC_MAIN admins, or a specific campus code
  */
 export const computeEventStatistics = (
   attendees: IAttendee[],
