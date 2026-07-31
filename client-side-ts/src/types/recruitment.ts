@@ -6,6 +6,7 @@ export interface RecruitmentPosition {
   requirements: string[];
   hiringStatus: "DRAFT" | "OPEN" | "CLOSED";
   isActive: boolean;
+  slots?: number;
   applicationDeadline?: string;
   sortOrder: number;
   createdAt: string;

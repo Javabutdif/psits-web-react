@@ -1,22 +1,20 @@
+export type {
+  RecruitmentPosition,
+  StatusHistoryItem,
+  Application,
+  Interview,
+  PaginatedResponse,
+  ApplicantFilters,
+} from "../../../../types/recruitment";
+
 export type RecruitmentTab =
-  | "applications"
-  | "verification"
-  | "interviews"
-  | "approved";
+  "applications" | "verification" | "interviews" | "approved";
 
 export type RecruitmentSortField =
-  | "name"
-  | "id_number"
-  | "courseYear"
-  | "roleApplied"
-  | "status";
+  "name" | "id_number" | "courseYear" | "roleApplied" | "status";
 
 export type RecruitmentAction =
-  | "approve"
-  | "reject"
-  | "verify"
-  | "schedule"
-  | "complete";
+  "approve" | "reject" | "verify" | "schedule" | "complete";
 
 export type RecruitmentStatus =
   | "Pending"
@@ -48,40 +46,43 @@ export interface RecruitmentApplicant {
 
 export interface RecruitmentFilters {
   roles: string[];
-
   courses: string[];
-
   years: string[];
-
   status: string;
 }
 
 export interface RecruitmentSort {
   field: RecruitmentSortField;
-
   direction: "asc" | "desc";
 }
 
 export interface ScheduleInterviewValues {
   date: string;
-
   startTime: string;
-
   endTime: string;
-
   officer: string;
-
   interviewType: string;
+}
+
+export interface OpenRecruitmentPosition {
+  id: string;
+  name: string;
+  enabled: boolean;
+  slots?: number;
+}
+
+export interface OpenRecruitmentRole {
+  id: string;
+  title: string;
+  enabled: boolean;
+  positions: OpenRecruitmentPosition[];
 }
 
 export interface OpenRecruitmentValues {
   startDate: string;
-
   endDate: string;
-
   startTime: string;
-
   endTime: string;
-
-  roles: string[];
+  roles: OpenRecruitmentRole[];
+  roleRequirements?: string;
 }

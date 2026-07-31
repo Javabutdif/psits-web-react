@@ -35,6 +35,7 @@ export class RecruitmentService {
       isActive,
       applicationDeadline,
       sortOrder,
+      slots,
     } = req.body;
 
     // Validate required fields
@@ -78,7 +79,8 @@ export class RecruitmentService {
 
   /** Admin: bulk-create positions from the "Open Role Application" modal */
   async createPositionsFromOpening(req: any) {
-    const { startDate, endDate, startTime, endTime, roles } = req.body;
+    const { startDate, endDate, startTime, endTime, roles, roleRequirements } =
+      req.body;
 
     if (
       !startDate ||
@@ -107,23 +109,29 @@ export class RecruitmentService {
       );
     }
 
+    const requirementsList: string[] = roleRequirements
+      ? roleRequirements
+          .split("\n")
+          .map((line: string) => line.trim())
+          .filter((line: string) => line.length > 0)
+      : [];
+
     const createdBy = req.userV2?.sub || req.admin?._id.toString();
     const docs: any[] = [];
     let sortOrder = 0;
 
     for (const role of roles) {
       if (!role.enabled) continue;
-
       const enabledSubPositions = (role.positions || []).filter(
         (p: any) => p.enabled
       );
-
       if (enabledSubPositions.length === 0) {
         // e.g. "Volunteer" — enabled with no sub-positions
         docs.push({
           title: role.title,
           hiringStatus: hiringStatus.OPEN,
           isActive: true,
+          requirements: roleRequirements || undefined,
           applicationOpensAt,
           applicationDeadline,
           sortOrder: sortOrder++,
@@ -138,6 +146,7 @@ export class RecruitmentService {
           hiringStatus: hiringStatus.OPEN,
           isActive: true,
           slots: position.slots ?? undefined,
+          requirements: roleRequirements || undefined,
           applicationOpensAt,
           applicationDeadline,
           sortOrder: sortOrder++,
@@ -203,10 +212,11 @@ export class RecruitmentService {
       description,
       responsibilities,
       requirements,
-      hiringStatus,
+      hiringStatus: newHiringStatus,
       isActive,
       applicationDeadline,
       sortOrder,
+      slots,
     } = req.body;
 
     if (title) position.title = title;
@@ -218,6 +228,7 @@ export class RecruitmentService {
     if (applicationDeadline)
       position.applicationDeadline = new Date(applicationDeadline);
     if (sortOrder !== undefined) position.sortOrder = sortOrder;
+    if (slots !== undefined) position.slots = slots;
 
     // Validate deadline if position is being opened
     if (

@@ -251,30 +251,35 @@ export const ApplicationPage = () => {
     year: "",
   });
 
-  useEffect(() => {
-    if (user) {
-      setForm((prev) => ({
-        ...prev,
-        studentId: user.idNumber || prev.studentId,
-        email: user.email || prev.email,
-        course: user.course || prev.course,
-        year:
-          user.year !== undefined
-            ? YEAR_MAP[String(user.year)] || prev.year
-            : prev.year,
-        ...(user.name
-          ? (() => {
-              const parts = user.name.trim().split(/\s+/);
-              return {
-                firstName: parts[0] || prev.firstName,
-                lastName:
-                  parts.length > 1 ? parts[parts.length - 1] : prev.lastName,
-              };
-            })()
-          : {}),
-      }));
-    }
-  }, [user]);
+  // Sync the logged-in user's profile fields into the form the first time
+  // `user` becomes available (or changes identity). Adjusting state during
+  // render — rather than in a useEffect — avoids the extra "commit, then
+  // re-render" pass that react-hooks/set-state-in-effect warns about — see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [loadedUser, setLoadedUser] = useState(user);
+  if (user && user !== loadedUser) {
+    setLoadedUser(user);
+    setForm((prev) => ({
+      ...prev,
+      studentId: user.idNumber || prev.studentId,
+      email: user.email || prev.email,
+      course: user.course || prev.course,
+      year:
+        user.year !== undefined
+          ? YEAR_MAP[String(user.year)] || prev.year
+          : prev.year,
+      ...(user.name
+        ? (() => {
+            const parts = user.name.trim().split(/\s+/);
+            return {
+              firstName: parts[0] || prev.firstName,
+              lastName:
+                parts.length > 1 ? parts[parts.length - 1] : prev.lastName,
+            };
+          })()
+        : {}),
+    }));
+  }
 
   useEffect(() => {
     const fetchPositions = async () => {
@@ -504,17 +509,27 @@ export const ApplicationPage = () => {
             <div className="min-h-[180px] rounded-lg border border-gray-200 p-4 text-sm text-gray-500">
               {selectedPosition ? (
                 <div className="space-y-3 text-gray-700">
-                  <p>{selectedPosition.description}</p>
-                  {selectedPosition.requirements?.length > 0 && (
-                    <div>
-                      <p className="font-semibold">REQUIREMENTS:</p>
-                      <ul className="list-disc pl-4">
-                        {selectedPosition.requirements.map((req, i) => (
-                          <li key={i}>{req}</li>
-                        ))}
-                      </ul>
-                    </div>
+                  {selectedPosition.description && (
+                    <p>{selectedPosition.description}</p>
                   )}
+                  {selectedPosition.requirements &&
+                    selectedPosition.requirements.length > 0 && (
+                      <div>
+                        <p className="font-semibold">REQUIREMENTS:</p>
+                        <ul className="list-disc pl-4">
+                          {selectedPosition.requirements.map((req, i) => (
+                            <li key={i}>{req}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  {!selectedPosition.description &&
+                    (!selectedPosition.requirements ||
+                      selectedPosition.requirements.length === 0) && (
+                      <p className="text-gray-400">
+                        No additional details provided for this role yet.
+                      </p>
+                    )}
                 </div>
               ) : (
                 <div className="flex h-full min-h-[148px] items-center justify-center text-center text-gray-500">

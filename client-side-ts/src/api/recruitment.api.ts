@@ -28,6 +28,7 @@ type PositionPayload = Partial<
     | "isActive"
     | "applicationDeadline"
     | "sortOrder"
+    | "slots"
   >
 >;
 
@@ -74,6 +75,7 @@ export const createOpening = (data: {
   startTime: string;
   endTime: string;
   roles: unknown[];
+  roleRequirements: string;
 }) => api.post(`${BASE_PATH}/positions/bulk-open`, data);
 
 export const updatePosition = (id: string, data: PositionPayload) =>
