@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { RecruitmentApplicant } from "../types/Recruitment.types";
 
-interface ApplicantInfoDialogProps {
+interface ApplicantInfoModalProps {
   applicant: RecruitmentApplicant | null;
   open: boolean;
   isLoading: boolean;
@@ -38,7 +38,7 @@ const Field = ({
   </div>
 );
 
-export const ApplicantInfoDialog = ({
+export const ApplicantInfoModal = ({
   applicant,
   open,
   isLoading,
@@ -49,7 +49,7 @@ export const ApplicantInfoDialog = ({
   onDownloadResume,
   isResumeLoading,
   resumeError,
-}: ApplicantInfoDialogProps) => {
+}: ApplicantInfoModalProps) => {
   const hasInterview = Boolean(
     applicant &&
     (applicant.interviewDate ||
@@ -263,4 +263,4 @@ export const ApplicantInfoDialog = ({
   );
 };
 
-export default ApplicantInfoDialog;
+export default ApplicantInfoModal;

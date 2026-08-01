@@ -41,12 +41,12 @@ import type {
   RecruitmentSort,
   RecruitmentSortField,
 } from "../types/Recruitment.types";
-import { ApplicantInfoDialog } from "./ApplicantInfo";
-import { InterviewSchedulingDialog } from "./InterviewSchedulingDialog";
+import { ApplicantInfoModal } from "./ApplicantInfoModal";
+import { InterviewSchedulingModal } from "./InterviewSchedulingModal";
 import OpenRole from "./OpenRole";
-import PositionEditDialog from "./PositionEditDialog";
-import { Verification } from "./Verification";
-import { AccountVerifiedDialog } from "./AccountVerifiedDialog";
+import PositionEditModal from "./PositionEditModal";
+import { VerificationModal } from "./VerificationModal";
+import { AccountVerifiedModal } from "./AccountVerifiedModal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const courses = ["BSIT", "BSCS", "ACT"];
@@ -1071,7 +1071,7 @@ export const RecuitmentViews = () => {
               ) : verificationApplicants.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {verificationApplicants.map((applicant) => (
-                    <Verification
+                    <VerificationModal
                       key={applicant.id}
                       applicant={applicant}
                       isApproving={isMutating}
@@ -1135,7 +1135,7 @@ export const RecuitmentViews = () => {
         </section>
       </div>
 
-      <ApplicantInfoDialog
+      <ApplicantInfoModal
         applicant={selectedApplicant}
         open={!!selectedApplicant || isDetailsLoading}
         isLoading={isDetailsLoading}
@@ -1148,7 +1148,7 @@ export const RecuitmentViews = () => {
         resumeError={resumeError}
       />
 
-      <InterviewSchedulingDialog
+      <InterviewSchedulingModal
         open={isScheduleOpen}
         isSubmitting={isMutating}
         onClose={() => setIsScheduleOpen(false)}
@@ -1171,7 +1171,7 @@ export const RecuitmentViews = () => {
           }
         }}
       />
-      <PositionEditDialog
+      <PositionEditModal
         open={!!editingPosition}
         isSubmitting={isMutating}
         position={editingPosition}
@@ -1186,7 +1186,7 @@ export const RecuitmentViews = () => {
           }
         }}
       />
-      <AccountVerifiedDialog
+      <AccountVerifiedModal
         result={verifiedAccount}
         onClose={clearVerifiedAccount}
       />

@@ -18,17 +18,17 @@ function getInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "?";
 }
 
-interface VerificationProps {
+interface VerificationModalProps {
   applicant: RecruitmentApplicant;
   isApproving: boolean;
   onApprove: (id: string) => void;
 }
 
-export const Verification = ({
+export const VerificationModal = ({
   applicant,
   isApproving,
   onApprove,
-}: VerificationProps) => {
+}: VerificationModalProps) => {
   return (
     <div className="flex flex-col rounded-2xl border border-[#e5e5e5] bg-white p-4">
       <div className="flex items-start gap-3">
@@ -82,4 +82,4 @@ export const Verification = ({
   );
 };
 
-export default Verification;
+export default VerificationModal;

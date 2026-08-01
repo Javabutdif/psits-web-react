@@ -29,15 +29,15 @@ function downloadCredentials(result: VerifiedAccountResult) {
   URL.revokeObjectURL(url);
 }
 
-interface AccountVerifiedDialogProps {
+interface AccountVerifiedModalProps {
   result: VerifiedAccountResult | null;
   onClose: () => void;
 }
 
-export const AccountVerifiedDialog = ({
+export const AccountVerifiedModal = ({
   result,
   onClose,
-}: AccountVerifiedDialogProps) => {
+}: AccountVerifiedModalProps) => {
   if (!result) return null;
 
   const showCredentials = isOfficerRole(result.role);
@@ -107,4 +107,4 @@ export const AccountVerifiedDialog = ({
   );
 };
 
-export default AccountVerifiedDialog;
+export default AccountVerifiedModal;

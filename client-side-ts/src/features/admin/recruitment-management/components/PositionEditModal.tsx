@@ -172,7 +172,7 @@ export interface PositionEditValues {
   requirements: string[];
 }
 
-interface PositionEditDialogProps {
+interface PositionEditModalProps {
   open: boolean;
   isSubmitting: boolean;
   position: RecruitmentPosition | null;
@@ -180,13 +180,13 @@ interface PositionEditDialogProps {
   onConfirm: (data: PositionEditValues) => void;
 }
 
-export default function PositionEditDialog({
+export default function PositionEditModal({
   open,
   isSubmitting,
   position,
   onClose,
   onConfirm,
-}: PositionEditDialogProps) {
+}: PositionEditModalProps) {
   const [title, setTitle] = useState("");
   const [slots, setSlots] = useState<number | "">("");
   const [deadlineDate, setDeadlineDate] = useState<Date>();

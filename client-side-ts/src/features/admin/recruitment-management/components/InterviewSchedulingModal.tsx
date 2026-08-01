@@ -237,19 +237,19 @@ function OfficerMultiSelectPopover({
   );
 }
 
-interface InterviewSchedulingDialogProps {
+interface InterviewSchedulingModalProps {
   open: boolean;
   isSubmitting: boolean;
   onClose: () => void;
   onConfirm: (values: ScheduleInterviewValues) => void;
 }
 
-export const InterviewSchedulingDialog = ({
+export const InterviewSchedulingModal = ({
   open,
   isSubmitting,
   onClose,
   onConfirm,
-}: InterviewSchedulingDialogProps) => {
+}: InterviewSchedulingModalProps) => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -393,4 +393,4 @@ export const InterviewSchedulingDialog = ({
   );
 };
 
-export default InterviewSchedulingDialog;
+export default InterviewSchedulingModal;
