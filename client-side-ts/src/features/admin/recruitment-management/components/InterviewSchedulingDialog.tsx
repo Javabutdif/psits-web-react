@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarIcon, Clock, X } from "lucide-react";
+import { CalendarIcon, ChevronDown, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +25,7 @@ const OFFICER_OPTIONS = [
   "Vice President - Internal",
   "Vice President - External",
   "Secretary",
+  "Chief Volunteer",
 ];
 
 const INTERVIEW_TYPE_OPTIONS = ["Online", "Face-to-Face"];
@@ -59,6 +60,13 @@ function formatDateDisplay(date?: Date) {
     month: "long",
     day: "numeric",
   });
+}
+
+// Convert "HH:mm" (24h) to minutes since midnight for reliable comparison.
+function timeToMinutes(time24: string) {
+  const [h, m] = time24.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return -1;
+  return h * 60 + m;
 }
 
 interface TimePickerPopoverProps {
@@ -168,6 +176,67 @@ function TimePickerPopover({
   );
 }
 
+interface OfficerMultiSelectPopoverProps {
+  value: string[];
+  onChange: (value: string[]) => void;
+  options: string[];
+}
+
+function OfficerMultiSelectPopover({
+  value,
+  onChange,
+  options,
+}: OfficerMultiSelectPopoverProps) {
+  const [open, setOpen] = useState(false);
+
+  const toggle = (officer: string) => {
+    if (value.includes(officer)) {
+      onChange(value.filter((o) => o !== officer));
+    } else {
+      onChange([...value, officer]);
+    }
+  };
+
+  const label =
+    value.length === 0
+      ? "Officer"
+      : value.length === 1
+        ? value[0]
+        : `${value.length} officers selected`;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex h-9 w-full items-center justify-between rounded-lg border border-[#ececec] px-3 text-sm text-slate-700"
+        >
+          <span className={value.length === 0 ? "text-slate-400" : "truncate"}>
+            {label}
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 rounded-2xl p-2" align="start">
+        <div className="max-h-56 space-y-0.5 overflow-y-auto">
+          {options.map((o) => (
+            <label
+              key={o}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              <Checkbox
+                checked={value.includes(o)}
+                onCheckedChange={() => toggle(o)}
+              />
+              {o}
+            </label>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 interface InterviewSchedulingDialogProps {
   open: boolean;
   isSubmitting: boolean;
@@ -184,11 +253,12 @@ export const InterviewSchedulingDialog = ({
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [officer, setOfficer] = useState("");
+  const [officers, setOfficers] = useState<string[]>([]);
   const [interviewType, setInterviewType] = useState("");
   const [saveSelection, setSaveSelection] = useState(false);
 
-  const isValid = date && startTime && endTime && officer && interviewType;
+  const isValid =
+    date && startTime && endTime && officers.length > 0 && interviewType;
 
   const handleConfirm = () => {
     if (!isValid || !date) return;
@@ -196,7 +266,7 @@ export const InterviewSchedulingDialog = ({
       date: date.toISOString().slice(0, 10),
       startTime,
       endTime,
-      officer,
+      officer: officers.join(", "),
       interviewType,
     });
   };
@@ -221,10 +291,10 @@ export const InterviewSchedulingDialog = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 px-6 py-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 px-6 py-4 md:grid-cols-2">
           {/* Left: calendar */}
           <div>
-            <Label className="mb-2 block text-xs font-medium">
+            <Label className="mb-1 block text-xs font-medium">
               Select Date &amp; Time
             </Label>
             <div className="rounded-2xl border border-[#ececec] p-2">
@@ -254,7 +324,9 @@ export const InterviewSchedulingDialog = ({
                 placeholder="From"
                 onChange={(v) => {
                   setStartTime(v);
-                  if (endTime && endTime <= v) setEndTime("");
+                  if (endTime && timeToMinutes(endTime) <= timeToMinutes(v)) {
+                    setEndTime("");
+                  }
                 }}
               />
 
@@ -271,18 +343,11 @@ export const InterviewSchedulingDialog = ({
               <Label className="mb-1.5 block text-xs font-medium">
                 Officer In-charge
               </Label>
-              <Select value={officer} onValueChange={setOfficer}>
-                <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
-                  <SelectValue placeholder="Officer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {OFFICER_OPTIONS.map((o) => (
-                    <SelectItem key={o} value={o}>
-                      {o}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <OfficerMultiSelectPopover
+                value={officers}
+                onChange={setOfficers}
+                options={OFFICER_OPTIONS}
+              />
             </div>
 
             <div>

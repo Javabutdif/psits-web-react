@@ -5,7 +5,7 @@ import type {
   RecruitmentPosition,
 } from "../types/recruitment";
 
-// Base path for recruitment routes — matches your existing /api/v2 pattern
+// Base path for recruitment routes — the shared axios client already prefixes /api
 const BASE_PATH = "/v2/recruitment";
 
 type PositionListParams = {
@@ -106,6 +106,9 @@ export const updateApplicationStatus = (
   data: StatusUpdatePayload
 ) => api.patch(`${BASE_PATH}/applications/${id}/status`, data);
 
+export const deleteApplication = (id: string) =>
+  api.delete(`${BASE_PATH}/applications/${id}`);
+
 export const createInterview = (
   applicationId: string,
   data: InterviewPayload
@@ -120,4 +123,4 @@ export const cancelInterview = (applicationId: string) =>
   api.delete(`${BASE_PATH}/applications/${applicationId}/interview`);
 
 export const verifyApplicantAccount = (id: string) =>
-  api.post(`/recruitment/applications/${id}/verify`);
+  api.post(`${BASE_PATH}/applications/${id}/verify`);

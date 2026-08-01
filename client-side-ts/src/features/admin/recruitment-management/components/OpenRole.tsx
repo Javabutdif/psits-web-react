@@ -29,6 +29,7 @@ type Role = {
   title: string;
   enabled: boolean;
   positions: Position[];
+  slots?: number;
 };
 
 const DEFAULT_ROLES: Role[] = [
@@ -232,6 +233,7 @@ interface RoleCardProps {
   onToggleRole: () => void;
   onTogglePosition: (positionId: string) => void;
   onSlotsChange: (positionId: string, slots: number) => void;
+  onRoleSlotsChange: (slots: number) => void;
 }
 
 function RoleCard({
@@ -239,6 +241,7 @@ function RoleCard({
   onToggleRole,
   onTogglePosition,
   onSlotsChange,
+  onRoleSlotsChange,
 }: RoleCardProps) {
   return (
     <div className="mb-0">
@@ -247,13 +250,13 @@ function RoleCard({
         <Switch
           checked={role.enabled}
           onCheckedChange={onToggleRole}
-          className="data-[state=checked]:bg-[ #1C9DDE] scale-85"
+          className="scale-85 data-[state=checked]:bg-[#1C9DDE]"
         />
 
         <span className="text-[16px] font-normal">{role.title}</span>
       </div>
 
-      {role.enabled && role.positions.length > 0 && (
+      {role.enabled && role.positions.length > 0 ? (
         <div className="mt-1 ml-12 space-y-1">
           {role.positions.map((position) => (
             <div
@@ -285,6 +288,18 @@ function RoleCard({
             </div>
           ))}
         </div>
+      ) : (
+        role.enabled && (
+          <div className="mt-1 ml-12">
+            <input
+              type="number"
+              placeholder="Slots No."
+              value={role.slots ?? ""}
+              onChange={(e) => onRoleSlotsChange(Number(e.target.value))}
+              className="h-6 w-16 rounded-full border border-[#D9D9D9] text-center text-[10px] placeholder:text-[#B8B8B8] focus:outline-none"
+            />
+          </div>
+        )
       )}
     </div>
   );
@@ -371,6 +386,14 @@ export default function OpenRole({
           ),
         };
       })
+    );
+  };
+
+  const setRoleSlots = (roleId: string, slots: number) => {
+    setRoles((prev) =>
+      prev.map((role) =>
+        role.id === roleId ? { ...role, slots } : role
+      )
     );
   };
 
@@ -482,7 +505,7 @@ export default function OpenRole({
                 </span>
               </Label>
 
-              <div className="rounded-2xl border border-[#ECECEC] p-3">
+              <div className="max-h-[357px] overflow-y-auto rounded-2xl border border-[#ECECEC] p-3">
                 <Calendar
                   mode="single"
                   selected={pickingField === "start" ? startDate : endDate}
@@ -553,6 +576,9 @@ export default function OpenRole({
                       onSlotsChange={(positionId, slots) =>
                         setPositionSlots(role.id, positionId, slots)
                       }
+                      onRoleSlotsChange={(slots) =>
+                        setRoleSlots(role.id, slots)
+                      }
                     />
                   ))}
                 </div>
@@ -619,7 +645,7 @@ export default function OpenRole({
               step === 1 ? !isStepOneValid : !isStepOneValid || isSubmitting
             }
             onClick={step === 1 ? handleNext : handleConfirm}
-            className={`h-10 w-56 rounded-full transition-all ${
+            className={`-mt-5 h-10 w-56 rounded-full transition-all ${
               isStepOneValid
                 ? "bg-[#1C9DDE] hover:bg-[#1487C2]"
                 : "bg-slate-300"

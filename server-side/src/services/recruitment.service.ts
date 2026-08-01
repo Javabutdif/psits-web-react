@@ -11,9 +11,16 @@ import {
   applicationStatus,
   interviewStatus,
 } from "../enums/recruitment.enums";
+import { account_status, membership_status } from "../enums/status.enums";
 import { verifyAccessToken } from "../util/jwt.util";
+import bcrypt from "bcryptjs";
+import { randomInt } from "crypto";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import {
+  recruitmentApprovedMail,
+  recruitmentRejectedMail,
+} from "../mail_template/mail.template";
 
 const r2Client = new S3Client({
   region: "auto",
@@ -109,12 +116,10 @@ export class RecruitmentService {
       );
     }
 
-    const requirementsList: string[] = roleRequirements
-      ? roleRequirements
-          .split("\n")
-          .map((line: string) => line.trim())
-          .filter((line: string) => line.length > 0)
-      : [];
+    const requirementsList: string[] = (roleRequirements ?? "")
+      .split("\n")
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0);
 
     const createdBy = req.userV2?.sub || req.admin?._id.toString();
     const docs: any[] = [];
@@ -131,7 +136,8 @@ export class RecruitmentService {
           title: role.title,
           hiringStatus: hiringStatus.OPEN,
           isActive: true,
-          requirements: roleRequirements || undefined,
+          slots: role.slots ?? undefined,
+          requirements: requirementsList,
           applicationOpensAt,
           applicationDeadline,
           sortOrder: sortOrder++,
@@ -146,7 +152,7 @@ export class RecruitmentService {
           hiringStatus: hiringStatus.OPEN,
           isActive: true,
           slots: position.slots ?? undefined,
-          requirements: roleRequirements || undefined,
+          requirements: requirementsList,
           applicationOpensAt,
           applicationDeadline,
           sortOrder: sortOrder++,
@@ -353,11 +359,6 @@ export class RecruitmentService {
       );
     }
 
-    console.log("req.files =", req.files);
-    console.log("resume =", resume);
-    console.log("resume.originalname =", resume?.originalname);
-    console.log("resume.mimetype =", resume?.mimetype);
-    console.log("resume.size =", resume?.size);
     const application = new Application({
       position: positionId,
       applicant: studentId,
@@ -398,10 +399,23 @@ export class RecruitmentService {
       await application.save();
       return application;
     } catch (error) {
-      console.error("Application Save Error:");
-      console.error(error);
+      const rawMessage =
+        error instanceof Error
+          ? error.message
+          : String(error ?? "Unknown error");
 
-      throw new AppError("Failed to save application.", 500);
+      console.error("Application Save Error:");
+      console.error({
+        rawMessage,
+        positionId,
+        applicant: studentId,
+        resumeStorageKey,
+        resumeFileName: resume?.originalname,
+        resumeMimeType: resume?.mimetype,
+        resumeSize: resume?.size,
+      });
+
+      throw new AppError(`Failed to save application: ${rawMessage}`, 500);
     }
   }
 
@@ -412,11 +426,13 @@ export class RecruitmentService {
       .populate("position", "title hiringStatus")
       .sort({ createdAt: -1 });
 
-    // Sanitize response - never expose internalNotes or reviewer info to students
+    // Sanitize response - never expose internalNotes, reviewer info, or
+    // volunteer temp credentials to students
     return applications.map((app) => {
       const obj = app.toObject();
       delete obj.internalNotes;
       delete obj.reviewer;
+      delete obj.volunteerAccount;
       return obj;
     });
   }
@@ -432,7 +448,11 @@ export class RecruitmentService {
         404
       );
 
-    return app;
+    const obj = app.toObject();
+    delete obj.internalNotes;
+    delete obj.reviewer;
+    delete obj.volunteerAccount;
+    return obj;
   }
 
   /** Admin: Get paginated applicant list with filters */
@@ -529,6 +549,140 @@ export class RecruitmentService {
     };
   }
 
+  /** Admin: Create the volunteer account for an Approved applicant */
+  async verifyApplicantAccount(applicationId: string, req: any) {
+    const adminId =
+      req.userV2?.sub || (req.admin ? req.admin._id.toString() : null);
+    if (!adminId) throw new AppError("Authentication required.", 401);
+
+    const app = await Application.findById(applicationId).populate(
+      "position",
+      "title"
+    );
+    if (!app) throw new AppError("Application not found.", 404);
+
+    if (app.status !== applicationStatus.APPROVED) {
+      throw new AppError("Only approved applications can be verified.", 400);
+    }
+
+    if (app.volunteerAccount) {
+      throw new AppError(
+        "Volunteer account has already been created for this applicant.",
+        400
+      );
+    }
+
+    const idNumber = app.applicantSnapshot.idNumber;
+    const username = `psits-${String(idNumber)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "")}`;
+
+    // Temp password: 10 chars from an unambiguous alphabet.
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    const tempPassword = Array.from({ length: 10 }, () => {
+      return chars[randomInt(0, chars.length)];
+    }).join("");
+
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    const snapshotName = app.applicantSnapshot.name || "";
+    const nameParts = snapshotName.trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+
+    const yearMatch = String(app.applicantSnapshot.year ?? "").match(/\d+/);
+    const year = yearMatch ? Number(yearMatch[0]) : 1;
+
+    const positionTitle = (app.position as any)?.title ?? "";
+
+    // Extract role and sub-role from the position title.
+    // e.g. "Developer - Frontend" → role="Developer", subRole="Frontend"
+    //      "Volunteer"             → role="Volunteer", subRole=undefined
+    const titleParts = positionTitle.split(" - ");
+    const role = titleParts[0]?.trim() || "Volunteer";
+    const subRole =
+      titleParts.length > 1 ? titleParts.slice(1).join(" - ").trim() : undefined;
+
+    // Upsert the student record so the account exists even if the student
+    // doc was created out-of-band. `rfid` is a required field on Student,
+    // so reuse the (unique) id_number as a stable placeholder.
+    await Student.updateOne(
+      { _id: app.applicant },
+      {
+        $set: {
+          id_number: idNumber,
+          rfid: `RFID-${idNumber}`,
+          password: hashedPassword,
+          first_name: firstName,
+          last_name: lastName,
+          email: app.applicantSnapshot.email,
+          course: app.applicantSnapshot.course,
+          year,
+          role,
+          membershipStatus: membership_status.ACTIVE,
+          status: account_status.ACTIVE,
+          isFirstApplication: false,
+        },
+      },
+      { upsert: true }
+    );
+
+    app.volunteerAccount = {
+      username,
+      tempPassword,
+      createdAt: new Date(),
+    };
+    app.statusHistory.push({
+      status: applicationStatus.APPROVED,
+      changedAt: new Date(),
+      changedBy: adminId,
+      note: "Volunteer account created.",
+    });
+    await app.save();
+
+    // Send approval email — best-effort, don't block on failure
+    try {
+      await recruitmentApprovedMail({
+        applicantName: snapshotName,
+        applicantEmail: app.applicantSnapshot.email,
+        role,
+        subRole,
+      });
+    } catch (err) {
+      console.error(
+        "Failed to send recruitment approval email:",
+        err instanceof Error ? err.message : err
+      );
+    }
+
+    return { username, tempPassword };
+  }
+
+  /** Admin: Delete a rejected/withdrawn application */
+  async deleteApplication(id: string, req: any) {
+    const adminId =
+      req.userV2?.sub || (req.admin ? req.admin._id.toString() : null);
+    if (!adminId) throw new AppError("Authentication required.", 401);
+
+    const app = await Application.findById(id);
+    if (!app) throw new AppError("Application not found.", 404);
+
+    // Only terminal, non-actionable states can be deleted. This prevents
+    // accidentally removing active/in-progress applications.
+    if (
+      app.status !== applicationStatus.REJECTED &&
+      app.status !== applicationStatus.WITHDRAWN
+    ) {
+      throw new AppError(
+        "Only rejected or withdrawn applications can be deleted.",
+        400
+      );
+    }
+
+    await app.deleteOne();
+    return { message: "Application deleted successfully" };
+  }
+
   /** Update application status (admin only) */
   async updateApplicationStatus(id: string, req: any) {
     const { status, note } = req.body;
@@ -585,6 +739,23 @@ export class RecruitmentService {
       `\n[${new Date().toISOString()}] ${note || ""}`;
 
     await app.save();
+
+    // Send rejection email automatically when the decision is REJECTED
+    if (status === applicationStatus.REJECTED) {
+      try {
+        await recruitmentRejectedMail({
+          applicantName: app.applicantSnapshot.name || "",
+          applicantEmail: app.applicantSnapshot.email || "",
+          reason: note || undefined,
+        });
+      } catch (err) {
+        console.error(
+          "Failed to send recruitment rejection email:",
+          err instanceof Error ? err.message : err
+        );
+      }
+    }
+
     return app;
   }
 
@@ -616,6 +787,18 @@ export class RecruitmentService {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    app.status = applicationStatus.INTERVIEW_SCHEDULED;
+    app.statusHistory.push({
+      status: applicationStatus.INTERVIEW_SCHEDULED,
+      changedAt: new Date(),
+      changedBy: adminId,
+      note: "Interview scheduled.",
+    });
+    app.reviewer = adminId;
+    app.internalNotes =
+      (app.internalNotes || "") +
+      `\n[${new Date().toISOString()}] Interview scheduled. ${location || ""}`;
 
     await app.save();
     return app;

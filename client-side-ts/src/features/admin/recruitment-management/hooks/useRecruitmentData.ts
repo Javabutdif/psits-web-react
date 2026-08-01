@@ -27,6 +27,8 @@ import {
   updatePosition as updatePositionApi,
   toggleHiringStatus,
   verifyApplicantAccount,
+  deleteApplication,
+  deletePosition as deletePositionApi,
 } from "../../../../api/recruitment.api";
 
 export const ROWS_PER_PAGE = 8;
@@ -65,6 +67,7 @@ interface RawApplicantRecord {
   interview?: {
     scheduledAt?: string;
     location?: string;
+    notes?: string;
   };
   interviewDate?: string;
   interviewStart?: string;
@@ -94,18 +97,55 @@ interface RawApplicantRecord {
       url?: string;
     };
   };
+  volunteerAccount?: {
+    username?: string;
+    tempPassword?: string;
+    createdAt?: string;
+  };
 }
 
 const STATUS_LABELS: Record<string, RecruitmentApplicant["status"]> = {
   SUBMITTED: "Pending",
-  INTERVIEW_SCHEDULED: "Interview Scheduled",
+  INTERVIEW_SCHEDULED: "Scheduled",
   INTERVIEWING: "Interview Completed",
   APPROVED: "Approved",
   REJECTED: "Rejected",
   WITHDRAWN: "Rejected",
 };
 
+function formatTime12Hour(time24: string) {
+  const [time, meridiem] = time24.split(" ");
+  if (time && meridiem) return time24;
+
+  const [hourText, minuteText] = time24.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText || 0);
+
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return time24;
+
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${String(hour12).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${suffix}`;
+}
+
+function parseInterviewNotes(notes?: string) {
+  const officerMatch = notes?.match(/officer in charge:\s*(.+?)(?:;|$)/i);
+  const typeMatch = notes?.match(/interview type:\s*(.+?)(?:;|$)/i);
+  const startMatch = notes?.match(/starts\s*([^;]+)$/i);
+  const endMatch = notes?.match(/ends\s*([^;]+)$/i);
+
+  return {
+    officer: officerMatch?.[1]?.trim() ?? "",
+    type: typeMatch?.[1]?.trim() ?? "",
+    starts: startMatch?.[1]?.trim() ?? "",
+    ends: endMatch?.[1]?.trim() ?? "",
+  };
+}
+
 function mapApplication(raw: RawApplicantRecord): RecruitmentApplicant {
+  const interviewNotes = raw.interview?.notes ?? "";
+  const parsedInterviewNotes = parseInterviewNotes(interviewNotes);
+
   return {
     id: raw.id ?? raw._id ?? "",
     id_number:
@@ -137,21 +177,29 @@ function mapApplication(raw: RawApplicantRecord): RecruitmentApplicant {
     interviewDate: raw.interview?.scheduledAt ?? raw.interviewDate,
     interviewStart: raw.interviewStart,
     interviewEnd: raw.interviewEnd,
-    interviewOfficer: raw.interview?.location ?? raw.interviewOfficer,
-    interviewType: raw.interviewType,
+    interviewOfficer:
+      parsedInterviewNotes.officer || raw.interviewOfficer || "",
+    interviewType: parsedInterviewNotes.type || raw.interviewType || "",
+    volunteerAccount: raw.volunteerAccount
+      ? {
+          username: raw.volunteerAccount.username ?? "",
+          tempPassword: raw.volunteerAccount.tempPassword ?? "",
+        }
+      : undefined,
   };
 }
 
 // createInterview/updateInterview on the backend expect {scheduledAt,
 // location, notes} (see InterviewPayload in recruitment.api.ts), not the
 // {date, startTime, endTime, officer, interviewType} shape the scheduling
-// dialog collects. Combine date + startTime into an ISO string and stash
-// the officer/type into notes until there's a dedicated field for them.
+// dialog collects. Keep `location` empty and carry the officer/type/end time
+// in `notes` so the UI can render a proper interview summary without
+// mislabeling the officer as the interview venue.
 function toInterviewPayload(values: ScheduleInterviewValues) {
   return {
     scheduledAt: new Date(`${values.date}T${values.startTime}`).toISOString(),
-    location: values.officer,
-    notes: `Interview type: ${values.interviewType}; ends ${values.endTime}`,
+    location: "",
+    notes: `Interview type: ${values.interviewType}; officer in charge: ${values.officer}; starts ${formatTime12Hour(values.startTime)}; ends ${formatTime12Hour(values.endTime)}`,
   };
 }
 
@@ -290,31 +338,9 @@ export const useRecruitmentData = () => {
   }, [fetchPositions]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const res = await getApplicants({});
-        const list = res.data.data.applicants;
-        if (!cancelled) setApplicants(list.map(mapApplication));
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load applicants"
-          );
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; fetchApplicants is also used for refetch, so its internal setIsLoading/setError calls are needed there
+    fetchApplicants();
+  }, [fetchApplicants]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; setIsLoading/setError also serve the exposed refetch() path
@@ -358,11 +384,13 @@ export const useRecruitmentData = () => {
           return false;
         }
 
-        if (
-          filters.years.length > 0 &&
-          !filters.years.includes(applicant.year)
-        ) {
-          return false;
+        if (filters.years.length > 0) {
+          // applicant.year may be "1st Year", "2", etc. — normalize to the
+          // leading digit so the filter values ("1".."4") match.
+          const yearDigit = String(applicant.year).match(/\d+/)?.[0] ?? "";
+          if (!filters.years.includes(yearDigit)) {
+            return false;
+          }
         }
 
         if (filters.status !== "all" && applicant.status !== filters.status) {
@@ -660,6 +688,24 @@ export const useRecruitmentData = () => {
     }
   };
 
+  // Delete a position (only for CLOSED roles — the UI gates this).
+  // The backend hard-deletes if no applications exist, otherwise
+  // soft-disables (isActive = false).
+  const deletePosition = async (id: string) => {
+    setIsMutating(true);
+    setMutationError(null);
+    try {
+      await deletePositionApi(id);
+      setPositions((current) => current.filter((p) => p._id !== id));
+    } catch (err) {
+      setMutationError(
+        err instanceof Error ? err.message : "Failed to delete position"
+      );
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
   // Update an existing interview for an applicant (uses updateInterview API)
   const rescheduleInterview = async (
     id: string,
@@ -687,11 +733,8 @@ export const useRecruitmentData = () => {
 
   // ── Verification (approve → auto-create volunteer account) ────────────
   // "For Verification" applicants are Approved applicants who don't have a
-  // volunteerAccount yet. PLACEHOLDER: there's no backend endpoint for this
-  // yet — swap the simulated delay + generated credentials below for a real
-  // call once one exists, e.g.
-  //   const res = await verifyApplicantAccount(id);
-  //   const account = res.data.data;
+  // volunteerAccount yet. verifyApplicantAccount calls the backend endpoint
+  // that creates the account and returns { username, tempPassword }.
   const [verifiedAccount, setVerifiedAccount] = useState<{
     name: string;
     role: string;
@@ -737,6 +780,50 @@ export const useRecruitmentData = () => {
     },
     [applicants]
   );
+
+  // ── Rejected applicants (delete) ───────────────────────────────────────
+  const rejectedApplicants = useMemo(
+    () => applicants.filter((a) => a.status === "Rejected"),
+    [applicants]
+  );
+
+  const deleteRejectedApplicant = async (id: string) => {
+    setIsMutating(true);
+    setMutationError(null);
+    try {
+      await deleteApplication(id);
+      setApplicants((current) => current.filter((a) => a.id !== id));
+      setSelectedApplicant((current) =>
+        current?.id === id ? null : current
+      );
+    } catch (err) {
+      setMutationError(
+        err instanceof Error ? err.message : "Failed to delete applicant"
+      );
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const clearAllRejectedApplicants = async () => {
+    setIsMutating(true);
+    setMutationError(null);
+    try {
+      const ids = rejectedApplicants.map((a) => a.id);
+      await Promise.all(ids.map((id) => deleteApplication(id)));
+      setApplicants((current) =>
+        current.filter((a) => a.status !== "Rejected")
+      );
+    } catch (err) {
+      setMutationError(
+        err instanceof Error ? err.message : "Failed to clear rejected applicants"
+      );
+      // Refetch to reconcile partial failures
+      await fetchApplicants();
+    } finally {
+      setIsMutating(false);
+    }
+  };
 
   const clearVerifiedAccount = useCallback(() => setVerifiedAccount(null), []);
 
@@ -788,9 +875,13 @@ export const useRecruitmentData = () => {
     openRoleApplication,
     updatePosition,
     closePosition,
+    deletePosition,
     verificationApplicants,
     verifyApplicant,
     verifiedAccount,
     clearVerifiedAccount,
+    rejectedApplicants,
+    deleteRejectedApplicant,
+    clearAllRejectedApplicants,
   };
 };

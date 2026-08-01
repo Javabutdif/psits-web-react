@@ -10,6 +10,7 @@ import {
   UserPen,
   X,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ import {
   DEFAULT_FILTERS,
 } from "../hooks/useRecruitmentData";
 import type {
+  RecruitmentApplicant,
   RecruitmentFilters,
   RecruitmentPosition,
   RecruitmentSort,
@@ -45,6 +47,7 @@ import OpenRole from "./OpenRole";
 import PositionEditDialog from "./PositionEditDialog";
 import { Verification } from "./Verification";
 import { AccountVerifiedDialog } from "./AccountVerifiedDialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
@@ -52,7 +55,7 @@ const years = ["1", "2", "3", "4"];
 const STATUS_STYLES: Record<string, string> = {
   Pending: "bg-amber-100 text-amber-700",
   "For Verification": "bg-slate-100 text-slate-700",
-  "Interview Scheduled": "bg-blue-100 text-blue-700",
+  Scheduled: "bg-blue-100 text-blue-700",
   "Interview Completed": "bg-purple-100 text-purple-700",
   Approved: "bg-emerald-100 text-emerald-700",
   Rejected: "bg-red-100 text-red-700",
@@ -340,10 +343,14 @@ export const RecuitmentViews = () => {
     positionsError,
     updatePosition,
     closePosition,
+    deletePosition,
     verificationApplicants,
     verifyApplicant,
     verifiedAccount,
     clearVerifiedAccount,
+    rejectedApplicants,
+    deleteRejectedApplicant,
+    clearAllRejectedApplicants,
   } = useRecruitmentData();
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -354,15 +361,20 @@ export const RecuitmentViews = () => {
     useState<RecruitmentPosition | null>(null);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [isOpenRoleOpen, setIsOpenRoleOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<RecruitmentApplicant | null>(
+    null
+  );
+  const [positionDeleteTarget, setPositionDeleteTarget] =
+    useState<RecruitmentPosition | null>(null);
+  const [isClearAllRejectedOpen, setIsClearAllRejectedOpen] = useState(false);
 
   const counts = useMemo(() => {
     return {
       pending: applicants.filter((a) => a.status === "Pending").length,
       approved: applicants.filter((a) => a.status === "Approved").length,
-      verifications: applicants.filter((a) => a.status === "For Verification")
-        .length,
+      verifications: verificationApplicants.length,
     };
-  }, [applicants]);
+  }, [applicants, verificationApplicants]);
 
   const total = filteredApplicants.length;
 
@@ -447,112 +459,127 @@ export const RecuitmentViews = () => {
         )}
 
         <section className="rounded-[22px] border border-[#e5e5e5] bg-white px-4 py-5 sm:px-6">
-          {/* Toolbar */}
-          <div className="mb-5 flex flex-wrap items-center gap-2 sm:justify-between sm:gap-3">
-            <div className="relative min-w-0 flex-1 sm:max-w-[260px]">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#9b9b9b]" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search"
-                className="h-9 rounded-full border-[#e8e8e8] pl-9 text-sm"
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
+          {/* Row 1: pill tabs + search */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex gap-1 rounded-full bg-[#f2f2f2] p-1">
               <button
                 type="button"
                 onClick={() => setActiveTab("applicants")}
-                className={cn(
-                  "cursor-pointer rounded-full px-3 py-1.5 text-sm",
+                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
                   activeTab === "applicants"
-                    ? "bg-[#1c9dde] text-white"
-                    : "bg-slate-100 text-slate-600"
-                )}
+                    ? "bg-white text-[#303030] shadow-sm"
+                    : "text-[#777] hover:text-[#303030]"
+                }`}
               >
                 Applicants
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("applications")}
-                className={cn(
-                  "cursor-pointer rounded-full px-3 py-1.5 text-sm",
+                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
                   activeTab === "applications"
-                    ? "bg-[#1c9dde] text-white"
-                    : "bg-slate-100 text-slate-600"
-                )}
+                    ? "bg-white text-[#303030] shadow-sm"
+                    : "text-[#777] hover:text-[#303030]"
+                }`}
               >
                 Open Roles
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("verification")}
-                className={cn(
-                  "cursor-pointer rounded-full px-3 py-1.5 text-sm",
+                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
                   activeTab === "verification"
-                    ? "bg-[#1c9dde] text-white"
-                    : "bg-slate-100 text-slate-600"
-                )}
+                    ? "bg-white text-[#303030] shadow-sm"
+                    : "text-[#777] hover:text-[#303030]"
+                }`}
               >
                 Verifications
               </button>
-              <Select
-                value={filters.roles[0] ?? "all"}
-                onValueChange={(v) =>
-                  setFilters((current) => ({
-                    ...current,
-                    roles: v === "all" ? [] : [v],
-                  }))
-                }
+              <button
+                type="button"
+                onClick={() => setActiveTab("rejected")}
+                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+                  activeTab === "rejected"
+                    ? "bg-white text-[#303030] shadow-sm"
+                    : "text-[#777] hover:text-[#303030]"
+                }`}
               >
-                <SelectTrigger className="h-9 w-[140px] rounded-full border-[#e8e8e8] text-sm">
-                  <SelectValue placeholder="All Roles" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  {roleOptions.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                Rejected
+                {rejectedApplicants.length > 0 && (
+                  <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">
+                    {rejectedApplicants.length}
+                  </span>
+                )}
+              </button>
+            </div>
 
-              <Select
-                value={filters.status}
-                onValueChange={(v) =>
-                  setFilters((current) => ({
-                    ...current,
-                    status: v as RecruitmentFilters["status"],
-                  }))
-                }
-              >
-                <SelectTrigger className="h-9 w-[150px] rounded-full border-[#e8e8e8] text-sm">
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="For Verification">
-                    For Verification
-                  </SelectItem>
-                  <SelectItem value="Interview Scheduled">
-                    Interview Scheduled
-                  </SelectItem>
-                  <SelectItem value="Interview Completed">
-                    Interview Completed
-                  </SelectItem>
-                  <SelectItem value="Approved">Approved</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <RecruitmentFilterPopover
-                filters={filters}
-                roleOptions={roleOptions}
-                onApply={setFilters}
+            <div className="relative w-56">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#999]" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search"
+                className="rounded-full border-[#e0e0e0] pl-9"
               />
             </div>
+          </div>
+
+          {/* Row 2: filter dropdowns */}
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <Select
+              value={filters.roles[0] ?? "all"}
+              onValueChange={(v) =>
+                setFilters((current) => ({
+                  ...current,
+                  roles: v === "all" ? [] : [v],
+                }))
+              }
+            >
+              <SelectTrigger className="h-9 w-[140px] rounded-full border-[#e8e8e8] text-sm">
+                <SelectValue placeholder="All Roles" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                {roleOptions.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.status}
+              onValueChange={(v) =>
+                setFilters((current) => ({
+                  ...current,
+                  status: v as RecruitmentFilters["status"],
+                }))
+              }
+            >
+              <SelectTrigger className="h-9 w-[150px] rounded-full border-[#e8e8e8] text-sm">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="For Verification">
+                  For Verification
+                </SelectItem>
+                <SelectItem value="Scheduled">Scheduled</SelectItem>
+                <SelectItem value="Interview Completed">
+                  Interview Completed
+                </SelectItem>
+                <SelectItem value="Approved">Approved</SelectItem>
+                <SelectItem value="Rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <RecruitmentFilterPopover
+              filters={filters}
+              roleOptions={roleOptions}
+              onApply={setFilters}
+            />
           </div>
 
           {/* Table / Verification cards */}
@@ -677,6 +704,19 @@ export const RecuitmentViews = () => {
                                 <Ban className="h-4 w-4" />
                                 Close Role Application
                               </button>
+                              {position.hiringStatus === "CLOSED" && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPositionDeleteTarget(position);
+                                    setOpenPositionMenuId(null);
+                                  }}
+                                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete Role Application
+                                </button>
+                              )}
                             </PopoverContent>
                           </Popover>
                         </td>
@@ -909,6 +949,114 @@ export const RecuitmentViews = () => {
                 </tbody>
               </table>
             </div>
+          ) : activeTab === "rejected" ? (
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-base font-medium text-slate-700">
+                  Rejected Applicants
+                </h2>
+                {rejectedApplicants.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isMutating}
+                    onClick={() => setIsClearAllRejectedOpen(true)}
+                    className="h-8 rounded-full border-red-200 text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    Clear All
+                  </Button>
+                )}
+              </div>
+              {isLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 4 }, (_, i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : rejectedApplicants.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[700px] table-fixed border-collapse text-sm">
+                    <thead>
+                      <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
+                        <th className="w-[30%] rounded-l-md px-3 py-2 text-left font-medium">
+                          Applicant
+                        </th>
+                        <th className="w-[15%] px-3 py-2 text-left font-medium">
+                          ID Number
+                        </th>
+                        <th className="w-[15%] px-3 py-2 text-left font-medium">
+                          Course / Year
+                        </th>
+                        <th className="w-[25%] px-3 py-2 text-left font-medium">
+                          Role Applied
+                        </th>
+                        <th className="w-[15%] rounded-r-md px-3 py-2 text-right font-medium">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rejectedApplicants.map((applicant) => (
+                        <tr
+                          key={applicant.id}
+                          className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
+                        >
+                          <td className="px-3 py-3">
+                            <div className="flex min-w-0 items-center gap-2.5">
+                              <span
+                                className={cn(
+                                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white",
+                                  getAvatarColor(applicant.name || "?")
+                                )}
+                              >
+                                {getInitial(applicant.name)}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-slate-900">
+                                  {applicant.name || "—"}
+                                </p>
+                                <p className="truncate text-xs text-[#8a8a8a]">
+                                  {applicant.email}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="truncate px-3 py-3">
+                            {applicant.id_number || "—"}
+                          </td>
+                          <td className="truncate px-3 py-3">
+                            {[applicant.course, applicant.year]
+                              .filter(Boolean)
+                              .join(" • ") || "—"}
+                          </td>
+                          <td className="truncate px-3 py-3">
+                            {applicant.roleApplied || "—"}
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
+                              disabled={isMutating}
+                              onClick={() => setDeleteTarget(applicant)}
+                              className="h-7 w-7 rounded-full border text-red-500 hover:bg-red-50 hover:text-red-600"
+                              aria-label={`Delete ${applicant.name}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="py-16 text-center text-sm text-[#777]">
+                  No rejected applicants.
+                </p>
+              )}
+            </div>
           ) : (
             <div>
               <h2 className="mb-4 text-center text-base font-medium text-slate-700">
@@ -1042,6 +1190,145 @@ export const RecuitmentViews = () => {
         result={verifiedAccount}
         onClose={clearVerifiedAccount}
       />
+
+      {/* Delete single rejected applicant — confirmation */}
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <DialogContent className="max-w-sm rounded-2xl">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+              <Trash2 className="h-6 w-6 text-red-500" />
+            </div>
+            <DialogTitle className="text-lg font-semibold">
+              Delete this applicant?
+            </DialogTitle>
+            <p className="text-sm text-slate-500">
+              This will permanently remove{" "}
+              <span className="font-medium text-slate-700">
+                {deleteTarget?.name}
+              </span>
+              's rejected application. This action cannot be undone.
+            </p>
+            <div className="mt-2 flex w-full justify-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 flex-1 rounded-full"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="h-9 flex-1 rounded-full bg-red-500 hover:bg-red-600"
+                disabled={isMutating}
+                onClick={async () => {
+                  if (!deleteTarget) return;
+                  await deleteRejectedApplicant(deleteTarget.id);
+                  setDeleteTarget(null);
+                }}
+              >
+                {isMutating ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clear all rejected applicants — confirmation */}
+      <Dialog
+        open={isClearAllRejectedOpen}
+        onOpenChange={setIsClearAllRejectedOpen}
+      >
+        <DialogContent className="max-w-sm rounded-2xl">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+              <Trash2 className="h-6 w-6 text-red-500" />
+            </div>
+            <DialogTitle className="text-lg font-semibold">
+              Clear all rejected applicants?
+            </DialogTitle>
+            <p className="text-sm text-slate-500">
+              This will permanently delete{" "}
+              <span className="font-medium text-slate-700">
+                {rejectedApplicants.length}
+              </span>{" "}
+              rejected application
+              {rejectedApplicants.length === 1 ? "" : "s"}. This action cannot
+              be undone.
+            </p>
+            <div className="mt-2 flex w-full justify-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 flex-1 rounded-full"
+                onClick={() => setIsClearAllRejectedOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="h-9 flex-1 rounded-full bg-red-500 hover:bg-red-600"
+                disabled={isMutating}
+                onClick={async () => {
+                  await clearAllRejectedApplicants();
+                  setIsClearAllRejectedOpen(false);
+                }}
+              >
+                {isMutating ? "Deleting..." : "Delete All"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete a closed position — confirmation */}
+      <Dialog
+        open={!!positionDeleteTarget}
+        onOpenChange={(open) => !open && setPositionDeleteTarget(null)}
+      >
+        <DialogContent className="max-w-sm rounded-2xl">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+              <Trash2 className="h-6 w-6 text-red-500" />
+            </div>
+            <DialogTitle className="text-lg font-semibold">
+              Delete this role application?
+            </DialogTitle>
+            <p className="text-sm text-slate-500">
+              This will permanently remove{" "}
+              <span className="font-medium text-slate-700">
+                {positionDeleteTarget?.title}
+              </span>
+              . This action cannot be undone.
+            </p>
+            <div className="mt-2 flex w-full justify-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 flex-1 rounded-full"
+                onClick={() => setPositionDeleteTarget(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="h-9 flex-1 rounded-full bg-red-500 hover:bg-red-600"
+                disabled={isMutating}
+                onClick={async () => {
+                  if (!positionDeleteTarget) return;
+                  await deletePosition(positionDeleteTarget._id);
+                  setPositionDeleteTarget(null);
+                }}
+              >
+                {isMutating ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

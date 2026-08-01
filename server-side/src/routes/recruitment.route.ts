@@ -187,6 +187,20 @@ router.patch(
   recruitmentController.updateApplicationStatus
 );
 
+router.delete(
+  "/applications/:id",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  recruitmentController.deleteApplication
+);
+
+router.post(
+  "/applications/:id/verify",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  recruitmentController.verifyApplicantAccount
+);
+
 router.post(
   "/applications/:id/interview",
   requireAccessTokenV2,

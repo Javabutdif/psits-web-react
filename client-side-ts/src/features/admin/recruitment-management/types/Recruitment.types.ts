@@ -8,7 +8,12 @@ export type {
 } from "../../../../types/recruitment";
 
 export type RecruitmentTab =
-  "applications" | "applicants" | "verification" | "interviews" | "approved";
+  | "applications"
+  | "applicants"
+  | "verification"
+  | "interviews"
+  | "approved"
+  | "rejected";
 
 export type RecruitmentSortField =
   "name" | "id_number" | "courseYear" | "roleApplied" | "status";
@@ -19,7 +24,7 @@ export type RecruitmentAction =
 export type RecruitmentStatus =
   | "Pending"
   | "For Verification"
-  | "Interview Scheduled"
+  | "Scheduled"
   | "Interview Completed"
   | "Approved"
   | "Rejected";
@@ -82,6 +87,7 @@ export interface OpenRecruitmentRole {
   title: string;
   enabled: boolean;
   positions: OpenRecruitmentPosition[];
+  slots?: number;
 }
 
 export interface OpenRecruitmentValues {

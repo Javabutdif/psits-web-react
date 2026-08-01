@@ -53,7 +53,7 @@ class RecruitmentController {
   updatePosition = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const position = await recruitmentService.updatePosition(id, req);
-    return res``
+    return res
       .status(200)
       .json({ message: "Position updated successfully", data: position });
   });
@@ -150,6 +150,24 @@ class RecruitmentController {
     return res
       .status(200)
       .json({ message: "Application status updated successfully", data: app });
+  });
+
+  /** Admin: Delete a rejected/withdrawn application */
+  deleteApplication = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const result = await recruitmentService.deleteApplication(id, req);
+    return res.status(200).json(result);
+  });
+
+  /** Admin: Create the volunteer account for an Approved applicant */
+  verifyApplicantAccount = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const account =
+      await recruitmentService.verifyApplicantAccount(id, req);
+    return res.status(201).json({
+      message: "Volunteer account created successfully",
+      data: account,
+    });
   });
 
   /** Admin: Schedule interview */

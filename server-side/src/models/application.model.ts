@@ -51,6 +51,14 @@ export interface IApplication extends Document {
   interview?: IInterview;
   reviewer?: string; // Reference to Admin who made decision
   internalNotes?: string;
+  // Set when an Approved applicant has had their volunteer account created
+  // (see RecruitmentService.verifyApplicantAccount). Admin "Verifications"
+  // tab uses this to know which Approved applicants still need an account.
+  volunteerAccount?: {
+    username: string;
+    tempPassword: string;
+    createdAt: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -128,13 +136,21 @@ const ApplicationSchema = new Schema<IApplication>(
       scheduledAt: { type: Date },
       location: { type: String },
       notes: { type: String },
-      status: { type: String },
+      status: {
+        type: String,
+        enum: ["SCHEDULED", "RESCHEDULED", "COMPLETED", "CANCELLED"],
+      },
       scheduledBy: { type: String },
       createdAt: { type: Date },
       updatedAt: { type: Date },
     },
     reviewer: String,
     internalNotes: String,
+    volunteerAccount: {
+      username: { type: String },
+      tempPassword: { type: String },
+      createdAt: { type: Date },
+    },
   },
   { timestamps: true }
 );

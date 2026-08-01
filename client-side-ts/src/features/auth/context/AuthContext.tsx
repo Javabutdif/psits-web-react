@@ -55,6 +55,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const result = await refreshTokens();
+    if (result) {
+      setUser(result.user);
+      return result.user;
+    }
+
+    setUser(null);
+    return null;
+  }, []);
+
   // ── Memoized context value ──────────────────────────────────────────
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -63,8 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: user !== null,
       login,
       logout,
+      refreshUser,
     }),
-    [user, isLoading, login, logout]
+    [user, isLoading, login, logout, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

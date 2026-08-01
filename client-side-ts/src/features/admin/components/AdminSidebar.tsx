@@ -277,13 +277,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                         }}
                       >
                         <Users className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>Recruitment Management</span>}
+                        {!collapsed && <span>Recruitment</span>}
                       </Link>
                     </Button>
                   </TooltipTrigger>
                   {collapsed && (
                     <TooltipContent side="right">
-                      <p>Recruitment Management</p>
+                      <p>Recruitment</p>
                     </TooltipContent>
                   )}
                 </Tooltip>
