@@ -39,7 +39,7 @@ export const useOrdersData = () => {
   const paidRef = useRef(0);
 
   const isUcMainAdmin =
-    user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
+    user?.role === "admin" && normalizeCampus(user.campus) === "UC_MAIN";
 
   useEffect(() => {
     const timer = setTimeout(

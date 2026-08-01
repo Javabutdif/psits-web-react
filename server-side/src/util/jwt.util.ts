@@ -35,7 +35,7 @@ type BaseClaims = {
   sub: string; // user ObjectId as string
   idNumber: string; // unique user identifier (e.g., "2024-12345" or "2024-admin-001")
   role: "admin" | "student"; // determines authorization level
-  campus: string; // e.g., "UC-Main"; used for filtering/authorization
+  campus: string; // e.g., "UC_MAIN"; used for filtering/authorization
   access?: string; // admin access level when available
   pwdChangedAt?: string; // ISO timestamp; token becomes invalid if user changed password after issuance
 };

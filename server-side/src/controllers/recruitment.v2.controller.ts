@@ -53,7 +53,7 @@ class RecruitmentController {
   updatePosition = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const position = await recruitmentService.updatePosition(id, req);
-    return res
+    return res``
       .status(200)
       .json({ message: "Position updated successfully", data: position });
   });

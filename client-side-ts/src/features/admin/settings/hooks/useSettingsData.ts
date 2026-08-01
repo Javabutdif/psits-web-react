@@ -22,7 +22,7 @@ export const useSettingsData = () => {
   const [confirmRevoke, setConfirmRevoke] = useState(false);
 
   const isUcMainAdmin =
-    user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
+    user?.role === "admin" && normalizeCampus(user.campus) === "UC_MAIN";
 
   const isAdminAccess = isUcMainAdmin && user?.access === PSITS_ROLES.ADMIN;
 

@@ -57,17 +57,17 @@ const capabilities: Capability[] = [
   {
     feature: "View Dashboard / Students / Organization",
     grants: ["Admin", "Developer", "Head Finance", "Finance", "Executive"],
-    notes: "Sidebar + router restrict non-UC-MAIN admins.",
+    notes: "Sidebar + router restrict non-UC_MAIN admins.",
   },
   {
     feature: "Event Raffle / Promo",
     grants: ["Admin", "Developer"],
-    notes: "Router guard requires UC-MAIN campus.",
+    notes: "Router guard requires UC_MAIN campus.",
   },
   {
     feature: "Reports / Orders / Finances",
     grants: ["Admin", "Developer", "Head Finance", "Finance"],
-    notes: "Router guard requires UC-MAIN campus.",
+    notes: "Router guard requires UC_MAIN campus.",
   },
   {
     feature: "Access DevTools",

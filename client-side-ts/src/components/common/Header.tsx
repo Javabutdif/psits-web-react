@@ -43,7 +43,7 @@ const staticNavLinks: NavLinkItem[] = [
     name: "Shop",
     href: "/shop",
     hasDropdown: false,
-    allowedCampus: ["UC-MAIN", "UC-CS"],
+    allowedCampus: ["UC_MAIN", "UC_CS"],
   },
 ];
 
@@ -202,10 +202,10 @@ export const Header = () => {
 
         {/* Right Section */}
         <div className="flex items-center gap-2 md:gap-4">
-          {/* Cart — only for authenticated UC-MAIN users */}
+          {/* Cart — only for authenticated UC_MAIN users */}
           {isAuthenticated && user ? (
             <CampusView
-              allowedCampuses={["UC-MAIN", "UC-CS"]}
+              allowedCampuses={["UC_MAIN", "UC_CS"]}
               role={user.role === "admin" ? "admin" : "student"}
             >
               <Link

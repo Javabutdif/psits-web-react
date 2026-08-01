@@ -46,7 +46,7 @@ export const AccountPanel = ({ isAdminAccess }: AccountPanelProps) => {
       <section className="rounded-xl border border-[#e5e5e5] bg-white p-5">
         <h3 className="mb-4 text-base font-medium">Account Actions</h3>
         <p className="mb-4 text-sm text-[#8a8a8a]">
-          Contact UC-MAIN admin to modify your account details or password.
+          Contact UC_MAIN admin to modify your account details or password.
         </p>
         {!isAdminAccess && (
           <p className="text-xs text-orange-600">Standard access users cannot modify their own account settings.</p>

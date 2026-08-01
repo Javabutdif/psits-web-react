@@ -213,7 +213,7 @@ export const generateStudentCertificate = async (req: Request, res: Response) =>
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    return res.status(200).send(pdfBuffer);
+    return res.status(200).send(Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer as any));
   } catch (error: any) {
     // NOTE: Here is where you can catch rate limiter errors if implemented in middleware
     return res.status(500).json({ success: false, message: error.message });
@@ -239,6 +239,20 @@ export const getAssetFileTree = async (req: Request, res: Response) => {
     const filter = (req.query.filter || req.query.type || "") as string;
     const tree = await CertificateServiceV2.getAssetFileTree(filter.trim().toLowerCase());
     return res.status(200).json({ success: true, data: tree });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getStudentCertificateEvents = async (req: Request, res: Response) => {
+  try {
+    const studentId = (req as any).userV2?.idNumber;
+    if (!studentId) {
+      return res.status(401).json({ success: false, message: "Unauthorized student identity" });
+    }
+
+    const eventsData = await CertificateServiceV2.getStudentCertificateEvents(studentId);
+    return res.status(200).json({ success: true, ...eventsData });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

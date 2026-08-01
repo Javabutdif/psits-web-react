@@ -41,10 +41,10 @@ const REEL_SIZE = WINNER_IDX + BRAKE_ITEMS + VISIBLE + 40;
 
 const CAMPUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All Campuses" },
-  { value: "UC-Main", label: "UC Main" },
-  { value: "UC-Banilad", label: "UC Banilad" },
-  { value: "UC-LM", label: "UCLM" },
-  { value: "UC-PT", label: "UCPT" },
+  { value: "UC_MAIN", label: "UC Main" },
+  { value: "UC_BANILAD", label: "UC Banilad" },
+  { value: "UC_LM", label: "UCLM" },
+  { value: "UC_PT", label: "UCPT" },
 ];
 
 /** easeOutCubic: fast start, guaranteed stop at t=1 with zero velocity. */

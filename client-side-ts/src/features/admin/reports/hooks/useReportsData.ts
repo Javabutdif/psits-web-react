@@ -98,7 +98,7 @@ export const useReportsData = () => {
   const merchandiseRequestRef = useRef(0);
 
   const isUcMainAdmin =
-    user?.role === "admin" && normalizeCampus(user.campus) === "UC-MAIN";
+    user?.role === "admin" && normalizeCampus(user.campus) === "UC_MAIN";
 
   const canDeleteReports =
     isUcMainAdmin &&

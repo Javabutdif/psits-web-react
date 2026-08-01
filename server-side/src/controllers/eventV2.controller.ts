@@ -16,7 +16,9 @@ import {
   hydrateEventsAttendance,
   markAttendance,
 } from "../services/attendance.service";
+import { EventV2Service } from "../services/eventV2.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
+import { campus_type } from "../enums/campus.enums";
 import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
@@ -495,24 +497,19 @@ export const getEventAttendeesV2Controller = async (
     }
 
     const params = normalizeAttendeeQueryParams(req);
-    const requesterCampus = claims.campus;
-    const isUcMainAdmin = requesterCampus === "UC-Main";
 
-    const effectiveCampus = isUcMainAdmin ? params.campus : requesterCampus;
+    const isUcMainAdmin = claims.campus === campus_type.MAIN;
+    const effectiveCampus = isUcMainAdmin ? params.campus : claims.campus;
 
-    const event = await Event.findOne(query).select("_id attendees eventId").lean();
-
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+    let hydratedAttendees;
+    try {
+      hydratedAttendees = await EventV2Service.getEventAttendees(eventId);
+    } catch (err: any) {
+      if (err.message === "Event not found") {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      throw err;
     }
-
-    const attendeeList = Array.isArray(event.attendees)
-      ? (event.attendees as unknown as IAttendee[])
-      : [];
-    const hydratedAttendees = await hydrateAttendeesAttendance(
-      event._id,
-      attendeeList
-    );
 
     const filteredAttendees = filterAttendees(hydratedAttendees, {
       ...params,
@@ -599,13 +596,13 @@ type RaffleAttendee = IAttendee & {
 };
 
 const RAFFLE_FILTERABLE_CAMPUSES = [
-  "UC-Main",
-  "UC-Banilad",
-  "UC-LM",
-  "UC-PT",
+  "UC_MAIN",
+  "UC_BANILAD",
+  "UC_LM",
+  "UC_PT",
 ];
 
-const RAFFLE_ELIGIBLE_CAMPUSES = [...RAFFLE_FILTERABLE_CAMPUSES, "UC-CS"];
+const RAFFLE_ELIGIBLE_CAMPUSES = [...RAFFLE_FILTERABLE_CAMPUSES, "UC_CS"];
 
 const buildRaffleCampusFilter = (
   campusParam: string | undefined
@@ -613,8 +610,8 @@ const buildRaffleCampusFilter = (
   if (!campusParam) return null;
 
   const normalized = campusParam.trim();
-  if (normalized === "UC-Main") {
-    return ["UC-Main", "UC-CS"];
+  if (normalized === "UC_MAIN") {
+    return ["UC_MAIN", "UC_CS"];
   }
 
   return [normalized];
@@ -653,10 +650,10 @@ export const getEligibleAttendeesRaffleV2Controller = async (
     if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
     const eventId = req.params.eventId as string;
@@ -729,10 +726,10 @@ export const drawEventRaffleWinnerController = async (
     if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
@@ -805,10 +802,10 @@ export const undoEventRaffleWinnerController = async (
     if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
     const eventId = req.params.eventId as string;
@@ -863,13 +860,13 @@ const V_EMAIL_REGEX =
 const V_PWD_MIN = 8;
 const V_STUDENT_ID_REGEX = /^\d{8}$/;
 const V_VALID_COURSES = ["BSIT", "BSCS", "ACT"];
-const V_VALID_CAMPUSES = ["UC-Banilad", "UC-LM", "UC-PT"];
-const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC-Main", "UC-CS"];
+const V_VALID_CAMPUSES = ["UC_BANILAD", "UC_LM", "UC_PT"];
+const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC_MAIN", "UC_CS"];
 
 const CAMPUS_ID_SUFFIX: Record<string, string> = {
-  "UC-Banilad": "ucb",
-  "UC-LM": "uclm",
-  "UC-PT": "ucpt",
+  "UC_BANILAD": "ucb",
+  "UC_LM": "uclm",
+  "UC_PT": "ucpt",
 };
 
 const buildCampusScopedStudentId = (rawStudentId: string, campus: string) => {
@@ -1353,7 +1350,7 @@ export const getEventStatisticsV2Controller = async (
     }
 
     const requesterCampus = claims.campus;
-    const isUcMainAdmin = requesterCampus === "UC-Main";
+    const isUcMainAdmin = requesterCampus === campus_type.MAIN;
     const campusScope = isUcMainAdmin ? "all" : requesterCampus;
 
     const event = await Event.findOne(query)
@@ -2335,8 +2332,7 @@ export const getAllEventsRawController = async (
   res: Response
 ): Promise<any> => {
   try {
-    // Fetches raw events, using the Event model's custom 'eventId' rather than '_id'
-    const events = await Event.find({}, "eventId eventName eventImage -_id").lean();
+    const events = await EventV2Service.getAllEventsRaw();
     return res.status(200).json({
       data: events,
       message: "Fetched raw events successfully",
@@ -2349,3 +2345,62 @@ export const getAllEventsRawController = async (
     })
   }
 }
+
+export const updateEventV2Controller = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const eventId = req.params.eventId as string;
+    const claims = (req as any).userV2;
+
+    if (claims.role !== "admin" || claims.campus !== campus_type.MAIN) {
+      return res.status(403).json({
+        error: "FORBIDDEN",
+        message: "Only UC_MAIN admins can edit events",
+      });
+    }
+
+    const {
+      eventName,
+      eventDescription,
+      eventDate,
+      eventVenue,
+      eventTheme,
+      eventVenueSpecific,
+      eventStartTime,
+      eventEndTime,
+      eventImage,
+    } = req.body;
+
+    const updatedEvent = await EventV2Service.updateEvent(eventId, {
+      eventName,
+      eventDescription,
+      eventDate,
+      eventVenue,
+      eventTheme,
+      eventVenueSpecific,
+      eventStartTime,
+      eventEndTime,
+      eventImage,
+    });
+
+    if (!updatedEvent) {
+      return res.status(404).json({
+        error: "NOT_FOUND",
+        message: "Event not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Event updated successfully",
+      data: updatedEvent,
+    });
+  } catch (error: any) {
+    console.error("Error in updateEventV2Controller:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: error.message,
+    });
+  }
+};

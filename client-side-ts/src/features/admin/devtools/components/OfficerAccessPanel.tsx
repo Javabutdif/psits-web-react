@@ -78,7 +78,7 @@ export const OfficerAccessPanel = () => {
 
       {!isAdminAccess && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          Officer access management is restricted to PSITS_ADMIN accounts. Contact your UC-MAIN administrator.
+          Officer access management is restricted to PSITS_ADMIN accounts. Contact your UC_MAIN administrator.
         </div>
       )}
 

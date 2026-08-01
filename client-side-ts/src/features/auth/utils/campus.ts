@@ -1,9 +1,9 @@
 const CAMPUS_ALIASES: Record<string, string> = {
-  ucmain: "UC-MAIN",
-  ucbanilad: "UC-BANILAD",
-  uclm: "UC-LM",
-  ucpt: "UC-PT",
-  uccs: "UC-CS",
+  ucmain: "UC_MAIN",
+  ucbanilad: "UC_BANILAD",
+  uclm: "UC_LM",
+  ucpt: "UC_PT",
+  uccs: "UC_CS",
 };
 
 export const normalizeCampus = (campus?: string | null): string => {

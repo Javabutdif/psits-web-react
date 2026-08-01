@@ -53,7 +53,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const isUcMainAdmin = useCampusCheck(["UC-MAIN"]);
+  const isUcMainAdmin = useCampusCheck(["UC_MAIN"]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [merchandiseOpen, setMerchandiseOpen] = useState(
     location.pathname.startsWith("/admin/merchandise")

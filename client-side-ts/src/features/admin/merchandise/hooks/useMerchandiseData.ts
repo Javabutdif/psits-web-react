@@ -302,7 +302,7 @@ export const useMerchandiseData = () => {
   const [error, setError] = useState<string | null>(null);
 
   const canManageMerchandise =
-    normalizeCampus(user?.campus) === "UC-MAIN" &&
+    normalizeCampus(user?.campus) === "UC_MAIN" &&
     (user?.access === PSITS_ROLES.ADMIN ||
       user?.access === PSITS_ROLES.FINANCE);
 

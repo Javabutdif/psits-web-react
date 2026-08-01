@@ -41,7 +41,7 @@ export const StudentLayout: React.FC = () => {
                 Event Attendance
               </NavLink>
             </li>
-            <CampusView allowedCampuses={["UC-MAIN"]} role="student">
+            <CampusView allowedCampuses={["UC_MAIN"]} role="student">
               <li>
                 <NavLink
                   to="my-orders"
@@ -53,6 +53,17 @@ export const StudentLayout: React.FC = () => {
                 </NavLink>
               </li>
             </CampusView>
+
+            <li>
+              <NavLink
+                to="certificates"
+                className={({ isActive }) =>
+                  `pb-3 ${isActive ? "border-b-4 border-sky-400" : "border-b-4 border-transparent"}`
+                }
+              >
+                Certificates
+              </NavLink>
+            </li>
 
             <li>
               <NavLink

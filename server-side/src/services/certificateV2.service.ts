@@ -16,6 +16,15 @@ export interface AssetTreeNode {
   children?: AssetTreeNode[];
 }
 
+function formatTimeToAMPM(timeStr?: string): string {
+  if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) return timeStr || "TBA";
+  const [hourStr, minStr] = timeStr.split(":");
+  const hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${formattedHour}:${minStr} ${ampm}`;
+}
+
 export class CertificateServiceV2 {
   // 1. getAllActiveTemplates
   static async getAllActiveTemplates() {
@@ -25,6 +34,48 @@ export class CertificateServiceV2 {
   // 1.5 getAllEventsWithCertificates
   static async getAllEventsWithCertificates() {
     return await Event.find({ isGenerateCertificate: true }).populate("certificateTemplate");
+  }
+
+  // 1.5.5 getStudentCertificateEvents
+  static async getStudentCertificateEvents(studentId: string) {
+    const events = await Event.find({ isGenerateCertificate: true })
+      .populate("certificateTemplate")
+      .lean();
+
+    const eligibleList: any[] = [];
+    const otherList: any[] = [];
+
+    for (const event of events) {
+      const isEligible = Array.isArray(event.eligibleStudentsForCertificate) &&
+        event.eligibleStudentsForCertificate.includes(studentId);
+
+      const mappedEvent = {
+        _id: event._id,
+        eventId: event.eventId,
+        eventName: event.eventName,
+        eventDate: event.eventDate,
+        eventImage: event.eventImage,
+        eventDescription: event.eventDescription,
+        eventTheme: event.eventTheme || (event.certificateTemplate as any)?.description || "",
+        eventVenue: event.eventVenue || "TBA",
+        eventVenueSpecific: event.eventVenueSpecific || "",
+        eventStartTime: event.eventStartTime || "",
+        eventEndTime: event.eventEndTime || "",
+        location: event.eventVenue || "TBA",
+        isEligible: isEligible,
+      };
+
+      if (isEligible) {
+        eligibleList.push(mappedEvent);
+      } else {
+        otherList.push(mappedEvent);
+      }
+    }
+
+    return {
+      eligible: eligibleList,
+      other: otherList,
+    };
   }
 
   // 1.6 getEventAttendeesRaw (bypasses campus filter for cert management)
@@ -155,13 +206,17 @@ export class CertificateServiceV2 {
       student_name: `${student.first_name} ${student.last_name}`,
       event_name: event.eventName,
       event_date: event.eventDate
-        ? new Date(event.eventDate).toLocaleDateString()
+        ? new Date(event.eventDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
         : "TBA",
-      event_start_time: "TBA",
-      event_end_time: "TBA",
-      event_venue_specific: "TBA",
-      event_venue: "TBA",
-      event_theme: "",
+      event_start_time: formatTimeToAMPM((event as any).eventStartTime),
+      event_end_time: formatTimeToAMPM((event as any).eventEndTime),
+      event_venue_specific: (event as any).eventVenueSpecific || "TBA",
+      event_venue: (event as any).eventVenue || "TBA",
+      event_theme: (event as any).eventTheme || "",
       signees: template.defaultSignees || [],
       images: template.defaultImages
         ? Object.fromEntries(template.defaultImages)
