@@ -1,3 +1,4 @@
+import { Checkbox } from "@/components/ui/checkbox";
 import { useMemo, useState } from "react";
 import {
   ArrowUpDown,
@@ -299,7 +300,7 @@ const StatCard = ({ label, value }: { label: string; value: number }) => (
   </div>
 );
 
-export const RecuitmentViews = () => {
+export const RecruitmentViews = () => {
   const {
     activeTab,
     setActiveTab,
@@ -368,6 +369,9 @@ export const RecuitmentViews = () => {
     useState<RecruitmentPosition | null>(null);
   const [isClearAllRejectedOpen, setIsClearAllRejectedOpen] = useState(false);
 
+  const [selectedRejectedIds, setSelectedRejectedIds] = useState<string[]>([]);
+  const [selectedPositionIds, setSelectedPositionIds] = useState<string[]>([]);
+
   const counts = useMemo(() => {
     return {
       pending: applicants.filter((a) => a.status === "Pending").length,
@@ -389,6 +393,30 @@ export const RecuitmentViews = () => {
       if (!allOnPageSelected && !isSelected) toggleApplicantSelection(a.id);
     });
   };
+
+  const allRejectedSelected =
+  rejectedApplicants.length > 0 &&
+  rejectedApplicants.every((a) => selectedRejectedIds.includes(a.id));
+
+const toggleRejectedSelection = (id: string) => {
+  setSelectedRejectedIds((current) =>
+    current.includes(id)
+      ? current.filter((x) => x !== id)
+      : [...current, id]
+  );
+};
+
+const allPositionsSelected =
+  positions.length > 0 &&
+  positions.every((p) => selectedPositionIds.includes(p._id));
+
+const togglePositionSelection = (id: string) => {
+  setSelectedPositionIds((current) =>
+    current.includes(id)
+      ? current.filter((x) => x !== id)
+      : [...current, id]
+  );
+};
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
@@ -588,31 +616,49 @@ export const RecuitmentViews = () => {
               <table className="w-full min-w-[820px] table-fixed border-collapse text-sm">
                 <thead>
                   <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                    <th className="w-[26%] rounded-l-md px-3 py-2 text-left font-medium">
-                      Position
-                    </th>
-                    <th className="w-[13%] px-3 py-2 text-left font-medium">
-                      Status
-                    </th>
-                    <th className="w-[12%] px-3 py-2 text-left font-medium">
-                      Slots
-                    </th>
-                    <th className="w-[17%] px-3 py-2 text-left font-medium">
-                      Deadline
-                    </th>
-                    <th className="w-[17%] px-3 py-2 text-left font-medium">
-                      Created
-                    </th>
-                    <th className="w-[15%] rounded-r-md px-3 py-2 text-right font-medium">
-                      Actions
-                    </th>
-                  </tr>
+                <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
+                  <Checkbox
+                    checked={allPositionsSelected}
+                    onCheckedChange={(checked) =>
+                      setSelectedPositionIds(
+                        checked ? positions.map((p) => p._id) : []
+                      )
+                    }
+                    aria-label="Select all positions"
+                    className="data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:border-[#1C9DDE]"
+                  />
+                </th>
+
+                <th className="w-[22%] px-3 py-2 text-left font-medium">
+                  Position
+                </th>
+
+                <th className="w-[12%] px-3 py-2 text-left font-medium">
+                  Status
+                </th>
+
+                <th className="w-[12%] px-3 py-2 text-left font-medium">
+                  Slots
+                </th>
+
+                <th className="w-[17%] px-3 py-2 text-left font-medium">
+                  Deadline
+                </th>
+
+                <th className="w-[18%] px-3 py-2 text-left font-medium">
+                  Created
+                </th>
+
+                <th className="w-[15%] rounded-r-md px-3 py-2 text-right font-medium">
+                  Actions
+                </th>
+              </tr>
                 </thead>
                 <tbody>
                   {isPositionsLoading ? (
-                    Array.from({ length: 5 }, (_, index) => (
-                      <tr key={index} className="border-b border-[#ededed]">
-                        {Array.from({ length: 6 }, (_, cell) => (
+                    Array.from({ length: 5 }, (_, row) => (
+                      <tr key={row} className="border-b border-[#ededed]">
+                        {Array.from({ length: 7 }, (_, cell) => (
                           <td key={cell} className="px-3 py-3">
                             <Skeleton className="h-4 w-full rounded-full" />
                           </td>
@@ -622,7 +668,7 @@ export const RecuitmentViews = () => {
                   ) : positionsError ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-3 py-16 text-center text-sm text-red-600"
                       >
                         {positionsError}
@@ -634,9 +680,22 @@ export const RecuitmentViews = () => {
                         key={position._id}
                         className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
                       >
+                        {/* Checkbox */}
+                        <td className="px-3 py-3">
+                          <Checkbox
+                            checked={selectedPositionIds.includes(position._id)}
+                            onCheckedChange={() => togglePositionSelection(position._id)}
+                            aria-label={`Select ${position.title}`}
+                            className="data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:border-[#1C9DDE] data-[state=checked]:text-white"
+                          />
+                        </td>
+
+                        {/* Position */}
                         <td className="truncate px-3 py-3 font-medium text-slate-900">
                           {position.title}
                         </td>
+
+                        {/* Status */}
                         <td className="px-3 py-3">
                           <span
                             className={cn(
@@ -648,17 +707,25 @@ export const RecuitmentViews = () => {
                             {position.hiringStatus}
                           </span>
                         </td>
-                        <td className="px-3 py-3">{position.slots ?? "—"}</td>
+
+                        {/* Slots */}
+                        <td className="px-3 py-3">
+                          {position.slots ?? "—"}
+                        </td>
+
+                        {/* Deadline */}
                         <td className="px-3 py-3">
                           {position.applicationDeadline
-                            ? new Date(
-                                position.applicationDeadline
-                              ).toLocaleDateString()
+                            ? new Date(position.applicationDeadline).toLocaleDateString()
                             : "—"}
                         </td>
+
+                        {/* Created */}
                         <td className="px-3 py-3">
                           {new Date(position.createdAt).toLocaleDateString()}
                         </td>
+
+                        {/* Actions */}
                         <td className="px-3 py-3 text-right">
                           <Popover
                             open={openPositionMenuId === position._id}
@@ -677,6 +744,7 @@ export const RecuitmentViews = () => {
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </PopoverTrigger>
+
                             <PopoverContent
                               align="end"
                               className="w-56 rounded-xl border-[#ececec] p-1.5 shadow-lg"
@@ -692,6 +760,7 @@ export const RecuitmentViews = () => {
                                 <Pencil className="h-4 w-4 text-slate-500" />
                                 Edit Role Application
                               </button>
+
                               <button
                                 type="button"
                                 disabled={position.hiringStatus === "CLOSED"}
@@ -704,6 +773,7 @@ export const RecuitmentViews = () => {
                                 <Ban className="h-4 w-4" />
                                 Close Role Application
                               </button>
+
                               {position.hiringStatus === "CLOSED" && (
                                 <button
                                   type="button"
@@ -725,7 +795,7 @@ export const RecuitmentViews = () => {
                   ) : (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-3 py-16 text-center text-sm text-[#777]"
                       >
                         No open roles yet.
@@ -753,12 +823,11 @@ export const RecuitmentViews = () => {
                 <thead>
                   <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
                     <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={allOnPageSelected}
-                        onChange={toggleSelectAllOnPage}
+                        onCheckedChange={toggleSelectAllOnPage}
                         aria-label="Select all on page"
-                        className="h-4 w-4 cursor-pointer"
+                        className="data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:border-[#1C9DDE] data-[state=checked]:text-white"
                       />
                     </th>
                     <th className="w-[24%] px-3 py-2 text-left">
@@ -819,15 +888,12 @@ export const RecuitmentViews = () => {
                         className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
                       >
                         <td className="px-3 py-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(applicant.id)}
-                            onChange={() =>
-                              toggleApplicantSelection(applicant.id)
-                            }
-                            aria-label={`Select ${applicant.name}`}
-                            className="h-4 w-4 cursor-pointer"
-                          />
+                        <Checkbox
+                          checked={selectedIds.includes(applicant.id)}
+                          onCheckedChange={() => toggleApplicantSelection(applicant.id)}
+                          aria-label={`Select ${applicant.name}`}
+                          className="data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:border-[#1C9DDE] data-[state=checked]:text-white"
+                        />
                         </td>
                         <td className="px-3 py-3">
                           <div className="flex min-w-0 items-center gap-2.5">
@@ -979,7 +1045,19 @@ export const RecuitmentViews = () => {
                   <table className="w-full min-w-[700px] table-fixed border-collapse text-sm">
                     <thead>
                       <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                        <th className="w-[30%] rounded-l-md px-3 py-2 text-left font-medium">
+                        <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
+                          <Checkbox
+                            checked={allRejectedSelected}
+                            onCheckedChange={(checked) =>
+                              setSelectedRejectedIds(
+                                checked ? rejectedApplicants.map((a) => a.id) : []
+                              )
+                            }
+                            aria-label="Select all rejected applicants"
+                            className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE]"
+                          />
+                        </th>
+                        <th className="w-[26%] px-3 py-2 text-left font-medium">
                           Applicant
                         </th>
                         <th className="w-[15%] px-3 py-2 text-left font-medium">
@@ -1002,6 +1080,17 @@ export const RecuitmentViews = () => {
                           key={applicant.id}
                           className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
                         >
+                          {/* Checkbox */}
+                          <td className="px-3 py-3">
+                            <Checkbox
+                              checked={selectedRejectedIds.includes(applicant.id)}
+                              onCheckedChange={() => toggleRejectedSelection(applicant.id)}
+                              aria-label={`Select ${applicant.name}`}
+                              className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
+                            />
+                          </td>
+
+                          {/* Applicant */}
                           <td className="px-3 py-3">
                             <div className="flex min-w-0 items-center gap-2.5">
                               <span
@@ -1012,6 +1101,7 @@ export const RecuitmentViews = () => {
                               >
                                 {getInitial(applicant.name)}
                               </span>
+
                               <div className="min-w-0">
                                 <p className="truncate font-medium text-slate-900">
                                   {applicant.name || "—"}
@@ -1022,17 +1112,25 @@ export const RecuitmentViews = () => {
                               </div>
                             </div>
                           </td>
+
+                          {/* ID Number */}
                           <td className="truncate px-3 py-3">
                             {applicant.id_number || "—"}
                           </td>
+
+                          {/* Course / Year */}
                           <td className="truncate px-3 py-3">
                             {[applicant.course, applicant.year]
                               .filter(Boolean)
                               .join(" • ") || "—"}
                           </td>
+
+                          {/* Role Applied */}
                           <td className="truncate px-3 py-3">
                             {applicant.roleApplied || "—"}
                           </td>
+
+                          {/* Actions */}
                           <td className="px-3 py-3 text-right">
                             <Button
                               type="button"
@@ -1333,4 +1431,4 @@ export const RecuitmentViews = () => {
   );
 };
 
-export default RecuitmentViews;
+export default RecruitmentViews;

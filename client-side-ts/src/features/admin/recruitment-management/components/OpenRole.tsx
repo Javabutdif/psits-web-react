@@ -38,10 +38,10 @@ const DEFAULT_ROLES: Role[] = [
     title: "Developer",
     enabled: false,
     positions: [
-      { id: "frontend", name: "Frontend", enabled: false },
-      { id: "backend", name: "Backend", enabled: false },
-      { id: "fullstack", name: "Full stack", enabled: false },
-      { id: "uiux", name: "UI / UX", enabled: false },
+      { id: "frontend", name: "Front-end", enabled: false },
+      { id: "backend", name: "Back-end", enabled: false },
+      { id: "fullstack", name: "Full-stack", enabled: false },
+      { id: "uiux", name: "UI/UX Designer", enabled: false },
       { id: "qa", name: "QA Tester", enabled: false },
     ],
   },
@@ -61,9 +61,20 @@ const DEFAULT_ROLES: Role[] = [
     title: "Officer",
     enabled: false,
     positions: [
-      { id: "secretary", name: "Secretary", enabled: false },
-      { id: "treasurer", name: "Treasurer", enabled: false },
+      { id: "president", name: "President", enabled: false },
+      { id: "vp-external", name: "Vice Pres. - External", enabled: false },
+      { id: "vp-internal", name: "Vice Pres. - Internal", enabled: false },
       { id: "auditor", name: "Auditor", enabled: false },
+      { id: "asst-treasurer", name: "Asst. Treasurer", enabled: false },
+      { id: "treasurer", name: "Treasurer", enabled: false },
+      { id: "secretary", name: "Secretary", enabled: false },
+      { id: "chief-volunteer", name: "Chief Volunteer", enabled: false },
+      { id: "pro", name: "PRO", enabled: false },
+      { id: "pio", name: "PIO", enabled: false },
+      { id: "rep-1st", name: "1st Year REP", enabled: false },
+      { id: "rep-2nd", name: "2nd Year REP", enabled: false },
+      { id: "rep-3rd", name: "3rd Year REP", enabled: false },
+      { id: "rep-4th", name: "4th Year REP", enabled: false },
     ],
   },
   {
@@ -334,7 +345,8 @@ export default function OpenRole({
 
   const [roles, setRoles] = useState<Role[]>(DEFAULT_ROLES);
   const [saveSelection, setSaveSelection] = useState(false);
-  const [requirements, setRequirements] = useState("");
+  const [requirementsByItem, setRequirementsByItem] = useState<Record<string, string>>({});
+  const [activeRequirementId, setActiveRequirementId] = useState<string | null>(null);
 
   // Track whether the dialog was open on the previous render so we can
   // reset to page 1 exactly when it transitions closed -> open. Doing this
@@ -344,7 +356,11 @@ export default function OpenRole({
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
-    if (open) setStep(1);
+    if (open) {
+      setStep(1);
+      setRequirementsByItem({});
+      setActiveRequirementId(null);
+    }
   }
 
   const toggleRole = (roleId: string) => {
@@ -453,20 +469,24 @@ export default function OpenRole({
   const handleNext = () => {
     if (!isStepOneValid) return;
     setStep(2);
+    setActiveRequirementId((current) => current ?? requirementItems[0]?.id ?? null);
   };
 
   const handleBack = () => setStep(1);
 
   const handleConfirm = () => {
     if (!isStepOneValid) return;
-    onConfirm({
+
+    const confirmationData = {
       startDate: startDate!.toISOString(),
       endDate: endDate!.toISOString(),
       startTime,
       endTime,
       roles,
-      roleRequirements: requirements.trim(),
-    });
+      requirementsByItem,
+    } as OpenRecruitmentValues & { requirementsByItem: Record<string, string> };
+
+    onConfirm(confirmationData);
   };
 
   return (
@@ -605,23 +625,40 @@ export default function OpenRole({
               </p>
             ) : (
               <div className="mb-4 flex flex-wrap gap-2">
-                {requirementItems.map((item) => (
-                  <span
-                    key={item.id}
-                    className="rounded-full bg-[#EFF8FD] px-3 py-1 text-xs text-[#1C9DDE]"
-                  >
-                    {item.label}
-                  </span>
-                ))}
-              </div>
+              {requirementItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveRequirementId(item.id)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    activeRequirementId === item.id
+                      ? "bg-[#1C9DDE] text-white"
+                      : "bg-[#EFF8FD] text-[#1C9DDE] hover:bg-[#dcefff]"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
             )}
 
             <div className="rounded-2xl border border-[#ECECEC] p-4">
               <textarea
-                value={requirements}
-                onChange={(e) => setRequirements(e.target.value)}
-                placeholder="List the requirements, qualifications, or expectations applicants should meet — e.g. year level, course, or experience..."
-                className="h-40 w-full resize-none rounded-xl border-none p-1 text-[13px] text-[#4A4A4A] placeholder:text-slate-400 focus:outline-none"
+                value={activeRequirementId ? (requirementsByItem[activeRequirementId] ?? "") : ""}
+                onChange={(e) =>
+                  activeRequirementId &&
+                  setRequirementsByItem((prev) => ({
+                    ...prev,
+                    [activeRequirementId]: e.target.value,
+                  }))
+                }
+                disabled={!activeRequirementId}
+                placeholder={
+                  activeRequirementId
+                    ? "List the requirements, qualifications, or expectations applicants should meet — e.g. year level, course, or experience..."
+                    : "Select a role above to add its requirements"
+                }
+                className="h-40 w-full resize-none rounded-xl border-none p-1 text-[13px] text-[#4A4A4A] placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -645,7 +682,7 @@ export default function OpenRole({
               step === 1 ? !isStepOneValid : !isStepOneValid || isSubmitting
             }
             onClick={step === 1 ? handleNext : handleConfirm}
-            className={`-mt-5 h-10 w-56 rounded-full transition-all ${
+            className={`h-10 w-56 rounded-full transition-all ${
               isStepOneValid
                 ? "bg-[#1C9DDE] hover:bg-[#1487C2]"
                 : "bg-slate-300"
