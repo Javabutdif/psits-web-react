@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/features/auth";
 import {
   listPositions,
@@ -33,15 +33,6 @@ const YEAR_MAP: Record<string, string> = {
   "3": "3rd Year",
   "4": "4th Year",
 };
-
-const OFFICER_SUBPOSITIONS = [
-  "President",
-  "Vice President - Internal",
-  "Vice President - External",
-  "Secretary",
-  "Treasurer",
-  "Auditor",
-];
 
 type StatusStep = {
   key: string;
@@ -372,6 +363,7 @@ export const ApplicationPage = () => {
 
   const [selectedPositionId, setSelectedPositionId] = useState("");
   const [subPosition, setSubPosition] = useState("");
+  const [selectedBaseRole, setSelectedBaseRole] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [resume, setResume] = useState<File | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -453,15 +445,31 @@ export const ApplicationPage = () => {
     fetchApplications();
   }, []);
 
+  // Position titles look like "Developer - Frontend" or plain "Volunteer".
+  // Split each into a base role + optional sub-label so the two dropdowns
+  // below can be driven from data that's actually stored as one combined
+  // string on the backend, rather than a hardcoded list of sub-positions.
+  const groupedPositions = useMemo(() => {
+  const groups: Record<string, { positionId: string; subLabel: string | null }[]> = {};
+
+    positions.forEach((p) => {
+      const [base, ...rest] = p.title.split(" - ");
+      const baseRole = base.trim();
+      const subLabel = rest.length > 0 ? rest.join(" - ").trim() : null;
+
+      if (!groups[baseRole]) groups[baseRole] = [];
+      groups[baseRole].push({ positionId: p._id, subLabel });
+    });
+
+    return groups;
+  }, [positions]);
+
+  const baseRoleOptions = Object.keys(groupedPositions);
+
   const selectedPosition = positions.find((p) => p._id === selectedPositionId);
-  // Bulk-opened officer roles are titled "Officer - Secretary", etc., so
-  // match on the leading word rather than an exact "officer" string.
-  const isOfficerRole =
-    selectedPosition?.title?.toLowerCase().startsWith("officer") ?? false;
 
   const isFormValid =
     selectedPositionId &&
-    (!isOfficerRole || subPosition) &&
     acknowledged &&
     resume &&
     form.studentId &&
@@ -532,6 +540,8 @@ export const ApplicationPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid || !resume) return;
+
+     console.log("DEBUG submitting:", { selectedPositionId, subPosition });
 
     setSubmitting(true);
     try {
@@ -607,10 +617,18 @@ export const ApplicationPage = () => {
 
             <div className="flex gap-3">
               <Select
-                value={selectedPositionId}
+                value={selectedBaseRole}
                 onValueChange={(v) => {
-                  setSelectedPositionId(v);
+                  setSelectedBaseRole(v);
                   setSubPosition("");
+                  // If this base role has no sub-labels (e.g. "Volunteer"),
+                  // there's only one matching position — select it right away.
+                  const group = groupedPositions[v] || [];
+                  if (group.length === 1 && group[0].subLabel === null) {
+                    setSelectedPositionId(group[0].positionId);
+                  } else {
+                    setSelectedPositionId("");
+                  }
                 }}
                 disabled={positionsLoading}
               >
@@ -624,9 +642,9 @@ export const ApplicationPage = () => {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {positions.map((p) => (
-                    <SelectItem key={p._id} value={p._id}>
-                      {p.title}
+                  {baseRoleOptions.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -634,18 +652,31 @@ export const ApplicationPage = () => {
 
               <Select
                 value={subPosition}
-                onValueChange={setSubPosition}
-                disabled={!isOfficerRole}
+                onValueChange={(label) => {
+                  setSubPosition(label);
+                  const match = (
+                    groupedPositions[selectedBaseRole] || []
+                  ).find((item) => item.subLabel === label);
+                  if (match) setSelectedPositionId(match.positionId);
+                }}
+                disabled={
+                  !selectedBaseRole ||
+                  (groupedPositions[selectedBaseRole] || []).every(
+                    (item) => item.subLabel === null
+                  )
+                }
               >
                 <SelectTrigger className="flex-1">
                   <SelectValue placeholder="Position" />
                 </SelectTrigger>
                 <SelectContent>
-                  {OFFICER_SUBPOSITIONS.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
+                  {(groupedPositions[selectedBaseRole] || [])
+                    .filter((item) => item.subLabel !== null)
+                    .map((item) => (
+                      <SelectItem key={item.positionId} value={item.subLabel!}>
+                        {item.subLabel}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
