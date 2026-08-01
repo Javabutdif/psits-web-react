@@ -97,7 +97,7 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
             </div>
           ) : (
             <>
-              <Upload className="mb-4 h-12 w-12 text-gray-400" />
+              <Upload className="mb-4 h-8 w-8 text-gray-400" />
               <p className="mb-1 text-base font-medium text-gray-700">
                 Choose a file or drag & drop it here
               </p>
