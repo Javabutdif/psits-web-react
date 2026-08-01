@@ -143,7 +143,10 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] w-full max-w-4xl flex-col gap-0 overflow-y-auto rounded-lg p-0 sm:max-w-2xl sm:rounded-xl">
+      <DialogContent
+        showCloseButton={false}
+        className="flex max-h-[80vh] w-full max-w-4xl flex-col gap-0 overflow-y-auto rounded-lg p-0 sm:max-w-2xl sm:rounded-xl"
+      >
         <DialogHeader className="border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-semibold leading-6">

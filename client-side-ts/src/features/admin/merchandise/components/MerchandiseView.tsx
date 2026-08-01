@@ -432,6 +432,9 @@ interface ProductTableProps {
   products: MerchandiseItem[];
   total: number;
   totalPages: number;
+  selectedIds: string[];
+  onToggleSelectAll: () => void;
+  onToggleSelectRow: (id: string) => void;
   onDelete: (product: MerchandiseItem) => void;
   onEdit: (product: MerchandiseItem) => void;
   onPageChange: (page: number) => void;
@@ -447,6 +450,9 @@ const ProductTable = ({
   products,
   total,
   totalPages,
+  selectedIds,
+  onToggleSelectAll,
+  onToggleSelectRow,
   onDelete,
   onEdit,
   onPageChange,
@@ -469,7 +475,15 @@ const ProductTable = ({
         <thead>
           <tr className="h-8 rounded-lg bg-[#ededed] text-left text-xs font-medium">
             <th className="rounded-l-lg px-2">
-              <Checkbox aria-label="Select all products" className="h-4 w-4" />
+              <Checkbox
+                aria-label="Select all products"
+                className="h-4 w-4"
+                checked={
+                  products.length > 0 &&
+                  products.every((product) => selectedIds.includes(product._id))
+                }
+                onCheckedChange={onToggleSelectAll}
+              />
             </th>
             <th className="px-2">
               <SortLabel field="name" onSort={onSort}>
@@ -519,7 +533,12 @@ const ProductTable = ({
               return (
                 <tr key={product._id} className="border-b border-[#eeeeee]">
                   <td className="px-2 py-3 align-middle">
-                    <Checkbox aria-label={`Select ${product.name}`} className="h-4 w-4" />
+                    <Checkbox
+                      aria-label={`Select ${product.name}`}
+                      className="h-4 w-4"
+                      checked={selectedIds.includes(product._id)}
+                      onCheckedChange={() => onToggleSelectRow(product._id)}
+                    />
                   </td>
                   <td className="px-2 py-3">
                     <div className="flex min-w-0 items-center gap-3">
@@ -843,6 +862,20 @@ const ProductsPage = () => {
     useState<"delete-product" | "publish-product" | null>(null);
   const [confirmProduct, setConfirmProduct] = useState<MerchandiseItem | null>(null);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+const toggleSelectAll = () => {
+  const allIds = productRows.map((product) => product._id);
+  const allSelected = allIds.every((id) => selectedIds.includes(id));
+  setSelectedIds(allSelected ? [] : allIds);
+};
+
+const toggleSelectRow = (id: string) => {
+  setSelectedIds((prev) =>
+    prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+  );
+};
+
   const openConfirm = (
     action: "delete-product" | "publish-product",
     product: MerchandiseItem
@@ -909,6 +942,9 @@ const ProductsPage = () => {
           products={productRows}
           total={filteredProducts.length}
           totalPages={productTotalPages}
+          selectedIds={selectedIds}
+          onToggleSelectAll={toggleSelectAll}
+          onToggleSelectRow={toggleSelectRow}
           onDelete={(product) => openConfirm("delete-product", product)}
           onEdit={(product) =>
             navigate(`/admin/merchandise/products/${product._id}/edit`)
