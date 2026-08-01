@@ -29,6 +29,7 @@ import studentRoutes from "./routes/students.route";
 import studentV2Routes from "./routes/studentsV2.route";
 import indexV2Routes from "./routes/index.v2.route";
 import reportV2Routes from "./routes/report.v2.route";
+import recruitmentRoutes from "./routes/recruitment.route";
 import { hardDeleteSoftDeletedMerch } from "./controllers/merchandise.v2.controller";
 import certificateV2Routes from "./routes/certificateV2.route";
 import { errorHandler } from "./util/errors.util";
@@ -43,7 +44,6 @@ const allowedOrigins = [
   process.env.CORS2,
   process.env.CORS3,
 ].filter((origin): origin is string => Boolean(origin));
-
 
 app.use(
   helmet({
@@ -80,6 +80,7 @@ app.use("/api/v2/auth", authV2Routes);
 app.use("/api/v2/events", eventsV2Routes);
 app.use("/api/v2/merchandise", merchandiseV2Routes);
 app.use("/api/v2/students", studentV2Routes);
+app.use("/api/v2/recruitment", recruitmentRoutes);
 app.use("/api/v2/dev", devtoolsRoutes);
 app.use("/api/v2/certificates", certificateV2Routes);
 
@@ -135,89 +136,108 @@ async function startServer() {
       }
     });
 
-    const emailJob = cron.schedule("0 1 * * *", async () => {
-      console.log("[1AM PH] Running daily email resend job...");
-      const startedAt = new Date();
-      try {
-        await resendPendingEmails();
-        await logCronExecution({
-          jobName: "email-resend",
-          scheduledAt: startedAt,
-          startedAt,
-          completedAt: new Date(),
-          durationMs: Date.now() - startedAt.getTime(),
-          success: true,
-        });
-      } catch (err: any) {
-        await logCronExecution({
-          jobName: "email-resend",
-          scheduledAt: startedAt,
-          startedAt,
-          completedAt: new Date(),
-          durationMs: Date.now() - startedAt.getTime(),
-          success: false,
-          errorMessage: err.message,
-        });
-      }
-    }, { timezone: "Asia/Manila" });
-
-    const orderJob = cron.schedule("0 0 1 * *", async () => {
-      console.log("[Monthly 1st] Running expired orders cleanup...");
-      const startedAt = new Date();
-      try {
-        const result = await orderService.cancelExpiredOrders();
-        console.log(`[Monthly] Cancelled ${result.cancelledCount} orders, restored ${result.restoredItems} items`);
-        await logCronExecution({
-          jobName: "cancel-expired-orders",
-          scheduledAt: startedAt,
-          startedAt,
-          completedAt: new Date(),
-          durationMs: Date.now() - startedAt.getTime(),
-          success: true,
-          metadata: { cancelledCount: result.cancelledCount, restoredItems: result.restoredItems },
-        });
-      } catch (err: any) {
-        await logCronExecution({
-          jobName: "cancel-expired-orders",
-          scheduledAt: startedAt,
-          startedAt,
-          completedAt: new Date(),
-          durationMs: Date.now() - startedAt.getTime(),
-          success: false,
-          errorMessage: err.message,
-        });
-      }
-    }, { timezone: "Asia/Manila" });
-
-    const merchCleanupJob = cron.schedule("0 2 * * *", async () => {
-      console.log("[2AM PH] Running soft-deleted merch cleanup...");
-      const startedAt = new Date();
-      try {
-        const result = await hardDeleteSoftDeletedMerch();
-        if (result.deletedCount > 0) {
-          console.log(`[2AM PH] Permanently deleted ${result.deletedCount} expired soft-deleted merchandise`);
+    const emailJob = cron.schedule(
+      "0 1 * * *",
+      async () => {
+        console.log("[1AM PH] Running daily email resend job...");
+        const startedAt = new Date();
+        try {
+          await resendPendingEmails();
+          await logCronExecution({
+            jobName: "email-resend",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: true,
+          });
+        } catch (err: any) {
+          await logCronExecution({
+            jobName: "email-resend",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: false,
+            errorMessage: err.message,
+          });
         }
-        await logCronExecution({
-          jobName: "merch-cleanup",
-          scheduledAt: startedAt,
-          startedAt,
-          completedAt: new Date(),
-          durationMs: Date.now() - startedAt.getTime(),
-          success: true,
-          metadata: { deletedCount: result.deletedCount },
-        });
-      } catch (err: any) {
-        await logCronExecution({
-          jobName: "merch-cleanup",
-          scheduledAt: startedAt,
-          startedAt,
-          completedAt: new Date(),
-          durationMs: Date.now() - startedAt.getTime(),
-          success: false,
-          errorMessage: err.message,
-        });
-      }
-    }, { timezone: "Asia/Manila" });
+      },
+      { timezone: "Asia/Manila" }
+    );
+
+    const orderJob = cron.schedule(
+      "0 0 1 * *",
+      async () => {
+        console.log("[Monthly 1st] Running expired orders cleanup...");
+        const startedAt = new Date();
+        try {
+          const result = await orderService.cancelExpiredOrders();
+          console.log(
+            `[Monthly] Cancelled ${result.cancelledCount} orders, restored ${result.restoredItems} items`
+          );
+          await logCronExecution({
+            jobName: "cancel-expired-orders",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: true,
+            metadata: {
+              cancelledCount: result.cancelledCount,
+              restoredItems: result.restoredItems,
+            },
+          });
+        } catch (err: any) {
+          await logCronExecution({
+            jobName: "cancel-expired-orders",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: false,
+            errorMessage: err.message,
+          });
+        }
+      },
+      { timezone: "Asia/Manila" }
+    );
+
+    const merchCleanupJob = cron.schedule(
+      "0 2 * * *",
+      async () => {
+        console.log("[2AM PH] Running soft-deleted merch cleanup...");
+        const startedAt = new Date();
+        try {
+          const result = await hardDeleteSoftDeletedMerch();
+          if (result.deletedCount > 0) {
+            console.log(
+              `[2AM PH] Permanently deleted ${result.deletedCount} expired soft-deleted merchandise`
+            );
+          }
+          await logCronExecution({
+            jobName: "merch-cleanup",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: true,
+            metadata: { deletedCount: result.deletedCount },
+          });
+        } catch (err: any) {
+          await logCronExecution({
+            jobName: "merch-cleanup",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: false,
+            errorMessage: err.message,
+          });
+        }
+      },
+      { timezone: "Asia/Manila" }
+    );
   } catch (error) {
     console.error("Startup failed:", error);
     process.exit(1);

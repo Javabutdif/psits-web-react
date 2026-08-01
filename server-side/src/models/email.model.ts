@@ -16,7 +16,7 @@ const emailSchema = new Schema<IEmailDocument>({
   studentId: {
     type: Schema.Types.ObjectId,
     ref: "Student",
-    required: true,
+    default: null,
   },
   email: { type: String, required: true },
   status: { type: String, default: "pending", required: true },

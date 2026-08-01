@@ -8,6 +8,7 @@ export type AuthContextValue = {
   isAuthenticated: boolean;
   login: (payload: LoginPayload) => Promise<User>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
 };
 
 export const AuthContext = createContext<AuthContextValue | undefined>(

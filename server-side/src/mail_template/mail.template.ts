@@ -84,7 +84,12 @@ export const membershipRequestReceipt = async (
   const logoBuffer = await fs.readFile(logoPath);
 
   try {
-    const queueEntry = await emailService.createByEmail("receipt", studenteEmail, "membership", referenceCode);
+    const queueEntry = await emailService.createByEmail(
+      "receipt",
+      studenteEmail,
+      "membership",
+      referenceCode
+    );
 
     await sendEmail({
       to: studenteEmail,
@@ -100,9 +105,12 @@ export const membershipRequestReceipt = async (
       ],
     });
 
-    await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+    await emailService.updateStatusById(String(queueEntry._id), "sent");
   } catch (err: unknown) {
-    console.error("Failed to send membership request receipt email:", err instanceof Error ? err.message : err);
+    console.error(
+      "Failed to send membership request receipt email:",
+      err instanceof Error ? err.message : err
+    );
   }
 };
 
@@ -124,7 +132,12 @@ export const orderReceipt = async (
   const logoBuffer = await fs.readFile(logoPath);
 
   try {
-    const queueEntry = await emailService.createByEmail("receipt", studentEmail, "order", referenceCode);
+    const queueEntry = await emailService.createByEmail(
+      "receipt",
+      studentEmail,
+      "order",
+      referenceCode
+    );
 
     await sendEmail({
       to: studentEmail,
@@ -140,9 +153,12 @@ export const orderReceipt = async (
       ],
     });
 
-    await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+    await emailService.updateStatusById(String(queueEntry._id), "sent");
   } catch (err: unknown) {
-    console.error("Failed to send order receipt email:", err instanceof Error ? err.message : err);
+    console.error(
+      "Failed to send order receipt email:",
+      err instanceof Error ? err.message : err
+    );
   }
 };
 
@@ -197,10 +213,10 @@ export const forgotPasswordMail = async (
       "password_reset",
       token.slice(0, 8)
     );
-  await sendEmail({
-    to: studentMail,
-    subject: "Reset Your Password",
-    html: `
+    await sendEmail({
+      to: studentMail,
+      subject: "Reset Your Password",
+      html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
               <h1 style="color: #333; text-align: center; margin-bottom: 30px;">PSITS - Reset Your Password</h1>
               <p style="color: #555; font-size: 16px;">Hello,</p>
@@ -227,9 +243,9 @@ export const forgotPasswordMail = async (
               <p style="color: #555; font-size: 16px;">The Support Team</p>
             </div>
           `,
-  });
+    });
 
-  await emailService.updateStatusById(queueEntry._id.toString(), "sent");
+    await emailService.updateStatusById(queueEntry._id.toString(), "sent");
 
     return { status: true, message: "Email Sent" };
   } catch (err: any) {
@@ -293,4 +309,72 @@ export const certificateOfParticipationEmail = async (
     );
     throw err;
   }
+};
+
+/**
+ * Sends an approval email to a recruitment applicant whose application
+ * has been approved and volunteer account created.
+ */
+export const recruitmentApprovedMail = async (data: {
+  applicantName: string;
+  applicantEmail: string;
+  role: string;
+  subRole?: string;
+}): Promise<void> => {
+  await sendEmail({
+    to: data.applicantEmail,
+    subject: "Your PSITS Application Has Been Approved! 🎉",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h1 style="color: #333; text-align: center; margin-bottom: 20px;">Your PSITS Application Has Been Approved! 🎉</h1>
+        <p style="color: #555; font-size: 16px;">Dear ${data.applicantName},</p>
+        <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
+          Congratulations! 🎉 We're happy to let you know that your application to join PSITS has been approved.
+        </p>
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+          <p style="margin: 5px 0;"><strong>Role:</strong> ${data.role}</p>
+          ${data.subRole ? `<p style="margin: 5px 0;"><strong>Sub-role:</strong> ${data.subRole}</p>` : ""}
+        </div>
+        <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
+          Welcome to the team! Keep an eye on your email and our official communication channels for announcements and onboarding details.
+        </p>
+        <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
+          We're excited to have you with us. See you soon!
+        </p>
+        <p style="color: #555; font-size: 16px;">— PSITS UC-Main</p>
+      </div>
+    `,
+  });
+};
+
+/**
+ * Sends a rejection email to a recruitment applicant whose application
+ * has been rejected.
+ */
+export const recruitmentRejectedMail = async (data: {
+  applicantName: string;
+  applicantEmail: string;
+  reason?: string;
+}): Promise<void> => {
+  await sendEmail({
+    to: data.applicantEmail,
+    subject: "Update on Your PSITS Application",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h1 style="color: #333; text-align: center; margin-bottom: 20px;">Update on Your PSITS Application</h1>
+        <p style="color: #555; font-size: 16px;">Dear ${data.applicantName},</p>
+        <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
+          Thank you for taking the time to apply to PSITS.
+        </p>
+        <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
+          After carefully reviewing all applications, we regret to inform you that your application was not selected this time.
+        </p>
+        ${data.reason ? `<div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;"><p style="margin: 5px 0;"><strong>Reason:</strong> ${data.reason}</p></div>` : ""}
+        <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
+          We truly appreciate your interest in being part of PSITS and encourage you to apply again in future recruitment periods. We wish you the best, and we hope to see you again in the future!
+        </p>
+        <p style="color: #555; font-size: 16px;">— PSITS UC-Main</p>
+      </div>
+    `,
+  });
 };

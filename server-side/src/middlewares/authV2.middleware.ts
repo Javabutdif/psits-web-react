@@ -306,6 +306,16 @@ export const roleAuthenticateV2 = (
  * router.post("/announcement", requireAccessTokenV2,
  *   roleAuthenticateV2(["Admin"]), controller) // No adminAccessAuthenticateV2
  */
+const normalizeAccessKey = (value?: string) => {
+  if (!value) return "";
+
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/^PSITS_/, "")
+    .replace(/[_\s-]+/g, "");
+};
+
 export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.userV2 || req.userV2.role !== "admin") {
@@ -313,7 +323,9 @@ export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
     }
 
     try {
+      const normalizedAllowedAccess = allowedAccess.map(normalizeAccessKey);
       const currentAccess = req.admin?.access ?? req.userV2.access;
+      const normalizedCurrentAccess = normalizeAccessKey(currentAccess);
 
       if (!currentAccess) {
         const admin = await Admin.findById(req.userV2.sub);
@@ -321,7 +333,8 @@ export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
           return res.status(403).json({ message: "Admin not found" });
         }
 
-        if (!allowedAccess.includes(admin.access)) {
+        const normalizedDbAccess = normalizeAccessKey(admin.access);
+        if (!normalizedAllowedAccess.includes(normalizedDbAccess)) {
           return res
             .status(403)
             .json({ message: "Insufficient admin permissions" });
@@ -332,7 +345,7 @@ export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
         return;
       }
 
-      if (!allowedAccess.includes(currentAccess)) {
+      if (!normalizedAllowedAccess.includes(normalizedCurrentAccess)) {
         return res
           .status(403)
           .json({ message: "Insufficient admin permissions" });
