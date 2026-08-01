@@ -4,6 +4,7 @@ import {
   requireAccessTokenV2,
   roleAuthenticateV2,
 } from "../middlewares/authV2.middleware";
+import { applicationSubmitLimiter } from "../util/limiter.util";
 import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
@@ -120,6 +121,7 @@ router.post(
   "/positions/:id/applications",
   requireAccessTokenV2,
   roleAuthenticateV2(["student"]),
+  applicationSubmitLimiter,
   getResumeUpload().fields([{ name: "resume", maxCount: 1 }]),
   (err: unknown, req: Request, res: Response, next: NextFunction) => {
     if (err instanceof multer.MulterError) {

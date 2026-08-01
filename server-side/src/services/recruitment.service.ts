@@ -19,6 +19,8 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   recruitmentApprovedMail,
+  recruitmentAccountCreatedMail,
+  recruitmentInterviewScheduledMail,
   recruitmentRejectedMail,
 } from "../mail_template/mail.template";
 
@@ -588,7 +590,8 @@ export class RecruitmentService {
     const snapshotName = app.applicantSnapshot.name || "";
     const nameParts = snapshotName.trim().split(/\s+/);
     const firstName = nameParts[0] || "";
-    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+    const lastName =
+      nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
 
     const yearMatch = String(app.applicantSnapshot.year ?? "").match(/\d+/);
     const year = yearMatch ? Number(yearMatch[0]) : 1;
@@ -601,7 +604,9 @@ export class RecruitmentService {
     const titleParts = positionTitle.split(" - ");
     const role = titleParts[0]?.trim() || "Volunteer";
     const subRole =
-      titleParts.length > 1 ? titleParts.slice(1).join(" - ").trim() : undefined;
+      titleParts.length > 1
+        ? titleParts.slice(1).join(" - ").trim()
+        : undefined;
 
     // Upsert the student record so the account exists even if the student
     // doc was created out-of-band. `rfid` is a required field on Student,
@@ -640,17 +645,22 @@ export class RecruitmentService {
     });
     await app.save();
 
-    // Send approval email — best-effort, don't block on failure
+    // Send account-creation email with credentials — best-effort, don't
+    // block on failure. This is sent only on verification (account creation),
+    // not on approval. The approval email is sent separately in
+    // updateApplicationStatus when the status changes to APPROVED.
     try {
-      await recruitmentApprovedMail({
+      await recruitmentAccountCreatedMail({
         applicantName: snapshotName,
         applicantEmail: app.applicantSnapshot.email,
         role,
         subRole,
+        username,
+        tempPassword,
       });
     } catch (err) {
       console.error(
-        "Failed to send recruitment approval email:",
+        "Failed to send recruitment account creation email:",
         err instanceof Error ? err.message : err
       );
     }
@@ -691,7 +701,7 @@ export class RecruitmentService {
 
     if (!adminId) throw new AppError("Authentication required.", 401);
 
-    const app = await Application.findById(id);
+    const app = await Application.findById(id).populate("position", "title");
     if (!app) throw new AppError("Application not found.", 404);
 
     // Validate allowed transition
@@ -756,6 +766,33 @@ export class RecruitmentService {
       }
     }
 
+    // Send approval email automatically when the decision is APPROVED.
+    // The account-creation email (with credentials) is sent separately
+    // later in verifyApplicantAccount when the volunteer account is created.
+    if (status === applicationStatus.APPROVED) {
+      try {
+        const positionTitle = (app.position as any)?.title ?? "";
+        const titleParts = positionTitle.split(" - ");
+        const role = titleParts[0]?.trim() || "Volunteer";
+        const subRole =
+          titleParts.length > 1
+            ? titleParts.slice(1).join(" - ").trim()
+            : undefined;
+
+        await recruitmentApprovedMail({
+          applicantName: app.applicantSnapshot.name || "",
+          applicantEmail: app.applicantSnapshot.email || "",
+          role,
+          subRole,
+        });
+      } catch (err) {
+        console.error(
+          "Failed to send recruitment approval email:",
+          err instanceof Error ? err.message : err
+        );
+      }
+    }
+
     return app;
   }
 
@@ -801,6 +838,40 @@ export class RecruitmentService {
       `\n[${new Date().toISOString()}] Interview scheduled. ${location || ""}`;
 
     await app.save();
+
+    // Send interview schedule notification email — best-effort, don't
+    // block on failure. Parses the interview mode from the notes field
+    // (stored as "Interview type: [type]; ...") and formats the date/time
+    // from the scheduledAt timestamp.
+    try {
+      const scheduledAt = app.interview.scheduledAt;
+      const dateStr = scheduledAt.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const timeStr = scheduledAt.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+
+      const modeMatch = (notes || "").match(/Interview type:\s*(.+?)(?:;|$)/i);
+      const mode = modeMatch?.[1]?.trim() || "Face-to-Face";
+
+      await recruitmentInterviewScheduledMail({
+        applicantName: app.applicantSnapshot.name || "",
+        applicantEmail: app.applicantSnapshot.email || "",
+        interviewDate: dateStr,
+        interviewTime: timeStr,
+        mode,
+      });
+    } catch (err) {
+      console.error(
+        "Failed to send interview schedule email:",
+        err instanceof Error ? err.message : err
+      );
+    }
+
     return app;
   }
 

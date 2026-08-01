@@ -59,6 +59,21 @@ export interface IApplication extends Document {
     tempPassword: string;
     createdAt: Date;
   };
+  // Tracks recruitment notification emails sent to the applicant
+  // (approval, rejection, interview schedule, account creation). Each
+  // entry is appended after the email attempt so the admin can see the
+  // full communication history in the ApplicantInfoModal timeline.
+  emailLog?: {
+    emailType:
+      | "APPROVAL"
+      | "REJECTION"
+      | "INTERVIEW_SCHEDULED"
+      | "ACCOUNT_CREATED";
+    sentAt: Date;
+    sentBy?: string;
+    success: boolean;
+    error?: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -151,6 +166,19 @@ const ApplicationSchema = new Schema<IApplication>(
       tempPassword: { type: String },
       createdAt: { type: Date },
     },
+    emailLog: [
+      {
+        emailType: {
+          type: String,
+          enum: ["APPROVAL", "REJECTION", "INTERVIEW_SCHEDULED", "ACCOUNT_CREATED"],
+          required: true,
+        },
+        sentAt: { type: Date, default: Date.now },
+        sentBy: String,
+        success: { type: Boolean, default: true },
+        error: String,
+      },
+    ],
   },
   { timestamps: true }
 );

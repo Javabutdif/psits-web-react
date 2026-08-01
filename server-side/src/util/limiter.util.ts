@@ -34,5 +34,30 @@ export const signupLimiter = rateLimit({
   },
 });
 
+/**
+ * Limits application submissions to 1 per student per position per 15-minute
+ * window. Only successful submissions count (skipFailedRequests), so a failed
+ * attempt (e.g. upload error) doesn't block a retry. Keyed by student ID +
+ * position ID so the limit is per-applicant-per-position, not global.
+ */
+export const applicationSubmitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1,
+  skipFailedRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const studentId = req.userV2?.sub ?? "unknown";
+    const positionId = (req.params as any)?.id ?? "unknown";
+    return `app-submit:${studentId}:${positionId}`;
+  },
+  handler: (req, res) => {
+    incrementRateLimitBlocked();
+    res.status(429).json({
+      message:
+        "You have already submitted an application for this position. Please try again later.",
+    });
+  },
+});
 
 export default loginLimiter;
