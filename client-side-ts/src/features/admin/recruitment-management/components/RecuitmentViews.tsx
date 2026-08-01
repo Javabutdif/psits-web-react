@@ -921,7 +921,10 @@ export const RecuitmentViews = () => {
                               </button>
                               <button
                                 type="button"
-                                disabled={applicant.status === "Rejected"}
+                                disabled={
+                                  applicant.status === "Approved" ||
+                                  applicant.status === "Rejected"
+                                }
                                 onClick={() => {
                                   rejectApplicant(applicant.id);
                                   setOpenMenuId(null);

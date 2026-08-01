@@ -1,10 +1,10 @@
 import { Types } from "mongoose";
 export interface IEmail {
   timestamp: Date;
-  type: "receipt" | "forgot";
+  type: "receipt" | "forgot" | "auth" | "recruitment";
   studentId: Types.ObjectId;
   email: String;
-  status: "pending" | "sent";
+  status: "pending" | "sent" | "failed";
   subtype?: string;
   referenceCode?: string;
   retryCount?: number;

@@ -177,10 +177,10 @@ export const ApplicantInfoModal = ({
                 </div>
 
                 {hasInterview && (
-                  <div className="rounded-[22px] border border-[#cfead9] bg-[#f5fbf7] p-2.5">
+                  <div className="rounded-[22px] border border-[#cfead9] bg-[#F0F9FF] p-2.5">
                     <div className="mb-2.5 flex items-center justify-between">
                       <p className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-                        <CalendarClock className="h-3.5 w-3.5 text-emerald-600" />
+                        <CalendarClock className="h-3.5 w-3.5 text-sky-600" />
                         Interview
                       </p>
                       <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-emerald-700 uppercase">
