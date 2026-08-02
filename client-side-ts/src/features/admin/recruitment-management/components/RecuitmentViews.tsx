@@ -55,7 +55,7 @@ import { VerificationModal } from "./VerificationModal";
 import { AccountVerifiedModal } from "./AccountVerifiedModal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
-const courses = ["BSIT", "BSCS", "ACT"];
+const courses = ["BSIT", "BSCS"];
 const years = ["1", "2", "3", "4"];
 
 const STATUS_STYLES: Record<string, string> = {
@@ -385,6 +385,9 @@ export const RecruitmentViews = () => {
   const [selectedRejectedIds, setSelectedRejectedIds] = useState<string[]>([]);
   const [selectedPositionIds, setSelectedPositionIds] = useState<string[]>([]);
 
+  const [isBulkDeletePositionsOpen, setIsBulkDeletePositionsOpen] =
+    useState(false);
+
   const counts = useMemo(() => {
     return {
       pending: applicants.filter((a) => a.status === "Pending").length,
@@ -408,33 +411,49 @@ export const RecruitmentViews = () => {
   };
 
   const allRejectedSelected =
-  rejectedApplicants.length > 0 &&
-  rejectedApplicants.every((a) => selectedRejectedIds.includes(a.id));
+    rejectedApplicants.length > 0 &&
+    rejectedApplicants.every((a) => selectedRejectedIds.includes(a.id));
 
-const toggleRejectedSelection = (id: string) => {
-  setSelectedRejectedIds((current) =>
-    current.includes(id)
-      ? current.filter((x) => x !== id)
-      : [...current, id]
+  const toggleRejectedSelection = (id: string) => {
+    setSelectedRejectedIds((current) =>
+      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
+    );
+  };
+
+  const allPositionsSelected =
+    positions.length > 0 &&
+    positions.every((p) => selectedPositionIds.includes(p._id));
+
+  const positionsStart =
+    positionsTotal > 0 ? (positionsPage - 1) * POSITIONS_PER_PAGE + 1 : 0;
+  const positionsEnd =
+    positionsTotal > 0
+      ? Math.min(positionsStart + positions.length - 1, positionsTotal)
+      : 0;
+
+  const togglePositionSelection = (id: string) => {
+    setSelectedPositionIds((current) =>
+      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
+    );
+  };
+
+  // Only CLOSED positions are eligible for deletion (matches the per-row
+  // menu, which only shows "Delete Role Application" once a position is
+  // closed). Any OPEN/DRAFT rows in the selection are filtered out here so
+  // bulk delete never attempts to remove a live position.
+  const deletablePositionIds = useMemo(
+    () =>
+      selectedPositionIds.filter((id) =>
+        positions.find((p) => p._id === id && p.hiringStatus === "CLOSED")
+      ),
+    [selectedPositionIds, positions]
   );
-};
 
-const allPositionsSelected =
-  positions.length > 0 &&
-  positions.every((p) => selectedPositionIds.includes(p._id));
-
-const positionsStart =
-  positionsTotal > 0 ? (positionsPage - 1) * POSITIONS_PER_PAGE + 1 : 0;
-const positionsEnd =
-  positionsTotal > 0 ? Math.min(positionsStart + positions.length - 1, positionsTotal) : 0;
-
-const togglePositionSelection = (id: string) => {
-  setSelectedPositionIds((current) =>
-    current.includes(id)
-      ? current.filter((x) => x !== id)
-      : [...current, id]
-  );
-};
+  const handleBulkDeletePositions = async () => {
+    await Promise.all(deletablePositionIds.map((id) => deletePosition(id)));
+    setSelectedPositionIds([]);
+    setIsBulkDeletePositionsOpen(false);
+  };
 
   const handleOpenRoleConfirm = async (data: OpenRecruitmentValues) => {
     try {
@@ -682,46 +701,80 @@ const togglePositionSelection = (id: string) => {
           {/* Table / Verification cards */}
           {activeTab === "applications" ? (
             <div className="overflow-x-auto">
+              {selectedPositionIds.length > 0 && (
+                <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <span>
+                    {selectedPositionIds.length} selected
+                    {deletablePositionIds.length <
+                      selectedPositionIds.length && (
+                      <span className="ml-1 text-amber-600">
+                        (
+                        {selectedPositionIds.length -
+                          deletablePositionIds.length}{" "}
+                        open — close before deleting)
+                      </span>
+                    )}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPositionIds([])}
+                      className="cursor-pointer font-medium text-[#1c9dde] hover:underline"
+                    >
+                      Clear selection
+                    </button>
+                    {deletablePositionIds.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setIsBulkDeletePositionsOpen(true)}
+                        className="cursor-pointer font-medium text-red-600 hover:underline"
+                      >
+                        Delete selected ({deletablePositionIds.length})
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
               <table className="w-full min-w-[820px] table-fixed border-collapse text-sm">
                 <thead>
                   <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
-                  <Checkbox
-                    checked={allPositionsSelected}
-                    onCheckedChange={(checked) =>
-                      setSelectedPositionIds(
-                        checked ? positions.map((p) => p._id) : []
-                      )
-                    }
-                    aria-label="Select all positions"
-                    className="data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:border-[#1C9DDE]"
-                  />
-                </th>
+                    <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
+                      <Checkbox
+                        checked={allPositionsSelected}
+                        onCheckedChange={(checked) =>
+                          setSelectedPositionIds(
+                            checked ? positions.map((p) => p._id) : []
+                          )
+                        }
+                        aria-label="Select all positions"
+                        className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE]"
+                      />
+                    </th>
 
-                <th className="w-[22%] px-3 py-2 text-left font-medium">
-                  Position
-                </th>
+                    <th className="w-[22%] px-3 py-2 text-left font-medium">
+                      Position
+                    </th>
 
-                <th className="w-[12%] px-3 py-2 text-left font-medium">
-                  Status
-                </th>
+                    <th className="w-[12%] px-3 py-2 text-left font-medium">
+                      Status
+                    </th>
 
-                <th className="w-[12%] px-3 py-2 text-left font-medium">
-                  Slots
-                </th>
+                    <th className="w-[12%] px-3 py-2 text-left font-medium">
+                      Slots
+                    </th>
 
-                <th className="w-[17%] px-3 py-2 text-left font-medium">
-                  Deadline
-                </th>
+                    <th className="w-[17%] px-3 py-2 text-left font-medium">
+                      Deadline
+                    </th>
 
-                <th className="w-[18%] px-3 py-2 text-left font-medium">
-                  Created
-                </th>
+                    <th className="w-[18%] px-3 py-2 text-left font-medium">
+                      Created
+                    </th>
 
-                <th className="w-[15%] rounded-r-md px-3 py-2 text-right font-medium">
-                  Actions
-                </th>
-              </tr>
+                    <th className="w-[15%] rounded-r-md px-3 py-2 text-right font-medium">
+                      Actions
+                    </th>
+                  </tr>
                 </thead>
                 <tbody>
                   {isPositionsLoading ? (
@@ -753,9 +806,11 @@ const togglePositionSelection = (id: string) => {
                         <td className="px-3 py-3">
                           <Checkbox
                             checked={selectedPositionIds.includes(position._id)}
-                            onCheckedChange={() => togglePositionSelection(position._id)}
+                            onCheckedChange={() =>
+                              togglePositionSelection(position._id)
+                            }
                             aria-label={`Select ${position.title}`}
-                            className="data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:border-[#1C9DDE] data-[state=checked]:text-white"
+                            className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
                           />
                         </td>
 
@@ -778,14 +833,14 @@ const togglePositionSelection = (id: string) => {
                         </td>
 
                         {/* Slots */}
-                        <td className="px-3 py-3">
-                          {position.slots ?? "—"}
-                        </td>
+                        <td className="px-3 py-3">{position.slots ?? "—"}</td>
 
                         {/* Deadline */}
                         <td className="px-3 py-3">
                           {position.applicationDeadline
-                            ? new Date(position.applicationDeadline).toLocaleDateString()
+                            ? new Date(
+                                position.applicationDeadline
+                              ).toLocaleDateString()
                             : "—"}
                         </td>
 
@@ -934,7 +989,7 @@ const togglePositionSelection = (id: string) => {
                         checked={allOnPageSelected}
                         onCheckedChange={toggleSelectAllOnPage}
                         aria-label="Select all on page"
-                        className="data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:border-[#1C9DDE] data-[state=checked]:text-white"
+                        className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
                       />
                     </th>
                     <th className="w-[24%] px-3 py-2 text-left">
@@ -995,12 +1050,14 @@ const togglePositionSelection = (id: string) => {
                         className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
                       >
                         <td className="px-3 py-3">
-                        <Checkbox
-                          checked={selectedIds.includes(applicant.id)}
-                          onCheckedChange={() => toggleApplicantSelection(applicant.id)}
-                          aria-label={`Select ${applicant.name}`}
-                          className="data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:border-[#1C9DDE] data-[state=checked]:text-white"
-                        />
+                          <Checkbox
+                            checked={selectedIds.includes(applicant.id)}
+                            onCheckedChange={() =>
+                              toggleApplicantSelection(applicant.id)
+                            }
+                            aria-label={`Select ${applicant.name}`}
+                            className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
+                          />
                         </td>
                         <td className="px-3 py-3">
                           <div className="flex min-w-0 items-center gap-2.5">
@@ -1160,7 +1217,9 @@ const togglePositionSelection = (id: string) => {
                             checked={allRejectedSelected}
                             onCheckedChange={(checked) =>
                               setSelectedRejectedIds(
-                                checked ? rejectedApplicants.map((a) => a.id) : []
+                                checked
+                                  ? rejectedApplicants.map((a) => a.id)
+                                  : []
                               )
                             }
                             aria-label="Select all rejected applicants"
@@ -1193,8 +1252,12 @@ const togglePositionSelection = (id: string) => {
                           {/* Checkbox */}
                           <td className="px-3 py-3">
                             <Checkbox
-                              checked={selectedRejectedIds.includes(applicant.id)}
-                              onCheckedChange={() => toggleRejectedSelection(applicant.id)}
+                              checked={selectedRejectedIds.includes(
+                                applicant.id
+                              )}
+                              onCheckedChange={() =>
+                                toggleRejectedSelection(applicant.id)
+                              }
                               aria-label={`Select ${applicant.name}`}
                               className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
                             />
@@ -1396,20 +1459,22 @@ const togglePositionSelection = (id: string) => {
             </div>
 
             <div className="max-h-44 space-y-2 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3">
-              {(openingConflict?.conflicts || []).slice(0, 6).map((conflict) => (
-                <div
-                  key={conflict._id}
-                  className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm"
-                >
-                  <span className="font-medium text-slate-700">
-                    {conflict.title}
-                  </span>
-                  <span className="shrink-0 text-xs text-slate-400">
-                    {conflict.slots ?? 0} slot
-                    {conflict.slots === 1 ? "" : "s"}
-                  </span>
-                </div>
-              ))}
+              {(openingConflict?.conflicts || [])
+                .slice(0, 6)
+                .map((conflict) => (
+                  <div
+                    key={conflict._id}
+                    className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm"
+                  >
+                    <span className="font-medium text-slate-700">
+                      {conflict.title}
+                    </span>
+                    <span className="shrink-0 text-xs text-slate-400">
+                      {conflict.slots ?? 0} slot
+                      {conflict.slots === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                ))}
               {(openingConflict?.conflicts.length || 0) > 6 && (
                 <p className="px-1 text-xs text-slate-500">
                   +{(openingConflict?.conflicts.length || 0) - 6} more
@@ -1599,6 +1664,46 @@ const togglePositionSelection = (id: string) => {
                   await deletePosition(positionDeleteTarget._id);
                   setPositionDeleteTarget(null);
                 }}
+              >
+                {isMutating ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk delete selected positions — confirmation */}
+      <Dialog
+        open={isBulkDeletePositionsOpen}
+        onOpenChange={setIsBulkDeletePositionsOpen}
+      >
+        <DialogContent className="max-w-sm rounded-2xl">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+              <Trash2 className="h-6 w-6 text-red-500" />
+            </div>
+            <DialogTitle className="text-lg font-semibold">
+              Delete {deletablePositionIds.length} role application
+              {deletablePositionIds.length === 1 ? "" : "s"}?
+            </DialogTitle>
+            <p className="text-sm text-slate-500">
+              Only closed positions are deleted; any open ones stay untouched.
+              This action cannot be undone.
+            </p>
+            <div className="mt-2 flex w-full justify-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 flex-1 rounded-full"
+                onClick={() => setIsBulkDeletePositionsOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="h-9 flex-1 rounded-full bg-red-500 hover:bg-red-600"
+                disabled={isMutating}
+                onClick={handleBulkDeletePositions}
               >
                 {isMutating ? "Deleting..." : "Delete"}
               </Button>

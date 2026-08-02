@@ -406,26 +406,26 @@ export const recruitmentInterviewScheduledMail = async (data: {
             <p style="margin: 5px 0;"><strong>Mode:</strong> ${data.mode}</p>
           </div>
           <p style="color: #555; font-size: 16px; margin-bottom: 12px;">
-            <strong>If your interview is Face-to-Face:</strong>
+            <strong>For FACE -TO-FACE interview:</strong>
           </p>
           <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            Please proceed to <strong>PSITS Office beside Room 540</strong> at least <strong>5 minutes before</strong> your scheduled interview time. Kindly bring the documents requested during your application.
+            Please proceed to <strong>PSITS Office </strong> beside <strong>Room 540</strong> at least <strong>5 minutes before</strong> your scheduled interview time. Kindly bring the documents requested during your application.
           </p>
           <p style="color: #555; font-size: 16px; margin-bottom: 12px;">
-            <strong>If your interview is Online:</strong>
+            <strong>For ONLINE interview:</strong>
           </p>
           <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
             A recruitment officer will contact you before your scheduled interview to provide the meeting link and any additional instructions. Please ensure that you are available at the scheduled time and have a stable internet connection.
           </p>
           <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            If you have any questions or are unable to attend your scheduled interview, please let us know as soon as possible.
+            If you have any questions or are unable to attend your scheduled interview, please inform us as soon as possible.
           </p>
           <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
             We look forward to meeting you and wish you the best of luck.
           </p>
           <p style="color: #555; font-size: 16px;">Best regards,</p>
           <p style="color: #555; font-size: 16px;"><strong>Recruitment Team</strong></p>
-          <p style="color: #555; font-size: 16px;">PSITS</p>
+          <p style="color: #555; font-size: 16px;">— PSITS UC-Main</p>
         </div>
       `,
     });
@@ -531,11 +531,11 @@ export const recruitmentRejectedMail = async (data: {
           <h1 style="color: #333; text-align: center; margin-bottom: 20px;">Update on Your PSITS Application</h1>
           <p style="color: #555; font-size: 16px;">Dear ${data.applicantName},</p>
           <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            Thank you for taking the time to apply to PSITS.
+            Thank you for expressing your interest in joining PSITS.
           </p>
           <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            After carefully reviewing all applications, we regret to inform you that your application was not selected this time.
-          </p>
+            After carefully reviewing all applications, we regret to inform you that your application was not selected for this recruitment period.
+          </p>  
           ${data.reason ? `<div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;"><p style="margin: 5px 0;"><strong>Reason:</strong> ${data.reason}</p></div>` : ""}
           <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
             We truly appreciate your interest in being part of PSITS and encourage you to apply again in future recruitment periods. We wish you the best, and we hope to see you again in the future!
