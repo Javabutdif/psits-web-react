@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/features/auth";
+import { getStudentProfileV2 } from "@/features/student";
 import {
   listPositions,
   submitApplication,
@@ -392,7 +393,7 @@ const ApplicationStatus = ({
 };
 
 export const ApplicationPage = () => {
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
 
   const [positions, setPositions] = useState<RecruitmentPosition[]>([]);
   const [positionsLoading, setPositionsLoading] = useState(true);
@@ -426,6 +427,37 @@ export const ApplicationPage = () => {
     year: "",
   });
 
+  // Profile details come from the server (login session) and are read-only
+  // for the student; they cannot be edited on the application form.
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.idNumber) {
+        setProfileLoading(false);
+        return;
+      }
+      try {
+        const profile = await getStudentProfileV2(user.idNumber);
+        setForm({
+          studentId: profile.id_number || "",
+          firstName: profile.first_name || "",
+          middleName: profile.middle_name || "",
+          lastName: profile.last_name || "",
+          email: profile.email || "",
+          course: profile.course || "",
+          year: YEAR_MAP[String(profile.year)] || "",
+        });
+      } catch (err) {
+        console.error("Failed to load student profile:", err);
+        toast.error("Couldn't load your profile. Refresh to retry.");
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [user?.idNumber]);
+
   // Sync the logged-in user's profile fields into the form the first time
   // `user` becomes available (or changes identity). Adjusting state during
   // render — rather than in a useEffect — avoids the extra "commit, then
@@ -455,10 +487,6 @@ export const ApplicationPage = () => {
         : {}),
     }));
   }
-
-  useEffect(() => {
-    void refreshUser();
-  }, [refreshUser]);
 
   useEffect(() => {
     const fetchPositions = async () => {
@@ -706,7 +734,7 @@ export const ApplicationPage = () => {
     }
   };
 
-  if (applicationsLoading) {
+  if (applicationsLoading || profileLoading) {
     return (
       <div className="mx-auto max-w-4xl">
         <div className="rounded-2xl bg-white p-8 text-center text-gray-500 shadow-sm">
@@ -924,40 +952,46 @@ export const ApplicationPage = () => {
           {/* Personal Info */}
           <div className="space-y-4 md:pl-8">
             <h2 className="text-lg font-medium text-gray-800">Personal Info</h2>
+            <p className="-mt-2 text-xs text-gray-500">
+              Loaded from your account. To update these, edit your account
+              profile.
+            </p>
 
             <Input
               placeholder="Student ID Number *"
               value={form.studentId}
-              onChange={(e) => setForm({ ...form, studentId: e.target.value })}
+              readOnly
+              className="bg-slate-50 text-slate-600"
             />
             <Input
               placeholder="Last Name *"
               value={form.lastName}
-              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+              readOnly
+              className="bg-slate-50 text-slate-600"
             />
             <Input
               placeholder="Middle Name"
               value={form.middleName}
-              onChange={(e) => setForm({ ...form, middleName: e.target.value })}
+              readOnly
+              className="bg-slate-50 text-slate-600"
             />
             <Input
               placeholder="First Name *"
               value={form.firstName}
-              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+              readOnly
+              className="bg-slate-50 text-slate-600"
             />
             <Input
               type="email"
               placeholder="Email Address *"
               value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              readOnly
+              className="bg-slate-50 text-slate-600"
             />
 
             <div className="flex gap-3">
-              <Select
-                value={form.course}
-                onValueChange={(v) => setForm({ ...form, course: v })}
-              >
-                <SelectTrigger className="flex-1">
+              <Select value={form.course} disabled>
+                <SelectTrigger className="flex-1 bg-slate-50 text-slate-600">
                   <SelectValue
                     placeholder={
                       <span>
@@ -975,11 +1009,8 @@ export const ApplicationPage = () => {
                 </SelectContent>
               </Select>
 
-              <Select
-                value={form.year}
-                onValueChange={(v) => setForm({ ...form, year: v })}
-              >
-                <SelectTrigger className="flex-1">
+              <Select value={form.year} disabled>
+                <SelectTrigger className="flex-1 bg-slate-50 text-slate-600">
                   <SelectValue
                     placeholder={
                       <span>

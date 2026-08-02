@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateTemplateDialog } from "./CreateTemplateDialog";
 import { showToast } from "@/utils/alertHelper";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import { Eye, Loader2, Edit } from "lucide-react";
 
 export const TemplatesTab: React.FC = () => {
+  const { canManageCertificates } = useAdminPermissions();
   const [templates, setTemplates] = useState<ICertificateTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -48,11 +50,13 @@ export const TemplatesTab: React.FC = () => {
   };
 
   const handleOpenCreate = () => {
+    if (!canManageCertificates) return;
     setEditData(null);
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (template: ICertificateTemplate) => {
+    if (!canManageCertificates) return;
     setEditData(template);
     setIsDialogOpen(true);
   };
@@ -65,7 +69,9 @@ export const TemplatesTab: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="heading-3">Certificate Templates</h2>
-        <Button onClick={handleOpenCreate}>Create New Template</Button>
+        {canManageCertificates && (
+          <Button onClick={handleOpenCreate}>Create New Template</Button>
+        )}
       </div>
 
       {loading ? (
@@ -104,16 +110,18 @@ export const TemplatesTab: React.FC = () => {
                   </p>
                 </CardContent>
                 <CardFooter className="pt-0 flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleOpenEdit(template)}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="secondary" 
+                  {canManageCertificates && (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => handleOpenEdit(template)}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                  <Button
+                    variant="secondary"
                     className="flex-1"
                     disabled={previewingId === template._id}
                     onClick={() => handlePreview(template._id)}

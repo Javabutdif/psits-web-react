@@ -5,6 +5,7 @@ import type { Event } from "../../../events/types/event.types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import { ConfigureEventDialog } from "./ConfigureEventDialog";
 
 interface EventsTabProps {
@@ -34,6 +35,7 @@ const EventCardSkeleton: React.FC = () => (
 );
 
 export const EventsTab: React.FC<EventsTabProps> = ({ onEventSelect }) => {
+  const { canManageCertificates } = useAdminPermissions();
   const [eventsWithCert, setEventsWithCert] = useState<any[]>([]);
   const [otherEvents, setOtherEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,9 +101,11 @@ export const EventsTab: React.FC<EventsTabProps> = ({ onEventSelect }) => {
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="heading-3">Events with Certificates</h2>
-          <Button variant="default" onClick={() => setIsConfigDialogOpen(true)}>
-            Add Certificate Generation for Event
-          </Button>
+          {canManageCertificates && (
+            <Button variant="default" onClick={() => setIsConfigDialogOpen(true)}>
+              Add Certificate Generation for Event
+            </Button>
+          )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {eventsWithCert.length === 0 ? (

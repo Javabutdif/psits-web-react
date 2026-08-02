@@ -4,6 +4,30 @@ import * as XLSX from "xlsx";
 import { CertificateServiceV2 } from "../services/certificateV2.service";
 import { PaginatedList } from "../custom_function/paginator";
 import { Event } from "../models/event.model";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
+
+const logAdminAction = (
+  req: Request,
+  action: string,
+  target: string,
+  target_id?: string,
+  target_model = "Certificate"
+) =>
+  logService.create({
+    admin:
+      req.admin?.name ??
+      (req.userV2 as { idNumber?: string } | undefined)?.idNumber ??
+      "Unknown Admin",
+    admin_id: req.admin?._id,
+    action,
+    target,
+    target_id:
+      target_id && Types.ObjectId.isValid(target_id)
+        ? new Types.ObjectId(target_id)
+        : undefined,
+    target_model,
+  });
 
 export const getAllActiveTemplates = async (req: Request, res: Response) => {
   try {
@@ -94,6 +118,12 @@ export const getEventAttendeesRaw = async (req: Request, res: Response) => {
 export const createCertificateTemplate = async (req: Request, res: Response) => {
   try {
     const template = await CertificateServiceV2.createCertificateTemplate(req.body);
+    await logAdminAction(
+      req,
+      logs_action.CREATE_TEMPLATE,
+      template?.name ?? "Certificate template",
+      String(template?._id ?? "")
+    );
     return res.status(201).json({ success: true, template });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -104,6 +134,12 @@ export const updateCertificateTemplate = async (req: Request, res: Response) => 
   try {
     const templateId = req.params.templateId as string;
     const template = await CertificateServiceV2.updateCertificateTemplate(templateId, req.body);
+    await logAdminAction(
+      req,
+      logs_action.UPDATE_TEMPLATE,
+      template?.name ?? templateId,
+      templateId
+    );
     return res.status(200).json({ success: true, template });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -118,6 +154,12 @@ export const configureEventCertificate = async (req: Request, res: Response) => 
       eventId,
       templateId,
       isGenerateCertificate
+    );
+    await logAdminAction(
+      req,
+      logs_action.EVENT_SETTINGS_UPDATE,
+      event?.eventName ?? eventId,
+      eventId
     );
     return res.status(200).json({ success: true, event });
   } catch (error: any) {
@@ -175,6 +217,12 @@ export const processCsvOrXlsxEligibility = async (req: Request, res: Response) =
     }
 
     const results = await CertificateServiceV2.processCsvEligibility(eventId, studentIds);
+    await logAdminAction(
+      req,
+      logs_action.IMPORT_CERTIFICATE,
+      `${studentIds.length} student(s) imported`,
+      eventId
+    );
     return res.status(200).json({ success: true, results });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -195,6 +243,12 @@ export const updateStudentEligibility = async (req: Request, res: Response) => {
       studentIds,
       isEligible
     );
+    await logAdminAction(
+      req,
+      logs_action.UPDATE_ELIGIBILITY,
+      `${studentIds.length} student(s) ${isEligible ? "made eligible" : "made ineligible"}`,
+      eventId
+    );
     return res.status(200).json({ success: true, eligibleStudentsForCertificate: updatedList });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -209,6 +263,13 @@ export const generateStudentCertificate = async (req: Request, res: Response) =>
     const { pdfBuffer, fileName } = await CertificateServiceV2.verifyAndGenerateStudentCertificate(
       eventId,
       studentId
+    );
+
+    await logAdminAction(
+      req,
+      logs_action.GENERATE_CERTIFICATE,
+      `${fileName ?? studentId}`,
+      eventId
     );
 
     res.setHeader("Content-Type", "application/pdf");

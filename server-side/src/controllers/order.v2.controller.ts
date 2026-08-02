@@ -3,7 +3,6 @@ import { Event } from "../models/event.model";
 import { CartItem } from "../models/cart.model";
 import { Orders, IOrdersDocument } from "../models/orders.model";
 import { Merch } from "../models/merch.model";
-import { Log } from "../models/log.model";
 import { Admin } from "../models/admin.model";
 import { IOrders } from "../models/orders.interface";
 import { IOrderReceipt } from "../mail_template/mail.interface";
@@ -21,6 +20,8 @@ import { Refund } from "../models/refund.model";
 import { refundCodeGenerator } from "../custom_function/code_generator";
 import { orderService } from "../services/order.service";
 import { adminService } from "../services/admin.service";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
 import { AppError } from "../util/app.error.util";
 import { studentService } from "../services/student.service";
 import { promoService } from "../services/promo.service";
@@ -206,6 +207,16 @@ class OrderController {
       );
       await session.commitTransaction();
       session.endSession();
+      await logService.create({
+        admin: req.admin?.name ?? "Unknown Admin",
+        admin_id: req.admin?._id,
+        action: logs_action.CANCEL_ORDER,
+        target: typeof _id === "string" ? _id : undefined,
+        target_id: Types.ObjectId.isValid(String(_id))
+          ? new Types.ObjectId(String(_id))
+          : undefined,
+        target_model: "Order",
+      });
       return res.status(200).json({
         message: result.message,
       });
@@ -298,6 +309,16 @@ class OrderController {
       userEmail._id.toString(),
       receipt.reference_code
     );
+    await logService.create({
+      admin: admin.name,
+      admin_id: admin._id,
+      action: logs_action.APPROVE_ORDER,
+      target: result.order?.reference_code ?? String(order_id),
+      target_id: Types.ObjectId.isValid(String(order_id))
+        ? new Types.ObjectId(String(order_id))
+        : undefined,
+      target_model: "Order",
+    });
     return res.status(200).json({
       message: "Successfully approved order",
     });
@@ -325,6 +346,16 @@ class OrderController {
       );
       await session.commitTransaction();
       session.endSession();
+      await logService.create({
+        admin: admin.name,
+        admin_id: admin._id,
+        action: logs_action.REFUND_ORDER,
+        target: String(order_id),
+        target_id: Types.ObjectId.isValid(String(order_id))
+          ? new Types.ObjectId(String(order_id))
+          : undefined,
+        target_model: "Order",
+      });
       return res.status(200).json({
         message: result.message,
       });

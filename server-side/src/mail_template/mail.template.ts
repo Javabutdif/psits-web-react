@@ -467,13 +467,13 @@ export const recruitmentAccountCreatedMail = async (data: {
 
     await sendEmail({
       to: data.applicantEmail,
-      subject: "Your PSITS Volunteer Account Has Been Created! 🎉",
+      subject: `${"Your PSITS " + data.role} Account Has Been Created! `,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h1 style="color: #333; text-align: center; margin-bottom: 20px;">Your PSITS Volunteer Account Has Been Created! 🎉</h1>
+          <h1 style="color: #333; text-align: center; margin-bottom: 20px;">${"Your PSITS " + data.role} Account Has Been Created!</h1>
           <p style="color: #555; font-size: 16px;">Dear ${data.applicantName},</p>
           <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            Welcome to the team! Your PSITS volunteer account has been successfully created. Below are your login credentials:
+            Welcome to the team! Your PSITS ${data.role} account has been successfully created. Below are your login credentials:
           </p>
           <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
             <p style="margin: 5px 0;"><strong>Role:</strong> ${data.role}</p>

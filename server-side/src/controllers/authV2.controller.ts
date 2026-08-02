@@ -112,20 +112,17 @@ export const loginV2Controller = async (
       }
 
       const passwordMatch = await bcrypt.compare(password, admin.password);
+      console.log("Password match:", passwordMatch); // Debugging line
       if (!passwordMatch) {
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
-      const isSuspended =
-        admin.status === account_status.SUSPENDED ||
-        admin.status === "Suspend" ||
-        admin.status === "Suspended";
+      const isSuspended = admin.status === account_status.SUSPENDED;
       if (isSuspended) {
         throw new AuthError(AuthErrorCodes.AccountSuspended);
       }
 
-      const isActive =
-        admin.status === account_status.ACTIVE || admin.status === "Active";
+      const isActive = admin.status === account_status.ACTIVE;
       if (!isActive) {
         throw new AuthError(AuthErrorCodes.AccountNotActive);
       }

@@ -30,7 +30,7 @@ export const getStudentProfile = async(req: Request, res: Response)=>{
   try{
     const {id_number} = req.params;
     const profile: IStudent | null = await Student.findOne({id_number})
-    .select('id_number first_name last_name course year email campus -_id');;
+    .select('id_number first_name middle_name last_name course year email campus -_id');;
     if(!profile){
       return res.status(404).json({message: "Profile Not Found!"});
     }

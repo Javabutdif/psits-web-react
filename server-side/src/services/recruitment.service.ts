@@ -23,6 +23,8 @@ import {
   recruitmentInterviewScheduledMail,
   recruitmentRejectedMail,
 } from "../mail_template/mail.template";
+import { adminService } from "./admin.service";
+import { campus_type } from "../enums/campus.enums";
 
 const r2Client = new S3Client({
   region: "auto",
@@ -742,25 +744,25 @@ export class RecruitmentService {
       throw new AppError("Only approved applications can be verified.", 400);
     }
 
-    if (app.volunteerAccount) {
+    const existingAdminAccount = await adminService.fetch({
+      id_number: `${app.applicantSnapshot.idNumber}-admin`,
+    });
+
+    if (existingAdminAccount.length > 0) {
       throw new AppError(
-        "Volunteer account has already been created for this applicant.",
+        "Admin account already exists for this applicant.",
         400
       );
     }
 
     const idNumber = app.applicantSnapshot.idNumber;
-    const username = `psits-${String(idNumber)
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "")}`;
+    const username = `${String(idNumber)}-admin`;
 
     // Temp password: 10 chars from an unambiguous alphabet.
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
     const tempPassword = Array.from({ length: 10 }, () => {
       return chars[randomInt(0, chars.length)];
     }).join("");
-
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
     const snapshotName = app.applicantSnapshot.name || "";
     const nameParts = snapshotName.trim().split(/\s+/);
@@ -786,26 +788,19 @@ export class RecruitmentService {
     // Upsert the student record so the account exists even if the student
     // doc was created out-of-band. `rfid` is a required field on Student,
     // so reuse the (unique) id_number as a stable placeholder.
-    await Student.updateOne(
-      { _id: app.applicant },
-      {
-        $set: {
-          id_number: idNumber,
-          rfid: `RFID-${idNumber}`,
-          password: hashedPassword,
-          first_name: firstName,
-          last_name: lastName,
-          email: app.applicantSnapshot.email,
-          course: app.applicantSnapshot.course,
-          year,
-          role,
-          membershipStatus: membership_status.ACTIVE,
-          status: account_status.ACTIVE,
-          isFirstApplication: false,
-        },
-      },
-      { upsert: true }
-    );
+    //id_number, name, password, email, position, course, year, campus
+
+    const accountBody: Request = {
+      id_number: `${idNumber}-admin`,
+      name: snapshotName,
+      password: tempPassword,
+      email: app.applicantSnapshot.email || "",
+      position: role,
+      course: app.applicantSnapshot.course || "",
+      year: year,
+      campus: app.applicantSnapshot.campus || campus_type.MAIN,
+    };
+    await adminService.create(accountBody, req);
 
     app.volunteerAccount = {
       username,

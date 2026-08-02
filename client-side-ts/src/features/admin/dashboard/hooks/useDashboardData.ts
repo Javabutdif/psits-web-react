@@ -90,23 +90,18 @@ const buildRevenueTrend = (
   });
 };
 
-const fetchPaidOrdersForRevenue = async () => {
-  const firstPage = await getDashboardPaidOrders({ page: 1, limit: 1000 });
+const fetchRevenueOrders = async (endDateKey: string) => {
+  const endDate = parseDateKey(endDateKey);
+  const startDate = addDays(endDate, -13);
 
-  if (firstPage.totalPages <= 1) {
-    return firstPage.data;
-  }
+  const result = await getDashboardPaidOrders({
+    page: 1,
+    limit: 1000,
+    startDate: formatDateKey(startDate),
+    endDate: endDateKey,
+  });
 
-  const remainingPages = await Promise.all(
-    Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-      getDashboardPaidOrders({ page: index + 2, limit: 1000 })
-    )
-  );
-
-  return [
-    ...firstPage.data,
-    ...remainingPages.flatMap((pageResult) => pageResult.data),
-  ];
+  return result.data;
 };
 
 export const useDashboardData = () => {
@@ -134,10 +129,7 @@ export const useDashboardData = () => {
     setError(null);
 
     try {
-      const [dashboardStats, paidOrders] = await Promise.all([
-        getDashboardStats(),
-        fetchPaidOrdersForRevenue(),
-      ]);
+      const dashboardStats = await getDashboardStats();
 
       const stats: DashboardStatsResponse = dashboardStats ?? {
         dashboardCount: {
@@ -216,13 +208,26 @@ export const useDashboardData = () => {
       setCounts(nextCounts);
       setYearLevels(yearData);
       setCourses(courseData);
-      setRevenueOrders(paidOrders);
     } catch {
       setError("Unable to load dashboard data.");
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchRevenueOrders(revenueEndDate).then((orders) => {
+      if (!cancelled) {
+        setRevenueOrders(orders);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [revenueEndDate]);
 
   const fetchPendingOrders = useCallback(async () => {
     setIsPendingLoading(true);

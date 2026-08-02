@@ -9,7 +9,24 @@ import { Application } from "../models/application.model";
 import { catchAsync } from "../util/catch.async.util";
 import { hiringStatus } from "../enums/recruitment.enums";
 import { recruitmentService } from "../services/recruitment.service";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
 import { AppError } from "../util/app.error.util";
+
+const logAdminAction = (
+  req: Request,
+  action: string,
+  target: string,
+  target_id?: string
+) =>
+  logService.create({
+    admin: req.admin?.name ?? "Unknown Admin",
+    admin_id: req.admin?._id,
+    action,
+    target,
+    target_id: target_id && /^[a-f\d]{24}$/i.test(target_id) ? target_id : undefined,
+    target_model: "Recruitment",
+  });
 
 class RecruitmentController {
   /** Public: List all open positions */
@@ -32,6 +49,7 @@ class RecruitmentController {
   /** Admin: Create a new position */
   createPosition = catchAsync(async (req: Request, res: Response) => {
     const position = await recruitmentService.createPosition(req);
+    await logAdminAction(req, logs_action.CREATE_POSITION, position?.title, String(position?._id));
     return res
       .status(201)
       .json({ message: "Position created successfully", data: position });
@@ -49,6 +67,7 @@ class RecruitmentController {
           data: positions,
         });
       }
+      await logAdminAction(req, logs_action.CREATE_POSITION, "Bulk open role applications");
       return res.status(201).json({
         message: "Positions opened successfully",
         data: positions,
@@ -60,6 +79,7 @@ class RecruitmentController {
   updatePosition = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const position = await recruitmentService.updatePosition(id, req);
+    await logAdminAction(req, logs_action.UPDATE_POSITION, position?.title, String(position?._id));
     return res
       .status(200)
       .json({ message: "Position updated successfully", data: position });
@@ -69,6 +89,7 @@ class RecruitmentController {
   toggleHiringStatus = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const position = await recruitmentService.toggleHiringStatus(id, req);
+    await logAdminAction(req, logs_action.TOGGLE_HIRING, position?.title, String(position?._id));
     return res
       .status(200)
       .json({ message: "Hiring status updated successfully", data: position });
@@ -78,6 +99,7 @@ class RecruitmentController {
   deletePosition = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     await recruitmentService.deletePosition(id);
+    await logAdminAction(req, logs_action.DELETE_POSITION, String(id), id);
     return res.status(200).json({ message: "Position archived successfully" });
   });
 
@@ -154,6 +176,14 @@ class RecruitmentController {
   updateApplicationStatus = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const app = await recruitmentService.updateApplicationStatus(id, req);
+    const targetStatus = String(app?.status ?? "").toUpperCase();
+    const action =
+      targetStatus === "APPROVED"
+        ? logs_action.APPROVE_APPLICANT
+        : targetStatus === "REJECTED" || targetStatus === "WITHDRAWN"
+          ? logs_action.REJECT_APPLICANT
+          : logs_action.APPLICATION_STATUS_UPDATE;
+    await logAdminAction(req, action, app?.applicantSnapshot?.name || String(id), id);
     return res
       .status(200)
       .json({ message: "Application status updated successfully", data: app });
@@ -163,6 +193,7 @@ class RecruitmentController {
   deleteApplication = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const result = await recruitmentService.deleteApplication(id, req);
+    await logAdminAction(req, logs_action.DELETE_APPLICATION, String(id), id);
     return res.status(200).json(result);
   });
 
@@ -171,6 +202,7 @@ class RecruitmentController {
     const id = req.params.id as string;
     const account =
       await recruitmentService.verifyApplicantAccount(id, req);
+    await logAdminAction(req, logs_action.VERIFY_APPLICANT, String(id), id);
     return res.status(201).json({
       message: "Volunteer account created successfully",
       data: account,
@@ -181,6 +213,7 @@ class RecruitmentController {
   createInterview = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const app = await recruitmentService.createInterview(id, req);
+    await logAdminAction(req, logs_action.CREATE_INTERVIEW, app?.applicantSnapshot?.name || String(id), id);
     return res
       .status(201)
       .json({ message: "Interview scheduled successfully", data: app });
@@ -190,6 +223,7 @@ class RecruitmentController {
   updateInterview = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const app = await recruitmentService.updateInterview(id, req);
+    await logAdminAction(req, logs_action.UPDATE_INTERVIEW, app?.applicantSnapshot?.name || String(id), id);
     return res
       .status(200)
       .json({ message: "Interview updated successfully", data: app });
@@ -199,6 +233,7 @@ class RecruitmentController {
   cancelInterview = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const app = await recruitmentService.deleteInterview(id);
+    await logAdminAction(req, logs_action.CANCEL_INTERVIEW, app?.applicantSnapshot?.name || String(id), id);
     return res
       .status(200)
       .json({ message: "Interview cancelled successfully", data: app });

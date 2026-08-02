@@ -36,6 +36,7 @@ import type {
   EventMerchMeta,
 } from "@/features/events/types/event.types";
 import { useAuth } from "@/features/auth";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import type { Campus } from "@/features/auth/types/auth.types";
 import { showToast } from "@/utils/alertHelper";
 
@@ -265,6 +266,7 @@ const EventManagement: React.FC = () => {
 
   const isAdmin = user?.role === "admin";
   const isUcMainAdmin = isAdmin && user?.campus === "UC_MAIN";
+  const { canManageEvents } = useAdminPermissions();
 
   const availableCampusCodes = useMemo(() => {
     const eventCampusCodes = eventDetails?.campusCodes ?? DEFAULT_CAMPUSES;
@@ -389,12 +391,12 @@ const EventManagement: React.FC = () => {
   };
 
   const handleEditEvent = () => {
-    if (!eventDetails || !isUcMainAdmin) return;
+    if (!eventDetails || !isUcMainAdmin || !canManageEvents) return;
     setIsEditEventOpen(true);
   };
 
   const handleAttendeeSettings = () => {
-    if (!isUcMainAdmin) return;
+    if (!isUcMainAdmin || !canManageEvents) return;
     showToast("error", UNDER_CONSTRUCTION_MESSAGE);
   };
 
@@ -433,7 +435,7 @@ const EventManagement: React.FC = () => {
             </p>
           </div>
 
-          {isUcMainAdmin && (
+          {isUcMainAdmin && canManageEvents && (
             <div className="flex w-full justify-end sm:w-auto">
               <Button
                 variant="outline"
@@ -609,7 +611,7 @@ const EventManagement: React.FC = () => {
                           </p>
                         </div>
 
-                        {isUcMainAdmin && (
+                        {isUcMainAdmin && canManageEvents && (
                           <div>
                             <Button
                               onClick={handleEditEvent}

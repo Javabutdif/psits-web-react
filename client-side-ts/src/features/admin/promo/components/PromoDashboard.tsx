@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { showToast } from "@/utils/alertHelper";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import { deletePromo } from "../api/promo.api";
 import { PromoAddModal } from "./PromoAddModal";
 import { PromoViewModal } from "./PromoViewModal";
@@ -74,6 +75,7 @@ const loadPromoCodes = async (): Promise<PromoListRow[] | null> => {
 };
 
 export const PromoDashboard = () => {
+  const { canManagePromo } = useAdminPermissions();
   const [promoCodes, setPromoCodes] = useState<PromoListRow[]>([]);
   // Defaults to true since we always fetch on mount — this lets the mount
   // effect below only ever set state *after* an await (the React-recommended
@@ -124,6 +126,7 @@ export const PromoDashboard = () => {
   }, []);
 
   const handleEdit = (row: PromoListRow) => {
+    if (!canManagePromo) return;
     setEditData(row);
     setIsEditModalOpen(true);
   };
@@ -134,12 +137,14 @@ export const PromoDashboard = () => {
   };
 
   const handleDeleteClick = (row: PromoListRow) => {
+    if (!canManagePromo) return;
     setDeleteId(row._id);
     setDeleteName(row.promo_name);
     setIsDeleteConfirmOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
+    if (!canManagePromo) return;
     const result = await deletePromo(deleteId);
     if (result) {
       setIsDeleteConfirmOpen(false);
@@ -223,6 +228,7 @@ export const PromoDashboard = () => {
             type="button"
             className="h-9 rounded-full bg-[#1c9dde] px-5 hover:bg-[#168bc7]"
             onClick={() => setIsAddModalOpen(true)}
+            disabled={!canManagePromo}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Promo Code
@@ -393,15 +399,17 @@ export const PromoDashboard = () => {
                         </TableCell>
                         <TableCell className="px-2 py-3 text-right">
                           <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              className="h-7 w-7 rounded-full border border-[#eeeeee]"
-                              onClick={() => handleEdit(row)}
-                              aria-label={`Edit ${row.promo_name}`}
-                            >
-                              <PenLine className="h-4 w-4 text-blue-500" />
-                            </Button>
+                            {canManagePromo && (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                className="h-7 w-7 rounded-full border border-[#eeeeee]"
+                                onClick={() => handleEdit(row)}
+                                aria-label={`Edit ${row.promo_name}`}
+                              >
+                                <PenLine className="h-4 w-4 text-blue-500" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon-sm"
@@ -411,15 +419,17 @@ export const PromoDashboard = () => {
                             >
                               <Eye className="h-4 w-4 text-blue-500" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              className="h-7 w-7 rounded-full border border-[#eeeeee]"
-                              onClick={() => handleDeleteClick(row)}
-                              aria-label={`Delete ${row.promo_name}`}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
+                            {canManagePromo && (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                className="h-7 w-7 rounded-full border border-[#eeeeee]"
+                                onClick={() => handleDeleteClick(row)}
+                                aria-label={`Delete ${row.promo_name}`}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

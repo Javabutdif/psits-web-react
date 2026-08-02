@@ -68,6 +68,14 @@ class DevToolsController {
 
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename=email-queue-${new Date().toISOString().split("T")[0]}.csv`);
+    const csvAdminName = String(req.admin?.name ?? "");
+    await logService.create({
+      admin: csvAdminName || String(req.userV2?.idNumber ?? "") || "Unknown Admin",
+      admin_id: req.admin?._id,
+      action: logs_action.EXPORT_REPORT,
+      target: "Email queue CSV",
+      target_model: "Report",
+    });
     res.status(200).send(csvRows.join("\n"));
   });
 
@@ -82,7 +90,7 @@ class DevToolsController {
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: logs_action.RESEND_EMAIL,
-      target: id,
+      target: String(id),
       target_model: "Order",
     });
     res.status(200).json({ message: "Email resent successfully" });
