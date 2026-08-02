@@ -16,10 +16,12 @@ import {
 
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import {
+  RECRUITMENT_ROLE_CATALOG,
+  type RecruitmentRolePosition,
+} from "@/constants/recruitmentRoles";
 
-type Position = {
-  id: string;
-  name: string;
+type Position = RecruitmentRolePosition & {
   enabled: boolean;
   slots?: number;
 };
@@ -32,58 +34,15 @@ type Role = {
   slots?: number;
 };
 
-const DEFAULT_ROLES: Role[] = [
-  {
-    id: "developer",
-    title: "Developer",
+const createDefaultRoles = (): Role[] =>
+  RECRUITMENT_ROLE_CATALOG.map((role) => ({
+    ...role,
     enabled: false,
-    positions: [
-      { id: "frontend", name: "Front-end", enabled: false },
-      { id: "backend", name: "Back-end", enabled: false },
-      { id: "fullstack", name: "Full-stack", enabled: false },
-      { id: "uiux", name: "UI/UX Designer", enabled: false },
-      { id: "qa", name: "QA Tester", enabled: false },
-    ],
-  },
-  {
-    id: "media",
-    title: "Media Creative",
-    enabled: false,
-    positions: [
-      { id: "video", name: "Videographer", enabled: false },
-      { id: "photo", name: "Photojournalist", enabled: false },
-      { id: "creatives", name: "Creatives", enabled: false },
-      { id: "techwrite", name: "Technical Writer", enabled: false },
-    ],
-  },
-  {
-    id: "officer",
-    title: "Officer",
-    enabled: false,
-    positions: [
-      { id: "president", name: "President", enabled: false },
-      { id: "vp-external", name: "Vice Pres. - External", enabled: false },
-      { id: "vp-internal", name: "Vice Pres. - Internal", enabled: false },
-      { id: "auditor", name: "Auditor", enabled: false },
-      { id: "asst-treasurer", name: "Asst. Treasurer", enabled: false },
-      { id: "treasurer", name: "Treasurer", enabled: false },
-      { id: "secretary", name: "Secretary", enabled: false },
-      { id: "chief-volunteer", name: "Chief Volunteer", enabled: false },
-      { id: "pro", name: "PRO", enabled: false },
-      { id: "pio", name: "PIO", enabled: false },
-      { id: "rep-1st", name: "1st Year REP", enabled: false },
-      { id: "rep-2nd", name: "2nd Year REP", enabled: false },
-      { id: "rep-3rd", name: "3rd Year REP", enabled: false },
-      { id: "rep-4th", name: "4th Year REP", enabled: false },
-    ],
-  },
-  {
-    id: "volunteer",
-    title: "Volunteer",
-    enabled: false,
-    positions: [],
-  },
-];
+    positions: role.positions.map((position) => ({
+      ...position,
+      enabled: false,
+    })),
+  }));
 
 function formatDateDisplay(date?: Date) {
   if (!date) return "";
@@ -343,7 +302,7 @@ export default function OpenRole({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  const [roles, setRoles] = useState<Role[]>(DEFAULT_ROLES);
+  const [roles, setRoles] = useState<Role[]>(createDefaultRoles);
   const [saveSelection, setSaveSelection] = useState(false);
   const [requirementsByItem, setRequirementsByItem] = useState<Record<string, string>>({});
   const [activeRequirementId, setActiveRequirementId] = useState<string | null>(null);
@@ -477,14 +436,14 @@ export default function OpenRole({
   const handleConfirm = () => {
     if (!isStepOneValid) return;
 
-    const confirmationData = {
+    const confirmationData: OpenRecruitmentValues = {
       startDate: startDate!.toISOString(),
       endDate: endDate!.toISOString(),
       startTime,
       endTime,
       roles,
       requirementsByItem,
-    } as OpenRecruitmentValues & { requirementsByItem: Record<string, string> };
+    };
 
     onConfirm(confirmationData);
   };

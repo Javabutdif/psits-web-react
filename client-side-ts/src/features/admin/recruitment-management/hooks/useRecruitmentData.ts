@@ -11,6 +11,7 @@ import type {
   ScheduleInterviewValues,
   RecruitmentPosition,
   OpenRecruitmentValues,
+  RecruitmentOpeningConflictError,
 } from "../types/Recruitment.types";
 
 // Adjust this path if your actual file structure differs
@@ -32,6 +33,7 @@ import {
 } from "../../../../api/recruitment.api";
 
 export const ROWS_PER_PAGE = 8;
+export const POSITIONS_PER_PAGE = 8;
 
 export const DEFAULT_FILTERS: RecruitmentFilters = {
   roles: [],
@@ -226,6 +228,9 @@ export const useRecruitmentData = () => {
   const [positions, setPositions] = useState<RecruitmentPosition[]>([]);
   const [isPositionsLoading, setIsPositionsLoading] = useState(true);
   const [positionsError, setPositionsError] = useState<string | null>(null);
+  const [positionsPage, setPositionsPage] = useState(1);
+  const [positionsTotalPages, setPositionsTotalPages] = useState(1);
+  const [positionsTotal, setPositionsTotal] = useState(0);
 
   const [mutationError, setMutationError] = useState<string | null>(null);
 
@@ -317,12 +322,20 @@ export const useRecruitmentData = () => {
     }
   }, []);
 
-  const fetchPositions = useCallback(async () => {
+  const fetchPositions = useCallback(async (pageNumber = positionsPage) => {
     setIsPositionsLoading(true);
     setPositionsError(null);
     try {
-      const res = await listPositions({});
-      setPositions(res.data.data.positions);
+      const res = await listPositions({
+        page: pageNumber,
+        limit: POSITIONS_PER_PAGE,
+      });
+      const payload = res.data.data;
+      const pagination = payload.pagination;
+
+      setPositions(payload.positions || []);
+      setPositionsTotalPages(Number(pagination?.totalPages || 1));
+      setPositionsTotal(Number(pagination?.total || 0));
     } catch (err) {
       setPositionsError(
         err instanceof Error ? err.message : "Failed to load positions"
@@ -330,7 +343,7 @@ export const useRecruitmentData = () => {
     } finally {
       setIsPositionsLoading(false);
     }
-  }, []);
+  }, [positionsPage]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; fetchPositions is also used for refetch, so its internal setIsPositionsLoading/setPositionsError calls are needed there
@@ -632,8 +645,33 @@ export const useRecruitmentData = () => {
         ...data,
         roleRequirements: data.roleRequirements ?? "",
       });
-      await fetchPositions();
+      setPositionsPage(1);
+      await fetchPositions(1);
     } catch (err) {
+      const response = (err as {
+        response?: {
+          status?: number;
+          data?: {
+            code?: string;
+            message?: string;
+            data?: { conflicts?: RecruitmentOpeningConflictError["conflicts"] };
+          };
+        };
+      }).response;
+
+      if (
+        response?.status === 409 &&
+        response.data?.code === "RECRUITMENT_POSITION_CONFLICT"
+      ) {
+        const conflictError = new Error(
+          response.data.message || "Some selected role applications already exist."
+        ) as RecruitmentOpeningConflictError;
+        conflictError.code = "RECRUITMENT_POSITION_CONFLICT";
+        conflictError.conflicts = response.data.data?.conflicts ?? [];
+        setMutationError(conflictError.message);
+        throw conflictError;
+      }
+
       setMutationError(
         err instanceof Error ? err.message : "Failed to open role application"
       );
@@ -696,7 +734,16 @@ export const useRecruitmentData = () => {
     setMutationError(null);
     try {
       await deletePositionApi(id);
-      setPositions((current) => current.filter((p) => p._id !== id));
+      const nextPage =
+        positions.length === 1 && positionsPage > 1
+          ? positionsPage - 1
+          : positionsPage;
+
+      if (nextPage !== positionsPage) {
+        setPositionsPage(nextPage);
+      }
+
+      await fetchPositions(nextPage);
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to delete position"
@@ -844,6 +891,10 @@ export const useRecruitmentData = () => {
     setPage,
     totalPages,
     currentPage,
+    positionsPage,
+    setPositionsPage,
+    positionsTotalPages,
+    positionsTotal,
     isLoading,
     isMutating,
     error,

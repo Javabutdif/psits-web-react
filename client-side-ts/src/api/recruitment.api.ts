@@ -13,6 +13,7 @@ type PositionListParams = {
   page?: number;
   limit?: number;
   status?: RecruitmentPosition["hiringStatus"];
+  availableOnly?: boolean;
 };
 
 type ApplicationPayload = FormData;
@@ -76,6 +77,8 @@ export const createOpening = (data: {
   endTime: string;
   roles: unknown[];
   roleRequirements: string;
+  requirementsByItem?: Record<string, string>;
+  conflictStrategy?: "update_existing" | "close_old_create_new";
 }) => api.post(`${BASE_PATH}/positions/bulk-open`, data);
 
 export const updatePosition = (id: string, data: PositionPayload) =>

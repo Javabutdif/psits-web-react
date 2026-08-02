@@ -1,6 +1,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMemo, useState } from "react";
 import {
+  AlertTriangle,
   ArrowUpDown,
   Ban,
   Check,
@@ -33,6 +34,7 @@ import { cn } from "@/lib/utils";
 import {
   useRecruitmentData,
   ROWS_PER_PAGE,
+  POSITIONS_PER_PAGE,
   DEFAULT_FILTERS,
 } from "../hooks/useRecruitmentData";
 import type {
@@ -41,6 +43,9 @@ import type {
   RecruitmentPosition,
   RecruitmentSort,
   RecruitmentSortField,
+  OpenRecruitmentValues,
+  RecruitmentOpeningConflict,
+  RecruitmentOpeningConflictStrategy,
 } from "../types/Recruitment.types";
 import { ApplicantInfoModal } from "./ApplicantInfoModal";
 import { InterviewSchedulingModal } from "./InterviewSchedulingModal";
@@ -320,6 +325,10 @@ export const RecruitmentViews = () => {
     currentPage,
     totalPages,
     setPage,
+    positionsPage,
+    setPositionsPage,
+    positionsTotalPages,
+    positionsTotal,
     isLoading,
     isMutating,
     error,
@@ -362,6 +371,10 @@ export const RecruitmentViews = () => {
     useState<RecruitmentPosition | null>(null);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [isOpenRoleOpen, setIsOpenRoleOpen] = useState(false);
+  const [openingConflict, setOpeningConflict] = useState<{
+    values: OpenRecruitmentValues;
+    conflicts: RecruitmentOpeningConflict[];
+  } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RecruitmentApplicant | null>(
     null
   );
@@ -410,6 +423,11 @@ const allPositionsSelected =
   positions.length > 0 &&
   positions.every((p) => selectedPositionIds.includes(p._id));
 
+const positionsStart =
+  positionsTotal > 0 ? (positionsPage - 1) * POSITIONS_PER_PAGE + 1 : 0;
+const positionsEnd =
+  positionsTotal > 0 ? Math.min(positionsStart + positions.length - 1, positionsTotal) : 0;
+
 const togglePositionSelection = (id: string) => {
   setSelectedPositionIds((current) =>
     current.includes(id)
@@ -417,6 +435,57 @@ const togglePositionSelection = (id: string) => {
       : [...current, id]
   );
 };
+
+  const handleOpenRoleConfirm = async (data: OpenRecruitmentValues) => {
+    try {
+      await openRoleApplication(data);
+      setOpeningConflict(null);
+      setIsOpenRoleOpen(false);
+    } catch (error) {
+      const conflictError = error as {
+        code?: string;
+        conflicts?: RecruitmentOpeningConflict[];
+      };
+
+      if (conflictError.code === "RECRUITMENT_POSITION_CONFLICT") {
+        setOpeningConflict({
+          values: data,
+          conflicts: conflictError.conflicts ?? [],
+        });
+      }
+    }
+  };
+
+  const resolveOpeningConflict = async (
+    strategy: RecruitmentOpeningConflictStrategy
+  ) => {
+    if (!openingConflict) return;
+
+    try {
+      await openRoleApplication({
+        ...openingConflict.values,
+        conflictStrategy: strategy,
+      });
+      setOpeningConflict(null);
+      setIsOpenRoleOpen(false);
+    } catch (error) {
+      const conflictError = error as {
+        code?: string;
+        conflicts?: RecruitmentOpeningConflict[];
+      };
+
+      if (conflictError.code === "RECRUITMENT_POSITION_CONFLICT") {
+        setOpeningConflict((current) =>
+          current
+            ? {
+                ...current,
+                conflicts: conflictError.conflicts ?? current.conflicts,
+              }
+            : current
+        );
+      }
+    }
+  };
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
@@ -804,6 +873,44 @@ const togglePositionSelection = (id: string) => {
                   )}
                 </tbody>
               </table>
+              <div className="mt-4 flex flex-col gap-3 text-sm text-[#777] sm:flex-row sm:items-center sm:justify-between">
+                <span>
+                  Showing {positionsStart} to {positionsEnd} of {positionsTotal}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={positionsPage <= 1 || isPositionsLoading}
+                    onClick={() =>
+                      setPositionsPage(Math.max(1, positionsPage - 1))
+                    }
+                    className="h-8 rounded-full border-[#e8e8e8] bg-white px-3 text-xs"
+                  >
+                    Previous
+                  </Button>
+                  <span className="rounded-full bg-[#1c9dde] px-3 py-1 text-xs font-medium text-white">
+                    {positionsPage}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={
+                      positionsPage >= positionsTotalPages || isPositionsLoading
+                    }
+                    onClick={() =>
+                      setPositionsPage(
+                        Math.min(positionsTotalPages, positionsPage + 1)
+                      )
+                    }
+                    className="h-8 rounded-full border-[#e8e8e8] bg-white px-3 text-xs"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             </div>
           ) : activeTab === "applicants" ? (
             <div className="overflow-x-auto">
@@ -1262,16 +1369,85 @@ const togglePositionSelection = (id: string) => {
       <OpenRole
         open={isOpenRoleOpen}
         isSubmitting={isMutating}
-        onClose={() => setIsOpenRoleOpen(false)}
-        onConfirm={async (data) => {
-          try {
-            await openRoleApplication(data);
-            setIsOpenRoleOpen(false);
-          } catch {
-            // mutationError is already set by the hook
-          }
+        onClose={() => {
+          setIsOpenRoleOpen(false);
+          setOpeningConflict(null);
         }}
+        onConfirm={handleOpenRoleConfirm}
       />
+      <Dialog
+        open={!!openingConflict}
+        onOpenChange={(open) => !open && setOpeningConflict(null)}
+      >
+        <DialogContent className="max-w-lg rounded-2xl">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-50">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-semibold">
+                  Some role applications are already open
+                </DialogTitle>
+                <p className="mt-1 text-sm text-slate-500">
+                  Choose how to handle the existing openings before continuing.
+                </p>
+              </div>
+            </div>
+
+            <div className="max-h-44 space-y-2 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3">
+              {(openingConflict?.conflicts || []).slice(0, 6).map((conflict) => (
+                <div
+                  key={conflict._id}
+                  className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm"
+                >
+                  <span className="font-medium text-slate-700">
+                    {conflict.title}
+                  </span>
+                  <span className="shrink-0 text-xs text-slate-400">
+                    {conflict.slots ?? 0} slot
+                    {conflict.slots === 1 ? "" : "s"}
+                  </span>
+                </div>
+              ))}
+              {(openingConflict?.conflicts.length || 0) > 6 && (
+                <p className="px-1 text-xs text-slate-500">
+                  +{(openingConflict?.conflicts.length || 0) - 6} more
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-auto rounded-xl px-3 py-2 text-sm"
+                disabled={isMutating}
+                onClick={() => setOpeningConflict(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-auto rounded-xl px-3 py-2 text-sm"
+                disabled={isMutating}
+                onClick={() => resolveOpeningConflict("update_existing")}
+              >
+                Update existing
+              </Button>
+              <Button
+                type="button"
+                className="h-auto rounded-xl bg-[#1C9DDE] px-3 py-2 text-sm hover:bg-[#168bc7]"
+                disabled={isMutating}
+                onClick={() => resolveOpeningConflict("close_old_create_new")}
+              >
+                Close old and create
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <PositionEditModal
         open={!!editingPosition}
         isSubmitting={isMutating}
