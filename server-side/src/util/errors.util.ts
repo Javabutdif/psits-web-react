@@ -77,6 +77,17 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
         });
     }
 
+    const operationalError = err as Error & {
+        statusCode?: number;
+        isOperational?: boolean;
+    };
+
+    if (operationalError.isOperational && operationalError.statusCode) {
+        return res.status(operationalError.statusCode).json({
+            message: operationalError.message,
+        });
+    }
+
     // Handle other errors (e.g. Mongoose validation) here in the future
 
     return res.status(500).json({

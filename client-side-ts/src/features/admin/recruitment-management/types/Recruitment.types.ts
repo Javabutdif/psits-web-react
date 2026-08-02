@@ -90,6 +90,24 @@ export interface OpenRecruitmentRole {
   slots?: number;
 }
 
+export type RecruitmentOpeningConflictStrategy =
+  | "update_existing"
+  | "close_old_create_new";
+
+export interface RecruitmentOpeningConflict {
+  _id: string;
+  title: string;
+  slots?: number;
+  applicationOpensAt?: string;
+  applicationDeadline?: string;
+  createdAt?: string;
+}
+
+export interface RecruitmentOpeningConflictError extends Error {
+  code: "RECRUITMENT_POSITION_CONFLICT";
+  conflicts: RecruitmentOpeningConflict[];
+}
+
 export interface OpenRecruitmentValues {
   startDate: string;
   endDate: string;
@@ -97,4 +115,6 @@ export interface OpenRecruitmentValues {
   endTime: string;
   roles: OpenRecruitmentRole[];
   roleRequirements?: string;
+  requirementsByItem?: Record<string, string>;
+  conflictStrategy?: RecruitmentOpeningConflictStrategy;
 }

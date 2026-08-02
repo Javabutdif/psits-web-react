@@ -7,6 +7,7 @@ export interface RecruitmentPosition {
   hiringStatus: "DRAFT" | "OPEN" | "CLOSED";
   isActive: boolean;
   slots?: number;
+  applicationOpensAt?: string;
   applicationDeadline?: string;
   sortOrder: number;
   createdAt: string;

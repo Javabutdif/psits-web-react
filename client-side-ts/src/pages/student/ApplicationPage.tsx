@@ -6,6 +6,7 @@ import {
   getApplicationsForUser,
 } from "@/api/recruitment.api";
 import type { Application, RecruitmentPosition } from "@/types/recruitment";
+import { RECRUITMENT_ROLE_CATALOG } from "@/constants/recruitmentRoles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,16 +23,60 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, Check, X } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Upload, Check, X, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 const COURSES = ["BSIT", "BSCS"];
 const YEARS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+const POSITIONS_PAGE_LIMIT = 100;
 const YEAR_MAP: Record<string, string> = {
   "1": "1st Year",
   "2": "2nd Year",
   "3": "3rd Year",
   "4": "4th Year",
+};
+
+const getPositionTimestamp = (position: RecruitmentPosition) => {
+  const timestamp = new Date(position.updatedAt || position.createdAt).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
+const normalizePositionLabel = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const getPositionKey = (role: string, position: string | null) =>
+  `${normalizePositionLabel(role)}:${normalizePositionLabel(position || role)}`;
+
+const parsePositionTitle = (title: string) => {
+  const [base, ...rest] = title.split(" - ");
+  return {
+    baseRole: base.trim(),
+    subLabel: rest.length > 0 ? rest.join(" - ").trim() : null,
+  };
+};
+
+const isPositionCurrentlyOpen = (position?: RecruitmentPosition) => {
+  if (
+    !position ||
+    position.isActive === false ||
+    position.hiringStatus !== "OPEN"
+  ) {
+    return false;
+  }
+
+  const now = Date.now();
+  const deadline = position.applicationDeadline
+    ? new Date(position.applicationDeadline).getTime()
+    : null;
+
+  if (deadline && Number.isFinite(deadline) && deadline < now) return false;
+
+  return true;
 };
 
 type StatusStep = {
@@ -364,6 +409,7 @@ export const ApplicationPage = () => {
   const [selectedPositionId, setSelectedPositionId] = useState("");
   const [subPosition, setSubPosition] = useState("");
   const [selectedBaseRole, setSelectedBaseRole] = useState("");
+  const [positionSelectOpen, setPositionSelectOpen] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const [resume, setResume] = useState<File | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -417,8 +463,34 @@ export const ApplicationPage = () => {
   useEffect(() => {
     const fetchPositions = async () => {
       try {
-        const res = await listPositions({ status: "OPEN" });
-        setPositions(res.data.data?.positions || []);
+        const firstPage = await listPositions({
+          status: "OPEN",
+          page: 1,
+          limit: POSITIONS_PAGE_LIMIT,
+        });
+        const firstPayload = firstPage.data.data;
+        const allPositions: RecruitmentPosition[] = [
+          ...(firstPayload?.positions || []),
+        ];
+        const totalPages = Number(firstPayload?.pagination?.totalPages || 1);
+
+        if (totalPages > 1) {
+          const remainingPages = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+              listPositions({
+                status: "OPEN",
+                page: index + 2,
+                limit: POSITIONS_PAGE_LIMIT,
+              })
+            )
+          );
+
+          remainingPages.forEach((pageResult) => {
+            allPositions.push(...(pageResult.data.data?.positions || []));
+          });
+        }
+
+        setPositions(allPositions);
       } catch (err) {
         console.error("Failed to load positions:", err);
         toast.error("Couldn't load open positions. Try refreshing.");
@@ -445,26 +517,88 @@ export const ApplicationPage = () => {
     fetchApplications();
   }, []);
 
-  // Position titles look like "Developer - Frontend" or plain "Volunteer".
-  // Split each into a base role + optional sub-label so the two dropdowns
-  // below can be driven from data that's actually stored as one combined
-  // string on the backend, rather than a hardcoded list of sub-positions.
+  const positionsByCatalogKey = useMemo(() => {
+    const byKey = new Map<string, RecruitmentPosition>();
+
+    positions.forEach((position) => {
+      const { baseRole, subLabel } = parsePositionTitle(position.title);
+      const key = getPositionKey(baseRole, subLabel);
+      const current = byKey.get(key);
+      const nextIsOpen = isPositionCurrentlyOpen(position);
+      const currentIsOpen = isPositionCurrentlyOpen(current);
+
+      if (
+        !current ||
+        (nextIsOpen && !currentIsOpen) ||
+        (nextIsOpen === currentIsOpen &&
+          getPositionTimestamp(position) > getPositionTimestamp(current))
+      ) {
+        byKey.set(key, position);
+      }
+    });
+
+    return byKey;
+  }, [positions]);
+
   const groupedPositions = useMemo(() => {
-  const groups: Record<string, { positionId: string; subLabel: string | null }[]> = {};
+    const groups: Record<
+      string,
+      {
+        id: string;
+        positionId: string;
+        subLabel: string | null;
+        isOpen: boolean;
+        position?: RecruitmentPosition;
+      }[]
+    > = {};
 
-    positions.forEach((p) => {
-      const [base, ...rest] = p.title.split(" - ");
-      const baseRole = base.trim();
-      const subLabel = rest.length > 0 ? rest.join(" - ").trim() : null;
+    RECRUITMENT_ROLE_CATALOG.forEach((role) => {
+      if (role.positions.length === 0) {
+        const position = positionsByCatalogKey.get(
+          getPositionKey(role.title, null)
+        );
+        groups[role.title] = [
+          {
+            id: role.id,
+            positionId: position?._id || "",
+            subLabel: null,
+            isOpen: isPositionCurrentlyOpen(position),
+            position,
+          },
+        ];
+        return;
+      }
 
-      if (!groups[baseRole]) groups[baseRole] = [];
-      groups[baseRole].push({ positionId: p._id, subLabel });
+      groups[role.title] = role.positions.map((catalogPosition) => {
+        const position = positionsByCatalogKey.get(
+          getPositionKey(role.title, catalogPosition.name)
+        );
+
+        return {
+          id: catalogPosition.id,
+          positionId: position?._id || "",
+          subLabel: catalogPosition.name,
+          isOpen: isPositionCurrentlyOpen(position),
+          position,
+        };
+      });
     });
 
     return groups;
-  }, [positions]);
+  }, [positionsByCatalogKey]);
 
-  const baseRoleOptions = Object.keys(groupedPositions);
+  const baseRoleOptions = RECRUITMENT_ROLE_CATALOG.map((role) => role.title);
+  const selectedRolePositionOptions =
+    groupedPositions[selectedBaseRole] || [];
+  const hasPositionOptions = selectedRolePositionOptions.length > 0;
+  const selectedPositionOption = selectedRolePositionOptions.find(
+    (item) => item.positionId && item.positionId === selectedPositionId
+  );
+  const selectedPositionLabel = selectedPositionOption
+    ? selectedPositionOption.subLabel ||
+      selectedPositionOption.position?.title ||
+      selectedBaseRole
+    : "";
 
   const selectedPosition = positions.find((p) => p._id === selectedPositionId);
 
@@ -541,8 +675,6 @@ export const ApplicationPage = () => {
     e.preventDefault();
     if (!isFormValid || !resume) return;
 
-     console.log("DEBUG submitting:", { selectedPositionId, subPosition });
-
     setSubmitting(true);
     try {
       const formData = new FormData();
@@ -562,7 +694,13 @@ export const ApplicationPage = () => {
       toast.success("Application submitted!");
     } catch (err) {
       console.error("Submission failed:", err);
-      toast.error("Application submission failed. Please try again.");
+      const message =
+        (err as { response?: { data?: { message?: string; error?: string } } })
+          .response?.data?.message ||
+        (err as { response?: { data?: { message?: string; error?: string } } })
+          .response?.data?.error ||
+        "Application submission failed. Please try again.";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -621,10 +759,15 @@ export const ApplicationPage = () => {
                 onValueChange={(v) => {
                   setSelectedBaseRole(v);
                   setSubPosition("");
+                  setPositionSelectOpen(false);
                   // If this base role has no sub-labels (e.g. "Volunteer"),
                   // there's only one matching position — select it right away.
                   const group = groupedPositions[v] || [];
-                  if (group.length === 1 && group[0].subLabel === null) {
+                  if (
+                    group.length === 1 &&
+                    group[0].subLabel === null &&
+                    group[0].isOpen
+                  ) {
                     setSelectedPositionId(group[0].positionId);
                   } else {
                     setSelectedPositionId("");
@@ -650,35 +793,67 @@ export const ApplicationPage = () => {
                 </SelectContent>
               </Select>
 
-              <Select
-                value={subPosition}
-                onValueChange={(label) => {
-                  setSubPosition(label);
-                  const match = (
-                    groupedPositions[selectedBaseRole] || []
-                  ).find((item) => item.subLabel === label);
-                  if (match) setSelectedPositionId(match.positionId);
-                }}
-                disabled={
-                  !selectedBaseRole ||
-                  (groupedPositions[selectedBaseRole] || []).every(
-                    (item) => item.subLabel === null
+              <Popover
+                open={positionSelectOpen}
+                onOpenChange={(open) =>
+                  setPositionSelectOpen(
+                    open && !!selectedBaseRole && hasPositionOptions
                   )
                 }
               >
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Position" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(groupedPositions[selectedBaseRole] || [])
-                    .filter((item) => item.subLabel !== null)
-                    .map((item) => (
-                      <SelectItem key={item.positionId} value={item.subLabel!}>
-                        {item.subLabel}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!selectedBaseRole}
+                    className="h-10 flex-1 justify-between rounded-md border-gray-200 bg-white px-3 text-left text-sm font-normal shadow-none hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <span
+                      className={
+                        selectedPositionLabel
+                          ? "truncate text-gray-900"
+                          : "truncate text-gray-400"
+                      }
+                    >
+                      {selectedPositionLabel || "Position"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="w-[var(--radix-popover-trigger-width)] p-1"
+                >
+                  {selectedRolePositionOptions.map((item) => {
+                    const label =
+                      item.subLabel || item.position?.title || selectedBaseRole;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        disabled={!item.isOpen}
+                        onClick={() => {
+                          if (!item.isOpen || !item.positionId) return;
+                          setSubPosition(item.subLabel || "");
+                          setSelectedPositionId(item.positionId);
+                          setPositionSelectOpen(false);
+                        }}
+                        className={
+                          item.isOpen
+                            ? "flex w-full cursor-pointer items-center justify-between gap-3 rounded-sm px-2 py-1.5 text-left text-sm text-[#0274b8] hover:bg-sky-50"
+                            : "flex w-full cursor-not-allowed items-center justify-between gap-3 rounded-sm px-2 py-1.5 text-left text-sm text-slate-400 opacity-60"
+                        }
+                      >
+                        <span className="truncate">{label}</span>
+                        <span className="shrink-0 text-[11px]">
+                          {item.isOpen ? "Open" : "Closed"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="min-h-[180px] rounded-lg border border-gray-200 p-4 text-sm text-gray-500">
