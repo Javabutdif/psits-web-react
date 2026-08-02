@@ -33,6 +33,25 @@ const r2Client = new S3Client({
   },
 });
 
+const OPENING_CONFLICT_STRATEGIES = {
+  updateExisting: "update_existing",
+  closeOldCreateNew: "close_old_create_new",
+};
+
+const toBooleanQuery = (value: any) =>
+  value === true || value === "true" || value === "1";
+
+const toPositiveInteger = (value: any, fallback: number) => {
+  const parsed = parseInt(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const toRequirementList = (value: any) =>
+  String(value ?? "")
+    .split("\n")
+    .map((line: string) => line.trim())
+    .filter((line: string) => line.length > 0);
+
 export class RecruitmentService {
   /** Create a new recruitment position */
   async createPosition(req: any) {
@@ -65,7 +84,8 @@ export class RecruitmentService {
       const now = Date.now();
       if (isActive && deadline.getTime() < now) {
         throw new AppError(
-          "Application deadline must be in future for open positions."
+          "Application deadline must be in future for open positions.",
+          400
         );
       }
     }
@@ -88,8 +108,16 @@ export class RecruitmentService {
 
   /** Admin: bulk-create positions from the "Open Role Application" modal */
   async createPositionsFromOpening(req: any) {
-    const { startDate, endDate, startTime, endTime, roles, roleRequirements } =
-      req.body;
+    const {
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+      roles,
+      roleRequirements,
+      requirementsByItem,
+      conflictStrategy,
+    } = req.body;
 
     if (
       !startDate ||
@@ -118,11 +146,7 @@ export class RecruitmentService {
       );
     }
 
-    const requirementsList: string[] = (roleRequirements ?? "")
-      .split("\n")
-      .map((line: string) => line.trim())
-      .filter((line: string) => line.length > 0);
-
+    const fallbackRequirements = toRequirementList(roleRequirements);
     const createdBy = req.userV2?.sub || req.admin?._id.toString();
     const docs: any[] = [];
     let sortOrder = 0;
@@ -133,13 +157,19 @@ export class RecruitmentService {
         (p: any) => p.enabled
       );
       if (enabledSubPositions.length === 0) {
+        const itemRequirements = toRequirementList(
+          requirementsByItem?.[role.id]
+        );
+        const requirements =
+          itemRequirements.length > 0 ? itemRequirements : fallbackRequirements;
+
         // e.g. "Volunteer" — enabled with no sub-positions
         docs.push({
           title: role.title,
           hiringStatus: hiringStatus.OPEN,
           isActive: true,
           slots: role.slots ?? undefined,
-          requirements: requirementsList,
+          requirements,
           applicationOpensAt,
           applicationDeadline,
           sortOrder: sortOrder++,
@@ -149,12 +179,18 @@ export class RecruitmentService {
       }
 
       for (const position of enabledSubPositions) {
+        const itemRequirements = toRequirementList(
+          requirementsByItem?.[position.id]
+        );
+        const requirements =
+          itemRequirements.length > 0 ? itemRequirements : fallbackRequirements;
+
         docs.push({
           title: `${role.title} - ${position.name}`,
           hiringStatus: hiringStatus.OPEN,
           isActive: true,
           slots: position.slots ?? undefined,
-          requirements: requirementsList,
+          requirements,
           applicationOpensAt,
           applicationDeadline,
           sortOrder: sortOrder++,
@@ -167,13 +203,115 @@ export class RecruitmentService {
       throw new AppError("No roles or positions were selected.", 400);
     }
 
+    const selectedTitles = docs.map((doc) => doc.title);
+    const existingOpenPositions = await RecruitmentPosition.find({
+      title: { $in: selectedTitles },
+      hiringStatus: hiringStatus.OPEN,
+      isActive: true,
+    }).sort({ createdAt: -1 });
+
+    if (
+      existingOpenPositions.length > 0 &&
+      !Object.values(OPENING_CONFLICT_STRATEGIES).includes(conflictStrategy)
+    ) {
+      return {
+        conflict: true,
+        conflicts: existingOpenPositions.map((position: any) => ({
+          _id: position._id,
+          title: position.title,
+          slots: position.slots,
+          applicationOpensAt: position.applicationOpensAt,
+          applicationDeadline: position.applicationDeadline,
+          createdAt: position.createdAt,
+        })),
+      };
+    }
+
+    if (
+      conflictStrategy === OPENING_CONFLICT_STRATEGIES.closeOldCreateNew &&
+      existingOpenPositions.length > 0
+    ) {
+      await RecruitmentPosition.updateMany(
+        {
+          _id: {
+            $in: existingOpenPositions.map((position: any) => position._id),
+          },
+        },
+        {
+          $set: {
+            hiringStatus: hiringStatus.CLOSED,
+            isActive: false,
+          },
+        }
+      );
+      return RecruitmentPosition.insertMany(docs);
+    }
+
+    if (conflictStrategy === OPENING_CONFLICT_STRATEGIES.updateExisting) {
+      const existingByTitle = existingOpenPositions.reduce(
+        (map: Map<string, any[]>, position: any) => {
+          const list = map.get(position.title) ?? [];
+          list.push(position);
+          map.set(position.title, list);
+          return map;
+        },
+        new Map()
+      );
+
+      const savedPositions = [];
+
+      for (const doc of docs) {
+        const matchingPositions = existingByTitle.get(doc.title) ?? [];
+        const [primaryPosition, ...duplicatePositions] = matchingPositions;
+
+        if (!primaryPosition) {
+          const created = await RecruitmentPosition.create(doc);
+          savedPositions.push(created);
+          continue;
+        }
+
+        primaryPosition.set({
+          slots: doc.slots,
+          requirements: doc.requirements,
+          applicationOpensAt: doc.applicationOpensAt,
+          applicationDeadline: doc.applicationDeadline,
+          sortOrder: doc.sortOrder,
+          hiringStatus: hiringStatus.OPEN,
+          isActive: true,
+          createdBy,
+        });
+        await primaryPosition.save();
+        savedPositions.push(primaryPosition);
+
+        if (duplicatePositions.length > 0) {
+          await RecruitmentPosition.updateMany(
+            {
+              _id: {
+                $in: duplicatePositions.map((position: any) => position._id),
+              },
+            },
+            {
+              $set: {
+                hiringStatus: hiringStatus.CLOSED,
+                isActive: false,
+              },
+            }
+          );
+        }
+      }
+
+      return savedPositions;
+    }
+
     return RecruitmentPosition.insertMany(docs);
   }
 
   /** Get all positions with filtering */
   async listPositions(req: any) {
-    const { search, status, page = 1, limit = 10 } = req.query;
+    const { search, status, page = 1, limit = 10, availableOnly } = req.query;
     const query: any = {};
+    const currentPage = toPositiveInteger(page, 1);
+    const pageLimit = toPositiveInteger(limit, 10);
 
     // Public API defaults to only active/open positions unless filtered
     if (req.path.startsWith("/public")) {
@@ -181,6 +319,28 @@ export class RecruitmentService {
       query.hiringStatus = hiringStatus.OPEN;
     } else {
       if (status) query.hiringStatus = status;
+    }
+
+    if (toBooleanQuery(availableOnly)) {
+      const now = new Date();
+      query.isActive = true;
+      query.hiringStatus = hiringStatus.OPEN;
+      query.$and = [
+        {
+          $or: [
+            { applicationOpensAt: { $exists: false } },
+            { applicationOpensAt: null },
+            { applicationOpensAt: { $lte: now } },
+          ],
+        },
+        {
+          $or: [
+            { applicationDeadline: { $exists: false } },
+            { applicationDeadline: null },
+            { applicationDeadline: { $gte: now } },
+          ],
+        },
+      ];
     }
 
     if (search) {
@@ -191,15 +351,20 @@ export class RecruitmentService {
     }
 
     const positions = await RecruitmentPosition.find(query)
-      .sort({ sortOrder: 1 })
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit));
+      .sort({ sortOrder: 1, createdAt: -1 })
+      .skip((currentPage - 1) * pageLimit)
+      .limit(pageLimit);
 
     const total = await RecruitmentPosition.countDocuments(query);
 
     return {
       positions,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      pagination: {
+        page: currentPage,
+        limit: pageLimit,
+        total,
+        totalPages: Math.ceil(total / pageLimit),
+      },
     };
   }
 
@@ -250,7 +415,8 @@ export class RecruitmentService {
         position.applicationDeadline.getTime() < now
       ) {
         throw new AppError(
-          "Application deadline must be in future for open positions."
+          "Application deadline must be in future for open positions.",
+          400
         );
       }
     }
@@ -310,6 +476,13 @@ export class RecruitmentService {
       );
     }
 
+    if (
+      position.applicationOpensAt &&
+      position.applicationOpensAt > new Date()
+    ) {
+      throw new AppError("Application is not open yet.", 400);
+    }
+
     // Validate deadline not expired
     if (
       position.applicationDeadline &&
@@ -334,7 +507,7 @@ export class RecruitmentService {
 
     // Get student snapshot for historical record
     const student = await Student.findById(studentId)
-      .select("first_name last_name id_number email")
+      .select("first_name last_name id_number email course year")
       .lean();
     if (!student) throw new AppError("Student not found.", 404);
 
@@ -365,11 +538,13 @@ export class RecruitmentService {
       position: positionId,
       applicant: studentId,
       applicantSnapshot: {
-        name: `${student.first_name} ${student.last_name}`.trim(),
+        name: `${student.first_name || req.body.firstName} ${
+          student.last_name || req.body.lastName
+        }`.trim(),
         idNumber: student.id_number,
-        email: student.email,
-        course: student.course,
-        year: student.year,
+        email: student.email || req.body.email,
+        course: student.course || req.body.course,
+        year: student.year || req.body.year,
       },
       documents: {
         resume: {

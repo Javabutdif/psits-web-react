@@ -42,6 +42,13 @@ class RecruitmentController {
     async (req: Request, res: Response) => {
       const positions =
         await recruitmentService.createPositionsFromOpening(req);
+      if (!Array.isArray(positions) && positions?.conflict) {
+        return res.status(409).json({
+          code: "RECRUITMENT_POSITION_CONFLICT",
+          message: "Some selected role applications are already open.",
+          data: positions,
+        });
+      }
       return res.status(201).json({
         message: "Positions opened successfully",
         data: positions,
