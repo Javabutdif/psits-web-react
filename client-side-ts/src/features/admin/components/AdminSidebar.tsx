@@ -260,6 +260,40 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     <Button
                       variant="ghost"
                       className={getNavButtonClass(
+                        "/admin/recuitment-management",
+                        !isUcMainAdmin
+                      )}
+                      asChild
+                    >
+                      <Link
+                        to={
+                          isUcMainAdmin ? "/admin/recuitment-management" : "#"
+                        }
+                        onClick={(e) => {
+                          if (!isUcMainAdmin) {
+                            e.preventDefault();
+                            showToast("error", "Unauthorized.");
+                          }
+                        }}
+                      >
+                        <Users className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>Recruitment</span>}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>Recruitment</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass(
                         "/admin/students",
                         !isUcMainAdmin
                       )}

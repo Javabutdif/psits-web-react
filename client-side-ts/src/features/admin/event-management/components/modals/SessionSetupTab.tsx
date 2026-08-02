@@ -1,8 +1,9 @@
-import { Clock3 } from "lucide-react";
+import { Sunrise, Sun, Sunset } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { EventFormData } from "./AddEventModal";
+
 
 interface SessionSetupTabProps {
   formData: EventFormData;
@@ -16,9 +17,9 @@ interface SessionField {
 }
 
 const SESSION_FIELDS: SessionField[] = [
-  { key: "morning", label: "Morning Session" },
-  { key: "afternoon", label: "Afternoon Session" },
-  { key: "evening", label: "Evening Session" },
+  { key: "morning", label: "Morning Session", icon: <Sunrise className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" /> },
+  { key: "afternoon", label: "Afternoon Session", icon: <Sun className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" /> },
+  { key: "evening", label: "Evening Session", icon: <Sunset className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" /> },
 ];
 
 const formatDateLabel = (date?: Date): string => {
@@ -96,7 +97,7 @@ export const SessionSetupTab: React.FC<SessionSetupTabProps> = ({
                 }
                 className="data-[state=checked]:bg-[#1C9DDE]"
               />
-              <Clock3 className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" />
+              {session.icon}
               <Label htmlFor={`session-${session.key}`} className="cursor-pointer">
                 {session.label}
               </Label>

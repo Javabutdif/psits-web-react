@@ -19,20 +19,21 @@ export const UpcomingEventsSection = () => {
       </div>
 
       <div className="relative">
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-4">
-            {events.map((event) => (
+        {events.length > 0 ? (
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {events.map((event) => (
               <CarouselItem
                 key={event.id}
-                className="basis-[85%] pl-4 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
-              >
-                <Card className="group relative h-[320px] overflow-hidden rounded-2xl border-none bg-black p-0 shadow-md transition-all duration-300 hover:scale-[1.02]">
+                  className="basis-[85%] pl-4 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                >
+                  <Card className="group relative h-[320px] overflow-hidden rounded-2xl border-none bg-black p-0 shadow-md transition-all duration-300 hover:scale-[1.02]">
                   {/* Background Image */}
                   <div className="absolute inset-0">
                     <OptimizedImage
@@ -42,9 +43,9 @@ export const UpcomingEventsSection = () => {
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-                  </div>
+                    </div>
 
-                  <CardContent className="absolute right-0 bottom-0 left-0 p-5 text-white">
+                  <CardContent className="absolute right-0 bottom-0 left-0 p-5  text-white">
                     <h3 className="group-hover:text-primary mb-2 text-lg leading-tight font-bold transition-colors">
                       {event.title}
                     </h3>
@@ -54,6 +55,7 @@ export const UpcomingEventsSection = () => {
                         <Calendar className="text-primary h-3.5 w-3.5" />
                         <span>{event.date}</span>
                       </div>
+
                       <div className="flex items-center gap-2 text-xs text-white/80">
                         <MapPin className="text-primary h-3.5 w-3.5" />
                         <span className="truncate">{event.location}</span>
@@ -61,10 +63,17 @@ export const UpcomingEventsSection = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        ) : (
+          <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-border">
+          <p className="text-muted-foreground text-lg">
+            No upcoming events yet.
+          </p>
+        </div>
+        )}
       </div>
     </section>
   );

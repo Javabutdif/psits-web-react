@@ -10,9 +10,7 @@ export const StudentLayout: React.FC = () => {
   const location = useLocation();
   const isIndexRoute =
     location.pathname === "/student" || location.pathname === "/student/";
-  const isMembershipRoute = location.pathname.startsWith(
-    "/student/membership"
-  );
+  const isMembershipRoute = location.pathname.startsWith("/student/membership");
   const showMembershipLink =
     user?.role === "student" &&
     normalizeMembershipStatus(user.membershipStatus) !== "active";
@@ -89,6 +87,16 @@ export const StudentLayout: React.FC = () => {
                 </NavLink>
               </li>
             )}
+            <li>
+              <NavLink
+                to="application"
+                className={({ isActive }) =>
+                  `pb-3 ${isActive ? "border-b-4 border-sky-400" : "border-b-4 border-transparent"}`
+                }
+              >
+                Application
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </div>

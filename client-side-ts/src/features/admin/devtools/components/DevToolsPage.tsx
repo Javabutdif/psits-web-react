@@ -62,19 +62,22 @@ const displayActiveTab = currentPanels.some((p) => p.key === activeTab) ? active
 
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
         <Tabs value={activeSection} onValueChange={setActiveSection}>
-          <div className="mb-5 flex w-full border-b border-[#eeeeee] sm:w-auto sm:gap-8 overflow-x-auto">
+          <div className="mb-5 flex w-full gap-6 border-b border-[#eeeeee] sm:w-auto sm:gap-8 overflow-x-auto">
             {sections.map((section) => (
               <button
                 key={section.key}
                 type="button"
                 onClick={() => setActiveSection(section.key)}
-                className={`shrink-0 rounded-full border px-4 py-2 text-sm ${
+                className={`relative shrink-0 cursor-pointer pb-3 text-sm ${
                   activeSection === section.key
-                    ? "border-[#1c9dde] bg-blue-50 text-[#1c9dde]"
-                    : "border-[#e5e5e5] bg-white text-gray-500"
+                    ? "font-medium text-[#1c9dde]"
+                    : "text-[#858585]"
                 }`}
               >
                 {section.label}
+                {activeSection === section.key && (
+                  <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-[#1c9dde]" />
+                )}
               </button>
             ))}
           </div>
@@ -148,23 +151,20 @@ interface TabBarProps {
 }
 
 const TabBar = ({ tabs, activeTab, onChange }: TabBarProps) => (
-  <div className="flex w-full border-b border-[#eeeeee] sm:w-auto sm:gap-8 overflow-x-auto">
+  <div className="flex w-full flex-wrap gap-2 overflow-x-auto sm:w-auto">
     {tabs.map((tab) => (
       <button
         key={tab.key}
         type="button"
         onClick={() => onChange(tab.key)}
-        className={`relative flex shrink-0 cursor-pointer items-center justify-center gap-2 pb-3 text-sm ${
+        className={`flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm ${
           activeTab === tab.key
-            ? "font-medium text-[#1c9dde]"
-            : "text-[#858585]"
+            ? "border-[#1c9dde] bg-blue-50 text-[#1c9dde]"
+            : "border-[#e5e5e5] bg-white text-gray-500"
         }`}
       >
         <tab.icon className="h-4 w-4 shrink-0" />
         {tab.label}
-        {activeTab === tab.key && (
-          <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-[#1c9dde]" />
-        )}
       </button>
     ))}
   </div>

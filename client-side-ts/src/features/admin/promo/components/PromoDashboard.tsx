@@ -30,7 +30,6 @@ import { PromoEditModal } from "./PromoEditModal";
 import type { PromoListRow } from "../types/promo.types";
 import { getAllPromoCodes } from "../api/promo.api";
 
-
 const getStatusBadge = (start_date: string, end_date: string) => {
   const current = new Date();
   const start = new Date(start_date);
@@ -50,7 +49,6 @@ const getStatusBadge = (start_date: string, end_date: string) => {
   return badge;
 };
 
-
 const getStockDisplay = (limit_type: string, quantity: number) => {
   if (limit_type === "Unlimited") return "Unlimited";
   if (quantity <= 0)
@@ -58,9 +56,30 @@ const getStockDisplay = (limit_type: string, quantity: number) => {
   return String(quantity);
 };
 
+// Pure fetch — no state writes. Shared by the mount effect and the
+// button/mutation-triggered refetches below.
+const loadPromoCodes = async (): Promise<PromoListRow[] | null> => {
+  try {
+    const data = await getAllPromoCodes();
+    if (!data) {
+      showToast("error", "Failed to fetch promo codes.");
+      return null;
+    }
+    return data;
+  } catch (error) {
+    console.error(error);
+    showToast("error", "Failed to fetch promo codes.");
+    return null;
+  }
+};
+
 export const PromoDashboard = () => {
   const [promoCodes, setPromoCodes] = useState<PromoListRow[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // Defaults to true since we always fetch on mount — this lets the mount
+  // effect below only ever set state *after* an await (the React-recommended
+  // shape), instead of calling setIsLoading(true) synchronously inside the
+  // effect, which is what react-hooks/set-state-in-effect flags.
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<PromoListRow | null>(null);
@@ -71,29 +90,37 @@ export const PromoDashboard = () => {
   const [deleteId, setDeleteId] = useState("");
   const [deleteName, setDeleteName] = useState("");
 
-//Filter tab, search text, selected checkboxes
+  //Filter tab, search text, selected checkboxes
   const [activeFilter, setActiveFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const fetchAllPromoCodes = async () => {
+  // Used for refetches triggered from event handlers (add/edit/delete
+  // callbacks below) — these aren't inside an effect, so setting isLoading
+  // synchronously here is fine.
+  const refetchPromoCodes = async () => {
     setIsLoading(true);
     try {
-      const data = await getAllPromoCodes();
-      if (!data) {
-        showToast("error", "Failed to fetch promo codes.");
-      }
-      setPromoCodes(data);
-    } catch (error) {
-      console.error(error);
-      showToast("error", "Failed to fetch promo codes.");
+      const data = await loadPromoCodes();
+      if (data) setPromoCodes(data);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAllPromoCodes();
+    let ignore = false;
+
+    (async () => {
+      const data = await loadPromoCodes();
+      if (ignore) return;
+      if (data) setPromoCodes(data);
+      setIsLoading(false);
+    })();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleEdit = (row: PromoListRow) => {
@@ -118,7 +145,7 @@ export const PromoDashboard = () => {
       setIsDeleteConfirmOpen(false);
       setDeleteId("");
       setDeleteName("");
-      fetchAllPromoCodes();
+      refetchPromoCodes();
     }
   };
 
@@ -146,7 +173,9 @@ export const PromoDashboard = () => {
 
     const matchesTab =
       activeFilter === "All" ||
-      (activeFilter === "Active" && status.label === "Active" && !isOutOfStock) ||
+      (activeFilter === "Active" &&
+        status.label === "Active" &&
+        !isOutOfStock) ||
       (activeFilter === "Out of Stock" && isOutOfStock) ||
       (activeFilter === "Expired" && status.label === "Expired");
 
@@ -217,13 +246,14 @@ export const PromoDashboard = () => {
                       : "text-[#777] hover:text-[#303030]"
                   }`}
                 >
-                  {tab} <span className="text-xs text-[#999]">{countFor(tab)}</span>
+                  {tab}{" "}
+                  <span className="text-xs text-[#999]">{countFor(tab)}</span>
                 </button>
               ))}
             </div>
 
             <div className="relative w-56">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#999]" />
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#999]" />
               <Input
                 placeholder="Search"
                 value={search}
@@ -238,7 +268,7 @@ export const PromoDashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                    <TableHead className="w-8 rounded-l-md py-2 pl-2 pr-0" />
+                    <TableHead className="w-8 rounded-l-md py-2 pr-0 pl-2" />
                     <TableHead className="w-[28%] px-2 py-2 font-medium">
                       Promo Name
                     </TableHead>
@@ -262,7 +292,7 @@ export const PromoDashboard = () => {
                 <TableBody>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell className="py-3 pl-2 pr-0">
+                      <TableCell className="py-3 pr-0 pl-2">
                         <Skeleton className="h-4 w-4 rounded" />
                       </TableCell>
                       <TableCell className="px-2 py-3">
@@ -291,11 +321,14 @@ export const PromoDashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                    <TableHead className="w-8 rounded-l-md py-2 pl-2 pr-0">
-                      <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
+                    <TableHead className="w-8 rounded-l-md py-2 pr-0 pl-2">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={toggleSelectAll}
+                      />
                     </TableHead>
                     <TableHead className="w-[28%] px-2 py-2 font-medium">
-                    Promo Name
+                      Promo Name
                     </TableHead>
                     <TableHead className="w-[12%] px-2 py-2 font-medium">
                       Type
@@ -320,13 +353,13 @@ export const PromoDashboard = () => {
                     const stock = getStockDisplay(row.limit_type, row.quantity);
                     return (
                       <TableRow key={row._id} className="text-[#303030]">
-                        <TableCell className="py-3 pl-2 pr-0">
+                        <TableCell className="py-3 pr-0 pl-2">
                           <Checkbox
                             checked={selectedIds.includes(row._id)}
                             onCheckedChange={() => toggleSelectRow(row._id)}
                           />
                         </TableCell>
-                        <TableCell className="truncate py-3 pl-2 pr-2 font-medium">
+                        <TableCell className="truncate py-3 pr-2 pl-2 font-medium">
                           {row.promo_name}
                         </TableCell>
                         <TableCell className="px-2 py-3">{row.type}</TableCell>
@@ -411,11 +444,14 @@ export const PromoDashboard = () => {
 
       {/* Add Modal */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="max-w-[760px] rounded-[20px] p-0" showCloseButton={false}>
+        <DialogContent
+          className="max-w-[760px] rounded-[20px] p-0"
+          showCloseButton={false}
+        >
           <PromoAddModal
             onClose={() => {
               setIsAddModalOpen(false);
-              fetchAllPromoCodes();
+              refetchPromoCodes();
             }}
           />
         </DialogContent>
@@ -423,14 +459,17 @@ export const PromoDashboard = () => {
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-[620px] rounded-[20px] p-0" showCloseButton={false}>
+        <DialogContent
+          className="max-w-[620px] rounded-[20px] p-0"
+          showCloseButton={false}
+        >
           {editData && (
             <PromoEditModal
               data={editData}
               onClose={() => {
                 setIsEditModalOpen(false);
                 setEditData(null);
-                fetchAllPromoCodes();
+                refetchPromoCodes();
               }}
             />
           )}
@@ -439,7 +478,10 @@ export const PromoDashboard = () => {
 
       {/* View Modal */}
       <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-        <DialogContent className="max-w-[700px] rounded-[20px]" showCloseButton={false}>
+        <DialogContent
+          className="max-w-[700px] rounded-[20px]"
+          showCloseButton={false}
+        >
           {viewData && (
             <PromoViewModal
               data={viewData}
@@ -485,7 +527,10 @@ export const PromoDashboard = () => {
 
       {/* Log Modal */}
       <Dialog open={isLogModalOpen} onOpenChange={setIsLogModalOpen}>
-        <DialogContent className="max-w-3xl rounded-[20px]" showCloseButton={false}>
+        <DialogContent
+          className="max-w-3xl rounded-[20px]"
+          showCloseButton={false}
+        >
           <PromoLogModal onClose={() => setIsLogModalOpen(false)} />
         </DialogContent>
       </Dialog>
