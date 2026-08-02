@@ -18,11 +18,35 @@ import {
 } from "../services/attendance.service";
 import { EventV2Service } from "../services/eventV2.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
 import { campus_type } from "../enums/campus.enums";
 import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
 } from "../dtos/events.dto";
+
+const logAdminAction = (
+  req: Request,
+  action: string,
+  target: string,
+  target_id?: string,
+  target_model = "Event"
+) =>
+  logService.create({
+    admin:
+      req.admin?.name ??
+      (req.userV2 as { idNumber?: string } | undefined)?.idNumber ??
+      "Unknown Admin",
+    admin_id: req.admin?._id,
+    action,
+    target,
+    target_id:
+      target_id && Types.ObjectId.isValid(target_id)
+        ? new Types.ObjectId(target_id)
+        : undefined,
+    target_model,
+  });
 
 /**
  * Returns a Date object representing the start of the day (00:00:00)
@@ -782,6 +806,14 @@ export const drawEventRaffleWinnerController = async (
     event.markModified("attendees");
     await event.save();
 
+    await logAdminAction(
+      req,
+      logs_action.RAFFLE_DRAW,
+      `${chosen.name} (${chosen.id_number})`,
+      eventId,
+      "Raffle"
+    );
+
     return res.status(200).json({
       message: "Success",
       winner: toRaffleAttendeeDto(chosen),
@@ -841,6 +873,14 @@ export const undoEventRaffleWinnerController = async (
 
     event.markModified("attendees");
     await event.save();
+
+    await logAdminAction(
+      req,
+      logs_action.RAFFLE_UNDO,
+      `${attendee.name} (${attendee.id_number})`,
+      eventId,
+      "Raffle"
+    );
 
     return res.status(200).json({ message: "Win undone" });
   } catch (error) {
@@ -1219,6 +1259,8 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     await session.commitTransaction();
     session.endSession();
 
+    await logAdminAction(req, logs_action.ADD_ATTENDEE, attendeeName, eventId);
+
     let emailSent = true;
     if (isNewStudent) {
       try {
@@ -1435,6 +1477,13 @@ export const markAttendanceV2Controller = async (
       year: Number(year) || 1,
       confirmedByAdminName: adminName,
     });
+
+    await logAdminAction(
+      req,
+      logs_action.UPDATE_ATTENDEE,
+      `${attendeeName.trim()} (${idNumber.trim()})`,
+      eventId
+    );
 
     return res.status(200).json({
       message: `Attendance for ${result.session} successfully recorded`,
@@ -1997,6 +2046,13 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
     await session.commitTransaction();
     session.endSession();
 
+    await logAdminAction(
+      req,
+      logs_action.UPDATE_ATTENDEE,
+      `${attendee.name} (${attendee.id_number})`,
+      eventId
+    );
+
     return res.status(200).json({
       message: "Attendee updated successfully",
       data: {
@@ -2191,6 +2247,13 @@ export const changeAttendeePasswordV2Controller = async (
     await session.commitTransaction();
     session.endSession();
 
+    await logAdminAction(
+      req,
+      logs_action.CHANGE_PASSWORD,
+      `${attendee.name ?? idNumber} (${attendee.id_number})`,
+      eventId
+    );
+
     return res.status(200).json({
       message: "Password changed successfully",
     });
@@ -2314,6 +2377,8 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
 
     await newEvent.save();
 
+    await logAdminAction(req, logs_action.CREATE_EVENT, eventName, String(newEvent._id));
+
     return res.status(201).json({
       message: "Event created successfully",
       data: newEvent.toObject(),
@@ -2391,6 +2456,13 @@ export const updateEventV2Controller = async (
         message: "Event not found",
       });
     }
+
+    await logAdminAction(
+      req,
+      logs_action.UPDATE_EVENT,
+      updatedEvent.eventName ?? eventId,
+      eventId
+    );
 
     return res.status(200).json({
       message: "Event updated successfully",

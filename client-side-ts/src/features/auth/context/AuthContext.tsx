@@ -62,7 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return result.user;
     }
 
-    setUser(null);
+    // A failed refresh must not destroy an active session. Session loss is
+    // only definitive at boot (restoreSession) or when a real API request
+    // 401s; an opportunistic refresh failure (e.g. token rotation race
+    // between tabs) should not force-log the user out.
     return null;
   }, []);
 

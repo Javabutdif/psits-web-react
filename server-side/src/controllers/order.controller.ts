@@ -133,8 +133,29 @@ export const getAllPaidOrdersController = async (
     const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit as string, 10) || 50, 1);
     const search = (req.query.search as string) || "";
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
+
+    const dateRange: Record<string, Date> = {};
+    if (startDate) {
+      const parsed = new Date(startDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        dateRange.$gte = parsed;
+      }
+    }
+    if (endDate) {
+      const parsed = new Date(endDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        parsed.setHours(23, 59, 59, 999);
+        dateRange.$lte = parsed;
+      }
+    }
+
     const query = {
       order_status: "Paid",
+      ...(Object.keys(dateRange).length > 0
+        ? { transaction_date: dateRange }
+        : {}),
       ...buildOrderSearchQuery(search),
     };
 

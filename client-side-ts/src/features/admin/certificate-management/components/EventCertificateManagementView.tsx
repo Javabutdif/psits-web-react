@@ -23,6 +23,7 @@ import type { Event } from "../../../events/types/event.types";
 import type { AttendeeRaw } from "../../../certificate/types/certificate.types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -192,6 +193,7 @@ const EditOptionalDetailsModal: React.FC<EditOptionalDetailsModalProps> = ({
 };
 
 export const EventCertificateManagementView: React.FC<EventCertificateManagementViewProps> = ({ eventId, onBack }) => {
+  const { canManageCertificates } = useAdminPermissions();
   const [event, setEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<AttendeeRaw[]>([]);
   const [loading, setLoading] = useState(true);
@@ -239,10 +241,12 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
   };
 
   const handleImportClick = () => {
+    if (!canManageCertificates) return;
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canManageCertificates) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -266,6 +270,7 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
   };
 
   const handleConfirmImport = async () => {
+    if (!canManageCertificates) return;
     const validStudentIds = importResults
       .filter((r) => r.isAttendee)
       .map((r) => r.studentId);
@@ -407,6 +412,7 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
   ).length;
 
   const handleUpdateEligibility = async (isEligible: boolean) => {
+    if (!canManageCertificates) return;
     const targetIds = selectedIds.filter((id) =>
       isEligible ? !eligibleIds.has(id) : eligibleIds.has(id)
     );
@@ -534,15 +540,17 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
                 </div>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsEditOpen(true)}
-              className="text-[#146f9e] hover:text-[#1c9dde] hover:bg-[#e8f5fc] transition-all flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-bold flex-shrink-0"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              Edit Details
-            </Button>
+            {canManageCertificates && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditOpen(true)}
+                className="text-[#146f9e] hover:text-[#1c9dde] hover:bg-[#e8f5fc] transition-all flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-bold flex-shrink-0"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit Details
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -596,10 +604,12 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
             accept=".csv,.xlsx,.xls"
             className="hidden"
           />
-          <Button variant="outline" onClick={handleImportClick} disabled={isFileProcessing}>
-            <Upload className="w-4 h-4 mr-2" />
-            {isFileProcessing ? "Processing..." : "Import via CSV/XLSX"}
-          </Button>
+          {canManageCertificates && (
+            <Button variant="outline" onClick={handleImportClick} disabled={isFileProcessing}>
+              <Upload className="w-4 h-4 mr-2" />
+              {isFileProcessing ? "Processing..." : "Import via CSV/XLSX"}
+            </Button>
+          )}
 
           <TooltipProvider>
             <Tooltip>
@@ -622,20 +632,24 @@ export const EventCertificateManagementView: React.FC<EventCertificateManagement
             </Tooltip>
           </TooltipProvider>
           
-          <Button
-            className="bg-green-600 hover:bg-green-700 text-white"
-            disabled={selectedIneligibleCount === 0 || isUpdating}
-            onClick={() => handleUpdateEligibility(true)}
-          >
-            Eligibilize {selectedIneligibleCount > 0 && `(${selectedIneligibleCount})`}
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={selectedEligibleCount === 0 || isUpdating}
-            onClick={() => handleUpdateEligibility(false)}
-          >
-            Uneligibilize {selectedEligibleCount > 0 && `(${selectedEligibleCount})`}
-          </Button>
+          {canManageCertificates && (
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={selectedIneligibleCount === 0 || isUpdating}
+              onClick={() => handleUpdateEligibility(true)}
+            >
+              Eligibilize {selectedIneligibleCount > 0 && `(${selectedIneligibleCount})`}
+            </Button>
+          )}
+          {canManageCertificates && (
+            <Button
+              variant="destructive"
+              disabled={selectedEligibleCount === 0 || isUpdating}
+              onClick={() => handleUpdateEligibility(false)}
+            >
+              Uneligibilize {selectedEligibleCount > 0 && `(${selectedEligibleCount})`}
+            </Button>
+          )}
         </div>
       </div>
 

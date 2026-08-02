@@ -2,6 +2,7 @@ import { BadgeCheck, CalendarClock, Download, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import type { RecruitmentApplicant } from "../types/Recruitment.types";
 
 interface ApplicantInfoModalProps {
@@ -50,6 +51,7 @@ export const ApplicantInfoModal = ({
   isResumeLoading,
   resumeError,
 }: ApplicantInfoModalProps) => {
+  const { canManageRecruitment } = useAdminPermissions();
   const hasInterview = Boolean(
     applicant &&
     (applicant.interviewDate ||
@@ -238,7 +240,7 @@ export const ApplicantInfoModal = ({
 
         {!isLoading && applicant && !error && (
           <div className="mt-auto flex shrink-0 justify-center px-6 py-4">
-            {hasInterview ? (
+            {hasInterview || !canManageRecruitment ? (
               <Button
                 type="button"
                 className="h-11 rounded-full bg-[#1c9dde] px-9 text-sm font-semibold hover:bg-[#168bc7]"

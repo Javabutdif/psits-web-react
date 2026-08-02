@@ -15,6 +15,7 @@ import { orderService } from "./order.service";
 import { AppError } from "../util/app.error.util";
 import { IResponseMessage } from "../models/global.response.interface";
 import { ILog } from "../models/log.interface";
+import { ICreateAdmin } from "../models/admin.interface";
 
 class AdminService {
   //Update One Dynamic Admin
@@ -424,26 +425,23 @@ class AdminService {
     }
   };
   //Create Admin Account
-  create = async (req: Request) => {
-    const { id_number, name, password, email, position, course, year, campus } =
-      req.body;
-
+  create = async (body: ICreateAdmin, req: Request) => {
     //Check if id number existed
-    const admin = await Admin.findOne({ id_number });
+    const admin = await Admin.findOne({ id_number: body.id_number });
     if (admin) {
       throw new AppError("Already have an account!", 404);
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(body.password, 10);
     const newAdmin: IAdminDocument = new Admin({
-      id_number,
-      name,
+      id_number: body.id_number,
+      name: body.name,
       password: hashedPassword,
-      email,
-      position,
-      course,
-      year,
-      campus,
+      email: body.email,
+      position: body.position,
+      course: body.course,
+      year: body.year,
+      campus: body.campus,
       status: account_status.PENDING,
       access: psits_roles.STANDARD,
     });
@@ -453,7 +451,7 @@ class AdminService {
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: logs_action.CREATE_ADMIN,
-      target: id_number,
+      target: body.id_number,
       target_model: "Admin",
     };
     //Runs Log

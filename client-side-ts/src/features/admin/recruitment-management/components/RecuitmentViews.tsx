@@ -54,6 +54,7 @@ import PositionEditModal from "./PositionEditModal";
 import { VerificationModal } from "./VerificationModal";
 import { AccountVerifiedModal } from "./AccountVerifiedModal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 
 const courses = ["BSIT", "BSCS"];
 const years = ["1", "2", "3", "4"];
@@ -306,6 +307,7 @@ const StatCard = ({ label, value }: { label: string; value: number }) => (
 );
 
 export const RecruitmentViews = () => {
+  const { canManageRecruitment } = useAdminPermissions();
   const {
     activeTab,
     setActiveTab,
@@ -516,14 +518,16 @@ export const RecruitmentViews = () => {
           </p>
         </div>
 
-        <Button
-          type="button"
-          className="h-10 shrink-0 rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
-          onClick={() => setIsOpenRoleOpen(true)}
-        >
-          <Plus className="h-4 w-1" />
-          Open Role Application
-        </Button>
+        {canManageRecruitment && (
+          <Button
+            type="button"
+            className="h-10 shrink-0 rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
+            onClick={() => setIsOpenRoleOpen(true)}
+          >
+            <Plus className="h-4 w-1" />
+            Open Role Application
+          </Button>
+        )}
       </header>
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
         {/* Stat cards */}
@@ -723,7 +727,7 @@ export const RecruitmentViews = () => {
                     >
                       Clear selection
                     </button>
-                    {deletablePositionIds.length > 0 && (
+                    {deletablePositionIds.length > 0 && canManageRecruitment && (
                       <button
                         type="button"
                         onClick={() => setIsBulkDeletePositionsOpen(true)}
@@ -851,68 +855,72 @@ export const RecruitmentViews = () => {
 
                         {/* Actions */}
                         <td className="px-3 py-3 text-right">
-                          <Popover
-                            open={openPositionMenuId === position._id}
-                            onOpenChange={(open) =>
-                              setOpenPositionMenuId(open ? position._id : null)
-                            }
-                          >
-                            <PopoverTrigger asChild>
-                              <Button
-                                type="button"
-                                size="icon-sm"
-                                variant="ghost"
-                                disabled={isMutating}
-                                className="h-7 w-7 rounded-full border text-slate-500 hover:bg-slate-100"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-
-                            <PopoverContent
-                              align="end"
-                              className="w-56 rounded-xl border-[#ececec] p-1.5 shadow-lg"
+                          {canManageRecruitment && (
+                            <Popover
+                              open={openPositionMenuId === position._id}
+                              onOpenChange={(open) =>
+                                setOpenPositionMenuId(
+                                  open ? position._id : null
+                                )
+                              }
                             >
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingPosition(position);
-                                  setOpenPositionMenuId(null);
-                                }}
-                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50"
-                              >
-                                <Pencil className="h-4 w-4 text-slate-500" />
-                                Edit Role Application
-                              </button>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  disabled={isMutating}
+                                  className="h-7 w-7 rounded-full border text-slate-500 hover:bg-slate-100"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
 
-                              <button
-                                type="button"
-                                disabled={position.hiringStatus === "CLOSED"}
-                                onClick={() => {
-                                  closePosition(position._id);
-                                  setOpenPositionMenuId(null);
-                                }}
-                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                              <PopoverContent
+                                align="end"
+                                className="w-56 rounded-xl border-[#ececec] p-1.5 shadow-lg"
                               >
-                                <Ban className="h-4 w-4" />
-                                Close Role Application
-                              </button>
-
-                              {position.hiringStatus === "CLOSED" && (
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setPositionDeleteTarget(position);
+                                    setEditingPosition(position);
                                     setOpenPositionMenuId(null);
                                   }}
-                                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
+                                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50"
                                 >
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete Role Application
+                                  <Pencil className="h-4 w-4 text-slate-500" />
+                                  Edit Role Application
                                 </button>
-                              )}
-                            </PopoverContent>
-                          </Popover>
+
+                                <button
+                                  type="button"
+                                  disabled={position.hiringStatus === "CLOSED"}
+                                  onClick={() => {
+                                    closePosition(position._id);
+                                    setOpenPositionMenuId(null);
+                                  }}
+                                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                                >
+                                  <Ban className="h-4 w-4" />
+                                  Close Role Application
+                                </button>
+
+                                {position.hiringStatus === "CLOSED" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setPositionDeleteTarget(position);
+                                      setOpenPositionMenuId(null);
+                                    }}
+                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete Role Application
+                                  </button>
+                                )}
+                              </PopoverContent>
+                            </Popover>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -1134,36 +1142,40 @@ export const RecruitmentViews = () => {
                                 <UserPen className="h-4 w-4 text-slate-500" />
                                 View Details
                               </button>
-                              <button
-                                type="button"
-                                disabled={
-                                  applicant.status === "Approved" ||
-                                  applicant.status === "Rejected"
-                                }
-                                onClick={() => {
-                                  approveApplicant(applicant.id);
-                                  setOpenMenuId(null);
-                                }}
-                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
-                              >
-                                <Check className="h-4 w-4" />
-                                Approve
-                              </button>
-                              <button
-                                type="button"
-                                disabled={
-                                  applicant.status === "Approved" ||
-                                  applicant.status === "Rejected"
-                                }
-                                onClick={() => {
-                                  rejectApplicant(applicant.id);
-                                  setOpenMenuId(null);
-                                }}
-                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
-                              >
-                                <X className="h-4 w-4" />
-                                Reject
-                              </button>
+                              {canManageRecruitment && (
+                                <>
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      applicant.status === "Approved" ||
+                                      applicant.status === "Rejected"
+                                    }
+                                    onClick={() => {
+                                      approveApplicant(applicant.id);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                                  >
+                                    <Check className="h-4 w-4" />
+                                    Approve
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      applicant.status === "Approved" ||
+                                      applicant.status === "Rejected"
+                                    }
+                                    onClick={() => {
+                                      rejectApplicant(applicant.id);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                                  >
+                                    <X className="h-4 w-4" />
+                                    Reject
+                                  </button>
+                                </>
+                              )}
                             </PopoverContent>
                           </Popover>
                         </td>
@@ -1188,7 +1200,7 @@ export const RecruitmentViews = () => {
                 <h2 className="text-base font-medium text-slate-700">
                   Rejected Applicants
                 </h2>
-                {rejectedApplicants.length > 0 && (
+                {rejectedApplicants.length > 0 && canManageRecruitment && (
                   <Button
                     type="button"
                     variant="outline"
@@ -1305,17 +1317,19 @@ export const RecruitmentViews = () => {
 
                           {/* Actions */}
                           <td className="px-3 py-3 text-right">
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              disabled={isMutating}
-                              onClick={() => setDeleteTarget(applicant)}
-                              className="h-7 w-7 rounded-full border text-red-500 hover:bg-red-50 hover:text-red-600"
-                              aria-label={`Delete ${applicant.name}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {canManageRecruitment && (
+                              <Button
+                                type="button"
+                                size="icon-sm"
+                                variant="ghost"
+                                disabled={isMutating}
+                                onClick={() => setDeleteTarget(applicant)}
+                                className="h-7 w-7 rounded-full border text-red-500 hover:bg-red-50 hover:text-red-600"
+                                aria-label={`Delete ${applicant.name}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       ))}

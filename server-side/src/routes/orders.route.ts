@@ -123,7 +123,11 @@ router.put(
   "/v2/approve",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  adminAccessAuthenticateV2([
+    psits_roles.ADMIN,
+    psits_roles.FINANCE,
+    psits_roles.HEAD_FINANCE,
+  ]),
   orderV2Controller.approveOrder
 );
 
@@ -132,7 +136,11 @@ router.post(
   "/v2/refund",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
-  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  adminAccessAuthenticateV2([
+    psits_roles.ADMIN,
+    psits_roles.FINANCE,
+    psits_roles.HEAD_FINANCE,
+  ]),
   orderV2Controller.processRefund
 );
 

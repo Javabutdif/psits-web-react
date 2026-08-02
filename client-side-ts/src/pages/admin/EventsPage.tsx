@@ -9,10 +9,12 @@ import {
 } from "@/features/admin/event-management";
 
 import { getEvents } from "@/features/events/api/eventService";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import type { Event as ApiEvent } from "@/features/events/types/event.types";
 
 const EventsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { canManageEvents } = useAdminPermissions();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,7 +53,11 @@ const EventsPage: React.FC = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <EventsHeader onAddEvent={() => setIsAddEventModalOpen(true)} />
+      <EventsHeader
+        onAddEvent={
+          canManageEvents ? () => setIsAddEventModalOpen(true) : undefined
+        }
+      />
 
       <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
 

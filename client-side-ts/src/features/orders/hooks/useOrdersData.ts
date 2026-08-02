@@ -5,8 +5,7 @@ import {
   cancelOrderV2,
   refundOrderV2,
 } from "@/features/orders/api/orders";
-import { useAuth } from "@/features/auth";
-import { normalizeCampus } from "@/features/auth/utils/campus";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import { showToast } from "@/utils/alertHelper";
 import type { OrdersTab, OrdersStatus } from "../types/orders.types";
 import type { OrderRow, ApprovePayload } from "../types/orders.types";
@@ -15,7 +14,7 @@ export const ROWS_PER_PAGE = 8;
 const SEARCH_DEBOUNCE_MS = 250;
 
 export const useOrdersData = () => {
-  const { user } = useAuth();
+  const { canManageOrders } = useAdminPermissions();
 
   const [activeTab, setActiveTab] = useState<OrdersTab>("pending");
   const [search, setSearch] = useState("");
@@ -37,9 +36,6 @@ export const useOrdersData = () => {
   const [paidTotalPages, setPaidTotalPages] = useState(1);
   const [paidStatus, setPaidStatus] = useState<OrdersStatus>("idle");
   const paidRef = useRef(0);
-
-  const isUcMainAdmin =
-    user?.role === "admin" && normalizeCampus(user.campus) === "UC_MAIN";
 
   useEffect(() => {
     const timer = setTimeout(
@@ -133,7 +129,7 @@ export const useOrdersData = () => {
 
   const handleApprove = useCallback(
     async (payload: ApprovePayload): Promise<boolean> => {
-      if (!isUcMainAdmin) {
+      if (!canManageOrders) {
         showToast("error", "Unauthorized.");
         return false;
       }
@@ -155,12 +151,12 @@ export const useOrdersData = () => {
         setIsMutating(false);
       }
     },
-    [isUcMainAdmin, page, fetchPending, fetchPaid]
+    [canManageOrders, page, fetchPending, fetchPaid]
   );
 
   const handleCancel = useCallback(
     async (orderId: string): Promise<boolean> => {
-      if (!isUcMainAdmin) {
+      if (!canManageOrders) {
         showToast("error", "Unauthorized.");
         return false;
       }
@@ -180,12 +176,12 @@ export const useOrdersData = () => {
         setIsMutating(false);
       }
     },
-    [isUcMainAdmin, activeTab, page, fetchPending, fetchPaid]
+    [canManageOrders, activeTab, page, fetchPending, fetchPaid]
   );
 
   const handleRefund = useCallback(
     async (orderId: string): Promise<boolean> => {
-      if (!isUcMainAdmin) {
+      if (!canManageOrders) {
         showToast("error", "Unauthorized.");
         return false;
       }
@@ -201,7 +197,7 @@ export const useOrdersData = () => {
         setIsMutating(false);
       }
     },
-    [isUcMainAdmin, page, fetchPaid]
+    [canManageOrders, page, fetchPaid]
   );
 
   const toggleSelection = useCallback((id: string) => {
@@ -241,7 +237,7 @@ export const useOrdersData = () => {
     isMutating,
     selectedIds,
     selectedCount,
-    isUcMainAdmin,
+    canManageOrders,
     toggleSelection,
     toggleAllOnPage,
     handleApprove,

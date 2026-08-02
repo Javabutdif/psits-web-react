@@ -4,6 +4,8 @@ import { Promo } from "../models/promo.model";
 import { PromoLog } from "../models/promo.log.model";
 import { PromoUsage } from "../models/promo.usage.model";
 import { promoService } from "../services/promo.service";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
 import { Merch } from "../models/merch.model";
 import { AppError } from "../util/app.error.util";
 
@@ -43,6 +45,13 @@ class PromoController {
   create = async (req: Request, res: Response) => {
     try {
       await promoService.create(req.body, req.admin);
+      await logService.create({
+        admin: req.admin?.name ?? "Unknown Admin",
+        admin_id: req.admin?._id,
+        action: logs_action.CREATE_PROMO,
+        target: req.body?.promo_name ?? "Promo code",
+        target_model: "Promo",
+      });
       res.status(200).json({ message: "Successfully created Promo Code!" });
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -76,6 +85,13 @@ class PromoController {
   update = async (req: Request, res: Response) => {
     try {
       await promoService.update(req.body);
+      await logService.create({
+        admin: req.admin?.name ?? "Unknown Admin",
+        admin_id: req.admin?._id,
+        action: logs_action.UPDATE_PROMO,
+        target: req.body?.promo_name ?? "Promo code",
+        target_model: "Promo",
+      });
       res.status(200).json({ message: "Promo Code updated successfully!" });
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -103,6 +119,14 @@ class PromoController {
       if (!promo) {
         return res.status(404).json({ message: "Promo not found" });
       }
+      await logService.create({
+        admin: req.admin?.name ?? "Unknown Admin",
+        admin_id: req.admin?._id,
+        action: logs_action.DELETE_PROMO,
+        target: promo.promo_name ?? String(id),
+        target_id: promo._id,
+        target_model: "Promo",
+      });
       res.status(200).json({ message: "Promo deleted successfully" });
     } catch (error: unknown) {
       if (error instanceof AppError) {

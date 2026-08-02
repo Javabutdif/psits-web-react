@@ -9,6 +9,7 @@ import type {
 } from "@/features/events/types/event.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import {
   RaffleBackground,
   RaffleControls,
@@ -143,6 +144,7 @@ export default function RaffleDraw({
 }) {
   const { eventId } = useParams<{ eventId: string }>();
   const normalizedEventId = eventId?.trim() ?? "";
+  const { canManageRaffle } = useAdminPermissions();
 
   const [allParticipants, setAllParticipants] = useState<RaffleAttendeeDto[]>(
     []
@@ -792,19 +794,21 @@ export default function RaffleDraw({
           </p>
         )}
 
-        <RaffleControls
-          isSpinning={isSpinning}
-          isResetting={isResetting}
-          isLoadingParticipants={isLoadingParticipants}
-          poolLength={allParticipants.length}
-          winnersCount={filteredWinners.length}
-          selectedCampus={selectedCampus}
-          campusOptions={CAMPUS_OPTIONS}
-          onCampusChange={setSelectedCampus}
-          onDraw={drawWinner}
-          onReset={resetAll}
-          disableReset={false}
-        />
+        {canManageRaffle && (
+          <RaffleControls
+            isSpinning={isSpinning}
+            isResetting={isResetting}
+            isLoadingParticipants={isLoadingParticipants}
+            poolLength={allParticipants.length}
+            winnersCount={filteredWinners.length}
+            selectedCampus={selectedCampus}
+            campusOptions={CAMPUS_OPTIONS}
+            onCampusChange={setSelectedCampus}
+            onDraw={drawWinner}
+            onReset={resetAll}
+            disableReset={false}
+          />
+        )}
       </div>
 
       {showWinners && (

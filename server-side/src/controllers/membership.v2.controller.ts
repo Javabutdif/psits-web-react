@@ -14,6 +14,8 @@ import { format } from "date-fns";
 import { membershipRequestReceipt } from "../mail_template/mail.template";
 import { IMembershipRequest } from "../mail_template/mail.interface";
 import { membershipService } from "../services/membership.service";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
 import { catchAsync } from "../util/catch.async.util";
 
 class MembershipController {
@@ -93,6 +95,15 @@ class MembershipController {
         await membershipRequestReceipt(data, student.email, (student as any)._id, reference_code);
       }
 
+      await logService.create({
+        admin: admin ?? req.admin?.name ?? "Unknown Admin",
+        admin_id: req.admin?._id,
+        action: logs_action.APPROVE_MEMBERSHIP,
+        target: studentService.fullNameFormat(student),
+        target_id: (student as any)._id,
+        target_model: "Membership",
+      });
+
       return res
         .status(200)
         .json({ message: "Membership approved successfully" });
@@ -103,6 +114,13 @@ class MembershipController {
     async (req: Request, res: Response) => {
       const result = await membershipService.revokeMembership();
       if (result.status) {
+        await logService.create({
+          admin: req.admin?.name ?? "Unknown Admin",
+          admin_id: req.admin?._id,
+          action: logs_action.REVOKE_MEMBERSHIP,
+          target: "All memberships",
+          target_model: "Membership",
+        });
         res.status(200).json({
           message: result.message,
         });
@@ -151,6 +169,13 @@ class MembershipController {
     async (req: Request, res: Response) => {
       const { price } = req.body;
       const update = await settingsService.updateMembershipPrice(price);
+      await logService.create({
+        admin: req.admin?.name ?? "Unknown Admin",
+        admin_id: req.admin?._id,
+        action: logs_action.CHANGE_MEMBER_PRICE,
+        target: `PHP ${price}`,
+        target_model: "Membership",
+      });
       if (update.matchedCount === 0 && !(await Settings.exists({}))) {
         return res
           .status(200)

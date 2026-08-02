@@ -309,6 +309,29 @@ const createHeaders = () => ({
 
 const merchandiseV2BaseUrl = () => `${backendConnection()}/api/v2/merchandise`;
 
+const cacheStore = new Map<string, { value: unknown; expiresAt: number }>();
+
+const withCache = async <T>(
+  key: string,
+  ttlMs: number,
+  fetcher: () => Promise<T>
+): Promise<T> => {
+  const now = Date.now();
+  const cached = cacheStore.get(key);
+  if (cached && cached.expiresAt > now) {
+    return cached.value as T;
+  }
+
+  const value = await fetcher();
+  if (value) {
+    cacheStore.set(key, { value, expiresAt: now + ttlMs });
+  }
+  return value;
+};
+
+const cacheKey = (url: string, params: Record<string, unknown> = {}) =>
+  url + JSON.stringify(params);
+
 const handleApiError = (error: unknown, showUser = true): void => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
@@ -723,17 +746,20 @@ export const updateMerchandise = async (
 
 export const getDashboardStats =
   async (): Promise<DashboardStatsResponse | void> => {
-    try {
-      const response: AxiosResponse<DashboardStatsResponse> = await axios.get(
-        `${backendConnection()}/api/admin/dashboard-stats`,
-        {
-          headers: createHeaders(),
-        }
-      );
-      return response.data;
-    } catch (error) {
-      handleApiError(error, false);
-    }
+    const url = `${backendConnection()}/api/admin/dashboard-stats`;
+    return withCache<DashboardStatsResponse | void>(cacheKey(url), 60_000, async () => {
+      try {
+        const response: AxiosResponse<DashboardStatsResponse> = await axios.get(
+          url,
+          {
+            headers: createHeaders(),
+          }
+        );
+        return response.data;
+      } catch (error) {
+        handleApiError(error, false);
+      }
+    });
   };
 
 export const getDailySales = async (): Promise<DailySalesData[] | void> => {
@@ -753,30 +779,38 @@ export const getDailySales = async (): Promise<DailySalesData[] | void> => {
 export const getDashboardPaidOrders = async ({
   page = 1,
   limit = 5000,
+  startDate,
+  endDate,
 }: {
   page?: number;
   limit?: number;
+  startDate?: string;
+  endDate?: string;
 } = {}): Promise<DashboardPaidOrdersResult> => {
-  try {
-    const response: AxiosResponse<DashboardPaidOrdersResult> = await axios.get(
-      `${backendConnection()}/api/orders/get-all-paid-orders`,
-      {
-        headers: createHeaders(),
-        params: { page, limit },
-      }
-    );
+  const url = `${backendConnection()}/api/orders/get-all-paid-orders`;
+  const params = { page, limit, startDate, endDate };
+  return withCache<DashboardPaidOrdersResult>(cacheKey(url, params), 60_000, async () => {
+    try {
+      const response: AxiosResponse<DashboardPaidOrdersResult> = await axios.get(
+        url,
+        {
+          headers: createHeaders(),
+          params,
+        }
+      );
 
-    return {
-      data: response.data.data || [],
-      total: response.data.total || 0,
-      page: response.data.page || page,
-      totalPages: response.data.totalPages || 1,
-      limit: response.data.limit || limit,
-    };
-  } catch (error) {
-    handleApiError(error, false);
-    return { data: [], total: 0, page, totalPages: 1, limit };
-  }
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        page: response.data.page || page,
+        totalPages: response.data.totalPages || 1,
+        limit: response.data.limit || limit,
+      };
+    } catch (error) {
+      handleApiError(error, false);
+      return { data: [], total: 0, page, totalPages: 1, limit };
+    }
+  });
 };
 
 export const deleteReports = async (
@@ -1022,25 +1056,29 @@ export const fetchAllPendingCounts = async ({
   sort = [{ field: "product_name", direction: "asc" as const }],
   search = "",
 }: PendingCountsParams = {}): Promise<PendingCountsResult> => {
-  try {
-    const response: AxiosResponse<PendingCountsResult> = await axios.get(
-      `${backendConnection()}/api/orders/get-all-pending-counts`,
-      {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
-        params: { page, limit, sort, search },
-      }
-    );
-    return {
-      data: response.data.data || [],
-      total: response.data.total || 0,
-      page: response.data.page || 1,
-      totalPages: response.data.totalPages || 1,
-      limit: response.data.limit || limit,
-    };
-  } catch (error) {
-    console.error("Error fetching student:", error);
-    return { data: [], page: 1, total: 0, totalPages: 0, limit };
-  }
+  const url = `${backendConnection()}/api/orders/get-all-pending-counts`;
+  const params = { page, limit, sort, search };
+  return withCache<PendingCountsResult>(cacheKey(url, params), 30_000, async () => {
+    try {
+      const response: AxiosResponse<PendingCountsResult> = await axios.get(
+        url,
+        {
+          headers: { Authorization: `Bearer ${getAuthToken()}` },
+          params,
+        }
+      );
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        page: response.data.page || 1,
+        totalPages: response.data.totalPages || 1,
+        limit: response.data.limit || limit,
+      };
+    } catch (error) {
+      console.error("Error fetching student:", error);
+      return { data: [], page: 1, total: 0, totalPages: 0, limit };
+    }
+  });
 };
 
 export const addOfficer = async (

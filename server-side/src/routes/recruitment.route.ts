@@ -2,8 +2,11 @@ import { Router, Request, Response, NextFunction } from "express";
 import { recruitmentController } from "../controllers/recruitment.v2.controller";
 import {
   requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2,
+  adminAccessAuthenticateV2,
 } from "../middlewares/authV2.middleware";
+import { psits_roles } from "../enums/role.enums";
 import { applicationSubmitLimiter } from "../util/limiter.util";
 import multer from "multer";
 import multerS3 from "multer-s3";
@@ -76,6 +79,15 @@ const getResumeUpload = () => {
 
 const router = Router();
 
+// All admin access levels EXCEPT STANDARD / NO_ACCESS can manage recruitment
+const recruitmentMutationRoles = [
+  psits_roles.ADMIN,
+  psits_roles.HEAD_FINANCE,
+  psits_roles.FINANCE,
+  psits_roles.EXECUTIVE,
+  psits_roles.DEVELOPER,
+];
+
 /** Public endpoints - no auth required for reading positions */
 router.get("/positions", recruitmentController.listPositions);
 
@@ -84,36 +96,41 @@ router.get("/positions/:id", recruitmentController.getPositionById);
 /** Admin-only endpoints - require role authentication */
 router.post(
   "/positions",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.createPosition
 );
 
 router.post(
   "/positions/bulk-open",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.createPositionsFromOpening
 );
 
 router.patch(
   "/positions/:id",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.updatePosition
 );
 
 router.delete(
   "/positions/:id",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.deletePosition
 );
 
 router.patch(
   "/positions/:id/hiring-status",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.toggleHiringStatus
 );
 
@@ -184,43 +201,49 @@ router.get(
 
 router.patch(
   "/applications/:id/status",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.updateApplicationStatus
 );
 
 router.delete(
   "/applications/:id",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.deleteApplication
 );
 
 router.post(
   "/applications/:id/verify",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.verifyApplicantAccount
 );
 
 router.post(
   "/applications/:id/interview",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.createInterview
 );
 
 router.patch(
   "/applications/:id/interview",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.updateInterview
 );
 
 router.delete(
   "/applications/:id/interview",
-  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
   recruitmentController.cancelInterview
 );
 

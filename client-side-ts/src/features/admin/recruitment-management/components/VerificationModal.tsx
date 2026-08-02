@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import type { RecruitmentApplicant } from "../types/Recruitment.types";
 
 const AVATAR_COLORS = [
@@ -29,6 +30,7 @@ export const VerificationModal = ({
   isApproving,
   onApprove,
 }: VerificationModalProps) => {
+  const { canManageRecruitment } = useAdminPermissions();
   return (
     <div className="flex flex-col rounded-2xl border border-[#e5e5e5] bg-white p-4">
       <div className="flex items-start gap-3">
@@ -70,14 +72,16 @@ export const VerificationModal = ({
         </p>
       </div>
 
-      <Button
-        type="button"
-        disabled={isApproving}
-        onClick={() => onApprove(applicant.id)}
-        className="mt-4 h-9 w-full rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
-      >
-        {isApproving ? "Approving..." : "Approve"}
-      </Button>
+      {canManageRecruitment && (
+        <Button
+          type="button"
+          disabled={isApproving}
+          onClick={() => onApprove(applicant.id)}
+          className="mt-4 h-9 w-full rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
+        >
+          {isApproving ? "Approving..." : "Approve"}
+        </Button>
+      )}
     </div>
   );
 };

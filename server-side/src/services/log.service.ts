@@ -1,10 +1,19 @@
-import { Type } from "@aws-sdk/client-s3";
 import { Log } from "../models/log.model";
 import { Types } from "mongoose";
 
+export interface LogParams {
+  admin: string;
+  admin_id?: Types.ObjectId | string;
+  action: string;
+  target?: string;
+  target_id?: Types.ObjectId | string;
+  target_model?: string;
+  timestamp?: Date;
+}
+
 class LogService {
   //Create Logs
-  create = async (params: any) => {
+  create = async (params: LogParams) => {
     await new Log(params).save();
   };
 }

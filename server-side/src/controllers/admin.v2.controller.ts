@@ -9,6 +9,7 @@ import { user_model } from "../model_template/model_data";
 import { catchAsync } from "../util/catch.async.util";
 import { account_status, membership_status } from "../enums/status.enums";
 import { psits_roles } from "../enums/role.enums";
+import { ICreateAdmin } from "../models/admin.interface";
 
 class AdminController {
   getSearchStudentByIdController = catchAsync(
@@ -190,7 +191,8 @@ class AdminController {
   );
   addNewAdminAccountController = catchAsync(
     async (req: Request, res: Response) => {
-      const result = await adminService.create(req);
+      const body: ICreateAdmin = req.body;
+      const result = await adminService.create(body, req);
       if (!result.status) {
         return res.status(400).json({ message: result.message });
       }
@@ -230,9 +232,7 @@ class AdminController {
         id_number === req.admin.id_number &&
         normalized !== psits_roles.ADMIN
       ) {
-        return res
-          .status(403)
-          .json({ message: "Cannot downgrade own access" });
+        return res.status(403).json({ message: "Cannot downgrade own access" });
       }
       const result = await adminService.changeAccess(req);
       if (!result.status) {

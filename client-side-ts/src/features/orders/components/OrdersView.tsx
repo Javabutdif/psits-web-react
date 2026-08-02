@@ -279,7 +279,7 @@ export const OrdersView = () => {
     isMutating,
     selectedIds,
     selectedCount,
-    isUcMainAdmin,
+    canManageOrders,
     toggleSelection,
     toggleAllOnPage,
     handleApprove,
@@ -529,7 +529,7 @@ export const OrdersView = () => {
 
                       <td className="px-2 py-3 text-right align-middle">
                         <div className="flex justify-end gap-2">
-                          {activeTab === "pending" && isUcMainAdmin && (
+                          {activeTab === "pending" && canManageOrders && (
                             <Button
                               type="button"
                               size="sm"
@@ -540,7 +540,7 @@ export const OrdersView = () => {
                               Approve
                             </Button>
                           )}
-                          {activeTab === "pending" && isUcMainAdmin && (
+                          {activeTab === "pending" && canManageOrders && (
                             <Button
                               type="button"
                               size="sm"
@@ -563,7 +563,7 @@ export const OrdersView = () => {
                               Details
                             </Button>
                           )}
-                          {activeTab === "paid" && isUcMainAdmin && (
+                          {activeTab === "paid" && canManageOrders && (
                             <Button
                               type="button"
                               size="sm"
@@ -604,7 +604,7 @@ export const OrdersView = () => {
       </div>
 
       {/* Bulk action bar */}
-      {selectedCount > 0 && isUcMainAdmin && (
+      {selectedCount > 0 && canManageOrders && (
         <div className="fixed bottom-8 left-1/2 z-30 flex -translate-x-1/2 items-center overflow-hidden rounded-full bg-[#2f2f2f] px-4 py-3 text-sm text-white shadow-2xl">
           <span className="pr-5">
             {selectedCount} of {rowCount} selected

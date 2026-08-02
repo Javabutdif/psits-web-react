@@ -21,4 +21,54 @@ export const logs_action = Object.freeze({
   TRIGGER_CRON: "Triggered Cron Job",
   CANCEL_EXPIRED_ORDERS: "Cancelled Expired Orders",
   REBUILD_DB_INDEXES: "Rebuilt Database Indexes",
+  // Orders
+  APPROVE_ORDER: "Approved Order",
+  CANCEL_ORDER: "Cancelled Order",
+  REFUND_ORDER: "Refunded Order",
+  // Events
+  CREATE_EVENT: "Created Event",
+  UPDATE_EVENT: "Updated Event",
+  DELETE_EVENT: "Deleted Event",
+  ADD_ATTENDEE: "Added Attendee",
+  UPDATE_ATTENDEE: "Updated Attendee",
+  REMOVE_ATTENDEE: "Removed Attendee",
+  EVENT_SETTINGS_UPDATE: "Updated Event Settings",
+  // Raffle
+  RAFFLE_DRAW: "Raffle Draw",
+  RAFFLE_RESET: "Raffle Reset",
+  RAFFLE_UNDO: "Raffle Undo",
+  // Promo
+  CREATE_PROMO: "Created Promo",
+  UPDATE_PROMO: "Updated Promo",
+  DELETE_PROMO: "Deleted Promo",
+  // Recruitment
+  CREATE_POSITION: "Created Recruitment Position",
+  UPDATE_POSITION: "Updated Recruitment Position",
+  DELETE_POSITION: "Deleted Recruitment Position",
+  TOGGLE_HIRING: "Toggled Hiring Status",
+  APPROVE_APPLICANT: "Approved Applicant",
+  REJECT_APPLICANT: "Rejected Applicant",
+  VERIFY_APPLICANT: "Verified Applicant",
+  APPLICATION_STATUS_UPDATE: "Updated Application Status",
+  CREATE_INTERVIEW: "Created Interview",
+  UPDATE_INTERVIEW: "Updated Interview",
+  CANCEL_INTERVIEW: "Cancelled Interview",
+  DELETE_APPLICATION: "Deleted Application",
+  CLEAR_REJECTED: "Cleared Rejected Applicants",
+  // Certificates
+  CREATE_TEMPLATE: "Created Certificate Template",
+  UPDATE_TEMPLATE: "Updated Certificate Template",
+  DELETE_TEMPLATE: "Deleted Certificate Template",
+  GENERATE_CERTIFICATE: "Generated Certificates",
+  UPDATE_ELIGIBILITY: "Updated Certificate Eligibility",
+  IMPORT_CERTIFICATE: "Imported Certificate Data",
+  // Students
+  UPDATE_STUDENT: "Updated Student",
+  DELETE_STUDENT: "Deleted Student",
+  // Membership
+  APPROVE_MEMBERSHIP: "Approved Membership",
+  REVOKE_MEMBERSHIP: "Revoked Memberships",
+  CHANGE_MEMBER_PRICE: "Changed Membership Price",
+  // Reports
+  EXPORT_REPORT: "Exported Report",
 });

@@ -1,6 +1,7 @@
 // src/features/admin/recruitment-management/hooks/useRecruitmentData.ts
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 
 import type {
   RecruitmentApplicant,
@@ -215,6 +216,7 @@ const STATUS = {
 } as const;
 
 export const useRecruitmentData = () => {
+  const { canManageRecruitment } = useAdminPermissions();
   const [activeTab, setActiveTab] = useState<RecruitmentTab>("applicants");
   const [applicants, setApplicants] = useState<RecruitmentApplicant[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -518,6 +520,10 @@ export const useRecruitmentData = () => {
   }, []);
 
   const rejectApplicant = async (id: string) => {
+    if (!canManageRecruitment) {
+      setMutationError("You don't have permission to reject applicants.");
+      return;
+    }
     setIsMutating(true);
     setMutationError(null);
     try {
@@ -590,6 +596,10 @@ export const useRecruitmentData = () => {
 
   // INTERVIEWING → APPROVED (only valid step for real "Approve")
   const approveApplicant = async (id: string) => {
+    if (!canManageRecruitment) {
+      setMutationError("You don't have permission to approve applicants.");
+      return;
+    }
     setIsMutating(true);
     setMutationError(null);
     try {
@@ -797,6 +807,10 @@ export const useRecruitmentData = () => {
 
   const verifyApplicant = useCallback(
     async (id: string) => {
+      if (!canManageRecruitment) {
+        setMutationError("You don't have permission to verify applicants.");
+        return;
+      }
       setIsMutating(true);
       setMutationError(null);
       try {
@@ -825,7 +839,7 @@ export const useRecruitmentData = () => {
         setIsMutating(false);
       }
     },
-    [applicants]
+    [applicants, canManageRecruitment]
   );
 
   // ── Rejected applicants (delete) ───────────────────────────────────────
