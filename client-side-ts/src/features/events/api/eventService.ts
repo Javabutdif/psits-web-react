@@ -11,6 +11,8 @@ import type {
   ChangeAttendeePasswordV2Response,
   CreateEventData,
   CreateEventResponse,
+  CreateEventV2Payload,
+  CreateEventV2Response,
   DrawRaffleWinnerResponse,
   EditableAttendeeResponse,
   EditAttendeeV2Payload,
@@ -83,6 +85,20 @@ export const getEvents = async (): Promise<Event[] | false> => {
     return handleApiError(error, true);
   }
 };
+
+export const getAllEventsRaw = async (): Promise<Event[] | false> => {
+  try {
+    const response = await api.get<EventApiResponse>(
+      "/api/v2/events/get-all-events-raw"
+    );
+
+    const eventsArray = response.data.data;
+
+    return Array.isArray(eventsArray) ? eventsArray : [];
+  } catch (error) {
+    return handleApiError(error, true);
+  }
+};
 /**
  * GET /api/v2/events/my-events
  *
@@ -108,6 +124,47 @@ export const getEventById = async (eventId: string): Promise<Event | false> => {
     return response.data.data;
   } catch (error) {
     return handleApiError(error);
+  }
+};
+
+export const createEventV2 = async (
+  payload: CreateEventV2Payload,
+): Promise<CreateEventV2Response | false> => {
+  try {
+    const formData = new FormData();
+    formData.append("eventName", payload.eventName);
+    formData.append("eventDescription", payload.eventDescription ?? "");
+    formData.append("eventDate", payload.eventDate);
+    formData.append("attendanceType", payload.attendanceType);
+    if (payload.status) formData.append("status", payload.status);
+    formData.append(
+      "sessionConfig",
+      JSON.stringify(payload.sessionConfig),
+    );
+    if (payload.limit && payload.limit.length > 0) {
+      formData.append("limit", JSON.stringify(payload.limit));
+    }
+    payload.images?.forEach((file) => formData.append("images", file));
+
+    const response = await api.post<CreateEventV2Response>(
+      "/api/v2/events",
+      formData,
+      { headers: { "Content-Type": undefined } },
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to create event";
+      showToast("error", String(message));
+    } else {
+      console.error("Error creating event:", error);
+      showToast("error", "Failed to create event");
+    }
+    return false;
   }
 };
 
@@ -312,10 +369,11 @@ export const getEligibleRaffleAttendees = async (
 
 export const getEligibleRaffleAttendeesV2 = async (
   eventId: string,
-  params? : RaffleQueryParams
+  params?: RaffleQueryParams
 ): Promise<GetRafflePoolResponse> => {
   const { data } = await api.get<GetRafflePoolResponse>(
-    `${backendConnection()}/api/v2/events/raffle/${eventId}`, {params}
+    `${backendConnection()}/api/v2/events/raffle/${eventId}`,
+    { params }
   );
   return data;
 };
@@ -667,4 +725,12 @@ export const changeAttendeePasswordV2 = async (
     }
     return false;
   }
+};
+
+export const updateEventDetails = async (
+  eventId: string,
+  payload: any
+): Promise<any> => {
+  const response = await api.patch(`/api/v2/events/${eventId}`, payload);
+  return response.data;
 };

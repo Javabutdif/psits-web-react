@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Event as ApiEvent } from "@/features/events/types/event.types";
+import { formatEventDateLabel } from "@/utils/date-manila";
 
 const getEventId = (event: ApiEvent): string =>
   String(event.eventId ?? event._id ?? "unknown-id");
@@ -20,16 +21,9 @@ const getEventDate = (event: ApiEvent): string => {
   if (!event.eventDate) return "TBA";
 
   const date = new Date(event.eventDate);
-
-  // Fallback to original string if the date is invalid
   if (isNaN(date.getTime())) return String(event.eventDate);
 
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC", // Prevents day-shifting depending on the user's local timezone
-  }).format(date);
+  return formatEventDateLabel(date);
 };
 
 const getEventImage = (event: ApiEvent): string => {

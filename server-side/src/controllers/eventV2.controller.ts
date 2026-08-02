@@ -16,7 +16,37 @@ import {
   hydrateEventsAttendance,
   markAttendance,
 } from "../services/attendance.service";
+import { EventV2Service } from "../services/eventV2.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
+import { campus_type } from "../enums/campus.enums";
+import {
+  parseCampusLimitsPayload,
+  parseSessionConfigPayload,
+} from "../dtos/events.dto";
+
+const logAdminAction = (
+  req: Request,
+  action: string,
+  target: string,
+  target_id?: string,
+  target_model = "Event"
+) =>
+  logService.create({
+    admin:
+      req.admin?.name ??
+      (req.userV2 as { idNumber?: string } | undefined)?.idNumber ??
+      "Unknown Admin",
+    admin_id: req.admin?._id,
+    action,
+    target,
+    target_id:
+      target_id && Types.ObjectId.isValid(target_id)
+        ? new Types.ObjectId(target_id)
+        : undefined,
+    target_model,
+  });
 
 /**
  * Returns a Date object representing the start of the day (00:00:00)
@@ -486,29 +516,24 @@ export const getEventAttendeesV2Controller = async (
 
     const claims = req.userV2;
 
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
     const params = normalizeAttendeeQueryParams(req);
-    const requesterCampus = claims.campus;
-    const isUcMainAdmin = requesterCampus === "UC-Main";
 
-    const effectiveCampus = isUcMainAdmin ? params.campus : requesterCampus;
+    const isUcMainAdmin = claims.campus === campus_type.MAIN;
+    const effectiveCampus = isUcMainAdmin ? params.campus : claims.campus;
 
-    const event = await Event.findOne(query).select("_id attendees eventId").lean();
-
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+    let hydratedAttendees;
+    try {
+      hydratedAttendees = await EventV2Service.getEventAttendees(eventId);
+    } catch (err: any) {
+      if (err.message === "Event not found") {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      throw err;
     }
-
-    const attendeeList = Array.isArray(event.attendees)
-      ? (event.attendees as unknown as IAttendee[])
-      : [];
-    const hydratedAttendees = await hydrateAttendeesAttendance(
-      event._id,
-      attendeeList
-    );
 
     const filteredAttendees = filterAttendees(hydratedAttendees, {
       ...params,
@@ -595,13 +620,13 @@ type RaffleAttendee = IAttendee & {
 };
 
 const RAFFLE_FILTERABLE_CAMPUSES = [
-  "UC-Main",
-  "UC-Banilad",
-  "UC-LM",
-  "UC-PT",
+  "UC_MAIN",
+  "UC_BANILAD",
+  "UC_LM",
+  "UC_PT",
 ];
 
-const RAFFLE_ELIGIBLE_CAMPUSES = [...RAFFLE_FILTERABLE_CAMPUSES, "UC-CS"];
+const RAFFLE_ELIGIBLE_CAMPUSES = [...RAFFLE_FILTERABLE_CAMPUSES, "UC_CS"];
 
 const buildRaffleCampusFilter = (
   campusParam: string | undefined
@@ -609,8 +634,8 @@ const buildRaffleCampusFilter = (
   if (!campusParam) return null;
 
   const normalized = campusParam.trim();
-  if (normalized === "UC-Main") {
-    return ["UC-Main", "UC-CS"];
+  if (normalized === "UC_MAIN") {
+    return ["UC_MAIN", "UC_CS"];
   }
 
   return [normalized];
@@ -646,16 +671,16 @@ export const getEligibleAttendeesRaffleV2Controller = async (
 ) => {
   try {
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ message: "Invalid event ID format" });
     }
@@ -717,18 +742,18 @@ export const drawEventRaffleWinnerController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId } = req.params;
+  const eventId = req.params.eventId as string;
 
   try {
     const claims = req.userV2;
 
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
@@ -781,6 +806,14 @@ export const drawEventRaffleWinnerController = async (
     event.markModified("attendees");
     await event.save();
 
+    await logAdminAction(
+      req,
+      logs_action.RAFFLE_DRAW,
+      `${chosen.name} (${chosen.id_number})`,
+      eventId,
+      "Raffle"
+    );
+
     return res.status(200).json({
       message: "Success",
       winner: toRaffleAttendeeDto(chosen),
@@ -798,16 +831,17 @@ export const undoEventRaffleWinnerController = async (
   try {
     const claims = req.userV2;
 
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    if (claims.campus !== "UC-Main") {
+    if (claims.campus !== campus_type.MAIN) {
       return res
         .status(403)
-        .json({ message: "Only UC-Main admins can access raffle controls" });
+        .json({ message: "Only UC_MAIN admins can access raffle controls" });
     }
 
-    const { eventId, attendeeId } = req.params;
+    const eventId = req.params.eventId as string;
+    const attendeeId = req.params.attendeeId as string;
 
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ message: "Invalid event ID format" });
@@ -840,6 +874,14 @@ export const undoEventRaffleWinnerController = async (
     event.markModified("attendees");
     await event.save();
 
+    await logAdminAction(
+      req,
+      logs_action.RAFFLE_UNDO,
+      `${attendee.name} (${attendee.id_number})`,
+      eventId,
+      "Raffle"
+    );
+
     return res.status(200).json({ message: "Win undone" });
   } catch (error) {
     console.error("Error undoing raffle winner:", error);
@@ -858,13 +900,13 @@ const V_EMAIL_REGEX =
 const V_PWD_MIN = 8;
 const V_STUDENT_ID_REGEX = /^\d{8}$/;
 const V_VALID_COURSES = ["BSIT", "BSCS", "ACT"];
-const V_VALID_CAMPUSES = ["UC-Banilad", "UC-LM", "UC-PT"];
-const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC-Main", "UC-CS"];
+const V_VALID_CAMPUSES = ["UC_BANILAD", "UC_LM", "UC_PT"];
+const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC_MAIN", "UC_CS"];
 
 const CAMPUS_ID_SUFFIX: Record<string, string> = {
-  "UC-Banilad": "ucb",
-  "UC-LM": "uclm",
-  "UC-PT": "ucpt",
+  "UC_BANILAD": "ucb",
+  "UC_LM": "uclm",
+  "UC_PT": "ucpt",
 };
 
 const buildCampusScopedStudentId = (rawStudentId: string, campus: string) => {
@@ -933,7 +975,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
   try {
     // ── Auth guard ──────────────────────────────────────────────────────
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
@@ -956,7 +998,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     }
 
     // ── Event ID param ──────────────────────────────────────────────────
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -1217,6 +1259,8 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     await session.commitTransaction();
     session.endSession();
 
+    await logAdminAction(req, logs_action.ADD_ATTENDEE, attendeeName, eventId);
+
     let emailSent = true;
     if (isNewStudent) {
       try {
@@ -1296,8 +1340,16 @@ export const getMyEventsController = async (req: Request, res: Response) => {
       .sort({ eventDate: 1 })
       .lean();
 
+    // Drop malformed records so a single bad event cannot break the student list.
+    const validEvents = events.filter((event) => {
+      if (!event.eventDate) return false;
+      const date =
+        event.eventDate instanceof Date ? event.eventDate : new Date(String(event.eventDate));
+      return !Number.isNaN(date.getTime());
+    });
+
     // Just filter attendees
-    const filteredEvents = events.map((event) => ({
+    const filteredEvents = validEvents.map((event) => ({
       ...event,
       attendees: (event.attendees || []).filter((att) => {
         if (!campus) {
@@ -1335,12 +1387,12 @@ export const getEventStatisticsV2Controller = async (
     }
 
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
     const requesterCampus = claims.campus;
-    const isUcMainAdmin = requesterCampus === "UC-Main";
+    const isUcMainAdmin = requesterCampus === campus_type.MAIN;
     const campusScope = isUcMainAdmin ? "all" : requesterCampus;
 
     const event = await Event.findOne(query)
@@ -1386,17 +1438,17 @@ export const markAttendanceV2Controller = async (
 ) => {
   try {
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
       });
     }
 
-    const { eventId, idNumber } = req.params;
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
     const { campus, attendeeName, course, year } = req.body;
 
-    // Basic body validation
     if (!idNumber?.trim()) {
       return res
         .status(400)
@@ -1413,7 +1465,6 @@ export const markAttendanceV2Controller = async (
         .json({ error: "VALIDATION", message: "Campus is required" });
     }
 
-    // Resolve admin display name for confirmedBy
     const admin = await Admin.findById(claims.sub).select("name");
     const adminName = admin?.name ?? claims.idNumber;
 
@@ -1426,6 +1477,13 @@ export const markAttendanceV2Controller = async (
       year: Number(year) || 1,
       confirmedByAdminName: adminName,
     });
+
+    await logAdminAction(
+      req,
+      logs_action.UPDATE_ATTENDEE,
+      `${attendeeName.trim()} (${idNumber.trim()})`,
+      eventId
+    );
 
     return res.status(200).json({
       message: `Attendance for ${result.session} successfully recorded`,
@@ -1460,7 +1518,7 @@ export const getEditableAttendeeV2Controller = async (
 ) => {
   try {
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
@@ -1482,7 +1540,8 @@ export const getEditableAttendeeV2Controller = async (
       });
     }
 
-    const { eventId, idNumber } = req.params;
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -1510,7 +1569,6 @@ export const getEditableAttendeeV2Controller = async (
       : [];
 
     const attendee = attendeeList.find((a) => a.id_number === idNumber.trim());
-
     if (!attendee) {
       return res.status(404).json({
         error: "ATTENDEE_NOT_FOUND",
@@ -1580,7 +1638,7 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
   try {
     // ── Auth guard ──────────────────────────────────────────────────────
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
@@ -1750,7 +1808,8 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
     }
 
     // ── Find event and attendee ─────────────────────────────────────────
-    const { eventId, idNumber } = req.params;
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -1987,6 +2046,13 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
     await session.commitTransaction();
     session.endSession();
 
+    await logAdminAction(
+      req,
+      logs_action.UPDATE_ATTENDEE,
+      `${attendee.name} (${attendee.id_number})`,
+      eventId
+    );
+
     return res.status(200).json({
       message: "Attendee updated successfully",
       data: {
@@ -2044,7 +2110,7 @@ export const changeAttendeePasswordV2Controller = async (
   try {
     // ── Auth guard ──────────────────────────────────────────────────────
     const claims = req.userV2;
-    if (!claims || claims.role !== "Admin") {
+    if (!claims || claims.role !== "admin") {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
         message: "Admin access required",
@@ -2106,8 +2172,8 @@ export const changeAttendeePasswordV2Controller = async (
       return res.status(400).json({ error: "VALIDATION", message: pwdErr });
     }
 
-    // ── Find event and attendee ─────────────────────────────────────────
-    const { eventId, idNumber } = req.params;
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -2181,6 +2247,13 @@ export const changeAttendeePasswordV2Controller = async (
     await session.commitTransaction();
     session.endSession();
 
+    await logAdminAction(
+      req,
+      logs_action.CHANGE_PASSWORD,
+      `${attendee.name ?? idNumber} (${attendee.id_number})`,
+      eventId
+    );
+
     return res.status(200).json({
       message: "Password changed successfully",
     });
@@ -2194,6 +2267,212 @@ export const changeAttendeePasswordV2Controller = async (
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Internal server error",
+    });
+  }
+};
+
+// ── V2 Event Creation ────────────────────────────────────────────────────────
+
+interface CreateEventV2Body {
+  eventName?: string;
+  eventDescription?: string;
+  eventDate?: string;
+  attendanceType?: string;
+  status?: string;
+  sessionConfig?: unknown;
+  limit?: unknown;
+}
+
+const parseManilaMidnightDate = (value: string): Date | null => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const parsed = new Date(`${value}T16:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+};
+
+export const createEventV2Controller = async (req: Request, res: Response) => {
+  const body = req.body as CreateEventV2Body;
+
+  const eventName =
+    typeof body.eventName === "string" ? body.eventName.trim() : "";
+  const eventDate =
+    typeof body.eventDate === "string" ? body.eventDate.trim() : "";
+
+  if (!eventName) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: "Event name is required",
+    });
+  }
+
+  if (eventName.length > 120) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: "Event name must be at most 120 characters",
+    });
+  }
+
+  const parsedDate = parseManilaMidnightDate(eventDate);
+  if (!parsedDate) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: "Event date must be a valid yyyy-MM-dd calendar date",
+    });
+  }
+
+  const attendanceType =
+    body.attendanceType === "ticketed" ? "ticketed" : "open";
+
+  const status =
+    body.status === "Upcoming" ||
+      body.status === "Ended" ||
+      body.status === "Cancelled"
+      ? body.status
+      : "Ongoing";
+
+  const parsedSessionConfigResult = parseSessionConfigPayload(body.sessionConfig);
+  if ("error" in parsedSessionConfigResult) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: parsedSessionConfigResult.error,
+    });
+  }
+
+  const parsedLimitResult = parseCampusLimitsPayload(body.limit);
+  if ("error" in parsedLimitResult) {
+    return res.status(400).json({
+      error: "VALIDATION",
+      message: parsedLimitResult.error,
+    });
+  }
+
+  try {
+    const imageUrl = (req.files as Express.MulterS3.File[] | undefined)?.map(
+      (file) => file.location,
+    ) ?? [];
+
+    const createdBy =
+      req.admin?.name ??
+      (typeof req.userV2?.sub === "string" ? req.userV2.sub : "unknown-admin");
+
+    const eventFields: Record<string, unknown> = {
+      eventId: new mongoose.Types.ObjectId(),
+      eventName,
+      eventImage: imageUrl,
+      eventDate: parsedDate,
+      eventDescription:
+        typeof body.eventDescription === "string" ? body.eventDescription : "",
+      attendanceType,
+      status,
+      sessionConfig: parsedSessionConfigResult,
+      createdBy,
+      attendees: [],
+    };
+
+    if (parsedLimitResult.length > 0) {
+      eventFields.limit = parsedLimitResult;
+    }
+
+    const newEvent = new Event(eventFields);
+
+    await newEvent.save();
+
+    await logAdminAction(req, logs_action.CREATE_EVENT, eventName, String(newEvent._id));
+
+    return res.status(201).json({
+      message: "Event created successfully",
+      data: newEvent.toObject(),
+    });
+  } catch (error) {
+    console.error("Error creating event:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Failed to create event",
+    })
+  }
+}
+
+export const getAllEventsRawController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const events = await EventV2Service.getAllEventsRaw();
+    return res.status(200).json({
+      data: events,
+      message: "Fetched raw events successfully",
+    });
+  } catch (error) {
+    console.error("Error in getAllEventsRawController:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Internal server error",
+    })
+  }
+}
+
+export const updateEventV2Controller = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const eventId = req.params.eventId as string;
+    const claims = (req as any).userV2;
+
+    if (claims.role !== "admin" || claims.campus !== campus_type.MAIN) {
+      return res.status(403).json({
+        error: "FORBIDDEN",
+        message: "Only UC_MAIN admins can edit events",
+      });
+    }
+
+    const {
+      eventName,
+      eventDescription,
+      eventDate,
+      eventVenue,
+      eventTheme,
+      eventVenueSpecific,
+      eventStartTime,
+      eventEndTime,
+      eventImage,
+    } = req.body;
+
+    const updatedEvent = await EventV2Service.updateEvent(eventId, {
+      eventName,
+      eventDescription,
+      eventDate,
+      eventVenue,
+      eventTheme,
+      eventVenueSpecific,
+      eventStartTime,
+      eventEndTime,
+      eventImage,
+    });
+
+    if (!updatedEvent) {
+      return res.status(404).json({
+        error: "NOT_FOUND",
+        message: "Event not found",
+      });
+    }
+
+    await logAdminAction(
+      req,
+      logs_action.UPDATE_EVENT,
+      updatedEvent.eventName ?? eventId,
+      eventId
+    );
+
+    return res.status(200).json({
+      message: "Event updated successfully",
+      data: updatedEvent,
+    });
+  } catch (error: any) {
+    console.error("Error in updateEventV2Controller:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: error.message,
     });
   }
 };

@@ -8,10 +8,10 @@ export default function GeneralAdminPage() {
         This is a general page accessible to all admins, regardless of campus.
       </p>
 
-      {/* Conditional UI for UC-Main Admins */}
-      <CampusView allowedCampuses={["UC-Main"]} role="Admin">
+      {/* Conditional UI for UC_MAIN Admins */}
+      <CampusView allowedCampuses={["UC_MAIN"]} role="admin">
         <div className="relative rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700">
-          <strong className="font-bold">UC-Main Specific Content:</strong>
+          <strong className="font-bold">UC_MAIN Specific Content:</strong>
           <span className="block sm:inline">
             {" "}
             Welcome, Main Campus Admin! Here are your exclusive controls.

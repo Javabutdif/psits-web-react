@@ -10,6 +10,7 @@ import { IOrderReceipt } from "../mail_template/mail.interface";
 import { orderSearch } from "../utils/search.pending.orders";
 import { orderSort, ISort } from "../utils/sort.pending.orders";
 import { Promo } from "../models/promo.model";
+import { PromoUsage } from "../models/promo.usage.model";
 //Initialize
 import mongoose, { Types } from "mongoose";
 import dotenv from "dotenv";
@@ -46,11 +47,22 @@ export const getSpecificOrdersController = async (
   req: Request,
   res: Response
 ) => {
-  const { id_number } = req.query;
+  const claims = req.userV2;
+  let id_number: string | undefined;
+
+  if (claims.role === "admin") {
+    id_number = (req.query.id_number as string) || claims.idNumber;
+  } else {
+    id_number = claims.idNumber;
+  }
+
+  if (!id_number) {
+    return res.status(400).json({ message: "Missing id_number" });
+  }
 
   try {
     const orders: IOrders[] = await Orders.find({
-      id_number: id_number,
+      id_number,
     }).sort({ order_date: -1 });
     if (orders.length > 0) {
       res.status(200).json(orders);
@@ -87,18 +99,10 @@ export const getAllPendingOrdersController = async (
     const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit as string, 10) || 50, 1);
     const search = (req.query.search as string) || "";
-    const trimmedSearch = search.trim();
-
     const query = {
       order_status: "Pending",
       ...buildOrderSearchQuery(search),
     };
-
-    console.log("[getAllPendingOrdersController] Fetching pending orders", {
-      page,
-      limit,
-      search: trimmedSearch || null,
-    });
 
     const total = await Orders.countDocuments(query);
     const orders: IOrders[] = await Orders.find(query)
@@ -107,14 +111,6 @@ export const getAllPendingOrdersController = async (
       })
       .skip((page - 1) * limit)
       .limit(limit);
-
-    console.log("[getAllPendingOrdersController] Pending orders fetched", {
-      total,
-      returned: orders.length,
-      page,
-      limit,
-      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
-    });
 
     res.status(200).json({
       data: orders,
@@ -137,18 +133,31 @@ export const getAllPaidOrdersController = async (
     const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit as string, 10) || 50, 1);
     const search = (req.query.search as string) || "";
-    const trimmedSearch = search.trim();
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
+
+    const dateRange: Record<string, Date> = {};
+    if (startDate) {
+      const parsed = new Date(startDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        dateRange.$gte = parsed;
+      }
+    }
+    if (endDate) {
+      const parsed = new Date(endDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        parsed.setHours(23, 59, 59, 999);
+        dateRange.$lte = parsed;
+      }
+    }
 
     const query = {
       order_status: "Paid",
+      ...(Object.keys(dateRange).length > 0
+        ? { transaction_date: dateRange }
+        : {}),
       ...buildOrderSearchQuery(search),
     };
-
-    console.log("[getAllPaidOrdersController] Fetching paid orders", {
-      page,
-      limit,
-      search: trimmedSearch || null,
-    });
 
     const total = await Orders.countDocuments(query);
     const orders: IOrders[] = await Orders.find(query)
@@ -157,14 +166,6 @@ export const getAllPaidOrdersController = async (
       })
       .skip((page - 1) * limit)
       .limit(limit);
-
-    console.log("[getAllPaidOrdersController] Paid orders fetched", {
-      total,
-      returned: orders.length,
-      page,
-      limit,
-      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
-    });
 
     res.status(200).json({
       data: orders,
@@ -227,6 +228,12 @@ export const studentAndAdminOrderController = async (
 
     let finalMembershipDiscount = false;
     let promo;
+    const promoUsageRecords: {
+      promo_id: Types.ObjectId;
+      merch_id: Types.ObjectId;
+      id_number: string;
+      promo_used: Date;
+    }[] = [];
     for (let item of itemsArray) {
       const productId = new Types.ObjectId(item.product_id);
 
@@ -258,8 +265,10 @@ export const studentAndAdminOrderController = async (
           ? item.sizes[0]
           : item.sizes;
         const sizeConfig = findMerch.selectedSizes.get(selectedSize);
-        if (sizeConfig && sizeConfig.price) {
-          actualPrice = parseFloat(sizeConfig.price);
+        const sizePrice = Number(sizeConfig?.price);
+
+        if (sizeConfig?.custom && Number.isFinite(sizePrice)) {
+          actualPrice = sizePrice;
         }
       }
 
@@ -292,23 +301,13 @@ export const studentAndAdminOrderController = async (
               .status(404)
               .json({ message: `Promo Code out of Stocks` });
           }
-          await Promo.updateOne(
-            {
-              promo_name,
-              "selected_merchandise._id": item.product_id,
-              "selected_merchandise.items.id_number": { $ne: both.id_number },
-            },
-            {
-              $push: {
-                "selected_merchandise.$.items": {
-                  id_number: both.id_number,
-                  promo_used: new Date(),
-                },
-              },
-              $inc: { quantity: -1 },
-            }
-          );
           orderTotal = orderTotal - orderTotal * (promo.discount / 100);
+          promoUsageRecords.push({
+            promo_id: promo._id as Types.ObjectId,
+            merch_id: productId,
+            id_number: both.id_number,
+            promo_used: new Date(),
+          });
         }
       }
       const processedItem = {
@@ -351,6 +350,15 @@ export const studentAndAdminOrderController = async (
 
     const newOrder = new Orders(finalOrder);
     await newOrder.save({ session });
+
+    if (promoUsageRecords.length > 0) {
+      const orderId = newOrder._id as Types.ObjectId;
+      const promoUsages = promoUsageRecords.map((usage) => ({
+        ...usage,
+        order_id: orderId,
+      }));
+      await PromoUsage.create(promoUsages, { session });
+    }
 
     for (let i = 0; i < itemsArray.length; i++) {
       const item = itemsArray[i];
@@ -413,7 +421,7 @@ export const studentAndAdminOrderController = async (
 export const cancelOrderController = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  const { product_id } = req.params;
+  const product_id = req.params.product_id as string;
 
   if (!product_id) {
     return res.status(400).json({ message: "Product ID is required" });
@@ -439,19 +447,22 @@ export const cancelOrderController = async (req: Request, res: Response) => {
       }
 
       const newStocks = merch.stocks + item.quantity;
-      if (order.promo.promo_discount) {
+      if (order.promo && order.promo.promo_discount) {
+        await PromoUsage.deleteOne({
+          promo_id: order.promo._id,
+          order_id: order._id,
+          merch_id: merchId,
+          id_number: order.id_number,
+        }).session(session);
+
         await Promo.updateOne(
           {
-            promo_name: order.promo.promo_name,
-            "selected_merchandise._id": item.product_id,
+            _id: order.promo._id,
           },
           {
-            $pull: {
-              "selected_merchandise.$.items": { id_number: order.id_number },
-            },
             $inc: { quantity: 1 },
           }
-        );
+        ).session(session);
       }
 
       await Merch.updateOne(
@@ -508,7 +519,6 @@ export const approveOrderController = async (req: Request, res: Response) => {
           err.errorLabels?.includes("TransientTransactionError") &&
           attempt < 2
         ) {
-          console.warn(`Retrying transaction (attempt ${attempt + 1})...`);
           continue;
         }
         throw err;
@@ -634,7 +644,7 @@ export const approveOrderController = async (req: Request, res: Response) => {
                       : selectedSizesMap[selectedSize];
 
                   const parsedSizePrice = Number(sizeConfig?.price);
-                  if (Number.isFinite(parsedSizePrice)) {
+                  if (sizeConfig?.custom && Number.isFinite(parsedSizePrice)) {
                     resolvedShirtPrice = parsedSizePrice;
                   }
                 }
@@ -688,7 +698,7 @@ export const approveOrderController = async (req: Request, res: Response) => {
         }
       }
 
-      const data: IOrderReceipt = {
+      const data: any = {
         reference_code: successfulOrder.reference_code,
         transaction_date: format(
           new Date(successfulOrder.transaction_date),
@@ -741,7 +751,6 @@ export const getAllPendingCountController = async (
     try {
       sortParam = JSON.parse(sort as string);
     } catch (err) {
-      console.warn("Invalid sort param, using default");
     }
 
     // Fetch all pending orders
@@ -812,8 +821,6 @@ export const refund = async (req: Request, res: Response) => {
   session.startTransaction();
 
   const { order_id } = req.body;
-  console.log(order_id);
-
   if (!order_id) {
     return res.status(400).json({ message: "Order ID is required" });
   }

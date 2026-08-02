@@ -1,10 +1,18 @@
 import sidePhoto from "@/assets/side_photo_forms.png";
 
 import { LoginForm, useAuth, type LoginCredentials } from "@/features/auth";
+import { normalizeMembershipStatus } from "@/features/student";
 import { showToast } from "@/utils/alertHelper";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
+
+const getStudentLandingPath = (membershipStatus?: string) => {
+  const status = normalizeMembershipStatus(membershipStatus);
+  if (status === "active") return "/student/event-attendance";
+  if (status === "pending") return "/student/membership-pending";
+  return "/student/membership-required";
+};
 
 export default function Login() {
   const { login, isAuthenticated, user } = useAuth();
@@ -13,10 +21,12 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === "Admin") {
-        navigate("/admin/events", { replace: true });
-      } else if (user.role === "Student") {
-        navigate("/student/event-attendance", { replace: true });
+      if (user.role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (user.role === "student") {
+        navigate(getStudentLandingPath(user.membershipStatus), {
+          replace: true,
+        });
       } else {
         navigate("/", { replace: true });
       }
@@ -33,10 +43,10 @@ export default function Login() {
 
       showToast("success", "Signed in successfully");
 
-      if (loggedInUser.role === "Admin") {
-        navigate("/admin/events");
-      } else if (loggedInUser.role === "Student") {
-        navigate("/student/event-attendance");
+      if (loggedInUser.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (loggedInUser.role === "student") {
+        navigate(getStudentLandingPath(loggedInUser.membershipStatus));
       } else {
         navigate("/");
       }

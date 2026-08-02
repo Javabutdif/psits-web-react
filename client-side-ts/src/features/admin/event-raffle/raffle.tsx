@@ -9,6 +9,7 @@ import type {
 } from "@/features/events/types/event.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import {
   RaffleBackground,
   RaffleControls,
@@ -41,10 +42,10 @@ const REEL_SIZE = WINNER_IDX + BRAKE_ITEMS + VISIBLE + 40;
 
 const CAMPUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All Campuses" },
-  { value: "UC-Main", label: "UC Main" },
-  { value: "UC-Banilad", label: "UC Banilad" },
-  { value: "UC-LM", label: "UCLM" },
-  { value: "UC-PT", label: "UCPT" },
+  { value: "UC_MAIN", label: "UC Main" },
+  { value: "UC_BANILAD", label: "UC Banilad" },
+  { value: "UC_LM", label: "UCLM" },
+  { value: "UC_PT", label: "UCPT" },
 ];
 
 /** easeOutCubic: fast start, guaranteed stop at t=1 with zero velocity. */
@@ -143,6 +144,7 @@ export default function RaffleDraw({
 }) {
   const { eventId } = useParams<{ eventId: string }>();
   const normalizedEventId = eventId?.trim() ?? "";
+  const { canManageRaffle } = useAdminPermissions();
 
   const [allParticipants, setAllParticipants] = useState<RaffleAttendeeDto[]>(
     []
@@ -198,7 +200,8 @@ export default function RaffleDraw({
       setIsLoadingParticipants(true);
       setLoadError(null);
       try {
-        const campusParam = selectedCampus === "all" ? undefined : selectedCampus;
+        const campusParam =
+          selectedCampus === "all" ? undefined : selectedCampus;
         const pool = await getEligibleRaffleAttendeesV2(normalizedEventId, {
           campus: campusParam,
         });
@@ -311,7 +314,7 @@ export default function RaffleDraw({
 
         // Keep the reel in a visible range while waiting for slow API responses.
         if (reelCycleHeight > 0 && offset <= -reelCycleHeight) {
-          offset = -((-offset) % reelCycleHeight);
+          offset = -(-offset % reelCycleHeight);
         }
 
         setTransform(offset);
@@ -475,10 +478,12 @@ export default function RaffleDraw({
     clearWinnerModalState();
     setIsSpinning(false);
 
-    void undoRaffleWinner(normalizedEventId, attendeeIdToUndo).catch((error) => {
-      console.error("Reject failed:", error);
-      alert("Failed to reject winner. Please try again.");
-    });
+    void undoRaffleWinner(normalizedEventId, attendeeIdToUndo).catch(
+      (error) => {
+        console.error("Reject failed:", error);
+        alert("Failed to reject winner. Please try again.");
+      }
+    );
   };
 
   const resetAll = () => {
@@ -561,9 +566,7 @@ export default function RaffleDraw({
       }
 
       if (failedCount > 0) {
-        alert(
-          `${failedCount} winner(s) could not be reset. Please try again.`
-        );
+        alert(`${failedCount} winner(s) could not be reset. Please try again.`);
       }
 
       setWinnerLit(false);
@@ -791,19 +794,21 @@ export default function RaffleDraw({
           </p>
         )}
 
-        <RaffleControls
-          isSpinning={isSpinning}
-          isResetting={isResetting}
-          isLoadingParticipants={isLoadingParticipants}
-          poolLength={allParticipants.length}
-          winnersCount={filteredWinners.length}
-          selectedCampus={selectedCampus}
-          campusOptions={CAMPUS_OPTIONS}
-          onCampusChange={setSelectedCampus}
-          onDraw={drawWinner}
-          onReset={resetAll}
-          disableReset={false}
-        />
+        {canManageRaffle && (
+          <RaffleControls
+            isSpinning={isSpinning}
+            isResetting={isResetting}
+            isLoadingParticipants={isLoadingParticipants}
+            poolLength={allParticipants.length}
+            winnersCount={filteredWinners.length}
+            selectedCampus={selectedCampus}
+            campusOptions={CAMPUS_OPTIONS}
+            onCampusChange={setSelectedCampus}
+            onDraw={drawWinner}
+            onReset={resetAll}
+            disableReset={false}
+          />
+        )}
       </div>
 
       {showWinners && (

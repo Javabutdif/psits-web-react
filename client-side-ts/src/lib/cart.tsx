@@ -1,10 +1,16 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export interface CartItem {
-  uid: string; 
-  id: string | number; 
+  uid: string;
+  id: string | number;
   name: string;
-  price: number; 
+  price: number;
   image: string;
   color?: string;
   size?: string;
@@ -14,48 +20,48 @@ export interface CartItem {
 
 interface CartContextValue {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, 'uid'>) => string | undefined;
+  addItem: (item: Omit<CartItem, "uid">) => string | undefined;
   removeItem: (uid: string) => void;
   updateQty: (uid: string, qty: number) => void;
   clear: () => void;
   total: number;
 }
 
-const STORAGE_KEY = 'psits_cart_v1';
+const STORAGE_KEY = "psits_cart_v1";
 const MAX_QTY = 999;
 const MAX_NAME_LEN = 512;
 const MAX_IMAGE_LEN = 1024;
-const MAX_ATTR_LEN = 64; 
+const MAX_ATTR_LEN = 64;
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-
 function generateUid(): string {
   try {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    if (
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+    ) {
       return crypto.randomUUID();
     }
-  } catch (e) {
-
-  }
+  } catch (e) {}
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function sanitizeStoredItem(obj: any): CartItem | null {
-  if (!obj || typeof obj !== 'object') return null;
-  
+  if (!obj || typeof obj !== "object") return null;
+
   // Support both string IDs (MongoDB) and number IDs (legacy)
   const rawId = obj.id;
   let id: string | number;
-  if (typeof rawId === 'string' && rawId.length > 0) {
+  if (typeof rawId === "string" && rawId.length > 0) {
     id = rawId;
   } else {
     const numId = Number(rawId);
     if (!Number.isFinite(numId) || numId <= 0) return null;
     id = numId;
   }
-  
-  const name = typeof obj.name === 'string' ? obj.name : '';
+
+  const name = typeof obj.name === "string" ? obj.name : "";
   const price = Number(obj.price);
 
   let qty = Number(obj.qty) || 0;
@@ -63,17 +69,28 @@ function sanitizeStoredItem(obj: any): CartItem | null {
   if (!Number.isFinite(price) || price < 0) return null;
   qty = Math.max(1, Math.min(MAX_QTY, Math.floor(qty)));
 
-  const uid = typeof obj.uid === 'string' && obj.uid.length > 0 ? obj.uid : generateUid();
+  const uid =
+    typeof obj.uid === "string" && obj.uid.length > 0 ? obj.uid : generateUid();
 
   return {
     uid,
     id,
     name: name.slice(0, MAX_NAME_LEN),
     price,
-    image: typeof obj.image === 'string' ? obj.image.slice(0, MAX_IMAGE_LEN) : '',
-    color: typeof obj.color === 'string' ? obj.color.slice(0, MAX_ATTR_LEN) : undefined,
-    size: typeof obj.size === 'string' ? obj.size.slice(0, MAX_ATTR_LEN) : undefined,
-    course: typeof obj.course === 'string' ? obj.course.slice(0, MAX_ATTR_LEN) : undefined,
+    image:
+      typeof obj.image === "string" ? obj.image.slice(0, MAX_IMAGE_LEN) : "",
+    color:
+      typeof obj.color === "string"
+        ? obj.color.slice(0, MAX_ATTR_LEN)
+        : undefined,
+    size:
+      typeof obj.size === "string"
+        ? obj.size.slice(0, MAX_ATTR_LEN)
+        : undefined,
+    course:
+      typeof obj.course === "string"
+        ? obj.course.slice(0, MAX_ATTR_LEN)
+        : undefined,
     qty,
   };
 }
@@ -97,14 +114,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch (err) {
-    }
+    } catch (err) {}
   }, [items]);
 
   const indexMapRef = React.useRef<Map<string, number>>(new Map());
 
-  const makeKey = (it: { id: string | number; size?: string; color?: string; course?: string }) =>
-    `${it.id}|${it.size ?? ''}|${it.color ?? ''}|${it.course ?? ''}`;
+  const makeKey = (it: {
+    id: string | number;
+    size?: string;
+    color?: string;
+    course?: string;
+  }) => `${it.id}|${it.size ?? ""}|${it.color ?? ""}|${it.course ?? ""}`;
 
   const rebuildIndexMap = (arr: CartItem[]) => {
     const m = new Map<string, number>();
@@ -118,7 +138,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     rebuildIndexMap(items);
   }, []);
 
-  const addItem = (item: Omit<CartItem, 'uid'>): string | undefined => {
+  const addItem = (item: Omit<CartItem, "uid">): string | undefined => {
     const safeItem = sanitizeStoredItem({ ...item, uid: generateUid() });
     if (!safeItem) return undefined;
 
@@ -151,7 +171,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQty = (uid: string, qty: number) => {
-    const safeQty = Math.max(1, Math.min(MAX_QTY, Math.floor(Number(qty) || 0)));
+    const safeQty = Math.max(
+      1,
+      Math.min(MAX_QTY, Math.floor(Number(qty) || 0))
+    );
     setItems((s) => {
       const idx = s.findIndex((i) => i.uid === uid);
       if (idx === -1) return s;
@@ -166,10 +189,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     indexMapRef.current.clear();
   };
 
-  const total = useMemo(() => items.reduce((sum, it) => sum + it.price * it.qty, 0), [items]);
+  const total = useMemo(
+    () => items.reduce((sum, it) => sum + it.price * it.qty, 0),
+    [items]
+  );
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQty, clear, total }}>
+    <CartContext.Provider
+      value={{ items, addItem, removeItem, updateQty, clear, total }}
+    >
       {children}
     </CartContext.Provider>
   );
@@ -177,7 +205,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
 export function useCart() {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error('useCart must be used within CartProvider');
+  if (!ctx) throw new Error("useCart must be used within CartProvider");
   return ctx;
 }
 

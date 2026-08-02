@@ -6,7 +6,7 @@ export interface IOrdersDocument extends IOrders, Document {}
 
 const promoSchema = new Schema<IPromoOrder>({
   _id: {
-    type: Types.ObjectId,
+    type: Schema.Types.ObjectId,
   },
   promo_name: {
     type: String,
@@ -28,9 +28,7 @@ const orderSchema = new Schema<IOrdersDocument>({
   membership_discount: {
     type: Boolean,
   },
-  promo: {
-    type: promoSchema,
-  },
+  promo: promoSchema,
   student_name: {
     type: String,
     required: true,

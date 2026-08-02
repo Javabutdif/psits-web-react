@@ -1,11 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
+  BookOpen,
+  ChevronDown,
+  ClipboardList,
   Grid,
   Calendar,
   BarChart3,
+  FileText,
+  GraduationCap,
   MoreVertical,
   PanelLeft,
   LogOut,
+  Settings,
+  ShoppingBag,
+  Users,
+  Code,
+  Award,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -20,8 +30,10 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/features/auth";
 import { useCampusCheck } from "@/features/auth/hooks/useCampusCheck";
+import { logAdminAction } from "@/features/admin/api/admin";
 import { showToast } from "@/utils/alertHelper";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { PSITS_ROLES } from "@/features/admin/constants/adminAccess";
 
 interface AdminSidebarProps {
   userName?: string;
@@ -40,9 +52,31 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const isUcMainAdmin = useCampusCheck(["UC-Main"]);
+  const location = useLocation();
+  const isUcMainAdmin = useCampusCheck(["UC_MAIN"]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [merchandiseOpen, setMerchandiseOpen] = useState(
+    location.pathname.startsWith("/admin/merchandise")
+  );
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const isActivePath = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
+
+  const getNavButtonClass = (path: string, isDisabled = false) =>
+    cn(
+      "w-full",
+      collapsed ? "h-10 justify-center px-0" : "justify-start",
+      isActivePath(path) &&
+        "bg-[#1C9DDE]/10 text-[#1C9DDE] hover:bg-[#1C9DDE]/20 hover:text-[#1C9DDE]",
+      isDisabled && "cursor-not-allowed text-gray-400 opacity-50"
+    );
+
+  const restrictedNavButtonClass = cn(
+    "w-full",
+    collapsed ? "h-10 justify-center px-0" : "justify-start",
+    !isUcMainAdmin && "cursor-not-allowed text-gray-400 opacity-50"
+  );
 
   // Close menu on outside click
   useEffect(() => {
@@ -60,6 +94,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const handleLogout = async () => {
     setMenuOpen(false);
     try {
+      if (user?.id) {
+        await logAdminAction({
+          admin_id: user.id,
+          action: "Admin Logged Out (V2)",
+        });
+      }
       await logout();
       showToast("success", "Logged out successfully");
       navigate("/auth/login", { replace: true });
@@ -68,17 +108,32 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     }
   };
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={700}>
       <aside
         className={cn(
-          "bg-background fixed top-0 flex h-screen flex-col border transition-all duration-300 lg:sticky",
+          "group/sidebar bg-background fixed top-0 flex h-screen flex-col border transition-all duration-300 lg:sticky",
           collapsed ? "w-16" : "w-64"
         )}
       >
         {/* Logo and Collapse Button */}
-        <div className="p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
+        <div
+          className={cn(
+            "relative p-4",
+            collapsed && "flex h-20 items-center justify-center px-2 py-4"
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center gap-3",
+              collapsed ? "justify-center" : "justify-between"
+            )}
+          >
+            <div
+              className={cn(
+                "flex min-w-0 items-center gap-3",
+                collapsed && "justify-center"
+              )}
+            >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full">
                 <img
                   src={logo}
@@ -106,7 +161,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 variant="ghost"
                 size="icon-sm"
                 onClick={onToggleCollapse}
-                className="hidden shrink-0 transition-all duration-300 lg:flex"
+                className={cn(
+                  "hidden shrink-0 transition-all duration-300 lg:flex",
+                  collapsed &&
+                    "bg-background absolute top-4 right-1 h-7 w-7 border opacity-0 shadow-sm group-hover/sidebar:opacity-100 focus-visible:opacity-100"
+                )}
                 aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
                 <PanelLeft
@@ -136,16 +195,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
+                      className={getNavButtonClass(
+                        "/admin/dashboard",
+                        !isUcMainAdmin
                       )}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/dashboard" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -170,16 +227,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
+                      className={getNavButtonClass(
+                        "/admin/organization",
+                        !isUcMainAdmin
                       )}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/organization" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -187,19 +242,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                           }
                         }}
                       >
-                        <svg
-                          className="h-5 w-5 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
+                        <Users className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Organization</span>}
                       </Link>
                     </Button>
@@ -216,16 +259,16 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
+                      className={getNavButtonClass(
+                        "/admin/recuitment-management",
+                        !isUcMainAdmin
                       )}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={
+                          isUcMainAdmin ? "/admin/recuitment-management" : "#"
+                        }
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -233,19 +276,39 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                           }
                         }}
                       >
-                        <svg
-                          className="h-5 w-5 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                          />
-                        </svg>
+                        <Users className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>Recruitment</span>}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>Recruitment</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass(
+                        "/admin/students",
+                        !isUcMainAdmin
+                      )}
+                      asChild
+                    >
+                      <Link
+                        to={isUcMainAdmin ? "/admin/students" : "#"}
+                        onClick={(e) => {
+                          if (!isUcMainAdmin) {
+                            e.preventDefault();
+                            showToast("error", "Unauthorized.");
+                          }
+                        }}
+                      >
+                        <GraduationCap className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Students</span>}
                       </Link>
                     </Button>
@@ -262,10 +325,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full bg-[#1C9DDE]/10 text-[#1C9DDE] hover:bg-[#1C9DDE]/20 hover:text-[#1C9DDE]",
-                        collapsed ? "justify-center px-2" : "justify-start"
-                      )}
+                      className={getNavButtonClass("/admin/events")}
                       asChild
                     >
                       <Link to="/admin/events">
@@ -279,6 +339,29 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   {collapsed && (
                     <TooltipContent side="right">
                       <p>Events</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass("/admin/certificates")}
+                      asChild
+                    >
+                      <Link to="/admin/certificates">
+                        <Award className="h-5 w-5 shrink-0" />
+                        {!collapsed && (
+                          <span className="font-medium">Certificates</span>
+                        )}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>Certificates</p>
                     </TooltipContent>
                   )}
                 </Tooltip>
@@ -297,54 +380,31 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
+                      className={getNavButtonClass(
+                        "/admin/merchandise",
+                        !isUcMainAdmin
                       )}
-                      asChild
+                      aria-expanded={!collapsed && merchandiseOpen}
+                      onClick={() => {
+                        if (!isUcMainAdmin) {
+                          showToast("error", "Unauthorized.");
+                          return;
+                        }
+                        setMerchandiseOpen((current) => !current);
+                      }}
                     >
-                      <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
-                        onClick={(e) => {
-                          if (!isUcMainAdmin) {
-                            e.preventDefault();
-                            showToast("error", "Unauthorized.");
-                          }
-                        }}
-                      >
-                        <svg
-                          className="h-5 w-5 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                          />
-                        </svg>
-                        {!collapsed && <span>Merchandise</span>}
-                        {!collapsed && (
-                          <svg
-                            className="ml-auto h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        )}
-                      </Link>
+                      <ShoppingBag className="h-5 w-5 shrink-0" />
+                      {!collapsed && <span>Merchandise</span>}
+                      {!collapsed && (
+                        <ChevronDown
+                          className={cn(
+                            "ml-auto h-4 w-4 transition-transform",
+                            merchandiseOpen && "rotate-180"
+                          )}
+                        />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   {collapsed && (
@@ -353,42 +413,43 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     </TooltipContent>
                   )}
                 </Tooltip>
+                {!collapsed && isUcMainAdmin && merchandiseOpen && (
+                  <div className="mt-1 ml-9 space-y-1">
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "h-8 w-full justify-start px-2 text-sm font-normal",
+                        isActivePath("/admin/merchandise/products") &&
+                          "text-[#1C9DDE]"
+                      )}
+                      asChild
+                    >
+                      <Link to="/admin/merchandise/products">Products</Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "h-8 w-full justify-start px-2 text-sm font-normal",
+                        isActivePath("/admin/merchandise/promo") &&
+                          "text-[#1C9DDE]"
+                      )}
+                      asChild
+                    >
+                      <Link to="/admin/merchandise/promo">Promo</Link>
+                    </Button>
+                  </div>
+                )}
               </li>
               <li>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
-                      )}
+                      className={getNavButtonClass("/admin/orders")}
                       asChild
                     >
-                      <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
-                        onClick={(e) => {
-                          if (!isUcMainAdmin) {
-                            e.preventDefault();
-                            showToast("error", "Unauthorized.");
-                          }
-                        }}
-                      >
-                        <svg
-                          className="h-5 w-5 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
+                      <Link to="/admin/orders">
+                        <ClipboardList className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Orders</span>}
                       </Link>
                     </Button>
@@ -400,21 +461,43 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   )}
                 </Tooltip>
               </li>
+              {user?.access === PSITS_ROLES.DEVELOPER ||
+              user?.access === PSITS_ROLES.ADMIN ? (
+                <li>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={getNavButtonClass("/admin/devtools")}
+                        asChild
+                      >
+                        <Link to="/admin/devtools">
+                          <Code className="h-5 w-5 shrink-0" />
+                          {!collapsed && <span>Developer Tools</span>}
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    {collapsed && (
+                      <TooltipContent side="right">
+                        <p>Developer Tools</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </li>
+              ) : null}
               <li>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
+                      className={getNavButtonClass(
+                        "/admin/reports",
+                        !isUcMainAdmin
                       )}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/reports" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -449,42 +532,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
-                      )}
+                      className={getNavButtonClass("/admin/settings")}
                       asChild
                     >
-                      <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
-                        onClick={(e) => {
-                          if (!isUcMainAdmin) {
-                            e.preventDefault();
-                            showToast("error", "Unauthorized.");
-                          }
-                        }}
-                      >
-                        <svg
-                          className="h-5 w-5 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
+                      <Link to="/admin/settings">
+                        <Settings className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Settings</span>}
                       </Link>
                     </Button>
@@ -501,12 +553,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
-                      )}
+                      className={restrictedNavButtonClass}
                       asChild
                     >
                       <Link
@@ -518,34 +565,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                           }
                         }}
                       >
-                        <svg
-                          className="h-5 w-5 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                          />
-                        </svg>
+                        <BookOpen className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Documentation</span>}
                         {!collapsed && (
-                          <svg
-                            className="ml-auto h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
+                          <ChevronDown className="ml-auto h-4 w-4" />
                         )}
                       </Link>
                     </Button>
@@ -562,16 +585,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={cn(
-                        "w-full",
-                        collapsed ? "justify-center px-2" : "justify-start",
-                        !isUcMainAdmin &&
-                          "cursor-not-allowed text-gray-400 opacity-50"
-                      )}
+                      className={restrictedNavButtonClass}
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/logs" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -579,19 +597,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                           }
                         }}
                       >
-                        <svg
-                          className="h-5 w-5 shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
+                        <FileText className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Logs</span>}
                       </Link>
                     </Button>

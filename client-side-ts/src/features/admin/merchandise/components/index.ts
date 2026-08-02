@@ -1,0 +1,2 @@
+export { MerchandiseView } from "./MerchandiseView";
+

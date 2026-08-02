@@ -50,7 +50,9 @@ const NewPasswordForm = () => {
         }, 3000);
       })
       .catch((error) => {
-        showToast("error", "Your link has expired");
+        const message =
+          error.response?.data?.message || "Something went wrong. Please try again.";
+        showToast("error", message);
       });
   };
 

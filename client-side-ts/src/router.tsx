@@ -2,7 +2,11 @@ import { createBrowserRouter, Outlet } from "react-router-dom";
 import { AdminHomeRedirect } from "./components/common/AdminHomeRedirect";
 import { AdminCampusRouteGuard } from "./components/common/AdminCampusRouteGuard";
 import { PublicShopCampusGuard } from "./components/common/PublicShopCampusGuard";
-import { AdminRouteGuard } from "./components/common/RouteGuards";
+import { StudentMembershipRouteGuard } from "./components/common/StudentMembershipRouteGuard";
+import {
+  AdminRouteGuard,
+  StudentRouteGuard,
+} from "./components/common/RouteGuards";
 import { StudentCampusRouteGuard } from "./components/common/StudentCampusRouteGuard";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { MainLayout } from "./layouts/MainLayout";
@@ -11,11 +15,20 @@ import EventManagement from "./pages/admin/EventManagement";
 import EventsPage from "./pages/admin/EventsPage";
 import EventStatisticsPage from "./pages/admin/EventStatisticsPage";
 import EventRafflePage from "./pages/admin/EventRafflePage";
+import Merchandise from "./pages/admin/Merchandise";
+import CertificatesPage from "./pages/admin/CertificatesPage";
 import GeneralAdminPage from "./pages/admin/GeneralAdminPage";
 import { MainCampusFinancePage } from "./pages/admin/MainCampusFinancePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Login from "./pages/auth/Login";
 import OTPCode from "./pages/auth/OtpCode";
+import Dashboard from "./pages/admin/Dashboard";
+import Organization from "./pages/admin/Organization";
+import Students from "./pages/admin/Students";
+import Reports from "./pages/admin/Reports";
+import Orders from "./pages/admin/Orders";
+import Settings from "./pages/admin/Settings";
+import { PromoDashboard } from "./features/admin/promo";
 import SetNewPassword from "./pages/auth/SetNewPassword";
 import { ErrorPage } from "./pages/ErrorPage";
 import { Events } from "./pages/events";
@@ -28,8 +41,16 @@ import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import AccountSettings from "./pages/student/AccountSettings";
 import EventAttendance from "./pages/student/EventAttendance";
 import MyOrders from "./pages/student/MyOrders";
+import MembershipPending from "./pages/student/MembershipPending";
+import MembershipRequired from "./pages/student/MembershipRequired";
+import StudentCertificatesPage from "./pages/student/StudentCertificatesPage";
 import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
+import { LogsView } from "./features/admin/logs";
+import { DevToolsPage } from "./features/admin/devtools/components/DevToolsPage";
+import SignUp from "./pages/auth/SignUp";
+import ApplicationPage from "./pages/student/ApplicationPage";
+import Recruitment from "./features/admin/recruitment-management/components/RecuitmentViews";
 
 const router = createBrowserRouter([
   {
@@ -50,21 +71,43 @@ const router = createBrowserRouter([
             children: [
               { path: "shop", Component: Shop },
               { path: "shop/:id", Component: ProductDetailsPage },
-              { path: "cart", Component: Cart },
+              {
+                element: <StudentMembershipRouteGuard />,
+                children: [{ path: "cart", Component: Cart }],
+              },
             ],
           },
           {
             path: "student",
-            Component: StudentLayout,
+            Component: StudentRouteGuard,
             children: [
-              { index: true, Component: AccountSettings },
-              { path: "event-attendance", Component: EventAttendance },
-              { path: "account-settings", Component: AccountSettings },
               {
-                element: (
-                  <StudentCampusRouteGuard allowedCampuses={["UC-Main"]} />
-                ),
-                children: [{ path: "my-orders", Component: MyOrders }],
+                Component: StudentLayout,
+                children: [
+                  { index: true, Component: AccountSettings },
+                  { path: "account-settings", Component: AccountSettings },
+                  {
+                    path: "membership-required",
+                    Component: MembershipRequired,
+                  },
+                  { path: "membership-pending", Component: MembershipPending },
+                  { path: "application", Component: ApplicationPage },
+                  {
+                    element: <StudentMembershipRouteGuard />,
+                    children: [
+                      { path: "event-attendance", Component: EventAttendance },
+                      { path: "certificates", Component: StudentCertificatesPage },
+                      {
+                        element: (
+                          <StudentCampusRouteGuard
+                            allowedCampuses={["UC_MAIN"]}
+                          />
+                        ),
+                        children: [{ path: "my-orders", Component: MyOrders }],
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
@@ -78,7 +121,7 @@ const router = createBrowserRouter([
         path: "auth",
         children: [
           { path: "login", Component: Login },
-          { path: "signup", Component: UnderConstruction },
+          { path: "signup", Component: SignUp },
           { path: "forgot-password", Component: ForgotPassword },
           { path: "otp", Component: OTPCode },
           { path: "reset-password", Component: SetNewPassword },
@@ -96,9 +139,20 @@ const router = createBrowserRouter([
           {
             Component: AdminLayout,
             children: [
-              // { path: "dashboard", Component: Dashboard },
+              { path: "dashboard", Component: Dashboard },
+              { path: "organization", Component: Organization },
+              { path: "recuitment-management", Component: Recruitment },
+              { path: "students", Component: Students },
+              { path: "merchandise", Component: Merchandise },
+              { path: "merchandise/products", Component: Merchandise },
+              { path: "merchandise/products/new", Component: Merchandise },
+              {
+                path: "merchandise/products/:productId/edit",
+                Component: Merchandise,
+              },
               { path: "events", Component: EventsPage },
               { path: "events/:eventId", Component: EventManagement },
+              { path: "certificates", Component: CertificatesPage },
               {
                 path: "events/:eventId/statistics",
                 Component: EventStatisticsPage,
@@ -106,7 +160,7 @@ const router = createBrowserRouter([
               {
                 element: (
                   <AdminCampusRouteGuard
-                    allowedCampuses={["UC-Main"]}
+                    allowedCampuses={["UC_MAIN"]}
                     campusUnauthorizedToastMessage="Unauthorized"
                   />
                 ),
@@ -117,8 +171,33 @@ const router = createBrowserRouter([
                   },
                 ],
               },
+              {
+                element: (
+                  <AdminCampusRouteGuard
+                    allowedCampuses={["UC_MAIN"]}
+                    campusUnauthorizedToastMessage="Unauthorized"
+                  />
+                ),
+                children: [
+                  { path: "reports", Component: Reports },
+                  { path: "orders", Component: Orders },
+                  { path: "settings", Component: Settings },
+                  { path: "merchandise/promo", Component: PromoDashboard },
+                ],
+              },
+              {
+                element: (
+                  <AdminCampusRouteGuard
+                    allowedCampuses={["UC_MAIN"]}
+                    campusUnauthorizedToastMessage="Unauthorized"
+                  />
+                ),
+                children: [
+                  { path: "logs", Component: LogsView },
+                  { path: "devtools", Component: DevToolsPage },
+                ],
+              },
               // TODO: Remove this sample
-              // Example of a general admin page with campus-specific component
               { path: "general", Component: GeneralAdminPage },
             ],
           },
@@ -126,7 +205,7 @@ const router = createBrowserRouter([
           // Example of a campus-specific route
           {
             path: "finances",
-            element: <AdminCampusRouteGuard allowedCampuses={["UC-Main"]} />,
+            element: <AdminCampusRouteGuard allowedCampuses={["UC_MAIN"]} />,
             children: [{ index: true, Component: MainCampusFinancePage }],
           },
         ],

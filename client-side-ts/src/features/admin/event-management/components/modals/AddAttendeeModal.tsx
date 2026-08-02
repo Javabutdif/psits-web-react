@@ -45,9 +45,9 @@ export interface AttendeeFormData {
 }
 
 const CAMPUS_ID_SUFFIX_LABELS: Record<string, string> = {
-  "UC-Banilad": "ucb",
-  "UC-LM": "uclm",
-  "UC-PT": "ucpt",
+  "UC_BANILAD": "ucb",
+  "UC_LM": "uclm",
+  "UC_PT": "ucpt",
 };
 
 const COURSE_OPTIONS = ["BSIT", "BSCS", "ACT"];

@@ -7,6 +7,7 @@ import { Log } from "../models/log.model";
 import { forgotPasswordMail } from "../mail_template/mail.template";
 import { Request, Response } from "express";
 import { IStudent } from "../models/student.interface";
+import { campus_type } from "../enums/campus.enums";
 import dotenv from "dotenv";
 dotenv.config();
 const token_key = process.env.JWT_SECRET ?? "Default_Token";
@@ -129,7 +130,7 @@ export const registerController = async (req: Request, res: Response) => {
       membership: "None",
       applied,
       role: "all",
-      campus: "UC-Main",
+      campus: campus_type.MAIN,
       isRequest: false,
       isYearUpdated: true,
     });
@@ -160,7 +161,6 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
       email: req.body.email,
       id_number: req.body.id_number,
     });
-    
     if (userAdmin) {
       user = userAdmin;
     } else if (getUser) {
@@ -187,13 +187,10 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
     const token = jwt.sign({ userId: user._id }, token_key, {
       expiresIn: "10m",
     });
-
     await forgotPasswordMail(req.body.email, url, token);
-
-    res.status(200).json({ message: "Email sent successfully! Please check your email for further instructions." });
   } catch (err) {
     console.error("Server error during forgot password process:", err);
-    res.status(500).send({ message: "Internal Server Error" });
+    res.status(500).send({ message: err });
   }
 };
 
@@ -203,7 +200,7 @@ export interface jwtPayload {
 
 export const resetPasswordController = async (req: Request, res: Response) => {
   try {
-    const decodedToken = jwt.verify(req.params.token, token_key) as jwtPayload;
+    const decodedToken = jwt.verify(req.params.token as string, token_key) as unknown as jwtPayload;
 
     if (!decodedToken) {
       return res.status(401).send({ message: "Invalid token" });
@@ -235,7 +232,6 @@ export const resetPasswordController = async (req: Request, res: Response) => {
     res.status(200).send({ message: "Password updated" });
   } catch (err) {
     // Send error response if any error occurs
-    console.error("Server error during reset password process:", err);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).send({ message: err });
   }
 };

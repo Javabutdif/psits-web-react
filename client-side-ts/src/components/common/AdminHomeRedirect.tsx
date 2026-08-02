@@ -9,8 +9,8 @@ export const AdminHomeRedirect = () => {
     return null;
   }
 
-  if (isAuthenticated && user?.role === "Admin") {
-    return <Navigate to="/admin/events" replace />;
+  if (isAuthenticated && user?.role === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return <Home />;

@@ -12,11 +12,11 @@ interface MerchandiseItem {
 
 interface PromoCodeData {
   promoName: string;
-  type: string; 
+  type: string;
   limitType: "Limited" | "Unlimited";
-  singleStudent: string; 
-  selectedAudience: string[] | "All Students"; 
-  selectedMerchandise: MerchandiseItem[]; 
+  singleStudent: string;
+  selectedAudience: string[] | "All Students";
+  selectedMerchandise: MerchandiseItem[];
   discount: number;
   quantity: number;
   startDate: string | Date;
@@ -74,18 +74,22 @@ const createHeaders = () => ({
 const handleApiError = (error: unknown): void => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ErrorResponse>;
-    const errorMessage = axiosError.response?.data?.message || "An error occurred";
+    const errorMessage =
+      axiosError.response?.data?.message || "An error occurred";
     showToast("error", errorMessage);
-    console.error("API Error:", axiosError.response?.data || axiosError.message);
+    console.error(
+      "API Error:",
+      axiosError.response?.data || axiosError.message
+    );
   } else {
     showToast("error", "An unexpected error occurred");
     console.error("Unexpected Error:", error);
   }
 };
 
-export const createPromoCode = async (data: PromoCodeData): Promise<boolean> => {
-  console.log(data);
-  
+export const createPromoCode = async (
+  data: PromoCodeData
+): Promise<boolean> => {
   try {
     const response: AxiosResponse<ApiResponse> = await axios.post(
       `${backendConnection()}/api/promo/create`,
@@ -106,9 +110,9 @@ export const createPromoCode = async (data: PromoCodeData): Promise<boolean> => 
   }
 };
 
-export const updatePromoCode = async (data: PromoCodeData): Promise<boolean> => {
-  console.log(data);
-  
+export const updatePromoCode = async (
+  data: PromoCodeData
+): Promise<boolean> => {
   try {
     const response: AxiosResponse<ApiResponse> = await axios.post(
       `${backendConnection()}/api/promo/update`,
@@ -129,7 +133,9 @@ export const updatePromoCode = async (data: PromoCodeData): Promise<boolean> => 
   }
 };
 
-export const getAllPromoCode = async (): Promise<PromoCode[] | string | undefined> => {
+export const getAllPromoCode = async (): Promise<
+  PromoCode[] | string | undefined
+> => {
   try {
     const response: AxiosResponse<ApiResponse> = await axios.get(
       `${backendConnection()}/api/promo/fetch`,
@@ -190,7 +196,9 @@ export const deletePromo = async (id: string | number): Promise<boolean> => {
   }
 };
 
-export const getPromoLog = async (): Promise<PromoLogEntry[] | string | undefined> => {
+export const getPromoLog = async (): Promise<
+  PromoLogEntry[] | string | undefined
+> => {
   try {
     const response: AxiosResponse<ApiResponse> = await axios.get(
       `${backendConnection()}/api/promo/log`,
@@ -205,5 +213,35 @@ export const getPromoLog = async (): Promise<PromoLogEntry[] | string | undefine
   } catch (error) {
     handleApiError(error);
     return undefined;
+  }
+};
+
+export interface PromoOption {
+  _id: string;
+  promo_name: string;
+  discount: number;
+  type: string;
+  limit_type: string;
+}
+
+export const getEligiblePromos = async (
+  merchIds: string[]
+): Promise<PromoOption[] | null> => {
+  try {
+    if (merchIds.length === 0) return [];
+    const response: AxiosResponse = await axios.get(
+      `${backendConnection()}/api/promo/eligible`,
+      {
+        params: { merch_ids: merchIds.join(",") },
+        headers: createHeaders(),
+      }
+    );
+    if (response.status === 200) {
+      return response.data.promos || [];
+    }
+    return [];
+  } catch (error) {
+    handleApiError(error);
+    return null;
   }
 };

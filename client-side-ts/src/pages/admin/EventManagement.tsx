@@ -36,6 +36,7 @@ import type {
   EventMerchMeta,
 } from "@/features/events/types/event.types";
 import { useAuth } from "@/features/auth";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import type { Campus } from "@/features/auth/types/auth.types";
 import { showToast } from "@/utils/alertHelper";
 
@@ -48,27 +49,30 @@ interface EventDetails {
   endDate: string;
   endTime: string;
   location: string;
-  locationAddress: string;
   description: string;
   image: string;
   campusCodes: Campus[];
   venues: string[];
   merch: EventMerchMeta | null;
   attendanceType: "open" | "ticketed";
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 const CAMPUS_CODE_TO_NAME: Record<Campus, string> = {
-  "UC-Main": "University of Cebu Main Campus",
-  "UC-Banilad": "University of Cebu Banilad Campus",
-  "UC-LM": "University of Cebu Lapu-Lapu & Mandaue",
-  "UC-PT": "University of Cebu Pardo & Talisay",
-  "UC-CS": "University of Cebu Main Campus",
+  UC_MAIN: "University of Cebu Main Campus",
+  UC_BANILAD: "University of Cebu Banilad Campus",
+  UC_LM: "University of Cebu Lapu-Lapu & Mandaue",
+  UC_PT: "University of Cebu Pardo & Talisay",
+  UC_CS: "University of Cebu Main Campus",
 };
 
-const DEFAULT_CAMPUSES: Campus[] = ["UC-Main", "UC-Banilad", "UC-LM", "UC-PT"];
+const DEFAULT_CAMPUSES: Campus[] = ["UC_MAIN", "UC_BANILAD", "UC_LM", "UC_PT"];
 
 const normalizeCampusForFilter = (campus: Campus): Campus =>
-  campus === "UC-CS" ? "UC-Main" : campus;
+  campus === "UC_CS" ? "UC_MAIN" : campus;
 
 const UNDER_CONSTRUCTION_MESSAGE =
   "This is under construction, visit legacy website to access this functionality.";
@@ -86,20 +90,7 @@ interface EventSessionConfig {
 
 type EventStatus = EventDetails["status"];
 
-const formatEventDateLabel = (value: unknown): string => {
-  if (!value) return "TBA";
-
-  const date = new Date(String(value));
-  if (Number.isNaN(date.getTime())) return String(value);
-
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
-};
+import { formatEventDateLabel } from "@/utils/date-manila";
 
 const normalizeStatus = (value: unknown): EventStatus => {
   const normalized = String(value ?? "")
@@ -180,6 +171,15 @@ const normalizeMerchMeta = (value: unknown): EventMerchMeta | null => {
   };
 };
 
+const formatTimeToAMPM = (timeStr?: string): string => {
+  if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) return timeStr || "TBA";
+  const [hourStr, minStr] = timeStr.split(":");
+  const hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${formattedHour}:${minStr} ${ampm}`;
+};
+
 const mapApiEventToEventDetails = (
   routeEventId: string,
   event: ApiEvent
@@ -208,7 +208,7 @@ const mapApiEventToEventDetails = (
 
   const normalizedCampusCodes = Array.from(
     new Set<Campus>([
-      "UC-Main",
+      "UC_MAIN",
       ...(mappedCampusCodes.length > 0 ? mappedCampusCodes : DEFAULT_CAMPUSES),
     ])
   );
@@ -222,11 +222,8 @@ const mapApiEventToEventDetails = (
     endDate: formatEventDateLabel(event.eventDate),
     endTime,
     location:
-      (typeof event.location === "string" && event.location) ||
+      (typeof event.eventVenue === "string" && event.eventVenue) ||
       "Location not specified",
-    locationAddress:
-      (typeof event.locationAddress === "string" && event.locationAddress) ||
-      "Address not specified",
     description:
       (typeof event.eventDescription === "string" && event.eventDescription) ||
       "No description available.",
@@ -238,6 +235,10 @@ const mapApiEventToEventDetails = (
       event.attendanceType === "open" || event.attendanceType === "ticketed"
         ? event.attendanceType
         : "ticketed",
+    eventTheme: event.eventTheme as string | undefined,
+    eventVenueSpecific: event.eventVenueSpecific as string | undefined,
+    eventStartTime: event.eventStartTime as string | undefined,
+    eventEndTime: event.eventEndTime as string | undefined,
   };
 };
 
@@ -256,14 +257,16 @@ const EventManagement: React.FC = () => {
   const [activeCampus, setActiveCampus] = useState<Campus | "all">("all");
   const [isAttendeeSettingsOpen, setIsAttendeeSettingsOpen] = useState(false);
   const [isEditEventOpen, setIsEditEventOpen] = useState(false);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   // Tab scroll state
   const tabsScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const isAdmin = user?.role === "Admin";
-  const isUcMainAdmin = isAdmin && user?.campus === "UC-Main";
+  const isAdmin = user?.role === "admin";
+  const isUcMainAdmin = isAdmin && user?.campus === "UC_MAIN";
+  const { canManageEvents } = useAdminPermissions();
 
   const availableCampusCodes = useMemo(() => {
     const eventCampusCodes = eventDetails?.campusCodes ?? DEFAULT_CAMPUSES;
@@ -381,24 +384,23 @@ const EventManagement: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [hasValidRouteEventId, normalizedRouteEventId]);
+  }, [hasValidRouteEventId, normalizedRouteEventId, refetchTrigger]);
 
   const handleBack = () => {
     navigate("/admin/events");
   };
 
   const handleEditEvent = () => {
-    if (!eventDetails || !isUcMainAdmin) return;
-    showToast("error", UNDER_CONSTRUCTION_MESSAGE);
+    if (!eventDetails || !isUcMainAdmin || !canManageEvents) return;
+    setIsEditEventOpen(true);
   };
 
   const handleAttendeeSettings = () => {
-    if (!isUcMainAdmin) return;
+    if (!isUcMainAdmin || !canManageEvents) return;
     showToast("error", UNDER_CONSTRUCTION_MESSAGE);
   };
 
-  const handleSaveAttendeeLimits = (limits: Record<string, number>) => {
-    console.warn("Save attendee limits:", limits);
+  const handleSaveAttendeeLimits = (_limits: Record<string, number>) => {
   };
 
   const retryFetch = () => {
@@ -433,7 +435,7 @@ const EventManagement: React.FC = () => {
             </p>
           </div>
 
-          {isUcMainAdmin && (
+          {isUcMainAdmin && canManageEvents && (
             <div className="flex w-full justify-end sm:w-auto">
               <Button
                 variant="outline"
@@ -563,7 +565,7 @@ const EventManagement: React.FC = () => {
                                   {eventDetails.startDate}
                                 </p>
                                 <p className="text-muted-foreground text-sm">
-                                  {eventDetails.startTime}
+                                  {formatTimeToAMPM(eventDetails.eventStartTime || eventDetails.startTime)}
                                 </p>
                               </div>
                             </div>
@@ -577,7 +579,7 @@ const EventManagement: React.FC = () => {
                                   {eventDetails.endDate}
                                 </p>
                                 <p className="text-muted-foreground text-sm">
-                                  {eventDetails.endTime}
+                                  {formatTimeToAMPM(eventDetails.eventEndTime || eventDetails.endTime)}
                                 </p>
                               </div>
                             </div>
@@ -589,12 +591,19 @@ const EventManagement: React.FC = () => {
                             <MapPin className="text-muted-foreground h-5 w-5" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium">Cebu Coliseum</p>
-                            <p className="text-muted-foreground text-sm">
-                              Sanciangko St., Cebu City, Philippines
+                            <p className="text-sm font-medium">
+                              {eventDetails.location || "Location not specified"}
+                              {eventDetails.eventVenueSpecific && ` (${eventDetails.eventVenueSpecific})`}
                             </p>
                           </div>
                         </div>
+
+                        {eventDetails.eventTheme && (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <p className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Event Theme</p>
+                            <p className="text-sm font-semibold italic text-gray-700 mt-0.5">"{eventDetails.eventTheme}"</p>
+                          </div>
+                        )}
 
                         <div>
                           <p className="text-muted-foreground text-sm leading-relaxed">
@@ -602,12 +611,12 @@ const EventManagement: React.FC = () => {
                           </p>
                         </div>
 
-                        {isUcMainAdmin && (
+                        {isUcMainAdmin && canManageEvents && (
                           <div>
                             <Button
                               onClick={handleEditEvent}
                               variant="outline"
-                              className="w-full cursor-not-allowed opacity-60"
+                              className="w-full"
                             >
                               Edit Event
                             </Button>
@@ -737,13 +746,18 @@ const EventManagement: React.FC = () => {
       <EditEventModal
         open={isEditEventOpen}
         onOpenChange={setIsEditEventOpen}
+        onSaveEvent={() => setRefetchTrigger((prev) => prev + 1)}
         eventData={{
           id: eventDetails?.id ?? "",
           title: eventDetails?.title ?? "",
           description: eventDetails?.description ?? "",
-          location: eventDetails?.location ?? "",
+          eventVenue: eventDetails?.location ?? "",
           startDate: eventDetails?.startDate ?? "",
           image: eventDetails?.image ?? "",
+          eventTheme: eventDetails?.eventTheme ?? "",
+          eventVenueSpecific: eventDetails?.eventVenueSpecific ?? "",
+          eventStartTime: eventDetails?.eventStartTime ?? "",
+          eventEndTime: eventDetails?.eventEndTime ?? "",
         }}
       />
     </div>

@@ -1,6 +1,7 @@
 import { Promo } from "../models/promo.model";
 import { Orders } from "../models/orders.model";
 import { PromoLog } from "../models/promo.log.model";
+import { PromoUsage } from "../models/promo.usage.model";
 
 export const checkPromos = async () => {
   try {
@@ -24,7 +25,7 @@ export const checkPromos = async () => {
         "promo._id": promo._id,
         order_status: "Pending",
       });
-      const idNumbers = relatedOrders.map((order) => order.id_number);
+      const orderIds = relatedOrders.map((order) => order._id);
 
       if (relatedOrders.length > 0) {
         const result = await Orders.deleteMany({
@@ -32,16 +33,10 @@ export const checkPromos = async () => {
           order_status: "Pending",
         });
 
-        await Promo.updateMany(
-          {},
-          {
-            $pull: {
-              "selected_merchandise.$[].items": {
-                id_number: { $in: idNumbers },
-              },
-            },
-          }
-        );
+        await PromoUsage.deleteMany({
+          promo_id: promo._id,
+          order_id: { $in: orderIds },
+        });
 
         const newQuantity = promo.quantity + result.deletedCount;
 

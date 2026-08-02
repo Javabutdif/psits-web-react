@@ -52,6 +52,12 @@ import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken, AccessTokenClaims } from "../util/jwt.util";
 import { Student } from "../models/student.model";
 import { Admin } from "../models/admin.model";
+import { admin_model } from "../model_template/model_data";
+import { account_status } from "../enums/status.enums";
+import {
+  hasActiveMembership,
+  normalizeMembershipStatus,
+} from "../util/membership.util";
 
 /**
  * Extend Express Request to include v2 auth user claims from access token.
@@ -60,7 +66,10 @@ import { Admin } from "../models/admin.model";
 declare global {
   namespace Express {
     interface Request {
-      userV2?: AccessTokenClaims;
+      userV2: AccessTokenClaims & {
+        role?: string;
+        membershipStatus?: string;
+      };
     }
   }
 }
@@ -78,7 +87,7 @@ declare global {
  * - 401: Missing or invalid access token
  * - Then chain with roleAuthenticateV2() to control access by role
  */
-export const requireAccessTokenV2 = (
+export const requireAccessTokenV2 = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -105,6 +114,12 @@ export const requireAccessTokenV2 = (
   try {
     const claims = verifyAccessToken(token);
     req.userV2 = claims;
+    if (claims.role === "admin") {
+      const admin = await Admin.findById(claims.sub);
+      if (admin) {
+        req.admin = admin_model(admin);
+      }
+    }
     next();
   } catch (error) {
     const message =
@@ -164,9 +179,12 @@ export const requireAccessTokenWithDBCheck = async (
     const claims = verifyAccessToken(token);
 
     // Verify user still exists and is active
-    if (claims.role === "Admin") {
+    if (claims.role === "admin") {
       const admin = await Admin.findById(claims.sub);
-      if (!admin || admin.status !== "Active") {
+      const isActive =
+        admin?.status === account_status.ACTIVE || admin?.status === "Active";
+
+      if (!admin || !isActive) {
         return res.status(403).json({
           error: "ACCOUNT_INACTIVE",
           message: "Account no longer active",
@@ -179,9 +197,15 @@ export const requireAccessTokenWithDBCheck = async (
           message: "Account credentials mismatch",
         });
       }
+      req.admin = admin_model(admin);
     } else {
       const student = await Student.findById(claims.sub);
-      if (!student || student.status !== "True") {
+      const isActive =
+        student?.status === account_status.ACTIVE ||
+        student?.status === "Active" ||
+        student?.status === "True";
+
+      if (!student || !isActive) {
         return res.status(403).json({
           error: "ACCOUNT_INACTIVE",
           message: "Account no longer active",
@@ -195,7 +219,17 @@ export const requireAccessTokenWithDBCheck = async (
       }
     }
 
-    req.userV2 = claims;
+    req.userV2 = claims as typeof claims & {
+      orgRole?: string;
+      membershipStatus?: string;
+    };
+    if (claims.role === "student") {
+      const student = await Student.findById(claims.sub);
+      if (student) {
+        (req.userV2 as any).orgRole = student.role;
+        (req.userV2 as any).membershipStatus = student.membershipStatus;
+      }
+    }
     next();
   } catch (error) {
     const message =
@@ -225,7 +259,7 @@ export const requireAccessTokenWithDBCheck = async (
  * router.get("/data", requireAccessTokenV2, roleAuthenticateV2(["Student", "Admin"]), controller)
  */
 export const roleAuthenticateV2 = (
-  allowedRoles: Array<"Admin" | "Student">
+  allowedRoles: Array<"admin" | "student">
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.userV2) {
@@ -272,23 +306,56 @@ export const roleAuthenticateV2 = (
  * router.post("/announcement", requireAccessTokenV2,
  *   roleAuthenticateV2(["Admin"]), controller) // No adminAccessAuthenticateV2
  */
+const normalizeAccessKey = (value?: string) => {
+  if (!value) return "";
+
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/^PSITS_/, "")
+    .replace(/[_\s-]+/g, "");
+};
+
 export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.userV2 || req.userV2.role !== "Admin") {
+    if (!req.userV2 || req.userV2.role !== "admin") {
       return res.status(403).json({ message: "Admin access required" });
     }
 
     try {
-      // Fetch admin to check access level
-      const admin = await Admin.findById(req.userV2.sub);
-      if (!admin) {
-        return res.status(403).json({ message: "Admin not found" });
+      const normalizedAllowedAccess = allowedAccess.map(normalizeAccessKey);
+      const currentAccess = req.admin?.access ?? req.userV2.access;
+      const normalizedCurrentAccess = normalizeAccessKey(currentAccess);
+
+      if (!currentAccess) {
+        const admin = await Admin.findById(req.userV2.sub);
+        if (!admin) {
+          return res.status(403).json({ message: "Admin not found" });
+        }
+
+        const normalizedDbAccess = normalizeAccessKey(admin.access);
+        if (!normalizedAllowedAccess.includes(normalizedDbAccess)) {
+          return res
+            .status(403)
+            .json({ message: "Insufficient admin permissions" });
+        }
+
+        req.admin = admin_model(admin);
+        next();
+        return;
       }
 
-      if (!allowedAccess.includes(admin.access)) {
+      if (!normalizedAllowedAccess.includes(normalizedCurrentAccess)) {
         return res
           .status(403)
           .json({ message: "Insufficient admin permissions" });
+      }
+
+      if (!req.admin) {
+        const admin = await Admin.findById(req.userV2.sub);
+        if (admin) {
+          req.admin = admin_model(admin);
+        }
       }
 
       next();
@@ -297,4 +364,37 @@ export const adminAccessAuthenticateV2 = (allowedAccess: string[]) => {
       return res.status(500).json({ message: "Authorization check failed" });
     }
   };
+};
+
+export const requireActiveStudentMembershipV2 = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.userV2 || req.userV2.role !== "student") {
+    return next();
+  }
+
+  try {
+    const student = await Student.findById(req.userV2.sub)
+      .select("membershipStatus")
+      .lean();
+    const rawStatus = student?.membershipStatus ?? req.userV2.membershipStatus;
+    const status = normalizeMembershipStatus(rawStatus);
+
+    if (hasActiveMembership(rawStatus)) {
+      req.userV2.membershipStatus = rawStatus;
+      return next();
+    }
+
+    return res.status(403).json({
+      error: "MEMBERSHIP_REQUIRED",
+      message: "Active membership is required to access this feature.",
+      status,
+      rawStatus,
+    });
+  } catch (error) {
+    console.error("Membership access check error:", error);
+    return res.status(500).json({ message: "Membership check failed" });
+  }
 };

@@ -1,5 +1,12 @@
-function backendConnection() {
-  return import.meta.env?.VITE_API_URL;
-}
+  function backendConnection() {
+    const env = import.meta.env;
 
-export default backendConnection;
+    return (
+      env?.VITE_API_URL ||
+      env?.VITE_BACKEND_URL ||
+      env?.VITE_SERVER_URL ||
+      (typeof window !== "undefined" ? window.location.origin : "")
+    );
+  }
+
+  export default backendConnection;

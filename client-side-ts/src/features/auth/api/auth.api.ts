@@ -18,6 +18,11 @@ const authAxios = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+const extractAccessToken = (data: Record<string, unknown>): string | null => {
+  const token = data.accessToken ?? data.token;
+  return typeof token === "string" && token.length > 0 ? token : null;
+};
+
 /**
  * POST /api/v2/auth/login
  *
@@ -31,7 +36,14 @@ export const loginUser = async (
     "/api/v2/auth/login",
     payload
   );
-  setAccessToken(data.accessToken);
+  const accessToken = extractAccessToken(data as Record<string, unknown>);
+  if (!accessToken) {
+    throw new Error("Login response did not include an access token.");
+  }
+
+  setAccessToken(accessToken);
+  sessionStorage.setItem("Token", accessToken);
+
   return data;
 };
 
@@ -59,8 +71,14 @@ export const refreshTokens = (): Promise<AuthResponse | null> => {
   inflightRefresh = authAxios
     .post<AuthResponse>("/api/v2/auth/refresh")
     .then(({ data }) => {
-      setAccessToken(data.accessToken);
-      return data;
+      const accessToken = extractAccessToken(data as Record<string, unknown>);
+      if (!accessToken) {
+        throw new Error("Refresh response did not include an access token.");
+      }
+
+      setAccessToken(accessToken);
+      sessionStorage.setItem("Token", accessToken);
+      return { ...data, accessToken };
     })
     .catch(() => {
       clearAccessToken();
@@ -84,5 +102,6 @@ export const logoutUser = async (): Promise<void> => {
     await authAxios.post("/api/v2/auth/logout");
   } finally {
     clearAccessToken();
+    sessionStorage.removeItem("Token");
   }
 };

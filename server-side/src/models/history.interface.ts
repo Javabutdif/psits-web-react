@@ -3,10 +3,10 @@ export interface IHistory {
   rfid?: string;
   reference_code: string;
   name: string;
-  year: string;
+  year: number;
   course: string;
   type: string;
   date: Date;
   admin: string;
-  total: Number;
+  total: number;
 }

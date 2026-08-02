@@ -43,7 +43,7 @@ const staticNavLinks: NavLinkItem[] = [
     name: "Shop",
     href: "/shop",
     hasDropdown: false,
-    allowedCampus: ["UC-Main", "UC-CS"],
+    allowedCampus: ["UC_MAIN", "UC_CS"],
   },
 ];
 
@@ -60,9 +60,9 @@ export const Header = () => {
   const homeHref =
     !isAuthenticated || !user
       ? "/"
-      : user.role === "Admin"
+      : user.role === "admin"
         ? "/admin/events"
-        : user.role === "Student"
+        : user.role === "student"
           ? "/student/event-attendance"
           : "/";
 
@@ -146,7 +146,7 @@ export const Header = () => {
         <CampusView
           key={link.name}
           allowedCampuses={link.allowedCampus}
-          role={user.role === "Admin" ? "Admin" : "Student"}
+          role={user.role === "admin" ? "admin" : "student"}
         >
           {linkEl}
         </CampusView>
@@ -202,11 +202,11 @@ export const Header = () => {
 
         {/* Right Section */}
         <div className="flex items-center gap-2 md:gap-4">
-          {/* Cart — only for authenticated UC-Main users */}
+          {/* Cart — only for authenticated UC_MAIN users */}
           {isAuthenticated && user ? (
             <CampusView
-              allowedCampuses={["UC-Main", "UC-CS"]}
-              role={user.role === "Admin" ? "Admin" : "Student"}
+              allowedCampuses={["UC_MAIN", "UC_CS"]}
+              role={user.role === "admin" ? "admin" : "student"}
             >
               <Link
                 to="/cart"
@@ -244,15 +244,6 @@ export const Header = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/profile"
-                    className="flex cursor-pointer items-center gap-2"
-                  >
-                    <UserCircle size={16} />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="flex cursor-pointer items-center gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"

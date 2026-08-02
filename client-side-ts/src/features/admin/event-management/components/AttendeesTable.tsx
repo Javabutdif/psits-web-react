@@ -42,6 +42,7 @@ import type {
 } from "@/features/events/types/event.types";
 import { markAttendanceV2 } from "@/features/events/api/eventService";
 import { CampusView } from "@/components/common/CampusView";
+import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 
 interface Attendee {
   id: string;
@@ -90,6 +91,8 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   eventStatus,
   attendanceType: _attendanceType,
 }) => {
+  const { canManageEvents } = useAdminPermissions();
+
   const toLocalYyyyMmDd = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -408,6 +411,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   };
 
   const handleAddAttendee = () => {
+    if (!canManageEvents) return;
     setIsAddAttendeeOpen(true);
   };
 
@@ -475,10 +479,12 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     }
   };
 
-  const NON_UC_MAIN_EDIT_CAMPUSES = ["UC-Banilad", "UC-LM", "UC-PT"];
-  const showEditActions = NON_UC_MAIN_EDIT_CAMPUSES.includes(adminCampus ?? "");
+  const NON_UC_MAIN_EDIT_CAMPUSES = ["UC_BANILAD", "UC_LM", "UC_PT"];
+  const showEditActions =
+    canManageEvents && NON_UC_MAIN_EDIT_CAMPUSES.includes(adminCampus ?? "");
 
   const handleEditAttendee = () => {
+    if (!canManageEvents) return;
     if (!selectedStudent) return;
     setEditTargetIdNumber(selectedStudent.studentId);
     setEditTargetName(selectedStudent.name);
@@ -487,6 +493,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   };
 
   const handleChangePassword = () => {
+    if (!canManageEvents) return;
     if (!selectedStudent) return;
     setEditTargetIdNumber(selectedStudent.studentId);
     setEditTargetName(selectedStudent.name);
@@ -500,30 +507,34 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-lg font-semibold">{venue}</h3>
         <div className="mt-2 flex w-full flex-row items-center gap-2 sm:mt-0 sm:w-auto">
-          <CampusView
-            allowedCampuses={["UC-LM", "UC-PT", "UC-Banilad"]}
-            role="Admin"
-          >
+          {canManageEvents && (
+            <CampusView
+              allowedCampuses={["UC_LM", "UC_PT", "UC_BANILAD"]}
+              role="admin"
+            >
+              <div className="flex-1 sm:flex-none">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddAttendee}
+                  className="w-full cursor-pointer rounded-xl"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Attendee
+                </Button>
+              </div>
+            </CampusView>
+          )}
+          {canManageEvents && (
             <div className="flex-1 sm:flex-none">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddAttendee}
-                className="w-full cursor-pointer rounded-xl"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Attendee
-              </Button>
+              <MarkAttendanceButton
+                className="w-full"
+                onScanQR={() => setIsScanQROpen(true)}
+                onEnterStudentId={() => setIsMarkAttendanceOpen(true)}
+                isSessionActive={eventStatus === "ongoing"}
+              />
             </div>
-          </CampusView>
-          <div className="flex-1 sm:flex-none">
-            <MarkAttendanceButton
-              className="w-full"
-              onScanQR={() => setIsScanQROpen(true)}
-              onEnterStudentId={() => setIsMarkAttendanceOpen(true)}
-              isSessionActive={eventStatus === "ongoing"}
-            />
-          </div>
+          )}
         </div>
       </div>
 

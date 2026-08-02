@@ -33,7 +33,21 @@ const logSchema = new Schema<ILogDocument>({
   target_model: {
     type: String,
     required: false, // Specifies the collection name for the `target_id` reference
-    enum: ["Admin", "Student", "Merchandise", "Order", "Merchandise Report"], // Allowed models
+    enum: [
+      "Admin",
+      "Student",
+      "Member",
+      "Merchandise",
+      "Order",
+      "Merchandise Report",
+      "Event",
+      "Promo",
+      "Recruitment",
+      "Certificate",
+      "Raffle",
+      "Report",
+      "Membership",
+    ], // Allowed models
   },
 });
 

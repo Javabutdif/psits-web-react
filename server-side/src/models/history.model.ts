@@ -21,7 +21,7 @@ const historySchema = new Schema<IHistoryDocument>({
     require: true,
   },
   year: {
-    type: String,
+    type: Number,
     require: true,
   },
   course: {

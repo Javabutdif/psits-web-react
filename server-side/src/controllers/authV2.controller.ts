@@ -13,6 +13,9 @@ import {
 import { verifyRefreshToken } from "../util/jwt.util";
 import { Log } from "../models/log.model";
 import { AuthError, AuthErrorCodes } from "../util/errors.util";
+import { account_status } from "../enums/status.enums";
+import { campus_type } from "../enums/campus.enums";
+import { studentService } from "../services/student.service";
 
 /**
  * Shared user response type for frontend
@@ -20,7 +23,7 @@ import { AuthError, AuthErrorCodes } from "../util/errors.util";
 type UserResponse = {
   id: string;
   idNumber: string;
-  role: "Admin" | "Student";
+  role: "admin" | "student";
   campus: string;
   name?: string;
   email?: string;
@@ -36,14 +39,14 @@ type UserResponse = {
  */
 const toUserResponse = (
   user: IStudentDocument | IAdminDocument,
-  role: "Admin" | "Student"
+  role: "admin" | "student"
 ): UserResponse => {
-  if (role === "Student") {
+  if (role === "student") {
     const student = user as IStudentDocument;
     return {
       id: student._id.toString(),
       idNumber: student.id_number,
-      role: "Student",
+      role: "student",
       campus: student.campus,
       name: `${student.first_name} ${student.middle_name || ""} ${
         student.last_name
@@ -58,8 +61,8 @@ const toUserResponse = (
     return {
       id: admin._id.toString(),
       idNumber: admin.id_number,
-      role: "Admin",
-      campus: admin.campus || "UC-Main",
+      role: "admin",
+      campus: admin.campus || campus_type.MAIN,
       name: admin.name,
       email: admin.email,
       course: admin.course,
@@ -79,34 +82,54 @@ export const loginV2Controller = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { id_number, password } = req.body;
+  const id_number =
+    typeof req.body?.id_number === "string" ? req.body.id_number.trim() : "";
+  const password =
+    typeof req.body?.password === "string" ? req.body.password : "";
 
   try {
+    if (!id_number || !password) {
+      throw new AuthError(AuthErrorCodes.InvalidCredentials);
+    }
+
     let user: IAdminDocument | IStudentDocument | null = null;
-    let role: "Admin" | "Student";
+    let role: "admin" | "student";
+    let accessLevel: string | undefined;
 
     // Check if admin login (id_number contains "-admin")
     if (id_number.includes("-admin")) {
-      const admin = await Admin.findOne({ id_number });
+      let admin = await Admin.findOne({ id_number });
+
+      // Some legacy admin records store only the base eight-digit ID.
+      if (!admin && id_number.endsWith("-admin")) {
+        admin = await Admin.findOne({
+          id_number: id_number.slice(0, -"-admin".length),
+        });
+      }
+
       if (!admin) {
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
       const passwordMatch = await bcrypt.compare(password, admin.password);
+      console.log("Password match:", passwordMatch); // Debugging line
       if (!passwordMatch) {
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
-      if (admin.status === "Suspend") {
+      const isSuspended = admin.status === account_status.SUSPENDED;
+      if (isSuspended) {
         throw new AuthError(AuthErrorCodes.AccountSuspended);
       }
 
-      if (admin.status !== "Active") {
+      const isActive = admin.status === account_status.ACTIVE;
+      if (!isActive) {
         throw new AuthError(AuthErrorCodes.AccountNotActive);
       }
 
       user = admin;
-      role = "Admin";
+      role = "admin";
+      accessLevel = admin.access;
 
       // Log admin login
       const log = new Log({
@@ -127,16 +150,24 @@ export const loginV2Controller = async (
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
-      if (student.status === "False") {
+      const isDeleted =
+        student.status === account_status.DELETED ||
+        student.status === "Deleted" ||
+        student.status === "False";
+      if (isDeleted) {
         throw new AuthError(AuthErrorCodes.AccountDeleted);
       }
 
-      if (student.status !== "True") {
+      const isActive =
+        student.status === account_status.ACTIVE ||
+        student.status === "Active" ||
+        student.status === "True";
+      if (!isActive) {
         throw new AuthError(AuthErrorCodes.AccountNotActive);
       }
 
       user = student;
-      role = "Student";
+      role = "student";
     }
 
     // Sign tokens
@@ -144,18 +175,19 @@ export const loginV2Controller = async (
       sub: user._id.toString(),
       idNumber: user.id_number,
       role,
-      campus: user.campus || "UC-Main",
+      campus: user.campus || campus_type.MAIN,
+      access: accessLevel,
     });
 
     const refreshToken = signRefreshToken({
       sub: user._id.toString(),
       idNumber: user.id_number,
       role,
-      campus: user.campus || "UC-Main",
+      campus: user.campus || campus_type.MAIN,
     });
 
     // Save refresh token to database for rotation validation
-    if (role === "Admin") {
+    if (role === "admin") {
       await Admin.findByIdAndUpdate(user._id, {
         currentRefreshToken: refreshToken,
       });
@@ -206,9 +238,9 @@ export const refreshV2Controller = async (
 
     // Fetch user from DB to check if token matches stored currentRefreshToken
     let user: IStudentDocument | IAdminDocument | null = null;
-    let role: "Admin" | "Student" = claims.role;
+    let role: "admin" | "student" = claims.role;
 
-    if (role === "Admin") {
+    if (role === "admin") {
       user = await Admin.findById(claims.sub);
     } else {
       user = await Student.findById(claims.sub);
@@ -221,7 +253,9 @@ export const refreshV2Controller = async (
     }
 
     const isAccountActive =
-      role === "Admin" ? user.status === "Active" : user.status === "True";
+      role === "admin"
+        ? user.status === account_status.ACTIVE
+        : user.status === account_status.ACTIVE;
 
     if (!isAccountActive) {
       clearRefreshCookie(res);
@@ -231,7 +265,7 @@ export const refreshV2Controller = async (
     // CRITICAL: Verify refresh token matches the stored token (rotation check)
     if (user.currentRefreshToken !== refreshToken) {
       // Invalidate all sessions for this user by setting currentRefreshToken to null
-      if (role === "Admin") {
+      if (role === "admin") {
         await Admin.findByIdAndUpdate(claims.sub, {
           currentRefreshToken: null,
         });
@@ -242,9 +276,6 @@ export const refreshV2Controller = async (
       }
 
       clearRefreshCookie(res);
-      console.warn(
-        `Refresh token reuse detected for user ${claims.idNumber} (${role}). All sessions invalidated.`
-      );
       throw new AuthError(AuthErrorCodes.TokenInvalidated);
     }
 
@@ -253,18 +284,19 @@ export const refreshV2Controller = async (
       sub: user._id.toString(),
       idNumber: user.id_number,
       role,
-      campus: user.campus || "UC-Main",
+      campus: user.campus || campus_type.MAIN,
+      access: role === "admin" ? (user as IAdminDocument).access : undefined,
     });
 
     const newRefreshToken = signRefreshToken({
       sub: user._id.toString(),
       idNumber: user.id_number,
       role,
-      campus: user.campus || "UC-Main",
+      campus: user.campus || campus_type.MAIN,
     });
 
     // Update database with new refresh token (invalidate old one)
-    if (role === "Admin") {
+    if (role === "admin") {
       await Admin.findByIdAndUpdate(claims.sub, {
         currentRefreshToken: newRefreshToken,
       });
@@ -305,7 +337,7 @@ export const logoutV2Controller = async (
       try {
         const claims = verifyRefreshToken(refreshToken);
 
-        if (claims.role === "Admin") {
+        if (claims.role === "admin") {
           await Admin.findByIdAndUpdate(claims.sub, {
             currentRefreshToken: null,
           });
@@ -316,13 +348,63 @@ export const logoutV2Controller = async (
         }
       } catch (error) {
         // Token might be expired or invalid, but we still clear the cookie
-        console.debug("Could not verify token during logout:", error);
       }
     }
 
     clearRefreshCookie(res);
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /v2/auth/signup
+ * Creates a new student account using the existing studentService.create logic.
+ */
+export const signupV2Controller = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const yearMap: Record<string, number> = {
+      "1st Year": 1,
+      "2nd Year": 2,
+      "3rd Year": 3,
+      "4th Year": 4,
+    };
+
+    req.body = {
+      id_number: req.body.id,
+      password: req.body.password,
+      first_name: req.body.fname,
+      middle_name: req.body.mname,
+      last_name: req.body.lname,
+      email: req.body.email,
+      course: req.body.course,
+      year: yearMap[req.body.year] ?? Number(req.body.year),
+    };
+
+    const result = await studentService.create(req);
+
+    if (!result.status) {
+      return res.status(400).json({ message: result.message });
+    }
+
+    return res.status(201).json({ message: result.message });
+  } catch (error: any) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue || {})[0];
+      return res.status(409).json({
+        message:
+          field === "id_number"
+            ? "This Student ID is already registered."
+            : field === "email"
+              ? "This email is already registered."
+              : "This account already exists.",
+      });
+    }
     next(error);
   }
 };

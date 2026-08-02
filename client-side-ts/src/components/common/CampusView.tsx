@@ -6,7 +6,7 @@ interface CampusViewProps {
   /** The list of campuses that are allowed to see the content. */
   allowedCampuses: Campus[];
   /** The user role required to view the content. Defaults to "Admin". */
-  role?: "Admin" | "Student";
+  role?: "admin" | "student";
   /** The content to render if the user's campus is in the allowed list. */
   children: React.ReactNode;
 }
@@ -20,7 +20,7 @@ interface CampusViewProps {
  */
 export function CampusView({
   allowedCampuses,
-  role = "Admin",
+  role = "admin",
   children,
 }: CampusViewProps) {
   const canView = useCampusCheck(allowedCampuses, role);

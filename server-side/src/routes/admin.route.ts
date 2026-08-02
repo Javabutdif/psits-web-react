@@ -1,215 +1,230 @@
 import { Router } from "express";
-import {
-  admin_authenticate,
-  role_authenticate,
-  both_authenticate,
-} from "../middlewares/custom_authenticate_token";
-import {
-  getSearchStudentByIdController,
-  approveMembershipController,
-  revokeAllMembershipController,
-  getMembershipHistoryController,
-  getMembershipRequestController,
-  getStudentsCountController,
-  getActiveMembershipCountController,
-  getPublishMerchandiseCountController,
-  getOrderPlacedCountController,
-  getStudentDashboardCountController,
-  getDailySalesController,
-  getAllAdminAccountsController,
-  getAllAdminMembersController,
-  getAllSuspendAdminAccountController,
-  editAdminAccountController,
-  changeAdminPasswordController,
-  setSuspendAdminAccountController,
-  setMemberRoleRemoveController,
-  setRestoreAdminAccountController,
-  setAdminRequestRoleController,
-  getAllRequestMemberController,
-  getAllRequestAdminAccountController,
-  approveRoleMemberController,
-  setDeclineMemberRoleController,
-  addNewAdminAccountController,
-  approveAdminAccountController,
-  declineAdminAccountController,
-  setNewAdminAccessController,
-  getMembershipPrice,
-  changeMembershipPrice,
-} from "../controllers/admin.controller";
 
+import { adminController } from "../controllers/admin.v2.controller";
+import { membershipController } from "../controllers/membership.v2.controller";
+
+import {
+  requireAccessTokenV2,
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2,
+  adminAccessAuthenticateV2,
+} from "../middlewares/authV2.middleware";
+import { psits_roles } from "../enums/role.enums";
 const router = Router();
 
 //Search student by ID
 router.get(
   "/student_search/:id_number",
-  admin_authenticate,
-  getSearchStudentByIdController
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminController.getSearchStudentByIdController
 );
 //ApproveMembership
 router.post(
   "/approve-membership",
-  admin_authenticate,
-  role_authenticate(["admin", "finance"]),
-  approveMembershipController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  membershipController.approveMembershipController
 );
 //Revoke Student Membership
 router.put(
   "/revoke-student",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  revokeAllMembershipController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  membershipController.revokeAllMembershipController
 );
 //Membership History
-router.get("/history", admin_authenticate, getMembershipHistoryController);
+router.get(
+  "/history",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.getMembershipHistoryController
+);
 //Membership Request
 router.get(
   "/membership-request",
-  admin_authenticate,
-  getMembershipRequestController
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.getMembershipRequestController
 );
 //Dashboard Student Counts
 router.get(
-  "/get-students-count",
-  admin_authenticate,
-  getStudentsCountController
+  "/get-dashboard",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminController.getDashboardStats
+);
+router.get(
+  "/dashboard-stats",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminController.getDashboardStats
 );
 //get-active-membership-count
 router.get(
   "/get-active-membership-count",
-  admin_authenticate,
-  getActiveMembershipCountController
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.getActiveMembershipCountController
 );
-//Dashboard Publish Merchandise Count
+
+//get-student-count
 router.get(
-  "/merchandise-created",
-  admin_authenticate,
-  getPublishMerchandiseCountController
+  "/get-students-count",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminController.getStudentCountController
 );
-//Dashboard Placed Order Count
-router.get("/placed-orders", admin_authenticate, getOrderPlacedCountController);
-//All Student Dashboard Stats
-router.get(
-  "/dashboard-stats",
-  admin_authenticate,
-  getStudentDashboardCountController
-);
-//Get Daily Sales Stats
-router.get("/get-daily-sales", admin_authenticate, getDailySalesController);
+
 //Get All admin officers
 router.get(
   "/get-all-officers",
-  admin_authenticate,
-  role_authenticate(["admin", "finance", "executive"]),
-  getAllAdminAccountsController
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([
+    psits_roles.ADMIN,
+    psits_roles.FINANCE,
+    psits_roles.EXECUTIVE,
+  ]),
+  adminController.getAllAdminController
 );
 //Get All Members
 router.get(
   "/get-all-members",
-  admin_authenticate,
-  getAllAdminMembersController
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminController.getAllAdminMembersController
 );
 //Get Suspend Admin Accounts
 router.get(
   "/get-suspend-officers",
-  admin_authenticate,
-  getAllSuspendAdminAccountController
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminController.getAllSuspendAdminAccountController
 );
 //Edit Admin Account
 router.post(
   "/edit-officer",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  editAdminAccountController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.editAdminController
 );
 //Change Password Admin Account
 router.post(
   "/change-password-officer",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  changeAdminPasswordController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.changeAdminPasswordController
 );
 //Set Admin Account to Suspend
 router.put(
   "/suspend",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  setSuspendAdminAccountController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.setSuspendAdminAccountController
 );
 //Set Member Role Remove
 router.put(
   "/role-remove",
-  admin_authenticate,
-  role_authenticate(["admin", "executive"]),
-  setMemberRoleRemoveController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.EXECUTIVE]),
+  adminController.setMemberRoleRemoveController
 );
 //Set Restore Deleted Admin
 router.put(
   "/restore-officer",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  setRestoreAdminAccountController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(["admin"]),
+  adminController.setRestoreAdminAccountController
 );
 //Set Admin Request Role to Member
-router.put("/request-role", admin_authenticate, setAdminRequestRoleController);
+router.put(
+  "/request-role",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminController.setAdminRequestRoleController
+);
 //Get all Members Account Request Role
 router.get(
   "/get-request-role",
-  admin_authenticate,
-  getAllRequestMemberController
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminController.getAllRequestAdminAccountController
 );
 //Get all Admin Account Request Role
 router.get(
   "/get-request-admin",
-  admin_authenticate,
-  getAllRequestAdminAccountController
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminController.getAllRequestAdminAccountController
 );
 //Set Approve Role for Members
 router.put(
   "/approve-role",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  approveRoleMemberController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.approveRoleMemberController
 );
 //Set Decline Role for Members
 router.put(
   "/decline-role",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  setDeclineMemberRoleController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.setDeclineMemberRoleController
 );
 //Add New Admin Account
 router.post(
   "/add-officer",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  addNewAdminAccountController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.addNewAdminAccountController
 );
 //Approve Admin Account Creation
 router.put(
   "/approve-admin-account",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  approveAdminAccountController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.approveAdminAccountController
 );
 //Decline Admin Account Creation
 router.put(
   "/decline-admin-account",
-  admin_authenticate,
-  role_authenticate(["admin"]),
-  declineAdminAccountController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.declineAdminAccountController
 );
 //update-admin-access
 router.put(
   "/update-admin-access",
-  admin_authenticate,
-  setNewAdminAccessController
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+  adminController.setNewAdminAccessController
 );
-router.get("/get-membership-price", both_authenticate, getMembershipPrice);
+router.get(
+  "/get-membership-price",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.getMemberPriceController
+);
 router.put(
   "/change-membership-price",
-  admin_authenticate,
-  role_authenticate(["finance", "admin"]),
-  changeMembershipPrice
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.HEAD_FINANCE, psits_roles.FINANCE]),
+  membershipController.changeMemberPriceController
 );
 
 export default router;

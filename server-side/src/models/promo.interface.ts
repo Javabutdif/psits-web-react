@@ -2,13 +2,6 @@ import { Types } from "mongoose";
 export interface ISelectMerchandise {
   _id: Types.ObjectId;
   name: string;
-  items: IItemsAvail[];
-}
-
-export interface IItemsAvail {
-  _id: Types.ObjectId;
-  id_number: string;
-  promo_used: Date;
 }
 
 export interface IPromo {
@@ -18,11 +11,13 @@ export interface IPromo {
   one_person_limit: boolean;
   selected_audience: String[];
   selected_specific_students: String[];
+  selected_categories: string[];
   discount: number;
   quantity: number;
   start_date: Date;
   end_date: Date;
   status: string;
+  promo_scope: string;
   selected_merchandise: ISelectMerchandise[];
   created_by: string;
 }

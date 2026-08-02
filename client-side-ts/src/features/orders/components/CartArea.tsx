@@ -1,28 +1,31 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { Card } from '@/components/ui/card';
-import { Spinner } from '@/components/ui/spinner';
-import { Minus, Plus, Trash } from 'lucide-react';
-import { useCart } from '@/lib/cart';
-import { useTransactions } from '@/lib/transactions';
-import { toast } from 'sonner';
-import { makeOrder } from '../api/orders';
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { Minus, Plus, Trash, Tag, X } from "lucide-react";
+import { useCart } from "@/lib/cart";
+import { useTransactions } from "@/lib/transactions";
+import { useAuth } from "@/features/auth";
+import { useMembershipGate } from "@/features/student";
+import { toast } from "sonner";
+import { makeOrder } from "../api/orders";
+import { getEligiblePromos, type PromoOption } from "../api/promo";
 
 const TOAST_STYLE = {
-  background: '#1DA1F2',
-  color: '#ffffff',
-  borderRadius: '0.75rem',
-  padding: '0.75rem 1rem',
+  background: "#1DA1F2",
+  color: "#ffffff",
+  borderRadius: "0.75rem",
+  padding: "0.75rem 1rem",
 } as const;
 
 const ERROR_TOAST_STYLE = {
-  background: '#ef4444',
-  color: '#ffffff',
-  borderRadius: '0.75rem',
-  padding: '0.75rem 1rem',
+  background: "#ef4444",
+  color: "#ffffff",
+  borderRadius: "0.75rem",
+  padding: "0.75rem 1rem",
 } as const;
 
 export const Cart: React.FC = () => {
@@ -31,45 +34,54 @@ export const Cart: React.FC = () => {
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(() => {
     // Check for pre-selected item from Buy Now
     try {
-      const preSelected = sessionStorage.getItem('buyNowItemId');
+      const preSelected = sessionStorage.getItem("buyNowItemId");
       if (preSelected) {
-        sessionStorage.removeItem('buyNowItemId');
+        sessionStorage.removeItem("buyNowItemId");
         return new Set([preSelected]);
       }
-    } catch (e) { }
+    } catch (e) {}
     return new Set();
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-
+  const [eligiblePromos, setEligiblePromos] = useState<PromoOption[]>([]);
+  const [selectedPromo, setSelectedPromo] = useState<PromoOption | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
   const navigate = useNavigate();
 
-  const getIdNumber = (): string | null => {
+  const { user } = useAuth();
+  const { ensureActiveMembership } = useMembershipGate();
+
+  const fetchEligiblePromos = useCallback(async () => {
+    const selectedItems = items.filter((i) => selectedIds.has(i.uid));
+    if (selectedItems.length === 0) {
+      setEligiblePromos([]);
+      setSelectedPromo(null);
+      return;
+    }
+    setPromoLoading(true);
     try {
-      const possibleKeys = ['id_number', 'IdNumber', 'idNumber', 'student_id', 'StudentId', 'user'];
-      for (const k of possibleKeys) {
-        const v = sessionStorage.getItem(k);
-        if (!v) continue;
-        if (k === 'user' || k === 'User' || v.trim().startsWith('{')) {
-          try {
-            const parsed = JSON.parse(v);
-            if (parsed && (parsed.id_number || parsed.idNumber || parsed.student_id)) {
-              return parsed.id_number || parsed.idNumber || parsed.student_id;
-            }
-          } catch (e) { }
-        }
-        return v;
-      }
-    } catch (e) { }
-    return null;
-  };
+      const promos = await getEligiblePromos(selectedItems.map((i) => String(i.id)));
+      setEligiblePromos(promos || []);
+    } catch {
+      setEligiblePromos([]);
+    } finally {
+      setPromoLoading(false);
+    }
+  }, [items, selectedIds]);
+
+  useEffect(() => {
+    fetchEligiblePromos();
+  }, [fetchEligiblePromos]);
 
   const handlePlaceOrder = async () => {
     const selected = items.filter((i) => selectedIds.has(i.uid));
     if (selected.length === 0) return;
 
-    const idNumber = getIdNumber();
+    if (!(await ensureActiveMembership())) return;
+
+    const idNumber = user?.idNumber || null;
     if (!idNumber) {
-      toast.error('Please log in to place an order', {
+      toast.error("Please log in to place an order", {
         style: ERROR_TOAST_STYLE,
       });
       return;
@@ -95,6 +107,7 @@ export const Cart: React.FC = () => {
         id_number: idNumber,
         items: orderItems,
         total,
+        promo_id: selectedPromo?._id,
       });
 
       if (success) {
@@ -108,17 +121,20 @@ export const Cart: React.FC = () => {
         selected.forEach((s) => removeItem(s.uid));
         setSelectedIds(new Set());
 
-        toast.success(`Order placed for ${selected.length} item(s) successfully!`, {
-          style: TOAST_STYLE,
-        });
+        toast.success(
+          `Order placed for ${selected.length} item(s) successfully!`,
+          {
+            style: TOAST_STYLE,
+          }
+        );
       } else {
-        toast.error('Failed to place order. Please try again.', {
+        toast.error("Failed to place order. Please try again.", {
           style: ERROR_TOAST_STYLE,
         });
       }
     } catch (error) {
-      console.error('Order error:', error);
-      toast.error('Failed to place order. Please try again.', {
+      console.error("Order error:", error);
+      toast.error("Failed to place order. Please try again.", {
         style: ERROR_TOAST_STYLE,
       });
     } finally {
@@ -128,13 +144,19 @@ export const Cart: React.FC = () => {
 
   if (!items.length) {
     return (
-      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
+      <div className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4">
         <div className="text-center">
-          <div className="text-6xl mb-4">🛒</div>
-          <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
-          <p className="text-sm text-gray-500 mb-6">Looks like you haven't added any items yet. Start shopping to add products to your cart.</p>
+          <div className="mb-4 text-6xl">🛒</div>
+          <h2 className="mb-2 text-2xl font-semibold">Your cart is empty</h2>
+          <p className="mb-6 text-sm text-gray-500">
+            Looks like you haven't added any items yet. Start shopping to add
+            products to your cart.
+          </p>
           <div className="flex items-center justify-center">
-            <Button onClick={() => navigate('/shop')} className="bg-[#1C9DDE] cursor-pointer text-white">
+            <Button
+              onClick={() => navigate("/shop")}
+              className="cursor-pointer bg-[#1C9DDE] text-white"
+            >
               Shop products
             </Button>
           </div>
@@ -144,14 +166,14 @@ export const Cart: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 mt-10 ">
-        <h1 className="text-3xl font-semibold mb-6">My Cart</h1>
+    <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-12 sm:px-6 sm:py-20 lg:grid-cols-3">
+      <div className="mt-10 lg:col-span-2">
+        <h1 className="mb-6 text-3xl font-semibold">My Cart</h1>
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <label className="flex items-center gap-3 text-sm text-gray-600">
             <Checkbox
-              className='cursor-pointer border-gray-300'
+              className="cursor-pointer border-gray-300"
               checked={selectedIds.size === items.length}
               onCheckedChange={(v) => {
                 if (v) setSelectedIds(new Set(items.map((i) => i.uid)));
@@ -161,7 +183,7 @@ export const Cart: React.FC = () => {
             <span>Select All</span>
           </label>
           <button
-            className="text-sm text-red-500 cursor-pointer"
+            className="cursor-pointer text-sm text-red-500"
             onClick={() => {
               selectedIds.forEach((id) => removeItem(id));
               setSelectedIds(new Set());
@@ -177,12 +199,12 @@ export const Cart: React.FC = () => {
               {/* Mobile-only delete button in top-right corner */}
               <button
                 onClick={() => removeItem(it.uid)}
-                className="sm:hidden absolute top-2 right-2 p-2 rounded-md text-red-500 "
+                className="absolute top-2 right-2 rounded-md p-2 text-red-500 sm:hidden"
                 aria-label="Remove item"
               >
                 <Trash />
               </button>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4">
+              <div className="flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center">
                     <Checkbox
@@ -199,31 +221,56 @@ export const Cart: React.FC = () => {
                     />
                   </div>
 
-                  <Avatar className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl overflow-hidden">
-                    <AvatarImage src={it.image} alt={it.name} className="w-full h-full object-cover" />
+                  <Avatar className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl sm:h-16 sm:w-16 md:h-20 md:w-20">
+                    <AvatarImage
+                      src={it.image}
+                      alt={it.name}
+                      className="h-full w-full object-cover"
+                    />
                   </Avatar>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate">{it.name}</h3>
-                  <p className="text-sm text-gray-500 truncate">{it.color}, {it.size}, {it.course}</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate font-semibold text-gray-900">
+                    {it.name}
+                  </h3>
+                  <p className="truncate text-sm text-gray-500">
+                    {it.color}, {it.size}, {it.course}
+                  </p>
                 </div>
 
-                <div className="w-full sm:w-auto flex flex-row items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 order-1 sm:order-2">
-                    <Button className='cursor-pointer' variant="ghost" size="icon" onClick={() => updateQty(it.uid, it.qty - 1)}>
+                <div className="flex w-full flex-row items-center justify-between gap-3 sm:w-auto">
+                  <div className="order-1 flex items-center gap-3 sm:order-2">
+                    <Button
+                      className="cursor-pointer"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => updateQty(it.uid, it.qty - 1)}
+                    >
                       <Minus />
                     </Button>
-                    <div className="text-base font-bold w-10 text-center">{it.qty}</div>
-                    <Button className='cursor-pointer' variant="ghost" size="icon" onClick={() => updateQty(it.uid, it.qty + 1)}>
+                    <div className="w-10 text-center text-base font-bold">
+                      {it.qty}
+                    </div>
+                    <Button
+                      className="cursor-pointer"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => updateQty(it.uid, it.qty + 1)}
+                    >
                       <Plus />
                     </Button>
-                    <button onClick={() => removeItem(it.uid)} className="hidden sm:inline-flex text-red-500 cursor-pointer lg:pr-5">
+                    <button
+                      onClick={() => removeItem(it.uid)}
+                      className="hidden cursor-pointer text-red-500 sm:inline-flex lg:pr-5"
+                    >
                       <Trash />
                     </button>
                   </div>
 
-                  <div className="order-2 sm:order-1 text-[#1C9DDE] font-bold">₱{(it.price * it.qty).toFixed(2)}</div>
+                  <div className="order-2 font-bold text-[#1C9DDE] sm:order-1">
+                    ₱{(it.price * it.qty).toFixed(2)}
+                  </div>
                 </div>
               </div>
             </Card>
@@ -231,42 +278,113 @@ export const Cart: React.FC = () => {
         </div>
       </div>
 
-      <aside className="w-full lg:w-auto mt-10">
+      <aside className="mt-10 w-full lg:w-auto">
         <Card className="rounded-2xl">
           <div className="px-4 py-6">
-            <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+            <h3 className="mb-4 text-lg font-semibold">Order Summary</h3>
             {selectedIds.size === 0 ? (
-              <div className="text-sm text-gray-500 mb-4">No items selected.</div>
+              <div className="mb-4 text-sm text-gray-500">
+                No items selected.
+              </div>
             ) : (
               <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
+                <div className="mb-2 flex items-center justify-between">
                   <span className="text-sm text-gray-600">Items</span>
-                  <span className="text-sm text-gray-800">{selectedIds.size}</span>
+                  <span className="text-sm text-gray-800">
+                    {selectedIds.size}
+                  </span>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-sm text-gray-600">Total</span>
-              <span className="text-[#1C9DDE] font-bold">₱{
-                items
-                  .filter((i) => selectedIds.has(i.uid))
-                  .reduce((a, b) => a + b.price * b.qty, 0)
-                  .toFixed(2)
-              }</span>
-            </div>
+            {selectedIds.size > 0 && (() => {
+              const originalTotal = items
+                .filter((i) => selectedIds.has(i.uid))
+                .reduce((a, b) => a + b.price * b.qty, 0);
+              const discountedTotal = selectedPromo
+                ? originalTotal * (1 - selectedPromo.discount / 100)
+                : originalTotal;
+              return (
+              <div className="mb-4">
+                {selectedPromo && (
+                  <div className="mb-2 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-3.5 w-3.5 text-blue-600" />
+                      <span className="text-xs font-medium text-blue-700">
+                        {selectedPromo.promo_name} ({selectedPromo.discount}% off)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPromo(null)}
+                      className="text-blue-400 hover:text-blue-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Total</span>
+                  <span className="font-bold text-[#1C9DDE]">
+                    ₱{originalTotal.toFixed(2)}
+                  </span>
+                </div>
+
+                {selectedPromo && (
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm text-green-600">Discount ({selectedPromo.discount}%)</span>
+                    <span className="font-medium text-green-600">
+                      -₱{(originalTotal * selectedPromo.discount / 100).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="mt-2 border-t pt-2 flex items-center justify-between">
+                  <span className="text-sm font-semibold">Amount Due</span>
+                  <span className="text-lg font-bold text-[#1C9DDE]">
+                    ₱{discountedTotal.toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="mt-3">
+                  {promoLoading ? (
+                    <p className="text-xs text-gray-400">Checking promos...</p>
+                  ) : eligiblePromos.length === 0 ? (
+                    <p className="text-xs text-gray-400">No promo codes available for selected items</p>
+                  ) : (
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const found = eligiblePromos.find((p) => p._id === e.target.value);
+                        setSelectedPromo(found || null);
+                      }}
+                      className="w-full rounded-lg border border-[#e8e8e8] px-3 py-2 text-xs text-gray-600 focus:border-[#1c9dde] focus:outline-none"
+                    >
+                      <option value="">Select a promo code</option>
+                      {eligiblePromos.map((promo) => (
+                        <option key={promo._id} value={promo._id}>
+                          {promo.promo_name} ({promo.discount}% off)
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+              );
+            })()}
             <Button
               disabled={selectedIds.size === 0 || isSubmitting}
-              className="w-full bg-[#1DA1F2] hover:bg-[#1c9dde]/ cursor-pointer text-white"
+              className="hover:bg-[#1c9dde]/ w-full cursor-pointer bg-[#1DA1F2] text-white"
               onClick={handlePlaceOrder}
             >
               {isSubmitting ? (
                 <>
-                  <Spinner className="size-4 mr-2" />
+                  <Spinner className="mr-2 size-4" />
                   Placing Order...
                 </>
               ) : (
-                'Order'
+                "Order"
               )}
             </Button>
           </div>

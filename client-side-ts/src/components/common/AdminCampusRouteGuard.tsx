@@ -11,7 +11,7 @@ interface CampusRouteGuardProps {
  * of the specified campuses.
  *
  * @example
- * <Route Component={<AdminCampusRouteGuard allowedCampuses={["UC-Main"]} />}>
+ * <Route Component={<AdminCampusRouteGuard allowedCampuses={["UC_MAIN"]} />}>
  *   <Route path="some-uc-main-page" Component={SomeUcMainPage} />
  * </Route>
  */
@@ -21,7 +21,7 @@ export function AdminCampusRouteGuard({
 }: CampusRouteGuardProps) {
   return (
     <ProtectedRoute
-      allowedRoles={["Admin"]}
+      allowedRoles={["admin"]}
       allowedCampuses={allowedCampuses}
       campusUnauthorizedToastMessage={campusUnauthorizedToastMessage}
     />

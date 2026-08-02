@@ -1,12 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth";
 import type { Campus } from "@/features/auth/types/auth.types";
+import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
 
 interface ProtectedRouteProps {
   /** Which roles are allowed through. Omit to allow any authenticated user. */
-  allowedRoles?: Array<"Admin" | "Student">;
+  allowedRoles?: Array<"admin" | "student">;
   /** Which campuses are allowed. Only applies to Admins. Omit to allow all. */
   allowedCampuses?: Campus[];
   /** Optional toast shown when blocked by campus restrictions. */
@@ -31,7 +32,30 @@ export default function ProtectedRoute({
   redirectTo = "/auth/login",
 }: ProtectedRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const hasShownCampusUnauthorizedToast = useRef(false);
+  const [hasShownCampusUnauthorizedToast, setHasShownCampusUnauthorizedToast] =
+    useState(false);
+
+  useEffect(() => {
+    const canAccessCampus = allowedCampuses
+      ? allowedCampuses.some(
+          (campus) => normalizeCampus(campus) === normalizeCampus(user?.campus)
+        )
+      : true;
+
+    if (allowedCampuses && user && !canAccessCampus) {
+      if (campusUnauthorizedToastMessage && !hasShownCampusUnauthorizedToast) {
+        showToast("error", campusUnauthorizedToastMessage);
+        const t = setTimeout(() => setHasShownCampusUnauthorizedToast(true), 0);
+        return () => clearTimeout(t);
+      }
+    }
+    return;
+  }, [
+    allowedCampuses,
+    user,
+    campusUnauthorizedToastMessage,
+    hasShownCampusUnauthorizedToast,
+  ]);
 
   if (isLoading) {
     return (
@@ -50,15 +74,16 @@ export default function ProtectedRoute({
     return <Navigate to="/" replace />;
   }
 
-  if (allowedCampuses && user && !allowedCampuses.includes(user.campus)) {
-    if (campusUnauthorizedToastMessage && !hasShownCampusUnauthorizedToast.current) {
-      showToast("error", campusUnauthorizedToastMessage);
-      hasShownCampusUnauthorizedToast.current = true;
-    }
+  if (allowedCampuses && user) {
+    const canAccessCampus = allowedCampuses.some(
+      (campus) => normalizeCampus(campus) === normalizeCampus(user.campus)
+    );
 
-    // User's campus is not allowed, send to a safe dashboard based on role
-    const fallback = user.role === "Admin" ? "/admin/events" : "/";
-    return <Navigate to={fallback} replace />;
+    if (!canAccessCampus) {
+      // User's campus is not allowed, send to a safe dashboard based on role
+      const fallback = user.role === "admin" ? "/admin/events" : "/";
+      return <Navigate to={fallback} replace />;
+    }
   }
 
   return <Outlet />;

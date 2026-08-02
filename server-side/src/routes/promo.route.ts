@@ -1,34 +1,66 @@
 import { Router } from "express";
-import {
-  admin_authenticate,
-  role_authenticate,
-  both_authenticate,
-} from "../middlewares/custom_authenticate_token";
-import {
-  createPromoCode,
-  getAllPromoCode,
-  deletePromo,
-  verifyPromo,
-  getPromoLog,
-  updatePromoCode,
-} from "../controllers/promo.controller";
+import { promoController } from "../controllers/promo.v2.controller";
+import { requireAccessTokenV2, requireAccessTokenWithDBCheck, roleAuthenticateV2, adminAccessAuthenticateV2 } from "../middlewares/authV2.middleware";
+import { psits_roles } from "../enums/role.enums";
 const router = Router();
 
+// Create promo — admin + finance/admin access
 router.post(
   "/create",
-  admin_authenticate,
-  role_authenticate(["finance", "admin"]),
-  createPromoCode
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  promoController.create
 );
-router.get("/fetch", both_authenticate, getAllPromoCode);
+
+// Fetch all promos — admin or student
+router.get(
+  "/fetch",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin", "student"]),
+  promoController.fetchAll
+);
+
+// Delete promo — admin + finance/admin access
 router.delete(
   "/delete/:id",
-  admin_authenticate,
-  role_authenticate(["admin", "finance"]),
-  deletePromo
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  promoController.softDelete
 );
-router.get("/verify/:promo_code/:merchId", both_authenticate, verifyPromo);
-router.get("/log", admin_authenticate, getPromoLog);
-router.post("/update", admin_authenticate, updatePromoCode);
+
+// Verify promo (student-facing) — admin or student
+router.get(
+  "/verify/:promo_id/:merchId",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin", "student"]),
+  promoController.verifyPromo
+);
+
+// Get promo logs — admin only
+router.get(
+  "/log",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  promoController.getLogs
+);
+
+// Update promo — admin + finance/admin access
+router.post(
+  "/update",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  promoController.update
+);
+
+// Get eligible promos for cart items — admin or student
+router.get(
+  "/eligible",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin", "student"]),
+  promoController.getEligiblePromos
+);
 
 export default router;

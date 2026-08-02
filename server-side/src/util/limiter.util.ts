@@ -1,16 +1,63 @@
 import { rateLimit } from "express-rate-limit";
+import { incrementRateLimitBlocked } from "../services/devtools.service";
 
 // Development mode: More lenient limits for testing
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 const loginLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: isDevelopment ? 1000 : 500, // 1000 attempts in dev, 500 in production
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: isDevelopment ? 100 : 20, // 100 attempts in dev, 20 in production
   skipSuccessfulRequests: true,
-  message:
-    "Too many login attempts from this IP, please try again after 5 minutes.",
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    incrementRateLimitBlocked();
+    res.status(429).json({
+      message:
+        "Too many login attempts from this IP, please try again after 15 minutes.",
+    });
+  },
+});
+
+export const signupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDevelopment ? 100 : 5,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    incrementRateLimitBlocked();
+    res.status(429).json({
+      message:
+        "Too many signup attempts from this IP, please try again after 15 minutes.",
+    });
+  },
+});
+
+/**
+ * Limits application submissions to 1 per student per position per 15-minute
+ * window. Only successful submissions count (skipFailedRequests), so a failed
+ * attempt (e.g. upload error) doesn't block a retry. Keyed by student ID +
+ * position ID so the limit is per-applicant-per-position, not global.
+ */
+export const applicationSubmitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1,
+  skipFailedRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const studentId = req.userV2?.sub ?? "unknown";
+    const positionId = (req.params as any)?.id ?? "unknown";
+    return `app-submit:${studentId}:${positionId}`;
+  },
+  handler: (req, res) => {
+    incrementRateLimitBlocked();
+    res.status(429).json({
+      message:
+        "You have already submitted an application for this position. Please try again later.",
+    });
+  },
 });
 
 export default loginLimiter;

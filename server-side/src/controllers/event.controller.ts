@@ -177,24 +177,42 @@ export const getAllEventsAndAttendeesController = async (
   req: Request,
   res: Response
 ) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
-    const eventId = new Types.ObjectId(id);
-    const merchData = await Merch.findById({ _id: eventId });
+    let eventDoc = await Event.findById(id).lean();
 
-    const attendees = await Event.find({ eventId }).lean();
-    const hydratedEvents = await hydrateEventsAttendance(attendees);
-
-    if (attendees) {
-      res
-        .status(200)
-        .json({ data: hydratedEvents, merch_data: merchData ? merchData : {} });
-    } else {
-      res.status(500).json({ message: "No attendees" });
+    // Final fallback: maybe the client passed event.eventId (custom field). Try finding by eventId field.
+    if (!eventDoc) {
+      try {
+        if (Types.ObjectId.isValid(id)) {
+          eventDoc = await Event.findOne({ eventId: new Types.ObjectId(id) }).lean();
+        }
+      } catch (e) {
+      }
     }
+
+    if (!eventDoc) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // merchData references the merch by eventDoc.eventId (if present)
+    let merchData = null;
+    if (eventDoc.eventId) {
+      try {
+        merchData = await Merch.findById(eventDoc.eventId);
+      } catch (e) {
+        merchData = null;
+      }
+    }
+
+    // hydrate attendance for a single event
+    const hydratedEvents = await hydrateEventsAttendance([eventDoc]);
+
+    return res.status(200).json({ data: hydratedEvents, merch_data: merchData ? merchData : {} });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Error fetching event attendees" });
   }
 };
 
@@ -207,8 +225,8 @@ export const updateAttendancePerSessionController = async (
 
   try {
     const result = await markAttendance({
-      eventId: event_id,
-      attendeeIdNumber: id_number,
+      eventId: event_id as string,
+      attendeeIdNumber: id_number as string,
       attendeeName,
       campus,
       course: course || "Unknown",
@@ -241,7 +259,7 @@ export const checkLimitPerCampusController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId } = req.params;
+  const eventId = req.params.eventId as string;
 
   const event_id = new Types.ObjectId(eventId);
   try {
@@ -261,7 +279,7 @@ export const updateLimitSettingsController = async (
   res: Response
 ) => {
   const { banilad, pt, lm, cs } = req.body;
-  const event_id = new Types.ObjectId(req.params.eventId);
+  const event_id = new Types.ObjectId(req.params.eventId as string);
 
   try {
     const response = await Event.findOneAndUpdate(
@@ -269,10 +287,10 @@ export const updateLimitSettingsController = async (
       {
         $set: {
           limit: [
-            { campus: "UC-Banilad", limit: banilad },
-            { campus: "UC-PT", limit: pt },
-            { campus: "UC-LM", limit: lm },
-            { campus: "UC-CS", limit: cs },
+            { campus: "UC_BANILAD", limit: banilad },
+            { campus: "UC_PT", limit: pt },
+            { campus: "UC_LM", limit: lm },
+            { campus: "UC_CS", limit: cs },
           ],
         },
       },
@@ -298,7 +316,7 @@ export const getEligibleAttendeesRaffleController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId } = req.params;
+  const eventId = req.params.eventId as string;
 
   try {
     const event_id = new Types.ObjectId(eventId);
@@ -308,7 +326,6 @@ export const getEligibleAttendeesRaffleController = async (
       return res.status(404).json({ message: "Event not found" });
     }
 
-    // Filter eligible attendees
     const eligibleAttendees = event.attendees.filter(
       (attendee) => !attendee.raffleIsWinner && !attendee.raffleIsRemoved
     );
@@ -330,7 +347,8 @@ export const setAttendeeAsRaffleWinnerController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId, attendeeId } = req.params;
+  const eventId = req.params.eventId as string;
+  const attendeeId = req.params.attendeeId as string;
   const { attendeeName } = req.body;
 
   try {
@@ -378,7 +396,8 @@ export const removeAttendeeInRaffleController = async (
   req: Request,
   res: Response
 ) => {
-  const { eventId, attendeeId } = req.params;
+  const eventId = req.params.eventId as string;
+  const attendeeId = req.params.attendeeId as string;
   const { attendeeName } = req.body;
 
   try {
@@ -508,7 +527,7 @@ export const getEventStatisticsController = async (
   res: Response
 ) => {
   try {
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
     const event_id = new Types.ObjectId(eventId);
     const event = await Event.findOne({ eventId: event_id });
     if (!event) {
@@ -555,13 +574,13 @@ export const getEventStatisticsController = async (
     };
 
     const yearLevelsByCampus = [
-      "UC-Main",
-      "UC-Banilad",
-      "UC-LM",
-      "UC-PT",
-      "UC-CS",
+      "UC_MAIN",
+      "UC_BANILAD",
+      "UC_LM",
+      "UC_PT",
+      "UC_CS",
     ].map((campus) => {
-      const campusWord = campus.split("-")[1];
+      const campusWord = campus.split("_")[1];
       return {
         campus: campusWord,
         yearLevels: [1, 2, 3, 4].reduce<YearLevels>(
@@ -583,13 +602,13 @@ export const getEventStatisticsController = async (
     });
 
     const campuses = [
-      "UC-Main",
-      "UC-Banilad",
-      "UC-LM",
-      "UC-PT",
-      "UC-CS",
+      "UC_MAIN",
+      "UC_BANILAD",
+      "UC_LM",
+      "UC_PT",
+      "UC_CS",
     ].reduce<Record<string, number>>((acc, campus) => {
-      const campusWord = campus.split("-")[1];
+      const campusWord = campus.split("_")[1];
       acc[campusWord] = attendees.filter(
         (attendee) => attendee.campus === campus && attendee.shirtPrice !== 0
       ).length;
@@ -597,13 +616,13 @@ export const getEventStatisticsController = async (
     }, {});
 
     const campusesAttended = [
-      "UC-Main",
-      "UC-Banilad",
-      "UC-LM",
-      "UC-PT",
-      "UC-CS",
+      "UC_MAIN",
+      "UC_BANILAD",
+      "UC_LM",
+      "UC_PT",
+      "UC_CS",
     ].reduce<Record<string, number>>((acc, campus) => {
-      const campusWord = campus.split("-")[1];
+      const campusWord = campus.split("_")[1];
       acc[campusWord] = attendees.filter(
         (attendee) => attendee.campus === campus && attendee.shirtPrice !== 0
       ).length;
