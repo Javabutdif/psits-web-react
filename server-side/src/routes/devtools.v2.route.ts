@@ -133,20 +133,6 @@ router.get(
   devtoolsController.getOrderDetails
 );
 
-// Admin Lookup
-router.get(
-  "/admins/search",
-  ...authChain,
-  devtoolsController.searchAdmins
-);
-
-// Student Lookup
-router.get(
-  "/students/search",
-  ...authChain,
-  devtoolsController.searchStudents
-);
-
 // Certificate Templates
 router.get(
   "/certificates",
@@ -187,6 +173,56 @@ router.get(
   "/rate-limit-violations",
   ...authChain,
   devtoolsController.getRateLimitViolations
+);
+
+// Email Queue Deep-Dive
+router.get(
+  "/email-queue/stats",
+  ...authChain,
+  devtoolsController.getEmailQueueStats
+);
+router.get(
+  "/email-queue/failed",
+  ...authChain,
+  devtoolsController.getFailedEmailDetails
+);
+router.patch(
+  "/email-queue/bulk-status",
+  ...authChain,
+  devtoolsController.bulkUpdateEmailStatus
+);
+
+// Server Error Log
+router.get(
+  "/errors",
+  ...authChain,
+  devtoolsController.getErrors
+);
+router.delete(
+  "/errors",
+  ...authChain,
+  devtoolsController.clearErrors
+);
+
+// Brute Force Detector
+router.get(
+  "/brute-force-logs",
+  ...authChain,
+  devtoolsController.getBruteForceLogs
+);
+
+// API Endpoint Inventory
+router.get(
+  "/endpoint-inventory",
+  ...authChain,
+  devtoolsController.getEndpointInventory
+);
+
+// Refund Queue
+router.get(
+  "/refunds",
+  ...authChain,
+  devtoolsController.getRefundQueue
 );
 
 export default router;

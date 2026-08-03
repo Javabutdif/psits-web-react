@@ -1,6 +1,6 @@
 import axios from "axios";
 import backendConnection from "@/api/backendApi";
-import type { EmailQueueEntry, HealthStats, SessionInfo, CronExecutionLog, EnvStatusItem, RateLimitStats, CollectionStat, LogQueryParams, LogsResponse, OrderDetail, OrderSearchParams, OrdersResponse, AdminSearchParams, AdminsResponse, StudentSearchParams, StudentsResponse } from "../types/devtools.types";
+import type { EmailQueueEntry, HealthStats, SessionInfo, CronExecutionLog, EnvStatusItem, RateLimitStats, CollectionStat, LogQueryParams, LogsResponse, OrderDetail, OrderSearchParams, OrdersResponse, ServerError, BruteForceLog, EndpointInfo, RefundEntry } from "../types/devtools.types";
 
 const getAuthToken = (): string | null => sessionStorage.getItem("Token");
 
@@ -151,22 +151,6 @@ export const getOrderDetails = async (id: string) => {
   return data.data;
 };
 
-export const searchAdmins = async (params?: AdminSearchParams) => {
-  const { data } = await api.get<AdminsResponse>("/api/v2/dev/admins/search", {
-    params,
-    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
-  });
-  return data;
-};
-
-export const searchStudents = async (params?: StudentSearchParams) => {
-  const { data } = await api.get<StudentsResponse>("/api/v2/dev/students/search", {
-    params,
-    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
-  });
-  return data;
-};
-
 export const getCertificateTemplates = async () => {
   const { data } = await api.get<{ data: import("../types/devtools.types").CertificateTemplate[] }>("/api/v2/dev/certificates", {
     headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
@@ -207,6 +191,66 @@ export const getSystemSettings = async () => {
 
 export const getRateLimitViolations = async (limit = 50) => {
   const { data } = await api.get<{ data: { ip: string; path: string; timestamp: string }[] }>("/api/v2/dev/rate-limit-violations", {
+    params: { limit },
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const getEmailQueueStats = async () => {
+  const { data } = await api.get<{ data: { total: number; pending: number; sent: number; failed: number; pendingHighRetry: number } }>("/api/v2/dev/email-queue/stats", {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const getFailedEmailDetails = async (limit = 100) => {
+  const { data } = await api.get<{ data: { _id: string; email: string; type: string; subtype?: string; referenceCode?: string; retryCount: number; timestamp: string; daysPending?: number; canResend: boolean }[] }>("/api/v2/dev/email-queue/failed", {
+    params: { limit },
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const bulkUpdateEmailStatus = async (ids: string[], status: string) => {
+  const { data } = await api.patch<{ message: string; updated: number }>("/api/v2/dev/email-queue/bulk-status", { ids, status }, {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data;
+};
+
+export const getErrors = async (limit = 50) => {
+  const { data } = await api.get<{ data: ServerError[] }>("/api/v2/dev/errors", {
+    params: { limit },
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const clearErrors = async () => {
+  const { data } = await api.delete<{ message: string; cleared: number }>("/api/v2/dev/errors", {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data;
+};
+
+export const getBruteForceLogs = async (threshold = 5, limit = 50) => {
+  const { data } = await api.get<{ data: BruteForceLog[] }>("/api/v2/dev/brute-force-logs", {
+    params: { threshold, limit },
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const getEndpointInventory = async () => {
+  const { data } = await api.get<{ data: EndpointInfo[] }>("/api/v2/dev/endpoint-inventory", {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const getRefundQueue = async (limit = 50) => {
+  const { data } = await api.get<{ data: RefundEntry[] }>("/api/v2/dev/refunds", {
     params: { limit },
     headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
   });

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Code, Mail, Activity, Users, Zap, Clock, Shield, Database, KeyRound, Inbox, FileCheck, ScrollText, ShoppingBag, Search, Users as UsersIcon, FileText, Download, TrendingUp, AlertTriangle, Settings as SettingsIcon } from "lucide-react";
+import { Code, Mail, Activity, Users, Zap, Clock, Shield, Database, KeyRound, Inbox, FileCheck, ScrollText, ShoppingBag, FileText, Download, TrendingUp, AlertTriangle, Settings as SettingsIcon, AlertCircle, List, Receipt } from "lucide-react";
 import { EmailQueuePanel } from "../components/EmailQueuePanel";
 import { HealthStatsPanel } from "../components/HealthStatsPanel";
 import { SessionManagerPanel } from "../components/SessionManagerPanel";
@@ -16,13 +16,15 @@ import { PendingRequestsPanel } from "../components/PendingRequestsPanel";
 import { PermissionMatrixPanel } from "../components/PermissionMatrixPanel";
 import { ActivityLogPanel } from "../components/ActivityLogPanel";
 import { OrderManagerPanel } from "../components/OrderManagerPanel";
-import { AdminLookupPanel } from "../components/AdminLookupPanel";
-import { StudentLookupPanel } from "../components/StudentLookupPanel";
 import { CertificatePanel } from "../components/CertificatePanel";
 import { DataExportPanel } from "../components/DataExportPanel";
 import { RevenuePanel } from "../components/RevenuePanel";
 import { StockAlertPanel } from "../components/StockAlertPanel";
 import { SettingsPanel } from "../components/SettingsPanel";
+import { ServerErrorPanel } from "../components/ServerErrorPanel";
+import { BruteForcePanel } from "../components/BruteForcePanel";
+import { EndpointInventoryPanel } from "../components/EndpointInventoryPanel";
+import { RefundQueuePanel } from "../components/RefundQueuePanel";
 
 const sections = [
   { key: "diagnostics", label: "Diagnostics" },
@@ -43,21 +45,23 @@ const sectionPanels: Record<string, PanelTab[]> = {
     { key: "revenue", label: "Revenue Dashboard", icon: TrendingUp },
     { key: "stock-alerts", label: "Stock Alerts", icon: AlertTriangle },
     { key: "settings", label: "Settings", icon: SettingsIcon },
+    { key: "errors", label: "Server Errors", icon: AlertCircle },
   ],
   operations: [
     { key: "sessions", label: "Sessions", icon: Users },
     { key: "actions", label: "Quick Actions", icon: Zap },
     { key: "tester", label: "API Tester", icon: Code },
     { key: "orders", label: "Order Manager", icon: ShoppingBag },
-    { key: "admin-lookup", label: "Admin Lookup", icon: Search },
-    { key: "student-lookup", label: "Student Lookup", icon: UsersIcon },
     { key: "data-export", label: "Data Export", icon: Download },
+    { key: "endpoint-inventory", label: "API Endpoints", icon: List },
+    { key: "refunds", label: "Refund Queue", icon: Receipt },
   ],
   security: [
     { key: "officers", label: "Officer Access", icon: KeyRound },
     { key: "suspended", label: "Suspended Officers", icon: Shield },
     { key: "pending", label: "Pending Requests", icon: Inbox },
     { key: "matrix", label: "Permission Matrix", icon: FileCheck },
+    { key: "brute-force", label: "Brute Force", icon: AlertTriangle },
   ],
 };
 
@@ -216,6 +220,12 @@ const PanelRenderer = ({ activeTab }: PanelRendererProps) => {
       return <StockAlertPanel />;
     case "settings":
       return <SettingsPanel />;
+    case "errors":
+      return <ServerErrorPanel />;
+    case "endpoint-inventory":
+      return <EndpointInventoryPanel />;
+    case "refunds":
+      return <RefundQueuePanel />;
     case "sessions":
       return <SessionManagerPanel />;
     case "actions":
@@ -224,10 +234,6 @@ const PanelRenderer = ({ activeTab }: PanelRendererProps) => {
       return <ApiTesterPanel />;
     case "orders":
       return <OrderManagerPanel />;
-    case "admin-lookup":
-      return <AdminLookupPanel />;
-    case "student-lookup":
-      return <StudentLookupPanel />;
     case "data-export":
       return <DataExportPanel />;
     case "officers":
@@ -238,6 +244,8 @@ const PanelRenderer = ({ activeTab }: PanelRendererProps) => {
       return <PendingRequestsPanel />;
     case "matrix":
       return <PermissionMatrixPanel />;
+    case "brute-force":
+      return <BruteForcePanel />;
     default:
       return null;
   }

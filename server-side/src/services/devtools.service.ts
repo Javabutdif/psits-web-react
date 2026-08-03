@@ -569,106 +569,6 @@ export const getOrderDetails = async (id: string): Promise<OrderDetail | null> =
   return order as OrderDetail | null;
 };
 
-export interface AdminInfo {
-  _id: string;
-  id_number: string;
-  name: string;
-  campus: string;
-  position?: string;
-  access: string;
-  status: string;
-  currentRefreshToken?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface AdminSearchParams {
-  query?: string;
-  limit?: number;
-  skip?: number;
-}
-
-export const searchAdmins = async ({
-  query,
-  limit = 50,
-  skip = 0,
-}: AdminSearchParams = {}) => {
-  const { Admin } = await import("../models/admin.model");
-
-  const searchQuery = query
-    ? {
-        $or: [
-          { name: { $regex: query, $options: "i" } },
-          { id_number: { $regex: query, $options: "i" } },
-          { email: { $regex: query, $options: "i" } },
-        ],
-      }
-    : {};
-
-  const [entries, total] = await Promise.all([
-    Admin.find(searchQuery)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    Admin.countDocuments(searchQuery),
-  ]);
-
-  return { entries, total };
-};
-
-export interface StudentInfo {
-  _id: string;
-  id_number: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  course: string;
-  year: number;
-  campus: string;
-  membershipStatus?: string;
-  status: string;
-  currentRefreshToken?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface StudentSearchParams {
-  query?: string;
-  limit?: number;
-  skip?: number;
-}
-
-export const searchStudents = async ({
-  query,
-  limit = 50,
-  skip = 0,
-}: StudentSearchParams = {}) => {
-  const { Student } = await import("../models/student.model");
-
-  const searchQuery = query
-    ? {
-        $or: [
-          { first_name: { $regex: query, $options: "i" } },
-          { last_name: { $regex: query, $options: "i" } },
-          { id_number: { $regex: query, $options: "i" } },
-          { email: { $regex: query, $options: "i" } },
-        ],
-      }
-    : {};
-
-  const [entries, total] = await Promise.all([
-    Student.find(searchQuery)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    Student.countDocuments(searchQuery),
-  ]);
-
-  return { entries, total };
-};
-
 export interface CertificateTemplate {
   _id: string;
   name: string;
@@ -827,4 +727,219 @@ export const exportCollection = async ({
     });
     return filtered;
   });
+};
+
+export interface ServerError {
+  message: string;
+  stack?: string;
+  path: string;
+  method: string;
+  ip: string;
+  timestamp: string;
+}
+
+const errorLog: ServerError[] = [];
+const MAX_ERROR_LOG = 200;
+
+export const logServerError = (err: any, req: any) => {
+  errorLog.push({
+    message: err.message || "Internal Server Error",
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    ip: req.ip || "unknown",
+    timestamp: new Date().toISOString(),
+  });
+  if (errorLog.length > MAX_ERROR_LOG) {
+    errorLog.shift();
+  }
+};
+
+export const getErrors = (limit = 50): ServerError[] => {
+  return errorLog.slice(-limit).reverse();
+};
+
+export const clearErrors = (): number => {
+  const count = errorLog.length;
+  errorLog.length = 0;
+  return count;
+};
+
+export interface BruteForceLog {
+  ip: string;
+  count: number;
+  lastAttempt: string;
+  attempts: Array<{ timestamp: string }>;
+}
+
+const failedAuthAttempts: Map<string, { count: number; lastAttempt: Date; attempts: Date[] }> = new Map();
+
+export const incrementFailedAuthAttempt = (ip: string) => {
+  const existing = failedAuthAttempts.get(ip) || { count: 0, lastAttempt: new Date(), attempts: [] };
+  existing.count++;
+  existing.lastAttempt = new Date();
+  existing.attempts.push(new Date());
+  if (existing.attempts.length > 100) {
+    existing.attempts = existing.attempts.slice(-100);
+  }
+  failedAuthAttempts.set(ip, existing);
+};
+
+export const getBruteForceLogs = (threshold = 5, limit = 50): BruteForceLog[] => {
+  const result: BruteForceLog[] = [];
+  for (const [ip, data] of failedAuthAttempts.entries()) {
+    if (data.count >= threshold) {
+      result.push({
+        ip,
+        count: data.count,
+        lastAttempt: data.lastAttempt.toISOString(),
+        attempts: data.attempts.map((t) => ({ timestamp: t.toISOString() })),
+      });
+    }
+  }
+  return result.sort((a, b) => b.count - a.count).slice(0, limit);
+};
+
+export interface EndpointInfo {
+  method: string;
+  path: string;
+  auth: string;
+  description?: string;
+}
+
+export const getEndpointInventory = (): EndpointInfo[] => {
+  const endpoints: EndpointInfo[] = [];
+  const addRoute = (method: string, path: string, auth: string) => {
+    endpoints.push({ method: method.toUpperCase(), path, auth });
+  };
+  addRoute("get", "/api/v2/dev/email-queue", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/email-resend/:id", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/email-export", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/health", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/sessions", "admin+MAIN");
+  addRoute("delete", "/api/v2/dev/sessions/expired", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/sessions/invalidate", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/sessions/invalidate-bulk", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/actions/cron", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/expired-orders", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/actions/cancel-expired", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/test-endpoint", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/cron-status", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/env-status", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/rate-limit-stats", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/db-performance", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/db/rebuild-indexes", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/logs", "admin+MAIN");
+  addRoute("delete", "/api/v2/dev/logs/old", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/orders", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/orders/:id", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/admins/search", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/students/search", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/certificates", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/export", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/membership-revenue", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/stock-alerts", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/settings", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/rate-limit-violations", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/email-queue/stats", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/email-queue/failed", "admin+MAIN");
+  addRoute("patch", "/api/v2/dev/email-queue/bulk-status", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/errors", "admin+MAIN");
+  addRoute("delete", "/api/v2/dev/errors", "admin+MAIN");
+  return endpoints;
+};
+
+export interface RefundEntry {
+  _id: string;
+  refund_id: string;
+  order_reference: string;
+  product_name: string;
+  refund_price: number;
+  refund_admin: string;
+  refund_date: string;
+}
+
+export const getRefundQueue = async (limit = 50): Promise<RefundEntry[]> => {
+  const { Refund } = await import("../models/refund.model");
+  const refunds = await Refund.find()
+    .sort({ refund_date: -1 })
+    .limit(limit)
+    .lean();
+  return refunds.map((r: any) => ({
+    _id: r._id.toString(),
+    refund_id: r.refund_id,
+    order_reference: r.order_reference,
+    product_name: r.product_name,
+    refund_price: r.refund_price,
+    refund_admin: r.refund_admin,
+    refund_date: r.refund_date?.toISOString() || new Date().toISOString(),
+  }));
+};
+
+export interface EmailQueueStats {
+  total: number;
+  pending: number;
+  sent: number;
+  failed: number;
+  pendingHighRetry: number;
+}
+
+export const getEmailQueueStats = async (): Promise<EmailQueueStats> => {
+  const { EmailQueue } = await import("../models/email.model");
+  const [total, pending, sent, failed] = await Promise.all([
+    EmailQueue.countDocuments(),
+    EmailQueue.countDocuments({ status: "pending" }),
+    EmailQueue.countDocuments({ status: "sent" }),
+    EmailQueue.countDocuments({ status: "failed" }),
+  ]);
+  const pendingHighRetry = await EmailQueue.countDocuments({
+    status: "pending",
+    retryCount: { $gte: 3 },
+  });
+  return { total, pending, sent, failed, pendingHighRetry };
+};
+
+export interface FailedEmailDetail {
+  _id: string;
+  email: string;
+  type: string;
+  subtype?: string;
+  referenceCode?: string;
+  retryCount: number;
+  timestamp: string;
+  daysPending?: number;
+  canResend: boolean;
+}
+
+export const getFailedEmailDetails = async (limit = 100): Promise<FailedEmailDetail[]> => {
+  const { EmailQueue } = await import("../models/email.model");
+  const entries = await EmailQueue.find({ status: "failed" })
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .lean();
+  const now = new Date();
+  return entries.map((e: any) => {
+    const timestamp = new Date(e.timestamp);
+    const daysPending = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      _id: e._id.toString(),
+      email: e.email,
+      type: e.type,
+      subtype: e.subtype,
+      referenceCode: e.referenceCode,
+      retryCount: e.retryCount,
+      timestamp: e.timestamp.toISOString(),
+      daysPending,
+      canResend: e.retryCount < 3,
+    };
+  });
+};
+
+export const bulkUpdateEmailStatus = async (ids: string[], status: string): Promise<number> => {
+  const { EmailQueue } = await import("../models/email.model");
+  const result = await EmailQueue.updateMany(
+    { _id: { $in: ids } },
+    { $set: { status } }
+  );
+  return result.modifiedCount || 0;
 };

@@ -16,14 +16,22 @@ import {
   deleteOldLogs,
   searchOrders,
   getOrderDetails,
-  searchAdmins,
-  searchStudents,
   getCertificateTemplates,
   exportCollection,
   getMembershipRevenue,
   getStockAlerts,
   getSystemSettings,
-  getRateLimitViolations,
+  getEmailQueueStats,
+  getFailedEmailDetails,
+  bulkUpdateEmailStatus,
+  getRateLimitViolations as getRateLimitViolationsService,
+  logServerError,
+  getErrors,
+  clearErrors,
+  incrementFailedAuthAttempt,
+  getBruteForceLogs,
+  getEndpointInventory,
+  getRefundQueue,
 } from "../services/devtools.service";
 import { emailService } from "../services/email.service";
 import { resendPendingEmails } from "../services/email.resend.service";
@@ -423,32 +431,6 @@ class DevToolsController {
     res.status(200).json({ data: order });
   });
 
-  searchAdmins = catchAsync(async (req: Request, res: Response) => {
-    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
-      return res.status(403).json({ message: "Campus not authorized" });
-    }
-    const { query, limit, skip } = req.query;
-    const { entries, total } = await searchAdmins({
-      query: query as string,
-      limit: limit ? parseInt(limit as string) : 50,
-      skip: skip ? parseInt(skip as string) : 0,
-    });
-    res.status(200).json({ data: entries, total });
-  });
-
-  searchStudents = catchAsync(async (req: Request, res: Response) => {
-    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
-      return res.status(403).json({ message: "Campus not authorized" });
-    }
-    const { query, limit, skip } = req.query;
-    const { entries, total } = await searchStudents({
-      query: query as string,
-      limit: limit ? parseInt(limit as string) : 50,
-      skip: skip ? parseInt(skip as string) : 0,
-    });
-    res.status(200).json({ data: entries, total });
-  });
-
   getCertificateTemplates = catchAsync(async (req: Request, res: Response) => {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
@@ -517,8 +499,83 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const { limit } = req.query;
-    const violations = getRateLimitViolations(limit ? parseInt(String(limit)) : 50);
+    const violations = getRateLimitViolationsService(limit ? parseInt(String(limit)) : 50);
     res.status(200).json({ data: violations });
+  });
+
+  getEmailQueueStats = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const stats = await getEmailQueueStats();
+    res.status(200).json({ data: stats });
+  });
+
+  getFailedEmailDetails = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { limit } = req.query;
+    const details = await getFailedEmailDetails(limit ? parseInt(String(limit)) : 100);
+    res.status(200).json({ data: details });
+  });
+
+  bulkUpdateEmailStatus = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { ids, status } = req.body;
+    if (!Array.isArray(ids) || !status) {
+      return res.status(400).json({ message: "ids (array) and status are required" });
+    }
+    const updated = await bulkUpdateEmailStatus(ids, status);
+    res.status(200).json({ message: `Updated ${updated} email(s)`, updated });
+  });
+
+  getErrors = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { limit } = req.query;
+    const errors = getErrors(limit ? parseInt(String(limit)) : 50);
+    res.status(200).json({ data: errors });
+  });
+
+  clearErrors = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const count = clearErrors();
+    res.status(200).json({ message: `Cleared ${count} error(s)`, cleared: count });
+  });
+
+  getBruteForceLogs = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { threshold, limit } = req.query;
+    const logs = getBruteForceLogs(
+      threshold ? parseInt(String(threshold)) : 5,
+      limit ? parseInt(String(limit)) : 50
+    );
+    res.status(200).json({ data: logs });
+  });
+
+  getEndpointInventory = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const endpoints = getEndpointInventory();
+    res.status(200).json({ data: endpoints });
+  });
+
+  getRefundQueue = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { limit } = req.query;
+    const refunds = await getRefundQueue(limit ? parseInt(String(limit)) : 50);
+    res.status(200).json({ data: refunds });
   });
 
   testEndpoint = catchAsync(async (req: Request, res: Response) => {
