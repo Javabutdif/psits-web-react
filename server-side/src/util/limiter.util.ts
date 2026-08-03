@@ -1,5 +1,5 @@
 import { rateLimit } from "express-rate-limit";
-import { incrementRateLimitBlocked } from "../services/devtools.service";
+import { incrementRateLimitBlocked, logRateLimitViolation, incrementFailedAuthAttempt } from "../services/devtools.service";
 
 // Development mode: More lenient limits for testing
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -12,6 +12,8 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
   handler: (req, res) => {
     incrementRateLimitBlocked();
+    logRateLimitViolation(req.ip || "unknown", req.path);
+    incrementFailedAuthAttempt(req.ip || "unknown");
     res.status(429).json({
       message:
         "Too many login attempts from this IP, please try again after 15 minutes.",
@@ -27,6 +29,7 @@ export const signupLimiter = rateLimit({
   legacyHeaders: false,
   handler: (req, res) => {
     incrementRateLimitBlocked();
+    logRateLimitViolation(req.ip || "unknown", req.path);
     res.status(429).json({
       message:
         "Too many signup attempts from this IP, please try again after 15 minutes.",
@@ -53,6 +56,7 @@ export const applicationSubmitLimiter = rateLimit({
   },
   handler: (req, res) => {
     incrementRateLimitBlocked();
+    logRateLimitViolation(req.ip || "unknown", req.path);
     res.status(429).json({
       message:
         "You have already submitted an application for this position. Please try again later.",

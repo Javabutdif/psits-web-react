@@ -48,6 +48,7 @@ import { TermsOfCondition } from "./pages/TermsOfCondition";
 import { UnderConstruction } from "./pages/UnderConstruction";
 import { LogsView } from "./features/admin/logs";
 import { DevToolsPage } from "./features/admin/devtools/components/DevToolsPage";
+import { DocumentationPage } from "./features/admin/documentation";
 import SignUp from "./pages/auth/SignUp";
 import ApplicationPage from "./pages/student/ApplicationPage";
 import Recruitment from "./features/admin/recruitment-management/components/RecuitmentViews";
@@ -195,6 +196,7 @@ const router = createBrowserRouter([
                 children: [
                   { path: "logs", Component: LogsView },
                   { path: "devtools", Component: DevToolsPage },
+                  { path: "documentation", Component: DocumentationPage },
                 ],
               },
               // TODO: Remove this sample

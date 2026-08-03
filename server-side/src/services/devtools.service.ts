@@ -269,6 +269,9 @@ const rateLimitBlockedCounters: { count: number; day: string } = {
   day: "",
 };
 
+const rateLimitViolations: Array<{ ip: string; path: string; timestamp: Date }> = [];
+const MAX_VIOLATION_LOGS = 1000;
+
 export const getRateLimitStats = () => {
   const today = new Date().toISOString().split("T")[0];
   if (rateLimitBlockedCounters.day !== today) {
@@ -290,6 +293,25 @@ export const incrementRateLimitBlocked = () => {
     rateLimitBlockedCounters.day = today;
   }
   rateLimitBlockedCounters.count++;
+};
+
+export interface RateLimitViolation {
+  ip: string;
+  path: string;
+  timestamp: string;
+}
+
+export const getRateLimitViolations = (limit = 50): RateLimitViolation[] => {
+  return rateLimitViolations
+    .slice(-limit)
+    .map((v) => ({ ...v, timestamp: v.timestamp.toISOString() }));
+};
+
+export const logRateLimitViolation = (ip: string, path: string) => {
+  rateLimitViolations.push({ ip, path, timestamp: new Date() });
+  if (rateLimitViolations.length > MAX_VIOLATION_LOGS) {
+    rateLimitViolations.shift();
+  }
 };
 
 interface CollectionStat {
@@ -410,4 +432,514 @@ export const rebuildIndexes = async (): Promise<{
     message: `Rebuilt indexes on ${rebuilt.length} collection(s)`,
     collections: rebuilt,
   };
+};
+
+export interface LogEntry {
+  _id: string;
+  timestamp: Date;
+  admin: string;
+  admin_id?: string;
+  action: string;
+  target?: string;
+  target_id?: string;
+  target_model?: string;
+}
+
+export interface LogQueryParams {
+  action?: string;
+  admin?: string;
+  target?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  limit?: number;
+  skip?: number;
+}
+
+export const getLogEntries = async ({
+  action,
+  admin,
+  target,
+  dateFrom,
+  dateTo,
+  limit = 100,
+  skip = 0,
+}: LogQueryParams = {}) => {
+  const { Log } = await import("../models/log.model");
+  const query: Record<string, unknown> = {};
+
+  if (action) query.action = { $regex: action, $options: "i" };
+  if (admin) query.admin = { $regex: admin, $options: "i" };
+  if (target) query.target = { $regex: target, $options: "i" };
+  if (dateFrom || dateTo) {
+    const timestampQuery: Record<string, Date> = {};
+    if (dateFrom) timestampQuery.$gte = dateFrom;
+    if (dateTo) timestampQuery.$lte = dateTo;
+    query.timestamp = timestampQuery;
+  }
+
+  const [entries, total] = await Promise.all([
+    Log.find(query)
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Log.countDocuments(query),
+  ]);
+
+  return { entries, total };
+};
+
+export const deleteOldLogs = async (days: number): Promise<number> => {
+  const { Log } = await import("../models/log.model");
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+
+  const result = await Log.deleteMany({
+    timestamp: { $lt: cutoffDate },
+  });
+
+  return result.deletedCount || 0;
+};
+
+export interface OrderDetail {
+  _id: string;
+  reference_code: string;
+  student_name: string;
+  id_number: string;
+  course: string;
+  year: number;
+  campus: string;
+  order_status: string;
+  transaction_date?: Date;
+  order_date: Date;
+  total: number;
+  items: Array<{
+    product_id: string;
+    product_name: string;
+    batch: string | number;
+    sizes: string[];
+    variation: string[];
+    quantity: number;
+    sub_total: number;
+  }>;
+  admin?: string;
+  rfid?: string;
+}
+
+export interface OrderSearchParams {
+  query?: string;
+  status?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export const searchOrders = async ({
+  query,
+  status,
+  limit = 50,
+  skip = 0,
+}: OrderSearchParams = {}) => {
+  const { Orders } = await import("../models/orders.model");
+  const { orderService } = await import("./order.service");
+
+  if (status) {
+    const result = await orderService.getAllOrdersDynamicStatus({
+      query: { search: query || "", page: 1, limit },
+      status,
+    });
+    return { entries: result.data, total: result.total };
+  }
+
+  const searchQuery = orderService.buildOrderSearchQuery(query || "");
+  const [entries, total] = await Promise.all([
+    Orders.find(searchQuery)
+      .sort({ order_date: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Orders.countDocuments(searchQuery),
+  ]);
+
+  return { entries, total };
+};
+
+export const getOrderDetails = async (id: string): Promise<OrderDetail | null> => {
+  const { Orders } = await import("../models/orders.model");
+  const order = await Orders.findById(id).lean();
+  return order as OrderDetail | null;
+};
+
+export interface CertificateTemplate {
+  _id: string;
+  name: string;
+  description?: string;
+  ejsRelativePath: string;
+  isActive: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const getCertificateTemplates = async (): Promise<CertificateTemplate[]> => {
+  const { CertificateTemplate: CertModel } = await import("../models/certificateTemplate.model");
+  const templates = await CertModel.find().sort({ createdAt: -1 }).lean();
+  return templates.map((t: any) => ({
+    _id: t._id.toString(),
+    name: t.name,
+    description: t.description,
+    ejsRelativePath: t.ejsRelativePath,
+    isActive: t.isActive,
+    createdBy: t.createdBy,
+    createdAt: t.createdAt?.toISOString(),
+    updatedAt: t.updatedAt?.toISOString(),
+  }));
+};
+
+export interface RevenueEntry {
+  month: string;
+  year: number;
+  total: number;
+  count: number;
+}
+
+export const getMembershipRevenue = async (): Promise<RevenueEntry[]> => {
+  const { MembershipHistory } = await import("../models/history.model");
+  const result = await MembershipHistory.aggregate([
+    {
+      $group: {
+        _id: {
+          year: { $year: "$date" },
+          month: { $month: "$date" },
+        },
+        total: { $sum: "$total" },
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $project: {
+        year: "$_id.year",
+        month: "$_id.month",
+        total: { $round: ["$total", 2] },
+        count: 1,
+        _id: 0,
+      },
+    },
+    { $sort: { year: -1, month: -1 } },
+  ]);
+  return result.map((r: any) => ({
+    month: r.month,
+    year: r.year,
+    total: r.total,
+    count: r.count,
+  }));
+};
+
+export interface StockAlert {
+  _id: string;
+  name: string;
+  stocks: number;
+  price: number;
+  is_active: boolean;
+  category: string;
+  warning: string;
+}
+
+export const getStockAlerts = async (threshold = 5): Promise<StockAlert[]> => {
+  const { Merch } = await import("../models/merch.model");
+  const items = await Merch.find({ stocks: { $lte: threshold } }).lean();
+  return items.map((item: any) => ({
+    _id: item._id.toString(),
+    name: item.name,
+    stocks: item.stocks,
+    price: item.price,
+    is_active: item.is_active,
+    category: item.category,
+    warning: item.stocks === 0 ? "Out of stock" : "Low stock",
+  }));
+};
+
+export interface SystemSettings {
+  membership_price: number;
+}
+
+export const getSystemSettings = async (): Promise<SystemSettings | null> => {
+  const { Settings } = await import("../models/settings.model");
+  const settings = await Settings.findOne().lean();
+  return settings as SystemSettings | null;
+};
+
+export interface ExportCollectionParams {
+  collection: string;
+  fields?: string[];
+  limit?: number;
+  skip?: number;
+}
+
+export const exportCollection = async ({
+  collection,
+  fields,
+  limit = 1000,
+  skip = 0,
+}: ExportCollectionParams) => {
+  const validCollections = [
+    "Admin",
+    "Student",
+    "Orders",
+    "EmailQueue",
+    "Merch",
+    "Event",
+    "MembershipHistory",
+    "CertificateTemplate",
+    "Log",
+    "Settings",
+  ];
+
+  if (!validCollections.includes(collection)) {
+    throw new Error(`Invalid collection: ${collection}`);
+  }
+
+  const { default: mongoose } = await import("mongoose");
+  const Model = mongoose.model(collection);
+  const docs = await Model.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  if (fields && fields.length > 0) {
+    return docs.map((doc: any) => {
+      const filtered: Record<string, any> = {};
+      fields.forEach((field) => {
+        if (doc[field] !== undefined) {
+          filtered[field] = doc[field];
+        }
+      });
+      return filtered;
+    });
+  }
+
+  return docs.map((doc: any) => {
+    const filtered: Record<string, any> = {};
+    Object.keys(doc).forEach((key) => {
+      if (key !== "__v" && key !== "_id") {
+        filtered[key] = doc[key];
+      }
+    });
+    return filtered;
+  });
+};
+
+export interface ServerError {
+  message: string;
+  stack?: string;
+  path: string;
+  method: string;
+  ip: string;
+  timestamp: string;
+}
+
+const errorLog: ServerError[] = [];
+const MAX_ERROR_LOG = 200;
+
+export const logServerError = (err: any, req: any) => {
+  errorLog.push({
+    message: err.message || "Internal Server Error",
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    ip: req.ip || "unknown",
+    timestamp: new Date().toISOString(),
+  });
+  if (errorLog.length > MAX_ERROR_LOG) {
+    errorLog.shift();
+  }
+};
+
+export const getErrors = (limit = 50): ServerError[] => {
+  return errorLog.slice(-limit).reverse();
+};
+
+export const clearErrors = (): number => {
+  const count = errorLog.length;
+  errorLog.length = 0;
+  return count;
+};
+
+export interface BruteForceLog {
+  ip: string;
+  count: number;
+  lastAttempt: string;
+  attempts: Array<{ timestamp: string }>;
+}
+
+const failedAuthAttempts: Map<string, { count: number; lastAttempt: Date; attempts: Date[] }> = new Map();
+
+export const incrementFailedAuthAttempt = (ip: string) => {
+  const existing = failedAuthAttempts.get(ip) || { count: 0, lastAttempt: new Date(), attempts: [] };
+  existing.count++;
+  existing.lastAttempt = new Date();
+  existing.attempts.push(new Date());
+  if (existing.attempts.length > 100) {
+    existing.attempts = existing.attempts.slice(-100);
+  }
+  failedAuthAttempts.set(ip, existing);
+};
+
+export const getBruteForceLogs = (threshold = 5, limit = 50): BruteForceLog[] => {
+  const result: BruteForceLog[] = [];
+  for (const [ip, data] of failedAuthAttempts.entries()) {
+    if (data.count >= threshold) {
+      result.push({
+        ip,
+        count: data.count,
+        lastAttempt: data.lastAttempt.toISOString(),
+        attempts: data.attempts.map((t) => ({ timestamp: t.toISOString() })),
+      });
+    }
+  }
+  return result.sort((a, b) => b.count - a.count).slice(0, limit);
+};
+
+export interface EndpointInfo {
+  method: string;
+  path: string;
+  auth: string;
+  description?: string;
+}
+
+export const getEndpointInventory = (): EndpointInfo[] => {
+  const endpoints: EndpointInfo[] = [];
+  const addRoute = (method: string, path: string, auth: string) => {
+    endpoints.push({ method: method.toUpperCase(), path, auth });
+  };
+  addRoute("get", "/api/v2/dev/email-queue", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/email-resend/:id", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/email-export", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/health", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/sessions", "admin+MAIN");
+  addRoute("delete", "/api/v2/dev/sessions/expired", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/sessions/invalidate", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/sessions/invalidate-bulk", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/actions/cron", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/expired-orders", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/actions/cancel-expired", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/test-endpoint", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/cron-status", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/env-status", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/rate-limit-stats", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/db-performance", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/db/rebuild-indexes", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/logs", "admin+MAIN");
+  addRoute("delete", "/api/v2/dev/logs/old", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/orders", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/orders/:id", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/admins/search", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/students/search", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/certificates", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/export", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/membership-revenue", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/stock-alerts", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/settings", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/rate-limit-violations", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/email-queue/stats", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/email-queue/failed", "admin+MAIN");
+  addRoute("patch", "/api/v2/dev/email-queue/bulk-status", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/errors", "admin+MAIN");
+  addRoute("delete", "/api/v2/dev/errors", "admin+MAIN");
+  return endpoints;
+};
+
+export interface RefundEntry {
+  _id: string;
+  refund_id: string;
+  order_reference: string;
+  product_name: string;
+  refund_price: number;
+  refund_admin: string;
+  refund_date: string;
+}
+
+export const getRefundQueue = async (limit = 50): Promise<RefundEntry[]> => {
+  const { Refund } = await import("../models/refund.model");
+  const refunds = await Refund.find()
+    .sort({ refund_date: -1 })
+    .limit(limit)
+    .lean();
+  return refunds.map((r: any) => ({
+    _id: r._id.toString(),
+    refund_id: r.refund_id,
+    order_reference: r.order_reference,
+    product_name: r.product_name,
+    refund_price: r.refund_price,
+    refund_admin: r.refund_admin,
+    refund_date: r.refund_date?.toISOString() || new Date().toISOString(),
+  }));
+};
+
+export interface EmailQueueStats {
+  total: number;
+  pending: number;
+  sent: number;
+  failed: number;
+  pendingHighRetry: number;
+}
+
+export const getEmailQueueStats = async (): Promise<EmailQueueStats> => {
+  const { EmailQueue } = await import("../models/email.model");
+  const [total, pending, sent, failed] = await Promise.all([
+    EmailQueue.countDocuments(),
+    EmailQueue.countDocuments({ status: "pending" }),
+    EmailQueue.countDocuments({ status: "sent" }),
+    EmailQueue.countDocuments({ status: "failed" }),
+  ]);
+  const pendingHighRetry = await EmailQueue.countDocuments({
+    status: "pending",
+    retryCount: { $gte: 3 },
+  });
+  return { total, pending, sent, failed, pendingHighRetry };
+};
+
+export interface FailedEmailDetail {
+  _id: string;
+  email: string;
+  type: string;
+  subtype?: string;
+  referenceCode?: string;
+  retryCount: number;
+  timestamp: string;
+  daysPending?: number;
+  canResend: boolean;
+}
+
+export const getFailedEmailDetails = async (limit = 100): Promise<FailedEmailDetail[]> => {
+  const { EmailQueue } = await import("../models/email.model");
+  const entries = await EmailQueue.find({ status: "failed" })
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .lean();
+  const now = new Date();
+  return entries.map((e: any) => {
+    const timestamp = new Date(e.timestamp);
+    const daysPending = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      _id: e._id.toString(),
+      email: e.email,
+      type: e.type,
+      subtype: e.subtype,
+      referenceCode: e.referenceCode,
+      retryCount: e.retryCount,
+      timestamp: e.timestamp.toISOString(),
+      daysPending,
+      canResend: e.retryCount < 3,
+    };
+  });
+};
+
+export const bulkUpdateEmailStatus = async (ids: string[], status: string): Promise<number> => {
+  const { EmailQueue } = await import("../models/email.model");
+  const result = await EmailQueue.updateMany(
+    { _id: { $in: ids } },
+    { $set: { status } }
+  );
+  return result.modifiedCount || 0;
 };

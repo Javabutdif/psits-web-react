@@ -7,6 +7,7 @@ export * from './event-management';
 export * from './merchandise';
 export * from './organization';
 export * from './students';
+export * from './documentation';
 
 // Admin API
 export * from "./api/admin";
