@@ -557,7 +557,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       asChild
                     >
                       <Link
-                        to={isUcMainAdmin ? "/admin/under-construction" : "#"}
+                        to={isUcMainAdmin ? "/admin/documentation" : "#"}
                         onClick={(e) => {
                           if (!isUcMainAdmin) {
                             e.preventDefault();
@@ -567,9 +567,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       >
                         <BookOpen className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Documentation</span>}
-                        {!collapsed && (
-                          <ChevronDown className="ml-auto h-4 w-4" />
-                        )}
                       </Link>
                     </Button>
                   </TooltipTrigger>

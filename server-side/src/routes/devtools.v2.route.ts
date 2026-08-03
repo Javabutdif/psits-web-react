@@ -109,4 +109,120 @@ router.post(
   devtoolsController.rebuildDbIndexes
 );
 
+// Activity logs
+router.get(
+  "/logs",
+  ...authChain,
+  devtoolsController.getLogs
+);
+router.delete(
+  "/logs/old",
+  ...authChain,
+  devtoolsController.deleteOldLogs
+);
+
+// Order Manager
+router.get(
+  "/orders",
+  ...authChain,
+  devtoolsController.getOrders
+);
+router.get(
+  "/orders/:id",
+  ...authChain,
+  devtoolsController.getOrderDetails
+);
+
+// Certificate Templates
+router.get(
+  "/certificates",
+  ...authChain,
+  devtoolsController.getCertificateTemplates
+);
+
+// Data Export
+router.get(
+  "/export",
+  ...authChain,
+  devtoolsController.exportCollection
+);
+
+// Membership Revenue
+router.get(
+  "/membership-revenue",
+  ...authChain,
+  devtoolsController.getMembershipRevenue
+);
+
+// Stock Alerts
+router.get(
+  "/stock-alerts",
+  ...authChain,
+  devtoolsController.getStockAlerts
+);
+
+// System Settings
+router.get(
+  "/settings",
+  ...authChain,
+  devtoolsController.getSystemSettings
+);
+
+// Rate Limit Violations
+router.get(
+  "/rate-limit-violations",
+  ...authChain,
+  devtoolsController.getRateLimitViolations
+);
+
+// Email Queue Deep-Dive
+router.get(
+  "/email-queue/stats",
+  ...authChain,
+  devtoolsController.getEmailQueueStats
+);
+router.get(
+  "/email-queue/failed",
+  ...authChain,
+  devtoolsController.getFailedEmailDetails
+);
+router.patch(
+  "/email-queue/bulk-status",
+  ...authChain,
+  devtoolsController.bulkUpdateEmailStatus
+);
+
+// Server Error Log
+router.get(
+  "/errors",
+  ...authChain,
+  devtoolsController.getErrors
+);
+router.delete(
+  "/errors",
+  ...authChain,
+  devtoolsController.clearErrors
+);
+
+// Brute Force Detector
+router.get(
+  "/brute-force-logs",
+  ...authChain,
+  devtoolsController.getBruteForceLogs
+);
+
+// API Endpoint Inventory
+router.get(
+  "/endpoint-inventory",
+  ...authChain,
+  devtoolsController.getEndpointInventory
+);
+
+// Refund Queue
+router.get(
+  "/refunds",
+  ...authChain,
+  devtoolsController.getRefundQueue
+);
+
 export default router;

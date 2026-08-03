@@ -62,3 +62,112 @@ export interface CollectionStat {
   indexes: number;
   warning?: string;
 }
+
+export interface LogEntry {
+  _id: string;
+  timestamp: string;
+  admin: string;
+  admin_id?: string;
+  action: string;
+  target?: string;
+  target_id?: string;
+  target_model?: string;
+}
+
+export interface LogQueryParams {
+  action?: string;
+  admin?: string;
+  target?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export interface LogsResponse {
+  data: LogEntry[];
+  total: number;
+}
+
+export interface OrderItem {
+  product_id: string;
+  product_name: string;
+  batch: string | number;
+  sizes: string[];
+  variation: string[];
+  quantity: number;
+  sub_total: number;
+}
+
+export interface OrderDetail {
+  _id: string;
+  reference_code: string;
+  student_name: string;
+  id_number: string;
+  course: string;
+  year: number;
+  campus: string;
+  order_status: string;
+  transaction_date?: string;
+  order_date: string;
+  total: number;
+  items: OrderItem[];
+  admin?: string;
+  rfid?: string;
+}
+
+export interface OrderSearchParams {
+  query?: string;
+  status?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export interface OrdersResponse {
+  data: OrderDetail[];
+  total: number;
+}
+
+export interface CertificateTemplate {
+  _id: string;
+  name: string;
+  description?: string;
+  ejsRelativePath: string;
+  isActive: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ServerError {
+  message: string;
+  stack?: string;
+  path: string;
+  method: string;
+  ip: string;
+  timestamp: string;
+}
+
+export interface BruteForceLog {
+  ip: string;
+  count: number;
+  lastAttempt: string;
+  attempts: Array<{ timestamp: string }>;
+}
+
+export interface EndpointInfo {
+  method: string;
+  path: string;
+  auth: string;
+  description?: string;
+}
+
+export interface RefundEntry {
+  _id: string;
+  refund_id: string;
+  order_reference: string;
+  product_name: string;
+  refund_price: number;
+  refund_admin: string;
+  refund_date: string;
+}
