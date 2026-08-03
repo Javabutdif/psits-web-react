@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Code, Mail, Activity, Users, Zap, Clock, Shield, Database, KeyRound, Inbox, FileCheck } from "lucide-react";
+import { Code, Mail, Activity, Users, Zap, Clock, Shield, Database, KeyRound, Inbox, FileCheck, ScrollText, ShoppingBag, Search, Users as UsersIcon, FileText, Download, TrendingUp, AlertTriangle, Settings as SettingsIcon } from "lucide-react";
 import { EmailQueuePanel } from "../components/EmailQueuePanel";
 import { HealthStatsPanel } from "../components/HealthStatsPanel";
 import { SessionManagerPanel } from "../components/SessionManagerPanel";
@@ -14,6 +14,15 @@ import { OfficerAccessPanel } from "../components/OfficerAccessPanel";
 import { SuspendedOfficersPanel } from "../components/SuspendedOfficersPanel";
 import { PendingRequestsPanel } from "../components/PendingRequestsPanel";
 import { PermissionMatrixPanel } from "../components/PermissionMatrixPanel";
+import { ActivityLogPanel } from "../components/ActivityLogPanel";
+import { OrderManagerPanel } from "../components/OrderManagerPanel";
+import { AdminLookupPanel } from "../components/AdminLookupPanel";
+import { StudentLookupPanel } from "../components/StudentLookupPanel";
+import { CertificatePanel } from "../components/CertificatePanel";
+import { DataExportPanel } from "../components/DataExportPanel";
+import { RevenuePanel } from "../components/RevenuePanel";
+import { StockAlertPanel } from "../components/StockAlertPanel";
+import { SettingsPanel } from "../components/SettingsPanel";
 
 const sections = [
   { key: "diagnostics", label: "Diagnostics" },
@@ -29,11 +38,20 @@ const sectionPanels: Record<string, PanelTab[]> = {
     { key: "env", label: "Env Inspector", icon: Shield },
     { key: "ratelimit", label: "Rate Limiter", icon: Shield },
     { key: "dbperf", label: "DB Performance", icon: Database },
+    { key: "activity", label: "Activity Log", icon: ScrollText },
+    { key: "certificates", label: "Certificate Templates", icon: FileText },
+    { key: "revenue", label: "Revenue Dashboard", icon: TrendingUp },
+    { key: "stock-alerts", label: "Stock Alerts", icon: AlertTriangle },
+    { key: "settings", label: "Settings", icon: SettingsIcon },
   ],
   operations: [
     { key: "sessions", label: "Sessions", icon: Users },
     { key: "actions", label: "Quick Actions", icon: Zap },
     { key: "tester", label: "API Tester", icon: Code },
+    { key: "orders", label: "Order Manager", icon: ShoppingBag },
+    { key: "admin-lookup", label: "Admin Lookup", icon: Search },
+    { key: "student-lookup", label: "Student Lookup", icon: UsersIcon },
+    { key: "data-export", label: "Data Export", icon: Download },
   ],
   security: [
     { key: "officers", label: "Officer Access", icon: KeyRound },
@@ -188,12 +206,30 @@ const PanelRenderer = ({ activeTab }: PanelRendererProps) => {
       return <RateLimitPanel />;
     case "dbperf":
       return <DbPerformancePanel />;
+    case "activity":
+      return <ActivityLogPanel />;
+    case "certificates":
+      return <CertificatePanel />;
+    case "revenue":
+      return <RevenuePanel />;
+    case "stock-alerts":
+      return <StockAlertPanel />;
+    case "settings":
+      return <SettingsPanel />;
     case "sessions":
       return <SessionManagerPanel />;
     case "actions":
       return <QuickActionsPanel />;
     case "tester":
       return <ApiTesterPanel />;
+    case "orders":
+      return <OrderManagerPanel />;
+    case "admin-lookup":
+      return <AdminLookupPanel />;
+    case "student-lookup":
+      return <StudentLookupPanel />;
+    case "data-export":
+      return <DataExportPanel />;
     case "officers":
       return <OfficerAccessPanel />;
     case "suspended":

@@ -12,6 +12,18 @@ import {
   getRateLimitStats as getRateLimitStatsService,
   getCollectionStats,
   rebuildIndexes,
+  getLogEntries,
+  deleteOldLogs,
+  searchOrders,
+  getOrderDetails,
+  searchAdmins,
+  searchStudents,
+  getCertificateTemplates,
+  exportCollection,
+  getMembershipRevenue,
+  getStockAlerts,
+  getSystemSettings,
+  getRateLimitViolations,
 } from "../services/devtools.service";
 import { emailService } from "../services/email.service";
 import { resendPendingEmails } from "../services/email.resend.service";
@@ -347,6 +359,166 @@ class DevToolsController {
       target_model: "Admin",
     });
     res.status(200).json({ message: result.message, data: result.collections });
+  });
+
+  getLogs = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { action, admin, target, dateFrom, dateTo, limit, skip } = req.query;
+    const { entries, total } = await getLogEntries({
+      action: action as string,
+      admin: admin as string,
+      target: target as string,
+      dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
+      dateTo: dateTo ? new Date(dateTo as string) : undefined,
+      limit: limit ? parseInt(limit as string) : 100,
+      skip: skip ? parseInt(skip as string) : 0,
+    });
+    res.status(200).json({ data: entries, total });
+  });
+
+  deleteOldLogs = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { days } = req.query;
+    if (!days) {
+      return res.status(400).json({ message: "days parameter required" });
+    }
+    const deletedCount = await deleteOldLogs(parseInt(days as string));
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: "DELETE_OLD_LOGS",
+      target: `Deleted ${deletedCount} log entries older than ${days} days`,
+      target_model: "Admin",
+    });
+    res.status(200).json({ message: `Deleted ${deletedCount} log entries`, deletedCount });
+  });
+
+  getOrders = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { query, status, limit, skip } = req.query;
+    const { entries, total } = await searchOrders({
+      query: query as string,
+      status: status as string,
+      limit: limit ? parseInt(limit as string) : 50,
+      skip: skip ? parseInt(skip as string) : 0,
+    });
+    res.status(200).json({ data: entries, total });
+  });
+
+  getOrderDetails = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { id } = req.params;
+    const order = await getOrderDetails(id as string);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    res.status(200).json({ data: order });
+  });
+
+  searchAdmins = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { query, limit, skip } = req.query;
+    const { entries, total } = await searchAdmins({
+      query: query as string,
+      limit: limit ? parseInt(limit as string) : 50,
+      skip: skip ? parseInt(skip as string) : 0,
+    });
+    res.status(200).json({ data: entries, total });
+  });
+
+  searchStudents = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { query, limit, skip } = req.query;
+    const { entries, total } = await searchStudents({
+      query: query as string,
+      limit: limit ? parseInt(limit as string) : 50,
+      skip: skip ? parseInt(skip as string) : 0,
+    });
+    res.status(200).json({ data: entries, total });
+  });
+
+  getCertificateTemplates = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const templates = await getCertificateTemplates();
+    res.status(200).json({ data: templates });
+  });
+
+  exportCollection = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { collection, fields, limit, skip } = req.query;
+    if (!collection || typeof collection !== "string") {
+      return res.status(400).json({ message: "collection parameter required" });
+    }
+
+    const docs = await exportCollection({
+      collection,
+      fields: fields ? String(fields).split(",") : undefined,
+      limit: limit ? parseInt(String(limit)) : 1000,
+      skip: skip ? parseInt(String(skip)) : 0,
+    });
+
+    const headers = docs.length > 0 ? Object.keys(docs[0]) : [];
+    const csvRows = [headers.join(","), ...docs.map((doc: any) =>
+      headers.map((h) => {
+        const val = doc[h];
+        const str = val === undefined || val === null ? "" : String(val);
+        return str.includes(",") || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+      }).join(",")
+    )];
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename=${collection.toLowerCase()}-export-${new Date().toISOString().split("T")[0]}.csv`);
+    res.status(200).send(csvRows.join("\n"));
+  });
+
+  getMembershipRevenue = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const revenue = await getMembershipRevenue();
+    res.status(200).json({ data: revenue });
+  });
+
+  getStockAlerts = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { threshold } = req.query;
+    const alerts = await getStockAlerts(threshold ? parseInt(String(threshold)) : 5);
+    res.status(200).json({ data: alerts });
+  });
+
+  getSystemSettings = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const settings = await getSystemSettings();
+    res.status(200).json({ data: settings });
+  });
+
+  getRateLimitViolations = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { limit } = req.query;
+    const violations = getRateLimitViolations(limit ? parseInt(String(limit)) : 50);
+    res.status(200).json({ data: violations });
   });
 
   testEndpoint = catchAsync(async (req: Request, res: Response) => {

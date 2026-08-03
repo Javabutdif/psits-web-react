@@ -269,6 +269,9 @@ const rateLimitBlockedCounters: { count: number; day: string } = {
   day: "",
 };
 
+const rateLimitViolations: Array<{ ip: string; path: string; timestamp: Date }> = [];
+const MAX_VIOLATION_LOGS = 1000;
+
 export const getRateLimitStats = () => {
   const today = new Date().toISOString().split("T")[0];
   if (rateLimitBlockedCounters.day !== today) {
@@ -290,6 +293,25 @@ export const incrementRateLimitBlocked = () => {
     rateLimitBlockedCounters.day = today;
   }
   rateLimitBlockedCounters.count++;
+};
+
+export interface RateLimitViolation {
+  ip: string;
+  path: string;
+  timestamp: string;
+}
+
+export const getRateLimitViolations = (limit = 50): RateLimitViolation[] => {
+  return rateLimitViolations
+    .slice(-limit)
+    .map((v) => ({ ...v, timestamp: v.timestamp.toISOString() }));
+};
+
+export const logRateLimitViolation = (ip: string, path: string) => {
+  rateLimitViolations.push({ ip, path, timestamp: new Date() });
+  if (rateLimitViolations.length > MAX_VIOLATION_LOGS) {
+    rateLimitViolations.shift();
+  }
 };
 
 interface CollectionStat {
@@ -410,4 +432,399 @@ export const rebuildIndexes = async (): Promise<{
     message: `Rebuilt indexes on ${rebuilt.length} collection(s)`,
     collections: rebuilt,
   };
+};
+
+export interface LogEntry {
+  _id: string;
+  timestamp: Date;
+  admin: string;
+  admin_id?: string;
+  action: string;
+  target?: string;
+  target_id?: string;
+  target_model?: string;
+}
+
+export interface LogQueryParams {
+  action?: string;
+  admin?: string;
+  target?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  limit?: number;
+  skip?: number;
+}
+
+export const getLogEntries = async ({
+  action,
+  admin,
+  target,
+  dateFrom,
+  dateTo,
+  limit = 100,
+  skip = 0,
+}: LogQueryParams = {}) => {
+  const { Log } = await import("../models/log.model");
+  const query: Record<string, unknown> = {};
+
+  if (action) query.action = { $regex: action, $options: "i" };
+  if (admin) query.admin = { $regex: admin, $options: "i" };
+  if (target) query.target = { $regex: target, $options: "i" };
+  if (dateFrom || dateTo) {
+    const timestampQuery: Record<string, Date> = {};
+    if (dateFrom) timestampQuery.$gte = dateFrom;
+    if (dateTo) timestampQuery.$lte = dateTo;
+    query.timestamp = timestampQuery;
+  }
+
+  const [entries, total] = await Promise.all([
+    Log.find(query)
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Log.countDocuments(query),
+  ]);
+
+  return { entries, total };
+};
+
+export const deleteOldLogs = async (days: number): Promise<number> => {
+  const { Log } = await import("../models/log.model");
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+
+  const result = await Log.deleteMany({
+    timestamp: { $lt: cutoffDate },
+  });
+
+  return result.deletedCount || 0;
+};
+
+export interface OrderDetail {
+  _id: string;
+  reference_code: string;
+  student_name: string;
+  id_number: string;
+  course: string;
+  year: number;
+  campus: string;
+  order_status: string;
+  transaction_date?: Date;
+  order_date: Date;
+  total: number;
+  items: Array<{
+    product_id: string;
+    product_name: string;
+    batch: string | number;
+    sizes: string[];
+    variation: string[];
+    quantity: number;
+    sub_total: number;
+  }>;
+  admin?: string;
+  rfid?: string;
+}
+
+export interface OrderSearchParams {
+  query?: string;
+  status?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export const searchOrders = async ({
+  query,
+  status,
+  limit = 50,
+  skip = 0,
+}: OrderSearchParams = {}) => {
+  const { Orders } = await import("../models/orders.model");
+  const { orderService } = await import("./order.service");
+
+  if (status) {
+    const result = await orderService.getAllOrdersDynamicStatus({
+      query: { search: query || "", page: 1, limit },
+      status,
+    });
+    return { entries: result.data, total: result.total };
+  }
+
+  const searchQuery = orderService.buildOrderSearchQuery(query || "");
+  const [entries, total] = await Promise.all([
+    Orders.find(searchQuery)
+      .sort({ order_date: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Orders.countDocuments(searchQuery),
+  ]);
+
+  return { entries, total };
+};
+
+export const getOrderDetails = async (id: string): Promise<OrderDetail | null> => {
+  const { Orders } = await import("../models/orders.model");
+  const order = await Orders.findById(id).lean();
+  return order as OrderDetail | null;
+};
+
+export interface AdminInfo {
+  _id: string;
+  id_number: string;
+  name: string;
+  campus: string;
+  position?: string;
+  access: string;
+  status: string;
+  currentRefreshToken?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AdminSearchParams {
+  query?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export const searchAdmins = async ({
+  query,
+  limit = 50,
+  skip = 0,
+}: AdminSearchParams = {}) => {
+  const { Admin } = await import("../models/admin.model");
+
+  const searchQuery = query
+    ? {
+        $or: [
+          { name: { $regex: query, $options: "i" } },
+          { id_number: { $regex: query, $options: "i" } },
+          { email: { $regex: query, $options: "i" } },
+        ],
+      }
+    : {};
+
+  const [entries, total] = await Promise.all([
+    Admin.find(searchQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Admin.countDocuments(searchQuery),
+  ]);
+
+  return { entries, total };
+};
+
+export interface StudentInfo {
+  _id: string;
+  id_number: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  course: string;
+  year: number;
+  campus: string;
+  membershipStatus?: string;
+  status: string;
+  currentRefreshToken?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface StudentSearchParams {
+  query?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export const searchStudents = async ({
+  query,
+  limit = 50,
+  skip = 0,
+}: StudentSearchParams = {}) => {
+  const { Student } = await import("../models/student.model");
+
+  const searchQuery = query
+    ? {
+        $or: [
+          { first_name: { $regex: query, $options: "i" } },
+          { last_name: { $regex: query, $options: "i" } },
+          { id_number: { $regex: query, $options: "i" } },
+          { email: { $regex: query, $options: "i" } },
+        ],
+      }
+    : {};
+
+  const [entries, total] = await Promise.all([
+    Student.find(searchQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Student.countDocuments(searchQuery),
+  ]);
+
+  return { entries, total };
+};
+
+export interface CertificateTemplate {
+  _id: string;
+  name: string;
+  description?: string;
+  ejsRelativePath: string;
+  isActive: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const getCertificateTemplates = async (): Promise<CertificateTemplate[]> => {
+  const { CertificateTemplate: CertModel } = await import("../models/certificateTemplate.model");
+  const templates = await CertModel.find().sort({ createdAt: -1 }).lean();
+  return templates.map((t: any) => ({
+    _id: t._id.toString(),
+    name: t.name,
+    description: t.description,
+    ejsRelativePath: t.ejsRelativePath,
+    isActive: t.isActive,
+    createdBy: t.createdBy,
+    createdAt: t.createdAt?.toISOString(),
+    updatedAt: t.updatedAt?.toISOString(),
+  }));
+};
+
+export interface RevenueEntry {
+  month: string;
+  year: number;
+  total: number;
+  count: number;
+}
+
+export const getMembershipRevenue = async (): Promise<RevenueEntry[]> => {
+  const { MembershipHistory } = await import("../models/history.model");
+  const result = await MembershipHistory.aggregate([
+    {
+      $group: {
+        _id: {
+          year: { $year: "$date" },
+          month: { $month: "$date" },
+        },
+        total: { $sum: "$total" },
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $project: {
+        year: "$_id.year",
+        month: "$_id.month",
+        total: { $round: ["$total", 2] },
+        count: 1,
+        _id: 0,
+      },
+    },
+    { $sort: { year: -1, month: -1 } },
+  ]);
+  return result.map((r: any) => ({
+    month: r.month,
+    year: r.year,
+    total: r.total,
+    count: r.count,
+  }));
+};
+
+export interface StockAlert {
+  _id: string;
+  name: string;
+  stocks: number;
+  price: number;
+  is_active: boolean;
+  category: string;
+  warning: string;
+}
+
+export const getStockAlerts = async (threshold = 5): Promise<StockAlert[]> => {
+  const { Merch } = await import("../models/merch.model");
+  const items = await Merch.find({ stocks: { $lte: threshold } }).lean();
+  return items.map((item: any) => ({
+    _id: item._id.toString(),
+    name: item.name,
+    stocks: item.stocks,
+    price: item.price,
+    is_active: item.is_active,
+    category: item.category,
+    warning: item.stocks === 0 ? "Out of stock" : "Low stock",
+  }));
+};
+
+export interface SystemSettings {
+  membership_price: number;
+}
+
+export const getSystemSettings = async (): Promise<SystemSettings | null> => {
+  const { Settings } = await import("../models/settings.model");
+  const settings = await Settings.findOne().lean();
+  return settings as SystemSettings | null;
+};
+
+export interface ExportCollectionParams {
+  collection: string;
+  fields?: string[];
+  limit?: number;
+  skip?: number;
+}
+
+export const exportCollection = async ({
+  collection,
+  fields,
+  limit = 1000,
+  skip = 0,
+}: ExportCollectionParams) => {
+  const validCollections = [
+    "Admin",
+    "Student",
+    "Orders",
+    "EmailQueue",
+    "Merch",
+    "Event",
+    "MembershipHistory",
+    "CertificateTemplate",
+    "Log",
+    "Settings",
+  ];
+
+  if (!validCollections.includes(collection)) {
+    throw new Error(`Invalid collection: ${collection}`);
+  }
+
+  const { default: mongoose } = await import("mongoose");
+  const Model = mongoose.model(collection);
+  const docs = await Model.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  if (fields && fields.length > 0) {
+    return docs.map((doc: any) => {
+      const filtered: Record<string, any> = {};
+      fields.forEach((field) => {
+        if (doc[field] !== undefined) {
+          filtered[field] = doc[field];
+        }
+      });
+      return filtered;
+    });
+  }
+
+  return docs.map((doc: any) => {
+    const filtered: Record<string, any> = {};
+    Object.keys(doc).forEach((key) => {
+      if (key !== "__v" && key !== "_id") {
+        filtered[key] = doc[key];
+      }
+    });
+    return filtered;
+  });
 };

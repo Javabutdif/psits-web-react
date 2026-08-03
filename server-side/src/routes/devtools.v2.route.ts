@@ -109,4 +109,84 @@ router.post(
   devtoolsController.rebuildDbIndexes
 );
 
+// Activity logs
+router.get(
+  "/logs",
+  ...authChain,
+  devtoolsController.getLogs
+);
+router.delete(
+  "/logs/old",
+  ...authChain,
+  devtoolsController.deleteOldLogs
+);
+
+// Order Manager
+router.get(
+  "/orders",
+  ...authChain,
+  devtoolsController.getOrders
+);
+router.get(
+  "/orders/:id",
+  ...authChain,
+  devtoolsController.getOrderDetails
+);
+
+// Admin Lookup
+router.get(
+  "/admins/search",
+  ...authChain,
+  devtoolsController.searchAdmins
+);
+
+// Student Lookup
+router.get(
+  "/students/search",
+  ...authChain,
+  devtoolsController.searchStudents
+);
+
+// Certificate Templates
+router.get(
+  "/certificates",
+  ...authChain,
+  devtoolsController.getCertificateTemplates
+);
+
+// Data Export
+router.get(
+  "/export",
+  ...authChain,
+  devtoolsController.exportCollection
+);
+
+// Membership Revenue
+router.get(
+  "/membership-revenue",
+  ...authChain,
+  devtoolsController.getMembershipRevenue
+);
+
+// Stock Alerts
+router.get(
+  "/stock-alerts",
+  ...authChain,
+  devtoolsController.getStockAlerts
+);
+
+// System Settings
+router.get(
+  "/settings",
+  ...authChain,
+  devtoolsController.getSystemSettings
+);
+
+// Rate Limit Violations
+router.get(
+  "/rate-limit-violations",
+  ...authChain,
+  devtoolsController.getRateLimitViolations
+);
+
 export default router;

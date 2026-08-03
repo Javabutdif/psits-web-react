@@ -62,3 +62,130 @@ export interface CollectionStat {
   indexes: number;
   warning?: string;
 }
+
+export interface LogEntry {
+  _id: string;
+  timestamp: string;
+  admin: string;
+  admin_id?: string;
+  action: string;
+  target?: string;
+  target_id?: string;
+  target_model?: string;
+}
+
+export interface LogQueryParams {
+  action?: string;
+  admin?: string;
+  target?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export interface LogsResponse {
+  data: LogEntry[];
+  total: number;
+}
+
+export interface OrderItem {
+  product_id: string;
+  product_name: string;
+  batch: string | number;
+  sizes: string[];
+  variation: string[];
+  quantity: number;
+  sub_total: number;
+}
+
+export interface OrderDetail {
+  _id: string;
+  reference_code: string;
+  student_name: string;
+  id_number: string;
+  course: string;
+  year: number;
+  campus: string;
+  order_status: string;
+  transaction_date?: string;
+  order_date: string;
+  total: number;
+  items: OrderItem[];
+  admin?: string;
+  rfid?: string;
+}
+
+export interface OrderSearchParams {
+  query?: string;
+  status?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export interface OrdersResponse {
+  data: OrderDetail[];
+  total: number;
+}
+
+export interface AdminInfo {
+  _id: string;
+  id_number: string;
+  name: string;
+  campus: string;
+  position?: string;
+  access: string;
+  status: string;
+  currentRefreshToken?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminSearchParams {
+  query?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export interface AdminsResponse {
+  data: AdminInfo[];
+  total: number;
+}
+
+export interface StudentInfo {
+  _id: string;
+  id_number: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  course: string;
+  year: number;
+  campus: string;
+  membershipStatus?: string;
+  status: string;
+  currentRefreshToken?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudentSearchParams {
+  query?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export interface StudentsResponse {
+  data: StudentInfo[];
+  total: number;
+}
+
+export interface CertificateTemplate {
+  _id: string;
+  name: string;
+  description?: string;
+  ejsRelativePath: string;
+  isActive: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
