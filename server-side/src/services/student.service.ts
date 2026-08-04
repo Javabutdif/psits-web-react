@@ -102,7 +102,7 @@ class StudentService {
       role: student_roles.GENERAL,
       campus: campus_type.MAIN,
       isRequest: false,
-      isYearUpdated: true,
+      createdAt: new Date(),
     });
     await newStudent.save();
 

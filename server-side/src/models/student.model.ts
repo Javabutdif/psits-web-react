@@ -39,9 +39,9 @@ const studentSchema = new Schema<IStudentDocument>({
     type: Number,
     required: true,
   },
-  isYearUpdated: {
-    type: Boolean,
-    required: false,
+  createdAt: {
+    type: Date,
+    required: true,
   },
   status: {
     type: String,

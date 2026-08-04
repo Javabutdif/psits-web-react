@@ -132,7 +132,7 @@ export const registerController = async (req: Request, res: Response) => {
       role: "all",
       campus: campus_type.MAIN,
       isRequest: false,
-      isYearUpdated: true,
+      createdAt: new Date(),
     });
     await newStudent.save();
 

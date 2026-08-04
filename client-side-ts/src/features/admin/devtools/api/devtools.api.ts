@@ -1,6 +1,6 @@
 import axios from "axios";
 import backendConnection from "@/api/backendApi";
-import type { EmailQueueEntry, HealthStats, SessionInfo, CronExecutionLog, EnvStatusItem, RateLimitStats, CollectionStat, LogQueryParams, LogsResponse, OrderDetail, OrderSearchParams, OrdersResponse, ServerError, BruteForceLog, EndpointInfo, RefundEntry } from "../types/devtools.types";
+import type { EmailQueueEntry, HealthStats, SessionInfo, CronExecutionLog, EnvStatusItem, RateLimitStats, CollectionStat, LogQueryParams, LogsResponse, OrderDetail, OrderSearchParams, OrdersResponse, ServerError, BruteForceLog, EndpointInfo, RefundEntry, BackfillResult, StudentYearUpdateResult } from "../types/devtools.types";
 
 const getAuthToken = (): string | null => sessionStorage.getItem("Token");
 
@@ -255,4 +255,18 @@ export const getRefundQueue = async (limit = 50) => {
     headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
   });
   return data.data;
+};
+
+export const backfillCreatedAt = async () => {
+  const { data } = await api.post<{ message: string; data: BackfillResult }>("/api/v2/dev/migration/backfill-created-at", {}, {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data;
+};
+
+export const updateStudentYears = async () => {
+  const { data } = await api.post<{ message: string; data: StudentYearUpdateResult }>("/api/v2/dev/actions/update-student-years", {}, {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data;
 };

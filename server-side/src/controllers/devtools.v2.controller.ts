@@ -32,6 +32,8 @@ import {
   getBruteForceLogs,
   getEndpointInventory,
   getRefundQueue,
+  backfillCreatedAt,
+  updateStudentYears,
 } from "../services/devtools.service";
 import { emailService } from "../services/email.service";
 import { resendPendingEmails } from "../services/email.resend.service";
@@ -623,6 +625,42 @@ class DevToolsController {
         error: error.response?.data || error.message,
       });
     }
+  });
+
+  backfillCreatedAt = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const result = await backfillCreatedAt();
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.BACKFILL_CREATED_AT,
+      target: `Backfilled createdAt for ${result.migrated} student(s)`,
+      target_model: "Student",
+    });
+    res.status(200).json({
+      message: "Migration completed",
+      data: result,
+    });
+  });
+
+  updateStudentYears = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const result = await updateStudentYears();
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.UPDATE_STUDENT_YEAR,
+      target: `Updated year for ${result.updated} student(s), skipped ${result.skippedYear4} (year 4 or deleted)`,
+      target_model: "Student",
+    });
+    res.status(200).json({
+      message: "Student years updated",
+      data: result,
+    });
   });
 }
 
