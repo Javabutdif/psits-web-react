@@ -207,7 +207,7 @@ export const PromoDashboard = () => {
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333]">
-      <header className="flex items-center justify-between px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <header className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-6 lg:px-8">
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Promo Code</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">
