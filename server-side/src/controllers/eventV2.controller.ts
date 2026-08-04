@@ -1214,8 +1214,8 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
             campus: adminCampus,
             role: "all",
             isRequest: false,
-            isYearUpdated: true,
             isFirstApplication: true,
+            createdAt: new Date(),
           },
         ],
         { session }

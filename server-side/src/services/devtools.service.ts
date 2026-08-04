@@ -11,6 +11,7 @@ import fs from "fs/promises";
 import os from "os";
 import mongoose, { Types } from "mongoose";
 import { emailService } from "./email.service";
+import { account_status } from "../enums/status.enums";
 
 export const getEmailQueueEntries = async ({
   status,
@@ -942,4 +943,50 @@ export const bulkUpdateEmailStatus = async (ids: string[], status: string): Prom
     { $set: { status } }
   );
   return result.modifiedCount || 0;
+};
+
+export const backfillCreatedAt = async (): Promise<{ migrated: number; skipped: number }> => {
+  const students = await Student.find({ createdAt: { $exists: false } }).lean();
+  if (students.length === 0) {
+    return { migrated: 0, skipped: 0 };
+  }
+
+  const operations = students.map((s) => ({
+    updateOne: {
+      filter: { _id: s._id },
+      update: { $set: { createdAt: new mongoose.Types.ObjectId(s._id).getTimestamp() } },
+    },
+  }));
+
+  await Student.bulkWrite(operations);
+  return { migrated: students.length, skipped: 0 };
+};
+
+export const updateStudentYears = async (): Promise<{
+  totalChecked: number;
+  eligible: number;
+  updated: number;
+  skippedYear4: number;
+}> => {
+  const cutoffDate = new Date();
+  cutoffDate.setMonth(cutoffDate.getMonth() - 3);
+
+  const students = await Student.find({
+    year: { $lt: 4 },
+    createdAt: { $lt: cutoffDate },
+    status: { $ne: account_status.DELETED },
+  }).lean();
+
+  const eligibleIds = students.map((s) => s._id);
+  const result = await Student.updateMany(
+    { _id: { $in: eligibleIds } },
+    { $inc: { year: 1 } }
+  );
+
+  return {
+    totalChecked: students.length,
+    eligible: eligibleIds.length,
+    updated: result.modifiedCount,
+    skippedYear4: students.length - result.modifiedCount,
+  };
 };
