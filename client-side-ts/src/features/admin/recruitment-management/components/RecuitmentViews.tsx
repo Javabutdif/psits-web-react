@@ -510,7 +510,7 @@ export const RecruitmentViews = () => {
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
-      <header className="flex flex-col justify-between gap-4 px-4 py-4 sm:flex sm:items-start sm:px-6 sm:py-6 lg:px-8">
+      <header className="flex flex-col justify-between gap-4 px-4 py-4 sm:flex-row sm:items-start sm:px-6 sm:py-6 lg:px-8">
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Applications</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">

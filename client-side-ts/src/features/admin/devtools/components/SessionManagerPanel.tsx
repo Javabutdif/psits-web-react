@@ -20,14 +20,20 @@ export const SessionManagerPanel = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [invalidating, setInvalidating] = useState(false);
   const [roleFilter, setRoleFilter] = useState("");
-  const [confirmAll, setConfirmAll] = useState<{open: boolean; type?: "admin" | "student"; count?: number}>({open: false});
+  const [confirmAll, setConfirmAll] = useState<{
+    open: boolean;
+    type?: "admin" | "student";
+    count?: number;
+  }>({ open: false });
 
   const fetchSessions = async () => {
     setLoading(true);
     try {
       const params: Record<string, string> = {};
       if (roleFilter) params.role = roleFilter;
-      const data = await getSessions(Object.keys(params).length > 0 ? params : undefined);
+      const data = await getSessions(
+        Object.keys(params).length > 0 ? params : undefined
+      );
       setSessions(data);
     } catch {
       showToast("error", "Failed to load sessions");
@@ -70,17 +76,22 @@ export const SessionManagerPanel = () => {
       setInvalidating(false);
       setConfirmOpen(false);
     }
-   };
+  };
 
-   const handleAllInvalidate = async () => {
+  const handleAllInvalidate = async () => {
     if (!confirmAll.type || !confirmAll.count) return;
     const type = confirmAll.type;
     const count = confirmAll.count;
-    setConfirmAll(prev => ({...prev, open: false}));
+    setConfirmAll((prev) => ({ ...prev, open: false }));
     setInvalidating(true);
     try {
-      await invalidateBulkSessions(sessions.filter(s => s.role === type).map(s => s.id));
-      showToast("success", `Success: ${count} ${type}(s) session(s) invalidated`);
+      await invalidateBulkSessions(
+        sessions.filter((s) => s.role === type).map((s) => s.id)
+      );
+      showToast(
+        "success",
+        `Success: ${count} ${type}(s) session(s) invalidated`
+      );
       fetchSessions();
     } catch {
       showToast("error", `Failed to invalidate all ${type} sessions`);
@@ -100,21 +111,27 @@ export const SessionManagerPanel = () => {
   }
 
   if (sessions.length === 0) {
-    return <p className="py-16 text-center text-sm text-[#777]">No active sessions found.</p>;
+    return (
+      <p className="py-16 text-center text-sm text-[#777]">
+        No active sessions found.
+      </p>
+    );
   }
 
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[#8a8a8a]">{sessions.length} active session(s)</span>
+          <span className="text-sm text-[#8a8a8a]">
+            {sessions.length} active session(s)
+          </span>
           {selected.size > 0 && (
             <span className="rounded-full bg-[#1c9dde] px-2 py-0.5 text-xs font-medium text-white">
               {selected.size} selected
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:flex-nowrap">
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
@@ -124,26 +141,38 @@ export const SessionManagerPanel = () => {
             <option value="admin">Admin</option>
             <option value="student">Student</option>
           </select>
-         <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="rounded-full"
-          onClick={() => setConfirmAll({open: true, type: "student", count: sessions.filter(s => s.role === "student").length})}
-          disabled={invalidating}
-        >
-          Invalidate All Students
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="rounded-full"
-          onClick={() => setConfirmAll({open: true, type: "admin", count: sessions.filter(s => s.role === "admin").length})}
-          disabled={invalidating}
-        >
-          Invalidate All Admins
-        </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() =>
+              setConfirmAll({
+                open: true,
+                type: "student",
+                count: sessions.filter((s) => s.role === "student").length,
+              })
+            }
+            disabled={invalidating}
+          >
+            Invalidate All Students
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() =>
+              setConfirmAll({
+                open: true,
+                type: "admin",
+                count: sessions.filter((s) => s.role === "admin").length,
+              })
+            }
+            disabled={invalidating}
+          >
+            Invalidate All Admins
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -162,22 +191,35 @@ export const SessionManagerPanel = () => {
             <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
               <th className="w-10 rounded-l-md px-2 py-2 text-center">
                 <Checkbox
-                  checked={selected.size === sessions.length && sessions.length > 0}
+                  checked={
+                    selected.size === sessions.length && sessions.length > 0
+                  }
                   onCheckedChange={toggleSelectAll}
                   aria-label="Select all"
                 />
               </th>
               <th className="w-[20%] px-2 py-2 text-left font-medium">Name</th>
-              <th className="w-[15%] px-2 py-2 text-left font-medium">ID Number</th>
+              <th className="w-[15%] px-2 py-2 text-left font-medium">
+                ID Number
+              </th>
               <th className="w-[12%] px-2 py-2 text-left font-medium">Role</th>
-              <th className="w-[15%] px-2 py-2 text-left font-medium">Campus</th>
-              <th className="w-[13%] px-2 py-2 text-left font-medium">Position</th>
-              <th className="w-[10%] rounded-r-md px-2 py-2 text-right font-medium">Actions</th>
+              <th className="w-[15%] px-2 py-2 text-left font-medium">
+                Campus
+              </th>
+              <th className="w-[13%] px-2 py-2 text-left font-medium">
+                Position
+              </th>
+              <th className="w-[10%] rounded-r-md px-2 py-2 text-right font-medium">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {sessions.map((session) => (
-              <tr key={session.id} className="border-b border-[#ededed] text-[#303030]">
+              <tr
+                key={session.id}
+                className="border-b border-[#ededed] text-[#303030]"
+              >
                 <td className="px-2 py-3 text-center">
                   <Checkbox
                     checked={selected.has(session.id)}
@@ -189,7 +231,9 @@ export const SessionManagerPanel = () => {
                 <td className="px-2 py-3">{session.idNumber}</td>
                 <td className="px-2 py-3 capitalize">{session.role}</td>
                 <td className="px-2 py-3">{session.campus || "-"}</td>
-                <td className="truncate px-2 py-3">{session.position || "-"}</td>
+                <td className="truncate px-2 py-3">
+                  {session.position || "-"}
+                </td>
                 <td className="px-2 py-3 text-right">
                   <Button
                     type="button"
@@ -216,7 +260,8 @@ export const SessionManagerPanel = () => {
             <DialogTitle>Invalidate {selected.size} session(s)?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-[#777]">
-            This will force logout the selected users. They will need to log in again.
+            This will force logout the selected users. They will need to log in
+            again.
           </p>
           <DialogFooter className="mt-3">
             <Button
@@ -237,35 +282,53 @@ export const SessionManagerPanel = () => {
               {invalidating ? "Invalidating..." : "Confirm"}
             </Button>
           </DialogFooter>
-       </DialogContent>
-     </Dialog>
+        </DialogContent>
+      </Dialog>
 
-     {/* All Invalidation Confirm Dialog */}
-     {confirmAll.open && confirmAll.type && (
-       <Dialog open={confirmAll.open} onOpenChange={(open) => setConfirmAll({...confirmAll, open})}>
-         <DialogContent className="max-w-sm rounded-[20px]">
-           <DialogHeader>
-             <DialogTitle>{confirmAll.type === 'admin' ? 'Admin' : 'Student'} Session Invalidate</DialogTitle>
-           </DialogHeader>
-           <p className="text-sm text-gray-500">
-             This will force logout all {confirmAll.type} session(s). Count: {confirmAll.count || 0}. Continue?
-           </p>
-           <DialogFooter className="mt-3">
-             <Button type="button" variant="outline" className="rounded-full" onClick={() => setConfirmAll({open:false, type: undefined, count: undefined})}>
-               Cancel
-             </Button>
-             <Button
-               type="button"
-               className="rounded-full bg-red-500 hover:bg-red-600"
-               onClick={handleAllInvalidate}
-               disabled={invalidating}
-             >
-               {invalidating ? "Invalidating..." : "Confirm"}
-             </Button>
-           </DialogFooter>
-         </DialogContent>
-       </Dialog>
-     )}
-   </div>
- );
+      {/* All Invalidation Confirm Dialog */}
+      {confirmAll.open && confirmAll.type && (
+        <Dialog
+          open={confirmAll.open}
+          onOpenChange={(open) => setConfirmAll({ ...confirmAll, open })}
+        >
+          <DialogContent className="max-w-sm rounded-[20px]">
+            <DialogHeader>
+              <DialogTitle>
+                {confirmAll.type === "admin" ? "Admin" : "Student"} Session
+                Invalidate
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-gray-500">
+              This will force logout all {confirmAll.type} session(s). Count:{" "}
+              {confirmAll.count || 0}. Continue?
+            </p>
+            <DialogFooter className="mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full"
+                onClick={() =>
+                  setConfirmAll({
+                    open: false,
+                    type: undefined,
+                    count: undefined,
+                  })
+                }
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="rounded-full bg-red-500 hover:bg-red-600"
+                onClick={handleAllInvalidate}
+                disabled={invalidating}
+              >
+                {invalidating ? "Invalidating..." : "Confirm"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
 };
