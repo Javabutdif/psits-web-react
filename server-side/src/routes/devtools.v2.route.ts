@@ -239,11 +239,18 @@ router.post(
   devtoolsController.backfillCreatedAt
 );
 
-// Student Year Update
+// Student Year Update - Admin only
 router.post(
   "/actions/update-student-years",
-  ...authChain,
+  ...adminOnlyAuthChain,
   devtoolsController.updateStudentYears
+);
+
+// Student Year Decrement - Admin only
+router.post(
+  "/actions/decrement-student-years",
+  ...adminOnlyAuthChain,
+  devtoolsController.decrementStudentYears
 );
 
 export default router;

@@ -67,6 +67,7 @@ export const logs_action = Object.freeze({
   DELETE_STUDENT: "Deleted Student",
   BACKFILL_CREATED_AT: "Backfilled Created At (Migration)",
   UPDATE_STUDENT_YEAR: "Updated Student Years",
+  DECREMENT_STUDENT_YEAR: "Decrement Student Years",
   // Membership
   APPROVE_MEMBERSHIP: "Approved Membership",
   REVOKE_MEMBERSHIP: "Revoked Memberships",

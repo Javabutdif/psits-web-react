@@ -183,3 +183,15 @@ export interface StudentYearUpdateResult {
   updated: number;
   skippedYear4: number;
 }
+
+export interface StudentYearDecrementResult {
+  totalChecked: number;
+  eligible: number;
+  updated: number;
+  skippedYear1: number;
+}
+
+export interface MigrationStatus {
+  studentCreatedAtBackfilled: boolean;
+  studentYearLastUpdated: string | null;
+}

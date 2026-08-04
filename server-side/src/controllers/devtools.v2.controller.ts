@@ -34,6 +34,7 @@ import {
   getRefundQueue,
   backfillCreatedAt,
   updateStudentYears,
+  decrementStudentYears,
 } from "../services/devtools.service";
 import { emailService } from "../services/email.service";
 import { resendPendingEmails } from "../services/email.resend.service";
@@ -659,6 +660,24 @@ class DevToolsController {
     });
     res.status(200).json({
       message: "Student years updated",
+      data: result,
+    });
+  });
+
+  decrementStudentYears = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const result = await decrementStudentYears();
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.DECREMENT_STUDENT_YEAR,
+      target: `Decremented year for ${result.updated} student(s), skipped ${result.skippedYear1} (year 1)`,
+      target_model: "Student",
+    });
+    res.status(200).json({
+      message: "Student years decremented",
       data: result,
     });
   });

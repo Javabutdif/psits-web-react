@@ -5,6 +5,7 @@ import { Admin } from "../models/admin.model";
 import { Student } from "../models/student.model";
 import { Merch } from "../models/merch.model";
 import { Event } from "../models/event.model";
+import { Settings } from "../models/settings.model";
 import ejs from "ejs";
 import path from "path";
 import fs from "fs/promises";
@@ -959,6 +960,14 @@ export const backfillCreatedAt = async (): Promise<{ migrated: number; skipped: 
   }));
 
   await Student.bulkWrite(operations);
+
+  const existing = await Settings.find();
+  if (existing.length === 0) {
+    await new Settings({ studentCreatedAtBackfilled: true }).save();
+  } else {
+    await Settings.updateOne({}, { $set: { studentCreatedAtBackfilled: true } });
+  }
+
   return { migrated: students.length, skipped: 0 };
 };
 
@@ -983,10 +992,46 @@ export const updateStudentYears = async (): Promise<{
     { $inc: { year: 1 } }
   );
 
+  const existing = await Settings.find();
+  if (existing.length === 0) {
+    await new Settings({ studentYearLastUpdated: new Date() }).save();
+  } else {
+    await Settings.updateOne({}, { $set: { studentYearLastUpdated: new Date() } });
+  }
+
   return {
     totalChecked: students.length,
     eligible: eligibleIds.length,
     updated: result.modifiedCount,
     skippedYear4: students.length - result.modifiedCount,
+  };
+};
+
+export const decrementStudentYears = async (): Promise<{
+  totalChecked: number;
+  eligible: number;
+  updated: number;
+  skippedYear1: number;
+}> => {
+  const cutoffDate = new Date();
+  cutoffDate.setMonth(cutoffDate.getMonth() - 3);
+
+  const students = await Student.find({
+    year: { $gt: 1 },
+    createdAt: { $lt: cutoffDate },
+    status: { $ne: account_status.DELETED },
+  }).lean();
+
+  const eligibleIds = students.map((s) => s._id);
+  const result = await Student.updateMany(
+    { _id: { $in: eligibleIds } },
+    { $inc: { year: -1 } }
+  );
+
+  return {
+    totalChecked: students.length,
+    eligible: eligibleIds.length,
+    updated: result.modifiedCount,
+    skippedYear1: students.length - result.modifiedCount,
   };
 };

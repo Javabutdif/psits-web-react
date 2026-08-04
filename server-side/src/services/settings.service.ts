@@ -31,6 +31,29 @@ class SettingsService {
 
     return { matchedCount: update.matchedCount };
   };
+
+  getMigrationStatus = async (): Promise<{
+    studentCreatedAtBackfilled: boolean;
+    studentYearLastUpdated: Date | null;
+  }> => {
+    const settings = await this.getConfig();
+    return {
+      studentCreatedAtBackfilled: settings?.studentCreatedAtBackfilled ?? false,
+      studentYearLastUpdated: settings?.studentYearLastUpdated ?? null,
+    };
+  };
+
+  updateMigrationStatus = async (updates: Partial<ISettings>): Promise<number> => {
+    const existing = await Settings.find();
+
+    if (existing.length === 0) {
+      await new Settings(updates).save();
+      return 0;
+    }
+
+    const update = await Settings.updateOne({}, { $set: updates });
+    return update.matchedCount;
+  };
 }
 
 const settingsService = new SettingsService();
