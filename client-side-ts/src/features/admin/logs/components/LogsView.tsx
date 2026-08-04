@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Filter, Search, X } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Search,
+  X,
+  Eye,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -192,27 +199,28 @@ interface LogDetailsPopoverProps {
   log: AdminLog;
   getAdminName: (log: AdminLog) => string;
   formatTimestamp: (value: string) => string;
-  children: React.ReactNode;
 }
 
 const LogDetailsPopover = ({
   log,
   getAdminName,
   formatTimestamp,
-  children,
-}: LogDetailsPopoverProps) => {
+}: Omit<LogDetailsPopoverProps, "children">) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
+        <Button
           type="button"
-          className="cursor-pointer text-left underline-offset-2 hover:underline"
+          size="icon-sm"
+          variant="ghost"
+          aria-label="View log details"
+          className="h-7 w-7 rounded-full border border-[#e0e0e0] text-[#1c9dde] hover:bg-sky-50"
         >
-          {children}
-        </button>
+          <Eye className="h-4 w-4" />
+        </Button>
       </PopoverTrigger>
       <PopoverContent
-        align="start"
+        align="end"
         side="bottom"
         sideOffset={8}
         className="w-72 rounded-2xl p-4 shadow-xl"
@@ -313,22 +321,22 @@ export const LogsView = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] table-fixed border-collapse text-sm">
+            <table className="w-full min-w-[700px] table-fixed border-collapse text-sm">
               <thead>
                 <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                  <th className="rounded-l-md px-2 py-2 text-left align-middle font-medium">
+                  <th className="w-[22%] rounded-l-md px-2 py-2 text-left align-middle font-medium">
                     Admin
                   </th>
-                  <th className="px-2 py-2 text-left align-middle font-medium">
+                  <th className="w-[20%] px-2 py-2 text-left align-middle font-medium">
                     Date &amp; Time
                   </th>
-                  <th className="px-2 py-2 text-left align-middle font-medium">
+                  <th className="w-[18%] px-2 py-2 text-left align-middle font-medium">
                     Event
                   </th>
-                  <th className="px-2 py-2 text-left align-middle font-medium">
+                  <th className="w-[18%] px-2 py-2 text-left align-middle font-medium">
                     Target
                   </th>
-                  <th className="rounded-r-md px-2 py-2 text-left align-middle font-medium">
+                  <th className="w-[22%] rounded-r-md px-2 py-2 text-left align-middle font-medium">
                     Target Model
                   </th>
                 </tr>
@@ -350,14 +358,8 @@ export const LogsView = () => {
                       key={log._id}
                       className="border-b border-[#ededed] text-[#303030]"
                     >
-                      <td className="px-2 py-3 text-left align-middle">
-                        <LogDetailsPopover
-                          log={log}
-                          getAdminName={getAdminName}
-                          formatTimestamp={formatTimestamp}
-                        >
-                          {getAdminName(log)}
-                        </LogDetailsPopover>
+                      <td className="truncate px-2 py-3 text-left align-middle">
+                        {getAdminName(log)}
                       </td>
                       <td className="px-2 py-3 text-left align-middle text-xs text-[#5f5f5f]">
                         {formatTimestamp(log.timestamp)}
@@ -370,8 +372,17 @@ export const LogsView = () => {
                       <td className="truncate px-2 py-3 text-left align-middle">
                         {log.target || "-"}
                       </td>
-                      <td className="truncate px-2 py-3 text-left align-middle">
-                        {log.target_model || "-"}
+                      <td className="px-2 py-3 align-middle">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate">
+                            {log.target_model || "-"}
+                          </span>
+                          <LogDetailsPopover
+                            log={log}
+                            getAdminName={getAdminName}
+                            formatTimestamp={formatTimestamp}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))
