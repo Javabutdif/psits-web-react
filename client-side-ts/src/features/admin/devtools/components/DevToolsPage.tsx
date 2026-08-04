@@ -1,6 +1,28 @@
 import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Code, Mail, Activity, Users, Zap, Clock, Shield, Database, KeyRound, Inbox, FileCheck, ScrollText, ShoppingBag, FileText, Download, TrendingUp, AlertTriangle, Settings as SettingsIcon, AlertCircle, List, Receipt } from "lucide-react";
+import {
+  Code,
+  Mail,
+  Activity,
+  Users,
+  Zap,
+  Clock,
+  Shield,
+  Database,
+  KeyRound,
+  Inbox,
+  FileCheck,
+  ScrollText,
+  ShoppingBag,
+  FileText,
+  Download,
+  TrendingUp,
+  AlertTriangle,
+  Settings as SettingsIcon,
+  AlertCircle,
+  List,
+  Receipt,
+} from "lucide-react";
 import { EmailQueuePanel } from "../components/EmailQueuePanel";
 import { HealthStatsPanel } from "../components/HealthStatsPanel";
 import { SessionManagerPanel } from "../components/SessionManagerPanel";
@@ -65,13 +87,16 @@ const sectionPanels: Record<string, PanelTab[]> = {
   ],
 };
 
-const getPanels = (section: string): PanelTab[] => sectionPanels[section] || sectionPanels.diagnostics;
+const getPanels = (section: string): PanelTab[] =>
+  sectionPanels[section] || sectionPanels.diagnostics;
 
 export const DevToolsPage = () => {
   const [activeSection, setActiveSection] = useState("diagnostics");
   const [activeTab, setActiveTab] = useState("email");
   const currentPanels = getPanels(activeSection);
-const displayActiveTab = currentPanels.some((p) => p.key === activeTab) ? activeTab : currentPanels[0]?.key ?? "email";
+  const displayActiveTab = currentPanels.some((p) => p.key === activeTab)
+    ? activeTab
+    : (currentPanels[0]?.key ?? "email");
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
@@ -84,7 +109,7 @@ const displayActiveTab = currentPanels.some((p) => p.key === activeTab) ? active
 
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
         <Tabs value={activeSection} onValueChange={setActiveSection}>
-          <div className="mb-5 flex w-full gap-6 border-b border-[#eeeeee] sm:w-auto sm:gap-8 overflow-x-auto">
+          <div className="mb-5 flex w-full gap-6 overflow-x-auto border-b border-[#eeeeee] sm:w-auto sm:gap-8">
             {sections.map((section) => (
               <button
                 key={section.key}
@@ -105,7 +130,10 @@ const displayActiveTab = currentPanels.some((p) => p.key === activeTab) ? active
           </div>
 
           <TabsContent value="diagnostics" className="mt-0 space-y-5">
-            <SectionHeader title="Diagnostics" subtitle="Server health, environment, database, and background jobs." />
+            <SectionHeader
+              title="Diagnostics"
+              subtitle="Server health, environment, database, and background jobs."
+            />
             <TabBar
               tabs={currentPanels}
               activeTab={displayActiveTab}
@@ -118,7 +146,10 @@ const displayActiveTab = currentPanels.some((p) => p.key === activeTab) ? active
           </TabsContent>
 
           <TabsContent value="operations" className="mt-0 space-y-5">
-            <SectionHeader title="Operations" subtitle="Queues, sessions, scheduled tasks, and diagnostic probes." />
+            <SectionHeader
+              title="Operations"
+              subtitle="Queues, sessions, scheduled tasks, and diagnostic probes."
+            />
             <TabBar
               tabs={currentPanels}
               activeTab={displayActiveTab}
@@ -131,7 +162,10 @@ const displayActiveTab = currentPanels.some((p) => p.key === activeTab) ? active
           </TabsContent>
 
           <TabsContent value="security" className="mt-0 space-y-5">
-            <SectionHeader title="Security" subtitle="Role management, session invalidation, access reviews, and pending grants." />
+            <SectionHeader
+              title="Security"
+              subtitle="Role management, session invalidation, access reviews, and pending grants."
+            />
             <TabBar
               tabs={currentPanels}
               activeTab={displayActiveTab}
@@ -173,7 +207,7 @@ interface TabBarProps {
 }
 
 const TabBar = ({ tabs, activeTab, onChange }: TabBarProps) => (
-  <div className="flex w-full flex-wrap gap-2 overflow-x-auto sm:w-auto">
+  <div className="flex w-full [scrollbar-width:none] gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] sm:w-auto sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
     {tabs.map((tab) => (
       <button
         key={tab.key}

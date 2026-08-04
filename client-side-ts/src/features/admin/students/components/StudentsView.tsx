@@ -1109,7 +1109,9 @@ const HistoryDialog = ({
                     >
                       <td className="px-3 py-3">{item.reference_code}</td>
                       <td className="px-3 py-3">{formatDate(item.date)}</td>
-                      <td className="px-3 py-3">{formatHistoryType(item.type)}</td>
+                      <td className="px-3 py-3">
+                        {formatHistoryType(item.type)}
+                      </td>
                       <td className="px-3 py-3">{item.admin || "-"}</td>
                       <td className="px-3 py-3 text-right">
                         <Button
@@ -1128,7 +1130,7 @@ const HistoryDialog = ({
                 ) : (
                   <tr>
                     <td
-                       colSpan={5}
+                      colSpan={5}
                       className="px-3 py-12 text-center text-[#777]"
                     >
                       No membership history found.
@@ -1333,13 +1335,13 @@ export const StudentsView = () => {
       </header>
 
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="mb-4 flex flex-wrap gap-8 border-b border-[#eeeeee]">
+        <div className="mb-4 flex [scrollbar-width:none] gap-6 overflow-x-auto border-b border-[#eeeeee] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
               className={cn(
-                "relative flex cursor-pointer items-center gap-2 pb-3 text-sm text-[#858585]",
+                "relative flex shrink-0 cursor-pointer items-center gap-1.5 pb-3 text-sm whitespace-nowrap text-[#858585]",
                 activeTab === tab.key && "font-medium text-[#1c9dde]"
               )}
               onClick={() => setActiveTab(tab.key)}
