@@ -1,6 +1,6 @@
 import axios from "axios";
 import backendConnection from "@/api/backendApi";
-import type { EmailQueueEntry, HealthStats, SessionInfo, CronExecutionLog, EnvStatusItem, RateLimitStats, CollectionStat, LogQueryParams, LogsResponse, OrderDetail, OrderSearchParams, OrdersResponse, ServerError, BruteForceLog, EndpointInfo, RefundEntry, BackfillResult, StudentYearUpdateResult } from "../types/devtools.types";
+import type { EmailQueueEntry, HealthStats, SessionInfo, CronExecutionLog, EnvStatusItem, RateLimitStats, CollectionStat, LogQueryParams, LogsResponse, OrderDetail, OrderSearchParams, OrdersResponse, ServerError, BruteForceLog, EndpointInfo, RefundEntry, BackfillResult, StudentYearUpdateResult, StudentYearDecrementResult } from "../types/devtools.types";
 
 const getAuthToken = (): string | null => sessionStorage.getItem("Token");
 
@@ -183,7 +183,7 @@ export const getStockAlerts = async (threshold?: number) => {
 };
 
 export const getSystemSettings = async () => {
-  const { data } = await api.get<{ data: { membership_price: number } | null }>("/api/v2/dev/settings", {
+  const { data } = await api.get<{ data: { membership_price: number; studentCreatedAtBackfilled?: boolean; studentYearLastUpdated?: string } | null }>("/api/v2/dev/settings", {
     headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
   });
   return data.data;
@@ -266,6 +266,13 @@ export const backfillCreatedAt = async () => {
 
 export const updateStudentYears = async () => {
   const { data } = await api.post<{ message: string; data: StudentYearUpdateResult }>("/api/v2/dev/actions/update-student-years", {}, {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data;
+};
+
+export const decrementStudentYears = async () => {
+  const { data } = await api.post<{ message: string; data: StudentYearDecrementResult }>("/api/v2/dev/actions/decrement-student-years", {}, {
     headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
   });
   return data;

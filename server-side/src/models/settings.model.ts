@@ -7,6 +7,13 @@ const settingsSchema = new Schema<ISettingsDocument>({
   membership_price: {
     type: Number,
   },
+  studentCreatedAtBackfilled: {
+    type: Boolean,
+    default: false,
+  },
+  studentYearLastUpdated: {
+    type: Date,
+  },
 });
 
 export const Settings = mongoose.model<ISettingsDocument>(
