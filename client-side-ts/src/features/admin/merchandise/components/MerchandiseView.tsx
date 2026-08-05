@@ -40,7 +40,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -212,7 +216,10 @@ const PaginationBar = ({
 const ProductSkeleton = () => (
   <div className="space-y-4">
     {Array.from({ length: 8 }, (_, index) => (
-      <div key={index} className="grid grid-cols-[34px_1.5fr_0.7fr_0.6fr_1fr_0.8fr_40px] gap-5 px-2">
+      <div
+        key={index}
+        className="grid grid-cols-[34px_1.5fr_0.7fr_0.6fr_1fr_0.8fr_40px] gap-5 px-2"
+      >
         <Skeleton className="h-5 w-5 rounded" />
         <Skeleton className="h-12 rounded-xl" />
         <Skeleton className="h-5 rounded-full" />
@@ -334,7 +341,9 @@ const ProductFilter = ({ filters, batches, onApply }: ProductFilterProps) => {
               label="Batch"
               options={batches}
               selected={draft.batches}
-              getLabel={(value) => `${value}${/^\d+$/.test(value) ? " Year" : ""}`}
+              getLabel={(value) =>
+                `${value}${/^\d+$/.test(value) ? " Year" : ""}`
+              }
               onToggle={(value) => toggleListValue("batches", value)}
             />
             <div className="space-y-2">
@@ -564,7 +573,9 @@ const ProductTable = ({
                   <td className="px-2 py-3 text-center font-medium text-[#1C9DDE]">
                     {formatCurrency(product.price)}
                   </td>
-                  <td className="px-2 py-3 text-center">{product.batch || "-"}</td>
+                  <td className="px-2 py-3 text-center">
+                    {product.batch || "-"}
+                  </td>
                   <td className="px-2 py-3 text-center">
                     {formatPurchaseControl(product.control)}
                   </td>
@@ -589,7 +600,10 @@ const ProductTable = ({
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44 rounded-xl p-1">
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-44 rounded-xl p-1"
+                      >
                         <DropdownMenuItem
                           className="cursor-pointer gap-2 rounded-lg"
                           onClick={() => onView(product)}
@@ -669,14 +683,24 @@ const ProductDetailsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[560px] rounded-3xl border-none p-0">
+      <DialogContent className="w-[calc(100%-3rem)] max-w-[420px] overflow-hidden rounded-3xl border-none p-0 sm:max-w-[560px] [&>button]:hidden sm:[&>button]:top-5 sm:[&>button]:right-5 sm:[&>button]:block">
         <DialogTitle className="sr-only">Product details</DialogTitle>
         <DialogDescription className="sr-only">
           Review merchandise details.
         </DialogDescription>
         <div className="p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-4">
+          <div className="mb-3 flex justify-end sm:hidden">
+            <button
+              type="button"
+              aria-label="Close"
+              className="cursor-pointer rounded-full p-1.5 text-[#9a9a9a] hover:bg-[#f2f2f2] hover:text-[#333333]"
+              onClick={() => onOpenChange(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap sm:gap-4 sm:pr-8">
+            <div className="-mt-10 flex min-w-0 items-center gap-4 sm:mt-0">
               {product.imageUrl?.[0] ? (
                 <img
                   src={product.imageUrl[0]}
@@ -688,20 +712,25 @@ const ProductDetailsDialog = ({
                   <Package className="h-6 w-6 text-[#9da8b3]" />
                 </div>
               )}
-              <div className="min-w-0">
-                <h2 className="truncate text-lg font-semibold">{product.name}</h2>
+              <div className="max-w-[140px] min-w-0">
+                <h2 className="line-clamp-2 text-base leading-snug font-semibold">
+                  {product.name}
+                </h2>
                 <p className="text-sm text-[#9b9b9b]">Merchandise</p>
               </div>
             </div>
-            <span className="rounded-full bg-[#e9f6fd] px-3 py-1 text-sm font-semibold text-[#1C9DDE]">
+            <span className="shrink-0 rounded-full bg-[#e9f6fd] px-3 py-1 text-sm font-semibold text-[#1C9DDE]">
               {formatCurrency(product.price)}
             </span>
           </div>
 
-          <div className="mt-6 grid grid-cols-4 gap-4 border-y border-[#eeeeee] py-5 text-sm">
+          <div className="mt-6 grid grid-cols-2 gap-4 border-y border-[#eeeeee] py-5 text-sm sm:grid-cols-4">
             <InfoBlock label="Stock" value={String(product.stocks || 0)} />
             <InfoBlock label="Batch" value={String(product.batch || "-")} />
-            <InfoBlock label="Audience" value={product.selectedAudience || "All"} />
+            <InfoBlock
+              label="Audience"
+              value={product.selectedAudience || "All"}
+            />
             <InfoBlock
               label="From / To"
               value={formatDateRange(product.start_date, product.end_date)}
@@ -722,14 +751,16 @@ const ProductDetailsDialog = ({
               colorValue={variations[0]}
             />
           )}
-          {sizeLabels.length > 0 && <TagList label="Size" values={sizeLabels} />}
+          {sizeLabels.length > 0 && (
+            <TagList label="Size" values={sizeLabels} />
+          )}
 
-          <div className="mt-6 flex items-center justify-between border-t border-[#eeeeee] pt-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-300 text-xs font-semibold text-white">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#eeeeee] pt-4 sm:flex-nowrap">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-300 text-xs font-semibold text-white">
                 {(product.created_by || "A").slice(0, 2).toUpperCase()}
               </div>
-              <p className="text-sm font-medium">
+              <p className="truncate text-sm font-medium">
                 {product.created_by || "Admin"}
               </p>
             </div>
@@ -748,9 +779,9 @@ const ProductDetailsDialog = ({
 };
 
 const InfoBlock = ({ label, value }: { label: string; value: string }) => (
-  <div>
+  <div className="min-w-0">
     <p className="mb-2 text-xs text-[#9a9a9a]">{label}</p>
-    <p className="break-words text-sm text-[#2f2f2f]">{value}</p>
+    <p className="text-sm break-words text-[#2f2f2f]">{value}</p>
   </div>
 );
 
@@ -856,25 +887,29 @@ const ProductsPage = () => {
     tabCounts,
     toggleProductSort,
   } = useMerchandiseData();
-  const [selectedProduct, setSelectedProduct] = useState<MerchandiseItem | null>(null);
+  const [selectedProduct, setSelectedProduct] =
+    useState<MerchandiseItem | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [confirmAction, setConfirmAction] =
-    useState<"delete-product" | "publish-product" | null>(null);
-  const [confirmProduct, setConfirmProduct] = useState<MerchandiseItem | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "delete-product" | "publish-product" | null
+  >(null);
+  const [confirmProduct, setConfirmProduct] = useState<MerchandiseItem | null>(
+    null
+  );
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-const toggleSelectAll = () => {
-  const allIds = productRows.map((product) => product._id);
-  const allSelected = allIds.every((id) => selectedIds.includes(id));
-  setSelectedIds(allSelected ? [] : allIds);
-};
+  const toggleSelectAll = () => {
+    const allIds = productRows.map((product) => product._id);
+    const allSelected = allIds.every((id) => selectedIds.includes(id));
+    setSelectedIds(allSelected ? [] : allIds);
+  };
 
-const toggleSelectRow = (id: string) => {
-  setSelectedIds((prev) =>
-    prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
-  );
-};
+  const toggleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    );
+  };
 
   const openConfirm = (
     action: "delete-product" | "publish-product",
@@ -917,7 +952,7 @@ const toggleSelectRow = (id: string) => {
           )
         }
       />
-      <div className="rounded-3xl border border-[#e7e7e7] bg-white p-5">
+      <div className="min-w-0 rounded-3xl border border-[#e7e7e7] bg-white p-5">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div className="relative w-full max-w-[300px]">
             <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-[#a1a1a1]" />
@@ -1034,17 +1069,15 @@ interface ProductFormPageProps {
 const ProductFormPage = ({ productId }: ProductFormPageProps) => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const {
-    getProductFormValues,
-    isLoading,
-    isMutating,
-    products,
-    saveProduct,
-  } = useMerchandiseData();
+  const { getProductFormValues, isLoading, isMutating, products, saveProduct } =
+    useMerchandiseData();
   const product = products.find((item) => item._id === productId) || null;
   const isEditing = Boolean(productId);
-  const [activeStep, setActiveStep] = useState<"product" | "sessions">("product");
-  const [formValues, setFormValues] = useState<ProductFormValues>(EMPTY_PRODUCT_FORM);
+  const [activeStep, setActiveStep] = useState<"product" | "sessions">(
+    "product"
+  );
+  const [formValues, setFormValues] =
+    useState<ProductFormValues>(EMPTY_PRODUCT_FORM);
   const [imageState, setImageState] =
     useState<ProductImageState>(EMPTY_PRODUCT_IMAGES);
 
@@ -1076,7 +1109,10 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
     const incoming = Array.from(files);
-    if (imageState.files.length + imageState.previews.length + incoming.length > 3) {
+    if (
+      imageState.files.length + imageState.previews.length + incoming.length >
+      3
+    ) {
       showToast("error", "You can only upload up to 3 images");
       return;
     }
@@ -1101,8 +1137,12 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
       return {
         files: isExisting
           ? current.files
-          : current.files.filter((_, fileIndex) => fileIndex !== previewFilesBeforeIndex),
-        previews: current.previews.filter((_, previewIndex) => previewIndex !== index),
+          : current.files.filter(
+              (_, fileIndex) => fileIndex !== previewFilesBeforeIndex
+            ),
+        previews: current.previews.filter(
+          (_, previewIndex) => previewIndex !== index
+        ),
         removedUrls: isExisting
           ? [...current.removedUrls, preview]
           : current.removedUrls,
@@ -1175,7 +1215,10 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
       return;
     }
     if (!formValues.category || !formValues.type || !formValues.control) {
-      showToast("error", "Category, product type, and purchase type are required");
+      showToast(
+        "error",
+        "Category, product type, and purchase type are required"
+      );
       return;
     }
     if (!formValues.start_date || !formValues.end_date) {
@@ -1185,11 +1228,17 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
     const invalidSizePrice = Object.entries(formValues.selectedSizes).find(
       ([, details]) => {
         const price = Number(details.price);
-        return details.custom && (!details.price || !Number.isFinite(price) || price <= 0);
+        return (
+          details.custom &&
+          (!details.price || !Number.isFinite(price) || price <= 0)
+        );
       }
     );
     if (invalidSizePrice) {
-      showToast("error", `Enter a valid custom price for ${invalidSizePrice[0]}`);
+      showToast(
+        "error",
+        `Enter a valid custom price for ${invalidSizePrice[0]}`
+      );
       return;
     }
 
@@ -1198,7 +1247,9 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
   };
 
   const typeOptions = PRODUCT_TYPES[formValues.category] || [];
-  const selectedSizes = PRODUCT_SIZES.filter((size) => formValues.selectedSizes[size]);
+  const selectedSizes = PRODUCT_SIZES.filter(
+    (size) => formValues.selectedSizes[size]
+  );
 
   return (
     <div>
@@ -1241,7 +1292,7 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[#e7e7e7] bg-white p-6">
+      <div className="min-w-0 rounded-3xl border border-[#e7e7e7] bg-white p-6">
         {isLoading && isEditing ? (
           <ProductSkeleton />
         ) : activeStep === "sessions" ? (
@@ -1374,7 +1425,9 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                     type="date"
                     className={fieldClass}
                     value={formValues.eventDate}
-                    onChange={(event) => setValue("eventDate", event.target.value)}
+                    onChange={(event) =>
+                      setValue("eventDate", event.target.value)
+                    }
                   />
                 </FormField>
               )}
@@ -1411,7 +1464,9 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                       type="number"
                       className={fieldClass}
                       value={formValues.price}
-                      onChange={(event) => setValue("price", event.target.value)}
+                      onChange={(event) =>
+                        setValue("price", event.target.value)
+                      }
                       placeholder="0.00"
                     />
                   </FormField>
@@ -1431,7 +1486,9 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                       type="number"
                       className={fieldClass}
                       value={formValues.stocks}
-                      onChange={(event) => setValue("stocks", event.target.value)}
+                      onChange={(event) =>
+                        setValue("stocks", event.target.value)
+                      }
                       placeholder="0"
                     />
                   </FormField>
@@ -1502,7 +1559,9 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                             type="button"
                             className={cn(
                               "h-8 cursor-pointer rounded-full border border-[#e0e0e0] px-3 text-xs",
-                              formValues.selectedVariations.includes(variation) &&
+                              formValues.selectedVariations.includes(
+                                variation
+                              ) &&
                                 "border-[#1C9DDE] bg-[#e5f5fd] text-[#1C9DDE]"
                             )}
                             onClick={() => toggleVariation(variation)}
@@ -1573,7 +1632,9 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                                       )
                                     }
                                   >
-                                    {sizeConfig.custom ? "Custom price" : "Base price"}
+                                    {sizeConfig.custom
+                                      ? "Custom price"
+                                      : "Base price"}
                                   </button>
                                   <Input
                                     type="number"
@@ -1592,7 +1653,10 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                                         : "Uses base price"
                                     }
                                     onChange={(event) =>
-                                      setSizeCustomPrice(size, event.target.value)
+                                      setSizeCustomPrice(
+                                        size,
+                                        event.target.value
+                                      )
                                     }
                                   />
                                 </div>
@@ -1739,7 +1803,10 @@ const SessionSetupForm = ({
         ).split(" - ");
 
         return (
-          <div key={session.label} className="rounded-2xl border border-[#eeeeee] p-4">
+          <div
+            key={session.label}
+            className="rounded-2xl border border-[#eeeeee] p-4"
+          >
             <div className="flex items-center justify-between">
               <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
                 <Checkbox
@@ -1797,14 +1864,14 @@ export const MerchandiseView = () => {
 
   if (isProductForm) {
     return (
-      <main className="min-h-screen bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <main className="min-h-screen overflow-x-hidden bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <ProductFormPage productId={params.productId} />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+    <main className="min-h-screen overflow-x-hidden bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
       <ProductsPage />
     </main>
   );

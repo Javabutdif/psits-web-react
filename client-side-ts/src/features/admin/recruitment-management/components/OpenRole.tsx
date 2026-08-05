@@ -304,8 +304,12 @@ export default function OpenRole({
 
   const [roles, setRoles] = useState<Role[]>(createDefaultRoles);
   const [saveSelection, setSaveSelection] = useState(false);
-  const [requirementsByItem, setRequirementsByItem] = useState<Record<string, string>>({});
-  const [activeRequirementId, setActiveRequirementId] = useState<string | null>(null);
+  const [requirementsByItem, setRequirementsByItem] = useState<
+    Record<string, string>
+  >({});
+  const [activeRequirementId, setActiveRequirementId] = useState<string | null>(
+    null
+  );
 
   // Track whether the dialog was open on the previous render so we can
   // reset to page 1 exactly when it transitions closed -> open. Doing this
@@ -366,9 +370,7 @@ export default function OpenRole({
 
   const setRoleSlots = (roleId: string, slots: number) => {
     setRoles((prev) =>
-      prev.map((role) =>
-        role.id === roleId ? { ...role, slots } : role
-      )
+      prev.map((role) => (role.id === roleId ? { ...role, slots } : role))
     );
   };
 
@@ -428,7 +430,9 @@ export default function OpenRole({
   const handleNext = () => {
     if (!isStepOneValid) return;
     setStep(2);
-    setActiveRequirementId((current) => current ?? requirementItems[0]?.id ?? null);
+    setActiveRequirementId(
+      (current) => current ?? requirementItems[0]?.id ?? null
+    );
   };
 
   const handleBack = () => setStep(1);
@@ -451,14 +455,14 @@ export default function OpenRole({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="max-h-[95vh] !max-w-3xl gap-0 rounded-3xl p-0 [&>button]:hidden"
+        className="flex max-h-[95vh] w-[95vw] flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:w-full sm:!max-w-3xl md:max-h-[101vh] [&>button]:hidden"
         showCloseButton={false}
       >
         {/* Header */}
-        <div className="relative flex items-center justify-center py-5">
+        <div className="relative flex shrink-0 items-center justify-center py-4.5">
           <div className="text-center">
             <h2 className="text-lg font-semibold">Open Application</h2>
-            <p className="mt-0.5 text-xs text-slate-400">
+            <p className="text-xs text-slate-400">
               Step {step} of 2 —{" "}
               {step === 1 ? "Schedule & Openings" : "Role Requirements"}
             </p>
@@ -473,158 +477,168 @@ export default function OpenRole({
         </div>
 
         {/* Body */}
-        {step === 1 ? (
-          <div className="-mt-4 grid grid-cols-2 gap-8 px-8 py-6">
-            {/* LEFT SIDE */}
-            <div>
-              <Label className="mb-3 block font-medium">
-                Select Date{" "}
-                <span className="font-normal text-slate-400">
-                  ({pickingField === "start" ? "start" : "end"})
-                </span>
-              </Label>
-
-              <div className="max-h-[357px] overflow-y-auto rounded-2xl border border-[#ECECEC] p-3">
-                <Calendar
-                  mode="single"
-                  selected={pickingField === "start" ? startDate : endDate}
-                  onSelect={handleCalendarSelect}
-                  disabled={
-                    pickingField === "end" && startDate
-                      ? { before: startDate }
-                      : undefined
-                  }
-                  className="mx-auto"
-                />
-              </div>
-            </div>
-
-            {/* RIGHT SIDE */}
-            <div className="space-y-4">
-              {/* APPLICATION WINDOW */}
+        <div className="flex-1 overflow-y-auto">
+          {step === 1 ? (
+            <div className="grid grid-cols-1 gap-6 px-4 py-6 md:-mt-10 md:grid-cols-2 md:gap-8 md:px-8">
+              {/* LEFT SIDE */}
               <div>
                 <Label className="mb-3 block font-medium">
-                  Application Window
+                  Select Date{" "}
+                  <span className="font-normal text-slate-400">
+                    ({pickingField === "start" ? "start" : "end"})
+                  </span>
                 </Label>
 
-                <div className="space-y-3">
-                  <div onClick={() => setPickingField("start")}>
-                    <DateInput
-                      value={startDate}
-                      placeholder="Start Date"
-                      active={pickingField === "start"}
-                    />
-                  </div>
-
-                  <div onClick={() => setPickingField("end")}>
-                    <DateInput
-                      value={endDate}
-                      placeholder="End Date"
-                      active={pickingField === "end"}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <TimePickerPopover
-                      value={startTime}
-                      placeholder="Start Time"
-                      onChange={setStartTime}
-                    />
-                    <span className="text-slate-400">to</span>
-                    <TimePickerPopover
-                      value={endTime}
-                      placeholder="End Time"
-                      onChange={setEndTime}
-                    />
-                  </div>
+                <div className="max-h-[400px] space-y-4 overflow-y-auto rounded-2xl border border-[#ECECEC] p-3 md:max-h-[375px]">
+                  <Calendar
+                    mode="single"
+                    selected={pickingField === "start" ? startDate : endDate}
+                    onSelect={handleCalendarSelect}
+                    disabled={
+                      pickingField === "end" && startDate
+                        ? { before: startDate }
+                        : undefined
+                    }
+                    className="mx-auto"
+                  />
                 </div>
               </div>
 
-              {/* SET OPENING */}
-              <div>
-                <Label className="mb-2 block font-medium">Set Opening</Label>
-                <div className="max-h-[130px] overflow-y-auto rounded-[22px] border border-[#E5E5E5] bg-white py-1">
-                  {roles.map((role) => (
-                    <RoleCard
-                      key={role.id}
-                      role={role}
-                      onToggleRole={() => toggleRole(role.id)}
-                      onTogglePosition={(positionId) =>
-                        togglePosition(role.id, positionId)
-                      }
-                      onSlotsChange={(positionId, slots) =>
-                        setPositionSlots(role.id, positionId, slots)
-                      }
-                      onRoleSlotsChange={(slots) =>
-                        setRoleSlots(role.id, slots)
-                      }
-                    />
+              {/* RIGHT SIDE */}
+              <div className="space-y-4">
+                {/* APPLICATION WINDOW */}
+                <div>
+                  <Label className="mb-3 block font-medium">
+                    Application Window
+                  </Label>
+
+                  <div className="space-y-3">
+                    <div onClick={() => setPickingField("start")}>
+                      <DateInput
+                        value={startDate}
+                        placeholder="Start Date"
+                        active={pickingField === "start"}
+                      />
+                    </div>
+
+                    <div onClick={() => setPickingField("end")}>
+                      <DateInput
+                        value={endDate}
+                        placeholder="End Date"
+                        active={pickingField === "end"}
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <TimePickerPopover
+                        value={startTime}
+                        placeholder="Start Time"
+                        onChange={setStartTime}
+                      />
+                      <span className="text-slate-400">to</span>
+                      <TimePickerPopover
+                        value={endTime}
+                        placeholder="End Time"
+                        onChange={setEndTime}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SET OPENING */}
+                <div>
+                  <Label className="mb-2 block font-medium">Set Opening</Label>
+                  <div className="max-h-[130px] overflow-y-auto rounded-[22px] border border-[#E5E5E5] bg-white py-1 md:max-h-[150px]">
+                    {roles.map((role) => (
+                      <RoleCard
+                        key={role.id}
+                        role={role}
+                        onToggleRole={() => toggleRole(role.id)}
+                        onTogglePosition={(positionId) =>
+                          togglePosition(role.id, positionId)
+                        }
+                        onSlotsChange={(positionId, slots) =>
+                          setPositionSlots(role.id, positionId, slots)
+                        }
+                        onRoleSlotsChange={(slots) =>
+                          setRoleSlots(role.id, slots)
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* SAVE */}
+                <label className="flex cursor-pointer items-center gap-3 text-sm">
+                  <Checkbox
+                    checked={saveSelection}
+                    onCheckedChange={(value) =>
+                      setSaveSelection(Boolean(value))
+                    }
+                  />
+                  Save Selection
+                  <span className="text-red-500">*</span>
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="px-4 py-6 md:px-8">
+              <Label className="mb-3 block font-medium">
+                Role Requirements
+              </Label>
+
+              {requirementItems.length === 0 ? (
+                <p className="mb-4 rounded-2xl border border-dashed border-[#E5E5E5] p-6 text-center text-sm text-slate-400">
+                  No roles or positions were selected on the previous page.
+                </p>
+              ) : (
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {requirementItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveRequirementId(item.id)}
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                        activeRequirementId === item.id
+                          ? "bg-[#1C9DDE] text-white"
+                          : "bg-[#EFF8FD] text-[#1C9DDE] hover:bg-[#dcefff]"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
                   ))}
                 </div>
-              </div>
+              )}
 
-              {/* SAVE */}
-              <label className="flex cursor-pointer items-center gap-3 text-sm">
-                <Checkbox
-                  checked={saveSelection}
-                  onCheckedChange={(value) => setSaveSelection(Boolean(value))}
+              <div className="rounded-2xl border border-[#ECECEC] p-4">
+                <textarea
+                  value={
+                    activeRequirementId
+                      ? (requirementsByItem[activeRequirementId] ?? "")
+                      : ""
+                  }
+                  onChange={(e) =>
+                    activeRequirementId &&
+                    setRequirementsByItem((prev) => ({
+                      ...prev,
+                      [activeRequirementId]: e.target.value,
+                    }))
+                  }
+                  disabled={!activeRequirementId}
+                  placeholder={
+                    activeRequirementId
+                      ? "List the requirements, qualifications, or expectations applicants should meet — e.g. year level, course, or experience..."
+                      : "Select a role above to add its requirements"
+                  }
+                  className="h-40 w-full resize-none rounded-xl border-none p-1 text-[13px] text-[#4A4A4A] placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed"
                 />
-                Save Selection
-                <span className="text-red-500">*</span>
-              </label>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="-mt-4 px-8 py-6">
-            <Label className="mb-3 block font-medium">Role Requirements</Label>
-
-            {requirementItems.length === 0 ? (
-              <p className="mb-4 rounded-2xl border border-dashed border-[#E5E5E5] p-6 text-center text-sm text-slate-400">
-                No roles or positions were selected on the previous page.
-              </p>
-            ) : (
-              <div className="mb-4 flex flex-wrap gap-2">
-              {requirementItems.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setActiveRequirementId(item.id)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                    activeRequirementId === item.id
-                      ? "bg-[#1C9DDE] text-white"
-                      : "bg-[#EFF8FD] text-[#1C9DDE] hover:bg-[#dcefff]"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            )}
-
-            <div className="rounded-2xl border border-[#ECECEC] p-4">
-              <textarea
-                value={activeRequirementId ? (requirementsByItem[activeRequirementId] ?? "") : ""}
-                onChange={(e) =>
-                  activeRequirementId &&
-                  setRequirementsByItem((prev) => ({
-                    ...prev,
-                    [activeRequirementId]: e.target.value,
-                  }))
-                }
-                disabled={!activeRequirementId}
-                placeholder={
-                  activeRequirementId
-                    ? "List the requirements, qualifications, or expectations applicants should meet — e.g. year level, course, or experience..."
-                    : "Select a role above to add its requirements"
-                }
-                className="h-40 w-full resize-none rounded-xl border-none p-1 text-[13px] text-[#4A4A4A] placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* FOOTER */}
-        <div className="flex items-center justify-center gap-3 py-6">
+        <div className="sm: flex flex-col flex-row items-center justify-center gap-3 px-4 py-6">
           {step === 2 && (
             <Button
               type="button"
@@ -641,7 +655,7 @@ export default function OpenRole({
               step === 1 ? !isStepOneValid : !isStepOneValid || isSubmitting
             }
             onClick={step === 1 ? handleNext : handleConfirm}
-            className={`h-10 w-56 rounded-full transition-all ${
+            className={`h-10 w-45 rounded-full transition-all ${
               isStepOneValid
                 ? "bg-[#1C9DDE] hover:bg-[#1487C2]"
                 : "bg-slate-300"

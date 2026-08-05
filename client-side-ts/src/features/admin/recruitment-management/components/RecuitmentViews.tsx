@@ -510,7 +510,7 @@ export const RecruitmentViews = () => {
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
-      <header className="flex items-start justify-between gap-4 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <header className="flex flex-col justify-between gap-4 px-4 py-4 sm:flex-row sm:items-start sm:px-6 sm:py-6 lg:px-8">
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Applications</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">
@@ -580,12 +580,12 @@ export const RecruitmentViews = () => {
 
         <section className="rounded-[22px] border border-[#e5e5e5] bg-white px-4 py-5 sm:px-6">
           {/* Row 1: pill tabs + search */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex gap-1 rounded-full bg-[#f2f2f2] p-1">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-full bg-[#f2f2f2] p-1">
               <button
                 type="button"
                 onClick={() => setActiveTab("applicants")}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+                className={`shrink-0 rounded-full px-2.5 py-1.5 text-sm font-medium whitespace-nowrap sm:px-3 sm:text-sm ${
                   activeTab === "applicants"
                     ? "bg-white text-[#303030] shadow-sm"
                     : "text-[#777] hover:text-[#303030]"
@@ -596,7 +596,7 @@ export const RecruitmentViews = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab("applications")}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+                className={`shirnk-0 rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap ${
                   activeTab === "applications"
                     ? "bg-white text-[#303030] shadow-sm"
                     : "text-[#777] hover:text-[#303030]"
@@ -607,7 +607,7 @@ export const RecruitmentViews = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab("verification")}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+                className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap ${
                   activeTab === "verification"
                     ? "bg-white text-[#303030] shadow-sm"
                     : "text-[#777] hover:text-[#303030]"
@@ -727,15 +727,16 @@ export const RecruitmentViews = () => {
                     >
                       Clear selection
                     </button>
-                    {deletablePositionIds.length > 0 && canManageRecruitment && (
-                      <button
-                        type="button"
-                        onClick={() => setIsBulkDeletePositionsOpen(true)}
-                        className="cursor-pointer font-medium text-red-600 hover:underline"
-                      >
-                        Delete selected ({deletablePositionIds.length})
-                      </button>
-                    )}
+                    {deletablePositionIds.length > 0 &&
+                      canManageRecruitment && (
+                        <button
+                          type="button"
+                          onClick={() => setIsBulkDeletePositionsOpen(true)}
+                          className="cursor-pointer font-medium text-red-600 hover:underline"
+                        >
+                          Delete selected ({deletablePositionIds.length})
+                        </button>
+                      )}
                   </div>
                 </div>
               )}

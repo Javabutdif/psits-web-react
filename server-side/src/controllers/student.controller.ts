@@ -376,20 +376,11 @@ export const editStudentYearLevel = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Student not found." });
     }
 
-    // Check if already updated this school year
-    if (student.isYearUpdated) {
-      return res.status(400).json({
-        message:
-          "Student's year level has already been updated for this school year.",
-      });
-    }
-
-    // Update both year and isYearUpdated flag
+    // Update year level
     const updatedStudent = await Student.findOneAndUpdate(
       { id_number },
       {
         year,
-        isYearUpdated: true,
       },
       { new: true, runValidators: true }
     );
@@ -421,9 +412,8 @@ export const isYearUpdatedController = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Student not found." });
     }
 
-    // Return the isYearUpdated status
     return res.status(200).json({
-      isYearUpdated: student.isYearUpdated,
+      createdAt: student.createdAt,
       message: "Student year update status retrieved successfully.",
     });
   } catch (error) {

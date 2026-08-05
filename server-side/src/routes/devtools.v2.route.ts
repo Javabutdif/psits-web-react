@@ -16,6 +16,13 @@ const authChain = [
   adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.DEVELOPER]),
 ];
 
+// Admin-only routes (stricter access)
+const adminOnlyAuthChain = [
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN]),
+];
+
 // Email queue
 router.get("/email-queue", ...authChain, devtoolsController.getEmailQueue);
 router.post(
@@ -223,6 +230,27 @@ router.get(
   "/refunds",
   ...authChain,
   devtoolsController.getRefundQueue
+);
+
+// Migration - Admin only
+router.post(
+  "/migration/backfill-created-at",
+  ...adminOnlyAuthChain,
+  devtoolsController.backfillCreatedAt
+);
+
+// Student Year Update - Admin only
+router.post(
+  "/actions/update-student-years",
+  ...adminOnlyAuthChain,
+  devtoolsController.updateStudentYears
+);
+
+// Student Year Decrement - Admin only
+router.post(
+  "/actions/decrement-student-years",
+  ...adminOnlyAuthChain,
+  devtoolsController.decrementStudentYears
 );
 
 export default router;

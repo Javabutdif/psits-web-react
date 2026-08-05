@@ -12,7 +12,6 @@ import {
   fetchSpecificStudentController,
   fetchSpecificMembershipHistoryController,
   editStudentYearLevel,
-  isYearUpdatedController,
 } from "../controllers/student.controller";
 import {
   requireAccessTokenV2,
@@ -108,13 +107,6 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin", "student"]),
   editStudentYearLevel
-);
-
-router.get(
-  "/students/is-year-updated/:id_number",
-  requireAccessTokenV2,
-  roleAuthenticateV2(["admin", "student"]),
-  isYearUpdatedController
 );
 
 export default router;

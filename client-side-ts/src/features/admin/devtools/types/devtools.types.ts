@@ -171,3 +171,27 @@ export interface RefundEntry {
   refund_admin: string;
   refund_date: string;
 }
+
+export interface BackfillResult {
+  migrated: number;
+  skipped: number;
+}
+
+export interface StudentYearUpdateResult {
+  totalChecked: number;
+  eligible: number;
+  updated: number;
+  skippedYear4: number;
+}
+
+export interface StudentYearDecrementResult {
+  totalChecked: number;
+  eligible: number;
+  updated: number;
+  skippedYear1: number;
+}
+
+export interface MigrationStatus {
+  studentCreatedAtBackfilled: boolean;
+  studentYearLastUpdated: string | null;
+}
