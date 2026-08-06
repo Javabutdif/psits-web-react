@@ -35,7 +35,12 @@ const baseSchema = z.object({
   email: z.email({ error: "Invalid email address" }),
   course: z.string().min(1, "Course is required"),
   year: z.string().min(1, "Year level is required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[a-z]/, "Must include at least one small letter")
+    .regex(/[A-Z]/, "Must include at least one capital letter")
+    .regex(/[\d\W]/, "Must include at least one number or symbol"),
   confirmPassword: z.string(),
 });
 

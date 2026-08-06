@@ -1,7 +1,8 @@
 import sidePhoto from "@/assets/side_photo_forms.png";
 
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import backendConnection from "@/api/backendApi";
 import {
   SetNewPasswordForm,
   type SetNewPasswordCredentials,
@@ -9,7 +10,8 @@ import {
 
 export default function SetNewPassword() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const routeParams = useParams();
+  const token = searchParams.get("token") || routeParams.token;
   const navigate = useNavigate();
   const [message, setMessage] = useState<{
     type: "error" | "success";
@@ -24,7 +26,7 @@ export default function SetNewPassword() {
 
     try {
       const response = await fetch(
-        `https://staging-api.psits.org/api/student/reset-password/${token}`,
+        `${backendConnection()}/api/student/reset-password/${token}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -32,12 +34,12 @@ export default function SetNewPassword() {
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
         setMessage({
           type: "error",
-          text: data.message || "Something went wrong.",
+          text: data?.message || "Something went wrong.",
         });
         return;
       }
