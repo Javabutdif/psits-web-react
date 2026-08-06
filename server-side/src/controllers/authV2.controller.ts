@@ -16,6 +16,7 @@ import { AuthError, AuthErrorCodes } from "../util/errors.util";
 import { account_status } from "../enums/status.enums";
 import { campus_type } from "../enums/campus.enums";
 import { studentService } from "../services/student.service";
+import { validateSignupData } from "../util/signupValidation.util";
 
 /**
  * Shared user response type for frontend
@@ -368,6 +369,16 @@ export const signupV2Controller = async (
   next: NextFunction
 ) => {
   try {
+    const validationError = validateSignupData({
+      fname: req.body.fname,
+      lname: req.body.lname,
+      id: req.body.id,
+      email: req.body.email,
+    });
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+
     const yearMap: Record<string, number> = {
       "1st Year": 1,
       "2nd Year": 2,

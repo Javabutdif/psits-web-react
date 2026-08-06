@@ -27,12 +27,62 @@ import {
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo_forms_100x100.png";
 
+const TEST_WORD_PATTERN =
+  /(test|asdf|qwerty|sample|dummy|foobar|admin|demo|example|placeholder|lorem|ipsum|temp|fake|junk|noreply|nobody|whatever|asdasd|zzz|aaa|hello|hehe|haha|wala)/i;
+
+function isSuspiciousName(value: string) {
+  return TEST_WORD_PATTERN.test(value.trim());
+}
+
+function isSuspiciousId(value: string) {
+  const isRepeating = /^(\d)\1+$/.test(value);
+  const isSequential = /^(0123456789|1234567890|12345678)/.test(value);
+  return isRepeating || isSequential;
+}
+
+function isSuspiciousEmail(email: string): boolean {
+  const localPart = email.split("@")[0];
+
+  // Too short (1-2 chars, covers single digits too)
+  if (localPart.length <= 2) return true;
+
+  // Purely numeric (e.g. "123456789@gmail.com")
+  if (/^\d+$/.test(localPart)) return true;
+
+  // Contains obvious test/junk words (e.g. "test@gmail.com")
+  if (TEST_WORD_PATTERN.test(localPart)) return true;
+
+  // Keyboard mashing / repeating same char (e.g. "aaaaa@gmail.com")
+  if (/^(.)\1{2,}$/.test(localPart)) return true;
+
+  return false;
+}
+
 const baseSchema = z.object({
-  id: z.string().min(8, "ID Number must at least be 8 digits."),
-  lname: z.string().min(1, "Last name is required"),
+  id: z
+    .string()
+    .min(8, "ID Number must at least be 8 digits.")
+    .refine((val) => !isSuspiciousId(val), {
+      message: "Please enter a valid student ID number",
+    }),
+  lname: z
+    .string()
+    .min(1, "Last name is required")
+    .refine((val) => !isSuspiciousName(val), {
+      message: "Please enter your real last name",
+    }),
   mname: z.string().optional(),
-  fname: z.string().min(1, "First name is required"),
-  email: z.email({ error: "Invalid email address" }),
+  fname: z
+    .string()
+    .min(1, "First name is required")
+    .refine((val) => !isSuspiciousName(val), {
+      message: "Please enter your real first name",
+    }),
+  email: z
+    .email({ error: "Invalid email address" })
+    .refine((val) => !isSuspiciousEmail(val), {
+      message: "Please enter a valid, real email address",
+    }),
   course: z.string().min(1, "Course is required"),
   year: z.string().min(1, "Year level is required"),
   password: z
