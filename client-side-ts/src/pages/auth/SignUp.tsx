@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import sidePhoto from "@/assets/side_photo_forms.png";
 import { useNavigate } from "react-router";
+import backendConnection from "@/api/backendApi";
 const courses = ["BSIT", "BSCS"];
 import { showToast } from "@/utils/alertHelper";
 
@@ -15,18 +16,18 @@ export default function Signup() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/v2/auth/signup", {
+      const res = await fetch(`${backendConnection()}/api/v2/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
         showToast(
           "error",
-          data.message || "Something went wrong. Please try again."
+          data?.message || "Something went wrong. Please try again."
         );
-        console.error(data.message);
+        console.error(data?.message || "Signup failed");
         return;
       }
       showToast("success", "Welcome! Your PSITS account is ready.");
