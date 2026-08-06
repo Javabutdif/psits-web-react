@@ -2,7 +2,7 @@ import { useState } from "react";
 import { SignupForm, type SignupCredentials } from "@/features/auth";
 import { Link } from "react-router";
 import { ArrowLeft } from "lucide-react";
-import sidePhoto from "@/assets/side_photo_forms.png";
+import sidePhoto from "@/assets/temp_side_photo.png";
 import { useNavigate } from "react-router";
 const courses = ["BSIT", "BSCS"];
 import { showToast } from "@/utils/alertHelper";

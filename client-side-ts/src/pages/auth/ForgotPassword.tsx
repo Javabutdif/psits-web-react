@@ -1,4 +1,4 @@
-import sidePhoto from "@/assets/side_photo_forms.png";
+import sidePhoto from "@/assets/temp_side_photo.png";
 
 import {
   ForgotPasswordForm,
