@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/card";
-import banner from "@/assets/banner.png";
+import banner from "@/assets/temp_banner.png";
 import { homeBannerData } from "@/data/sections-data";
 import { OptimizedImage } from "@/components/common/OptimizedImage";
 
