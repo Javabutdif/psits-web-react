@@ -6,8 +6,8 @@ on:
       - master
       - production
     paths:
-      - 'client-side/**'
-      - '.github/workflows/client-side-pipeline.yml'
+      - "client-side-ts/**"
+      - ".github/workflows/client-side-pipeline.yml"
 
 jobs:
   build:
@@ -19,19 +19,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Locate Client-side Directory
-        run: ls -la client-side
+        run: ls -la client-side-ts
 
       - name: Setup Node and Build Project
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
-          cache-dependency-path: client-side/package-lock.json
+          cache-dependency-path: client-side-ts/package-lock.json
 
       - name: Install Dependencies
         run: npm install
-        working-directory: client-side
+        working-directory: client-side-ts
 
       - name: Build Project
         run: npm run build
-        working-directory: client-side
+        working-directory: client-side-ts
