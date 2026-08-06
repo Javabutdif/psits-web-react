@@ -14,10 +14,13 @@ import dotenv from "dotenv";
 dotenv.config();
 const token_key = process.env.JWT_SECRET ?? "Default_Token";
 
-const url =
-  process.env.DB_NAME !== "psits-test"
-    ? "https://psits.vercel.app/reset-password/"
-    : "https://staging-v2.psits.org/auth/reset-password?token=";
+const frontendBaseUrl =
+  process.env.FRONTEND_URL ||
+  (process.env.DB_NAME !== "psits-test"
+    ? "https://psits.org"
+    : "https://staging-v2.psits.org");
+
+const url = `${frontendBaseUrl}/auth/reset-password?token=`;
 
 import { studentService } from "../services/student.service";
 import { adminService } from "../services/admin.service";

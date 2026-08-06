@@ -16,7 +16,12 @@ import { Check } from "lucide-react";
 
 const formSchema = z
   .object({
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[a-z]/, "Must include at least one small letter")
+      .regex(/[A-Z]/, "Must include at least one capital letter")
+      .regex(/[\d\W]/, "Must include at least one number or symbol"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
