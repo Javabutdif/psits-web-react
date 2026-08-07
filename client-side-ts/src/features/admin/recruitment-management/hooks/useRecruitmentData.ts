@@ -15,7 +15,6 @@ import type {
   RecruitmentOpeningConflictError,
 } from "../types/Recruitment.types";
 
-// Adjust this path if your actual file structure differs
 import {
   getApplicants,
   getApplicationDetails,
@@ -324,28 +323,31 @@ export const useRecruitmentData = () => {
     }
   }, []);
 
-  const fetchPositions = useCallback(async (pageNumber = positionsPage) => {
-    setIsPositionsLoading(true);
-    setPositionsError(null);
-    try {
-      const res = await listPositions({
-        page: pageNumber,
-        limit: POSITIONS_PER_PAGE,
-      });
-      const payload = res.data.data;
-      const pagination = payload.pagination;
+  const fetchPositions = useCallback(
+    async (pageNumber = positionsPage) => {
+      setIsPositionsLoading(true);
+      setPositionsError(null);
+      try {
+        const res = await listPositions({
+          page: pageNumber,
+          limit: POSITIONS_PER_PAGE,
+        });
+        const payload = res.data.data;
+        const pagination = payload.pagination;
 
-      setPositions(payload.positions || []);
-      setPositionsTotalPages(Number(pagination?.totalPages || 1));
-      setPositionsTotal(Number(pagination?.total || 0));
-    } catch (err) {
-      setPositionsError(
-        err instanceof Error ? err.message : "Failed to load positions"
-      );
-    } finally {
-      setIsPositionsLoading(false);
-    }
-  }, [positionsPage]);
+        setPositions(payload.positions || []);
+        setPositionsTotalPages(Number(pagination?.totalPages || 1));
+        setPositionsTotal(Number(pagination?.total || 0));
+      } catch (err) {
+        setPositionsError(
+          err instanceof Error ? err.message : "Failed to load positions"
+        );
+      } finally {
+        setIsPositionsLoading(false);
+      }
+    },
+    [positionsPage]
+  );
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; fetchPositions is also used for refetch, so its internal setIsPositionsLoading/setPositionsError calls are needed there
@@ -658,23 +660,28 @@ export const useRecruitmentData = () => {
       setPositionsPage(1);
       await fetchPositions(1);
     } catch (err) {
-      const response = (err as {
-        response?: {
-          status?: number;
-          data?: {
-            code?: string;
-            message?: string;
-            data?: { conflicts?: RecruitmentOpeningConflictError["conflicts"] };
+      const response = (
+        err as {
+          response?: {
+            status?: number;
+            data?: {
+              code?: string;
+              message?: string;
+              data?: {
+                conflicts?: RecruitmentOpeningConflictError["conflicts"];
+              };
+            };
           };
-        };
-      }).response;
+        }
+      ).response;
 
       if (
         response?.status === 409 &&
         response.data?.code === "RECRUITMENT_POSITION_CONFLICT"
       ) {
         const conflictError = new Error(
-          response.data.message || "Some selected role applications already exist."
+          response.data.message ||
+            "Some selected role applications already exist."
         ) as RecruitmentOpeningConflictError;
         conflictError.code = "RECRUITMENT_POSITION_CONFLICT";
         conflictError.conflicts = response.data.data?.conflicts ?? [];
@@ -854,9 +861,7 @@ export const useRecruitmentData = () => {
     try {
       await deleteApplication(id);
       setApplicants((current) => current.filter((a) => a.id !== id));
-      setSelectedApplicant((current) =>
-        current?.id === id ? null : current
-      );
+      setSelectedApplicant((current) => (current?.id === id ? null : current));
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to delete applicant"
@@ -877,7 +882,9 @@ export const useRecruitmentData = () => {
       );
     } catch (err) {
       setMutationError(
-        err instanceof Error ? err.message : "Failed to clear rejected applicants"
+        err instanceof Error
+          ? err.message
+          : "Failed to clear rejected applicants"
       );
       // Refetch to reconcile partial failures
       await fetchApplicants();

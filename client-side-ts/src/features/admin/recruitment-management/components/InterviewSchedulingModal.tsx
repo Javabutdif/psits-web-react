@@ -24,8 +24,13 @@ const OFFICER_OPTIONS = [
   "President",
   "Vice President - Internal",
   "Vice President - External",
+  "Treasurer",
+  "Asst. Treasurer",
+  "Auditor",
   "Secretary",
   "Chief Volunteer",
+  "PRO",
+  "Devs",
 ];
 
 const INTERVIEW_TYPE_OPTIONS = ["Online", "Face-to-Face"];
@@ -106,7 +111,10 @@ function TimePickerPopover({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 rounded-2xl p-5" align="start">
+      <PopoverContent
+        className="w-52 overflow-y-auto rounded-2xl p-5"
+        align="start"
+      >
         <div className="mb-6 flex items-center justify-between">
           <span className="text-1 xl font-medium text-slate-900">
             {String(hour12).padStart(2, "0")}:{String(minute).padStart(2, "0")}{" "}
@@ -218,7 +226,11 @@ function OfficerMultiSelectPopover({
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 rounded-2xl p-2" align="start">
-        <div className="max-h-56 space-y-0.5 overflow-y-auto">
+        <div
+          className="max-h-56 space-y-0.5 overflow-y-auto"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           {options.map((o) => (
             <label
               key={o}
@@ -274,10 +286,10 @@ export const InterviewSchedulingModal = ({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="!max-w-3xl gap-0 rounded-3xl p-0 [&>button]:hidden"
+        className="flex max-h-[95vh] w-[95vw] flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:w-full sm:!max-w-3xl md:max-h-[101vh] [&>button]:hidden"
         showCloseButton={false}
       >
-        <div className="relative flex items-center justify-center border-b border-[#f0f0f0] px-6 py-5">
+        <div className="relative flex items-center justify-center px-6 py-5">
           <h2 className="text-lg font-semibold text-slate-900">
             Interview Scheduling
           </h2>
@@ -291,7 +303,7 @@ export const InterviewSchedulingModal = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 px-6 py-4 md:grid-cols-2">
+        <div className="grid flex-1 grid-cols-1 gap-6 overflow-y-auto px-6 py-4 md:grid-cols-2">
           {/* Left: calendar */}
           <div>
             <Label className="mb-1 block text-xs font-medium">
@@ -340,7 +352,7 @@ export const InterviewSchedulingModal = ({
             </div>
 
             <div>
-              <Label className="mb-1.5 block text-xs font-medium">
+              <Label className="mb-1.5 block overflow-y-auto text-xs font-medium">
                 Officer In-charge
               </Label>
               <OfficerMultiSelectPopover
