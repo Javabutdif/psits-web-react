@@ -619,12 +619,7 @@ type RaffleAttendee = IAttendee & {
   _id: unknown;
 };
 
-const RAFFLE_FILTERABLE_CAMPUSES = [
-  "UC_MAIN",
-  "UC_BANILAD",
-  "UC_LM",
-  "UC_PT",
-];
+const RAFFLE_FILTERABLE_CAMPUSES = ["UC_MAIN", "UC_BANILAD", "UC_LM", "UC_PT"];
 
 const RAFFLE_ELIGIBLE_CAMPUSES = [...RAFFLE_FILTERABLE_CAMPUSES, "UC_CS"];
 
@@ -785,10 +780,11 @@ export const drawEventRaffleWinnerController = async (
       : [];
     const campusFilter = buildRaffleCampusFilter(campusParam);
 
-    const eligible = attendees.filter((attendee) =>
-      isEligibleForRaffle(attendee) &&
-      RAFFLE_ELIGIBLE_CAMPUSES.includes(attendee.campus) &&
-      (campusFilter === null || campusFilter.includes(attendee.campus))
+    const eligible = attendees.filter(
+      (attendee) =>
+        isEligibleForRaffle(attendee) &&
+        RAFFLE_ELIGIBLE_CAMPUSES.includes(attendee.campus) &&
+        (campusFilter === null || campusFilter.includes(attendee.campus))
     );
 
     if (eligible.length === 0) {
@@ -904,9 +900,9 @@ const V_VALID_CAMPUSES = ["UC_BANILAD", "UC_LM", "UC_PT"];
 const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC_MAIN", "UC_CS"];
 
 const CAMPUS_ID_SUFFIX: Record<string, string> = {
-  "UC_BANILAD": "ucb",
-  "UC_LM": "uclm",
-  "UC_PT": "ucpt",
+  UC_BANILAD: "ucb",
+  UC_LM: "uclm",
+  UC_PT: "ucpt",
 };
 
 const buildCampusScopedStudentId = (rawStudentId: string, campus: string) => {
@@ -1344,7 +1340,9 @@ export const getMyEventsController = async (req: Request, res: Response) => {
     const validEvents = events.filter((event) => {
       if (!event.eventDate) return false;
       const date =
-        event.eventDate instanceof Date ? event.eventDate : new Date(String(event.eventDate));
+        event.eventDate instanceof Date
+          ? event.eventDate
+          : new Date(String(event.eventDate));
       return !Number.isNaN(date.getTime());
     });
 
@@ -1367,6 +1365,142 @@ export const getMyEventsController = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ── Student Self-Apply V2 ────────────────────────────────────────────────
+
+export const applyToEventV2Controller = async (req: Request, res: Response) => {
+  try {
+    const claims = req.userV2;
+    if (!claims || claims.role !== "student") {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "Student access required",
+      });
+    }
+
+    const studentCampus = claims.campus;
+    if (!V_VALID_CAMPUSES.includes(studentCampus)) {
+      // adjust if UC_MAIN / UC_CS students are allowed to apply too —
+      // V_VALID_CAMPUSES currently excludes them (mirrors addAttendeeV2Controller)
+      return res.status(400).json({
+        error: "INVALID_CAMPUS",
+        message: "Student campus is invalid",
+      });
+    }
+
+    const eventId = req.params.eventId as string;
+    const query = buildEventLookupQuery(eventId);
+    if (!query) {
+      return res.status(400).json({
+        error: "INVALID_EVENT_ID",
+        message: "Invalid event ID format",
+      });
+    }
+
+    const event = await Event.findOne(query);
+    if (!event) {
+      return res
+        .status(404)
+        .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
+    }
+
+    // ── Only allow applying while event is Upcoming ─────────────────────
+    if (event.status !== "Upcoming") {
+      return res.status(409).json({
+        error: "APPLICATIONS_CLOSED",
+        message: "This event is no longer accepting applications",
+      });
+    }
+
+    // ── Campus limit check (same rule as admin add) ─────────────────────
+    const campusLimit = event.limit.find(
+      (entry) => entry.campus === studentCampus
+    );
+    const campusAttendeeCount = Array.isArray(event.attendees)
+      ? event.attendees.filter((a) => a.campus === studentCampus).length
+      : 0;
+
+    if (
+      campusLimit &&
+      campusLimit.limit > 0 &&
+      campusAttendeeCount >= campusLimit.limit
+    ) {
+      return res.status(409).json({
+        error: "CAMPUS_LIMIT_REACHED",
+        message: `Attendee limit reached for ${studentCampus}`,
+      });
+    }
+
+    // ── Duplicate check ──────────────────────────────────────────────────
+    const attendeeList = Array.isArray(event.attendees)
+      ? (event.attendees as unknown as IAttendee[])
+      : [];
+
+    const alreadyApplied = attendeeList.some(
+      (a) => a.id_number === claims.idNumber
+    );
+    if (alreadyApplied) {
+      return res.status(409).json({
+        error: "ALREADY_APPLIED",
+        message: "You have already applied to this event",
+      });
+    }
+
+    // ── Auto-pull student profile ───────────────────────────────────────
+    const student = await Student.findOne({ id_number: claims.idNumber });
+    if (!student) {
+      return res.status(404).json({
+        error: "STUDENT_NOT_FOUND",
+        message: "Student account not found",
+      });
+    }
+
+    const attendeeName = [
+      student.first_name,
+      student.middle_name,
+      student.last_name,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    event.attendees.push({
+      id_number: student.id_number,
+      name: attendeeName,
+      course: student.course,
+      year: student.year,
+      campus: studentCampus,
+      shirtSize: "",
+      shirtPrice: 0,
+      transactBy: student.id_number, // self-applied
+      transactDate: new Date(),
+      attendance: {
+        morning: { attended: false, timestamp: null },
+        afternoon: { attended: false, timestamp: null },
+        evening: { attended: false, timestamp: null },
+      },
+      confirmedBy: "",
+      raffleIsRemoved: false,
+      raffleIsWinner: false,
+    } as IAttendee);
+
+    await event.save();
+
+    return res.status(201).json({
+      message: "Applied successfully",
+      data: {
+        id_number: student.id_number,
+        name: attendeeName,
+        campus: studentCampus,
+      },
+    });
+  } catch (error) {
+    console.error("Error in applyToEventV2Controller:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Internal server error",
+    });
   }
 };
 
@@ -1518,10 +1652,26 @@ export const getEditableAttendeeV2Controller = async (
 ) => {
   try {
     const claims = req.userV2;
-    if (!claims || claims.role !== "admin") {
+    if (!claims) {
+      return res.status(401).json({
+        error: "UNAUTHORIZED",
+        message: "Authentication required",
+      });
+    }
+
+    const idNumber = req.params.idNumber as string;
+
+    if (claims.role === "student" && claims.idNumber !== idNumber?.trim()) {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
-        message: "Admin access required",
+        message: "You can only mark your own attendance",
+      });
+    }
+
+    if (claims.role !== "admin" && claims.role !== "student") {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "Admin or student access required",
       });
     }
 
@@ -1541,7 +1691,6 @@ export const getEditableAttendeeV2Controller = async (
     }
 
     const eventId = req.params.eventId as string;
-    const idNumber = req.params.idNumber as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -2325,12 +2474,14 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
 
   const status =
     body.status === "Upcoming" ||
-      body.status === "Ended" ||
-      body.status === "Cancelled"
+    body.status === "Ended" ||
+    body.status === "Cancelled"
       ? body.status
       : "Ongoing";
 
-  const parsedSessionConfigResult = parseSessionConfigPayload(body.sessionConfig);
+  const parsedSessionConfigResult = parseSessionConfigPayload(
+    body.sessionConfig
+  );
   if ("error" in parsedSessionConfigResult) {
     return res.status(400).json({
       error: "VALIDATION",
@@ -2347,9 +2498,10 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
   }
 
   try {
-    const imageUrl = (req.files as Express.MulterS3.File[] | undefined)?.map(
-      (file) => file.location,
-    ) ?? [];
+    const imageUrl =
+      (req.files as Express.MulterS3.File[] | undefined)?.map(
+        (file) => file.location
+      ) ?? [];
 
     const createdBy =
       req.admin?.name ??
@@ -2377,7 +2529,12 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
 
     await newEvent.save();
 
-    await logAdminAction(req, logs_action.CREATE_EVENT, eventName, String(newEvent._id));
+    await logAdminAction(
+      req,
+      logs_action.CREATE_EVENT,
+      eventName,
+      String(newEvent._id)
+    );
 
     return res.status(201).json({
       message: "Event created successfully",
@@ -2388,9 +2545,9 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Failed to create event",
-    })
+    });
   }
-}
+};
 
 export const getAllEventsRawController = async (
   req: Request,
@@ -2407,9 +2564,9 @@ export const getAllEventsRawController = async (
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Internal server error",
-    })
+    });
   }
-}
+};
 
 export const updateEventV2Controller = async (
   req: Request,

@@ -32,6 +32,7 @@ import reportV2Routes from "./routes/report.v2.route";
 import recruitmentRoutes from "./routes/recruitment.route";
 import { hardDeleteSoftDeletedMerch } from "./controllers/merchandise.v2.controller";
 import certificateV2Routes from "./routes/certificateV2.route";
+import attendanceRoutes from "./routes/attendance.routes";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 
@@ -83,6 +84,7 @@ app.use("/api/v2/students", studentV2Routes);
 app.use("/api/v2/recruitment", recruitmentRoutes);
 app.use("/api/v2/dev", devtoolsRoutes);
 app.use("/api/v2/certificates", certificateV2Routes);
+app.use("/api/v2", attendanceRoutes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);
