@@ -2,10 +2,10 @@
 
 A comprehensive web platform for the Philippine Society of Information Technology Students (PSITS) at the University of Cebu - Main Campus College of Computer Studies. This application enhances the student experience through merchandise management, event handling, attendance tracking, and community engagement features.
 
-**Website:** https://psits.vercel.app  
+**Website:** https://psits.org  
 **Facebook:** https://www.facebook.com/PSITS.UCmain
 
-<img src=".github/docs/ss-psits-1.png"/>
+<img src=".github/docs/psits-v2.png"/>
 
 ## 🛠️ Tech Stack
 
@@ -21,12 +21,13 @@ A comprehensive web platform for the Philippine Society of Information Technolog
 **Frontend:** React + Vite + TailwindCSS  
 **Backend:** Node.js + Express + TypeScript  
 **Database:** MongoDB  
-**Deployment:** Vercel (Frontend), Koyeb + AWS S3 (Backend)
+**Deployment:** Vercel (Frontend), Koyeb + Cloudflare (Backend)
 
 ## ✨ Features
 
 - 🛍️ **Merchandise Management** - Browse and purchase PSITS merchandise with inventory tracking
 - 📅 **Event Management** - Create, manage, and track organization events
+- 🤝 **Recruitment Management** - Create, manage, and track recruitment process
 - 📋 **Attendance Tracking** - Record and monitor student attendance at events
 - 👥 **Student Profiles** - Manage student memberships and membership requests
 - 📚 **Documentation** - Access organization documentation and resources
