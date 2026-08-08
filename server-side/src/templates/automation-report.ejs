@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automation Report</title>
+</head>
+<body style="margin:0;padding:0;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;background:#F8F8F6;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#F8F8F6">
+    <tr>
+      <td align="center" style="padding:32px 16px">
+        <table border="0" cellpadding="0" cellspacing="0" width="580" style="background:#fff;max-width:580px;width:100%;border-top:3px solid #1c9dde">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding:28px 32px 24px;border-bottom:1px solid #E0E0DC">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="width:56px;vertical-align:middle">
+                    <img src="cid:logo" alt="PSITS" width="48" height="48" style="display:block;border-radius:50%;width:48px;height:48px;object-fit:cover">
+                  </td>
+                  <td style="vertical-align:middle">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#999999;margin-bottom:4px">Automation Report</td>
+                      </tr>
+                      <tr>
+                        <td style="font-size:17px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2"><%= jobName %></td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td style="text-align:right;vertical-align:middle">
+                    <table border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:11px;color:#666666;text-align:right;line-height:1.6">
+                          <%= executionTime %><br>
+                          <span style="color:#999999"><%= targetCount %> recipient(s)</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Function Results -->
+          <tr>
+            <td style="padding:24px 32px 0">
+              <% results.forEach(function(r) { %>
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:20px">
+                  <tr>
+                    <td style="padding-bottom:6px">
+                      <span style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#666666"><%= r.description %></span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-bottom:10px">
+                      <span style="font-size:11px;font-weight:600;color:<%= r.success ? '#1a7a3a' : '#b91c1c' %>"><%= r.success ? 'Success' : 'Failed' %></span>
+                      <span style="font-size:11px;color:#999999;margin-left:10px"><%= r.recordCount %> records</span>
+                      <span style="font-size:11px;color:#999999;margin-left:10px"><%= (r.durationMs / 1000).toFixed(1) %>s</span>
+                    </td>
+                  </tr>
+                  <% if (!r.success && r.error) { %>
+                    <tr>
+                      <td style="padding-top:6px;border-top:1px solid #FDEDEC">
+                        <span style="font-size:11px;color:#b91c1c"><%= r.error.substring(0, 120) %><%= r.error.length > 120 ? '...' : '' %></span>
+                      </td>
+                    </tr>
+                  <% } %>
+                </table>
+
+                <% if (r.success && r.data && Array.isArray(r.data) && r.data.length > 0 && includeSummary) { %>
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:20px">
+                    <tr>
+                      <td style="padding:8px 0 6px;border-top:1px solid #E0E0DC">
+                        <span style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#999999"><%= r.description %> Data</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding-top:4px">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;font-size:12px">
+                          <thead>
+                            <tr>
+                              <% if (r.data.length > 0) { %>
+                                <% Object.keys(r.data[0]).slice(0, 6).forEach(function(k) { %>
+                                  <th style="text-align:left;padding:6px 8px;color:#666666;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid #E0E0DC"><%= k %></th>
+                                <% }); %>
+                              <% } %>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% (r.data || []).slice(0, 10).forEach(function(row) { %>
+                              <tr>
+                                <% Object.values(row).slice(0, 6).forEach(function(v) { %>
+                                  <td style="padding:7px 8px;border-bottom:1px solid #F2F2F0;color:#111111;word-break:break-word"><%= v != null ? String(v).substring(0, 60) : '\u2014' %></td>
+                                <% }); %>
+                              </tr>
+                            <% }); %>
+                            <% if ((r.data || []).length > 10) { %>
+                              <tr>
+                                <td colspan="6" style="padding:6px 8px;color:#999999;font-size:11px;font-style:italic;border-bottom:1px solid #F2F2F0">
+                                  ... and <%= (r.data || []).length - 10 %> more records
+                                </td>
+                              </tr>
+                            <% } %>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                <% } %>
+              <% }); %>
+            </td>
+          </tr>
+
+          <!-- Raw JSON -->
+          <% if (includeRawData) { %>
+            <tr>
+              <td style="padding:20px 32px 0">
+                <details style="border-top:1px solid #E0E0DC">
+                  <summary style="padding:10px 0;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#666666;cursor:pointer;list-style:none">Raw JSON Data</summary>
+                  <pre style="margin:10px 0 0;padding:12px;font-size:10px;background:#F8F8F6;overflow-x:auto;color:#666666;line-height:1.6;font-family:'SF Mono',Monaco,Consolas,monospace"><%= JSON.stringify(results, null, 2) %></pre>
+                </details>
+              </td>
+            </tr>
+          <% } %>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 32px 28px;border-top:1px solid #E0E0DC">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="font-size:11px;color:#999999;line-height:1.6">
+                    PSITS Automation System &bull; Asia/Manila
+                  </td>
+                  <td style="font-size:10px;color:#B0B8C4;text-align:right;line-height:1.6">
+                    &copy; <%= new Date().getFullYear() %> PSITS &bull; University of Cebu - Main Campus
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
