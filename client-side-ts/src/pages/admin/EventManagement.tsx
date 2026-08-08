@@ -1,19 +1,6 @@
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
-import {
-  ArrowLeft,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  Settings,
-} from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Pencil, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,8 +17,12 @@ import {
   AttendeeSettingsModal,
   EditEventModal,
 } from "@/features/admin/event-management/components/modals";
-import { getEventById } from "@/features/events/api/eventService";
+import {
+  getEventById,
+  updateEventDetails,
+} from "@/features/events/api/eventService";
 import type {
+  CampusLimit,
   Event as ApiEvent,
   EventMerchMeta,
 } from "@/features/events/types/event.types";
@@ -53,6 +44,7 @@ interface EventDetails {
   image: string;
   campusCodes: Campus[];
   venues: string[];
+  limits: Record<string, number>;
   merch: EventMerchMeta | null;
   attendanceType: "open" | "ticketed";
   eventTheme?: string;
@@ -73,9 +65,6 @@ const DEFAULT_CAMPUSES: Campus[] = ["UC_MAIN", "UC_BANILAD", "UC_LM", "UC_PT"];
 
 const normalizeCampusForFilter = (campus: Campus): Campus =>
   campus === "UC_CS" ? "UC_MAIN" : campus;
-
-const UNDER_CONSTRUCTION_MESSAGE =
-  "This is under construction, visit legacy website to access this functionality.";
 
 interface SessionConfigType {
   enabled?: boolean;
@@ -146,20 +135,22 @@ const normalizeMerchMeta = (value: unknown): EventMerchMeta | null => {
       ? raw.selectedSizes
       : {};
 
-  const selectedSizes = Object.entries(selectedSizesSource).reduce<
-    EventMerchMeta["selectedSizes"]
-  >((acc, [size, option]) => {
+  const selectedSizesEntries = Object.entries(selectedSizesSource) as Array<
+    [string, { custom?: unknown; price?: unknown }]
+  >;
+
+  const selectedSizes: EventMerchMeta["selectedSizes"] = {};
+
+  for (const [size, option] of selectedSizesEntries) {
     if (!option || typeof option !== "object") {
-      return acc;
+      continue;
     }
 
-    const parsed = option as { custom?: unknown; price?: unknown };
-    acc[size] = {
-      custom: Boolean(parsed.custom),
-      price: String(parsed.price ?? "0"),
+    selectedSizes[size] = {
+      custom: Boolean(option.custom),
+      price: String(option.price ?? "0"),
     };
-    return acc;
-  }, {});
+  }
 
   return {
     category: typeof raw.category === "string" ? raw.category : null,
@@ -213,6 +204,27 @@ const mapApiEventToEventDetails = (
     ])
   );
 
+  const limits: Record<string, number> = {};
+  for (const code of normalizedCampusCodes) {
+    const entry = Array.isArray(event.limit)
+      ? event.limit.find(
+          (item) =>
+            item &&
+            typeof item === "object" &&
+            "campus" in item &&
+            String((item as { campus?: unknown }).campus) === code
+        )
+      : undefined;
+    const limitValue =
+      entry &&
+      typeof entry === "object" &&
+      "limit" in entry &&
+      typeof (entry as { limit?: unknown }).limit === "number"
+        ? (entry as { limit: number }).limit
+        : 0;
+    limits[CAMPUS_CODE_TO_NAME[code]] = limitValue;
+  }
+
   return {
     id: String(event.eventId ?? routeEventId),
     title: String(event.eventName ?? "Untitled Event"),
@@ -230,6 +242,7 @@ const mapApiEventToEventDetails = (
     image,
     campusCodes: normalizedCampusCodes,
     venues: normalizedCampusCodes.map((code) => CAMPUS_CODE_TO_NAME[code]),
+    limits,
     merch: normalizeMerchMeta(event.merch),
     attendanceType:
       event.attendanceType === "open" || event.attendanceType === "ticketed"
@@ -258,11 +271,6 @@ const EventManagement: React.FC = () => {
   const [isAttendeeSettingsOpen, setIsAttendeeSettingsOpen] = useState(false);
   const [isEditEventOpen, setIsEditEventOpen] = useState(false);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
-
-  // Tab scroll state
-  const tabsScrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const isAdmin = user?.role === "admin";
   const isUcMainAdmin = isAdmin && user?.campus === "UC_MAIN";
@@ -303,53 +311,18 @@ const EventManagement: React.FC = () => {
     }
   };
 
-  // Check if scroll arrows should be visible
-  const updateScrollArrows = useCallback(() => {
+  const tabsScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleTabsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     const container = tabsScrollRef.current;
     if (!container) return;
 
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-    setCanScrollLeft(scrollLeft > 1);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
-  }, []);
+    // Only hijack vertical wheel scroll if there's actually horizontal overflow
+    if (container.scrollWidth <= container.clientWidth) return;
 
-  // Scroll the tabs container
-  const scrollTabs = useCallback(
-    (direction: "left" | "right") => {
-      const container = tabsScrollRef.current;
-      if (!container) return;
-
-      const scrollAmount = 250;
-      container.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-
-      // Update arrows after scroll animation
-      setTimeout(updateScrollArrows, 350);
-    },
-    [updateScrollArrows]
-  );
-
-  // Observe container resize and update arrows
-  useEffect(() => {
-    const container = tabsScrollRef.current;
-    if (!container) return;
-
-    updateScrollArrows();
-
-    container.addEventListener("scroll", updateScrollArrows, { passive: true });
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateScrollArrows();
-    });
-    resizeObserver.observe(container);
-
-    return () => {
-      container.removeEventListener("scroll", updateScrollArrows);
-      resizeObserver.disconnect();
-    };
-  }, [updateScrollArrows, availableCampusCodes]);
+    e.preventDefault();
+    container.scrollLeft += e.deltaY;
+  };
 
   useEffect(() => {
     if (!hasValidRouteEventId) {
@@ -397,10 +370,51 @@ const EventManagement: React.FC = () => {
 
   const handleAttendeeSettings = () => {
     if (!isUcMainAdmin || !canManageEvents) return;
-    showToast("error", UNDER_CONSTRUCTION_MESSAGE);
+    setIsAttendeeSettingsOpen(true);
   };
 
-  const handleSaveAttendeeLimits = (_limits: Record<string, number>) => {
+  const handleSaveAttendeeLimits = async (limits: Record<string, number>) => {
+    if (!eventDetails) return;
+
+    const nameToCode: Record<string, Campus> = {};
+    for (const [code, name] of Object.entries(CAMPUS_CODE_TO_NAME)) {
+      nameToCode[name] = code as Campus;
+    }
+
+    const campusLimits: CampusLimit[] = Object.entries(limits)
+      .map(([venueName, limit]) => {
+        const campus = nameToCode[venueName];
+        if (!campus) return null;
+        return { campus, limit };
+      })
+      .filter((entry): entry is CampusLimit => entry !== null);
+
+    try {
+      const res = await updateEventDetails(eventDetails.id, {
+        limit: campusLimits,
+      });
+      if (res) {
+        showToast("success", "Attendee limits updated successfully");
+        setRefetchTrigger((prev) => prev + 1);
+      } else {
+        showToast("error", "Failed to update attendee limits");
+      }
+    } catch (error) {
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "data" in error.response &&
+        error.response.data &&
+        typeof error.response.data === "object" &&
+        "message" in error.response.data &&
+        typeof error.response.data.message === "string"
+          ? error.response.data.message
+          : "Failed to update attendee limits";
+      showToast("error", message);
+    }
   };
 
   const retryFetch = () => {
@@ -440,7 +454,7 @@ const EventManagement: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={handleAttendeeSettings}
-                className="cursor-not-allowed opacity-60"
+                className="cursor-pointer"
               >
                 <Settings className="mr-2 h-4 w-4" />
                 Attendee Settings
@@ -515,11 +529,11 @@ const EventManagement: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* Event Details Section */}
-              <div className="mb-20 flex flex-col items-stretch gap-6 lg:flex-row">
-                {/* Event Image */}
-                <div className="lg:w-1/3">
-                  <div className="bg-muted relative h-full overflow-hidden rounded-lg">
+              {/* Event Details Section — compact bordered card */}
+              <div className="bg-card flex flex-col gap-4 rounded-xl border p-4 sm:flex-row">
+                {/* Event Image (thumbnail) */}
+                <div className="sm:w-56 sm:flex-shrink-0">
+                  <div className="bg-muted aspect-[4/3] w-full overflow-hidden rounded-lg sm:aspect-auto sm:h-full">
                     <img
                       src={eventDetails.image}
                       alt={eventDetails.title}
@@ -529,141 +543,117 @@ const EventManagement: React.FC = () => {
                 </div>
 
                 {/* Event Info */}
-                <div className="h-full space-y-6 lg:w-2/3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="mb-4 flex items-center gap-3">
-                        <h2 className="text-3xl font-bold">
-                          {eventDetails.title}
-                        </h2>
-                        <Badge
-                          variant={
-                            eventDetails.status === "ongoing"
-                              ? "default"
-                              : eventDetails.status === "ended"
-                                ? "secondary"
-                                : "outline"
-                          }
-                          className="capitalize"
-                        >
-                          {eventDetails.status}
-                        </Badge>
-                      </div>
+                <div className="flex-1 space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl font-bold">{eventDetails.title}</h2>
+                    <Badge
+                      variant={
+                        eventDetails.status === "ongoing"
+                          ? "default"
+                          : eventDetails.status === "ended"
+                            ? "secondary"
+                            : "outline"
+                      }
+                      className="capitalize"
+                    >
+                      {eventDetails.status}
+                    </Badge>
+                  </div>
 
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="mb-3 text-sm font-semibold">
-                            Event details & description
-                          </h3>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div className="flex gap-3">
-                              <div className="bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                                <Calendar className="text-muted-foreground h-5 w-5" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium">
-                                  {eventDetails.startDate}
-                                </p>
-                                <p className="text-muted-foreground text-sm">
-                                  {formatTimeToAMPM(eventDetails.eventStartTime || eventDetails.startTime)}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex gap-3">
-                              <div className="bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                                <Calendar className="text-muted-foreground h-5 w-5" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium">
-                                  {eventDetails.endDate}
-                                </p>
-                                <p className="text-muted-foreground text-sm">
-                                  {formatTimeToAMPM(eventDetails.eventEndTime || eventDetails.endTime)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                          <div className="bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                            <MapPin className="text-muted-foreground h-5 w-5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium">
-                              {eventDetails.location || "Location not specified"}
-                              {eventDetails.eventVenueSpecific && ` (${eventDetails.eventVenueSpecific})`}
-                            </p>
-                          </div>
-                        </div>
-
-                        {eventDetails.eventTheme && (
-                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                            <p className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Event Theme</p>
-                            <p className="text-sm font-semibold italic text-gray-700 mt-0.5">"{eventDetails.eventTheme}"</p>
-                          </div>
-                        )}
-
-                        <div>
-                          <p className="text-muted-foreground text-sm leading-relaxed">
-                            {eventDetails.description}
+                  <div>
+                    <p className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wide uppercase">
+                      Brief Details
+                    </p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="flex items-start gap-2">
+                        <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">
+                            {eventDetails.startDate}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatTimeToAMPM(
+                              eventDetails.eventStartTime ||
+                                eventDetails.startTime
+                            )}
                           </p>
                         </div>
+                      </div>
 
-                        {isUcMainAdmin && canManageEvents && (
-                          <div>
-                            <Button
-                              onClick={handleEditEvent}
-                              variant="outline"
-                              className="w-full"
-                            >
-                              Edit Event
-                            </Button>
-                          </div>
-                        )}
+                      <div className="flex items-start gap-2">
+                        <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">
+                            {eventDetails.endDate}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatTimeToAMPM(
+                              eventDetails.eventEndTime || eventDetails.endTime
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  <div className="flex items-start gap-2">
+                    <MapPin className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <p className="text-sm font-medium">
+                      {eventDetails.location || "Location not specified"}
+                      {eventDetails.eventVenueSpecific &&
+                        ` (${eventDetails.eventVenueSpecific})`}
+                    </p>
+                  </div>
+
+                  {eventDetails.eventTheme && (
+                    <div className="bg-muted/50 rounded-lg border p-3">
+                      <p className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
+                        Event Theme
+                      </p>
+                      <p className="mt-0.5 text-sm font-semibold italic">
+                        "{eventDetails.eventTheme}"
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {eventDetails.description}
+                  </p>
+
+                  {isUcMainAdmin && canManageEvents && (
+                    <Button
+                      onClick={handleEditEvent}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit Event
+                    </Button>
+                  )}
                 </div>
               </div>
 
               {/* Attendees Section - campuses tabs */}
-              <div className="space-y-4">
+              <div className="-mt-4 space-y-4">
                 <Tabs
                   value={activeCampusValue}
                   onValueChange={handleCampusChange}
                 >
-                  <div className="relative flex items-center">
-                    {/* Left Arrow */}
-                    <button
-                      type="button"
-                      onClick={() => scrollTabs("left")}
-                      className={`bg-background z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border shadow-sm transition-opacity ${
-                        canScrollLeft
-                          ? "hover:bg-accent cursor-pointer opacity-100"
-                          : "pointer-events-none opacity-0"
-                      }`}
-                      aria-label="Scroll tabs left"
-                      tabIndex={canScrollLeft ? 0 : -1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-
-                    {/* Scrollable Tabs */}
+                  <div className="relative">
                     <div
                       ref={tabsScrollRef}
+                      onWheel={handleTabsWheel}
                       className="scrollbar-hide overflow-x-auto scroll-smooth"
                       style={{
                         scrollbarWidth: "none",
                         msOverflowStyle: "none",
                       }}
                     >
-                      <TabsList className="inline-flex w-max gap-2 rounded-none bg-transparent px-2">
+                      <TabsList className="inline-flex w-max gap-2 rounded-none border-0 bg-transparent px-2">
                         {isUcMainAdmin && (
                           <TabsTrigger
                             value="all"
-                            className="mx-1 cursor-pointer rounded-none !bg-transparent px-4 py-3 whitespace-nowrap hover:bg-transparent focus:bg-transparent data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-[#1C9DDE] data-[state=active]:underline data-[state=active]:decoration-[#1C9DDE] data-[state=active]:decoration-2 data-[state=active]:underline-offset-11"
+                            className="mx-1 cursor-pointer rounded-none !bg-transparent px-4 py-3 whitespace-nowrap ring-0 outline-none hover:bg-transparent focus:bg-transparent focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-[#1C9DDE] data-[state=active]:underline data-[state=active]:decoration-[#1C9DDE] data-[state=active]:decoration-2 data-[state=active]:underline-offset-11"
                           >
                             All Campuses
                           </TabsTrigger>
@@ -672,7 +662,7 @@ const EventManagement: React.FC = () => {
                           <TabsTrigger
                             key={campusCode}
                             value={campusCode}
-                            className="mx-1 cursor-pointer rounded-none !bg-transparent px-4 py-3 whitespace-nowrap hover:bg-transparent focus:bg-transparent data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-[#1C9DDE] data-[state=active]:underline data-[state=active]:decoration-[#1C9DDE] data-[state=active]:decoration-2 data-[state=active]:underline-offset-11"
+                            className="mx-1 cursor-pointer rounded-none !bg-transparent px-4 py-3 whitespace-nowrap ring-0 outline-none hover:bg-transparent focus:bg-transparent focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-[#1C9DDE] data-[state=active]:underline data-[state=active]:decoration-[#1C9DDE] data-[state=active]:decoration-2 data-[state=active]:underline-offset-11"
                           >
                             {CAMPUS_CODE_TO_NAME[campusCode]}
                           </TabsTrigger>
@@ -680,20 +670,7 @@ const EventManagement: React.FC = () => {
                       </TabsList>
                     </div>
 
-                    {/* Right Arrow */}
-                    <button
-                      type="button"
-                      onClick={() => scrollTabs("right")}
-                      className={`bg-background z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border shadow-sm transition-opacity ${
-                        canScrollRight
-                          ? "hover:bg-accent cursor-pointer opacity-100"
-                          : "pointer-events-none opacity-0"
-                      }`}
-                      aria-label="Scroll tabs right"
-                      tabIndex={canScrollRight ? 0 : -1}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
+                    <div className="from-background pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l to-transparent" />
                   </div>
 
                   {isUcMainAdmin && (
@@ -741,6 +718,7 @@ const EventManagement: React.FC = () => {
           eventDetails?.venues ??
           DEFAULT_CAMPUSES.map((code) => CAMPUS_CODE_TO_NAME[code])
         }
+        initialLimits={eventDetails?.limits}
         onSave={handleSaveAttendeeLimits}
       />
       <EditEventModal

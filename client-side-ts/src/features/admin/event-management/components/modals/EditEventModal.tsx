@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,14 +32,6 @@ interface EditEventModalProps {
   } | null;
 }
 
-interface EditEventFormData extends EventFormData {
-  eventVenue?: string;
-  eventTheme?: string;
-  eventVenueSpecific?: string;
-  eventStartTime?: string;
-  eventEndTime?: string;
-}
-
 const defaultDisabledSessions: EventFormData["sessionConfig"] = {
   morning: { enabled: false, timeRange: "" },
   afternoon: { enabled: false, timeRange: "" },
@@ -56,7 +47,7 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
   const [activeTab, setActiveTab] = useState("event-info");
   const [isSaving, setIsSaving] = useState(false);
 
-  const [formData, setFormData] = useState<EditEventFormData>({
+  const [formData, setFormData] = useState<EventFormData>({
     eventName: "",
     eventDescription: "",
     eventSchedule: undefined,
@@ -72,10 +63,13 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
 
   useEffect(() => {
     if (open && eventData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing form state from props when modal opens
       setFormData({
         eventName: eventData.title || "",
         eventDescription: eventData.description || "",
-        eventSchedule: eventData.startDate ? new Date(eventData.startDate) : undefined,
+        eventSchedule: eventData.startDate
+          ? { from: new Date(eventData.startDate), to: undefined }
+          : undefined,
         attendanceType: "open",
         image: null,
         sessionConfig: defaultDisabledSessions,
@@ -106,6 +100,7 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
         eventVenueSpecific: formData.eventVenueSpecific,
         eventStartTime: formData.eventStartTime,
         eventEndTime: formData.eventEndTime,
+        image: formData.image,
       });
       if (res) {
         showToast("success", "Event updated successfully");
@@ -116,8 +111,10 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
       } else {
         showToast("error", "Failed to update event");
       }
-    } catch (error: any) {
-      showToast("error", error?.response?.data?.message || "Failed to update event");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update event";
+      showToast("error", message);
     } finally {
       setIsSaving(false);
     }
@@ -125,40 +122,36 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] w-full max-w-4xl flex-col gap-0 overflow-y-auto rounded-lg p-0 sm:max-w-2xl sm:rounded-xl">
-        <DialogHeader className="border-b px-6 py-4">
+      <DialogContent className="mx-auto flex max-h-[90vh] w-[92%] max-w-4xl flex-col gap-0 overflow-y-auto rounded-3xl p-0 sm:w-full sm:max-w-2xl sm:rounded-xl">
+        <DialogHeader className="px-6 py-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold leading-6">
+            <DialogTitle className="text-xl leading-6 font-semibold">
               Edit Event
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleCancel}
-              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
-          <TabsList className="h-auto w-full justify-start rounded-none border-b bg-transparent px-6 py-0">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent px-6 py-0">
             <TabsTrigger
               value="event-info"
-              className="cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
+              className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-sm text-gray-500 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
             >
               Event Info
             </TabsTrigger>
             <TabsTrigger
               value="session-setup"
-              className="border-blue cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
+              className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-sm text-gray-500 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
             >
               Session Setup
             </TabsTrigger>
             <TabsTrigger
               value="optional-details"
-              className="border-blue cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
+              className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-sm text-gray-500 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
             >
               Optional Details
             </TabsTrigger>
@@ -166,61 +159,103 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
 
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
             <TabsContent value="event-info" className="mt-0 h-full">
-              <EventInfoTab formData={formData} setFormData={setFormData as any} />
+              <EventInfoTab
+                formData={formData}
+                setFormData={setFormData}
+                initialImage={eventData?.image}
+              />
             </TabsContent>
 
             <TabsContent value="session-setup" className="mt-0 h-full">
-              <SessionSetupTab formData={formData} setFormData={setFormData as any} />
+              <SessionSetupTab formData={formData} setFormData={setFormData} />
             </TabsContent>
 
-            <TabsContent value="optional-details" className="mt-0 h-full space-y-4">
+            <TabsContent
+              value="optional-details"
+              className="mt-0 h-full space-y-4"
+            >
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-semibold text-gray-700">Event Theme</label>
+                  <label className="text-sm font-semibold text-gray-700">
+                    Event Theme
+                  </label>
                   <Input
                     className="mt-1"
                     placeholder="e.g. Synergizing AI and Cloud Technologies"
                     value={formData.eventTheme || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, eventTheme: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        eventTheme: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-semibold text-gray-700">General Venue / Location</label>
+                    <label className="text-sm font-semibold text-gray-700">
+                      General Venue / Location
+                    </label>
                     <Input
                       className="mt-1"
                       placeholder="e.g. Cebu Coliseum"
                       value={formData.eventVenue || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, eventVenue: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          eventVenue: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-700">Specific Venue (Room/Hall)</label>
+                    <label className="text-sm font-semibold text-gray-700">
+                      Specific Venue (Room/Hall)
+                    </label>
                     <Input
                       className="mt-1"
                       placeholder="e.g. Stage Left, IT Lab 4"
                       value={formData.eventVenueSpecific || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, eventVenueSpecific: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          eventVenueSpecific: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-semibold text-gray-700">Start Time</label>
+                    <label className="text-sm font-semibold text-gray-700">
+                      Start Time
+                    </label>
                     <Input
                       type="time"
                       className="mt-1"
                       value={formData.eventStartTime || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, eventStartTime: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          eventStartTime: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-700">End Time</label>
+                    <label className="text-sm font-semibold text-gray-700">
+                      End Time
+                    </label>
                     <Input
                       type="time"
                       className="mt-1"
                       value={formData.eventEndTime || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, eventEndTime: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          eventEndTime: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -229,7 +264,12 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
           </div>
 
           <div className="bg-background flex items-center justify-end gap-3 border-t px-6 py-4">
-            <Button variant="outline" onClick={handleCancel} className="cursor-pointer" disabled={isSaving}>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="cursor-pointer"
+              disabled={isSaving}
+            >
               Cancel
             </Button>
             <Button

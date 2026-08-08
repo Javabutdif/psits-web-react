@@ -1,8 +1,8 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import multerS3 from "multer-s3";
-import { S3Client } from "@aws-sdk/client-s3";
 import path from "path";
+import { r2Client } from "../lib/r2Client";
 import {
   requireAccessTokenV2,
   requireAccessTokenWithDBCheck,
@@ -12,6 +12,7 @@ import {
 
 import {
   addAttendeeV2Controller,
+  addWalkInAttendeeV2Controller,
   changeAttendeePasswordV2Controller,
   createEventV2Controller,
   drawEventRaffleWinnerController,
@@ -21,6 +22,7 @@ import {
   getEligibleAttendeesRaffleV2Controller,
   getEventAttendeesV2Controller,
   getEventByIdV2Controller,
+  getEventImageController,
   getEventStatisticsV2Controller,
   getMyEventsController,
   markAttendanceV2Controller,
@@ -31,15 +33,6 @@ import {
 } from "../controllers/eventV2.controller";
 
 const router = Router();
-
-const r2Client = new S3Client({
-  region: "auto",
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
-  },
-});
 
 const getUpload = () => {
   const bucket = process.env.R2_BUCKET_NAME;
@@ -142,6 +135,10 @@ router.get(
   getMyEventsController
 );
 
+// GET proxied event image (streams from private R2 bucket)
+// Must come before "/:eventId" so it isn't shadowed by that param route.
+router.get("/image/*", getEventImageController);
+
 // GET specific event
 router.get(
   "/:eventId",
@@ -162,6 +159,21 @@ router.patch(
   "/:eventId",
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
+  getUpload().array("images", 3),
+  (err: unknown, req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof multer.MulterError) {
+      return res
+        .status(400)
+        .json({ error: "UPLOAD_ERROR", message: err.message });
+    }
+    if (err) {
+      console.error("Event V2 update upload failed:", err);
+      return res
+        .status(500)
+        .json({ error: "UPLOAD_ERROR", message: "Image upload failed" });
+    }
+    next();
+  },
   updateEventV2Controller
 );
 
@@ -187,6 +199,14 @@ router.post(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   addAttendeeV2Controller
+);
+
+// POST add walk-in attendee (lightweight, no account creation, all campuses)
+router.post(
+  "/:eventId/attendees/walk-in",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  addWalkInAttendeeV2Controller
 );
 
 // PUT mark attendance for a specific attendee in an event

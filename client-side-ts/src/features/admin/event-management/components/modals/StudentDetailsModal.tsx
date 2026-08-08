@@ -22,6 +22,7 @@ interface StudentDetailsModalProps {
     campus?: string;
     shirtSize?: string;
     shirtPrice?: string;
+    isPresent?: boolean;
   } | null;
   showEditActions?: boolean;
   onEditAttendee?: () => void;
@@ -62,7 +63,7 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-full max-w-md gap-0 rounded-lg p-0 sm:max-w-md sm:rounded-xl"
+        className="mx-auto w-[92%] max-w-md gap-0 rounded-lg p-0 sm:w-full sm:max-w-sm sm:rounded-xl md:max-w-md"
         showCloseButton={false}
       >
         <DialogHeader className="border-b px-6 py-4">
@@ -86,6 +87,22 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
             <div className="flex items-start justify-between gap-4">
               <span className="text-muted-foreground text-sm">Status</span>
               <Badge variant="outline">{student.status}</Badge>
+            </div>
+          )}
+
+          {student.isPresent !== undefined && (
+            <div className="flex items-start justify-between gap-4">
+              <span className="text-muted-foreground text-sm">Attendance</span>
+              <Badge
+                variant="outline"
+                className={
+                  student.isPresent
+                    ? "border-green-200 bg-green-50 text-green-700"
+                    : "border-red-200 bg-red-50 text-red-700"
+                }
+              >
+                {student.isPresent ? "Present" : "Absent"}
+              </Badge>
             </div>
           )}
 

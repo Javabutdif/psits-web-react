@@ -7,6 +7,8 @@ export { FilterSheet } from "./FilterSheet";
 export type { FilterOptions } from "./FilterSheet";
 export { AddAttendeeModal } from "./AddAttendeeModal";
 export type { AttendeeFormData } from "./AddAttendeeModal";
+export { AddWalkInAttendeeModal } from "./AddWalkInAttendeeModal";
+export type { WalkInAttendeeFormData } from "./AddWalkInAttendeeModal";
 export { MarkAttendanceButton } from "./MarkAttendanceButton";
 export { StudentDetailsModal } from "./StudentDetailsModal";
 export { AttendeeSettingsModal } from "./AttendeeSettingsModal";

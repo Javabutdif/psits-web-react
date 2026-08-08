@@ -110,7 +110,7 @@ export const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="w-full max-w-md gap-0 rounded-lg p-0 sm:max-w-xs sm:rounded-xl"
+        className="mx-auto w-[92%] max-w-md gap-0 rounded-3xl p-0 sm:w-full sm:max-w-xs sm:rounded-xl"
         showCloseButton={false}
       >
         <DialogHeader className="border-b px-6 py-4">
@@ -145,14 +145,14 @@ export const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
                     handleSearch();
                   }
                 }}
-                className="pr-12"
+                className="rounded-3xl pr-1"
                 disabled={isSearching}
               />
               <Button
                 size="icon-sm"
                 onClick={handleSearch}
                 disabled={isSearching}
-                className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 rounded-full bg-[#1C9DDE] hover:bg-[#1789c4]"
+                className="absolute top-1/2 right-1 h-8 w-8 -translate-y-1/2 rounded-full bg-[#1C9DDE] hover:bg-[#1789c4]"
               >
                 {isSearching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

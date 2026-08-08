@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { XCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,14 +15,20 @@ import type { CanonicalSessionConfig } from "@/features/events/types/event.types
 import { createEventV2 } from "@/features/events/api/eventService";
 import { showToast } from "@/utils/alertHelper";
 import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 
 export interface EventFormData {
   eventName: string;
   eventDescription: string;
-  eventSchedule?: Date;
+  eventSchedule?: DateRange;
   attendanceType: "open" | "ticketed";
   image: File | null;
   sessionConfig: CanonicalSessionConfig;
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 interface AddEventModalProps {
@@ -53,9 +59,7 @@ const parseMinutes = (hhmm: string): number => {
   return h * 60 + m;
 };
 
-const validateSessions = (
-  config: CanonicalSessionConfig,
-): string | null => {
+const validateSessions = (config: CanonicalSessionConfig): string | null => {
   const enabled = ["morning", "afternoon", "evening"] as const;
   const ranges: Array<{ name: string; start: number; end: number }> = [];
 
@@ -105,7 +109,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       return;
     }
 
-    if (!formData.eventSchedule) {
+    if (!formData.eventSchedule?.from) {
       showToast("error", "Event schedule is required");
       return;
     }
@@ -116,9 +120,9 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       const result = await createEventV2({
         eventName: formData.eventName,
         eventDescription: formData.eventDescription,
-        eventDate: formatDateKey(formData.eventSchedule),
+        eventDate: formatDateKey(formData.eventSchedule.from),
         attendanceType: formData.attendanceType,
-        status: "Ongoing",
+        status: "Upcoming",
         sessionConfig: formData.sessionConfig,
         images: formData.image ? [formData.image] : [],
       });
@@ -149,7 +153,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       >
         <DialogHeader className="border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold leading-6">
+            <DialogTitle className="text-xl leading-6 font-semibold">
               Add Event
             </DialogTitle>
             <Button
@@ -159,7 +163,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
               disabled={isSubmitting}
               className="h-8 w-8 cursor-pointer rounded-full"
             >
-              <X className="h-4 w-4" />
+              <XCircle className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>

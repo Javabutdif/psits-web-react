@@ -6,6 +6,7 @@ import { orderService } from "../services/order.service";
 import { Refund } from "../models/refund.model";
 import { Settings } from "../models/settings.model";
 import { membership_status } from "../enums/status.enums";
+import { campus_type } from "../enums/campus.enums";
 import { normalizeMembershipStatus } from "../util/membership.util";
 
 const escapeRegex = (value: string) =>
@@ -61,6 +62,82 @@ export const getStudentLookupForAdmin = async (
     return res.status(200).json({ data: user_model(student) });
   } catch (error) {
     console.error("Error fetching student lookup:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export interface StudentSearchResult {
+  id_number: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  email?: string;
+  course: string;
+  year: number;
+  campus: string;
+}
+
+/**
+ * GET /api/v2/students/search?q=<term>
+ *
+ * Admin-only fuzzy search across student id_number, first_name, and
+ * last_name. UC_MAIN admins can search all campuses; other campus admins
+ * are scoped to their own campus.
+ */
+export const searchStudentsV2Controller = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const claims = req.userV2;
+    if (!claims || claims.role !== "admin") {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+
+    const searchTerm = (req.query.q as string | undefined)?.trim();
+    if (!searchTerm) {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    const escaped = escapeRegex(searchTerm);
+    const regex = new RegExp(escaped, "i");
+
+    const adminCampus = claims.campus;
+    const isUcMainAdmin = adminCampus === campus_type.MAIN;
+
+    const query: Record<string, unknown> = {
+      $or: [
+        { id_number: regex },
+        { first_name: regex },
+        { last_name: regex },
+      ],
+    };
+
+    // Non-UC-MAIN admins can only search within their own campus
+    if (!isUcMainAdmin && adminCampus) {
+      query.campus = adminCampus;
+    }
+
+    const students = await Student.find(query)
+      .select(
+        "id_number first_name middle_name last_name email course year campus"
+      )
+      .lean();
+
+    const results: StudentSearchResult[] = students.map((s) => ({
+      id_number: s.id_number,
+      first_name: s.first_name,
+      middle_name: s.middle_name,
+      last_name: s.last_name,
+      email: s.email,
+      course: s.course,
+      year: s.year,
+      campus: s.campus,
+    }));
+
+    return res.status(200).json({ data: results });
+  } catch (error) {
+    console.error("Error searching students:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

@@ -37,7 +37,7 @@ export const SessionSetupTab: React.FC<SessionSetupTabProps> = ({
   formData,
   setFormData,
 }) => {
-  const selectedDateLabel = formatDateLabel(formData.eventSchedule);
+  const selectedDateLabel = formatDateLabel(formData.eventSchedule?.from);
 
   const updateRange = (
     sessionKey: SessionField["key"],

@@ -16,21 +16,18 @@ import {
 } from "@/constants/attendance.constants";
 import { QRCodeDisplay } from "@/features/events/components/QRCodeDisplay";
 import { SessionStatusList } from "@/features/events/components/SessionStatusList";
+import { applyToEvent } from "@/features/events";
 import { useAuth } from "@/features/auth";
 import type { EventData } from "@/features/events/types/event.types";
 import { createQRPayload } from "@/features/events/utils/qrPayload.utils";
-import {
-  CalendarDays,
-  CheckCircle2,
-  MapPin,
-  XCircle,
-  Ticket,
-} from "lucide-react";
+import { getManilaStartOfDay } from "@/utils/date-manila";
+import { CalendarDays, CheckCircle2, MapPin, XCircle } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
 interface EventCardProps {
   event: EventData;
   studentId: string;
+  onApplied?: () => void;
 }
 
 const AttendancePill = React.memo<{ attended: boolean; label?: string }>(
@@ -62,7 +59,11 @@ const AttendancePill = React.memo<{ attended: boolean; label?: string }>(
   )
 );
 
-export const EventCard: React.FC<EventCardProps> = ({ event, studentId }) => {
+export const EventCard: React.FC<EventCardProps> = ({
+  event,
+  studentId,
+  onApplied,
+}) => {
   const {
     title,
     description,
@@ -76,7 +77,16 @@ export const EventCard: React.FC<EventCardProps> = ({ event, studentId }) => {
 
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
   const [loadedSrc, setLoadedSrc] = useState<string>("");
+  const [isApplying, setIsApplying] = useState(false);
 
+  const handleApply = async () => {
+    setIsApplying(true);
+    const result = await applyToEvent(event.id);
+    setIsApplying(false);
+    if (result) {
+      onApplied?.();
+    }
+  };
   const imgSrc = useMemo(() => {
     if (!imageUrl) return defaultThumbnail;
     return failedImageUrl === imageUrl ? defaultThumbnail : imageUrl;
@@ -168,8 +178,20 @@ export const EventCard: React.FC<EventCardProps> = ({ event, studentId }) => {
     user?.year,
   ]);
 
-  // If ticketed and not an attendee, student needs a ticket first
-  const canShowQR = event.attendanceType !== "ticketed" || !!studentAttendee;
+  // ── QR visibility gate ──────────────────────────────────────────────────
+  // Applied students always see their QR. Otherwise, once the event is
+  // within 1 day (including the event day itself), the QR is open to
+  // everyone as a walk-in allowance.
+  const canShowQR = useMemo(() => {
+    if (studentAttendee) return true;
+    if (!event.date) return false;
+    const today = getManilaStartOfDay();
+    const eventDay = getManilaStartOfDay(event.date);
+    const daysUntil = Math.round(
+      (eventDay.getTime() - today.getTime()) / 86_400_000
+    );
+    return daysUntil <= 1;
+  }, [studentAttendee, event.date]);
 
   return (
     <Card className="h-full rounded-2xl transition-all hover:shadow-md">
@@ -235,8 +257,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event, studentId }) => {
               {!studentAttendee || (sessions && !hasAnySessions) ? (
                 <div className="flex items-center justify-center gap-1.5 py-1">
                   <XCircle className="h-4 w-4 text-gray-400" />
-                  <span className="text-xs text-gray-500">
-                    {ATTENDANCE_STATUS.NOT_RECORDED}
+                  <span
+                    className={`rounded px-2 py-0.5 text-xs font-semibold ${ATTENDANCE_COLORS.absent.badge}`}
+                  >
+                    {ATTENDANCE_STATUS.ABSENT}
                   </span>
                 </div>
               ) : sessions && sessions.length > 0 ? (
@@ -305,15 +329,23 @@ export const EventCard: React.FC<EventCardProps> = ({ event, studentId }) => {
                         )}
                       </>
                     ) : (
-                      <div className="flex flex-col items-center gap-3 px-4 py-6 text-center">
-                        <Ticket className="h-10 w-10 text-gray-400" />
-                        <p className="text-sm font-semibold text-gray-700">
-                          Ticket Required
-                        </p>
-                        <p className="max-w-[220px] text-xs text-gray-400">
-                          You need to be registered as an attendee to view your
-                          attendance QR code.
-                        </p>
+                      <div className="flex w-full flex-col items-center gap-3 px-4 py-6 text-center">
+                        <h4 className="text-base font-semibold text-gray-800">
+                          {title}
+                        </h4>
+                        <div className="max-h-32 w-full overflow-y-auto rounded-lg bg-gray-50 px-3 py-2">
+                          <p className="text-xs leading-relaxed text-gray-500">
+                            {description}
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleApply}
+                          disabled={isApplying}
+                          className="mt-1 bg-sky-600 hover:bg-sky-700"
+                          size="sm"
+                        >
+                          {isApplying ? "Applying..." : "Apply Event"}
+                        </Button>
                       </div>
                     )}
                   </div>
