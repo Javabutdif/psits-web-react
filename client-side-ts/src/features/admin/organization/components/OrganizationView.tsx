@@ -127,6 +127,7 @@ const initialFormValues: OrganizationAccountFormValues = {
   year: "3",
   position: "Developer",
   campus: "UC_MAIN",
+  githubUsername: "",
   password: "",
   confirm_password: "",
 };
@@ -143,6 +144,7 @@ const getFormInitialValues = (
         year: account.year || "3",
         position: account.position || account.role || "Developer",
         campus: account.campus || "UC_MAIN",
+        githubUsername: account.githubUsername || "",
         password: "",
         confirm_password: "",
       }
@@ -954,6 +956,18 @@ const AccountFormDialog = ({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <Label className="text-xs font-medium">GitHub Username</Label>
+              <Input
+                value={values.githubUsername || ""}
+                onChange={(event) =>
+                  updateValue("githubUsername", event.target.value)
+                }
+                className="mt-1 h-10 rounded-lg border-[#eeeeee]"
+                placeholder="e.g. octocat"
+              />
             </div>
 
             {isCreate && (

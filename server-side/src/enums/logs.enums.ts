@@ -74,4 +74,10 @@ export const logs_action = Object.freeze({
   CHANGE_MEMBER_PRICE: "Changed Membership Price",
   // Reports
   EXPORT_REPORT: "Exported Report",
+  // Contributions
+  CREATE_CONTRIBUTION: "Created Contribution",
+  UPDATE_CONTRIBUTION: "Updated Contribution",
+  DELETE_CONTRIBUTION: "Deleted Contribution",
+  SYNC_DEVELOPER_CONTRIBUTIONS: "Synced Developer Contributions",
+  UPDATE_GITHUB_USERNAME: "Updated GitHub Username",
 });

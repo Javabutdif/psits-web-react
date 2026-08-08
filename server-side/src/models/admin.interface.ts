@@ -13,6 +13,7 @@ export interface IAdmin {
   campus?: string;
   access: string;
   currentRefreshToken?: string | null;
+  githubUsername?: string;
 }
 //id_number, name, password, email, position, course, year, campus
 export interface ICreateAdmin {
