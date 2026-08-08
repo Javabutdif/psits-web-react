@@ -34,6 +34,7 @@ import { hardDeleteSoftDeletedMerch } from "./controllers/merchandise.v2.control
 import certificateV2Routes from "./routes/certificateV2.route";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
+import contributionsV2Routes from "./routes/contributions.v2.route";
 
 dotenv.config();
 
