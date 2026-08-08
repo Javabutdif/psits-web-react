@@ -149,9 +149,9 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[80vh] w-full max-w-4xl flex-col gap-0 overflow-y-auto rounded-lg p-0 sm:max-w-2xl sm:rounded-xl"
+        className="mx-auto flex max-h-[90vh] w-[92%] max-w-4xl flex-col gap-0 overflow-y-auto rounded-3xl p-0 sm:w-full sm:max-w-2xl sm:rounded-xl"
       >
-        <DialogHeader className="border-b px-6 py-4">
+        <DialogHeader className="px-6 py-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl leading-6 font-semibold">
               Add Event
@@ -173,16 +173,16 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           onValueChange={setActiveTab}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <TabsList className="h-auto w-full justify-start rounded-none border-b bg-transparent px-6 py-0">
+          <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent px-6 py-0">
             <TabsTrigger
               value="event-info"
-              className="cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
+              className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-sm text-gray-500 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
             >
               Event Info
             </TabsTrigger>
             <TabsTrigger
               value="session-setup"
-              className="border-blue cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
+              className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-sm text-gray-500 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
             >
               Session Setup
             </TabsTrigger>

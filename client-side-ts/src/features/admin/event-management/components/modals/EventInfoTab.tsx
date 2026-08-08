@@ -1,5 +1,10 @@
 import React, { useRef, useState } from "react";
-import { Camera, Calendar as CalendarIcon, MapPin } from "lucide-react";
+import {
+  UploadCloud,
+  Calendar as CalendarIcon,
+  MapPin,
+  Camera,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -17,13 +22,20 @@ import type { EventFormData } from "./AddEventModal";
 interface EventInfoTabProps {
   formData: EventFormData;
   setFormData: React.Dispatch<React.SetStateAction<EventFormData>>;
+  initialImage?: string;
+  isEdit?: boolean;
 }
 
 export const EventInfoTab: React.FC<EventInfoTabProps> = ({
   formData,
   setFormData,
+  initialImage,
+  isEdit = false,
 }) => {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    initialImage || null
+  );
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (file: File | null) => {
@@ -43,30 +55,80 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
     handleFileChange(file);
   };
 
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    const file = e.dataTransfer.files?.[0] || null;
+    handleFileChange(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+  };
+
   return (
     <div className="flex h-full flex-col gap-6">
       {/* Top row - Image + Name/Description */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Left Column - Image Upload */}
-        <div className="flex flex-col">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="group relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-gray-100"
+        <div className="flex min-w-0 flex-col">
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={cn(
+              "relative flex aspect-[4/3] w-full flex-col items-center justify-center overflow-hidden rounded-4xl border-2 border-dashed transition-colors",
+              isEdit && "max-h-[220px]",
+              isDraggingOver
+                ? "border-[#1C9DDE] bg-[#1C9DDE]/5"
+                : "border-gray-300 bg-white"
+            )}
           >
             {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Event preview"
-                className="h-full w-full object-cover"
-              />
+              <>
+                <img
+                  src={imagePreview}
+                  alt={formData.eventName || "Event image"}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all hover:bg-black/30"
+                >
+                  <div className="rounded-full bg-black/40 p-2">
+                    <Camera className="h-8 w-8 text-white" />
+                  </div>
+                </button>
+              </>
             ) : (
-              <div className="h-full w-full bg-gray-200" />
+              <div className="flex flex-col items-center gap-3 px-6 text-center">
+                <UploadCloud className="h-8 w-8 text-gray-400" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    Choose a file or drag & drop it here
+                  </p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Uploading a new image will replace the current one
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-1 cursor-pointer rounded-full"
+                >
+                  Browse File
+                </Button>
+              </div>
             )}
-
-            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
-              <Camera className="h-10 w-10 text-white drop-shadow" />
-            </div>
 
             <input
               ref={fileInputRef}
@@ -76,11 +138,11 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
               className="hidden"
               onChange={handleFileInputChange}
             />
-          </button>
+          </div>
         </div>
 
         {/* Right Column - Name + Description */}
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
           {/* Event Name */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="eventName" className="text-sm font-medium">
@@ -97,7 +159,6 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
             />
           </div>
 
-          {/* Event Description */}
           {/* Event Description */}
           <div className="flex flex-1 flex-col gap-2">
             <Label htmlFor="eventDescription" className="text-sm font-medium">

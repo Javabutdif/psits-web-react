@@ -532,7 +532,7 @@ const EventManagement: React.FC = () => {
               {/* Event Details Section — compact bordered card */}
               <div className="bg-card flex flex-col gap-4 rounded-xl border p-4 sm:flex-row">
                 {/* Event Image (thumbnail) */}
-                <div className="sm:w-56 sm:flex-shrink-0">
+                <div className="sm:w-56 sm:flex-shrink-0 md:w-90">
                   <div className="bg-muted aspect-[4/3] w-full overflow-hidden rounded-lg sm:aspect-auto sm:h-full">
                     <img
                       src={eventDetails.image}

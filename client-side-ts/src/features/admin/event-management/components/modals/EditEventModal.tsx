@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { EventInfoTab } from "./EventInfoTab";
 import { SessionSetupTab } from "./SessionSetupTab";
 import type { EventFormData } from "./AddEventModal";
@@ -149,12 +148,6 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
             >
               Session Setup
             </TabsTrigger>
-            <TabsTrigger
-              value="optional-details"
-              className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-sm text-gray-500 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
-            >
-              Optional Details
-            </TabsTrigger>
           </TabsList>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
@@ -163,103 +156,12 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
                 formData={formData}
                 setFormData={setFormData}
                 initialImage={eventData?.image}
+                isEdit
               />
             </TabsContent>
 
             <TabsContent value="session-setup" className="mt-0 h-full">
               <SessionSetupTab formData={formData} setFormData={setFormData} />
-            </TabsContent>
-
-            <TabsContent
-              value="optional-details"
-              className="mt-0 h-full space-y-4"
-            >
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-semibold text-gray-700">
-                    Event Theme
-                  </label>
-                  <Input
-                    className="mt-1"
-                    placeholder="e.g. Synergizing AI and Cloud Technologies"
-                    value={formData.eventTheme || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        eventTheme: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700">
-                      General Venue / Location
-                    </label>
-                    <Input
-                      className="mt-1"
-                      placeholder="e.g. Cebu Coliseum"
-                      value={formData.eventVenue || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          eventVenue: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700">
-                      Specific Venue (Room/Hall)
-                    </label>
-                    <Input
-                      className="mt-1"
-                      placeholder="e.g. Stage Left, IT Lab 4"
-                      value={formData.eventVenueSpecific || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          eventVenueSpecific: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700">
-                      Start Time
-                    </label>
-                    <Input
-                      type="time"
-                      className="mt-1"
-                      value={formData.eventStartTime || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          eventStartTime: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700">
-                      End Time
-                    </label>
-                    <Input
-                      type="time"
-                      className="mt-1"
-                      value={formData.eventEndTime || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          eventEndTime: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
             </TabsContent>
           </div>
 

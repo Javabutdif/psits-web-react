@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarIcon, ChevronDown, Clock, X } from "lucide-react";
+import { CalendarIcon, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
+import { TimePicker } from "@/components/ui/TimePicker";
 import type { ScheduleInterviewValues } from "../types/Recruitment.types";
 
 const OFFICER_OPTIONS = [
@@ -35,29 +35,6 @@ const OFFICER_OPTIONS = [
 
 const INTERVIEW_TYPE_OPTIONS = ["Online", "Face-to-Face"];
 
-function formatTime12h(time24: string) {
-  const [h, m] = time24.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${String(hour12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
-}
-
-// Parse a "HH:mm" (24h) string into 12h-clock parts.
-function parseTime24(time24: string) {
-  if (!time24) return null;
-  const [h, m] = time24.split(":").map(Number);
-  const period: "AM" | "PM" = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return { hour12, minute: m, period };
-}
-
-// Build a "HH:mm" (24h) string from 12h-clock parts.
-function toTime24(hour12: number, minute: number, period: "AM" | "PM") {
-  let h = hour12 % 12;
-  if (period === "PM") h += 12;
-  return `${String(h).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
 function formatDateDisplay(date?: Date) {
   if (!date) return "";
   return date.toLocaleDateString(undefined, {
@@ -72,116 +49,6 @@ function timeToMinutes(time24: string) {
   const [h, m] = time24.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return -1;
   return h * 60 + m;
-}
-
-interface TimePickerPopoverProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-}
-
-function TimePickerPopover({
-  value,
-  onChange,
-  placeholder,
-}: TimePickerPopoverProps) {
-  const [open, setOpen] = useState(false);
-
-  const parsed = parseTime24(value);
-  const hour12 = parsed?.hour12 ?? 7;
-  const minute = parsed?.minute ?? 0;
-  const period = parsed?.period ?? "AM";
-
-  const commit = (h: number, m: number, p: "AM" | "PM") => {
-    onChange(toTime24(h, m, p));
-  };
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="flex h-9 w-fit items-center gap-1.5 rounded-full border border-[#ececec] px-3.5 text-sm text-slate-700"
-        >
-          <Clock className="h-3.5 w-3.5 text-slate-400" />
-          {value ? (
-            formatTime12h(value)
-          ) : (
-            <span className="text-slate-400">{placeholder}</span>
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-52 overflow-y-auto rounded-2xl p-5"
-        align="start"
-      >
-        <div className="mb-6 flex items-center justify-between">
-          <span className="text-1 xl font-medium text-slate-900">
-            {String(hour12).padStart(2, "0")}:{String(minute).padStart(2, "0")}{" "}
-            {period}
-          </span>
-          <div className="flex gap-2">
-            {(["AM", "PM"] as const).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => commit(hour12, minute, p)}
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                  period === p
-                    ? "bg-[#1c9dde] text-white"
-                    : "border border-[#ececec] text-slate-400"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <Label className="text-sm text-slate-700">Hour</Label>
-            <span className="rounded-lg border border-[#ececec] px-3 py-1 text-sm font-medium text-[#1c9dde]">
-              {String(hour12).padStart(2, "0")}
-            </span>
-          </div>
-          <Slider
-            value={[hour12]}
-            min={1}
-            max={12}
-            step={1}
-            onValueChange={([h]) => commit(h, minute, period)}
-          />
-          <div className="mt-1.5 flex justify-between text-xs text-slate-400">
-            <span>01</span>
-            <span>06</span>
-            <span>12</span>
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <Label className="text-sm text-slate-700">Minutes</Label>
-            <span className="rounded-lg border border-[#ececec] px-3 py-1 text-sm font-medium text-[#1c9dde]">
-              {String(minute).padStart(2, "0")}
-            </span>
-          </div>
-          <Slider
-            value={[minute]}
-            min={0}
-            max={59}
-            step={1}
-            onValueChange={([m]) => commit(hour12, m, period)}
-          />
-          <div className="mt-1.5 flex justify-between text-xs text-slate-400">
-            <span>00</span>
-            <span>30</span>
-            <span>59</span>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
 }
 
 interface OfficerMultiSelectPopoverProps {
@@ -331,7 +198,7 @@ export const InterviewSchedulingModal = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <TimePickerPopover
+              <TimePicker
                 value={startTime}
                 placeholder="From"
                 onChange={(v) => {
@@ -344,7 +211,7 @@ export const InterviewSchedulingModal = ({
 
               <span className="shrink-0 text-sm text-slate-500">to</span>
 
-              <TimePickerPopover
+              <TimePicker
                 value={endTime}
                 placeholder="To"
                 onChange={setEndTime}
