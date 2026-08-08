@@ -35,6 +35,8 @@ import certificateV2Routes from "./routes/certificateV2.route";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 import contributionsV2Routes from "./routes/contributions.v2.route";
+import automationRoutes from "./routes/automation.v2.route";
+import { automationService } from "./services/automation.service";
 
 dotenv.config();
 
@@ -64,6 +66,11 @@ app.use(
 app.set("trust proxy", 1);
 app.use(bodyParser.json());
 
+// Health check endpoint
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // Routes
 app.use("/api", indexV2Routes);
 app.use("/api", studentRoutes);
@@ -85,6 +92,7 @@ app.use("/api/v2/recruitment", recruitmentRoutes);
 app.use("/api/v2/dev", devtoolsRoutes);
 app.use("/api/v2/certificates", certificateV2Routes);
 app.use("/api/v2/contributions", contributionsV2Routes);
+app.use("/api/v2/dev/automation", automationRoutes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);
@@ -271,6 +279,13 @@ async function startServer() {
       },
       { timezone: "Asia/Manila" }
     );
+
+    // Schedule automation jobs from database
+    try {
+      await automationService.scheduleAllJobs();
+    } catch (err) {
+      console.error("Failed to schedule automation jobs:", err);
+    }
   } catch (error) {
     console.error("Startup failed:", error);
     process.exit(1);

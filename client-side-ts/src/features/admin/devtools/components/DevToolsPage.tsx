@@ -22,6 +22,7 @@ import {
   AlertCircle,
   List,
   Receipt,
+  Workflow,
 } from "lucide-react";
 import { EmailQueuePanel } from "../components/EmailQueuePanel";
 import { HealthStatsPanel } from "../components/HealthStatsPanel";
@@ -47,6 +48,9 @@ import { ServerErrorPanel } from "../components/ServerErrorPanel";
 import { BruteForcePanel } from "../components/BruteForcePanel";
 import { EndpointInventoryPanel } from "../components/EndpointInventoryPanel";
 import { RefundQueuePanel } from "../components/RefundQueuePanel";
+import { AutomationPanel } from "../components/AutomationPanel";
+import { JobFormDialog } from "../components/JobFormDialog";
+import type { AutomationJob } from "../types/automation.types";
 
 const sections = [
   { key: "diagnostics", label: "Diagnostics" },
@@ -77,6 +81,7 @@ const sectionPanels: Record<string, PanelTab[]> = {
     { key: "data-export", label: "Data Export", icon: Download },
     { key: "endpoint-inventory", label: "API Endpoints", icon: List },
     { key: "refunds", label: "Refund Queue", icon: Receipt },
+    { key: "automation", label: "Automation", icon: Workflow },
   ],
   security: [
     { key: "officers", label: "Officer Access", icon: KeyRound },
@@ -93,10 +98,27 @@ const getPanels = (section: string): PanelTab[] =>
 export const DevToolsPage = () => {
   const [activeSection, setActiveSection] = useState("diagnostics");
   const [activeTab, setActiveTab] = useState("email");
+  const [jobFormOpen, setJobFormOpen] = useState(false);
+  const [editingJob, setEditingJob] = useState<AutomationJob | null>(null);
   const currentPanels = getPanels(activeSection);
   const displayActiveTab = currentPanels.some((p) => p.key === activeTab)
     ? activeTab
     : (currentPanels[0]?.key ?? "email");
+
+  const handleCreateJob = () => {
+    setEditingJob(null);
+    setJobFormOpen(true);
+  };
+
+  const _handleEditJob = (job: AutomationJob) => {
+    setEditingJob(job);
+    setJobFormOpen(true);
+  };
+
+  const handleJobSuccess = () => {
+    setJobFormOpen(false);
+    setEditingJob(null);
+  };
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
@@ -142,7 +164,7 @@ export const DevToolsPage = () => {
                 setActiveSection("diagnostics");
               }}
             />
-            <PanelRenderer activeTab={displayActiveTab} />
+            <PanelRenderer activeTab={displayActiveTab} onCreateJob={handleCreateJob} />
           </TabsContent>
 
           <TabsContent value="operations" className="mt-0 space-y-5">
@@ -158,7 +180,7 @@ export const DevToolsPage = () => {
                 setActiveSection("operations");
               }}
             />
-            <PanelRenderer activeTab={displayActiveTab} />
+            <PanelRenderer activeTab={displayActiveTab} onCreateJob={handleCreateJob} />
           </TabsContent>
 
           <TabsContent value="security" className="mt-0 space-y-5">
@@ -174,9 +196,18 @@ export const DevToolsPage = () => {
                 setActiveSection("security");
               }}
             />
-            <PanelRenderer activeTab={displayActiveTab} />
+            <PanelRenderer activeTab={displayActiveTab} onCreateJob={handleCreateJob} />
           </TabsContent>
         </Tabs>
+        <JobFormDialog
+          open={jobFormOpen}
+          onClose={() => {
+            setJobFormOpen(false);
+            setEditingJob(null);
+          }}
+          job={editingJob}
+          onSuccess={handleJobSuccess}
+        />
       </div>
     </div>
   );
@@ -228,9 +259,10 @@ const TabBar = ({ tabs, activeTab, onChange }: TabBarProps) => (
 
 interface PanelRendererProps {
   activeTab: string;
+  onCreateJob: () => void;
 }
 
-const PanelRenderer = ({ activeTab }: PanelRendererProps) => {
+const PanelRenderer = ({ activeTab, onCreateJob }: PanelRendererProps) => {
   switch (activeTab) {
     case "email":
       return <EmailQueuePanel />;
@@ -280,6 +312,8 @@ const PanelRenderer = ({ activeTab }: PanelRendererProps) => {
       return <PermissionMatrixPanel />;
     case "brute-force":
       return <BruteForcePanel />;
+    case "automation":
+      return <AutomationPanel onCreateJob={onCreateJob} />;
     default:
       return null;
   }

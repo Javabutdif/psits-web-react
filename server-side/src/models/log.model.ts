@@ -48,6 +48,7 @@ const logSchema = new Schema<ILogDocument>({
       "Report",
       "Membership",
       "Contribution",
+      "AutomationJob",
     ], // Allowed models
   },
 });
