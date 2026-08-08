@@ -64,6 +64,11 @@ app.use(
 app.set("trust proxy", 1);
 app.use(bodyParser.json());
 
+// Health check endpoint
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // Routes
 app.use("/api", indexV2Routes);
 app.use("/api", studentRoutes);
