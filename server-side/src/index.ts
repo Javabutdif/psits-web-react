@@ -32,6 +32,7 @@ import reportV2Routes from "./routes/report.v2.route";
 import recruitmentRoutes from "./routes/recruitment.route";
 import { hardDeleteSoftDeletedMerch } from "./controllers/merchandise.v2.controller";
 import certificateV2Routes from "./routes/certificateV2.route";
+import contributionsV2Routes from "./routes/contributions.v2.route";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 
@@ -83,6 +84,7 @@ app.use("/api/v2/students", studentV2Routes);
 app.use("/api/v2/recruitment", recruitmentRoutes);
 app.use("/api/v2/dev", devtoolsRoutes);
 app.use("/api/v2/certificates", certificateV2Routes);
+app.use("/api/v2/contributions", contributionsV2Routes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);
@@ -227,6 +229,37 @@ async function startServer() {
         } catch (err: any) {
           await logCronExecution({
             jobName: "merch-cleanup",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: false,
+            errorMessage: err.message,
+          });
+        }
+      },
+      { timezone: "Asia/Manila" }
+    );
+
+    const contributionSyncJob = cron.schedule(
+      "0 2 * * *",
+      async () => {
+        console.log("[2AM PH] Running developer contribution sync...");
+        const startedAt = new Date();
+        try {
+          const { contributionService } = await import("./services/contribution.service");
+          await contributionService.syncDeveloperContributions();
+          await logCronExecution({
+            jobName: "contribution-sync",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: true,
+          });
+        } catch (err: any) {
+          await logCronExecution({
+            jobName: "contribution-sync",
             scheduledAt: startedAt,
             startedAt,
             completedAt: new Date(),

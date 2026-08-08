@@ -214,6 +214,7 @@ interface Officer extends Member {
   access?: string;
   password?: string;
   confirm_password?: string;
+  githubUsername?: string | null;
 }
 
 interface AdminLog {

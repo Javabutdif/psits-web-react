@@ -16,6 +16,7 @@ export const admin_model = (admin: IAdminDocument): any => {
     campus: admin.campus ?? "",
     access: admin.access,
     status: admin.status ?? "True",
+    githubUsername: admin.githubUsername ?? null,
   };
 };
 export const user_model = (user: IStudent): IUserModelData => {

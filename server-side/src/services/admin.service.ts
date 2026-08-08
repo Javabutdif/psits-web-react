@@ -128,7 +128,7 @@ class AdminService {
   };
   //Edit Admin Account
   editAdmin = async (req: Request) => {
-    const { id_number, name, position, email, course, year, campus } = req.body;
+    const { id_number, name, position, email, course, year, campus, githubUsername } = req.body;
 
     const admin: IAdminDocument | null = await Admin.findOne({
       id_number: req.body.id_number,
@@ -138,18 +138,21 @@ class AdminService {
       throw new AppError("No admin found!", 404);
     }
 
+    const updateFields: Record<string, unknown> = {
+      name,
+      position,
+      campus,
+      email,
+      course,
+      year,
+    };
+    if (githubUsername !== undefined) {
+      updateFields.githubUsername = githubUsername || null;
+    }
+
     const adminResult = await Admin.updateOne(
       { id_number: id_number },
-      {
-        $set: {
-          name: name,
-          position: position,
-          campus: campus,
-          email: email,
-          course: course,
-          year: year,
-        },
-      }
+      { $set: updateFields }
     );
 
     if (adminResult.modifiedCount > 0) {
