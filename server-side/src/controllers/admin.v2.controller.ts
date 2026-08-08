@@ -84,7 +84,7 @@ class AdminController {
     }
   );
   editAdminController = catchAsync(async (req: Request, res: Response) => {
-    const result = adminService.editAdmin(req);
+    const result = await adminService.editAdmin(req);
 
     if (!result) {
       return res.status(400).json({ message: "Failed to edit admin account" });

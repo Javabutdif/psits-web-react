@@ -121,6 +121,6 @@ Feel free to ask any questions, raise problems, and request new features in [Dis
 
 ## 📱 Build Pipelines
 
-[![PSITS Client](https://github.com/PSITS-UC-MAIN/PSITS-WEB-REACT/actions/workflows/client-side-pipeline.yml/badge.svg)](https://github.com/PSITS-UC-MAIN/PSITS-WEB-REACT/actions/workflows/client-side-pipeline.yml)
+[![PSITS Client](https://github.com/PSITS-UCMAIN/psits-web-react/actions/workflows/client-side-pipeline.yml/badge.svg)](https://github.com/PSITS-UCMAIN/psits-web-react/actions/workflows/client-side-pipeline.yml)
 
-[![PSITS Server](https://github.com/PSITS-UC-MAIN/PSITS-WEB-REACT/actions/workflows/server-side-pipeline.yml/badge.svg)](https://github.com/PSITS-UC-MAIN/PSITS-WEB-REACT/actions/workflows/server-side-pipeline.yml)
+[![PSITS Server](https://github.com/PSITS-UCMAIN/psits-web-react/actions/workflows/server-side-pipeline.yml/badge.svg)](https://github.com/PSITS-UCMAIN/psits-web-react/actions/workflows/server-side-pipeline.yml)

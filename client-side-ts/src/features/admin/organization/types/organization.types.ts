@@ -33,6 +33,7 @@ export interface OrganizationAccount {
   access?: string | string[];
   isRequest?: boolean;
   adminRequest?: string;
+  githubUsername?: string;
   accountType: "admin" | "member" | "memberRequest" | "adminRequest";
 }
 
@@ -56,6 +57,7 @@ export interface OrganizationAccountFormValues {
   year: string;
   position: string;
   campus: string;
+  githubUsername?: string;
   password?: string;
   confirm_password?: string;
 }

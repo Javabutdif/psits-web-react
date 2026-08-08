@@ -16,6 +16,7 @@ import {
   Users,
   Code,
   Award,
+  BookOpenCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -284,6 +285,38 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   {collapsed && (
                     <TooltipContent side="right">
                       <p>Recruitment</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass(
+                        "/admin/contributions",
+                        !isUcMainAdmin
+                      )}
+                      asChild
+                    >
+                      <Link
+                        to={isUcMainAdmin ? "/admin/contributions" : "#"}
+                        onClick={(e) => {
+                          if (!isUcMainAdmin) {
+                            e.preventDefault();
+                            showToast("error", "Unauthorized.");
+                          }
+                        }}
+                      >
+                        <BookOpenCheck className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>Contributions</span>}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>Contributions</p>
                     </TooltipContent>
                   )}
                 </Tooltip>

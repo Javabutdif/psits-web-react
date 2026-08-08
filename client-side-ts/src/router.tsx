@@ -52,6 +52,7 @@ import { DocumentationPage } from "./features/admin/documentation";
 import SignUp from "./pages/auth/SignUp";
 import ApplicationPage from "./pages/student/ApplicationPage";
 import Recruitment from "./features/admin/recruitment-management/components/RecuitmentViews";
+import Contributions from "./pages/admin/Contributions";
 
 const router = createBrowserRouter([
   {
@@ -143,6 +144,7 @@ const router = createBrowserRouter([
               { path: "dashboard", Component: Dashboard },
               { path: "organization", Component: Organization },
               { path: "recuitment-management", Component: Recruitment },
+              { path: "contributions", Component: Contributions },
               { path: "students", Component: Students },
               { path: "merchandise", Component: Merchandise },
               { path: "merchandise/products", Component: Merchandise },

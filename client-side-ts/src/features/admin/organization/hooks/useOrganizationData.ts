@@ -64,6 +64,7 @@ interface OrganizationApiRecord {
   access?: string | string[];
   isRequest?: boolean;
   adminRequest?: string;
+  githubUsername?: string;
 }
 
 const ORGANIZATION_TABS: OrganizationTab[] = [
@@ -150,6 +151,7 @@ const normalizeAccount = (
     access: record.access,
     isRequest: record.isRequest,
     adminRequest: record.adminRequest,
+    githubUsername: record.githubUsername || undefined,
     accountType: isMemberRequest
       ? "memberRequest"
       : isAdminRequest
@@ -383,6 +385,7 @@ export const useOrganizationData = () => {
         year: values.year,
         position: values.position,
         campus: values.campus,
+        githubUsername: values.githubUsername || null,
       });
 
       if (result) {
