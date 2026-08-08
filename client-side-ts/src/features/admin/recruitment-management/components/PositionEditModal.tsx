@@ -250,7 +250,7 @@ export default function PositionEditModal({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="flex max-h-[90vh] !max-w-3xl flex-col gap-0 overflow-hidden rounded-3xl p-0 [&>button]:hidden"
+        className="flex max-h-[95vh] w-[95vw] flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:w-full sm:!max-w-3xl md:max-h-[101vh] [&>button]:hidden"
         showCloseButton={false}
       >
         {/* Header */}
@@ -265,11 +265,9 @@ export default function PositionEditModal({
           </button>
         </div>
 
-        {/* Body — two columns: calendar left, fields right. Scrolls
-            internally so tall content stays clipped by the dialog's
-            rounded corners instead of spilling past the viewport. */}
-        <div className="-mt-4 flex-1 overflow-y-auto px-8 py-6">
-          <div className="grid grid-cols-2 gap-8">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 gap-6 px-4 py-6 md:-mt-4 md:grid-cols-2 md:gap-8 md:px-7">
             {/* LEFT SIDE */}
             <div>
               <Label className="mb-3 block font-medium">Select Date</Label>
@@ -285,7 +283,7 @@ export default function PositionEditModal({
             </div>
 
             {/* RIGHT SIDE */}
-            <div className="space-y-4">
+            <div className="space-y-4 md:mt-7">
               <div className="relative">
                 <Label className="absolute -top-2 left-3 z-10 bg-white px-1 text-xs font-medium text-slate-400">
                   Position Title

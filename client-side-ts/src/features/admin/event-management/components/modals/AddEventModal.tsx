@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { XCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,14 +15,20 @@ import type { CanonicalSessionConfig } from "@/features/events/types/event.types
 import { createEventV2 } from "@/features/events/api/eventService";
 import { showToast } from "@/utils/alertHelper";
 import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 
 export interface EventFormData {
   eventName: string;
   eventDescription: string;
-  eventSchedule?: Date;
+  eventSchedule?: DateRange;
   attendanceType: "open" | "ticketed";
   image: File | null;
   sessionConfig: CanonicalSessionConfig;
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 interface AddEventModalProps {
@@ -53,9 +59,7 @@ const parseMinutes = (hhmm: string): number => {
   return h * 60 + m;
 };
 
-const validateSessions = (
-  config: CanonicalSessionConfig,
-): string | null => {
+const validateSessions = (config: CanonicalSessionConfig): string | null => {
   const enabled = ["morning", "afternoon", "evening"] as const;
   const ranges: Array<{ name: string; start: number; end: number }> = [];
 
@@ -105,7 +109,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       return;
     }
 
-    if (!formData.eventSchedule) {
+    if (!formData.eventSchedule?.from) {
       showToast("error", "Event schedule is required");
       return;
     }
@@ -116,9 +120,9 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       const result = await createEventV2({
         eventName: formData.eventName,
         eventDescription: formData.eventDescription,
-        eventDate: formatDateKey(formData.eventSchedule),
+        eventDate: formatDateKey(formData.eventSchedule.from),
         attendanceType: formData.attendanceType,
-        status: "Ongoing",
+        status: "Upcoming",
         sessionConfig: formData.sessionConfig,
         images: formData.image ? [formData.image] : [],
       });
@@ -145,11 +149,11 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[80vh] w-full max-w-4xl flex-col gap-0 overflow-y-auto rounded-lg p-0 sm:max-w-2xl sm:rounded-xl"
+        className="mx-auto flex max-h-[90vh] w-[92%] max-w-4xl flex-col gap-0 overflow-y-auto rounded-3xl p-0 sm:w-full sm:max-w-2xl sm:rounded-xl"
       >
-        <DialogHeader className="border-b px-6 py-4">
+        <DialogHeader className="px-6 py-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold leading-6">
+            <DialogTitle className="text-xl leading-6 font-semibold">
               Add Event
             </DialogTitle>
             <Button
@@ -159,7 +163,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
               disabled={isSubmitting}
               className="h-8 w-8 cursor-pointer rounded-full"
             >
-              <X className="h-4 w-4" />
+              <XCircle className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>
@@ -169,16 +173,16 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           onValueChange={setActiveTab}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <TabsList className="h-auto w-full justify-start rounded-none border-b bg-transparent px-6 py-0">
+          <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent px-6 py-0">
             <TabsTrigger
               value="event-info"
-              className="cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
+              className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-sm text-gray-500 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
             >
               Event Info
             </TabsTrigger>
             <TabsTrigger
               value="session-setup"
-              className="border-blue cursor-pointer rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
+              className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-sm text-gray-500 data-[state=active]:border-b-[#1C9DDE] data-[state=active]:bg-transparent data-[state=active]:text-[#1C9DDE] data-[state=active]:shadow-none"
             >
               Session Setup
             </TabsTrigger>

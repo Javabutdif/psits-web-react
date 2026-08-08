@@ -379,6 +379,7 @@ export const recruitmentInterviewScheduledMail = async (data: {
   interviewDate: string;
   interviewTime: string;
   mode: string;
+  officer: string;
 }): Promise<void> => {
   let queueEntry: any;
 
@@ -404,6 +405,7 @@ export const recruitmentInterviewScheduledMail = async (data: {
             <p style="margin: 5px 0;"><strong>Date:</strong> ${data.interviewDate}</p>
             <p style="margin: 5px 0;"><strong>Time:</strong> ${data.interviewTime}</p>
             <p style="margin: 5px 0;"><strong>Mode:</strong> ${data.mode}</p>
+            <p style="margin: 5px 0;"><strong>Officer's In-charge:</strong> ${data.officer}</p>
           </div>
           <p style="color: #555; font-size: 16px; margin-bottom: 12px;">
             <strong>For FACE -TO-FACE interview:</strong>
