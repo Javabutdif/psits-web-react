@@ -110,11 +110,6 @@ export const DevToolsPage = () => {
     setJobFormOpen(true);
   };
 
-  const _handleEditJob = (job: AutomationJob) => {
-    setEditingJob(job);
-    setJobFormOpen(true);
-  };
-
   const handleJobSuccess = () => {
     setJobFormOpen(false);
     setEditingJob(null);
