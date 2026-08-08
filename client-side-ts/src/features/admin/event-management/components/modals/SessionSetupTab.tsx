@@ -1,9 +1,9 @@
 import { Sunrise, Sun, Sunset } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { EventFormData } from "./AddEventModal";
+import { TimePicker } from "@/components/ui/TimePicker";
 
+import type { EventFormData } from "./AddEventModal";
 
 interface SessionSetupTabProps {
   formData: EventFormData;
@@ -17,9 +17,21 @@ interface SessionField {
 }
 
 const SESSION_FIELDS: SessionField[] = [
-  { key: "morning", label: "Morning Session", icon: <Sunrise className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" /> },
-  { key: "afternoon", label: "Afternoon Session", icon: <Sun className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" /> },
-  { key: "evening", label: "Evening Session", icon: <Sunset className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" /> },
+  {
+    key: "morning",
+    label: "Morning Session",
+    icon: <Sunrise className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" />,
+  },
+  {
+    key: "afternoon",
+    label: "Afternoon Session",
+    icon: <Sun className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" />,
+  },
+  {
+    key: "evening",
+    label: "Evening Session",
+    icon: <Sunset className="h-5 w-5 text-[#1C9DDE]" aria-hidden="true" />,
+  },
 ];
 
 const formatDateLabel = (date?: Date): string => {
@@ -37,12 +49,12 @@ export const SessionSetupTab: React.FC<SessionSetupTabProps> = ({
   formData,
   setFormData,
 }) => {
-  const selectedDateLabel = formatDateLabel(formData.eventSchedule);
+  const selectedDateLabel = formatDateLabel(formData.eventSchedule?.from);
 
   const updateRange = (
     sessionKey: SessionField["key"],
     field: "startTime" | "endTime",
-    value: string,
+    value: string
   ) => {
     const current = formData.sessionConfig[sessionKey];
     const [, end] = current.timeRange.split(" - ");
@@ -74,7 +86,7 @@ export const SessionSetupTab: React.FC<SessionSetupTabProps> = ({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Configure attendance windows for <strong>{selectedDateLabel}</strong>.
         At least one session must be enabled with a valid 24-hour time range.
       </p>
@@ -98,41 +110,35 @@ export const SessionSetupTab: React.FC<SessionSetupTabProps> = ({
                 className="data-[state=checked]:bg-[#1C9DDE]"
               />
               {session.icon}
-              <Label htmlFor={`session-${session.key}`} className="cursor-pointer">
+              <Label
+                htmlFor={`session-${session.key}`}
+                className="cursor-pointer"
+              >
                 {session.label}
               </Label>
             </div>
 
             {field.enabled && (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor={`${session.key}-start`} className="mb-2 block text-xs text-muted-foreground">
-                    Start
-                  </Label>
-                  <Input
-                    id={`${session.key}-start`}
-                    type="time"
-                    step="60"
-                    value={startTime}
-                    onChange={(event) =>
-                      updateRange(session.key, "startTime", event.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`${session.key}-end`} className="mb-2 block text-xs text-muted-foreground">
-                    End
-                  </Label>
-                  <Input
-                    id={`${session.key}-end`}
-                    type="time"
-                    step="60"
-                    value={endTime}
-                    onChange={(event) =>
-                      updateRange(session.key, "endTime", event.target.value)
-                    }
-                  />
-                </div>
+              <div className="mt-4 flex items-center gap-2">
+                <TimePicker
+                  id={`${session.key}-start`}
+                  value={startTime}
+                  placeholder="From"
+                  onChange={(value) =>
+                    updateRange(session.key, "startTime", value)
+                  }
+                />
+
+                <span className="shrink-0 text-sm text-slate-500">to</span>
+
+                <TimePicker
+                  id={`${session.key}-end`}
+                  value={endTime}
+                  placeholder="To"
+                  onChange={(value) =>
+                    updateRange(session.key, "endTime", value)
+                  }
+                />
               </div>
             )}
           </section>

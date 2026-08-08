@@ -94,11 +94,15 @@ const router = createBrowserRouter([
                   },
                   { path: "membership-pending", Component: MembershipPending },
                   { path: "application", Component: ApplicationPage },
+                  { path: "event-attendance", Component: EventAttendance }, //temporary re-routed for CCS Freshman Orientaion
                   {
                     element: <StudentMembershipRouteGuard />,
                     children: [
-                      { path: "event-attendance", Component: EventAttendance },
-                      { path: "certificates", Component: StudentCertificatesPage },
+                      {
+                        path: "certificates",
+                        Component: StudentCertificatesPage,
+                      },
+                      // temporary re-routed for CCS Freshman Orientaion
                       {
                         element: (
                           <StudentCampusRouteGuard

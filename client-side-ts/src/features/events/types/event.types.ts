@@ -137,6 +137,9 @@ export interface GetAttendeesParams {
   yearLevel?: number[];
   registeredOn?: string;
   exportAll?: boolean;
+  studentId?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface AttendeesPagination {
@@ -320,6 +323,44 @@ export interface AddAttendeeV2Response {
       shirtPrice: number;
     };
   };
+}
+
+export interface AddWalkInAttendeeV2Payload {
+  studentId: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email?: string;
+  course: string;
+  yearLevel: string;
+  shirtSize?: string;
+  shirtPrice?: number;
+}
+
+export interface AddWalkInAttendeeV2Response {
+  message: string;
+  data: {
+    attendee: {
+      id_number: string;
+      name: string;
+      campus: string;
+      course: string;
+      year: number;
+      shirtSize: string;
+      shirtPrice: number;
+    };
+  };
+}
+
+export interface StudentSearchResult {
+  id_number: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  email?: string;
+  course: string;
+  year: number;
+  campus: string;
 }
 
 export interface RemoveAttendeeFormData {

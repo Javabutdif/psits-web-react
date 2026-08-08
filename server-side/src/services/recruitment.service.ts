@@ -1028,12 +1028,18 @@ export class RecruitmentService {
       const modeMatch = (notes || "").match(/Interview type:\s*(.+?)(?:;|$)/i);
       const mode = modeMatch?.[1]?.trim() || "Face-to-Face";
 
+      const officerMatch = (notes || "").match(
+        /officer in charge:\s*(.+?)(?:;|$)/i
+      );
+      const officer = officerMatch?.[1]?.trim() || "";
+
       await recruitmentInterviewScheduledMail({
         applicantName: app.applicantSnapshot.name || "",
         applicantEmail: app.applicantSnapshot.email || "",
         interviewDate: dateStr,
         interviewTime: timeStr,
         mode,
+        officer,
       });
     } catch (err) {
       console.error(

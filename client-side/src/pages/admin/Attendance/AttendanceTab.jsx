@@ -204,8 +204,8 @@ const AttendanceTabs = ({
         "Raffle Status": item.raffleIsRemoved
           ? "Removed"
           : item.raffleIsWinner
-          ? "Winner"
-          : "Null",
+            ? "Winner"
+            : "Null",
       };
     });
 
@@ -238,14 +238,12 @@ const AttendanceTabs = ({
 
     const markAsPresent = () => {
       navigate(
-        `/admin/attendance/${eventId}/${eventName}/markAsPresent/${
-          studentData.id_number
-        }/${
-          studentData.first_name +
-          " " +
-          studentData.middle_name +
-          " " +
-          studentData.last_name
+        `/admin/attendance/${eventId}/${eventName}/markAsPresent/${studentData.id_number
+        }/${studentData.first_name +
+        " " +
+        studentData.middle_name +
+        " " +
+        studentData.last_name
         }`
       );
     };

@@ -7,7 +7,7 @@ export type {
   SessionConfigEntry,
 } from "./types/event.types";
 // ─── API ──────────────────────────────────────────────────────────────────────
-export { getEvents, getMyEvents } from "./api/eventService";
+export { getEvents, getMyEvents, applyToEvent } from "./api/eventService";
 
 // ─── Components ───────────────────────────────────────────────────────────────
 export { QRCodeDisplay } from "./components/QRCodeDisplay";

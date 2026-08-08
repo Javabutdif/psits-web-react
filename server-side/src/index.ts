@@ -32,7 +32,6 @@ import reportV2Routes from "./routes/report.v2.route";
 import recruitmentRoutes from "./routes/recruitment.route";
 import { hardDeleteSoftDeletedMerch } from "./controllers/merchandise.v2.controller";
 import certificateV2Routes from "./routes/certificateV2.route";
-import contributionsV2Routes from "./routes/contributions.v2.route";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 

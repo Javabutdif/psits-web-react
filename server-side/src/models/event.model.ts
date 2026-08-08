@@ -106,4 +106,47 @@ const eventSchema = new Schema<IEventDocument>({
   eventEndTime: { type: String, default: "" },
 });
 
+// Normalize legacy hyphenated campus codes (e.g. "UC-Main") to canonical
+// underscore-uppercase codes (e.g. "UC_MAIN") used by the schema enum.
+const CANONICAL_CAMPUS_MAP: Record<string, string> = {
+  "UC-Main": "UC_MAIN",
+  "UC-Banilad": "UC_BANILAD",
+  "UC-LM": "UC_LM",
+  "UC-PT": "UC_PT",
+  "UC-CS": "UC_CS",
+};
+
+const normalizeCampusCode = (value: unknown): string => {
+  const str = String(value ?? "").trim();
+  return CANONICAL_CAMPUS_MAP[str] ?? str;
+};
+
+eventSchema.pre("save", function (next) {
+  if (Array.isArray(this.limit)) {
+    for (const entry of this.limit) {
+      if (entry && typeof entry === "object" && "campus" in entry) {
+        entry.campus = normalizeCampusCode(entry.campus) as
+          | "UC_MAIN"
+          | "UC_BANILAD"
+          | "UC_LM"
+          | "UC_PT"
+          | "UC_CS";
+      }
+    }
+  }
+  if (Array.isArray(this.sales_data)) {
+    for (const entry of this.sales_data) {
+      if (entry && typeof entry === "object" && "campus" in entry) {
+        entry.campus = normalizeCampusCode(entry.campus) as
+          | "UC_MAIN"
+          | "UC_BANILAD"
+          | "UC_LM"
+          | "UC_PT"
+          | "UC_CS";
+      }
+    }
+  }
+  next();
+});
+
 export const Event = mongoose.model<IEventDocument>("event", eventSchema);

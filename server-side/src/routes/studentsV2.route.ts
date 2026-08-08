@@ -7,6 +7,7 @@ import {
   getStudentRefund,
   getStudentMembershipStatusV2,
   requestStudentMembershipV2,
+  searchStudentsV2Controller,
 } from "../controllers/studentV2.controller";
 import {
   requireAccessTokenV2,
@@ -22,6 +23,17 @@ router.get(
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
   getStudentLookupForAdmin
+);
+
+/**
+ * GET /api/v2/students/search?q=<term>
+ * Admin-only fuzzy search across id_number, first_name, last_name.
+ */
+router.get(
+  "/search",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  searchStudentsV2Controller
 );
 
 router.get("/profile/:id_number",   

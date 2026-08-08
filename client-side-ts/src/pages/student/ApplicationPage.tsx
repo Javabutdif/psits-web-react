@@ -43,7 +43,9 @@ const YEAR_MAP: Record<string, string> = {
 };
 
 const getPositionTimestamp = (position: RecruitmentPosition) => {
-  const timestamp = new Date(position.updatedAt || position.createdAt).getTime();
+  const timestamp = new Date(
+    position.updatedAt || position.createdAt
+  ).getTime();
   return Number.isFinite(timestamp) ? timestamp : 0;
 };
 
@@ -616,8 +618,7 @@ export const ApplicationPage = () => {
   }, [positionsByCatalogKey]);
 
   const baseRoleOptions = RECRUITMENT_ROLE_CATALOG.map((role) => role.title);
-  const selectedRolePositionOptions =
-    groupedPositions[selectedBaseRole] || [];
+  const selectedRolePositionOptions = groupedPositions[selectedBaseRole] || [];
   const hasPositionOptions = selectedRolePositionOptions.length > 0;
   const selectedPositionOption = selectedRolePositionOptions.find(
     (item) => item.positionId && item.positionId === selectedPositionId
@@ -916,10 +917,11 @@ export const ApplicationPage = () => {
               )}
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-600">
+            <label className="text-black-600 flex items-center gap-2">
               <Checkbox
                 checked={acknowledged}
                 onCheckedChange={(v) => setAcknowledged(v === true)}
+                className="-mt-6 border-gray-300 data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE]"
               />
               I have read and understand the role requirements{" "}
               <span className="text-red-500">*</span>
