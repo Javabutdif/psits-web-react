@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getSessions, invalidateBulkSessions } from "../api/devtools.api";
 import type { SessionInfo } from "../types/devtools.types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+
+const PAGE_SIZE = 10;
 
 export const SessionManagerPanel = () => {
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
@@ -20,6 +24,8 @@ export const SessionManagerPanel = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [invalidating, setInvalidating] = useState(false);
   const [roleFilter, setRoleFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [confirmAll, setConfirmAll] = useState<{
     open: boolean;
     type?: "admin" | "student";
@@ -44,7 +50,37 @@ export const SessionManagerPanel = () => {
 
   useEffect(() => {
     fetchSessions();
+    setCurrentPage(1); // reset to first page when the role filter changes
   }, [roleFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1); // reset to first page whenever the search term changes
+  }, [search]);
+
+  // Client-side search across name, ID number, campus, and position.
+  const filteredSessions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return sessions;
+    return sessions.filter((s) =>
+      [s.name, s.idNumber, s.campus, s.position]
+        .filter(Boolean)
+        .some((field) => field!.toLowerCase().includes(query))
+    );
+  }, [sessions, search]);
+
+  // Clamp current page if the underlying data shrinks (e.g. after invalidation or search)
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredSessions.length / PAGE_SIZE)
+  );
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+
+  const paginatedSessions = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredSessions.slice(start, start + PAGE_SIZE);
+  }, [filteredSessions, currentPage]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -55,12 +91,22 @@ export const SessionManagerPanel = () => {
     });
   };
 
+  // Select-all now scopes to the current page only, which is the
+  // conventional behavior for paginated tables.
+  const pageIds = paginatedSessions.map((s) => s.id);
+  const allOnPageSelected =
+    pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+
   const toggleSelectAll = () => {
-    if (selected.size === sessions.length) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(sessions.map((s) => s.id)));
-    }
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) {
+        pageIds.forEach((id) => next.delete(id));
+      } else {
+        pageIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
   };
 
   const handleBulkInvalidate = async () => {
@@ -123,15 +169,36 @@ export const SessionManagerPanel = () => {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="text-sm text-[#8a8a8a]">
-            {sessions.length} active session(s)
+            {search.trim()
+              ? `${filteredSessions.length} of ${sessions.length} session(s)`
+              : `${sessions.length} active session(s)`}
           </span>
           {selected.size > 0 && (
-            <span className="rounded-full bg-[#1c9dde] px-2 py-0.5 text-xs font-medium text-white">
+            <span className="bg-[#1c9dde] px-2 py-0.5 text-xs font-medium text-white">
               {selected.size} selected
             </span>
           )}
         </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:flex-nowrap">
+        <div className="flex w-full flex-wrap items-center gap-2 rounded-full sm:flex-nowrap">
+          <div className="relative w-full sm:w-56">
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#9a9a9a]" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name, ID, campus"
+              className="rounded-2xl h-9 pr-8 pl-9 text-sm"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute top-1/2 right-2 -translate-y-1/2 text-[#9a9a9a] hover:text-[#555]"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
@@ -191,11 +258,9 @@ export const SessionManagerPanel = () => {
             <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
               <th className="w-10 rounded-l-md px-2 py-2 text-center">
                 <Checkbox
-                  checked={
-                    selected.size === sessions.length && sessions.length > 0
-                  }
+                  checked={allOnPageSelected}
                   onCheckedChange={toggleSelectAll}
-                  aria-label="Select all"
+                  aria-label="Select all on page"
                 />
               </th>
               <th className="w-[20%] px-2 py-2 text-left font-medium">Name</th>
@@ -215,7 +280,17 @@ export const SessionManagerPanel = () => {
             </tr>
           </thead>
           <tbody>
-            {sessions.map((session) => (
+            {filteredSessions.length === 0 && (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="px-2 py-10 text-center text-sm text-[#777]"
+                >
+                  No sessions match "{search}".
+                </td>
+              </tr>
+            )}
+            {paginatedSessions.map((session) => (
               <tr
                 key={session.id}
                 className="border-b border-[#ededed] text-[#303030]"
@@ -253,6 +328,59 @@ export const SessionManagerPanel = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination controls */}
+      {filteredSessions.length > 0 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm text-[#8a8a8a]">
+            Page {currentPage} of {totalPages}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 w-8 rounded-full p-0"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              // show a max of 5 page buttons centered around current page
+              .filter((page) => {
+                if (totalPages <= 5) return true;
+                return Math.abs(page - currentPage) <= 2;
+              })
+              .map((page) => (
+                <Button
+                  key={page}
+                  type="button"
+                  size="sm"
+                  variant={page === currentPage ? "default" : "outline"}
+                  className="h-8 w-8 rounded-full p-0"
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 w-8 rounded-full p-0"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-sm rounded-[20px]">
