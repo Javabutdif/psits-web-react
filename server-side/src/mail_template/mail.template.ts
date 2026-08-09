@@ -16,25 +16,13 @@ dotenv.config();
 import { emailService } from "../services/email.service";
 
 type EmailTemplateOptions = {
-  /** Small uppercase label above the title, e.g. "PASSWORD RESET", "RECRUITMENT" */
   category: string;
-  /** Main heading, e.g. "Reset Your Password" */
   title: string;
-  /** Inner content — plain HTML, no need to wrap in a container */
   bodyHtml: string;
-  /** Optional accent bar color at the very top. Defaults to PSITS blue. */
   accentColor?: string;
-  /** Value for the logo <img src> — pass a "cid:xxx" reference matching an attachment's contentId */
   logoDataUri?: string;
 };
 
-/**
- * Shared PSITS email shell — logo, category label, title, and footer.
- * The logo is referenced via a cid: attachment (see getLogoAttachment)
- * so it renders inline in the header.
- * Built with <table> layout for reliable rendering in Outlook and other
- * email clients that don't support flexbox.
- */
 const renderPsitsEmail = ({
   category,
   title,
@@ -109,9 +97,6 @@ type SendEmailOptions = {
   }>;
 };
 
-// The PSITS logo is sent as a cid-referenced attachment, so email HTML
-// can point to it via <img src="cid:logo">. We read the image once and
-// cache the attachment object across all send calls.
 let cachedLogoAttachment: {
   filename: string;
   content: Buffer;
@@ -160,10 +145,6 @@ const sendEmail = async ({
   }
 };
 
-/**
- * Sends a templated PSITS email: wraps bodyHtml in the shared logo/header/
- * footer shell and automatically attaches the inline logo image.
- */
 const sendPsitsTemplatedEmail = async (opts: {
   to: string;
   subject: string;

@@ -65,8 +65,6 @@ export const SessionManagerPanel = () => {
   }, [search]);
 
   // Client-side search across name, ID number, campus, and position,
-  // combined with the role filter so it works even if the backend
-  // doesn't actually filter by the `role` param.
   const filteredSessions = useMemo(() => {
     const query = search.trim().toLowerCase();
     return sessions
