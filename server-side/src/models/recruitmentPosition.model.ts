@@ -11,6 +11,7 @@ export interface IRecruitmentPosition extends Document {
   hiringStatus: keyof typeof hiringStatus;
   isActive: boolean;
   slots?: number;
+  slotsFilled: number;
   applicationOpensAt?: Date;
   applicationDeadline?: Date;
   sortOrder: number;
@@ -26,6 +27,7 @@ const RecruitmentPositionSchema = new Schema<IRecruitmentPosition>(
     responsibilities: { type: [String], default: [] },
     requirements: { type: [String], default: [] },
     slots: { type: Number, default: null },
+    slotsFilled: { type: Number, default: 0 },
     applicationOpensAt: Date,
     hiringStatus: {
       type: String,
