@@ -1045,7 +1045,7 @@ export const ApplicationPage = () => {
       </form>
 
       <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-        <DialogContent className="max-w-sm rounded-3xl">
+        <DialogContent className="w-[92vw] max-w-sm rounded-3xl p-6 sm:p-6">
           <DialogHeader>
             <DialogTitle>Upload File</DialogTitle>
           </DialogHeader>
@@ -1060,8 +1060,8 @@ export const ApplicationPage = () => {
           >
             <Upload className="h-8 w-8 text-sky-400" />
             <span className="text-sm text-gray-600">Drag & drop or browse</span>
-            <span className="text-xs text-gray-400">
-              Supports: PDF, max 5MB
+            <span className="text-xs text-gray-500">
+              Only PDF files are accepted (max 5MB)
             </span>
             <span className="mt-2 rounded-md bg-sky-500 px-4 py-1.5 text-sm text-white">
               Choose File
