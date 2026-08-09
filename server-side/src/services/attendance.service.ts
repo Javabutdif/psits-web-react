@@ -60,11 +60,12 @@ export type HydratableAttendee = IAttendee & {
   _id?: Types.ObjectId | string | null;
 };
 
-type EventWithAttendees<TAttendee extends HydratableAttendee = HydratableAttendee> =
-  {
-    _id?: unknown;
-    attendees?: TAttendee[] | null;
-  };
+type EventWithAttendees<
+  TAttendee extends HydratableAttendee = HydratableAttendee,
+> = {
+  _id?: unknown;
+  attendees?: TAttendee[] | null;
+};
 
 type EventAttendee = HydratableAttendee & { _id: Types.ObjectId };
 type AttendanceEventMetadata = {
@@ -187,7 +188,9 @@ function buildAttendanceKey(eventId: string, attendeeId: string) {
   return `${eventId}:${attendeeId}`;
 }
 
-function extractAttendeeRef(attendee: HydratableAttendee): Types.ObjectId | null {
+function extractAttendeeRef(
+  attendee: HydratableAttendee
+): Types.ObjectId | null {
   return toObjectId(attendee._id);
 }
 
@@ -314,7 +317,7 @@ function getActiveSession(event: {
   eventDate: Date;
   status: string;
 }): keyof IAttendanceSession {
-  if (event.status !== "Ongoing") {
+  if (event.status === "Ended" || event.status === "Cancelled") {
     throw new AttendanceError(
       "EVENT_NOT_ACTIVE",
       "This event is not currently active."

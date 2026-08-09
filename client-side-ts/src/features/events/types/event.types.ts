@@ -260,6 +260,11 @@ export interface CreateEventV2Payload {
   sessionConfig: CanonicalSessionConfig;
   images?: File[];
   limit?: CampusLimit[];
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 export interface CreateEventV2Response {

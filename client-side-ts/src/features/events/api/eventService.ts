@@ -144,6 +144,14 @@ export const createEventV2 = async (
     if (payload.limit && payload.limit.length > 0) {
       formData.append("limit", JSON.stringify(payload.limit));
     }
+    if (payload.eventVenue) formData.append("eventVenue", payload.eventVenue);
+    if (payload.eventTheme) formData.append("eventTheme", payload.eventTheme);
+    if (payload.eventVenueSpecific)
+      formData.append("eventVenueSpecific", payload.eventVenueSpecific);
+    if (payload.eventStartTime)
+      formData.append("eventStartTime", payload.eventStartTime);
+    if (payload.eventEndTime)
+      formData.append("eventEndTime", payload.eventEndTime);
     payload.images?.forEach((file) => formData.append("images", file));
 
     const response = await api.post<CreateEventV2Response>(
