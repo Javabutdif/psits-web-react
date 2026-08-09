@@ -8,7 +8,12 @@ export const globalErrorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  logServerError(err, req);
+  // Do not store expected refresh-token-miss errors in the devtools error log.
+  const isExpectedRefreshMiss =
+    err?.code === "AUTH_005" && req.path?.includes("/auth/refresh");
+  if (!isExpectedRefreshMiss) {
+    logServerError(err, req);
+  }
 
   const response: any = {
     status: err.statusCode || 500,

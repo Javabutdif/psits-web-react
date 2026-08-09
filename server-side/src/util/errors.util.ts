@@ -68,7 +68,17 @@ export const AuthErrorCodes = {
 };
 
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error("Error Handler:", err);
+    // Skip console noise for expected auth errors on the refresh endpoint.
+    // AuthProvider calls refresh on every mount; unauthenticated users have no cookie,
+    // so this 401 is normal and must not pollute server logs.
+    const isExpectedRefreshMiss =
+        err instanceof AuthError &&
+        err.code === "AUTH_005" &&
+        req.path?.includes("/auth/refresh");
+
+    if (!isExpectedRefreshMiss) {
+        console.error("Error Handler:", err);
+    }
 
     if (err instanceof AuthError) {
         return res.status(err.statusCode).json({
