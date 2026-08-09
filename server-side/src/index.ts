@@ -6,6 +6,7 @@ import cors from "cors";
 import helmet from "helmet";
 import bodyParser from "body-parser";
 import express from "express";
+import path from "path";
 
 import { checkPromos } from "./custom_function/check_promo";
 import { resendPendingEmails } from "./services/email.resend.service";
@@ -66,6 +67,7 @@ app.use(
 app.set("trust proxy", 1);
 app.use(bodyParser.json());
 
+app.use("/assets", express.static(path.join(__dirname, "assets")));
 // Health check endpoint
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -255,7 +257,8 @@ async function startServer() {
         console.log("[2AM PH] Running developer contribution sync...");
         const startedAt = new Date();
         try {
-          const { contributionService } = await import("./services/contribution.service");
+          const { contributionService } =
+            await import("./services/contribution.service");
           await contributionService.syncDeveloperContributions();
           await logCronExecution({
             jobName: "contribution-sync",

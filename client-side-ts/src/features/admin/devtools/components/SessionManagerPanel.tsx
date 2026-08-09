@@ -14,6 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const PAGE_SIZE = 10;
 
@@ -57,16 +64,18 @@ export const SessionManagerPanel = () => {
     setCurrentPage(1); // reset to first page whenever the search term changes
   }, [search]);
 
-  // Client-side search across name, ID number, campus, and position.
+  // Client-side search across name, ID number, campus, and position,
   const filteredSessions = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return sessions;
-    return sessions.filter((s) =>
-      [s.name, s.idNumber, s.campus, s.position]
-        .filter(Boolean)
-        .some((field) => field!.toLowerCase().includes(query))
-    );
-  }, [sessions, search]);
+    return sessions
+      .filter((s) => !roleFilter || s.role === roleFilter)
+      .filter((s) => {
+        if (!query) return true;
+        return [s.name, s.idNumber, s.campus, s.position]
+          .filter(Boolean)
+          .some((field) => field!.toLowerCase().includes(query));
+      });
+  }, [sessions, search, roleFilter]);
 
   // Clamp current page if the underlying data shrinks (e.g. after invalidation or search)
   const totalPages = Math.max(
@@ -174,19 +183,19 @@ export const SessionManagerPanel = () => {
               : `${sessions.length} active session(s)`}
           </span>
           {selected.size > 0 && (
-            <span className="bg-[#1c9dde] px-2 py-0.5 text-xs font-medium text-white">
+            <span className="rounded-full bg-[#1c9dde] px-2 py-0.5 text-xs font-medium text-white">
               {selected.size} selected
             </span>
           )}
         </div>
-        <div className="flex w-full flex-wrap items-center gap-2 rounded-full sm:flex-nowrap">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:flex-nowrap">
           <div className="relative w-full sm:w-56">
             <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#9a9a9a]" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, ID, campus"
-              className="rounded-2xl h-9 pr-8 pl-9 text-sm"
+              placeholder="Search name, ID, campus..."
+              className="h-9 rounded-2xl pr-8 pl-9 text-sm"
             />
             {search && (
               <button
@@ -199,15 +208,21 @@ export const SessionManagerPanel = () => {
               </button>
             )}
           </div>
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="h-9 rounded-lg border-[#ececec] bg-white px-3 text-sm"
+          <Select
+            value={roleFilter || "all"}
+            onValueChange={(value) =>
+              setRoleFilter(value === "all" ? "" : value)
+            }
           >
-            <option value="">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="student">Student</option>
-          </select>
+            <SelectTrigger className="h-9 w-[130px] rounded-full text-sm">
+              <SelectValue placeholder="All Roles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="student">Student</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             type="button"
             size="sm"

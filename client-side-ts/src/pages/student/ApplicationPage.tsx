@@ -73,10 +73,15 @@ const isPositionCurrentlyOpen = (position?: RecruitmentPosition) => {
   }
 
   const now = Date.now();
+
+  const opensAt = position.applicationOpensAt
+    ? new Date(position.applicationOpensAt).getTime()
+    : null;
+  if (opensAt && Number.isFinite(opensAt) && now < opensAt) return false;
+
   const deadline = position.applicationDeadline
     ? new Date(position.applicationDeadline).getTime()
     : null;
-
   if (deadline && Number.isFinite(deadline) && deadline < now) return false;
 
   return true;

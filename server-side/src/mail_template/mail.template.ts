@@ -15,6 +15,65 @@ dotenv.config();
 
 import { emailService } from "../services/email.service";
 
+type EmailTemplateOptions = {
+  category: string;
+  title: string;
+  bodyHtml: string;
+  accentColor?: string;
+  logoDataUri?: string;
+};
+
+const renderPsitsEmail = ({
+  category,
+  title,
+  bodyHtml,
+  accentColor = "#1c9dde",
+  logoDataUri = "",
+}: EmailTemplateOptions): string => `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f7; padding:32px 16px; font-family: Arial, Helvetica, sans-serif;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #ececec;">
+        <tr>
+          <td style="height:4px; background-color:${accentColor}; font-size:0; line-height:0;">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="padding:24px 32px 20px 32px; border-bottom:1px solid #f0f0f0;">
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding-right:14px; vertical-align:middle;">
+                  ${logoDataUri ? `<img src="${logoDataUri}" width="44" height="44" alt="PSITS" style="display:block; border-radius:50%; border:1px solid #eee;" />` : ""}
+                </td>
+                <td style="vertical-align:middle;">
+                  <p style="margin:0; font-size:11px; letter-spacing:1px; color:#9a9a9a; font-weight:700; text-transform:uppercase;">
+                    ${category}
+                  </p>
+                  <p style="margin:3px 0 0 0; font-size:20px; line-height:1.3; color:#1f1f1f; font-weight:bold;">
+                    ${title}
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px 32px 32px; color:#444444; font-size:15px; line-height:1.6;">
+            ${bodyHtml}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px; background-color:#fafafa; border-top:1px solid #f0f0f0; text-align:center;">
+            <p style="margin:0; font-size:12px; color:#aaaaaa;">
+              — PSITS UC-Main &middot; Philippine Society of Information Technology Students
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+`;
+
 const getResendClient = () => {
   const apiKey = process.env.RESEND_API_KEY;
 
@@ -36,6 +95,27 @@ type SendEmailOptions = {
     contentType?: string;
     contentId?: string;
   }>;
+};
+
+let cachedLogoAttachment: {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+  contentId: string;
+} | null = null;
+
+const getLogoAttachment = async () => {
+  if (!cachedLogoAttachment) {
+    const logoPath = path.join(__dirname, "../assets/psits.jpg");
+    const logoBuffer = await fs.readFile(logoPath);
+    cachedLogoAttachment = {
+      filename: "psits.jpg",
+      content: logoBuffer,
+      contentType: "image/jpeg",
+      contentId: "logo",
+    };
+  }
+  return cachedLogoAttachment;
 };
 
 const sendEmail = async ({
@@ -63,6 +143,30 @@ const sendEmail = async ({
   if (error) {
     throw new Error(`Error sending email: ${error.message}`);
   }
+};
+
+const sendPsitsTemplatedEmail = async (opts: {
+  to: string;
+  subject: string;
+  category: string;
+  title: string;
+  bodyHtml: string;
+  extraAttachments?: SendEmailOptions["attachments"];
+}) => {
+  const logoAttachment = await getLogoAttachment();
+  const html = renderPsitsEmail({
+    category: opts.category,
+    title: opts.title,
+    bodyHtml: opts.bodyHtml,
+    logoDataUri: "cid:logo",
+  });
+
+  await sendEmail({
+    to: opts.to,
+    subject: opts.subject,
+    html,
+    attachments: [logoAttachment, ...(opts.extraAttachments ?? [])],
+  });
 };
 
 export const membershipRequestReceipt = async (
@@ -170,31 +274,28 @@ export const attendeeRegistrationMail = async (data: {
   studentId: string;
   password: string;
 }): Promise<void> => {
-  await sendEmail({
+  await sendPsitsTemplatedEmail({
     to: data.studentEmail,
-    subject: `PSITS - Event Registration Confirmation`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-        <h1 style="color: #333; text-align: center; margin-bottom: 30px;">PSITS - Registration Confirmation</h1>
-        <p style="color: #555; font-size: 16px;">Hello ${data.studentName},</p>
-        <p style="color: #555; font-size: 16px; margin-bottom: 20px;">
-          Your account has been successfully created and you have been registered as an attendee for the following event:
-        </p>
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-          <p style="margin: 5px 0;"><strong>Event:</strong> ${data.eventName}</p>
-          <p style="margin: 5px 0;"><strong>Campus:</strong> ${data.campus}</p>
-          <p style="margin: 5px 0;"><strong>Student ID:</strong> ${data.studentId}</p>
-          <p style="margin: 5px 0;"><strong>Password:</strong> ${data.password}</p>
-        </div>
-        <p style="color: #555; font-size: 16px;">
-          You can use your Student ID and password to log in to the PSITS portal.
-        </p>
-        <p style="color: #999; font-size: 14px; margin-top: 30px;">
-          If you did not expect this email, please contact your campus PSITS admin.
-        </p>
-        <p style="color: #555; font-size: 16px;">Thank you,</p>
-        <p style="color: #555; font-size: 16px;">The PSITS Team</p>
-      </div>
+    subject: "PSITS - Event Registration Confirmation",
+    category: "Event Registration",
+    title: "Registration Confirmed",
+    bodyHtml: `
+      <p>Hello ${data.studentName},</p>
+      <p style="margin-bottom:20px;">
+        Your account has been successfully created and you have been registered as an attendee for the following event:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; border-radius:8px; margin-bottom:20px;">
+        <tr><td style="padding:16px 18px;">
+          <p style="margin:5px 0;"><strong>Event:</strong> ${data.eventName}</p>
+          <p style="margin:5px 0;"><strong>Campus:</strong> ${data.campus}</p>
+          <p style="margin:5px 0;"><strong>Student ID:</strong> ${data.studentId}</p>
+          <p style="margin:5px 0;"><strong>Password:</strong> ${data.password}</p>
+        </td></tr>
+      </table>
+      <p>You can use your Student ID and password to log in to the PSITS portal.</p>
+      <p style="color:#999; font-size:13px; margin-top:24px;">
+        If you did not expect this email, please contact your campus PSITS admin.
+      </p>
     `,
   });
 };
@@ -213,36 +314,33 @@ export const forgotPasswordMail = async (
       "password_reset",
       token.slice(0, 8)
     );
-    await sendEmail({
+
+    await sendPsitsTemplatedEmail({
       to: studentMail,
       subject: "Reset Your Password",
-      html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-              <h1 style="color: #333; text-align: center; margin-bottom: 30px;">PSITS - Reset Your Password</h1>
-              <p style="color: #555; font-size: 16px;">Hello,</p>
-              <p style="color: #555; font-size: 16px; margin-bottom: 20px">
-                We received a request to reset your password. Click the button below to reset it:
-              </p>
-              <div style="text-align: center; margin: 40px 0;">
-                <a
-                  href="${url}${token}"
-                  style="display: inline-block; padding: 20px 25px; color: #fff; background-color: #007bff; text-decoration: none; border-radius: 5px; font-size: 24px;">
-                  Reset Password
-                </a>
-              </div>
-              <p style="color: #555; font-size: 16px;">Or you can copy and paste this link into your browser:</p>
-              <p style="word-break: break-all;">
-                <a href="${url}${token}" style="color: #007bff;">
-                 ${url}${token}
-                </a>
-              </p>
-              <p style="color: #999; font-size: 14px;">
-                This link will expire in 10 minutes. If you didn’t request a password reset, you can safely ignore this email.
-              </p>
-              <p style="color: #555; font-size: 16px;">Thank you,</p>
-              <p style="color: #555; font-size: 16px;">The Support Team</p>
-            </div>
-          `,
+      category: "Philippine Technology of Information Technology Students",
+      title: "Reset Your Password",
+      bodyHtml: `
+        <p>Hello,</p>
+        <p style="margin-bottom:20px;">
+          We received a request to reset your password. Click the button below to reset it:
+        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr><td align="center" style="padding:20px 0;">
+            <a href="${url}${token}"
+              style="display:inline-block; padding:14px 28px; color:#ffffff; background-color:#007bff; text-decoration:none; border-radius:6px; font-size:16px; font-weight:bold;">
+              Reset Password
+            </a>
+          </td></tr>
+        </table>
+        <p>Or copy and paste this link into your browser:</p>
+        <p style="word-break:break-all;">
+          <a href="${url}${token}" style="color:#007bff;">${url}${token}</a>
+        </p>
+        <p style="color:#999; font-size:13px; margin-top:16px;">
+          This link will expire in 10 minutes. If you didn't request a password reset, you can safely ignore this email.
+        </p>
+      `,
     });
 
     await emailService.updateStatusById(queueEntry._id.toString(), "sent");
@@ -277,19 +375,30 @@ export const certificateOfParticipationEmail = async (
       parsedData
     );
 
-    const emailTemplate = await ejs.renderFile(
-      path.join(__dirname, "../assets/ejs/cert-participation-mail-body.ejs"),
-      parsedData,
-      { cache: true }
-    );
-
     const fileName = `${parsedData.student_name}-CERT.pdf`.toUpperCase();
+    const logoAttachment = await getLogoAttachment();
+
+    const html = renderPsitsEmail({
+      category: "Certificate",
+      title: "Congratulations! 🎉",
+      bodyHtml: `
+        <p>Hi ${parsedData.student_name},</p>
+        <p style="margin-bottom:20px;">
+          Thank you for attending <strong>${parsedData.event_name}</strong>! Your certificate of participation is attached to this email.
+        </p>
+        <p style="color:#999; font-size:13px; margin-top:16px;">
+          Keep this certificate for your records.
+        </p>
+      `,
+      logoDataUri: "cid:logo",
+    });
 
     await sendEmail({
       to: studentEmail,
       subject: `Congratulations for Attending ${parsedData.event_name}!`,
-      html: emailTemplate,
+      html,
       attachments: [
+        logoAttachment,
         {
           filename: fileName,
           content: Buffer.from(pdfBuffer),
@@ -330,28 +439,26 @@ export const recruitmentApprovedMail = async (data: {
       "approval"
     );
 
-    await sendEmail({
+    await sendPsitsTemplatedEmail({
       to: data.applicantEmail,
       subject: "Your PSITS Application Has Been Approved! 🎉",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h1 style="color: #333; text-align: center; margin-bottom: 20px;">Your PSITS Application Has Been Approved! 🎉</h1>
-          <p style="color: #555; font-size: 16px;">Dear ${data.applicantName},</p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            Congratulations! 🎉 We're happy to let you know that your application to join PSITS has been approved.
-          </p>
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-            <p style="margin: 5px 0;"><strong>Role:</strong> ${data.role}</p>
-            ${data.subRole ? `<p style="margin: 5px 0;"><strong>Sub-role:</strong> ${data.subRole}</p>` : ""}
-          </div>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            Welcome to the team! Keep an eye on your email and our official communication channels for announcements and onboarding details.
-          </p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            We're excited to have you with us. See you soon!
-          </p>
-          <p style="color: #555; font-size: 16px;">— PSITS UC-Main</p>
-        </div>
+      category: "Philippine Technology of Information Technology Students",
+      title: "PSITS Application Approved",
+      bodyHtml: `
+        <p>Dear ${data.applicantName},</p>
+        <p style="margin-bottom:16px;">
+          Congratulations! 🎉 We're happy to let you know that your application to join PSITS has been approved.
+        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; border-radius:8px; margin-bottom:20px;">
+          <tr><td style="padding:16px 18px;">
+            <p style="margin:5px 0;"><strong>Role:</strong> ${data.role}</p>
+            ${data.subRole ? `<p style="margin:5px 0;"><strong>Sub-role:</strong> ${data.subRole}</p>` : ""}
+          </td></tr>
+        </table>
+        <p style="margin-bottom:16px;">
+          Welcome to the team! Keep an eye on your email and our official communication channels for announcements and onboarding details.
+        </p>
+        <p>We're excited to have you with us. See you soon!</p>
       `,
     });
 
@@ -390,45 +497,38 @@ export const recruitmentInterviewScheduledMail = async (data: {
       "interview_scheduled"
     );
 
-    await sendEmail({
+    await sendPsitsTemplatedEmail({
       to: data.applicantEmail,
       subject: "PSITS Interview Schedule Notification",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h1 style="color: #333; text-align: center; margin-bottom: 20px;">PSITS Interview Schedule Notification</h1>
-          <p style="color: #555; font-size: 16px;">Dear ${data.applicantName},</p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            We are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
-          </p>
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-            <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">Interview Schedule</p>
-            <p style="margin: 5px 0;"><strong>Date:</strong> ${data.interviewDate}</p>
-            <p style="margin: 5px 0;"><strong>Time:</strong> ${data.interviewTime}</p>
-            <p style="margin: 5px 0;"><strong>Mode:</strong> ${data.mode}</p>
-            <p style="margin: 5px 0;"><strong>Officer's In-charge:</strong> ${data.officer}</p>
-          </div>
-          <p style="color: #555; font-size: 16px; margin-bottom: 12px;">
-            <strong>For FACE -TO-FACE interview:</strong>
-          </p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            Please proceed to <strong>PSITS Office </strong> beside <strong>Room 540</strong> at least <strong>5 minutes before</strong> your scheduled interview time. Kindly bring the documents requested during your application.
-          </p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 12px;">
-            <strong>For ONLINE interview:</strong>
-          </p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            A recruitment officer will contact you before your scheduled interview to provide the meeting link and any additional instructions. Please ensure that you are available at the scheduled time and have a stable internet connection.
-          </p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            If you have any questions or are unable to attend your scheduled interview, please inform us as soon as possible.
-          </p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            We look forward to meeting you and wish you the best of luck.
-          </p>
-          <p style="color: #555; font-size: 16px;">Best regards,</p>
-          <p style="color: #555; font-size: 16px;"><strong>Recruitment Team</strong></p>
-          <p style="color: #555; font-size: 16px;">— PSITS UC-Main</p>
-        </div>
+      category: "Philipine Technology of Information Technology Students",
+      title: "Interview Scheduled",
+      bodyHtml: `
+        <p>Dear ${data.applicantName},</p>
+        <p style="margin-bottom:16px;">
+          We are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
+        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; border-radius:8px; margin-bottom:20px;">
+          <tr><td style="padding:16px 18px;">
+            <p style="margin:5px 0; font-weight:bold; font-size:15px;">Interview Schedule</p>
+            <p style="margin:5px 0;"><strong>Date:</strong> ${data.interviewDate}</p>
+            <p style="margin:5px 0;"><strong>Time:</strong> ${data.interviewTime}</p>
+            <p style="margin:5px 0;"><strong>Mode:</strong> ${data.mode}</p>
+            <p style="margin:5px 0;"><strong>Officer's In-charge:</strong> ${data.officer}</p>
+          </td></tr>
+        </table>
+        <p style="margin-bottom:12px;"><strong>For FACE-TO-FACE interview:</strong></p>
+        <p style="margin-bottom:16px;">
+          Please proceed to <strong>PSITS Office</strong> beside <strong>Room 540</strong> at least <strong>5 minutes before</strong> your scheduled interview time. Kindly bring the documents requested during your application.
+        </p>
+        <p style="margin-bottom:12px;"><strong>For ONLINE interview:</strong></p>
+        <p style="margin-bottom:16px;">
+          A recruitment officer will contact you before your scheduled interview to provide the meeting link and any additional instructions. Please ensure that you are available at the scheduled time and have a stable internet connection.
+        </p>
+        <p style="margin-bottom:16px;">
+          If you have any questions or are unable to attend your scheduled interview, please inform us as soon as possible.
+        </p>
+        <p style="margin-bottom:16px;">We look forward to meeting you and wish you the best of luck.</p>
+        <p style="margin-bottom:0;">Best regards,<br/><strong>Recruitment Team</strong></p>
       `,
     });
 
@@ -467,30 +567,30 @@ export const recruitmentAccountCreatedMail = async (data: {
       "account_created"
     );
 
-    await sendEmail({
+    await sendPsitsTemplatedEmail({
       to: data.applicantEmail,
-      subject: `${"Your PSITS " + data.role} Account Has Been Created! `,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h1 style="color: #333; text-align: center; margin-bottom: 20px;">${"Your PSITS " + data.role} Account Has Been Created!</h1>
-          <p style="color: #555; font-size: 16px;">Dear ${data.applicantName},</p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            Welcome to the team! Your PSITS ${data.role} account has been successfully created. Below are your login credentials:
-          </p>
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-            <p style="margin: 5px 0;"><strong>Role:</strong> ${data.role}</p>
-            ${data.subRole ? `<p style="margin: 5px 0;"><strong>Sub-role:</strong> ${data.subRole}</p>` : ""}
-            <p style="margin: 5px 0;"><strong>Username:</strong> ${data.username}</p>
-            <p style="margin: 5px 0;"><strong>Temporary Password:</strong> ${data.tempPassword}</p>
-          </div>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            You can use your username and temporary password to log in to the PSITS portal. For security, please change your password after your first login.
-          </p>
-          <p style="color: #999; font-size: 14px; margin-bottom: 16px;">
-            If you did not expect this email, please contact your campus PSITS admin.
-          </p>
-          <p style="color: #555; font-size: 16px;">— PSITS UC-Main</p>
-        </div>
+      subject: `${"Your PSITS " + data.role} Account Has Been Created!`,
+      category: "Philippine Technology of Information Technology Students",
+      title: `Your PSITS ${data.role} Account Has Been Created!`,
+      bodyHtml: `
+        <p>Dear ${data.applicantName},</p>
+        <p style="margin-bottom:16px;">
+          Welcome to the team! Your PSITS ${data.role} account has been successfully created. Below are your login credentials:
+        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; border-radius:8px; margin-bottom:20px;">
+          <tr><td style="padding:16px 18px;">
+            <p style="margin:5px 0;"><strong>Role:</strong> ${data.role}</p>
+            ${data.subRole ? `<p style="margin:5px 0;"><strong>Sub-role:</strong> ${data.subRole}</p>` : ""}
+            <p style="margin:5px 0;"><strong>Username:</strong> ${data.username}</p>
+            <p style="margin:5px 0;"><strong>Temporary Password:</strong> ${data.tempPassword}</p>
+          </td></tr>
+        </table>
+        <p style="margin-bottom:16px;">
+          You can use your username and temporary password to log in to the PSITS portal. For security, please change your password after your first login.
+        </p>
+        <p style="color:#999; font-size:13px; margin-bottom:0;">
+          If you did not expect this email, please contact your campus PSITS admin.
+        </p>
       `,
     });
 
@@ -525,25 +625,29 @@ export const recruitmentRejectedMail = async (data: {
       "rejection"
     );
 
-    await sendEmail({
+    await sendPsitsTemplatedEmail({
       to: data.applicantEmail,
       subject: "Update on Your PSITS Application",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h1 style="color: #333; text-align: center; margin-bottom: 20px;">Update on Your PSITS Application</h1>
-          <p style="color: #555; font-size: 16px;">Dear ${data.applicantName},</p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            Thank you for expressing your interest in joining PSITS.
-          </p>
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            After carefully reviewing all applications, we regret to inform you that your application was not selected for this recruitment period.
-          </p>  
-          ${data.reason ? `<div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;"><p style="margin: 5px 0;"><strong>Reason:</strong> ${data.reason}</p></div>` : ""}
-          <p style="color: #555; font-size: 16px; margin-bottom: 16px;">
-            We truly appreciate your interest in being part of PSITS and encourage you to apply again in future recruitment periods. We wish you the best, and we hope to see you again in the future!
-          </p>
-          <p style="color: #555; font-size: 16px;">— PSITS UC-Main</p>
-        </div>
+      category: "Philippine Technology of Information Technology Students",
+      title: "Application Update",
+      bodyHtml: `
+        <p>Dear ${data.applicantName},</p>
+        <p style="margin-bottom:16px;">Thank you for expressing your interest in joining PSITS.</p>
+        <p style="margin-bottom:16px;">
+          After carefully reviewing all applications, we regret to inform you that your application was not selected for this recruitment period.
+        </p>
+        ${
+          data.reason
+            ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; border-radius:8px; margin-bottom:20px;">
+                <tr><td style="padding:16px 18px;">
+                  <p style="margin:5px 0;"><strong>Reason:</strong> ${data.reason}</p>
+                </td></tr>
+              </table>`
+            : ""
+        }
+        <p style="margin-bottom:0;">
+          We truly appreciate your interest in being part of PSITS and encourage you to apply again in future recruitment periods. We wish you the best, and we hope to see you again in the future!
+        </p>
       `,
     });
 
