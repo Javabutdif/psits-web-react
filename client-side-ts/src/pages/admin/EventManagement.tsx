@@ -79,16 +79,32 @@ interface EventSessionConfig {
 
 type EventStatus = EventDetails["status"];
 
-import { formatEventDateLabel } from "@/utils/date-manila";
+import { formatEventDateLabel, formatEventDateKey } from "@/utils/date-manila";
 
-const normalizeStatus = (value: unknown): EventStatus => {
+const normalizeStatus = (
+  value: unknown,
+  eventDate?: string | Date | null
+): EventStatus => {
   const normalized = String(value ?? "")
     .trim()
     .toLowerCase();
 
+  if (normalized === "ended" || normalized === "cancelled") return "ended";
   if (normalized === "ongoing") return "ongoing";
-  if (normalized === "upcoming") return "upcoming";
-  return "ended";
+  if (eventDate) {
+    const parsedEventDate =
+      typeof eventDate === "string" ? new Date(eventDate) : eventDate;
+
+    if (parsedEventDate && !Number.isNaN(parsedEventDate.getTime())) {
+      const todayKey = formatEventDateKey(new Date());
+      const eventKey = formatEventDateKey(parsedEventDate);
+      if (todayKey === eventKey) {
+        return "ongoing";
+      }
+    }
+  }
+
+  return "upcoming";
 };
 
 const getSessionBounds = (
@@ -228,7 +244,7 @@ const mapApiEventToEventDetails = (
   return {
     id: String(event.eventId ?? routeEventId),
     title: String(event.eventName ?? "Untitled Event"),
-    status: normalizeStatus(event.status),
+    status: normalizeStatus(event.status, event.eventDate),
     startDate: formatEventDateLabel(event.eventDate),
     startTime,
     endDate: formatEventDateLabel(event.eventDate),
@@ -533,7 +549,7 @@ const EventManagement: React.FC = () => {
               <div className="bg-card flex flex-col gap-4 rounded-xl border p-4 sm:flex-row">
                 {/* Event Image (thumbnail) */}
                 <div className="sm:w-56 sm:flex-shrink-0 md:w-90">
-                  <div className="bg-muted aspect-[4/3] w-full overflow-hidden rounded-lg sm:aspect-auto sm:h-full">
+                  <div className="bg-muted aspect-[4/3] w-full overflow-hidden rounded-lg sm:aspect-auto sm:h-48 md:h-56">
                     <img
                       src={eventDetails.image}
                       alt={eventDetails.title}

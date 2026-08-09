@@ -69,6 +69,16 @@ const shouldShowShirtFields = (merch?: EventMerchMeta | null): boolean => {
   return merch.category === "ict-congress" && merch.type === "Tshirt w/ Bundle";
 };
 
+const getYearLevelLabel = (year: number): string => {
+  const suffixes: Record<number, string> = {
+    1: "1st Year",
+    2: "2nd Year",
+    3: "3rd Year",
+    4: "4th Year",
+  };
+  return suffixes[year] ?? "";
+};
+
 // Validation helper functions
 const validateName = (
   value: string,
@@ -192,7 +202,7 @@ export const AddWalkInAttendeeModal: React.FC<AddWalkInAttendeeModalProps> = ({
       lastName: student.last_name ?? "",
       email: student.email ?? "",
       course: student.course ?? "",
-      yearLevel: student.year ? `${student.year}st Year` : "",
+      yearLevel: student.year ? getYearLevelLabel(student.year) : "",
     }));
     setErrors({});
     setSearchQuery("");
