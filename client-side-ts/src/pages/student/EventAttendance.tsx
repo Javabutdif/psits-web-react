@@ -22,7 +22,7 @@ import type {
 } from "@/features/events";
 import { getManilaStartOfDay } from "@/utils/date-manila";
 import { EventCard, getMyEvents } from "@/features/events";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 
 // ─── Mapper: Raw Event → Frontend EventData ───────────────────────────────────
@@ -47,7 +47,9 @@ const mapEventToEventData = (event: Event): EventData | null => {
   );
 
   const dateValue =
-    typeof event.eventDate === "string" ? new Date(event.eventDate) : event.eventDate;
+    typeof event.eventDate === "string"
+      ? new Date(event.eventDate)
+      : event.eventDate;
   if (!dateValue || Number.isNaN(dateValue.getTime())) return null;
 
   return {
@@ -72,72 +74,55 @@ const EventAttendance: React.FC = () => {
   const [upcomingEvents, setUpcomingEvents] = useState<EventData[]>([]);
   const [pastEvents, setPastEvents] = useState<EventData[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>(
-    getManilaStartOfDay().getFullYear().toString(),
+    getManilaStartOfDay().getFullYear().toString()
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchEvents = useCallback(async () => {
+    if (!user?.idNumber) {
+      setError("User information not available");
+      setIsLoading(false);
+      return;
+    }
 
-    const fetchEvents = async () => {
-      if (!user?.idNumber) {
-        if (isMounted) {
-          setError("User information not available");
-          setIsLoading(false);
-        }
-        return;
-      }
+    try {
+      setIsLoading(true);
+      setError(null);
 
-      try {
-        setIsLoading(true);
-        setError(null);
+      // Single call — backend filters attendees to the requesting student via JWT.
+      const transformedEvents: EventData[] = (await getMyEvents())
+        .map(mapEventToEventData)
+        .filter((event): event is EventData => event !== null);
 
-        // Single call — backend filters attendees to the requesting student via JWT.
-        const transformedEvents: EventData[] = (await getMyEvents())
-          .map(mapEventToEventData)
-          .filter((event): event is EventData => event !== null);
+      // Sort by date - most recent first
+      transformedEvents.sort(
+        (a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)
+      );
 
-        if (!isMounted) return;
-
-        // Sort by date - most recent first
-        transformedEvents.sort(
-          (a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)
-        );
-
-        if (isMounted) {
-          // Upcoming: today and any future dates, sorted soonest first
-          setUpcomingEvents(
-            transformedEvents
-              .filter((e) => e.date && isUpcoming(e.date))
-              .sort(
-                (a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0)
-              )
-          );
-          setPastEvents(
-            transformedEvents
-              .filter((e) => e.date && isPast(e.date))
-              .map((e) => ({ ...e, isPast: true }))
-          );
-        }
-      } catch (err) {
-        if (isMounted) {
-          console.error("Error fetching events:", err);
-          setError("An error occurred while fetching events");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchEvents();
-
-    return () => {
-      isMounted = false;
-    };
+      // Upcoming: today and any future dates, sorted soonest first
+      setUpcomingEvents(
+        transformedEvents
+          .filter((e) => e.date && isUpcoming(e.date))
+          .sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0))
+      );
+      setPastEvents(
+        transformedEvents
+          .filter((e) => e.date && isPast(e.date))
+          .map((e) => ({ ...e, isPast: true }))
+      );
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      setError("An error occurred while fetching events");
+    } finally {
+      setIsLoading(false);
+    }
   }, [user?.idNumber]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchEvents();
+  }, [fetchEvents]);
 
   // Derived state for filtering
   const filteredPastEvents = pastEvents.filter(
@@ -192,6 +177,7 @@ const EventAttendance: React.FC = () => {
                     key={event.id}
                     event={event}
                     studentId={user?.idNumber || ""}
+                    onApplied={fetchEvents}
                   />
                 ))
               ) : (
@@ -236,6 +222,7 @@ const EventAttendance: React.FC = () => {
                 key={event.id}
                 event={event}
                 studentId={user?.idNumber || ""}
+                onApplied={fetchEvents}
               />
             ))
           ) : (

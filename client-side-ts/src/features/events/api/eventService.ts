@@ -6,6 +6,8 @@ import type {
   AddAttendeeFormData,
   AddAttendeeV2Payload,
   AddAttendeeV2Response,
+  AddWalkInAttendeeV2Payload,
+  AddWalkInAttendeeV2Response,
   ApiErrorResponse,
   ChangeAttendeePasswordV2Payload,
   ChangeAttendeePasswordV2Response,
@@ -31,6 +33,7 @@ import type {
   RemoveAttendeeFormData,
   RemoveRaffleResponse,
   StatisticsData,
+  StudentSearchResult,
   UpdateSettingsFormData,
 } from "../types/event.types";
 
@@ -128,7 +131,7 @@ export const getEventById = async (eventId: string): Promise<Event | false> => {
 };
 
 export const createEventV2 = async (
-  payload: CreateEventV2Payload,
+  payload: CreateEventV2Payload
 ): Promise<CreateEventV2Response | false> => {
   try {
     const formData = new FormData();
@@ -137,19 +140,24 @@ export const createEventV2 = async (
     formData.append("eventDate", payload.eventDate);
     formData.append("attendanceType", payload.attendanceType);
     if (payload.status) formData.append("status", payload.status);
-    formData.append(
-      "sessionConfig",
-      JSON.stringify(payload.sessionConfig),
-    );
+    formData.append("sessionConfig", JSON.stringify(payload.sessionConfig));
     if (payload.limit && payload.limit.length > 0) {
       formData.append("limit", JSON.stringify(payload.limit));
     }
+    if (payload.eventVenue) formData.append("eventVenue", payload.eventVenue);
+    if (payload.eventTheme) formData.append("eventTheme", payload.eventTheme);
+    if (payload.eventVenueSpecific)
+      formData.append("eventVenueSpecific", payload.eventVenueSpecific);
+    if (payload.eventStartTime)
+      formData.append("eventStartTime", payload.eventStartTime);
+    if (payload.eventEndTime)
+      formData.append("eventEndTime", payload.eventEndTime);
     payload.images?.forEach((file) => formData.append("images", file));
 
     const response = await api.post<CreateEventV2Response>(
       "/api/v2/events",
       formData,
-      { headers: { "Content-Type": undefined } },
+      { headers: { "Content-Type": undefined } }
     );
 
     return response.data;
@@ -517,6 +525,107 @@ export const addAttendeeV2 = async (
   }
 };
 
+// ─── Walk-in Attendee V2 ─────────────────────────────────────────────────────
+
+export const addWalkInAttendeeV2 = async (
+  eventId: string,
+  payload: AddWalkInAttendeeV2Payload
+): Promise<AddWalkInAttendeeV2Response | false> => {
+  try {
+    if (!eventId?.trim()) {
+      showToast("error", "Event ID is required");
+      return false;
+    }
+
+    const response = await api.post<AddWalkInAttendeeV2Response>(
+      `/api/v2/events/${eventId}/attendees/walk-in`,
+      payload
+    );
+
+    showToast("success", response.data.message);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      const message =
+        axiosError.response?.data?.message || "Failed to add walk-in attendee";
+      showToast("error", message);
+    } else {
+      console.error("Error adding walk-in attendee V2:", error);
+      showToast("error", "An unexpected error occurred");
+    }
+    return false;
+  }
+};
+
+// ─── Student Search V2 ───────────────────────────────────────────────────────
+
+export const searchStudentsV2 = async (
+  query: string
+): Promise<StudentSearchResult[] | false> => {
+  try {
+    if (!query?.trim()) {
+      return [];
+    }
+
+    const response = await api.get<{ data: StudentSearchResult[] }>(
+      `/api/v2/students/search`,
+      { params: { q: query.trim() } }
+    );
+
+    return response.data.data ?? [];
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      const message =
+        axiosError.response?.data?.message || "Failed to search students";
+      showToast("error", message);
+    } else {
+      console.error("Error searching students V2:", error);
+      showToast("error", "An unexpected error occurred");
+    }
+    return false;
+  }
+};
+
+interface ApplyToEventResponse {
+  message: string;
+  data: {
+    id_number: string;
+    name: string;
+    campus: string;
+  };
+}
+
+export const applyToEvent = async (
+  eventId: string
+): Promise<ApplyToEventResponse | false> => {
+  try {
+    if (!eventId?.trim()) {
+      showToast("error", "Event ID is required");
+      return false;
+    }
+
+    const response = await api.post<ApplyToEventResponse>(
+      `/api/v2/events/${eventId}/apply`
+    );
+
+    showToast("success", response.data.message);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      const message =
+        axiosError.response?.data?.message || "Failed to apply to event";
+      showToast("error", message);
+    } else {
+      console.error("Error applying to event:", error);
+      showToast("error", "An unexpected error occurred");
+    }
+    return false;
+  }
+};
+
 export const getStatistic = async (
   eventId: string
 ): Promise<StatisticsData | [] | false> => {
@@ -729,8 +838,60 @@ export const changeAttendeePasswordV2 = async (
 
 export const updateEventDetails = async (
   eventId: string,
-  payload: any
+  payload: {
+    eventName?: string;
+    eventDescription?: string;
+    eventDate?: unknown;
+    eventVenue?: string;
+    eventTheme?: string;
+    eventVenueSpecific?: string;
+    eventStartTime?: string;
+    eventEndTime?: string;
+    sessionConfig?: unknown;
+    limit?: unknown;
+    image?: File | null;
+  }
 ): Promise<any> => {
-  const response = await api.patch(`/api/v2/events/${eventId}`, payload);
+  const { image, ...rest } = payload;
+
+  // Only use multipart/form-data when there's an actual file to send;
+  // otherwise keep the simpler JSON path.
+  if (image) {
+    const formData = new FormData();
+
+    for (const [key, value] of Object.entries(rest)) {
+      if (value === undefined || value === null) continue;
+
+      // eventDate is a DateRange object ({ from, to }) — send the start
+      // date as a plain ISO string so the backend can parse it directly
+      // from multipart/form-data.
+      if (
+        key === "eventDate" &&
+        value &&
+        typeof value === "object" &&
+        "from" in value
+      ) {
+        const from = (value as { from?: Date }).from;
+        if (from) {
+          formData.append(key, from.toISOString());
+        }
+        continue;
+      }
+
+      formData.append(
+        key,
+        typeof value === "string" ? value : JSON.stringify(value)
+      );
+    }
+
+    formData.append("images", image);
+
+    const response = await api.patch(`/api/v2/events/${eventId}`, formData, {
+      headers: { "Content-Type": undefined },
+    });
+    return response.data;
+  }
+
+  const response = await api.patch(`/api/v2/events/${eventId}`, rest);
   return response.data;
 };

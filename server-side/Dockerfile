@@ -1,20 +1,15 @@
-# Use Node.js 20 as the base image
-FROM node:20
+FROM node:20-alpine
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the container
+RUN apk add --no-cache curl
+
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+RUN npm ci
 
-# Copy the rest of your application files
 COPY . .
 
-# Expose the port your app will run on (update if your app runs on a different port)
 EXPOSE 5000
 
-# Command to run your application
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

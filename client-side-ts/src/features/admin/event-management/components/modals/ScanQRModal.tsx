@@ -91,7 +91,7 @@ export const ScanQRModal: React.FC<ScanQRModalProps> = ({
       }}
     >
       <DialogContent
-        className="w-full max-w-lg gap-0 rounded-lg p-0 sm:max-w-xs sm:rounded-xl"
+        className="mx-auto w-[92%] max-w-lg gap-0 rounded-lg p-0 sm:w-full sm:max-w-xs sm:rounded-xl"
         showCloseButton={false}
       >
         <DialogHeader className="border-b px-6 py-4">

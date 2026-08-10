@@ -52,6 +52,7 @@ import { DocumentationPage } from "./features/admin/documentation";
 import SignUp from "./pages/auth/SignUp";
 import ApplicationPage from "./pages/student/ApplicationPage";
 import Recruitment from "./features/admin/recruitment-management/components/RecuitmentViews";
+import Contributions from "./pages/admin/Contributions";
 
 const router = createBrowserRouter([
   {
@@ -93,11 +94,15 @@ const router = createBrowserRouter([
                   },
                   { path: "membership-pending", Component: MembershipPending },
                   { path: "application", Component: ApplicationPage },
+                  { path: "event-attendance", Component: EventAttendance }, //temporary re-routed for CCS Freshman Orientaion
                   {
                     element: <StudentMembershipRouteGuard />,
                     children: [
-                      { path: "event-attendance", Component: EventAttendance },
-                      { path: "certificates", Component: StudentCertificatesPage },
+                      {
+                        path: "certificates",
+                        Component: StudentCertificatesPage,
+                      },
+                      // temporary re-routed for CCS Freshman Orientaion
                       {
                         element: (
                           <StudentCampusRouteGuard
@@ -143,6 +148,7 @@ const router = createBrowserRouter([
               { path: "dashboard", Component: Dashboard },
               { path: "organization", Component: Organization },
               { path: "recuitment-management", Component: Recruitment },
+              { path: "contributions", Component: Contributions },
               { path: "students", Component: Students },
               { path: "merchandise", Component: Merchandise },
               { path: "merchandise/products", Component: Merchandise },

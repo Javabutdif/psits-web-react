@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import { randomInt } from "crypto";
 import { Request, Response } from "express";
 import mongoose, { Types } from "mongoose";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { r2Client, R2_BUCKET_NAME } from "../lib/r2Client";
 import { attendeeRegistrationMail } from "../mail_template/mail.template";
 import { Admin } from "../models/admin.model";
 import { IAttendee } from "../models/attendee.interface";
@@ -68,6 +70,171 @@ const buildEventLookupQuery = (eventId: string) => {
 
   return {
     $or: [{ _id: objectId }, { eventId: objectId }],
+  };
+};
+
+const buildProxyImageUrl = (
+  req: Request,
+  file: Express.MulterS3.File
+): string =>
+  `${req.protocol}://${req.get("host")}/api/v2/events/image/${file.key}`;
+
+const LEGACY_CAMPUS_MAP: Record<string, string> = {
+  "UC-Main": "UC_MAIN",
+  "UC-Banilad": "UC_BANILAD",
+  "UC-LM": "UC_LM",
+  "UC-PT": "UC_PT",
+  "UC-CS": "UC_CS",
+};
+
+const normalizeCampusValue = (value: unknown): string => {
+  const str = String(value ?? "").trim();
+  return LEGACY_CAMPUS_MAP[str] ?? str;
+};
+
+/**
+ * Defensive fix for legacy hyphenated campus codes (e.g. "UC-Main") stored
+ * in `limit` / `sales_data` before the campus enum was changed to underscore
+ * format. Mongoose validates the whole document on save, so any stale
+ * subdocument with an old value will throw "event validation failed" even
+ * if that subdocument wasn't the one being modified.
+ */
+const normalizeEventCampusFields = (event: IEvent): void => {
+  if (Array.isArray(event.limit)) {
+    for (const entry of event.limit) {
+      if (entry && typeof entry === "object" && "campus" in entry) {
+        entry.campus = normalizeCampusValue(
+          entry.campus
+        ) as typeof entry.campus;
+      }
+    }
+  }
+  if (Array.isArray(event.sales_data)) {
+    for (const entry of event.sales_data) {
+      if (entry && typeof entry === "object" && "campus" in entry) {
+        entry.campus = normalizeCampusValue(
+          entry.campus
+        ) as typeof entry.campus;
+      }
+    }
+  }
+};
+
+type SessionKey = "morning" | "afternoon" | "evening";
+
+interface SessionConfigEntry {
+  enabled?: boolean;
+  timeRange?: string; // e.g. "7:00 AM - 12:00 PM"
+}
+
+interface SessionConfig {
+  morning?: SessionConfigEntry;
+  afternoon?: SessionConfigEntry;
+  evening?: SessionConfigEntry;
+}
+
+/**
+ * Parses a "7:00 AM - 12:00 PM" style range into 24h minute-of-day bounds.
+ */
+const parseTimeRangeToMinutes = (
+  timeRange: string
+): { startMinutes: number; endMinutes: number } | null => {
+  const [startRaw, endRaw] = timeRange.split("-").map((s) => s.trim());
+  if (!startRaw || !endRaw) return null;
+
+  const toMinutes = (raw: string): number | null => {
+    // Try 24-hour format first: "07:30", "13:00"
+    const match24 = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (match24) {
+      const hour = parseInt(match24[1], 10);
+      const minute = parseInt(match24[2], 10);
+      if (hour > 23 || minute > 59) return null;
+      return hour * 60 + minute;
+    }
+
+    // Fall back to 12-hour format: "7:30 AM", "12:00 PM"
+    const match12 = raw.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match12) {
+      let hour = parseInt(match12[1], 10);
+      const minute = parseInt(match12[2], 10);
+      const meridiem = match12[3].toUpperCase();
+
+      if (meridiem === "PM" && hour !== 12) hour += 12;
+      if (meridiem === "AM" && hour === 12) hour = 0;
+
+      return hour * 60 + minute;
+    }
+
+    return null;
+  };
+
+  const startMinutes = toMinutes(startRaw);
+  const endMinutes = toMinutes(endRaw);
+  if (startMinutes === null || endMinutes === null) return null;
+
+  return { startMinutes, endMinutes };
+};
+
+/**
+ * Returns which session (morning/afternoon/evening) is currently active
+ * based on the event's sessionConfig and the current time in Asia/Manila.
+ * Returns null if no enabled session's timeRange currently contains "now".
+ */
+const getCurrentActiveSession = (
+  sessionConfig: SessionConfig | undefined
+): SessionKey | null => {
+  if (!sessionConfig) return null;
+
+  const nowInManila = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" })
+  );
+  const nowMinutes = nowInManila.getHours() * 60 + nowInManila.getMinutes();
+
+  const sessionOrder: SessionKey[] = ["morning", "afternoon", "evening"];
+
+  for (const key of sessionOrder) {
+    const session = sessionConfig[key];
+    if (!session?.enabled || !session.timeRange) continue;
+
+    const bounds = parseTimeRangeToMinutes(session.timeRange);
+    if (!bounds) continue;
+
+    if (nowMinutes >= bounds.startMinutes && nowMinutes <= bounds.endMinutes) {
+      return key;
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Builds an attendance object with only the active session marked attended.
+ * If no session is currently active, falls back to marking the morning
+ * session as attended — this covers the "add attendee" flow where an admin
+ * is manually registering a physically-present attendee.
+ */
+const buildAttendanceForActiveSession = (
+  sessionConfig: SessionConfig | undefined,
+  now: Date
+): IAttendee["attendance"] => {
+  const activeSession = getCurrentActiveSession(sessionConfig);
+  // Fallback: when no session time-range currently matches, default to
+  // morning so the attendee is not incorrectly shown as "Absent".
+  const effectiveSession = activeSession ?? "morning";
+
+  return {
+    morning: {
+      attended: effectiveSession === "morning",
+      timestamp: effectiveSession === "morning" ? now : null,
+    },
+    afternoon: {
+      attended: effectiveSession === "afternoon",
+      timestamp: effectiveSession === "afternoon" ? now : null,
+    },
+    evening: {
+      attended: effectiveSession === "evening",
+      timestamp: effectiveSession === "evening" ? now : null,
+    },
   };
 };
 
@@ -619,12 +786,7 @@ type RaffleAttendee = IAttendee & {
   _id: unknown;
 };
 
-const RAFFLE_FILTERABLE_CAMPUSES = [
-  "UC_MAIN",
-  "UC_BANILAD",
-  "UC_LM",
-  "UC_PT",
-];
+const RAFFLE_FILTERABLE_CAMPUSES = ["UC_MAIN", "UC_BANILAD", "UC_LM", "UC_PT"];
 
 const RAFFLE_ELIGIBLE_CAMPUSES = [...RAFFLE_FILTERABLE_CAMPUSES, "UC_CS"];
 
@@ -785,10 +947,11 @@ export const drawEventRaffleWinnerController = async (
       : [];
     const campusFilter = buildRaffleCampusFilter(campusParam);
 
-    const eligible = attendees.filter((attendee) =>
-      isEligibleForRaffle(attendee) &&
-      RAFFLE_ELIGIBLE_CAMPUSES.includes(attendee.campus) &&
-      (campusFilter === null || campusFilter.includes(attendee.campus))
+    const eligible = attendees.filter(
+      (attendee) =>
+        isEligibleForRaffle(attendee) &&
+        RAFFLE_ELIGIBLE_CAMPUSES.includes(attendee.campus) &&
+        (campusFilter === null || campusFilter.includes(attendee.campus))
     );
 
     if (eligible.length === 0) {
@@ -904,9 +1067,9 @@ const V_VALID_CAMPUSES = ["UC_BANILAD", "UC_LM", "UC_PT"];
 const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC_MAIN", "UC_CS"];
 
 const CAMPUS_ID_SUFFIX: Record<string, string> = {
-  "UC_BANILAD": "ucb",
-  "UC_LM": "uclm",
-  "UC_PT": "ucpt",
+  UC_BANILAD: "ucb",
+  UC_LM: "uclm",
+  UC_PT: "ucpt",
 };
 
 const buildCampusScopedStudentId = (rawStudentId: string, campus: string) => {
@@ -1222,7 +1385,13 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       );
     }
 
-    // Step 2: Push attendee into event
+    // Step 2: Push attendee into event, auto-marking the currently
+    // active session as present (based on the event's sessionConfig)
+    const now = new Date();
+    const attendance = buildAttendanceForActiveSession(
+      event.sessionConfig as SessionConfig | undefined,
+      now
+    );
     event.attendees.push({
       id_number: normalizedStudentId,
       name: attendeeName,
@@ -1233,17 +1402,14 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       shirtPrice: resolvedPrice,
       transactBy: claims.idNumber,
       transactDate: new Date(),
-      attendance: {
-        morning: { attended: false, timestamp: null },
-        afternoon: { attended: false, timestamp: null },
-        evening: { attended: false, timestamp: null },
-      },
-      confirmedBy: "",
+      attendance,
+      confirmedBy: claims.idNumber,
       raffleIsRemoved: false,
       raffleIsWinner: false,
     } as IAttendee);
 
     // Step 3: Update sales data (campus-specific)
+
     if (resolvedPrice > 0) {
       const campusData = event.sales_data.find((s) => s.campus === adminCampus);
       if (campusData) {
@@ -1254,6 +1420,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       event.totalRevenueAll = (event.totalRevenueAll ?? 0) + resolvedPrice;
     }
 
+    normalizeEventCampusFields(event);
     await event.save({ session });
 
     await session.commitTransaction();
@@ -1325,6 +1492,283 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     });
   }
 };
+interface AddWalkInAttendeeV2Body {
+  studentId?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  email?: string;
+  course?: string;
+  yearLevel?: string;
+  shirtSize?: string;
+  shirtPrice?: number;
+}
+
+/**
+ * POST /api/v2/events/:eventId/attendees/walk-in
+ *
+ * Lightweight manual attendee registration that does NOT create a student
+ * account (no password, no email notification). Available to ALL campuses
+ * (including UC_MAIN / UC_CS which are blocked from addAttendeeV2).
+ *
+ * The attendee is pushed directly into the event's `attendees` array so they
+ * can later be marked present via the existing attendance flow.
+ */
+export const addWalkInAttendeeV2Controller = async (
+  req: Request,
+  res: Response
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    // ── Auth guard ──────────────────────────────────────────────────────
+    const claims = req.userV2;
+    if (!claims || claims.role !== "admin") {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "Admin access required",
+      });
+    }
+
+    const adminCampus = claims.campus;
+
+    // ── Event ID param ──────────────────────────────────────────────────
+    const eventId = req.params.eventId as string;
+    const query = buildEventLookupQuery(eventId);
+    if (!query) {
+      return res.status(400).json({
+        error: "INVALID_EVENT_ID",
+        message: "Invalid event ID format",
+      });
+    }
+
+    // ── Body extraction & validation ────────────────────────────────────
+    const {
+      studentId,
+      firstName,
+      middleName,
+      lastName,
+      email,
+      course,
+      yearLevel,
+      shirtSize,
+      shirtPrice,
+    } = req.body as AddWalkInAttendeeV2Body;
+
+    // Required field presence
+    if (!studentId?.trim()) {
+      return res
+        .status(400)
+        .json({ error: "VALIDATION", message: "Student ID is required" });
+    }
+
+    if (!V_STUDENT_ID_REGEX.test(studentId.trim())) {
+      return res.status(400).json({
+        error: "VALIDATION",
+        message: "Student ID must be exactly 8 digits",
+      });
+    }
+
+    // Derive campus-scoped ID. For UC_BANILAD/UC_LM/UC_PT this appends the
+    // campus suffix (e.g. 21123456-uclm). For UC_MAIN/UC_CS there is no
+    // suffix, so we fall back to the raw 8-digit ID.
+    const normalizedStudentId =
+      buildCampusScopedStudentId(studentId, adminCampus) ?? studentId.trim();
+
+    const firstNameErr = validateNameField(firstName, "First name", true);
+    if (firstNameErr) {
+      return res
+        .status(400)
+        .json({ error: "VALIDATION", message: firstNameErr });
+    }
+
+    const middleNameErr = validateNameField(middleName, "Middle name", false);
+    if (middleNameErr) {
+      return res
+        .status(400)
+        .json({ error: "VALIDATION", message: middleNameErr });
+    }
+
+    const lastNameErr = validateNameField(lastName, "Last name", true);
+    if (lastNameErr) {
+      return res
+        .status(400)
+        .json({ error: "VALIDATION", message: lastNameErr });
+    }
+
+    // Email is optional for walk-in attendees
+    if (email?.trim() && !V_EMAIL_REGEX.test(email.trim())) {
+      return res
+        .status(400)
+        .json({ error: "VALIDATION", message: "Invalid email format" });
+    }
+
+    if (!course?.trim() || !V_VALID_COURSES.includes(course.trim())) {
+      return res
+        .status(400)
+        .json({ error: "VALIDATION", message: "Invalid course" });
+    }
+
+    if (!yearLevel?.trim()) {
+      return res
+        .status(400)
+        .json({ error: "VALIDATION", message: "Year level is required" });
+    }
+    const yearNumber = parseYearLevel(yearLevel);
+    if (yearNumber === null) {
+      return res
+        .status(400)
+        .json({ error: "VALIDATION", message: "Invalid year level" });
+    }
+
+    // ── Fetch event ─────────────────────────────────────────────────────
+    const event = await Event.findOne(query);
+    if (!event) {
+      return res
+        .status(404)
+        .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
+    }
+
+    const campusLimit = event.limit.find(
+      (entry) => entry.campus === adminCampus
+    );
+    const campusAttendeeCount = Array.isArray(event.attendees)
+      ? event.attendees.filter((attendee) => attendee.campus === adminCampus)
+          .length
+      : 0;
+
+    if (
+      campusLimit &&
+      campusLimit.limit > 0 &&
+      campusAttendeeCount >= campusLimit.limit
+    ) {
+      return res.status(409).json({
+        error: "CAMPUS_LIMIT_REACHED",
+        message: `Campus attendee limit reached for ${adminCampus}`,
+      });
+    }
+
+    // ── Duplicate attendee check ────────────────────────────────────────
+    const attendeeList = Array.isArray(event.attendees)
+      ? (event.attendees as unknown as IAttendee[])
+      : [];
+
+    const alreadyRegistered = attendeeList.some(
+      (a) => a.id_number === normalizedStudentId && a.campus === adminCampus
+    );
+    if (alreadyRegistered) {
+      return res.status(409).json({
+        error: "ATTENDEE_EXISTS",
+        message: "Student is already registered for this event at this campus",
+      });
+    }
+
+    // ── Validate user-provided price ──────────────────────────────────
+    const resolvedPrice = shirtPrice == null ? 0 : Number(shirtPrice);
+    if (!Number.isFinite(resolvedPrice) || resolvedPrice < 0) {
+      return res.status(400).json({
+        error: "VALIDATION",
+        message: "Price must be a non-negative number",
+      });
+    }
+
+    // ── Build attendee name ─────────────────────────────────────────────
+    const attendeeName = [
+      firstName!.trim(),
+      middleName?.trim(),
+      lastName!.trim(),
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    // ── Transaction ─────────────────────────────────────────────────────
+    session.startTransaction();
+
+    // Step 1: Push attendee into event (no student account creation),
+    // auto-marking the currently active session as present since a
+    // attendee is physically checking in right now
+    const now = new Date();
+    const attendance = buildAttendanceForActiveSession(
+      event.sessionConfig as SessionConfig | undefined,
+      now
+    );
+    event.attendees.push({
+      id_number: normalizedStudentId,
+      name: attendeeName,
+      course: course!.trim(),
+      year: yearNumber,
+      campus: adminCampus,
+      shirtSize: shirtSize?.trim() ?? "",
+      shirtPrice: resolvedPrice,
+      transactBy: claims.idNumber,
+      transactDate: new Date(),
+      attendance,
+      confirmedBy: claims.idNumber,
+      raffleIsRemoved: false,
+      raffleIsWinner: false,
+    } as IAttendee);
+
+    // Step 2: Update sales data (campus-specific)
+    if (resolvedPrice > 0) {
+      const campusData = event.sales_data.find((s) => s.campus === adminCampus);
+      if (campusData) {
+        campusData.unitsSold += 1;
+        campusData.totalRevenue += resolvedPrice;
+      }
+      event.totalUnitsSold = (event.totalUnitsSold ?? 0) + 1;
+      event.totalRevenueAll = (event.totalRevenueAll ?? 0) + resolvedPrice;
+    }
+
+    normalizeEventCampusFields(event);
+    await event.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await logAdminAction(req, logs_action.ADD_ATTENDEE, attendeeName, eventId);
+
+    return res.status(201).json({
+      message: "Walk-in attendee registered successfully",
+      data: {
+        attendee: {
+          id_number: normalizedStudentId,
+          name: attendeeName,
+          campus: adminCampus,
+          course: course!.trim(),
+          year: yearNumber,
+          shirtSize: shirtSize?.trim() ?? "",
+          shirtPrice: resolvedPrice,
+        },
+      },
+    });
+  } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
+
+    console.error("Error in addWalkInAttendeeV2Controller:", error);
+
+    // Duplicate key error (race condition on id_number)
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code: number }).code === 11000
+    ) {
+      return res.status(409).json({
+        error: "DUPLICATE_ENTRY",
+        message: "Student ID already exists",
+      });
+    }
+
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Internal server error",
+    });
+  }
+};
+
 export const getMyEventsController = async (req: Request, res: Response) => {
   try {
     const idNumber = req.userV2?.idNumber;
@@ -1344,7 +1788,9 @@ export const getMyEventsController = async (req: Request, res: Response) => {
     const validEvents = events.filter((event) => {
       if (!event.eventDate) return false;
       const date =
-        event.eventDate instanceof Date ? event.eventDate : new Date(String(event.eventDate));
+        event.eventDate instanceof Date
+          ? event.eventDate
+          : new Date(String(event.eventDate));
       return !Number.isNaN(date.getTime());
     });
 
@@ -1367,6 +1813,135 @@ export const getMyEventsController = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ── Student Self-Apply V2 ────────────────────────────────────────────────
+
+export const applyToEventV2Controller = async (req: Request, res: Response) => {
+  try {
+    const claims = req.userV2;
+    if (!claims || claims.role !== "student") {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "Student access required",
+      });
+    }
+
+    const studentCampus = claims.campus;
+
+    const eventId = req.params.eventId as string;
+    const query = buildEventLookupQuery(eventId);
+    if (!query) {
+      return res.status(400).json({
+        error: "INVALID_EVENT_ID",
+        message: "Invalid event ID format",
+      });
+    }
+
+    const event = await Event.findOne(query);
+    if (!event) {
+      return res
+        .status(404)
+        .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
+    }
+
+    // ── Only allow applying while event is Upcoming or Ongoing ──────────
+    if (event.status !== "Upcoming" && event.status !== "Ongoing") {
+      return res.status(409).json({
+        error: "APPLICATIONS_CLOSED",
+        message: "This event is no longer accepting applications",
+      });
+    }
+
+    // ── Campus limit check (same rule as admin add) ─────────────────────
+    const campusLimit = event.limit.find(
+      (entry) => entry.campus === studentCampus
+    );
+    const campusAttendeeCount = Array.isArray(event.attendees)
+      ? event.attendees.filter((a) => a.campus === studentCampus).length
+      : 0;
+
+    if (
+      campusLimit &&
+      campusLimit.limit > 0 &&
+      campusAttendeeCount >= campusLimit.limit
+    ) {
+      return res.status(409).json({
+        error: "CAMPUS_LIMIT_REACHED",
+        message: `Attendee limit reached for ${studentCampus}`,
+      });
+    }
+
+    // ── Duplicate check ──────────────────────────────────────────────────
+    const attendeeList = Array.isArray(event.attendees)
+      ? (event.attendees as unknown as IAttendee[])
+      : [];
+
+    const alreadyApplied = attendeeList.some(
+      (a) => a.id_number === claims.idNumber
+    );
+    if (alreadyApplied) {
+      return res.status(409).json({
+        error: "ALREADY_APPLIED",
+        message: "You have already applied to this event",
+      });
+    }
+
+    // ── Auto-pull student profile ───────────────────────────────────────
+    const student = await Student.findOne({ id_number: claims.idNumber });
+    if (!student) {
+      return res.status(404).json({
+        error: "STUDENT_NOT_FOUND",
+        message: "Student account not found",
+      });
+    }
+
+    const attendeeName = [
+      student.first_name,
+      student.middle_name,
+      student.last_name,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    event.attendees.push({
+      id_number: student.id_number,
+      name: attendeeName,
+      course: student.course,
+      year: student.year,
+      campus: studentCampus,
+      shirtSize: "",
+      shirtPrice: 0,
+      transactBy: student.id_number, // self-applied
+      transactDate: new Date(),
+      attendance: {
+        morning: { attended: false, timestamp: null },
+        afternoon: { attended: false, timestamp: null },
+        evening: { attended: false, timestamp: null },
+      },
+      confirmedBy: "",
+      raffleIsRemoved: false,
+      raffleIsWinner: false,
+    } as IAttendee);
+
+    normalizeEventCampusFields(event);
+    await event.save();
+
+    return res.status(201).json({
+      message: "Applied successfully",
+      data: {
+        id_number: student.id_number,
+        name: attendeeName,
+        campus: studentCampus,
+      },
+    });
+  } catch (error) {
+    console.error("Error in applyToEventV2Controller:", error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Internal server error",
+    });
   }
 };
 
@@ -1518,10 +2093,26 @@ export const getEditableAttendeeV2Controller = async (
 ) => {
   try {
     const claims = req.userV2;
-    if (!claims || claims.role !== "admin") {
+    if (!claims) {
+      return res.status(401).json({
+        error: "UNAUTHORIZED",
+        message: "Authentication required",
+      });
+    }
+
+    const idNumber = req.params.idNumber as string;
+
+    if (claims.role === "student" && claims.idNumber !== idNumber?.trim()) {
       return res.status(403).json({
         error: "INSUFFICIENT_PERMISSIONS",
-        message: "Admin access required",
+        message: "You can only mark your own attendance",
+      });
+    }
+
+    if (claims.role !== "admin" && claims.role !== "student") {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "Admin or student access required",
       });
     }
 
@@ -1541,7 +2132,6 @@ export const getEditableAttendeeV2Controller = async (
     }
 
     const eventId = req.params.eventId as string;
-    const idNumber = req.params.idNumber as string;
     const query = buildEventLookupQuery(eventId);
     if (!query) {
       return res.status(400).json({
@@ -2027,6 +2617,7 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
     attendee.editedBy.push(claims.idNumber);
 
     // ── Save event ──────────────────────────────────────────────────────
+    normalizeEventCampusFields(event);
     await event.save({ session });
 
     // ── Update student document ─────────────────────────────────────────
@@ -2242,6 +2833,7 @@ export const changeAttendeePasswordV2Controller = async (
       attendee.editedBy = [];
     }
     attendee.editedBy.push(claims.idNumber);
+    normalizeEventCampusFields(event);
     await event.save({ session });
 
     await session.commitTransaction();
@@ -2281,6 +2873,11 @@ interface CreateEventV2Body {
   status?: string;
   sessionConfig?: unknown;
   limit?: unknown;
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 const parseManilaMidnightDate = (value: string): Date | null => {
@@ -2288,6 +2885,41 @@ const parseManilaMidnightDate = (value: string): Date | null => {
   const parsed = new Date(`${value}T16:00:00.000Z`);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed;
+};
+
+export const getEventImageController = async (req: Request, res: Response) => {
+  try {
+    const key = req.params[0];
+    if (!key) {
+      return res.status(400).json({ message: "Image key is required" });
+    }
+
+    if (!R2_BUCKET_NAME) {
+      return res.status(500).json({ message: "Image storage not configured" });
+    }
+
+    const command = new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key });
+    const object = await r2Client.send(command);
+
+    if (!object.Body) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    res.setHeader(
+      "Content-Type",
+      object.ContentType || "application/octet-stream"
+    );
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+
+    const stream = object.Body as NodeJS.ReadableStream;
+    stream.pipe(res);
+  } catch (error: any) {
+    if (error?.name === "NoSuchKey" || error?.Code === "NoSuchKey") {
+      return res.status(404).json({ message: "Image not found" });
+    }
+    console.error("Error streaming event image:", error);
+    return res.status(500).json({ message: "Failed to load image" });
+  }
 };
 
 export const createEventV2Controller = async (req: Request, res: Response) => {
@@ -2325,12 +2957,14 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
 
   const status =
     body.status === "Upcoming" ||
-      body.status === "Ended" ||
-      body.status === "Cancelled"
+    body.status === "Ended" ||
+    body.status === "Cancelled"
       ? body.status
       : "Ongoing";
 
-  const parsedSessionConfigResult = parseSessionConfigPayload(body.sessionConfig);
+  const parsedSessionConfigResult = parseSessionConfigPayload(
+    body.sessionConfig
+  );
   if ("error" in parsedSessionConfigResult) {
     return res.status(400).json({
       error: "VALIDATION",
@@ -2347,9 +2981,10 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
   }
 
   try {
-    const imageUrl = (req.files as Express.MulterS3.File[] | undefined)?.map(
-      (file) => file.location,
-    ) ?? [];
+    const imageUrl =
+      (req.files as Express.MulterS3.File[] | undefined)?.map((file) =>
+        buildProxyImageUrl(req, file)
+      ) ?? [];
 
     const createdBy =
       req.admin?.name ??
@@ -2367,6 +3002,18 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
       sessionConfig: parsedSessionConfigResult,
       createdBy,
       attendees: [],
+      eventVenue:
+        typeof body.eventVenue === "string" ? body.eventVenue.trim() : "",
+      eventTheme:
+        typeof body.eventTheme === "string" ? body.eventTheme.trim() : "",
+      eventVenueSpecific:
+        typeof body.eventVenueSpecific === "string"
+          ? body.eventVenueSpecific.trim()
+          : "",
+      eventStartTime:
+        typeof body.eventStartTime === "string" ? body.eventStartTime : "",
+      eventEndTime:
+        typeof body.eventEndTime === "string" ? body.eventEndTime : "",
     };
 
     if (parsedLimitResult.length > 0) {
@@ -2377,7 +3024,12 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
 
     await newEvent.save();
 
-    await logAdminAction(req, logs_action.CREATE_EVENT, eventName, String(newEvent._id));
+    await logAdminAction(
+      req,
+      logs_action.CREATE_EVENT,
+      eventName,
+      String(newEvent._id)
+    );
 
     return res.status(201).json({
       message: "Event created successfully",
@@ -2388,9 +3040,9 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Failed to create event",
-    })
+    });
   }
-}
+};
 
 export const getAllEventsRawController = async (
   req: Request,
@@ -2407,9 +3059,9 @@ export const getAllEventsRawController = async (
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Internal server error",
-    })
+    });
   }
-}
+};
 
 export const updateEventV2Controller = async (
   req: Request,
@@ -2435,20 +3087,93 @@ export const updateEventV2Controller = async (
       eventVenueSpecific,
       eventStartTime,
       eventEndTime,
-      eventImage,
+      limit,
+      sessionConfig,
     } = req.body;
+    // eventDate may arrive as a plain ISO string OR as a range-picker object
+    // like { from, to } — only the start date maps to the eventDate field.
+    let normalizedEventDate: Date | undefined;
+    if (eventDate !== undefined) {
+      const rawDateValue =
+        eventDate && typeof eventDate === "object" && "from" in eventDate
+          ? (eventDate as { from?: string }).from
+          : eventDate;
 
-    const updatedEvent = await EventV2Service.updateEvent(eventId, {
+      if (typeof rawDateValue !== "string" || !rawDateValue.trim()) {
+        return res.status(400).json({
+          error: "VALIDATION",
+          message: "Event date must be a valid date string",
+        });
+      }
+
+      const parsed = new Date(rawDateValue);
+      if (Number.isNaN(parsed.getTime())) {
+        return res.status(400).json({
+          error: "VALIDATION",
+          message: "Invalid event date",
+        });
+      }
+      normalizedEventDate = parsed;
+    }
+
+    const updateFields: Record<string, unknown> = {
       eventName,
       eventDescription,
-      eventDate,
+      ...(normalizedEventDate !== undefined && {
+        eventDate: normalizedEventDate,
+      }),
       eventVenue,
       eventTheme,
       eventVenueSpecific,
       eventStartTime,
       eventEndTime,
-      eventImage,
-    });
+    };
+
+    const uploadedFiles = req.files as Express.MulterS3.File[] | undefined;
+    if (uploadedFiles && uploadedFiles.length > 0) {
+      updateFields.eventImage = uploadedFiles.map((file) =>
+        buildProxyImageUrl(req, file)
+      );
+    }
+
+    if (sessionConfig !== undefined) {
+      const parsedSessionConfigResult =
+        parseSessionConfigPayload(sessionConfig);
+      if ("error" in parsedSessionConfigResult) {
+        return res.status(400).json({
+          error: "VALIDATION",
+          message: parsedSessionConfigResult.error,
+        });
+      }
+      updateFields.sessionConfig = parsedSessionConfigResult;
+    }
+
+    if (limit !== undefined) {
+      const parsedLimitResult = parseCampusLimitsPayload(limit);
+      if ("error" in parsedLimitResult) {
+        return res.status(400).json({
+          error: "VALIDATION",
+          message: parsedLimitResult.error,
+        });
+      }
+      updateFields.limit = parsedLimitResult;
+    }
+
+    if (limit !== undefined) {
+      const parsedLimitResult = parseCampusLimitsPayload(limit);
+      if ("error" in parsedLimitResult) {
+        return res.status(400).json({
+          error: "VALIDATION",
+          message: parsedLimitResult.error,
+        });
+      }
+      updateFields.limit = parsedLimitResult;
+    }
+
+    const updatedEvent = await EventV2Service.updateEvent(
+      eventId,
+      updateFields
+    );
 
     if (!updatedEvent) {
       return res.status(404).json({

@@ -1,10 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Download, Plus, Filter, Loader2, X } from "lucide-react";
+import {
+  Search,
+  Download,
+  Plus,
+  Filter,
+  Loader2,
+  X,
+  ArrowUpDown,
+} from "lucide-react";
 import { format } from "date-fns";
 import { getAttendees } from "@/features/events/api/eventService";
 import { showToast } from "@/utils/alertHelper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -25,6 +35,7 @@ import {
 import {
   FilterSheet,
   AddAttendeeModal,
+  AddWalkInAttendeeModal,
   MarkAttendanceButton,
   StudentDetailsModal,
   AttendanceStatusModal,
@@ -33,7 +44,11 @@ import {
   EditAttendeeModal,
   ChangePasswordModal,
 } from "./modals";
-import type { FilterOptions, AttendeeFormData } from "./modals";
+import type {
+  FilterOptions,
+  AttendeeFormData,
+  WalkInAttendeeFormData,
+} from "./modals";
 import type {
   AttendeesPagination,
   GetAttendeesParams,
@@ -41,7 +56,6 @@ import type {
   QRCodePayloadV2,
 } from "@/features/events/types/event.types";
 import { markAttendanceV2 } from "@/features/events/api/eventService";
-import { CampusView } from "@/components/common/CampusView";
 import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 
 interface Attendee {
@@ -70,6 +84,7 @@ interface Attendee {
   shirtSize?: string;
   shirtPrice?: string;
   confirmedBy?: string;
+  isPresent?: boolean;
 }
 
 interface AttendeesTableProps {
@@ -106,6 +121,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const [refreshTick, setRefreshTick] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isAddAttendeeOpen, setIsAddAttendeeOpen] = useState(false);
+  const [isAddWalkInAttendeeOpen, setIsAddWalkInAttendeeOpen] = useState(false);
   const [isStudentDetailsOpen, setIsStudentDetailsOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Attendee | null>(null);
   const [isAttendanceStatusOpen, setIsAttendanceStatusOpen] = useState(false);
@@ -120,6 +136,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pagination, setPagination] = useState<AttendeesPagination>({
     page: 1,
     limit: 10,
@@ -253,6 +270,12 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const handleApplyFilter = (filters: FilterOptions) => {
     setActiveFilters(filters);
     setCurrentPage(1);
+  };
+
+  // TODO: wire this up to your actual sort param in buildFilterParams /
+  // getAttendees once the backend supports server-side sorting.
+  const handleSort = (field: "name" | "courseYear" | "registeredOn") => {
+    void field;
   };
 
   const handleExportCSV = async () => {
@@ -412,7 +435,13 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
 
   const handleAddAttendee = () => {
     if (!canManageEvents) return;
-    setIsAddAttendeeOpen(true);
+    // UC_MAIN / UC_CS are blocked from the V2 add-attendee endpoint
+    // (which creates student accounts), so they use the walk-in flow instead.
+    if (isWalkInOnlyCampus) {
+      setIsAddWalkInAttendeeOpen(true);
+    } else {
+      setIsAddAttendeeOpen(true);
+    }
   };
 
   const handleAddAttendeeSubmit = (attendee: AttendeeFormData) => {
@@ -421,6 +450,39 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
       id: attendee.studentId,
       name: `${attendee.firstName} ${attendee.middleName} ${attendee.lastName}`.trim(),
       email: attendee.email,
+      studentId: attendee.studentId,
+      attendance: {
+        morning: { attended: true, timestamp: new Date() },
+        afternoon: { attended: false, timestamp: null },
+        evening: { attended: false, timestamp: null },
+      },
+      courseYear: `${attendee.course} - ${attendee.yearLevel.charAt(0)}`,
+      registeredOn:
+        new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        }) +
+        "\n" +
+        new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      registeredBy: "Admin",
+      campus: attendee.campus,
+      shirtSize: attendee.shirtSize,
+      shirtPrice: attendee.shirtPrice,
+    };
+    setAttendees((prev) => [newAttendee, ...prev]);
+    setCurrentPage(1);
+    setRefreshTick((prev) => prev + 1);
+  };
+
+  const handleAddWalkInAttendeeSubmit = (attendee: WalkInAttendeeFormData) => {
+    const newAttendee: Attendee = {
+      id: attendee.studentId,
+      name: `${attendee.firstName} ${attendee.middleName} ${attendee.lastName}`.trim(),
+      email: attendee.email || `${attendee.studentId}@uc.edu.ph`,
       studentId: attendee.studentId,
       attendance: {
         morning: { attended: false, timestamp: null },
@@ -451,6 +513,11 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
 
   const isAttendanceAvailable = eventStatus !== "upcoming";
 
+  // Campuses blocked from addAttendeeV2Controller (account creation) use the
+  // walk-in flow which is available to ALL campuses.
+  const WALK_IN_ONLY_CAMPUSES = ["UC_MAIN", "UC_CS"];
+  const isWalkInOnlyCampus = WALK_IN_ONLY_CAMPUSES.includes(adminCampus ?? "");
+
   const getAttendanceSummary = (attendance: Attendee["attendance"]) => {
     if (!isAttendanceAvailable) {
       return "Not Available Yet";
@@ -466,6 +533,14 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     return `${attendedCount}/3 Sessions`;
   };
 
+  const computeIsPresent = (attendance: Attendee["attendance"]): boolean => {
+    return Boolean(
+      attendance?.morning?.attended ||
+      attendance?.afternoon?.attended ||
+      attendance?.evening?.attended
+    );
+  };
+
   const openAttendanceStatus = (attendee: Attendee) => {
     setSelectedAttendanceAttendee(attendee);
     setIsAttendanceStatusOpen(true);
@@ -474,7 +549,12 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const handleViewDetails = (attendeeId: string) => {
     const student = attendees.find((a) => a.id === attendeeId);
     if (student) {
-      setSelectedStudent(student);
+      setSelectedStudent({
+        ...student,
+        isPresent: isAttendanceAvailable
+          ? computeIsPresent(student.attendance)
+          : undefined,
+      });
       setIsStudentDetailsOpen(true);
     }
   };
@@ -508,22 +588,17 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         <h3 className="text-lg font-semibold">{venue}</h3>
         <div className="mt-2 flex w-full flex-row items-center gap-2 sm:mt-0 sm:w-auto">
           {canManageEvents && (
-            <CampusView
-              allowedCampuses={["UC_LM", "UC_PT", "UC_BANILAD"]}
-              role="admin"
-            >
-              <div className="flex-1 sm:flex-none">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddAttendee}
-                  className="w-full cursor-pointer rounded-xl"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Attendee
-                </Button>
-              </div>
-            </CampusView>
+            <div className="flex-1 sm:flex-none">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddAttendee}
+                className="w-full cursor-pointer rounded-xl"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {isWalkInOnlyCampus ? "Add Attendee" : "Add Attendee"}
+              </Button>
+            </div>
           )}
           {canManageEvents && (
             <div className="flex-1 sm:flex-none">
@@ -550,7 +625,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
               setSearchQuery(e.target.value);
               setCurrentPage(1); // Reset to first page when searching
             }}
-            className="pl-9"
+            className="rounded-2xl pl-9"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -656,19 +731,56 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-hidden rounded-lg border">
+      {/* Table - desktop */}
+      <div className="hidden overflow-hidden rounded-lg border md:block">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                <TableHead className="min-w-[200px]">Name</TableHead>
-                <TableHead className="min-w-[120px]">Student ID</TableHead>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={
+                      selectedIds.length === paginatedAttendees.length &&
+                      paginatedAttendees.length > 0
+                    }
+                    onCheckedChange={(checked) =>
+                      setSelectedIds(
+                        checked ? paginatedAttendees.map((a) => a.id) : []
+                      )
+                    }
+                  />
+                </TableHead>
+                <TableHead className="min-w-[220px]">
+                  <button
+                    className="flex cursor-pointer items-center gap-1"
+                    onClick={() => handleSort("name")}
+                  >
+                    Name{" "}
+                    <ArrowUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                  </button>
+                </TableHead>
+                <TableHead className="min-w-[110px]">Student ID</TableHead>
                 <TableHead className="min-w-[100px]">Status</TableHead>
-                <TableHead className="min-w-[120px]">Course & Year</TableHead>
-                <TableHead className="min-w-[150px]">Registered On</TableHead>
-                <TableHead className="min-w-[150px]">Registered By</TableHead>
-                <TableHead className="w-[120px]">Actions</TableHead>
+                <TableHead className="min-w-[120px]">
+                  <button
+                    className="flex cursor-pointer items-center gap-1"
+                    onClick={() => handleSort("courseYear")}
+                  >
+                    Course & Year{" "}
+                    <ArrowUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                  </button>
+                </TableHead>
+                <TableHead className="min-w-[140px]">
+                  <button
+                    className="flex cursor-pointer items-center gap-1"
+                    onClick={() => handleSort("registeredOn")}
+                  >
+                    Confirmed on{" "}
+                    <ArrowUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                  </button>
+                </TableHead>
+                <TableHead className="min-w-[140px]">Confirmed by</TableHead>
+                <TableHead className="w-[110px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -693,64 +805,205 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
               ) : paginatedAttendees.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="text-muted-foreground py-12 text-center"
                   >
                     No attendees found
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedAttendees.map((attendee) => (
-                  <TableRow key={attendee.id}>
-                    <TableCell>
-                      <div>
+                paginatedAttendees.map((attendee) => {
+                  const isPresent =
+                    attendee.attendance?.morning?.attended ||
+                    attendee.attendance?.afternoon?.attended ||
+                    attendee.attendance?.evening?.attended;
+                  return (
+                    <TableRow key={attendee.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.includes(attendee.id)}
+                          onCheckedChange={(checked) =>
+                            setSelectedIds((prev) =>
+                              checked
+                                ? [...prev, attendee.id]
+                                : prev.filter((id) => id !== attendee.id)
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
                         <p className="font-medium">{attendee.name}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{attendee.studentId}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openAttendanceStatus(attendee)}
-                        className="rounded-full"
-                      >
-                        {getAttendanceSummary(attendee.attendance)}
-                      </Button>
-                    </TableCell>
-                    <TableCell>{attendee.courseYear}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {attendee.registeredOn.split("\n").map((line, i) => (
-                          <div
-                            key={i}
+                        <p className="text-muted-foreground text-xs">
+                          {attendee.email}
+                        </p>
+                      </TableCell>
+                      <TableCell>{attendee.studentId}</TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => openAttendanceStatus(attendee)}
+                          className="cursor-pointer"
+                        >
+                          <Badge
+                            variant="outline"
                             className={
-                              i === 0 ? "font-medium" : "text-muted-foreground"
+                              isPresent
+                                ? "border-green-200 bg-green-50 text-green-700"
+                                : "border-red-200 bg-red-50 text-red-700"
                             }
                           >
-                            {line}
-                          </div>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {attendee.registeredBy}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewDetails(attendee.id)}
-                      >
-                        View Details
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                            {isAttendanceAvailable
+                              ? isPresent
+                                ? "Present"
+                                : "Absent"
+                              : "N/A"}
+                          </Badge>
+                        </button>
+                      </TableCell>
+                      <TableCell>{attendee.courseYear}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {attendee.registeredOn.split("\n").map((line, i) => (
+                            <div
+                              key={i}
+                              className={
+                                i === 0
+                                  ? "font-medium"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {line}
+                            </div>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {attendee.registeredBy}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleViewDetails(attendee.id)}
+                          className="h-7 rounded-2xl border-gray-300 px-4 text-sm font-semibold"
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
         </div>
+      </div>
+
+      {/* Cards - mobile */}
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <div className="text-muted-foreground rounded-lg border py-12 text-center text-sm">
+            Loading attendees...
+          </div>
+        ) : loadError ? (
+          <div className="text-muted-foreground rounded-lg border py-12 text-center text-sm">
+            {loadError}
+          </div>
+        ) : paginatedAttendees.length === 0 ? (
+          <div className="text-muted-foreground rounded-lg border py-12 text-center text-sm">
+            No attendees found
+          </div>
+        ) : (
+          paginatedAttendees.map((attendee) => {
+            const isPresent =
+              attendee.attendance?.morning?.attended ||
+              attendee.attendance?.afternoon?.attended ||
+              attendee.attendance?.evening?.attended;
+            return (
+              <div
+                key={attendee.id}
+                className="space-y-3 rounded-xl border p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <Checkbox
+                      checked={selectedIds.includes(attendee.id)}
+                      onCheckedChange={(checked) =>
+                        setSelectedIds((prev) =>
+                          checked
+                            ? [...prev, attendee.id]
+                            : prev.filter((id) => id !== attendee.id)
+                        )
+                      }
+                      className="mt-1"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{attendee.name}</p>
+                      <p className="text-muted-foreground truncate text-xs">
+                        {attendee.email}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => openAttendanceStatus(attendee)}
+                    className="flex-shrink-0 cursor-pointer"
+                  >
+                    <Badge
+                      variant="outline"
+                      className={
+                        isPresent
+                          ? "border-green-200 bg-green-50 text-green-700"
+                          : "border-red-200 bg-red-50 text-red-700"
+                      }
+                    >
+                      {isAttendanceAvailable
+                        ? isPresent
+                          ? "Present"
+                          : "Absent"
+                        : "N/A"}
+                    </Badge>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs">Student ID</p>
+                    <p className="font-medium">{attendee.studentId}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">
+                      Course & Year
+                    </p>
+                    <p className="font-medium">{attendee.courseYear}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">
+                      Confirmed on
+                    </p>
+                    <p className="font-medium">
+                      {attendee.registeredOn.split("\n").join(" · ")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">
+                      Confirmed by
+                    </p>
+                    <p className="truncate font-medium">
+                      {attendee.registeredBy}
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => handleViewDetails(attendee.id)}
+                >
+                  View Details
+                </Button>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* Footer with pagination and count */}
@@ -850,6 +1103,14 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         onOpenChange={setIsAddAttendeeOpen}
         eventId={eventId}
         onAddAttendee={handleAddAttendeeSubmit}
+        adminCampus={adminCampus}
+        merch={merch}
+      />
+      <AddWalkInAttendeeModal
+        open={isAddWalkInAttendeeOpen}
+        onOpenChange={setIsAddWalkInAttendeeOpen}
+        eventId={eventId}
+        onAddAttendee={handleAddWalkInAttendeeSubmit}
         adminCampus={adminCampus}
         merch={merch}
       />

@@ -18,6 +18,7 @@ const adminSchema = new Schema<IAdminDocument>({
   campus: { type: String },
   access: { type: String, default: "admin" },
   currentRefreshToken: { type: String, default: null },
+  githubUsername: { type: String },
 });
 
 export const Admin = mongoose.model<IAdminDocument>("Admin", adminSchema);

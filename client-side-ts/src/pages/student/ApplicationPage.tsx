@@ -43,7 +43,9 @@ const YEAR_MAP: Record<string, string> = {
 };
 
 const getPositionTimestamp = (position: RecruitmentPosition) => {
-  const timestamp = new Date(position.updatedAt || position.createdAt).getTime();
+  const timestamp = new Date(
+    position.updatedAt || position.createdAt
+  ).getTime();
   return Number.isFinite(timestamp) ? timestamp : 0;
 };
 
@@ -71,10 +73,15 @@ const isPositionCurrentlyOpen = (position?: RecruitmentPosition) => {
   }
 
   const now = Date.now();
+
+  const opensAt = position.applicationOpensAt
+    ? new Date(position.applicationOpensAt).getTime()
+    : null;
+  if (opensAt && Number.isFinite(opensAt) && now < opensAt) return false;
+
   const deadline = position.applicationDeadline
     ? new Date(position.applicationDeadline).getTime()
     : null;
-
   if (deadline && Number.isFinite(deadline) && deadline < now) return false;
 
   return true;
@@ -616,8 +623,7 @@ export const ApplicationPage = () => {
   }, [positionsByCatalogKey]);
 
   const baseRoleOptions = RECRUITMENT_ROLE_CATALOG.map((role) => role.title);
-  const selectedRolePositionOptions =
-    groupedPositions[selectedBaseRole] || [];
+  const selectedRolePositionOptions = groupedPositions[selectedBaseRole] || [];
   const hasPositionOptions = selectedRolePositionOptions.length > 0;
   const selectedPositionOption = selectedRolePositionOptions.find(
     (item) => item.positionId && item.positionId === selectedPositionId
@@ -916,10 +922,11 @@ export const ApplicationPage = () => {
               )}
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-600">
+            <label className="text-black-600 flex items-center gap-2">
               <Checkbox
                 checked={acknowledged}
                 onCheckedChange={(v) => setAcknowledged(v === true)}
+                className="-mt-6 border-gray-300 data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE]"
               />
               I have read and understand the role requirements{" "}
               <span className="text-red-500">*</span>
@@ -1043,7 +1050,7 @@ export const ApplicationPage = () => {
       </form>
 
       <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-        <DialogContent className="max-w-sm rounded-3xl">
+        <DialogContent className="w-[92vw] max-w-sm rounded-3xl p-6 sm:p-6">
           <DialogHeader>
             <DialogTitle>Upload File</DialogTitle>
           </DialogHeader>
@@ -1058,8 +1065,8 @@ export const ApplicationPage = () => {
           >
             <Upload className="h-8 w-8 text-sky-400" />
             <span className="text-sm text-gray-600">Drag & drop or browse</span>
-            <span className="text-xs text-gray-400">
-              Supports: PDF, max 5MB
+            <span className="text-xs text-gray-500">
+              Only PDF files are accepted (max 5MB)
             </span>
             <span className="mt-2 rounded-md bg-sky-500 px-4 py-1.5 text-sm text-white">
               Choose File

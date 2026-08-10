@@ -206,9 +206,13 @@ export class RecruitmentService {
     }
 
     const selectedTitles = docs.map((doc) => doc.title);
+    // Block re-creating a title while any *live* position document for it
+    // still exists — OPEN, CLOSED, or DRAFT, as long as it's active.
+    // Archived positions (isActive: false — set when deletePosition can't
+    // hard-delete due to existing applications) don't block reuse; the
+    // archive itself is the "deletion" for title-reuse purposes.
     const existingOpenPositions = await RecruitmentPosition.find({
       title: { $in: selectedTitles },
-      hiringStatus: hiringStatus.OPEN,
       isActive: true,
     }).sort({ createdAt: -1 });
 
@@ -233,20 +237,27 @@ export class RecruitmentService {
       conflictStrategy === OPENING_CONFLICT_STRATEGIES.closeOldCreateNew &&
       existingOpenPositions.length > 0
     ) {
-      await RecruitmentPosition.updateMany(
-        {
-          _id: {
-            $in: existingOpenPositions.map((position: any) => position._id),
-          },
-        },
-        {
-          $set: {
-            hiringStatus: hiringStatus.CLOSED,
-            isActive: false,
-          },
-        }
-      );
-      return RecruitmentPosition.insertMany(docs);
+      // Create the replacements first so we have real _ids to reassign
+      // applicants onto, then move every application from each old
+      // position to its same-titled replacement, then hard-delete the old
+      // position — safe now that it has zero applications left, so it
+      // never becomes a permanently-archived zombie row.
+      const created = await RecruitmentPosition.insertMany(docs);
+      const newByTitle = new Map(created.map((p: any) => [p.title, p]));
+
+      for (const oldPosition of existingOpenPositions) {
+        const replacement = newByTitle.get(oldPosition.title);
+        if (!replacement) continue; // titles always match here by construction
+
+        await Application.updateMany(
+          { position: oldPosition._id },
+          { $set: { position: replacement._id } }
+        );
+
+        await RecruitmentPosition.deleteOne({ _id: oldPosition._id });
+      }
+
+      return created;
     }
 
     if (conflictStrategy === OPENING_CONFLICT_STRATEGIES.updateExisting) {
@@ -315,6 +326,17 @@ export class RecruitmentService {
     const currentPage = toPositiveInteger(page, 1);
     const pageLimit = toPositiveInteger(limit, 10);
 
+    // Lazily close any OPEN positions whose deadline has passed.
+    // Cheap enough to run on every list call — indexed on hiringStatus +
+    // applicationDeadline — and keeps the UI honest without a cron job.
+    await RecruitmentPosition.updateMany(
+      {
+        hiringStatus: hiringStatus.OPEN,
+        applicationDeadline: { $lt: new Date() },
+      },
+      { $set: { hiringStatus: hiringStatus.CLOSED } }
+    );
+
     // Public API defaults to only active/open positions unless filtered
     if (req.path.startsWith("/public")) {
       query.isActive = true;
@@ -374,6 +396,16 @@ export class RecruitmentService {
   async getPositionById(id: string, req?: any) {
     const position = await RecruitmentPosition.findById(id);
     if (!position) throw new AppError("Position not found.", 404);
+
+    if (
+      position.hiringStatus === hiringStatus.OPEN &&
+      position.applicationDeadline &&
+      position.applicationDeadline < new Date()
+    ) {
+      position.hiringStatus = hiringStatus.CLOSED;
+      await position.save();
+    }
+
     return position;
   }
 
@@ -485,11 +517,16 @@ export class RecruitmentService {
       throw new AppError("Application is not open yet.", 400);
     }
 
-    // Validate deadline not expired
+    // Validate deadline not expired — also lazily flip the position closed
+    // so it doesn't keep showing OPEN to other readers after this point.
     if (
       position.applicationDeadline &&
       position.applicationDeadline < new Date()
     ) {
+      if (position.hiringStatus === hiringStatus.OPEN) {
+        position.hiringStatus = hiringStatus.CLOSED;
+        await position.save();
+      }
       throw new AppError("Application deadline has passed.", 400);
     }
 
@@ -507,16 +544,62 @@ export class RecruitmentService {
       );
     }
 
+    // ── Reserve a slot atomically (only if this position has a slot cap) ──
+    // The $expr condition means "only match/update if slotsFilled < slots"
+    // is evaluated and applied in the same atomic operation, so two
+    // simultaneous applicants can never both win the last slot.
+    const hasSlotLimit =
+      typeof position.slots === "number" && position.slots > 0;
+    let reservedPosition: any = null;
+
+    if (hasSlotLimit) {
+      reservedPosition = await RecruitmentPosition.findOneAndUpdate(
+        {
+          _id: positionId,
+          hiringStatus: hiringStatus.OPEN,
+          isActive: true,
+          $expr: { $lt: ["$slotsFilled", "$slots"] },
+        },
+        { $inc: { slotsFilled: 1 } },
+        { new: true }
+      );
+
+      if (!reservedPosition) {
+        throw new AppError("No slots available for this position.", 400);
+      }
+
+      // This reservation just filled the last slot — close hiring.
+      if (reservedPosition.slotsFilled >= (reservedPosition.slots ?? 0)) {
+        reservedPosition.hiringStatus = hiringStatus.CLOSED;
+        await reservedPosition.save();
+      }
+    }
+
+    const releaseReservation = async () => {
+      if (!hasSlotLimit) return;
+      await RecruitmentPosition.updateOne(
+        { _id: positionId },
+        {
+          $inc: { slotsFilled: -1 },
+          $set: { hiringStatus: hiringStatus.OPEN },
+        }
+      );
+    };
+
     // Get student snapshot for historical record
     const student = await Student.findById(studentId)
       .select("first_name last_name id_number email course year")
       .lean();
-    if (!student) throw new AppError("Student not found.", 404);
+    if (!student) {
+      await releaseReservation();
+      throw new AppError("Student not found.", 404);
+    }
 
     // Extract document metadata from request files (multer middleware)
     const files = req.files as any;
     const resume = files.resume?.[0];
     if (!resume) {
+      await releaseReservation();
       throw new AppError("Resume is required.", 400);
     }
 
@@ -530,6 +613,7 @@ export class RecruitmentService {
     // object that doesn't exist in the bucket (NoSuchKey on download).
     const resumeStorageKey = resume.key;
     if (!resumeStorageKey) {
+      await releaseReservation();
       throw new AppError(
         "Resume upload succeeded but no storage key was returned.",
         500
@@ -578,6 +662,9 @@ export class RecruitmentService {
       await application.save();
       return application;
     } catch (error) {
+      // Roll back the slot reservation — the application was never actually created.
+      await releaseReservation();
+
       const rawMessage =
         error instanceof Error
           ? error.message
@@ -871,7 +958,10 @@ export class RecruitmentService {
 
     if (!adminId) throw new AppError("Authentication required.", 401);
 
-    const app = await Application.findById(id).populate("position", "title");
+    const app = await Application.findById(id).populate(
+      "position",
+      "title slots slotsFilled hiringStatus applicationDeadline isActive"
+    );
     if (!app) throw new AppError("Application not found.", 404);
 
     // Validate allowed transition
@@ -919,6 +1009,41 @@ export class RecruitmentService {
       `\n[${new Date().toISOString()}] ${note || ""}`;
 
     await app.save();
+
+    // Release the reserved slot when an application is rejected — only if
+    // this position actually tracks slots. Also reopens hiring if the
+    // position was auto-closed for being full (but leaves it CLOSED if the
+    // deadline has since passed or an admin explicitly closed it for other
+    // reasons — see the deadline guard below).
+    if (status === applicationStatus.REJECTED) {
+      const position = app.position as any;
+      const hasSlotLimit =
+        typeof position?.slots === "number" && position.slots > 0;
+
+      if (hasSlotLimit) {
+        const deadlinePassed =
+          position.applicationDeadline &&
+          new Date(position.applicationDeadline) < new Date();
+
+        const update: any = { $inc: { slotsFilled: -1 } };
+
+        if (
+          position.hiringStatus === hiringStatus.CLOSED &&
+          position.isActive &&
+          !deadlinePassed
+        ) {
+          update.$set = { hiringStatus: hiringStatus.OPEN };
+        }
+
+        await RecruitmentPosition.updateOne(
+          {
+            _id: position._id,
+            slotsFilled: { $gt: 0 },
+          },
+          update
+        );
+      }
+    }
 
     // Send rejection email automatically when the decision is REJECTED
     if (status === applicationStatus.REJECTED) {
@@ -1028,12 +1153,18 @@ export class RecruitmentService {
       const modeMatch = (notes || "").match(/Interview type:\s*(.+?)(?:;|$)/i);
       const mode = modeMatch?.[1]?.trim() || "Face-to-Face";
 
+      const officerMatch = (notes || "").match(
+        /officer in charge:\s*(.+?)(?:;|$)/i
+      );
+      const officer = officerMatch?.[1]?.trim() || "";
+
       await recruitmentInterviewScheduledMail({
         applicantName: app.applicantSnapshot.name || "",
         applicantEmail: app.applicantSnapshot.email || "",
         interviewDate: dateStr,
         interviewTime: timeStr,
         mode,
+        officer,
       });
     } catch (err) {
       console.error(

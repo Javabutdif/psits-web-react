@@ -1,17 +1,12 @@
 import { useState } from "react";
-import { CalendarIcon, Clock, X } from "lucide-react";
+import { CalendarIcon, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Slider } from "@/components/ui/slider";
+import { TimePicker } from "@/components/ui/TimePicker";
 
 import type { RecruitmentPosition } from "../types/Recruitment.types";
 
@@ -22,122 +17,6 @@ function formatDateDisplay(date?: Date) {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function formatTime12h(time24: string) {
-  const [h, m] = time24.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${String(hour12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
-}
-
-function parseTime24(time24: string) {
-  if (!time24) return null;
-  const [h, m] = time24.split(":").map(Number);
-  return {
-    hour12: h % 12 === 0 ? 12 : h % 12,
-    minute: m,
-    period: h >= 12 ? "PM" : "AM",
-  } as const;
-}
-
-function toTime24(hour12: number, minute: number, period: "AM" | "PM") {
-  let hour = hour12 % 12;
-  if (period === "PM") hour += 12;
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-interface TimePickerPopoverProps {
-  value: string;
-  placeholder: string;
-  onChange: (value: string) => void;
-}
-
-function TimePickerPopover({
-  value,
-  placeholder,
-  onChange,
-}: TimePickerPopoverProps) {
-  const [open, setOpen] = useState(false);
-  const parsed = parseTime24(value);
-  const hour = parsed?.hour12 ?? 7;
-  const minute = parsed?.minute ?? 30;
-  const period = parsed?.period ?? "AM";
-
-  const commit = (h: number, m: number, p: "AM" | "PM") =>
-    onChange(toTime24(h, m, p));
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="flex h-9 items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 text-sm"
-        >
-          <Clock className="h-4 w-4 text-slate-400" />
-          {value ? (
-            formatTime12h(value)
-          ) : (
-            <span className="text-slate-400">{placeholder}</span>
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-56 rounded-2xl p-5">
-        <div className="mb-5 flex items-center justify-between">
-          <span className="text-lg font-medium">
-            {String(hour).padStart(2, "0")}:{String(minute).padStart(2, "0")}{" "}
-            {period}
-          </span>
-          <div className="flex gap-2">
-            {(["AM", "PM"] as const).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => commit(hour, minute, p)}
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs transition ${
-                  p === period ? "bg-[#1C9DDE] text-white" : "border"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <div className="mb-2 flex justify-between">
-              <Label>Hour</Label>
-              <span className="rounded border px-2 py-1 text-xs text-[#1C9DDE]">
-                {String(hour).padStart(2, "0")}
-              </span>
-            </div>
-            <Slider
-              value={[hour]}
-              min={1}
-              max={12}
-              step={1}
-              onValueChange={([v]) => commit(v, minute, period)}
-            />
-          </div>
-          <div>
-            <div className="mb-2 flex justify-between">
-              <Label>Minutes</Label>
-              <span className="rounded border px-2 py-1 text-xs text-[#1C9DDE]">
-                {String(minute).padStart(2, "0")}
-              </span>
-            </div>
-            <Slider
-              value={[minute]}
-              min={0}
-              max={59}
-              step={1}
-              onValueChange={([v]) => commit(hour, v, period)}
-            />
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
 }
 
 interface DateInputProps {
@@ -250,7 +129,7 @@ export default function PositionEditModal({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="flex max-h-[90vh] !max-w-3xl flex-col gap-0 overflow-hidden rounded-3xl p-0 [&>button]:hidden"
+        className="flex max-h-[95vh] w-[95vw] flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:w-full sm:!max-w-3xl md:max-h-[101vh] [&>button]:hidden"
         showCloseButton={false}
       >
         {/* Header */}
@@ -265,11 +144,9 @@ export default function PositionEditModal({
           </button>
         </div>
 
-        {/* Body — two columns: calendar left, fields right. Scrolls
-            internally so tall content stays clipped by the dialog's
-            rounded corners instead of spilling past the viewport. */}
-        <div className="-mt-4 flex-1 overflow-y-auto px-8 py-6">
-          <div className="grid grid-cols-2 gap-8">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 gap-6 px-4 py-6 md:-mt-4 md:grid-cols-2 md:gap-8 md:px-7">
             {/* LEFT SIDE */}
             <div>
               <Label className="mb-3 block font-medium">Select Date</Label>
@@ -285,7 +162,7 @@ export default function PositionEditModal({
             </div>
 
             {/* RIGHT SIDE */}
-            <div className="space-y-4">
+            <div className="space-y-4 md:mt-7">
               <div className="relative">
                 <Label className="absolute -top-2 left-3 z-10 bg-white px-1 text-xs font-medium text-slate-400">
                   Position Title
@@ -322,7 +199,7 @@ export default function PositionEditModal({
                     active
                   />
 
-                  <TimePickerPopover
+                  <TimePicker
                     value={deadlineTime}
                     placeholder="End Time"
                     onChange={setDeadlineTime}

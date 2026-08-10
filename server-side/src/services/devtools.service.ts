@@ -54,18 +54,51 @@ export const resendSingleEmail = async (id: string) => {
   if (!entry) throw new Error("Email queue entry not found");
   if (entry.status === "sent") throw new Error("Email has already been sent");
 
-  if (entry.type !== "receipt") {
-    throw new Error("Only receipt emails can be resent");
-  }
-
-  if (!entry.subtype) {
-    throw new Error("Entry has no subtype");
+  if (entry.type !== "receipt" && entry.type !== "automation-report") {
+    throw new Error("Only receipt and automation report emails can be resent");
   }
 
   let html: string;
   let subject: string;
 
-  if (entry.subtype === "membership") {
+  if (entry.type === "automation-report") {
+    let reportPayload: {
+      jobName: string;
+      executionTime: string;
+      results: Array<{ success: boolean; data?: unknown; recordCount: number; durationMs: number; error?: string }>;
+      includeSummary: boolean;
+      includeRawData: boolean;
+      subject: string;
+    };
+
+    try {
+      reportPayload = JSON.parse(entry.payload || "{}");
+    } catch {
+      throw new Error("Invalid automation report payload");
+    }
+
+    const templatePath = path.join(__dirname, "../templates/automation-report.ejs");
+    html = await ejs.renderFile(templatePath, {
+      jobName: reportPayload.jobName,
+      executionTime: new Date(reportPayload.executionTime).toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Manila",
+      }),
+      results: reportPayload.results,
+      includeSummary: reportPayload.includeSummary,
+      includeRawData: reportPayload.includeRawData,
+      targetCount: 1,
+      subject: reportPayload.subject,
+    });
+    subject = reportPayload.subject;
+  } else if (!entry.subtype) {
+    throw new Error("Entry has no subtype");
+  } else if (entry.subtype === "membership") {
     const history = await MembershipHistory.findOne({
       reference_code: entry.referenceCode,
     });
@@ -135,7 +168,7 @@ export const resendSingleEmail = async (id: string) => {
     throw new Error(`Unknown subtype: ${entry.subtype}`);
   }
 
-  const logoPath = path.join(__dirname, "../../assets/psits.jpg");
+  const logoPath = path.join(__dirname, "../assets/psits.jpg");
   const logoBuffer = await fs.readFile(logoPath);
 
   const { Resend } = await import("resend");
