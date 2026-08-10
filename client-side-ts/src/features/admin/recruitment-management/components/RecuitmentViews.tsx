@@ -57,6 +57,12 @@ import { AccountVerifiedModal } from "./AccountVerifiedModal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 
+import {
+  ApplicantMobileCard,
+  RejectedApplicantMobileCard,
+  PositionMobileCard,
+} from "./RecruitmentMobileTable";
+
 const courses = ["BSIT", "BSCS"];
 const years = ["1", "2", "3", "4"];
 
@@ -708,7 +714,7 @@ export const RecruitmentViews = () => {
 
           {/* Table / Verification cards */}
           {activeTab === "applications" ? (
-            <div className="overflow-x-auto">
+            <div>
               {selectedPositionIds.length > 0 && (
                 <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
                   <span>
@@ -744,216 +750,253 @@ export const RecruitmentViews = () => {
                   </div>
                 </div>
               )}
-              <table className="w-full min-w-[820px] table-fixed border-collapse text-sm">
-                <thead>
-                  <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                    <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
-                      <Checkbox
-                        checked={allPositionsSelected}
-                        onCheckedChange={(checked) =>
-                          setSelectedPositionIds(
-                            checked ? positions.map((p) => p._id) : []
-                          )
-                        }
-                        aria-label="Select all positions"
-                        className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE]"
-                      />
-                    </th>
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[820px] table-fixed border-collapse text-sm">
+                  <thead>
+                    <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
+                      <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
+                        <Checkbox
+                          checked={allPositionsSelected}
+                          onCheckedChange={(checked) =>
+                            setSelectedPositionIds(
+                              checked ? positions.map((p) => p._id) : []
+                            )
+                          }
+                          aria-label="Select all positions"
+                          className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE]"
+                        />
+                      </th>
 
-                    <th className="w-[22%] px-3 py-2 text-left font-medium">
-                      Position
-                    </th>
+                      <th className="w-[22%] px-3 py-2 text-left font-medium">
+                        Position
+                      </th>
 
-                    <th className="w-[12%] px-3 py-2 text-left font-medium">
-                      Status
-                    </th>
+                      <th className="w-[12%] px-3 py-2 text-left font-medium">
+                        Status
+                      </th>
 
-                    <th className="w-[12%] px-3 py-2 text-left font-medium">
-                      Slots
-                    </th>
+                      <th className="w-[12%] px-3 py-2 text-left font-medium">
+                        Slots
+                      </th>
 
-                    <th className="w-[17%] px-3 py-2 text-left font-medium">
-                      Deadline
-                    </th>
+                      <th className="w-[17%] px-3 py-2 text-left font-medium">
+                        Deadline
+                      </th>
 
-                    <th className="w-[18%] px-3 py-2 text-left font-medium">
-                      Created
-                    </th>
+                      <th className="w-[18%] px-3 py-2 text-left font-medium">
+                        Created
+                      </th>
 
-                    <th className="w-[15%] rounded-r-md px-3 py-2 text-right font-medium">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isPositionsLoading ? (
-                    Array.from({ length: 5 }, (_, row) => (
-                      <tr key={row} className="border-b border-[#ededed]">
-                        {Array.from({ length: 7 }, (_, cell) => (
-                          <td key={cell} className="px-3 py-3">
-                            <Skeleton className="h-4 w-full rounded-full" />
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : positionsError ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-3 py-16 text-center text-sm text-red-600"
-                      >
-                        {positionsError}
-                      </td>
+                      <th className="w-[15%] rounded-r-md px-3 py-2 text-right font-medium">
+                        Actions
+                      </th>
                     </tr>
-                  ) : positions.length > 0 ? (
-                    positions.map((position) => (
-                      <tr
-                        key={position._id}
-                        className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
-                      >
-                        {/* Checkbox */}
-                        <td className="px-3 py-3">
-                          <Checkbox
-                            checked={selectedPositionIds.includes(position._id)}
-                            onCheckedChange={() =>
-                              togglePositionSelection(position._id)
-                            }
-                            aria-label={`Select ${position.title}`}
-                            className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
-                          />
+                  </thead>
+                  <tbody>
+                    {isPositionsLoading ? (
+                      Array.from({ length: 5 }, (_, row) => (
+                        <tr key={row} className="border-b border-[#ededed]">
+                          {Array.from({ length: 7 }, (_, cell) => (
+                            <td key={cell} className="px-3 py-3">
+                              <Skeleton className="h-4 w-full rounded-full" />
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : positionsError ? (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-3 py-16 text-center text-sm text-red-600"
+                        >
+                          {positionsError}
                         </td>
-
-                        {/* Position */}
-                        <td className="truncate px-3 py-3 font-medium text-slate-900">
-                          {position.title}
-                        </td>
-
-                        {/* Status */}
-                        <td className="px-3 py-3">
-                          <span
-                            className={cn(
-                              "rounded-full px-2.5 py-1 text-xs font-medium",
-                              POSITION_STATUS_STYLES[position.hiringStatus] ??
-                                "bg-slate-100 text-slate-600"
-                            )}
-                          >
-                            {position.hiringStatus}
-                          </span>
-                        </td>
-
-                        {/* Slots */}
-                        <td className="px-3 py-3">{position.slots ?? "—"}</td>
-
-                        {/* Deadline */}
-                        <td className="px-3 py-3">
-                          {position.applicationDeadline
-                            ? new Date(
-                                position.applicationDeadline
-                              ).toLocaleDateString()
-                            : "—"}
-                        </td>
-
-                        {/* Created */}
-                        <td className="px-3 py-3">
-                          {new Date(position.createdAt).toLocaleDateString()}
-                        </td>
-
-                        {/* Actions */}
-                        <td className="px-3 py-3 text-right">
-                          {canManageRecruitment && (
-                            <Popover
-                              open={openPositionMenuId === position._id}
-                              onOpenChange={(open) =>
-                                setOpenPositionMenuId(
-                                  open ? position._id : null
-                                )
+                      </tr>
+                    ) : positions.length > 0 ? (
+                      positions.map((position) => (
+                        <tr
+                          key={position._id}
+                          className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
+                        >
+                          {/* Checkbox */}
+                          <td className="px-3 py-3">
+                            <Checkbox
+                              checked={selectedPositionIds.includes(
+                                position._id
+                              )}
+                              onCheckedChange={() =>
+                                togglePositionSelection(position._id)
                               }
+                              aria-label={`Select ${position.title}`}
+                              className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
+                            />
+                          </td>
+
+                          {/* Position */}
+                          <td className="truncate px-3 py-3 font-medium text-slate-900">
+                            {position.title}
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-3 py-3">
+                            <span
+                              className={cn(
+                                "rounded-full px-2.5 py-1 text-xs font-medium",
+                                POSITION_STATUS_STYLES[position.hiringStatus] ??
+                                  "bg-slate-100 text-slate-600"
+                              )}
                             >
-                              <PopoverTrigger asChild>
-                                <Button
-                                  type="button"
-                                  size="icon-sm"
-                                  variant="ghost"
-                                  disabled={isMutating}
-                                  className="h-7 w-7 rounded-full border text-slate-500 hover:bg-slate-100"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </PopoverTrigger>
+                              {position.hiringStatus}
+                            </span>
+                          </td>
 
-                              <PopoverContent
-                                align="end"
-                                className="w-56 rounded-xl border-[#ececec] p-1.5 shadow-lg"
+                          {/* Slots */}
+                          <td className="px-3 py-3">{position.slots ?? "—"}</td>
+
+                          {/* Deadline */}
+                          <td className="px-3 py-3">
+                            {position.applicationDeadline
+                              ? new Date(
+                                  position.applicationDeadline
+                                ).toLocaleDateString()
+                              : "—"}
+                          </td>
+
+                          {/* Created */}
+                          <td className="px-3 py-3">
+                            {new Date(position.createdAt).toLocaleDateString()}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-3 py-3 text-right">
+                            {canManageRecruitment && (
+                              <Popover
+                                open={openPositionMenuId === position._id}
+                                onOpenChange={(open) =>
+                                  setOpenPositionMenuId(
+                                    open ? position._id : null
+                                  )
+                                }
                               >
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingPosition(position);
-                                    setOpenPositionMenuId(null);
-                                  }}
-                                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50"
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    disabled={isMutating}
+                                    className="h-7 w-7 rounded-full border text-slate-500 hover:bg-slate-100"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+
+                                <PopoverContent
+                                  align="end"
+                                  className="w-56 rounded-xl border-[#ececec] p-1.5 shadow-lg"
                                 >
-                                  <Pencil className="h-4 w-4 text-slate-500" />
-                                  Edit Role Application
-                                </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingPosition(position);
+                                      setOpenPositionMenuId(null);
+                                    }}
+                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50"
+                                  >
+                                    <Pencil className="h-4 w-4 text-slate-500" />
+                                    Edit Role Application
+                                  </button>
 
-                                {position.hiringStatus === "CLOSED" ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      reopenPosition(position._id);
-                                      setOpenPositionMenuId(null);
-                                    }}
-                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-slate-50"
-                                  >
-                                    <RotateCcw className="h-4 w-4" />
-                                    Reopen Role Application
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      closePosition(position._id);
-                                      setOpenPositionMenuId(null);
-                                    }}
-                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
-                                  >
-                                    <Ban className="h-4 w-4" />
-                                    Close Role Application
-                                  </button>
-                                )}
+                                  {position.hiringStatus === "CLOSED" ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        reopenPosition(position._id);
+                                        setOpenPositionMenuId(null);
+                                      }}
+                                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-slate-50"
+                                    >
+                                      <RotateCcw className="h-4 w-4" />
+                                      Reopen Role Application
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        closePosition(position._id);
+                                        setOpenPositionMenuId(null);
+                                      }}
+                                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
+                                    >
+                                      <Ban className="h-4 w-4" />
+                                      Close Role Application
+                                    </button>
+                                  )}
 
-                                {position.hiringStatus === "CLOSED" && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setPositionDeleteTarget(position);
-                                      setOpenPositionMenuId(null);
-                                    }}
-                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    Delete Role Application
-                                  </button>
-                                )}
-                              </PopoverContent>
-                            </Popover>
-                          )}
+                                  {position.hiringStatus === "CLOSED" && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setPositionDeleteTarget(position);
+                                        setOpenPositionMenuId(null);
+                                      }}
+                                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Delete Role Application
+                                    </button>
+                                  )}
+                                </PopoverContent>
+                              </Popover>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-3 py-16 text-center text-sm text-[#777]"
+                        >
+                          No open roles yet.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-3 py-16 text-center text-sm text-[#777]"
-                      >
-                        No open roles yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="block space-y-3 md:hidden">
+                {isPositionsLoading ? (
+                  Array.from({ length: 4 }, (_, i) => (
+                    <Skeleton key={i} className="h-40 w-full rounded-xl" />
+                  ))
+                ) : positionsError ? (
+                  <p className="py-16 text-center text-sm text-red-600">
+                    {positionsError}
+                  </p>
+                ) : positions.length > 0 ? (
+                  positions.map((position) => (
+                    <PositionMobileCard
+                      key={position._id}
+                      position={position}
+                      selected={selectedPositionIds.includes(position._id)}
+                      onToggleSelect={togglePositionSelection}
+                      canManage={canManageRecruitment}
+                      isMutating={isMutating}
+                      onEdit={setEditingPosition}
+                      onClose={closePosition}
+                      onReopen={reopenPosition}
+                      onDelete={setPositionDeleteTarget}
+                    />
+                  ))
+                ) : (
+                  <p className="py-16 text-center text-sm text-[#777]">
+                    No open roles yet.
+                  </p>
+                )}
+              </div>
+
               <div className="mt-4 flex flex-col gap-3 text-sm text-[#777] sm:flex-row sm:items-center sm:justify-between">
                 <span>
                   Showing {positionsStart} to {positionsEnd} of {positionsTotal}
@@ -994,224 +1037,264 @@ export const RecruitmentViews = () => {
               </div>
             </div>
           ) : activeTab === "applicants" ? (
-            <div className="overflow-x-auto">
-              {selectedIds.length > 0 && (
-                <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                  <span>{selectedIds.length} selected</span>
-                  <button
-                    type="button"
-                    onClick={clearSelection}
-                    className="cursor-pointer font-medium text-[#1c9dde] hover:underline"
-                  >
-                    Clear selection
-                  </button>
-                </div>
-              )}
-              <table className="w-full min-w-[900px] table-fixed border-collapse text-sm">
-                <thead>
-                  <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                    <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
-                      <Checkbox
-                        checked={allOnPageSelected}
-                        onCheckedChange={toggleSelectAllOnPage}
-                        aria-label="Select all on page"
-                        className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
-                      />
-                    </th>
-                    <th className="w-[24%] px-3 py-2 text-left">
-                      <SortableHeader
-                        label="Applicant"
-                        field="name"
-                        sort={sort}
-                        onSort={toggleSort}
-                      />
-                    </th>
-                    <th className="w-[14%] px-3 py-2 text-left font-medium">
-                      ID Number
-                    </th>
-                    <th className="w-[14%] px-3 py-2 text-left">
-                      <SortableHeader
-                        label="Course / Year"
-                        field="courseYear"
-                        sort={sort}
-                        onSort={toggleSort}
-                      />
-                    </th>
-                    <th className="w-[16%] px-3 py-2 text-left">
-                      <SortableHeader
-                        label="Role Applied"
-                        field="roleApplied"
-                        sort={sort}
-                        onSort={toggleSort}
-                      />
-                    </th>
-                    <th className="w-[14%] px-3 py-2 text-left">
-                      <SortableHeader
-                        label="Status"
-                        field="status"
-                        sort={sort}
-                        onSort={toggleSort}
-                      />
-                    </th>
-                    <th className="w-[14%] rounded-r-md px-3 py-2 text-right font-medium">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    Array.from({ length: 5 }, (_, index) => (
-                      <tr key={index} className="border-b border-[#ededed]">
-                        {Array.from({ length: 7 }, (_, cell) => (
-                          <td key={cell} className="px-3 py-3">
-                            <Skeleton className="h-4 w-full rounded-full" />
+            <>
+              <div className="hidden overflow-x-auto md:block">
+                {selectedIds.length > 0 && (
+                  <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                    <span>{selectedIds.length} selected</span>
+                    <button
+                      type="button"
+                      onClick={clearSelection}
+                      className="cursor-pointer font-medium text-[#1c9dde] hover:underline"
+                    >
+                      Clear selection
+                    </button>
+                  </div>
+                )}
+                <table className="w-full min-w-[900px] table-fixed border-collapse text-sm">
+                  <thead>
+                    <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
+                      <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
+                        <Checkbox
+                          checked={allOnPageSelected}
+                          onCheckedChange={toggleSelectAllOnPage}
+                          aria-label="Select all on page"
+                          className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
+                        />
+                      </th>
+                      <th className="w-[24%] px-3 py-2 text-left">
+                        <SortableHeader
+                          label="Applicant"
+                          field="name"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                      </th>
+                      <th className="w-[14%] px-3 py-2 text-left font-medium">
+                        ID Number
+                      </th>
+                      <th className="w-[14%] px-3 py-2 text-left">
+                        <SortableHeader
+                          label="Course / Year"
+                          field="courseYear"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                      </th>
+                      <th className="w-[16%] px-3 py-2 text-left">
+                        <SortableHeader
+                          label="Role Applied"
+                          field="roleApplied"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                      </th>
+                      <th className="w-[14%] px-3 py-2 text-left">
+                        <SortableHeader
+                          label="Status"
+                          field="status"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                      </th>
+                      <th className="w-[14%] rounded-r-md px-3 py-2 text-right font-medium">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoading ? (
+                      Array.from({ length: 5 }, (_, index) => (
+                        <tr key={index} className="border-b border-[#ededed]">
+                          {Array.from({ length: 7 }, (_, cell) => (
+                            <td key={cell} className="px-3 py-3">
+                              <Skeleton className="h-4 w-full rounded-full" />
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : pagedApplicants.length > 0 ? (
+                      pagedApplicants.map((applicant) => (
+                        <tr
+                          key={applicant.id}
+                          className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
+                        >
+                          <td className="px-3 py-3">
+                            <Checkbox
+                              checked={selectedIds.includes(applicant.id)}
+                              onCheckedChange={() =>
+                                toggleApplicantSelection(applicant.id)
+                              }
+                              aria-label={`Select ${applicant.name}`}
+                              className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
+                            />
                           </td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : pagedApplicants.length > 0 ? (
-                    pagedApplicants.map((applicant) => (
-                      <tr
-                        key={applicant.id}
-                        className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
-                      >
-                        <td className="px-3 py-3">
-                          <Checkbox
-                            checked={selectedIds.includes(applicant.id)}
-                            onCheckedChange={() =>
-                              toggleApplicantSelection(applicant.id)
-                            }
-                            aria-label={`Select ${applicant.name}`}
-                            className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
-                          />
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex min-w-0 items-center gap-2.5">
+                          <td className="px-3 py-3">
+                            <div className="flex min-w-0 items-center gap-2.5">
+                              <span
+                                className={cn(
+                                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white",
+                                  getAvatarColor(applicant.name || "?")
+                                )}
+                              >
+                                {getInitial(applicant.name)}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-slate-900">
+                                  {applicant.name || "—"}
+                                </p>
+                                <p className="truncate text-xs text-[#8a8a8a]">
+                                  {applicant.email}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="truncate px-3 py-3">
+                            {applicant.id_number || "—"}
+                          </td>
+                          <td className="truncate px-3 py-3">
+                            {[applicant.course, applicant.year]
+                              .filter(Boolean)
+                              .join(" • ") || "—"}
+                          </td>
+                          <td className="truncate px-3 py-3">
+                            {applicant.roleApplied || "—"}
+                          </td>
+                          <td className="px-3 py-3">
                             <span
                               className={cn(
-                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white",
-                                getAvatarColor(applicant.name || "?")
+                                "rounded-full px-2.5 py-1 text-xs font-medium",
+                                STATUS_STYLES[applicant.status] ??
+                                  "bg-slate-100 text-slate-600"
                               )}
                             >
-                              {getInitial(applicant.name)}
+                              {applicant.status}
                             </span>
-                            <div className="min-w-0">
-                              <p className="truncate font-medium text-slate-900">
-                                {applicant.name || "—"}
-                              </p>
-                              <p className="truncate text-xs text-[#8a8a8a]">
-                                {applicant.email}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="truncate px-3 py-3">
-                          {applicant.id_number || "—"}
-                        </td>
-                        <td className="truncate px-3 py-3">
-                          {[applicant.course, applicant.year]
-                            .filter(Boolean)
-                            .join(" • ") || "—"}
-                        </td>
-                        <td className="truncate px-3 py-3">
-                          {applicant.roleApplied || "—"}
-                        </td>
-                        <td className="px-3 py-3">
-                          <span
-                            className={cn(
-                              "rounded-full px-2.5 py-1 text-xs font-medium",
-                              STATUS_STYLES[applicant.status] ??
-                                "bg-slate-100 text-slate-600"
-                            )}
-                          >
-                            {applicant.status}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-right">
-                          <Popover
-                            open={openMenuId === applicant.id}
-                            onOpenChange={(open) =>
-                              setOpenMenuId(open ? applicant.id : null)
-                            }
-                          >
-                            <PopoverTrigger asChild>
-                              <Button
-                                type="button"
-                                size="icon-sm"
-                                variant="ghost"
-                                disabled={isMutating}
-                                className="h-7 w-7 rounded-full border text-slate-500 hover:bg-slate-100"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              align="end"
-                              className="w-52 rounded-xl border-[#ececec] p-1.5 shadow-lg"
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <Popover
+                              open={openMenuId === applicant.id}
+                              onOpenChange={(open) =>
+                                setOpenMenuId(open ? applicant.id : null)
+                              }
                             >
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  viewApplicantDetails(applicant.id);
-                                  setOpenMenuId(null);
-                                }}
-                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50"
+                              <PopoverTrigger asChild>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  disabled={isMutating}
+                                  className="h-7 w-7 rounded-full border text-slate-500 hover:bg-slate-100"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                align="end"
+                                className="w-52 rounded-xl border-[#ececec] p-1.5 shadow-lg"
                               >
-                                <UserPen className="h-4 w-4 text-slate-500" />
-                                View Details
-                              </button>
-                              {canManageRecruitment && (
-                                <>
-                                  <button
-                                    type="button"
-                                    disabled={
-                                      applicant.status === "Approved" ||
-                                      applicant.status === "Rejected"
-                                    }
-                                    onClick={() => {
-                                      approveApplicant(applicant.id);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
-                                  >
-                                    <Check className="h-4 w-4" />
-                                    Approve
-                                  </button>
-                                  <button
-                                    type="button"
-                                    disabled={
-                                      applicant.status === "Approved" ||
-                                      applicant.status === "Rejected"
-                                    }
-                                    onClick={() => {
-                                      rejectApplicant(applicant.id);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
-                                  >
-                                    <X className="h-4 w-4" />
-                                    Reject
-                                  </button>
-                                </>
-                              )}
-                            </PopoverContent>
-                          </Popover>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    viewApplicantDetails(applicant.id);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50"
+                                >
+                                  <UserPen className="h-4 w-4 text-slate-500" />
+                                  View Details
+                                </button>
+                                {canManageRecruitment && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={
+                                        applicant.status === "Approved" ||
+                                        applicant.status === "Rejected"
+                                      }
+                                      onClick={() => {
+                                        approveApplicant(applicant.id);
+                                        setOpenMenuId(null);
+                                      }}
+                                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                                    >
+                                      <Check className="h-4 w-4" />
+                                      Approve
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={
+                                        applicant.status === "Approved" ||
+                                        applicant.status === "Rejected"
+                                      }
+                                      onClick={() => {
+                                        rejectApplicant(applicant.id);
+                                        setOpenMenuId(null);
+                                      }}
+                                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                                    >
+                                      <X className="h-4 w-4" />
+                                      Reject
+                                    </button>
+                                  </>
+                                )}
+                              </PopoverContent>
+                            </Popover>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-3 py-16 text-center text-sm text-[#777]"
+                        >
+                          No applicants found.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-3 py-16 text-center text-sm text-[#777]"
-                      >
-                        No applicants found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="block space-y-3 md:hidden">
+                {selectedIds.length > 0 && (
+                  <div className="mb-1 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                    <span>{selectedIds.length} selected</span>
+                    <button
+                      type="button"
+                      onClick={clearSelection}
+                      className="font-medium text-[#1c9dde]"
+                    >
+                      Clear selection
+                    </button>
+                  </div>
+                )}
+                {isLoading ? (
+                  Array.from({ length: 4 }, (_, i) => (
+                    <Skeleton key={i} className="h-40 w-full rounded-xl" />
+                  ))
+                ) : pagedApplicants.length > 0 ? (
+                  pagedApplicants.map((applicant) => (
+                    <ApplicantMobileCard
+                      key={applicant.id}
+                      applicant={applicant}
+                      selected={selectedIds.includes(applicant.id)}
+                      onToggleSelect={toggleApplicantSelection}
+                      onViewDetails={viewApplicantDetails}
+                      canManage={canManageRecruitment}
+                      isMutating={isMutating}
+                      onApprove={approveApplicant}
+                      onReject={rejectApplicant}
+                    />
+                  ))
+                ) : (
+                  <p className="py-16 text-center text-sm text-[#777]">
+                    No applicants found.
+                  </p>
+                )}
+              </div>
+            </>
           ) : activeTab === "rejected" ? (
             <div>
               <div className="mb-4 flex items-center justify-between">
@@ -1231,6 +1314,20 @@ export const RecruitmentViews = () => {
                   </Button>
                 )}
               </div>
+
+              {selectedRejectedIds.length > 0 && (
+                <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <span>{selectedRejectedIds.length} selected</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRejectedIds([])}
+                    className="cursor-pointer font-medium text-[#1c9dde] hover:underline"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+              )}
+
               {isLoading ? (
                 <div className="space-y-2">
                   {Array.from({ length: 4 }, (_, i) => (
@@ -1238,122 +1335,101 @@ export const RecruitmentViews = () => {
                   ))}
                 </div>
               ) : rejectedApplicants.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[700px] table-fixed border-collapse text-sm">
-                    <thead>
-                      <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                        <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
-                          <Checkbox
-                            checked={allRejectedSelected}
-                            onCheckedChange={(checked) =>
-                              setSelectedRejectedIds(
-                                checked
-                                  ? rejectedApplicants.map((a) => a.id)
-                                  : []
-                              )
-                            }
-                            aria-label="Select all rejected applicants"
-                            className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE]"
-                          />
-                        </th>
-                        <th className="w-[26%] px-3 py-2 text-left font-medium">
-                          Applicant
-                        </th>
-                        <th className="w-[15%] px-3 py-2 text-left font-medium">
-                          ID Number
-                        </th>
-                        <th className="w-[15%] px-3 py-2 text-left font-medium">
-                          Course / Year
-                        </th>
-                        <th className="w-[25%] px-3 py-2 text-left font-medium">
-                          Role Applied
-                        </th>
-                        <th className="w-[15%] rounded-r-md px-3 py-2 text-right font-medium">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rejectedApplicants.map((applicant) => (
-                        <tr
-                          key={applicant.id}
-                          className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
-                        >
-                          {/* Checkbox */}
-                          <td className="px-3 py-3">
+                <>
+                  {/* Desktop table */}
+                  <div className="hidden overflow-x-auto md:block">
+                    <table className="w-full min-w-[700px] table-fixed border-collapse text-sm">
+                      <thead>
+                        <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
+                          <th className="w-[4%] rounded-l-md px-3 py-2 text-left">
                             <Checkbox
-                              checked={selectedRejectedIds.includes(
-                                applicant.id
-                              )}
-                              onCheckedChange={() =>
-                                toggleRejectedSelection(applicant.id)
+                              checked={allRejectedSelected}
+                              onCheckedChange={(checked) =>
+                                setSelectedRejectedIds(
+                                  checked
+                                    ? rejectedApplicants.map((a) => a.id)
+                                    : []
+                                )
                               }
-                              aria-label={`Select ${applicant.name}`}
+                              aria-label="Select all rejected applicants"
                               className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
                             />
-                          </td>
-
-                          {/* Applicant */}
-                          <td className="px-3 py-3">
-                            <div className="flex min-w-0 items-center gap-2.5">
-                              <span
-                                className={cn(
-                                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white",
-                                  getAvatarColor(applicant.name || "?")
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium">
+                            Applicant
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium">
+                            Role Applied
+                          </th>
+                          <th className="rounded-r-md px-3 py-2 text-right font-medium">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rejectedApplicants.map((applicant) => (
+                          <tr
+                            key={applicant.id}
+                            className="border-b border-[#ededed] text-[#303030] hover:bg-slate-50"
+                          >
+                            <td className="px-3 py-3">
+                              <Checkbox
+                                checked={selectedRejectedIds.includes(
+                                  applicant.id
                                 )}
-                              >
-                                {getInitial(applicant.name)}
-                              </span>
-
-                              <div className="min-w-0">
-                                <p className="truncate font-medium text-slate-900">
-                                  {applicant.name || "—"}
-                                </p>
-                                <p className="truncate text-xs text-[#8a8a8a]">
-                                  {applicant.email}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* ID Number */}
-                          <td className="truncate px-3 py-3">
-                            {applicant.id_number || "—"}
-                          </td>
-
-                          {/* Course / Year */}
-                          <td className="truncate px-3 py-3">
-                            {[applicant.course, applicant.year]
-                              .filter(Boolean)
-                              .join(" • ") || "—"}
-                          </td>
-
-                          {/* Role Applied */}
-                          <td className="truncate px-3 py-3">
-                            {applicant.roleApplied || "—"}
-                          </td>
-
-                          {/* Actions */}
-                          <td className="px-3 py-3 text-right">
-                            {canManageRecruitment && (
+                                onCheckedChange={() =>
+                                  toggleRejectedSelection(applicant.id)
+                                }
+                                aria-label={`Select ${applicant.name}`}
+                                className="data-[state=checked]:border-[#1C9DDE] data-[state=checked]:bg-[#1C9DDE] data-[state=checked]:text-white"
+                              />
+                            </td>
+                            <td className="truncate px-3 py-3 font-medium">
+                              {applicant.name || "—"}
+                            </td>
+                            <td className="truncate px-3 py-3">
+                              {applicant.roleApplied || "—"}
+                            </td>                   
+                              <td className="px-3 py-3">
+                                {applicant.rejectedAt
+                                  ? new Date(
+                                      applicant.rejectedAt
+                                    ).toLocaleDateString()
+                                  : "—"}
+                              </td>                           
+                            <td className="px-3 py-3 text-right">
                               <Button
                                 type="button"
                                 size="icon-sm"
                                 variant="ghost"
                                 disabled={isMutating}
+                                className="h-7 w-7 rounded-full border text-red-500 hover:bg-red-50"
                                 onClick={() => setDeleteTarget(applicant)}
-                                className="h-7 w-7 rounded-full border text-red-500 hover:bg-red-50 hover:text-red-600"
-                                aria-label={`Delete ${applicant.name}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile cards */}
+                  <div className="block space-y-3 md:hidden">
+                    {rejectedApplicants.map((applicant) => (
+                      <RejectedApplicantMobileCard
+                        key={applicant.id}
+                        applicant={applicant}
+                        selected={selectedRejectedIds.includes(applicant.id)}
+                        onToggleSelect={toggleRejectedSelection}
+                        canManage={canManageRecruitment}
+                        isMutating={isMutating}
+                        onDelete={setDeleteTarget}
+                      />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <p className="py-16 text-center text-sm text-[#777]">
                   No rejected applicants.
