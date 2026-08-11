@@ -1046,20 +1046,20 @@ export class RecruitmentService {
       }
     }
 
-    // Send rejection email automatically when the decision is REJECTED
+    // Send rejection email automatically when the decision is REJECTED.
+    // Fire-and-forget so the status update responds immediately instead of
+    // blocking on the email provider's network latency.
     if (status === applicationStatus.REJECTED) {
-      try {
-        await recruitmentRejectedMail({
-          applicantName: app.applicantSnapshot.name || "",
-          applicantEmail: app.applicantSnapshot.email || "",
-          reason: note || undefined,
-        });
-      } catch (err) {
+      recruitmentRejectedMail({
+        applicantName: app.applicantSnapshot.name || "",
+        applicantEmail: app.applicantSnapshot.email || "",
+        reason: note || undefined,
+      }).catch((err) => {
         console.error(
           "Failed to send recruitment rejection email:",
           err instanceof Error ? err.message : err
         );
-      }
+      });
     }
 
     // Send approval email automatically when the decision is APPROVED.
