@@ -47,6 +47,7 @@ import type {
   OpenRecruitmentValues,
   RecruitmentOpeningConflict,
   RecruitmentOpeningConflictStrategy,
+  ScheduleInterviewValues,
 } from "../types/Recruitment.types";
 import { ApplicantInfoModal } from "./ApplicantInfoModal";
 import { InterviewSchedulingModal } from "./InterviewSchedulingModal";
@@ -96,6 +97,32 @@ function getAvatarColor(name: string) {
 
 function getInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "?";
+}
+
+// Convert an ISO timestamp to a local "YYYY-MM-DD" string for the date input.
+function toLocalDateStringForInput(iso?: string) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Convert "HH:mm AM/PM" (12h) → "HH:mm" (24h) for the TimePicker.
+function to24HourTime(time12?: string) {
+  if (!time12) return "";
+  const [time, meridiem] = time12.trim().split(/\s+/);
+  if (!time || !meridiem) return "";
+  const [hourText, minuteText] = time.split(":");
+  let hour = Number(hourText);
+  const minute = Number(minuteText || 0);
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return "";
+  const isPM = meridiem.toUpperCase() === "PM";
+  if (isPM && hour < 12) hour += 12;
+  if (!isPM && hour === 12) hour = 0;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 interface RecruitmentFilterPopoverProps {
@@ -354,6 +381,7 @@ export const RecruitmentViews = () => {
     closeApplicantDetails,
     viewResume,
     scheduleInterview,
+    rescheduleInterview,
     downloadResume,
     isResumeLoading,
     resumeError,
@@ -398,6 +426,20 @@ export const RecruitmentViews = () => {
 
   const [isBulkDeletePositionsOpen, setIsBulkDeletePositionsOpen] =
     useState(false);
+
+  // Pre-fill the scheduling modal with the selected applicant's current
+  // interview data (used when rescheduling) so the admin sees the existing
+  // schedule instead of a blank form.
+  const scheduleInitialValues: ScheduleInterviewValues | null = useMemo(() => {
+    if (!selectedApplicant) return null;
+    return {
+      date: toLocalDateStringForInput(selectedApplicant.interviewDate),
+      startTime: to24HourTime(selectedApplicant.interviewStart),
+      endTime: to24HourTime(selectedApplicant.interviewEnd),
+      officer: selectedApplicant.interviewOfficer || "",
+      interviewType: selectedApplicant.interviewType || "",
+    };
+  }, [selectedApplicant]);
 
   const counts = useMemo(() => {
     return {
@@ -1361,6 +1403,9 @@ export const RecruitmentViews = () => {
                           <th className="px-3 py-2 text-left font-medium">
                             Role Applied
                           </th>
+                          <th className="px-3 py-2 text-left font-medium">
+                            Rejected On
+                          </th>
                           <th className="rounded-r-md px-3 py-2 text-right font-medium">
                             Actions
                           </th>
@@ -1389,14 +1434,14 @@ export const RecruitmentViews = () => {
                             </td>
                             <td className="truncate px-3 py-3">
                               {applicant.roleApplied || "—"}
-                            </td>                   
-                              <td className="px-3 py-3">
-                                {applicant.rejectedAt
-                                  ? new Date(
-                                      applicant.rejectedAt
-                                    ).toLocaleDateString()
-                                  : "—"}
-                              </td>                           
+                            </td>
+                            <td className="px-3 py-3">
+                              {applicant.rejectedAt
+                                ? new Date(
+                                    applicant.rejectedAt
+                                  ).toLocaleDateString()
+                                : "—"}
+                            </td>
                             <td className="px-3 py-3 text-right">
                               <Button
                                 type="button"
@@ -1521,6 +1566,7 @@ export const RecruitmentViews = () => {
         error={detailsError}
         onClose={closeApplicantDetails}
         onSetSchedule={() => setIsScheduleOpen(true)}
+        onReschedule={() => setIsScheduleOpen(true)}
         onViewResume={viewResume}
         onDownloadResume={downloadResume}
         isResumeLoading={isResumeLoading}
@@ -1528,12 +1574,25 @@ export const RecruitmentViews = () => {
       />
 
       <InterviewSchedulingModal
+        key={`${selectedApplicant?.id ?? "schedule"}-${isScheduleOpen}`}
         open={isScheduleOpen}
         isSubmitting={isMutating}
+        initialValues={scheduleInitialValues}
         onClose={() => setIsScheduleOpen(false)}
         onConfirm={async (values) => {
           if (!selectedApplicant) return;
-          await scheduleInterview(selectedApplicant.id, values);
+          const hasInterview = Boolean(
+            selectedApplicant.interviewDate ||
+              selectedApplicant.interviewOfficer ||
+              selectedApplicant.interviewType ||
+              selectedApplicant.interviewStart ||
+              selectedApplicant.interviewEnd
+          );
+          if (hasInterview) {
+            await rescheduleInterview(selectedApplicant.id, values);
+          } else {
+            await scheduleInterview(selectedApplicant.id, values);
+          }
           setIsScheduleOpen(false);
         }}
       />
