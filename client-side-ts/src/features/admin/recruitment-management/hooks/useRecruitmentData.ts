@@ -133,8 +133,8 @@ function formatTime12Hour(time24: string) {
 function parseInterviewNotes(notes?: string) {
   const officerMatch = notes?.match(/officer in charge:\s*(.+?)(?:;|$)/i);
   const typeMatch = notes?.match(/interview type:\s*(.+?)(?:;|$)/i);
-  const startMatch = notes?.match(/starts\s*([^;]+)$/i);
-  const endMatch = notes?.match(/ends\s*([^;]+)$/i);
+  const startMatch = notes?.match(/starts\s*([^;]+?)(?:;|$)/i);
+  const endMatch = notes?.match(/ends\s*([^;]+?)(?:;|$)/i);
 
   return {
     officer: officerMatch?.[1]?.trim() ?? "",
@@ -177,8 +177,8 @@ function mapApplication(raw: RawApplicantRecord): RecruitmentApplicant {
     resumeFilename: raw.documents?.resume?.originalFilename,
     aiSummary: raw.aiSummary,
     interviewDate: raw.interview?.scheduledAt ?? raw.interviewDate,
-    interviewStart: raw.interviewStart,
-    interviewEnd: raw.interviewEnd,
+    interviewStart: parsedInterviewNotes.starts || raw.interviewStart || "",
+    interviewEnd: parsedInterviewNotes.ends || raw.interviewEnd || "",
     interviewOfficer:
       parsedInterviewNotes.officer || raw.interviewOfficer || "",
     interviewType: parsedInterviewNotes.type || raw.interviewType || "",
@@ -191,15 +191,11 @@ function mapApplication(raw: RawApplicantRecord): RecruitmentApplicant {
   };
 }
 
-// createInterview/updateInterview on the backend expect {scheduledAt,
-// location, notes} (see InterviewPayload in recruitment.api.ts), not the
-// {date, startTime, endTime, officer, interviewType} shape the scheduling
-// dialog collects. Keep `location` empty and carry the officer/type/end time
-// in `notes` so the UI can render a proper interview summary without
-// mislabeling the officer as the interview venue.
 function toInterviewPayload(values: ScheduleInterviewValues) {
   return {
-    scheduledAt: new Date(`${values.date}T${values.startTime}`).toISOString(),
+    scheduledAt: new Date(
+      `${values.date}T${values.startTime}:00+08:00`
+    ).toISOString(),
     location: "",
     notes: `Interview type: ${values.interviewType}; officer in charge: ${values.officer}; starts ${formatTime12Hour(values.startTime)}; ends ${formatTime12Hour(values.endTime)}`,
   };

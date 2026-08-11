@@ -545,6 +545,72 @@ export const recruitmentInterviewScheduledMail = async (data: {
   }
 };
 
+
+export const recruitmentInterviewRescheduledMail = async (data: {
+  applicantName: string;
+  applicantEmail: string;
+  interviewDate: string;
+  interviewTime: string;
+  mode: string;
+  officer: string;
+}): Promise<void> => {
+  let queueEntry: any;
+
+  try {
+    queueEntry = await emailService.createByEmail(
+      "recruitment",
+      data.applicantEmail,
+      "interview_rescheduled"
+    );
+
+    await sendPsitsTemplatedEmail({
+      to: data.applicantEmail,
+      subject: "PSITS Interview Reschedule Notification",
+      category: "Philipine Technology of Information Technology Students",
+      title: "Interview Rescheduled",
+      bodyHtml: `
+        <p>Dear ${data.applicantName},</p>
+        <p style="margin-bottom:16px;">
+          We would like to inform you that your interview schedule has been <strong>rescheduled</strong>. Please take note of your new schedule below.
+        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; border-radius:8px; margin-bottom:20px;">
+          <tr><td style="padding:16px 18px;">
+            <p style="margin:5px 0; font-weight:bold; font-size:15px;">New Interview Schedule</p>
+            <p style="margin:5px 0;"><strong>Date:</strong> ${data.interviewDate}</p>
+            <p style="margin:5px 0;"><strong>Time:</strong> ${data.interviewTime}</p>
+            <p style="margin:5px 0;"><strong>Mode:</strong> ${data.mode}</p>
+            <p style="margin:5px 0;"><strong>Officer's In-charge:</strong> ${data.officer}</p>
+          </td></tr>
+        </table>
+        <p style="margin-bottom:12px;"><strong>For FACE-TO-FACE interview:</strong></p>
+        <p style="margin-bottom:16px;">
+          Please proceed to <strong>PSITS Office</strong> beside <strong>Room 540</strong> at least <strong>5 minutes before</strong> your scheduled interview time. Kindly bring the documents requested during your application.
+        </p>
+        <p style="margin-bottom:12px;"><strong>For ONLINE interview:</strong></p>
+        <p style="margin-bottom:16px;">
+          A recruitment officer will contact you before your scheduled interview to provide the meeting link and any additional instructions. Please ensure that you are available at the scheduled time and have a stable internet connection.
+        </p>
+        <p style="margin-bottom:16px;">
+          If you have any questions or are unable to attend your rescheduled interview, please inform us as soon as possible.
+        </p>
+        <p style="margin-bottom:16px;">We look forward to meeting you and wish you the best of luck.</p>
+        <p style="margin-bottom:0;">Best regards,<br/><strong>Recruitment Team</strong></p>
+      `,
+    });
+
+    await emailService.updateStatusById(String(queueEntry._id), "sent");
+  } catch (err: unknown) {
+    console.error(
+      "Failed to send recruitment interview rescheduled email:",
+      err instanceof Error ? err.message : err
+    );
+    if (queueEntry) {
+      await emailService.updateStatusById(String(queueEntry._id), "failed");
+    }
+    throw err;
+  }
+};
+
 /**
  * Sends an account-creation email to a verified recruitment applicant whose
  * volunteer account has just been created. Includes the auto-generated login

@@ -21,6 +21,7 @@ import {
   recruitmentApprovedMail,
   recruitmentAccountCreatedMail,
   recruitmentInterviewScheduledMail,
+  recruitmentInterviewRescheduledMail,
   recruitmentRejectedMail,
 } from "../mail_template/mail.template";
 import { adminService } from "./admin.service";
@@ -1097,7 +1098,10 @@ export class RecruitmentService {
       req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
     if (!adminId) throw new AppError("Authentication required.", 401);
 
-    const app = await Application.findById(applicationId);
+    const app = await Application.findById(applicationId).populate(
+      "position",
+      "title"
+    );
     if (!app) throw new AppError("Application not found.", 404);
 
     const { scheduledAt, location, notes } = req.body;
@@ -1182,7 +1186,10 @@ export class RecruitmentService {
       req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
     if (!adminId) throw new AppError("Authentication required.", 401);
 
-    const app = await Application.findById(applicationId);
+    const app = await Application.findById(applicationId).populate(
+      "position",
+      "title"
+    );
     if (!app) throw new AppError("Application not found.", 404);
 
     if (!app.interview)
@@ -1209,6 +1216,48 @@ export class RecruitmentService {
     app.interview.scheduledBy = adminId;
 
     await app.save();
+
+    // Send interview reschedule notification email — best-effort, don't
+    // block on failure. Parses the interview mode from the notes field
+    // (stored as "Interview type: [type]; ...") and formats the new date/time
+    // from the updated scheduledAt timestamp.
+    try {
+      const rescheduledAt = app.interview.scheduledAt;
+      const dateStr = rescheduledAt.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const timeStr = rescheduledAt.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+
+      const modeMatch = (app.interview.notes || "").match(
+        /Interview type:\s*(.+?)(?:;|$)/i
+      );
+      const mode = modeMatch?.[1]?.trim() || "Face-to-Face";
+
+      const officerMatch = (app.interview.notes || "").match(
+        /officer in charge:\s*(.+?)(?:;|$)/i
+      );
+      const officer = officerMatch?.[1]?.trim() || "";
+
+      await recruitmentInterviewRescheduledMail({
+        applicantName: app.applicantSnapshot.name || "",
+        applicantEmail: app.applicantSnapshot.email || "",
+        interviewDate: dateStr,
+        interviewTime: timeStr,
+        mode,
+        officer,
+      });
+    } catch (err) {
+      console.error(
+        "Failed to send interview reschedule email:",
+        err instanceof Error ? err.message : err
+      );
+    }
+
     return app;
   }
 
