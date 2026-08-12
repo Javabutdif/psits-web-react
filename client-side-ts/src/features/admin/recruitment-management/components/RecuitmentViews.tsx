@@ -1567,6 +1567,10 @@ export const RecruitmentViews = () => {
         onClose={closeApplicantDetails}
         onSetSchedule={() => setIsScheduleOpen(true)}
         onReschedule={() => setIsScheduleOpen(true)}
+        canReschedule={
+          selectedApplicant?.status !== "Approved" &&
+          selectedApplicant?.status !== "Rejected"
+        }
         onViewResume={viewResume}
         onDownloadResume={downloadResume}
         isResumeLoading={isResumeLoading}
@@ -1583,10 +1587,10 @@ export const RecruitmentViews = () => {
           if (!selectedApplicant) return;
           const hasInterview = Boolean(
             selectedApplicant.interviewDate ||
-              selectedApplicant.interviewOfficer ||
-              selectedApplicant.interviewType ||
-              selectedApplicant.interviewStart ||
-              selectedApplicant.interviewEnd
+            selectedApplicant.interviewOfficer ||
+            selectedApplicant.interviewType ||
+            selectedApplicant.interviewStart ||
+            selectedApplicant.interviewEnd
           );
           if (hasInterview) {
             await rescheduleInterview(selectedApplicant.id, values);

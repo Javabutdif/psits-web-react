@@ -138,6 +138,7 @@ export const createEventV2 = async (
     formData.append("eventName", payload.eventName);
     formData.append("eventDescription", payload.eventDescription ?? "");
     formData.append("eventDate", payload.eventDate);
+    if (payload.eventEndDate) formData.append("eventEndDate", payload.eventEndDate);
     formData.append("attendanceType", payload.attendanceType);
     if (payload.status) formData.append("status", payload.status);
     formData.append("sessionConfig", JSON.stringify(payload.sessionConfig));
@@ -841,7 +842,8 @@ export const updateEventDetails = async (
   payload: {
     eventName?: string;
     eventDescription?: string;
-    eventDate?: unknown;
+    eventDate?: string;
+    eventEndDate?: string;
     eventVenue?: string;
     eventTheme?: string;
     eventVenueSpecific?: string;
@@ -854,30 +856,11 @@ export const updateEventDetails = async (
 ): Promise<any> => {
   const { image, ...rest } = payload;
 
-  // Only use multipart/form-data when there's an actual file to send;
-  // otherwise keep the simpler JSON path.
   if (image) {
     const formData = new FormData();
 
     for (const [key, value] of Object.entries(rest)) {
       if (value === undefined || value === null) continue;
-
-      // eventDate is a DateRange object ({ from, to }) — send the start
-      // date as a plain ISO string so the backend can parse it directly
-      // from multipart/form-data.
-      if (
-        key === "eventDate" &&
-        value &&
-        typeof value === "object" &&
-        "from" in value
-      ) {
-        const from = (value as { from?: Date }).from;
-        if (from) {
-          formData.append(key, from.toISOString());
-        }
-        continue;
-      }
-
       formData.append(
         key,
         typeof value === "string" ? value : JSON.stringify(value)
