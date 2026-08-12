@@ -1148,10 +1148,12 @@ export class RecruitmentService {
         year: "numeric",
         month: "long",
         day: "numeric",
+        timeZone: "Asia/Manila",
       });
       const timeStr = scheduledAt.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
+        timeZone: "Asia/Manila",
       });
 
       const modeMatch = (notes || "").match(/Interview type:\s*(.+?)(?:;|$)/i);
@@ -1227,10 +1229,12 @@ export class RecruitmentService {
         year: "numeric",
         month: "long",
         day: "numeric",
+        timeZone: "Asia/Manila",
       });
       const timeStr = rescheduledAt.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
+        timeZone: "Asia/Manila",
       });
 
       const modeMatch = (app.interview.notes || "").match(

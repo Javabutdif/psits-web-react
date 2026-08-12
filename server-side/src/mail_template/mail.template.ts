@@ -545,7 +545,6 @@ export const recruitmentInterviewScheduledMail = async (data: {
   }
 };
 
-
 export const recruitmentInterviewRescheduledMail = async (data: {
   applicantName: string;
   applicantEmail: string;
@@ -571,7 +570,7 @@ export const recruitmentInterviewRescheduledMail = async (data: {
       bodyHtml: `
         <p>Dear ${data.applicantName},</p>
         <p style="margin-bottom:16px;">
-          We would like to inform you that your interview schedule has been <strong>rescheduled</strong>. Please take note of your new schedule below.
+          We would like to inform you that your interview schedule has been <strong>RESCHEDULED</strong>. Please take note of your new schedule below.
         </p>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; border-radius:8px; margin-bottom:20px;">
           <tr><td style="padding:16px 18px;">
