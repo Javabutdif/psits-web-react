@@ -134,15 +134,14 @@ const getRefundQueueFn = async (): Promise<unknown> => {
   const applications = await Application.find({
     status: applicationStatus.SUBMITTED,
   })
+    .populate("position", "title")
     .sort({ createdAt: -1 })
     .limit(50)
     .lean();
   return applications.map((a: any) => ({
-    applicant_name: a.applicantSnapshot
-      ? `${a.applicantSnapshot.first_name} ${a.applicantSnapshot.last_name}`
-      : "N/A",
-    id_number: a.applicantSnapshot?.id_number,
-    position: a.position?.toString?.() || "N/A",
+    applicant_name: a.applicantSnapshot?.name || "N/A",
+    id_number: a.applicantSnapshot?.idNumber || "N/A",
+    position: a.position?.title || "N/A",
     submittedAt: a.createdAt,
   }));
 };
