@@ -1,6 +1,6 @@
 // src/features/admin/recruitment-management/hooks/useRecruitmentData.ts
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 
 import type {
@@ -29,6 +29,7 @@ import {
   toggleHiringStatus,
   verifyApplicantAccount,
   deleteApplication,
+  clearRejectedApplications,
   deletePosition as deletePositionApi,
 } from "../../../../api/recruitment.api";
 
@@ -45,6 +46,27 @@ export const DEFAULT_FILTERS: RecruitmentFilters = {
 const DEFAULT_SORT: RecruitmentSort = {
   field: "name",
   direction: "asc",
+};
+
+type ApplicantPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+type ApplicantSummary = {
+  pending: number;
+  approved: number;
+  rejected: number;
+  verifications: number;
+};
+
+const EMPTY_APPLICANT_SUMMARY: ApplicantSummary = {
+  pending: 0,
+  approved: 0,
+  rejected: 0,
+  verifications: 0,
 };
 
 interface RawApplicantRecord {
@@ -222,13 +244,26 @@ const STATUS = {
 
 export const useRecruitmentData = () => {
   const { canManageRecruitment } = useAdminPermissions();
-  const [activeTab, setActiveTab] = useState<RecruitmentTab>("applicants");
+  const [activeTab, setActiveTabState] =
+    useState<RecruitmentTab>("applicants");
   const [applicants, setApplicants] = useState<RecruitmentApplicant[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filters, setFilters] = useState<RecruitmentFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<RecruitmentSort>(DEFAULT_SORT);
   const [page, setPage] = useState(1);
+  const [applicantPagination, setApplicantPagination] =
+    useState<ApplicantPagination>({
+      page: 1,
+      limit: ROWS_PER_PAGE,
+      total: 0,
+      totalPages: 1,
+    });
+  const [applicantSummary, setApplicantSummary] =
+    useState<ApplicantSummary>(EMPTY_APPLICANT_SUMMARY);
+  const [roleOptions, setRoleOptions] = useState<string[]>([]);
+  const applicantRequestId = useRef(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -243,6 +278,12 @@ export const useRecruitmentData = () => {
   const [mutationError, setMutationError] = useState<string | null>(null);
 
   const clearMutationError = useCallback(() => setMutationError(null), []);
+
+  const setActiveTab = useCallback((tab: RecruitmentTab) => {
+    setActiveTabState(tab);
+    setPage(1);
+    setSelectedIds([]);
+  }, []);
 
   // ── Applicant details dialog state ────────────────────────────────────
   const [selectedApplicant, setSelectedApplicant] =
@@ -314,21 +355,57 @@ export const useRecruitmentData = () => {
   }, []);
 
   const fetchApplicants = useCallback(async () => {
+    const requestId = ++applicantRequestId.current;
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = await getApplicants({});
-      const list = res.data.data.applicants;
-      setApplicants(list.map(mapApplication));
+      const tabStatus =
+        activeTab === "rejected"
+          ? "Rejected"
+          : activeTab === "verification"
+            ? undefined
+            : filters.status === "all"
+              ? undefined
+              : filters.status;
+      const res = await getApplicants({
+        page,
+        limit: ROWS_PER_PAGE,
+        search: debouncedSearch || undefined,
+        status: tabStatus,
+        role: filters.roles[0],
+        course: filters.courses[0],
+        year: filters.years[0],
+        sortField: sort.field,
+        sortDirection: sort.direction,
+        verificationOnly: activeTab === "verification" || undefined,
+      });
+
+      if (requestId !== applicantRequestId.current) return;
+
+      const payload = res.data.data;
+      const pagination = payload.pagination ?? {};
+      setApplicants((payload.applicants ?? []).map(mapApplication));
+      setApplicantPagination({
+        page: Number(pagination.page ?? page),
+        limit: Number(pagination.limit ?? ROWS_PER_PAGE),
+        total: Number(pagination.total ?? 0),
+        totalPages: Math.max(1, Number(pagination.totalPages ?? 1)),
+      });
+      setApplicantSummary({
+        ...EMPTY_APPLICANT_SUMMARY,
+        ...(payload.summary ?? {}),
+      });
+      setRoleOptions(payload.filterOptions?.roles ?? []);
     } catch (err) {
+      if (requestId !== applicantRequestId.current) return;
       setError(
         err instanceof Error ? err.message : "Failed to load applicants"
       );
     } finally {
-      setIsLoading(false);
+      if (requestId === applicantRequestId.current) setIsLoading(false);
     }
-  }, []);
+  }, [activeTab, debouncedSearch, filters, page, sort]);
 
   const fetchPositions = useCallback(
     async (pageNumber = positionsPage) => {
@@ -376,122 +453,24 @@ export const useRecruitmentData = () => {
   }, [fetchOpenPositionsCount]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; fetchApplicants is also used for refetch, so its internal setIsLoading/setError calls are needed there
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+    return () => window.clearTimeout(timeoutId);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters, debouncedSearch, sort]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetches only the current server page.
     fetchApplicants();
   }, [fetchApplicants]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; setIsLoading/setError also serve the exposed refetch() path
-    setPage(1);
-  }, [filters, search]);
-
-  const filteredApplicants = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return applicants
-      .filter((applicant) => {
-        if (
-          query &&
-          ![
-            applicant.name,
-            applicant.id_number,
-            applicant.email,
-            applicant.course,
-            applicant.year,
-            applicant.roleApplied,
-            applicant.status,
-          ]
-            .join(" ")
-            .toLowerCase()
-            .includes(query)
-        ) {
-          return false;
-        }
-
-        if (
-          filters.roles.length > 0 &&
-          !filters.roles.includes(applicant.roleApplied)
-        ) {
-          return false;
-        }
-
-        if (
-          filters.courses.length > 0 &&
-          !filters.courses.includes(applicant.course)
-        ) {
-          return false;
-        }
-
-        if (filters.years.length > 0) {
-          // applicant.year may be "1st Year", "2", etc. — normalize to the
-          // leading digit so the filter values ("1".."4") match.
-          const yearDigit = String(applicant.year).match(/\d+/)?.[0] ?? "";
-          if (!filters.years.includes(yearDigit)) {
-            return false;
-          }
-        }
-
-        if (filters.status !== "all" && applicant.status !== filters.status) {
-          return false;
-        }
-
-        return true;
-      })
-      .sort((left, right) => {
-        let leftValue = "";
-        let rightValue = "";
-
-        switch (sort.field) {
-          case "courseYear":
-            leftValue = `${left.course} ${left.year}`;
-            rightValue = `${right.course} ${right.year}`;
-            break;
-
-          case "roleApplied":
-            leftValue = left.roleApplied;
-            rightValue = right.roleApplied;
-            break;
-
-          default:
-            leftValue = String(
-              left[sort.field as keyof RecruitmentApplicant] ?? ""
-            );
-
-            rightValue = String(
-              right[sort.field as keyof RecruitmentApplicant] ?? ""
-            );
-        }
-
-        const result = leftValue.localeCompare(rightValue, undefined, {
-          numeric: true,
-          sensitivity: "base",
-        });
-
-        return sort.direction === "asc" ? result : -result;
-      });
-  }, [applicants, search, filters, sort]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredApplicants.length / ROWS_PER_PAGE)
-  );
-
-  const currentPage = Math.min(page, totalPages);
-
-  const pagedApplicants = filteredApplicants.slice(
-    (currentPage - 1) * ROWS_PER_PAGE,
-    currentPage * ROWS_PER_PAGE
-  );
-
-  const roleOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          applicants.map((applicant) => applicant.roleApplied).filter(Boolean)
-        )
-      ).sort(),
-    [applicants]
-  );
+  const pagedApplicants = applicants;
+  const totalPages = applicantPagination.totalPages;
+  const currentPage = applicantPagination.page;
 
   const toggleSort = (field: RecruitmentSortField) => {
     setSort((current) =>
@@ -560,6 +539,7 @@ export const useRecruitmentData = () => {
       setSelectedApplicant((current) =>
         current?.id === id ? updated : current
       );
+      await fetchApplicants();
       Promise.all([
         fetchPositions(positionsPage),
         fetchOpenPositionsCount(),
@@ -588,6 +568,7 @@ export const useRecruitmentData = () => {
       setSelectedApplicant((current) =>
         current?.id === id ? updated : current
       );
+      await fetchApplicants();
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to update applicant"
@@ -612,6 +593,7 @@ export const useRecruitmentData = () => {
       setSelectedApplicant((current) =>
         current?.id === id ? updated : current
       );
+      await fetchApplicants();
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to update applicant"
@@ -640,6 +622,7 @@ export const useRecruitmentData = () => {
       setSelectedApplicant((current) =>
         current?.id === id ? updated : current
       );
+      await fetchApplicants();
       Promise.all([
         fetchPositions(positionsPage),
         fetchOpenPositionsCount(),
@@ -669,6 +652,7 @@ export const useRecruitmentData = () => {
       setSelectedApplicant((current) =>
         current?.id === id ? updated : current
       );
+      await fetchApplicants();
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to schedule interview"
@@ -836,6 +820,7 @@ export const useRecruitmentData = () => {
       setSelectedApplicant((current) =>
         current?.id === id ? updated : current
       );
+      await fetchApplicants();
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to reschedule interview"
@@ -858,8 +843,13 @@ export const useRecruitmentData = () => {
 
   const verificationApplicants = useMemo(
     () =>
-      applicants.filter((a) => a.status === "Approved" && !a.volunteerAccount),
-    [applicants]
+      activeTab === "verification"
+        ? applicants.filter(
+            (applicant) =>
+              applicant.status === "Approved" && !applicant.volunteerAccount
+          )
+        : [],
+    [activeTab, applicants]
   );
 
   const verifyApplicant = useCallback(
@@ -888,6 +878,7 @@ export const useRecruitmentData = () => {
           username: account.username,
           tempPassword: account.tempPassword,
         });
+        await fetchApplicants();
       } catch (err) {
         setMutationError(
           err instanceof Error ? err.message : "Failed to verify applicant"
@@ -896,13 +887,16 @@ export const useRecruitmentData = () => {
         setIsMutating(false);
       }
     },
-    [applicants, canManageRecruitment]
+    [applicants, canManageRecruitment, fetchApplicants]
   );
 
   // ── Rejected applicants (delete) ───────────────────────────────────────
   const rejectedApplicants = useMemo(
-    () => applicants.filter((a) => a.status === "Rejected"),
-    [applicants]
+    () =>
+      activeTab === "rejected"
+        ? applicants.filter((applicant) => applicant.status === "Rejected")
+        : [],
+    [activeTab, applicants]
   );
 
   const deleteRejectedApplicant = async (id: string) => {
@@ -912,6 +906,11 @@ export const useRecruitmentData = () => {
       await deleteApplication(id);
       setApplicants((current) => current.filter((a) => a.id !== id));
       setSelectedApplicant((current) => (current?.id === id ? null : current));
+      if (applicants.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        await fetchApplicants();
+      }
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to delete applicant"
@@ -925,11 +924,10 @@ export const useRecruitmentData = () => {
     setIsMutating(true);
     setMutationError(null);
     try {
-      const ids = rejectedApplicants.map((a) => a.id);
-      await Promise.all(ids.map((id) => deleteApplication(id)));
-      setApplicants((current) =>
-        current.filter((a) => a.status !== "Rejected")
-      );
+      await clearRejectedApplications();
+      setSelectedIds([]);
+      setPage(1);
+      if (page === 1) await fetchApplicants();
     } catch (err) {
       setMutationError(
         err instanceof Error
@@ -949,7 +947,6 @@ export const useRecruitmentData = () => {
     activeTab,
     setActiveTab,
     applicants,
-    filteredApplicants,
     pagedApplicants,
     selectedIds,
     search,
@@ -962,6 +959,8 @@ export const useRecruitmentData = () => {
     setPage,
     totalPages,
     currentPage,
+    applicantPagination,
+    applicantSummary,
     positionsPage,
     setPositionsPage,
     positionsTotalPages,
