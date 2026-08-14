@@ -115,6 +115,35 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     return `${year}-${month}-${day}`;
   };
 
+  // Derives a "Confirmed on" label from the attendance session timestamps.
+  // There is no flat `confirmedOn` field from the backend — only per-session
+  // timestamps (attendance.morning/afternoon/evening.timestamp), written
+  // when markAttendanceV2 / markAttendance() records that session. This
+  // picks whichever session timestamp is set (an attendee can only ever
+  // have one, since sessions are mutually exclusive time windows).
+  const getConfirmedOnLabel = (attendance: Attendee["attendance"]): string => {
+    const ts =
+      attendance?.morning?.timestamp ??
+      attendance?.afternoon?.timestamp ??
+      attendance?.evening?.timestamp ??
+      null;
+
+    if (!ts) return "--";
+
+    const date = new Date(ts);
+    if (Number.isNaN(date.getTime())) return "--";
+
+    return (
+      date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      }) +
+      "\n" +
+      date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    );
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -319,6 +348,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         campus: attendee.campus,
         shirtSize: attendee.shirtSize,
         shirtPrice: attendee.shirtPrice?.toString(),
+        confirmedBy: attendee.confirmedBy,
       }));
 
       const headers = [
@@ -331,6 +361,8 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         "Status",
         "Registered On",
         "Registered By",
+        "Confirmed On",
+        "Confirmed By",
         "Shirt Size",
         "Shirt Price",
       ];
@@ -345,6 +377,8 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         getAttendanceSummary(attendee.attendance),
         attendee.registeredOn.replace("\n", " "),
         attendee.registeredBy,
+        getConfirmedOnLabel(attendee.attendance).replace("\n", " "),
+        attendee.confirmedBy || "--",
         attendee.shirtSize || "",
         attendee.shirtPrice || "",
       ]);
@@ -860,24 +894,36 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                         </button>
                       </TableCell>
                       <TableCell>{attendee.courseYear}</TableCell>
+                      {/* FIX: was attendee.registeredOn (= transactDate, a
+                          registration-time field that is never set by the
+                          QR / manual "Mark Attendance" flow). Now derives
+                          the label from the actual attendance session
+                          timestamp, which IS set whenever attendance is
+                          confirmed. */}
                       <TableCell>
                         <div className="text-sm">
-                          {attendee.registeredOn.split("\n").map((line, i) => (
-                            <div
-                              key={i}
-                              className={
-                                i === 0
-                                  ? "font-medium"
-                                  : "text-muted-foreground"
-                              }
-                            >
-                              {line}
-                            </div>
-                          ))}
+                          {getConfirmedOnLabel(attendee.attendance)
+                            .split("\n")
+                            .map((line, i) => (
+                              <div
+                                key={i}
+                                className={
+                                  i === 0
+                                    ? "font-medium"
+                                    : "text-muted-foreground"
+                                }
+                              >
+                                {line}
+                              </div>
+                            ))}
                         </div>
                       </TableCell>
+                      {/* FIX: was attendee.registeredBy (= transactBy, also
+                          a registration-time field). Now uses the real
+                          confirmedBy value returned by the API, which is
+                          written whenever an admin confirms attendance. */}
                       <TableCell className="text-sm">
-                        {attendee.registeredBy}
+                        {attendee.confirmedBy || "--"}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -974,12 +1020,15 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                     </p>
                     <p className="font-medium">{attendee.courseYear}</p>
                   </div>
+                  {/* FIX: same swap as the desktop table above */}
                   <div>
                     <p className="text-muted-foreground text-xs">
                       Confirmed on
                     </p>
                     <p className="font-medium">
-                      {attendee.registeredOn.split("\n").join(" · ")}
+                      {getConfirmedOnLabel(attendee.attendance)
+                        .split("\n")
+                        .join(" · ")}
                     </p>
                   </div>
                   <div>
@@ -987,7 +1036,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                       Confirmed by
                     </p>
                     <p className="truncate font-medium">
-                      {attendee.registeredBy}
+                      {attendee.confirmedBy || "--"}
                     </p>
                   </div>
                 </div>

@@ -13,6 +13,7 @@ interface ApplicantInfoModalProps {
   onClose: () => void;
   onSetSchedule: () => void;
   onReschedule: () => void;
+  canReschedule?: boolean;
   onViewResume: (id: string) => void;
   onDownloadResume: (id: string) => void;
   isResumeLoading: boolean;
@@ -48,6 +49,7 @@ export const ApplicantInfoModal = ({
   onClose,
   onSetSchedule,
   onReschedule,
+  canReschedule = true,
   onViewResume,
   onDownloadResume,
   isResumeLoading,
@@ -244,7 +246,7 @@ export const ApplicantInfoModal = ({
           <div className="mt-auto flex shrink-0 justify-center gap-3 px-6 py-4">
             {hasInterview ? (
               <>
-                {canManageRecruitment && (
+                {canManageRecruitment && canReschedule && (
                   <Button
                     type="button"
                     className="h-11 rounded-full bg-[#1c9dde] px-9 text-sm font-semibold hover:bg-[#168bc7]"
@@ -263,7 +265,7 @@ export const ApplicantInfoModal = ({
                   Close
                 </Button>
               </>
-            ) : canManageRecruitment ? (
+            ) : canManageRecruitment && canReschedule ? (
               <Button
                 type="button"
                 className="h-11 rounded-full bg-[#1c9dde] px-9 text-sm font-semibold hover:bg-[#168bc7]"

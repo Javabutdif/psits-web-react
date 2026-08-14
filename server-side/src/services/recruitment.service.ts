@@ -1197,6 +1197,16 @@ export class RecruitmentService {
     if (!app.interview)
       throw new AppError("No interview scheduled for this application.", 400);
 
+    if (
+      app.status === applicationStatus.APPROVED ||
+      app.status === applicationStatus.REJECTED
+    ) {
+      throw new AppError(
+        `Cannot reschedule an interview for an application that is already ${app.status.toLowerCase()}.`,
+        400
+      );
+    }
+
     const { scheduledAt, location, notes, status } = req.body;
 
     if (scheduledAt) {

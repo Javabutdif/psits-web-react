@@ -121,6 +121,9 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         eventName: formData.eventName,
         eventDescription: formData.eventDescription,
         eventDate: formatDateKey(formData.eventSchedule.from),
+        eventEndDate: formData.eventSchedule?.to
+          ? formatDateKey(formData.eventSchedule.to)
+          : undefined,
         attendanceType: formData.attendanceType,
         status: "Upcoming",
         sessionConfig: formData.sessionConfig,

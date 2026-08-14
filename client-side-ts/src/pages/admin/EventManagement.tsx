@@ -37,8 +37,9 @@ interface EventDetails {
   status: "ongoing" | "ended" | "upcoming";
   startDate: string;
   startTime: string;
-  endDate: string;
   endTime: string;
+  endDate: string;
+  rawEndDate?: string;
   location: string;
   description: string;
   image: string;
@@ -247,7 +248,12 @@ const mapApiEventToEventDetails = (
     status: normalizeStatus(event.status, event.eventDate),
     startDate: formatEventDateLabel(event.eventDate),
     startTime,
-    endDate: formatEventDateLabel(event.eventDate),
+    endDate: formatEventDateLabel(event.eventEndDate ?? event.eventDate),
+    rawEndDate: event.eventEndDate
+      ? String(event.eventEndDate)
+      : event.eventDate
+        ? String(event.eventDate)
+        : undefined,
     endTime,
     location:
       (typeof event.eventVenue === "string" && event.eventVenue) ||
@@ -747,6 +753,7 @@ const EventManagement: React.FC = () => {
           description: eventDetails?.description ?? "",
           eventVenue: eventDetails?.location ?? "",
           startDate: eventDetails?.startDate ?? "",
+          eventEndDate: eventDetails?.rawEndDate ?? "",
           image: eventDetails?.image ?? "",
           eventTheme: eventDetails?.eventTheme ?? "",
           eventVenueSpecific: eventDetails?.eventVenueSpecific ?? "",
