@@ -14,6 +14,7 @@ export interface EmailConfig {
   subjectTemplate: string;
   includeSummary: boolean;
   includeRawData: boolean;
+  useNoetix: boolean;
 }
 
 export interface AutomationJob {

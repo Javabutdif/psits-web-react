@@ -3,15 +3,20 @@ import mongoose, { Types } from "mongoose";
 import path from "path";
 import ejs from "ejs";
 import { Resend } from "resend";
+import { marked } from "marked";
 import { AutomationJob, IAutomationJob } from "../models/automationJob.model";
 import { Admin } from "../models/admin.model";
 import { EmailQueue } from "../models/email.model";
 import { CronExecutionLog } from "../models/cronExecutionLog.model";
-import { AUTOMATION_FUNCTIONS, AutomationFunctionResult } from "./automationFunctions";
+import {
+  AUTOMATION_FUNCTIONS,
+  AutomationFunctionResult,
+} from "./automationFunctions";
 import { logService } from "./log.service";
 import { logs_action } from "../enums/logs.enums";
 import { account_status } from "../enums/status.enums";
 import { psits_roles } from "../enums/role.enums";
+import { generateEmailBody } from "./noetix-chat.service";
 
 const LOG_RETENTION_DAYS = 90;
 const LOCK_KEY = "automation_job_lock";
@@ -69,7 +74,10 @@ const addMinutes = (date: Date, minutes: number): Date => {
   return result;
 };
 
-const calculateNextRun = (schedule: IAutomationJob["schedule"], after: Date = new Date()): Date => {
+const calculateNextRun = (
+  schedule: IAutomationJob["schedule"],
+  after: Date = new Date()
+): Date => {
   const [hours, minutes] = schedule.time.split(":").map(Number);
   let next = new Date(after);
   next.setHours(hours, minutes, 0, 0);
@@ -143,27 +151,93 @@ const executeFunction = async (
 ): Promise<AutomationFunctionResult> => {
   const def = AUTOMATION_FUNCTIONS[key];
   if (!def) {
-    return { success: false, recordCount: 0, durationMs: 0, error: `Unknown function: ${key}`, functionKey: key, category: "system", description: key };
+    return {
+      success: false,
+      recordCount: 0,
+      durationMs: 0,
+      error: `Unknown function: ${key}`,
+      functionKey: key,
+      category: "system",
+      description: key,
+    };
   }
 
   const start = Date.now();
   try {
     const data = await def.fn(defaultParams);
     const count = Array.isArray(data) ? data.length : 1;
-    return { success: true, data, recordCount: count, durationMs: Date.now() - start, functionKey: key, category: def.category, description: def.description };
+    return {
+      success: true,
+      data,
+      recordCount: count,
+      durationMs: Date.now() - start,
+      functionKey: key,
+      category: def.category,
+      description: def.description,
+    };
   } catch (err: any) {
-    return { success: false, recordCount: 0, durationMs: Date.now() - start, error: err.message, functionKey: key, category: def.category, description: def.description };
+    return {
+      success: false,
+      recordCount: 0,
+      durationMs: Date.now() - start,
+      error: err.message,
+      functionKey: key,
+      category: def.category,
+      description: def.description,
+    };
   }
 };
 
 // ─── Email Rendering ────────────────────────────────────────────────────
+
+const compressResultsForNoetix = (
+  results: AutomationFunctionResult[]
+): Record<string, unknown> => {
+  const compact: Record<string, unknown> = {};
+  for (const r of results) {
+    const key = r.functionKey ?? "unknown";
+    if (r.success) {
+      if (Array.isArray(r.data) && r.data.length > 0) {
+        const samples = (r.data as Record<string, unknown>[]).slice(0, 3);
+        compact[key] = {
+          recordCount: r.data.length,
+          samples: samples.map((row) => {
+            const flat: Record<string, unknown> = {};
+            const keys = Object.keys(row);
+            for (let i = 0; i < Math.min(keys.length, 5); i++) {
+              const val = row[keys[i]];
+              if (
+                val !== null &&
+                val !== undefined &&
+                typeof val !== "object"
+              ) {
+                flat[keys[i]] = String(val).substring(0, 100);
+              }
+            }
+            return flat;
+          }),
+        };
+      } else if (r.data) {
+        compact[key] = r.data;
+      } else {
+        compact[key] = { recordCount: r.recordCount };
+      }
+    } else {
+      compact[key] = { error: r.error };
+    }
+  }
+  return compact;
+};
 
 const renderEmailTemplate = async (
   job: IAutomationJob,
   results: AutomationFunctionResult[],
   targets: ResolvedTarget[]
 ): Promise<string> => {
-  const templatePath = path.join(__dirname, "../templates/automation-report.ejs");
+  const templatePath = path.join(
+    __dirname,
+    "../templates/automation-report.ejs"
+  );
   const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -176,8 +250,10 @@ const renderEmailTemplate = async (
     timeZone: "Asia/Manila",
   });
   const subject = job.emailConfig.subjectTemplate
-    .split("{{jobName}}").join(job.name)
-    .split("{{date}}").join(dateStr);
+    .split("{{jobName}}")
+    .join(job.name)
+    .split("{{date}}")
+    .join(dateStr);
 
   return ejs.renderFile(templatePath, {
     jobName: job.name,
@@ -208,8 +284,10 @@ const queueReportEmail = async (
     timeZone: "Asia/Manila",
   });
   const subject = job.emailConfig.subjectTemplate
-    .split("{{jobName}}").join(job.name)
-    .split("{{date}}").join(dateStr);
+    .split("{{jobName}}")
+    .join(job.name)
+    .split("{{date}}")
+    .join(dateStr);
 
   const reportPayload = {
     jobName: job.name,
@@ -220,8 +298,11 @@ const queueReportEmail = async (
     subject,
   };
 
-  const templatePath = path.join(__dirname, "../templates/automation-report.ejs");
-  const html = await ejs.renderFile(templatePath, {
+  const templatePath = path.join(
+    __dirname,
+    "../templates/automation-report.ejs"
+  );
+  const fallbackHtml = await ejs.renderFile(templatePath, {
     jobName: job.name,
     executionTime: `${dateStr} at ${timeStr} (Asia/Manila)`,
     results,
@@ -231,8 +312,32 @@ const queueReportEmail = async (
     subject,
   });
 
+  let htmlBody: string | null = null;
+
+  if (job.emailConfig.useNoetix) {
+    const noetixData = compressResultsForNoetix(results);
+    try {
+      const noetixMarkdown = await generateEmailBody(
+        `Generate a professional daily operational report for "${job.name}". Include key metrics, highlights, and any concerns from the data below.`,
+        noetixData
+      );
+      htmlBody = marked(noetixMarkdown) as string;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[Automation] Noetix email generation failed for job ${job.name}:`,
+        message
+      );
+      htmlBody = null;
+    }
+  }
+
+  const html = htmlBody ?? fallbackHtml;
+
   const logoPath = path.join(__dirname, "../assets/psits.jpg");
-  const logoBuffer = await import("fs/promises").then((fs) => fs.readFile(logoPath));
+  const logoBuffer = await import("fs/promises").then((fs) =>
+    fs.readFile(logoPath)
+  );
   const resend = new Resend(process.env.RESEND_API_KEY);
   const from = process.env.EMAIL;
 
@@ -263,6 +368,7 @@ const queueReportEmail = async (
       subtype: job.name,
       referenceCode: job.name,
       payload: JSON.stringify(reportPayload),
+      htmlBody: htmlBody ?? undefined,
       retryCount: 0,
     }).save();
   };
@@ -274,7 +380,9 @@ const queueReportEmail = async (
 // ─── Job Execution ──────────────────────────────────────────────────────
 
 export const executeJob = async (jobId: string): Promise<ExecuteResult> => {
-  const job = await AutomationJob.findById(jobId).lean() as IAutomationJob | null;
+  const job = (await AutomationJob.findById(
+    jobId
+  ).lean()) as IAutomationJob | null;
   if (!job) throw new Error("Job not found");
 
   const startedAt = new Date();
@@ -305,7 +413,10 @@ export const executeJob = async (jobId: string): Promise<ExecuteResult> => {
       await queueReportEmail(job, results, targets);
       emailQueued = true;
     } catch (err: any) {
-      console.error(`[Automation] Failed to queue email for job ${jobId}:`, err.message);
+      console.error(
+        `[Automation] Failed to queue email for job ${jobId}:`,
+        err.message
+      );
     }
   }
 
@@ -317,12 +428,18 @@ export const executeJob = async (jobId: string): Promise<ExecuteResult> => {
   });
 
   // Log execution
-  await logCronExecutionForJob(jobId, job.name, startedAt, {
-    results,
-    targetCount: targets.length,
-    emailQueued,
-    totalDuration,
-  }, someSuccess);
+  await logCronExecutionForJob(
+    jobId,
+    job.name,
+    startedAt,
+    {
+      results,
+      targetCount: targets.length,
+      emailQueued,
+      totalDuration,
+    },
+    someSuccess
+  );
 
   // Log in activity log
   await logService.create({
@@ -387,38 +504,57 @@ export const scheduleAllJobs = async (): Promise<void> => {
   }
   taskMap.clear();
 
-  const jobs = (await AutomationJob.find({ isActive: true }).lean()) as unknown as IAutomationJob[];
+  const jobs = (await AutomationJob.find({
+    isActive: true,
+  }).lean()) as unknown as IAutomationJob[];
 
   for (const job of jobs) {
     try {
       const expression = buildCronExpression(job.schedule);
       const jobId = job._id.toString();
 
-      const task = cron.schedule(expression, async () => {
-        if (isExecuting) {
-          console.log(`[Automation] Job ${jobId} skipped: another job is running`);
-          return;
+      const task = cron.schedule(
+        expression,
+        async () => {
+          if (isExecuting) {
+            console.log(
+              `[Automation] Job ${jobId} skipped: another job is running`
+            );
+            return;
+          }
+          isExecuting = true;
+          try {
+            await executeJob(jobId);
+          } catch (err: any) {
+            console.error(`[Automation] Job ${jobId} failed:`, err.message);
+            await logCronExecutionForJob(
+              jobId,
+              job.name,
+              new Date(),
+              {
+                error: err.message,
+              },
+              false
+            );
+          } finally {
+            isExecuting = false;
+          }
+        },
+        {
+          timezone: "Asia/Manila",
         }
-        isExecuting = true;
-        try {
-          await executeJob(jobId);
-        } catch (err: any) {
-          console.error(`[Automation] Job ${jobId} failed:`, err.message);
-          await logCronExecutionForJob(jobId, job.name, new Date(), {
-            error: err.message,
-          }, false);
-        } finally {
-          isExecuting = false;
-        }
-      }, {
-        timezone: "Asia/Manila",
-      });
+      );
 
       task.start();
       taskMap.set(jobId, task);
-      console.log(`[Automation] Scheduled job "${job.name}" (${jobId}) → ${expression}`);
+      console.log(
+        `[Automation] Scheduled job "${job.name}" (${jobId}) → ${expression}`
+      );
     } catch (err: any) {
-      console.error(`[Automation] Failed to schedule job ${job._id}:`, err.message);
+      console.error(
+        `[Automation] Failed to schedule job ${job._id}:`,
+        err.message
+      );
     }
   }
 
@@ -430,26 +566,35 @@ export const rescheduleJob = async (jobId: string): Promise<void> => {
   if (task) task.stop();
   taskMap.delete(jobId);
 
-  const job = await AutomationJob.findById(jobId).lean() as IAutomationJob | null;
+  const job = (await AutomationJob.findById(
+    jobId
+  ).lean()) as IAutomationJob | null;
   if (!job || !job.isActive) return;
 
   try {
     const expression = buildCronExpression(job.schedule);
-    const task = cron.schedule(expression, async () => {
-      if (isExecuting) return;
-      isExecuting = true;
-      try {
-        await executeJob(jobId);
-      } catch (err: any) {
-        console.error(`[Automation] Job ${jobId} failed:`, err.message);
-      } finally {
-        isExecuting = false;
-      }
-    }, { timezone: "Asia/Manila" });
+    const task = cron.schedule(
+      expression,
+      async () => {
+        if (isExecuting) return;
+        isExecuting = true;
+        try {
+          await executeJob(jobId);
+        } catch (err: any) {
+          console.error(`[Automation] Job ${jobId} failed:`, err.message);
+        } finally {
+          isExecuting = false;
+        }
+      },
+      { timezone: "Asia/Manila" }
+    );
     task.start();
     taskMap.set(jobId, task);
   } catch (err: any) {
-    console.error(`[Automation] Failed to reschedule job ${jobId}:`, err.message);
+    console.error(
+      `[Automation] Failed to reschedule job ${jobId}:`,
+      err.message
+    );
   }
 };
 
@@ -481,14 +626,20 @@ export const updateJob = async (
   jobId: string,
   data: Partial<IAutomationJob>
 ): Promise<IAutomationJob | null> => {
-  const updated = await AutomationJob.findByIdAndUpdate(
+  const updated = (await AutomationJob.findByIdAndUpdate(
     jobId,
     {
       ...data,
-      ...(data.schedule ? { nextRunAt: calculateNextRun(data.schedule as IAutomationJob["schedule"]) } : {}),
+      ...(data.schedule
+        ? {
+            nextRunAt: calculateNextRun(
+              data.schedule as IAutomationJob["schedule"]
+            ),
+          }
+        : {}),
     },
     { new: true }
-  ).lean() as IAutomationJob | null;
+  ).lean()) as IAutomationJob | null;
 
   if (updated) {
     await rescheduleJob(jobId);
@@ -522,11 +673,17 @@ export const getJobs = async (
   return { jobs: jobs as unknown as IAutomationJob[], total };
 };
 
-export const getJobById = async (jobId: string): Promise<IAutomationJob | null> => {
-  return (await AutomationJob.findById(jobId).lean()) as unknown as IAutomationJob | null;
+export const getJobById = async (
+  jobId: string
+): Promise<IAutomationJob | null> => {
+  return (await AutomationJob.findById(
+    jobId
+  ).lean()) as unknown as IAutomationJob | null;
 };
 
-export const toggleJobActive = async (jobId: string): Promise<IAutomationJob | null> => {
+export const toggleJobActive = async (
+  jobId: string
+): Promise<IAutomationJob | null> => {
   const job = await AutomationJob.findById(jobId);
   if (!job) return null;
   job.isActive = !job.isActive;
@@ -545,7 +702,17 @@ export const getJobExecutionLogs = async (
   jobId: string,
   limit = 20,
   skip = 0
-): Promise<Array<{ _id: string; startedAt: Date; completedAt?: Date; durationMs?: number; success: boolean; errorMessage?: string; metadata?: Record<string, unknown> }>> => {
+): Promise<
+  Array<{
+    _id: string;
+    startedAt: Date;
+    completedAt?: Date;
+    durationMs?: number;
+    success: boolean;
+    errorMessage?: string;
+    metadata?: Record<string, unknown>;
+  }>
+> => {
   return (await CronExecutionLog.find({
     jobName: { $regex: `^automation-`, $options: "i" },
     metadata: { $regex: new RegExp(jobId) },
@@ -553,7 +720,15 @@ export const getJobExecutionLogs = async (
     .sort({ startedAt: -1 })
     .skip(skip)
     .limit(limit)
-    .lean()) as unknown as Array<{ _id: string; startedAt: Date; completedAt?: Date; durationMs?: number; success: boolean; errorMessage?: string; metadata?: Record<string, unknown> }>;
+    .lean()) as unknown as Array<{
+    _id: string;
+    startedAt: Date;
+    completedAt?: Date;
+    durationMs?: number;
+    success: boolean;
+    errorMessage?: string;
+    metadata?: Record<string, unknown>;
+  }>;
 };
 
 // ─── Function Registry ──────────────────────────────────────────────────
