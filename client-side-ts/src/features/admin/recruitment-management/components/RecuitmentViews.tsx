@@ -13,6 +13,7 @@ import {
   X,
   Plus,
   Trash2,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -331,6 +332,7 @@ export const RecruitmentViews = () => {
     setPositionsPage,
     positionsTotalPages,
     positionsTotal,
+    openPositionsCount,
     isLoading,
     isMutating,
     error,
@@ -355,6 +357,7 @@ export const RecruitmentViews = () => {
     positionsError,
     updatePosition,
     closePosition,
+    reopenPosition,
     deletePosition,
     verificationApplicants,
     verifyApplicant,
@@ -538,10 +541,11 @@ export const RecruitmentViews = () => {
             <Skeleton className="h-[76px] rounded-2xl" />
           </div>
         ) : (
-          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-4">
             <StatCard label="Pending" value={counts.pending} />
             <StatCard label="Approved" value={counts.approved} />
             <StatCard label="Verifications" value={counts.verifications} />
+            <StatCard label="Open Roles" value={openPositionsCount} />
           </div>
         )}
 
@@ -893,18 +897,31 @@ export const RecruitmentViews = () => {
                                   Edit Role Application
                                 </button>
 
-                                <button
-                                  type="button"
-                                  disabled={position.hiringStatus === "CLOSED"}
-                                  onClick={() => {
-                                    closePosition(position._id);
-                                    setOpenPositionMenuId(null);
-                                  }}
-                                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
-                                >
-                                  <Ban className="h-4 w-4" />
-                                  Close Role Application
-                                </button>
+                                {position.hiringStatus === "CLOSED" ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      reopenPosition(position._id);
+                                      setOpenPositionMenuId(null);
+                                    }}
+                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-slate-50"
+                                  >
+                                    <RotateCcw className="h-4 w-4" />
+                                    Reopen Role Application
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      closePosition(position._id);
+                                      setOpenPositionMenuId(null);
+                                    }}
+                                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
+                                  >
+                                    <Ban className="h-4 w-4" />
+                                    Close Role Application
+                                  </button>
+                                )}
 
                                 {position.hiringStatus === "CLOSED" && (
                                   <button
@@ -1465,10 +1482,10 @@ export const RecruitmentViews = () => {
               </div>
               <div>
                 <DialogTitle className="text-lg font-semibold">
-                  Some role applications are already open
+                  Some role applications already exist
                 </DialogTitle>
                 <p className="mt-1 text-sm text-slate-500">
-                  Choose how to handle the existing openings before continuing.
+                  Choose how to handle the existing role before continuing.
                 </p>
               </div>
             </div>
@@ -1522,7 +1539,7 @@ export const RecruitmentViews = () => {
                 disabled={isMutating}
                 onClick={() => resolveOpeningConflict("close_old_create_new")}
               >
-                Close old and create
+                Delete old and Create
               </Button>
             </div>
           </div>

@@ -125,6 +125,11 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         status: "Upcoming",
         sessionConfig: formData.sessionConfig,
         images: formData.image ? [formData.image] : [],
+        eventVenue: formData.eventVenue,
+        eventTheme: formData.eventTheme,
+        eventVenueSpecific: formData.eventVenueSpecific,
+        eventStartTime: formData.eventStartTime,
+        eventEndTime: formData.eventEndTime,
       });
 
       if (result) {

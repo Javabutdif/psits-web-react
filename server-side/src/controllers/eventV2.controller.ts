@@ -73,7 +73,10 @@ const buildEventLookupQuery = (eventId: string) => {
   };
 };
 
-const buildProxyImageUrl = (req: Request, file: Express.MulterS3.File): string =>
+const buildProxyImageUrl = (
+  req: Request,
+  file: Express.MulterS3.File
+): string =>
   `${req.protocol}://${req.get("host")}/api/v2/events/image/${file.key}`;
 
 const LEGACY_CAMPUS_MAP: Record<string, string> = {
@@ -2870,6 +2873,11 @@ interface CreateEventV2Body {
   status?: string;
   sessionConfig?: unknown;
   limit?: unknown;
+  eventVenue?: string;
+  eventTheme?: string;
+  eventVenueSpecific?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 const parseManilaMidnightDate = (value: string): Date | null => {
@@ -2974,9 +2982,9 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
 
   try {
     const imageUrl =
-  (req.files as Express.MulterS3.File[] | undefined)?.map((file) =>
-    buildProxyImageUrl(req, file)
-  ) ?? [];
+      (req.files as Express.MulterS3.File[] | undefined)?.map((file) =>
+        buildProxyImageUrl(req, file)
+      ) ?? [];
 
     const createdBy =
       req.admin?.name ??
@@ -2994,6 +3002,18 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
       sessionConfig: parsedSessionConfigResult,
       createdBy,
       attendees: [],
+      eventVenue:
+        typeof body.eventVenue === "string" ? body.eventVenue.trim() : "",
+      eventTheme:
+        typeof body.eventTheme === "string" ? body.eventTheme.trim() : "",
+      eventVenueSpecific:
+        typeof body.eventVenueSpecific === "string"
+          ? body.eventVenueSpecific.trim()
+          : "",
+      eventStartTime:
+        typeof body.eventStartTime === "string" ? body.eventStartTime : "",
+      eventEndTime:
+        typeof body.eventEndTime === "string" ? body.eventEndTime : "",
     };
 
     if (parsedLimitResult.length > 0) {

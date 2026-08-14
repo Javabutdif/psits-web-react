@@ -232,6 +232,7 @@ export const useRecruitmentData = () => {
   const [positionsPage, setPositionsPage] = useState(1);
   const [positionsTotalPages, setPositionsTotalPages] = useState(1);
   const [positionsTotal, setPositionsTotal] = useState(0);
+  const [openPositionsCount, setOpenPositionsCount] = useState(0);
 
   const [mutationError, setMutationError] = useState<string | null>(null);
 
@@ -349,10 +350,24 @@ export const useRecruitmentData = () => {
     [positionsPage]
   );
 
+  const fetchOpenPositionsCount = useCallback(async () => {
+    try {
+      const res = await listPositions({ status: "OPEN", limit: 1 });
+      setOpenPositionsCount(Number(res.data.data.pagination?.total || 0));
+    } catch {
+      // Non-critical — the stat card just won't update this cycle.
+    }
+  }, []);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; fetchPositions is also used for refetch, so its internal setIsPositionsLoading/setPositionsError calls are needed there
     fetchPositions();
   }, [fetchPositions]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount
+    fetchOpenPositionsCount();
+  }, [fetchOpenPositionsCount]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount; fetchApplicants is also used for refetch, so its internal setIsLoading/setError calls are needed there
@@ -659,6 +674,7 @@ export const useRecruitmentData = () => {
       });
       setPositionsPage(1);
       await fetchPositions(1);
+      await fetchOpenPositionsCount();
     } catch (err) {
       const response = (
         err as {
@@ -734,6 +750,7 @@ export const useRecruitmentData = () => {
       setPositions((current) =>
         current.map((p) => (p._id === id ? updated : p))
       );
+      await fetchOpenPositionsCount();
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to close role"
@@ -743,6 +760,24 @@ export const useRecruitmentData = () => {
     }
   };
 
+  const reopenPosition = async (id: string) => {
+    setIsMutating(true);
+    setMutationError(null);
+    try {
+      const res = await toggleHiringStatus(id, "OPEN");
+      const updated = res.data.data;
+      setPositions((current) =>
+        current.map((p) => (p._id === id ? updated : p))
+      );
+      await fetchOpenPositionsCount();
+    } catch (err) {
+      setMutationError(
+        err instanceof Error ? err.message : "Failed to reopen role"
+      );
+    } finally {
+      setIsMutating(false);
+    }
+  };
   // Delete a position (only for CLOSED roles — the UI gates this).
   // The backend hard-deletes if no applications exist, otherwise
   // soft-disables (isActive = false).
@@ -761,6 +796,7 @@ export const useRecruitmentData = () => {
       }
 
       await fetchPositions(nextPage);
+      await fetchOpenPositionsCount();
     } catch (err) {
       setMutationError(
         err instanceof Error ? err.message : "Failed to delete position"
@@ -916,6 +952,7 @@ export const useRecruitmentData = () => {
     setPositionsPage,
     positionsTotalPages,
     positionsTotal,
+    openPositionsCount,
     isLoading,
     isMutating,
     error,
@@ -947,6 +984,7 @@ export const useRecruitmentData = () => {
     openRoleApplication,
     updatePosition,
     closePosition,
+    reopenPosition,
     deletePosition,
     verificationApplicants,
     verifyApplicant,

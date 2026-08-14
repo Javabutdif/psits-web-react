@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   UploadCloud,
   Calendar as CalendarIcon,
@@ -10,11 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { EventFormData } from "./AddEventModal";
@@ -36,6 +33,108 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
     initialImage || null
   );
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // Controls the calendar panel open state
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // Tracks whether we're below the `sm` breakpoint — drives whether the
+  // calendar renders at the trigger-relative position (desktop) or
+  // centered on screen with larger cells (mobile).
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const PANEL_WIDTH = 300;
+  const PANEL_MARGIN = 16; // keep some breathing room from screen edges
+
+  // Root wrapper of this tab — used to compute where the panel should
+  // land on screen, since it's portaled out to escape the modal's
+  // scroll-clipping container.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const [panelPos, setPanelPos] = useState({
+    top: 0,
+    left: 0,
+    width: PANEL_WIDTH,
+  });
+
+  const updatePanelPosition = () => {
+    if (!rootRef.current || isMobile) return;
+    const rect = rootRef.current.getBoundingClientRect();
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const effectiveWidth = Math.min(
+      PANEL_WIDTH,
+      viewportWidth - PANEL_MARGIN * 2
+    );
+
+    let left = rect.right - effectiveWidth;
+    left = Math.max(
+      PANEL_MARGIN,
+      Math.min(left, viewportWidth - effectiveWidth - PANEL_MARGIN)
+    );
+
+    const estimatedPanelHeight = panelRef.current?.offsetHeight ?? 420;
+    let top = rect.top;
+    top = Math.max(
+      PANEL_MARGIN,
+      Math.min(top, viewportHeight - estimatedPanelHeight - PANEL_MARGIN)
+    );
+
+    setPanelPos({ top, left, width: effectiveWidth });
+  };
+
+  useLayoutEffect(() => {
+    if (isCalendarOpen) updatePanelPosition();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCalendarOpen, isMobile]);
+
+  useEffect(() => {
+    if (!isCalendarOpen || isMobile) return;
+    // Recalculate on scroll/resize so the panel stays pinned to the
+    // same visual spot even as the modal body scrolls internally.
+    window.addEventListener("scroll", updatePanelPosition, true);
+    window.addEventListener("resize", updatePanelPosition);
+    return () => {
+      window.removeEventListener("scroll", updatePanelPosition, true);
+      window.removeEventListener("resize", updatePanelPosition);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCalendarOpen, isMobile]);
+
+  useEffect(() => {
+    if (!isCalendarOpen) return;
+    // A real backdrop <div> gets intercepted by the parent Dialog's own
+    // "click outside closes the dialog" handling, since our backdrop is
+    // technically outside Dialog.Content too. A document-level listener
+    // in the capture phase runs independently of Radix's interception,
+    // so it reliably closes just our panel instead.
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(target) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(target)
+      ) {
+        setIsCalendarOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, [isCalendarOpen]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (file: File | null) => {
@@ -73,7 +172,7 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
   };
 
   return (
-    <div className="flex h-full flex-col gap-6">
+    <div ref={rootRef} className="relative flex h-full flex-col gap-6">
       {/* Top row - Image + Name/Description */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Left Column - Image Upload */}
@@ -182,46 +281,180 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
 
       {/* Bottom row - Event Schedule + Location, spans full width */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-2">
+        <div className="sm:col--2 flex min-w-0 flex-col gap-2">
           <Label className="text-sm font-medium">Event Schedule</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
+
+          {/* Single trigger field — just opens the panel, position is
+              fixed within the modal, not tied to this button's location */}
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={() => setIsCalendarOpen(true)}
+            className={cn(
+              "flex h-11 w-full items-center gap-2 rounded-xl border px-4 text-left text-sm transition-colors sm:w-60",
+              isCalendarOpen
+                ? "border-[#1C9DDE] ring-1 ring-[#1C9DDE]"
+                : "border-gray-200 hover:border-gray-300"
+            )}
+          >
+            <CalendarIcon className="h-4 w-4 shrink-0 text-gray-400" />
+            <span
+              className={cn(
+                "truncate",
+                !formData.eventSchedule?.from && "text-muted-foreground"
+              )}
+            >
+              {formData.eventSchedule?.from
+                ? formData.eventSchedule?.to
+                  ? `${format(formData.eventSchedule.from, "d MMM yyyy")} - ${format(formData.eventSchedule.to, "d MMM yyyy")}`
+                  : format(formData.eventSchedule.from, "d MMM yyyy")
+                : "Choose date"}
+            </span>
+          </button>
+        </div>
+
+        {/* Calendar panel — portaled to document.body.
+            Desktop: `fixed` coordinates computed from the root wrapper's
+            on-screen location, clamped to stay within the viewport.
+            Mobile (<640px): centered on screen with a dimmed backdrop and
+            larger day cells for easier tapping. */}
+        {isCalendarOpen &&
+          createPortal(
+            <>
+              {/* Backdrop, mobile only — dims content behind the panel */}
+              {isMobile && (
+                <div
+                  className="fixed inset-0 z-40 bg-black/40"
+                  onClick={() => setIsCalendarOpen(false)}
+                />
+              )}
+
+              <div
+                ref={panelRef}
+                style={
+                  isMobile
+                    ? undefined
+                    : {
+                        top: panelPos.top,
+                        left: panelPos.left,
+                        width: panelPos.width,
+                      }
+                }
                 className={cn(
-                  "w-full min-w-0 justify-start overflow-hidden rounded-lg border-gray-200 text-left font-normal shadow-sm",
-                  !formData.eventSchedule?.from && "text-muted-foreground"
+                  "pointer-events-auto fixed z-50 overflow-y-auto border border-gray-200 bg-white shadow-lg",
+                  isMobile
+                    ? "top-1/2 left-1/2 max-h-[85vh] w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-3xl p-5"
+                    : "max-h-[520px] rounded-2xl p-4"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
-                <span className="truncate">
-                  {formData.eventSchedule?.from ? (
-                    formData.eventSchedule.to ? (
-                      <>
-                        {format(formData.eventSchedule.from, "d MMM yyyy")} -{" "}
-                        {format(formData.eventSchedule.to, "d MMM yyyy")}
-                      </>
-                    ) : (
-                      format(formData.eventSchedule.from, "d MMM yyyy")
-                    )
-                  ) : (
-                    "Choose date range"
-                  )}
-                </span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                selected={formData.eventSchedule}
-                onSelect={(range) =>
-                  setFormData((prev) => ({ ...prev, eventSchedule: range }))
-                }
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+                {/* Plain pill fields — no dashed borders, no "+" icons */}
+                <div className="mb-1 flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "flex flex-1 items-center justify-center rounded-full border border-gray-200 text-sm",
+                      isMobile ? "h-9" : "h-9 px-3"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "truncate",
+                        !formData.eventSchedule?.from && "text-muted-foreground"
+                      )}
+                    >
+                      {formData.eventSchedule?.from
+                        ? format(formData.eventSchedule.from, "d MMM yyyy")
+                        : "Start date"}
+                    </span>
+                  </div>
+
+                  <div
+                    className={cn(
+                      "flex flex-1 items-center justify-center rounded-full border border-gray-200 text-sm",
+                      isMobile ? "h-9" : "h-7 px-3"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "truncate",
+                        !formData.eventSchedule?.to && "text-muted-foreground"
+                      )}
+                    >
+                      {formData.eventSchedule?.to
+                        ? format(formData.eventSchedule.to, "d MMM yyyy")
+                        : "End date"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Calendar — bigger cells on mobile for easier tapping */}
+                <Calendar
+                  mode="range"
+                  selected={formData.eventSchedule}
+                  onSelect={(range) =>
+                    setFormData((prev) => ({ ...prev, eventSchedule: range }))
+                  }
+                  initialFocus
+                  classNames={
+                    isMobile
+                      ? {
+                          day: "h-12 w-11 text-sm rounded-full",
+                          day_selected:
+                            "h-12 w-11 text-sm rounded-full bg-[#1C9DDE] text-white",
+
+                          cell: "w-11 h-10 p-0",
+
+                          head_cell: "w-11 text-center text-xs",
+
+                          caption_label: "text-base font-semibold",
+
+                          row: "flex w-fit mx-auto mt-1.5",
+
+                          head_row: "flex w-fit mx-auto",
+                        }
+                      : {
+                          day: "h-8 w-8 rounded-full text-xs",
+                          day_selected:
+                            "h-8 w-8 rounded-full bg-[#1C9DDE] text-white",
+
+                          cell: "w-8 h-10 p-0",
+
+                          head_cell:
+                            "w-8 text-center text-[10px] text-gray-400",
+
+                          caption_label: "text-sm font-semibold",
+
+                          row: "flex w-fit mx-auto",
+
+                          head_row: "flex w-fit mx-auto",
+
+                          day_range_middle:
+                            "bg-[#1C9DDE]/10 text-[#0879B5] rounded-none",
+
+                          day_range_start: "rounded-full",
+
+                          day_range_end: "rounded-full",
+                        }
+                  }
+                />
+
+                <div className="mt-2 border-t border-gray-100 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        eventSchedule: undefined,
+                      }));
+                    }}
+                    className="text-sm font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              </div>
+            </>,
+            document.body
+          )}
 
         <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="eventVenue" className="text-sm font-medium">
@@ -239,7 +472,7 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
                   eventVenue: e.target.value,
                 }))
               }
-              className="w-full min-w-0 rounded-lg border-gray-200 pl-9 shadow-sm"
+              className="h-11 w-full min-w-0 rounded-xl border-gray-200 pl-9 text-sm focus-visible:border-[#1C9DDE] focus-visible:ring-1 focus-visible:ring-[#1C9DDE]"
             />
           </div>
         </div>
