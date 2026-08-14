@@ -20,7 +20,7 @@ let browserInstance: Browser | null = null;
 
 const getBrowser = async (): Promise<Browser> => {
   // If no browser exists or the connection was dropped, spin up/connect a new one
-  if (!browserInstance || !browserInstance.isConnected()) {
+  if (!browserInstance || !browserInstance.connected) {
     const browserlessUrl = process.env.BROWSERLESS_URL;
     
     if (browserlessUrl) {
