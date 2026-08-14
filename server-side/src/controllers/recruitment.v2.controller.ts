@@ -197,6 +197,15 @@ class RecruitmentController {
     return res.status(200).json(result);
   });
 
+  /** Admin: Delete all rejected applications */
+  clearRejectedApplications = catchAsync(
+    async (req: Request, res: Response) => {
+      const result = await recruitmentService.clearRejectedApplications(req);
+      await logAdminAction(req, logs_action.CLEAR_REJECTED, "Rejected applicants");
+      return res.status(200).json(result);
+    }
+  );
+
   /** Admin: Create the volunteer account for an Approved applicant */
   verifyApplicantAccount = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id as string;

@@ -49,6 +49,15 @@ const toPositiveInteger = (value: any, fallback: number) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
+const toStringList = (value: unknown) =>
+  (Array.isArray(value) ? value : [value])
+    .flatMap((item) => String(item ?? "").split(","))
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const toRequirementList = (value: any) =>
   String(value ?? "")
     .split("\n")
@@ -722,31 +731,230 @@ export class RecruitmentService {
     return obj;
   }
 
-  /** Admin: Get paginated applicant list with filters */
+  /** Admin: Get one filtered and sorted page of applicants. */
   async getApplicants(req: any) {
-    const { positionId, status, search, page = 1, limit = 10 } = req.query;
-    const query: any = {};
+    const page = toPositiveInteger(req.query.page, 1);
+    const limit = Math.min(toPositiveInteger(req.query.limit, 10), 50);
+    const positionId = String(req.query.positionId ?? "").trim();
+    const search = String(req.query.search ?? "").trim();
+    const statuses = toStringList(req.query.status);
+    const roles = toStringList(req.query.roles ?? req.query.role);
+    const courses = toStringList(req.query.courses ?? req.query.course);
+    const years = toStringList(req.query.years ?? req.query.year)
+      .map((year) => year.match(/\d/)?.[0])
+      .filter((year): year is string => Boolean(year));
+    const verificationOnly = toBooleanQuery(req.query.verificationOnly);
 
-    if (positionId) query.position = positionId;
-    if (status) query.status = status;
-    if (search)
-      query.$or = [
-        { "applicantSnapshot.name": { $regex: search, $options: "i" } },
-        { "applicantSnapshot.idNumber": { $regex: search, $options: "i" } },
-      ];
+    const statusMap: Record<string, string> = {
+      Pending: applicationStatus.SUBMITTED,
+      Scheduled: applicationStatus.INTERVIEW_SCHEDULED,
+      "Interview Completed": applicationStatus.INTERVIEWING,
+      Approved: applicationStatus.APPROVED,
+      Rejected: applicationStatus.REJECTED,
+      "For Verification": applicationStatus.APPROVED,
+    };
 
-    const applicants = await Application.find(query)
-      .populate("position", "title")
-      .populate("applicant", "name id_number email course year")
-      .sort({ createdAt: -1 })
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit));
+    const conditions: Record<string, any>[] = [];
+    const mappedStatuses = statuses
+      .map((status) => statusMap[status] ?? status)
+      .filter(Boolean);
 
-    const total = await Application.countDocuments(query);
+    if (positionId) conditions.push({ position: positionId });
+    if (mappedStatuses.length) conditions.push({ status: { $in: mappedStatuses } });
+    if (courses.length)
+      conditions.push({ "applicantSnapshot.course": { $in: courses } });
+    if (years.length) {
+      conditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: { $ifNull: ["$applicantSnapshot.year", ""] } },
+            regex: `^[${years.join("")}]`,
+          },
+        },
+      });
+    }
+    if (search) {
+      const pattern = escapeRegex(search);
+      conditions.push({
+        $or: [
+          { "applicantSnapshot.name": { $regex: pattern, $options: "i" } },
+          {
+            "applicantSnapshot.idNumber": {
+              $regex: pattern,
+              $options: "i",
+            },
+          },
+          { "applicantSnapshot.email": { $regex: pattern, $options: "i" } },
+        ],
+      });
+    }
+    if (verificationOnly || statuses.includes("For Verification")) {
+      conditions.push({ status: applicationStatus.APPROVED });
+      conditions.push({ "volunteerAccount.username": { $exists: false } });
+    }
+
+    const applicationMatch =
+      conditions.length === 0
+        ? {}
+        : conditions.length === 1
+          ? conditions[0]
+          : { $and: conditions };
+
+    const sortField = String(req.query.sortField ?? "createdAt");
+    const sortDirection = req.query.sortDirection === "asc" ? 1 : -1;
+    const sort: Record<string, 1 | -1> = {};
+
+    switch (sortField) {
+      case "name":
+        sort["applicantSnapshot.name"] = sortDirection;
+        break;
+      case "id_number":
+        sort["applicantSnapshot.idNumber"] = sortDirection;
+        break;
+      case "courseYear":
+        sort["applicantSnapshot.course"] = sortDirection;
+        sort["applicantSnapshot.year"] = sortDirection;
+        break;
+      case "roleApplied":
+        sort["position.title"] = sortDirection;
+        break;
+      case "status":
+        sort.status = sortDirection;
+        break;
+      default:
+        sort.createdAt = -1;
+    }
+    sort._id = -1;
+
+    // Position is stored as a string in some older records and as an ObjectId
+    // in newer records. Comparing their string forms keeps both formats visible.
+    const positionLookup = [
+      {
+        $lookup: {
+          from: RecruitmentPosition.collection.name,
+          let: { applicationPositionId: { $toString: "$position" } },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    { $toString: "$_id" },
+                    "$$applicationPositionId",
+                  ],
+                },
+              },
+            },
+            { $project: { title: 1 } },
+          ],
+          as: "positionDetails",
+        },
+      },
+      {
+        $set: {
+          position: { $arrayElemAt: ["$positionDetails", 0] },
+        },
+      },
+      { $unset: "positionDetails" },
+    ];
+
+    const roleMatch = roles.length
+      ? [{ $match: { "position.title": { $in: roles } } }]
+      : [];
+
+    const [pageResult, summaryRows, positionIds] = await Promise.all([
+      Application.aggregate([
+        { $match: applicationMatch },
+        ...positionLookup,
+        ...roleMatch,
+        {
+          $facet: {
+            applicants: [
+              { $sort: sort },
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
+            ],
+            total: [{ $count: "count" }],
+          },
+        },
+      ]),
+      Application.aggregate([
+        {
+          $group: {
+            _id: null,
+            pending: {
+              $sum: {
+                $cond: [
+                  { $eq: ["$status", applicationStatus.SUBMITTED] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            approved: {
+              $sum: {
+                $cond: [
+                  { $eq: ["$status", applicationStatus.APPROVED] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            rejected: {
+              $sum: {
+                $cond: [
+                  { $eq: ["$status", applicationStatus.REJECTED] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            verifications: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $eq: ["$status", applicationStatus.APPROVED] },
+                      {
+                        $eq: [
+                          { $ifNull: ["$volunteerAccount.username", null] },
+                          null,
+                        ],
+                      },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      ]),
+      Application.distinct("position"),
+    ]);
+
+    const roleOptions = await RecruitmentPosition.distinct("title", {
+      _id: { $in: positionIds },
+    });
+    const result = pageResult[0] ?? { applicants: [], total: [] };
+    const total = Number(result.total?.[0]?.count ?? 0);
+    const summary = summaryRows[0] ?? {};
 
     return {
-      applicants,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      applicants: result.applicants,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+      summary: {
+        pending: Number(summary.pending ?? 0),
+        approved: Number(summary.approved ?? 0),
+        rejected: Number(summary.rejected ?? 0),
+        verifications: Number(summary.verifications ?? 0),
+      },
+      filterOptions: { roles: roleOptions.sort() },
     };
   }
 
@@ -949,6 +1157,22 @@ export class RecruitmentService {
 
     await app.deleteOne();
     return { message: "Application deleted successfully" };
+  }
+
+  /** Admin: Delete every rejected application without loading them in the UI. */
+  async clearRejectedApplications(req: any) {
+    const adminId =
+      req.userV2?.sub || (req.admin ? req.admin._id.toString() : null);
+    if (!adminId) throw new AppError("Authentication required.", 401);
+
+    const result = await Application.deleteMany({
+      status: applicationStatus.REJECTED,
+    });
+
+    return {
+      message: "Rejected applications cleared successfully",
+      deletedCount: result.deletedCount ?? 0,
+    };
   }
 
   /** Update application status (admin only) */
