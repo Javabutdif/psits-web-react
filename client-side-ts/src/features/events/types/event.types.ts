@@ -7,6 +7,7 @@ export interface Event {
   eventName: string;
   eventImage?: string[] | string;
   eventDate?: string | Date | null;
+  eventEndDate?: string | Date | null;
   eventDescription?: string;
   attendanceType?: string;
   sessionConfig?: CanonicalSessionConfig | Record<string, unknown>;
@@ -255,6 +256,7 @@ export interface CreateEventV2Payload {
   eventName: string;
   eventDescription?: string;
   eventDate: string;
+  eventEndDate?: string;
   attendanceType: AttendanceType;
   status?: EventStatus;
   sessionConfig: CanonicalSessionConfig;

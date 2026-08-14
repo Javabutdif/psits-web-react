@@ -48,6 +48,7 @@ export interface RecruitmentApplicant {
   interviewType?: string;
   resumeFilename?: string;
   volunteerAccount?: VolunteerAccountCredentials;
+  rejectedAt?: string;
 }
 
 export interface VolunteerAccountCredentials {
@@ -91,8 +92,7 @@ export interface OpenRecruitmentRole {
 }
 
 export type RecruitmentOpeningConflictStrategy =
-  | "update_existing"
-  | "close_old_create_new";
+  "update_existing" | "close_old_create_new";
 
 export interface RecruitmentOpeningConflict {
   _id: string;

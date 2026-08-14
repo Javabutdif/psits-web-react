@@ -40,6 +40,7 @@ const eventSchema = new Schema<IEventDocument>({
   eventName: { type: String, required: true },
   eventImage: { type: Array },
   eventDate: { type: Date },
+  eventEndDate: { type: Date },
   eventDescription: { type: String, required: true },
   attendanceType: {
     type: String,

@@ -6,6 +6,7 @@ export interface IEvent {
   eventName: string;
   eventImage?: [String];
   eventDate: Date;
+  eventEndDate?: Date;
   eventDescription: string;
   attendanceType: string;
   sessionConfig: ISessionConfig;

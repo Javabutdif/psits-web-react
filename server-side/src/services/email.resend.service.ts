@@ -18,6 +18,7 @@ interface PendingEntry {
   subtype: string;
   referenceCode: string;
   payload?: string;
+  htmlBody?: string;
   retryCount: number;
   type?: string;
 }
@@ -28,6 +29,7 @@ const toPendingEntry = (entry: any): PendingEntry => ({
   subtype: entry.subtype || "",
   referenceCode: entry.referenceCode || "",
   payload: entry.payload || undefined,
+  htmlBody: entry.htmlBody || undefined,
   retryCount: entry.retryCount || 0,
 });
 
@@ -163,23 +165,29 @@ const resendAutomationReport = async (entry: PendingEntry) => {
   }
 
   const templatePath = path.join(__dirname, "../templates/automation-report.ejs");
-  const html = await ejs.renderFile(templatePath, {
-    jobName: reportPayload.jobName,
-    executionTime: new Date(reportPayload.executionTime).toLocaleString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Manila",
-    }),
-    results: reportPayload.results,
-    includeSummary: reportPayload.includeSummary,
-    includeRawData: reportPayload.includeRawData,
-    targetCount: 1,
-    subject: reportPayload.subject,
-  });
+  let html: string;
+
+  if (entry.htmlBody) {
+    html = entry.htmlBody;
+  } else {
+    html = await ejs.renderFile(templatePath, {
+      jobName: reportPayload.jobName,
+      executionTime: new Date(reportPayload.executionTime).toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Manila",
+      }),
+      results: reportPayload.results,
+      includeSummary: reportPayload.includeSummary,
+      includeRawData: reportPayload.includeRawData,
+      targetCount: 1,
+      subject: reportPayload.subject,
+    });
+  }
 
   const logoPath = path.join(__dirname, "../assets/psits.jpg");
   const logoBuffer = await fs.readFile(logoPath);

@@ -23,6 +23,7 @@ const emailSchema = new Schema<IEmailDocument>({
   subtype: { type: String },
   referenceCode: { type: String },
   payload: { type: String },
+  htmlBody: { type: String },
   retryCount: { type: Number, default: 0 },
 });
 

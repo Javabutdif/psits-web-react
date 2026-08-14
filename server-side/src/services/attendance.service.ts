@@ -4,6 +4,7 @@ import { Attendance } from "../models/attendance.model";
 import { IAttendanceSession, IAttendee } from "../models/attendee.interface";
 import { ISessionConfig } from "../models/event.interface";
 import { Event } from "../models/event.model";
+import { parseTimeRangeToMinutes } from "../utils/timeRange";
 
 const TIMEZONE = "Asia/Manila";
 
@@ -341,14 +342,13 @@ function getActiveSession(event: {
     const config = event.sessionConfig?.[sessionName];
     if (!config?.enabled || !config.timeRange) continue;
 
-    const [startStr, endStr] = config.timeRange.split(" - ");
-    const [sh, sm] = startStr.split(":").map(Number);
-    const [eh, em] = endStr.split(":").map(Number);
+    const bounds = parseTimeRangeToMinutes(config.timeRange);
+    if (!bounds) continue;
 
-    const startMinutes = sh * 60 + sm;
-    const endMinutes = eh * 60 + em;
-
-    if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+    if (
+      currentMinutes >= bounds.startMinutes &&
+      currentMinutes <= bounds.endMinutes
+    ) {
       matchedSessions.push(sessionName);
     }
   }
@@ -518,6 +518,33 @@ async function ensureAttendanceSeed(
       throw error;
     }
   }
+}
+
+/**
+ * Upserts the `Attendance` collection record for an attendee so it matches
+ * the attendee's embedded attendance. This keeps the separate Attendance
+ * collection in sync when an attendee is added via the V2 add/walk-in flows
+ * (which only write to the embedded `event.attendees[].attendance`), so
+ * hydration does not surface a stale all-false record as "Absent".
+ */
+export async function syncAttendanceForAttendee(
+  eventId: Types.ObjectId,
+  attendee: EventAttendee,
+  session: ClientSession
+) {
+  await Attendance.updateOne(
+    { event: eventId, attendeeRef: attendee._id },
+    {
+      $set: {
+        event: eventId,
+        attendeeRef: attendee._id,
+        id_number: attendee.id_number,
+        attendance: normalizeAttendance(attendee.attendance),
+        confirmedBy: attendee.confirmedBy ?? "",
+      },
+    },
+    { upsert: true, session }
+  );
 }
 
 async function updateAttendanceRecord(

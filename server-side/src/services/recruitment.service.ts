@@ -21,6 +21,7 @@ import {
   recruitmentApprovedMail,
   recruitmentAccountCreatedMail,
   recruitmentInterviewScheduledMail,
+  recruitmentInterviewRescheduledMail,
   recruitmentRejectedMail,
 } from "../mail_template/mail.template";
 import { adminService } from "./admin.service";
@@ -47,6 +48,15 @@ const toPositiveInteger = (value: any, fallback: number) => {
   const parsed = parseInt(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
+
+const toStringList = (value: unknown) =>
+  (Array.isArray(value) ? value : [value])
+    .flatMap((item) => String(item ?? "").split(","))
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const toRequirementList = (value: any) =>
   String(value ?? "")
@@ -721,31 +731,230 @@ export class RecruitmentService {
     return obj;
   }
 
-  /** Admin: Get paginated applicant list with filters */
+  /** Admin: Get one filtered and sorted page of applicants. */
   async getApplicants(req: any) {
-    const { positionId, status, search, page = 1, limit = 10 } = req.query;
-    const query: any = {};
+    const page = toPositiveInteger(req.query.page, 1);
+    const limit = Math.min(toPositiveInteger(req.query.limit, 10), 50);
+    const positionId = String(req.query.positionId ?? "").trim();
+    const search = String(req.query.search ?? "").trim();
+    const statuses = toStringList(req.query.status);
+    const roles = toStringList(req.query.roles ?? req.query.role);
+    const courses = toStringList(req.query.courses ?? req.query.course);
+    const years = toStringList(req.query.years ?? req.query.year)
+      .map((year) => year.match(/\d/)?.[0])
+      .filter((year): year is string => Boolean(year));
+    const verificationOnly = toBooleanQuery(req.query.verificationOnly);
 
-    if (positionId) query.position = positionId;
-    if (status) query.status = status;
-    if (search)
-      query.$or = [
-        { "applicantSnapshot.name": { $regex: search, $options: "i" } },
-        { "applicantSnapshot.idNumber": { $regex: search, $options: "i" } },
-      ];
+    const statusMap: Record<string, string> = {
+      Pending: applicationStatus.SUBMITTED,
+      Scheduled: applicationStatus.INTERVIEW_SCHEDULED,
+      "Interview Completed": applicationStatus.INTERVIEWING,
+      Approved: applicationStatus.APPROVED,
+      Rejected: applicationStatus.REJECTED,
+      "For Verification": applicationStatus.APPROVED,
+    };
 
-    const applicants = await Application.find(query)
-      .populate("position", "title")
-      .populate("applicant", "name id_number email course year")
-      .sort({ createdAt: -1 })
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit));
+    const conditions: Record<string, any>[] = [];
+    const mappedStatuses = statuses
+      .map((status) => statusMap[status] ?? status)
+      .filter(Boolean);
 
-    const total = await Application.countDocuments(query);
+    if (positionId) conditions.push({ position: positionId });
+    if (mappedStatuses.length) conditions.push({ status: { $in: mappedStatuses } });
+    if (courses.length)
+      conditions.push({ "applicantSnapshot.course": { $in: courses } });
+    if (years.length) {
+      conditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: { $ifNull: ["$applicantSnapshot.year", ""] } },
+            regex: `^[${years.join("")}]`,
+          },
+        },
+      });
+    }
+    if (search) {
+      const pattern = escapeRegex(search);
+      conditions.push({
+        $or: [
+          { "applicantSnapshot.name": { $regex: pattern, $options: "i" } },
+          {
+            "applicantSnapshot.idNumber": {
+              $regex: pattern,
+              $options: "i",
+            },
+          },
+          { "applicantSnapshot.email": { $regex: pattern, $options: "i" } },
+        ],
+      });
+    }
+    if (verificationOnly || statuses.includes("For Verification")) {
+      conditions.push({ status: applicationStatus.APPROVED });
+      conditions.push({ "volunteerAccount.username": { $exists: false } });
+    }
+
+    const applicationMatch =
+      conditions.length === 0
+        ? {}
+        : conditions.length === 1
+          ? conditions[0]
+          : { $and: conditions };
+
+    const sortField = String(req.query.sortField ?? "createdAt");
+    const sortDirection = req.query.sortDirection === "asc" ? 1 : -1;
+    const sort: Record<string, 1 | -1> = {};
+
+    switch (sortField) {
+      case "name":
+        sort["applicantSnapshot.name"] = sortDirection;
+        break;
+      case "id_number":
+        sort["applicantSnapshot.idNumber"] = sortDirection;
+        break;
+      case "courseYear":
+        sort["applicantSnapshot.course"] = sortDirection;
+        sort["applicantSnapshot.year"] = sortDirection;
+        break;
+      case "roleApplied":
+        sort["position.title"] = sortDirection;
+        break;
+      case "status":
+        sort.status = sortDirection;
+        break;
+      default:
+        sort.createdAt = -1;
+    }
+    sort._id = -1;
+
+    // Position is stored as a string in some older records and as an ObjectId
+    // in newer records. Comparing their string forms keeps both formats visible.
+    const positionLookup = [
+      {
+        $lookup: {
+          from: RecruitmentPosition.collection.name,
+          let: { applicationPositionId: { $toString: "$position" } },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    { $toString: "$_id" },
+                    "$$applicationPositionId",
+                  ],
+                },
+              },
+            },
+            { $project: { title: 1 } },
+          ],
+          as: "positionDetails",
+        },
+      },
+      {
+        $set: {
+          position: { $arrayElemAt: ["$positionDetails", 0] },
+        },
+      },
+      { $unset: "positionDetails" },
+    ];
+
+    const roleMatch = roles.length
+      ? [{ $match: { "position.title": { $in: roles } } }]
+      : [];
+
+    const [pageResult, summaryRows, positionIds] = await Promise.all([
+      Application.aggregate([
+        { $match: applicationMatch },
+        ...positionLookup,
+        ...roleMatch,
+        {
+          $facet: {
+            applicants: [
+              { $sort: sort },
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
+            ],
+            total: [{ $count: "count" }],
+          },
+        },
+      ]),
+      Application.aggregate([
+        {
+          $group: {
+            _id: null,
+            pending: {
+              $sum: {
+                $cond: [
+                  { $eq: ["$status", applicationStatus.SUBMITTED] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            approved: {
+              $sum: {
+                $cond: [
+                  { $eq: ["$status", applicationStatus.APPROVED] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            rejected: {
+              $sum: {
+                $cond: [
+                  { $eq: ["$status", applicationStatus.REJECTED] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            verifications: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $eq: ["$status", applicationStatus.APPROVED] },
+                      {
+                        $eq: [
+                          { $ifNull: ["$volunteerAccount.username", null] },
+                          null,
+                        ],
+                      },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      ]),
+      Application.distinct("position"),
+    ]);
+
+    const roleOptions = await RecruitmentPosition.distinct("title", {
+      _id: { $in: positionIds },
+    });
+    const result = pageResult[0] ?? { applicants: [], total: [] };
+    const total = Number(result.total?.[0]?.count ?? 0);
+    const summary = summaryRows[0] ?? {};
 
     return {
-      applicants,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      applicants: result.applicants,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+      summary: {
+        pending: Number(summary.pending ?? 0),
+        approved: Number(summary.approved ?? 0),
+        rejected: Number(summary.rejected ?? 0),
+        verifications: Number(summary.verifications ?? 0),
+      },
+      filterOptions: { roles: roleOptions.sort() },
     };
   }
 
@@ -950,6 +1159,22 @@ export class RecruitmentService {
     return { message: "Application deleted successfully" };
   }
 
+  /** Admin: Delete every rejected application without loading them in the UI. */
+  async clearRejectedApplications(req: any) {
+    const adminId =
+      req.userV2?.sub || (req.admin ? req.admin._id.toString() : null);
+    if (!adminId) throw new AppError("Authentication required.", 401);
+
+    const result = await Application.deleteMany({
+      status: applicationStatus.REJECTED,
+    });
+
+    return {
+      message: "Rejected applications cleared successfully",
+      deletedCount: result.deletedCount ?? 0,
+    };
+  }
+
   /** Update application status (admin only) */
   async updateApplicationStatus(id: string, req: any) {
     const { status, note } = req.body;
@@ -1045,20 +1270,20 @@ export class RecruitmentService {
       }
     }
 
-    // Send rejection email automatically when the decision is REJECTED
+    // Send rejection email automatically when the decision is REJECTED.
+    // Fire-and-forget so the status update responds immediately instead of
+    // blocking on the email provider's network latency.
     if (status === applicationStatus.REJECTED) {
-      try {
-        await recruitmentRejectedMail({
-          applicantName: app.applicantSnapshot.name || "",
-          applicantEmail: app.applicantSnapshot.email || "",
-          reason: note || undefined,
-        });
-      } catch (err) {
+      recruitmentRejectedMail({
+        applicantName: app.applicantSnapshot.name || "",
+        applicantEmail: app.applicantSnapshot.email || "",
+        reason: note || undefined,
+      }).catch((err) => {
         console.error(
           "Failed to send recruitment rejection email:",
           err instanceof Error ? err.message : err
         );
-      }
+      });
     }
 
     // Send approval email automatically when the decision is APPROVED.
@@ -1097,7 +1322,10 @@ export class RecruitmentService {
       req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
     if (!adminId) throw new AppError("Authentication required.", 401);
 
-    const app = await Application.findById(applicationId);
+    const app = await Application.findById(applicationId).populate(
+      "position",
+      "title"
+    );
     if (!app) throw new AppError("Application not found.", 404);
 
     const { scheduledAt, location, notes } = req.body;
@@ -1144,10 +1372,12 @@ export class RecruitmentService {
         year: "numeric",
         month: "long",
         day: "numeric",
+        timeZone: "Asia/Manila",
       });
       const timeStr = scheduledAt.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
+        timeZone: "Asia/Manila",
       });
 
       const modeMatch = (notes || "").match(/Interview type:\s*(.+?)(?:;|$)/i);
@@ -1182,11 +1412,24 @@ export class RecruitmentService {
       req.userV2.sub || (req.admin ? req.admin._id.toString() : null);
     if (!adminId) throw new AppError("Authentication required.", 401);
 
-    const app = await Application.findById(applicationId);
+    const app = await Application.findById(applicationId).populate(
+      "position",
+      "title"
+    );
     if (!app) throw new AppError("Application not found.", 404);
 
     if (!app.interview)
       throw new AppError("No interview scheduled for this application.", 400);
+
+    if (
+      app.status === applicationStatus.APPROVED ||
+      app.status === applicationStatus.REJECTED
+    ) {
+      throw new AppError(
+        `Cannot reschedule an interview for an application that is already ${app.status.toLowerCase()}.`,
+        400
+      );
+    }
 
     const { scheduledAt, location, notes, status } = req.body;
 
@@ -1209,6 +1452,50 @@ export class RecruitmentService {
     app.interview.scheduledBy = adminId;
 
     await app.save();
+
+    // Send interview reschedule notification email — best-effort, don't
+    // block on failure. Parses the interview mode from the notes field
+    // (stored as "Interview type: [type]; ...") and formats the new date/time
+    // from the updated scheduledAt timestamp.
+    try {
+      const rescheduledAt = app.interview.scheduledAt;
+      const dateStr = rescheduledAt.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "Asia/Manila",
+      });
+      const timeStr = rescheduledAt.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "Asia/Manila",
+      });
+
+      const modeMatch = (app.interview.notes || "").match(
+        /Interview type:\s*(.+?)(?:;|$)/i
+      );
+      const mode = modeMatch?.[1]?.trim() || "Face-to-Face";
+
+      const officerMatch = (app.interview.notes || "").match(
+        /officer in charge:\s*(.+?)(?:;|$)/i
+      );
+      const officer = officerMatch?.[1]?.trim() || "";
+
+      await recruitmentInterviewRescheduledMail({
+        applicantName: app.applicantSnapshot.name || "",
+        applicantEmail: app.applicantSnapshot.email || "",
+        interviewDate: dateStr,
+        interviewTime: timeStr,
+        mode,
+        officer,
+      });
+    } catch (err) {
+      console.error(
+        "Failed to send interview reschedule email:",
+        err instanceof Error ? err.message : err
+      );
+    }
+
     return app;
   }
 

@@ -17,6 +17,7 @@ import {
   Code,
   Award,
   BookOpenCheck,
+  Bot,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -518,6 +519,27 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   </Tooltip>
                 </li>
               ) : null}
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass("/admin/agent-chat")}
+                      asChild
+                    >
+                      <Link to="/admin/agent-chat">
+                        <Bot className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>AI Assistant</span>}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>AI Assistant</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
               <li>
                 <Tooltip>
                   <TooltipTrigger asChild>

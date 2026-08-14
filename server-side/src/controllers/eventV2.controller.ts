@@ -17,6 +17,7 @@ import {
   hydrateAttendeesAttendance,
   hydrateEventsAttendance,
   markAttendance,
+  syncAttendanceForAttendee,
 } from "../services/attendance.service";
 import { EventV2Service } from "../services/eventV2.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
@@ -27,6 +28,7 @@ import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
 } from "../dtos/events.dto";
+import { parseTimeRangeToMinutes } from "../utils/timeRange";
 
 const logAdminAction = (
   req: Request,
@@ -132,48 +134,6 @@ interface SessionConfig {
   afternoon?: SessionConfigEntry;
   evening?: SessionConfigEntry;
 }
-
-/**
- * Parses a "7:00 AM - 12:00 PM" style range into 24h minute-of-day bounds.
- */
-const parseTimeRangeToMinutes = (
-  timeRange: string
-): { startMinutes: number; endMinutes: number } | null => {
-  const [startRaw, endRaw] = timeRange.split("-").map((s) => s.trim());
-  if (!startRaw || !endRaw) return null;
-
-  const toMinutes = (raw: string): number | null => {
-    // Try 24-hour format first: "07:30", "13:00"
-    const match24 = raw.match(/^(\d{1,2}):(\d{2})$/);
-    if (match24) {
-      const hour = parseInt(match24[1], 10);
-      const minute = parseInt(match24[2], 10);
-      if (hour > 23 || minute > 59) return null;
-      return hour * 60 + minute;
-    }
-
-    // Fall back to 12-hour format: "7:30 AM", "12:00 PM"
-    const match12 = raw.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (match12) {
-      let hour = parseInt(match12[1], 10);
-      const minute = parseInt(match12[2], 10);
-      const meridiem = match12[3].toUpperCase();
-
-      if (meridiem === "PM" && hour !== 12) hour += 12;
-      if (meridiem === "AM" && hour === 12) hour = 0;
-
-      return hour * 60 + minute;
-    }
-
-    return null;
-  };
-
-  const startMinutes = toMinutes(startRaw);
-  const endMinutes = toMinutes(endRaw);
-  if (startMinutes === null || endMinutes === null) return null;
-
-  return { startMinutes, endMinutes };
-};
 
 /**
  * Returns which session (morning/afternoon/evening) is currently active
@@ -1423,6 +1383,19 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     normalizeEventCampusFields(event);
     await event.save({ session });
 
+    // Step 4: Sync the separate Attendance collection so hydration does not
+    // surface a stale all-false record as "Absent" for this attendee.
+    const savedAttendee = event.attendees[event.attendees.length - 1] as
+      | (IAttendee & { _id?: Types.ObjectId })
+      | undefined;
+    if (savedAttendee?._id) {
+      await syncAttendanceForAttendee(
+        event._id as Types.ObjectId,
+        savedAttendee as IAttendee & { _id: Types.ObjectId },
+        session
+      );
+    }
+
     await session.commitTransaction();
     session.endSession();
 
@@ -1721,6 +1694,19 @@ export const addWalkInAttendeeV2Controller = async (
 
     normalizeEventCampusFields(event);
     await event.save({ session });
+
+    // Step 3: Sync the separate Attendance collection so hydration does not
+    // surface a stale all-false record as "Absent" for this attendee.
+    const savedAttendee = event.attendees[event.attendees.length - 1] as
+      | (IAttendee & { _id?: Types.ObjectId })
+      | undefined;
+    if (savedAttendee?._id) {
+      await syncAttendanceForAttendee(
+        event._id as Types.ObjectId,
+        savedAttendee as IAttendee & { _id: Types.ObjectId },
+        session
+      );
+    }
 
     await session.commitTransaction();
     session.endSession();
@@ -2869,6 +2855,7 @@ interface CreateEventV2Body {
   eventName?: string;
   eventDescription?: string;
   eventDate?: string;
+  eventEndDate?: string;
   attendanceType?: string;
   status?: string;
   sessionConfig?: unknown;
@@ -2990,6 +2977,10 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
       req.admin?.name ??
       (typeof req.userV2?.sub === "string" ? req.userV2.sub : "unknown-admin");
 
+    const parsedEndDate = body.eventEndDate
+      ? parseManilaMidnightDate(body.eventEndDate)
+      : null;
+
     const eventFields: Record<string, unknown> = {
       eventId: new mongoose.Types.ObjectId(),
       eventName,
@@ -3015,6 +3006,10 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
       eventEndTime:
         typeof body.eventEndTime === "string" ? body.eventEndTime : "",
     };
+
+    if (parsedEndDate) {
+      eventFields.eventEndDate = parsedEndDate;
+    }
 
     if (parsedLimitResult.length > 0) {
       eventFields.limit = parsedLimitResult;
@@ -3082,6 +3077,7 @@ export const updateEventV2Controller = async (
       eventName,
       eventDescription,
       eventDate,
+      eventEndDate,
       eventVenue,
       eventTheme,
       eventVenueSpecific,
@@ -3116,11 +3112,40 @@ export const updateEventV2Controller = async (
       normalizedEventDate = parsed;
     }
 
+    // eventEndDate may arrive as a plain ISO string or as a range-picker
+    // object like { from, to } — only the "to" value maps to eventEndDate.
+    let normalizedEventEndDate: Date | undefined;
+    if (eventEndDate !== undefined) {
+      const rawEndDateValue =
+        eventEndDate && typeof eventEndDate === "object" && "to" in eventEndDate
+          ? (eventEndDate as { to?: string }).to
+          : eventEndDate;
+
+      if (typeof rawEndDateValue !== "string" || !rawEndDateValue.trim()) {
+        return res.status(400).json({
+          error: "VALIDATION",
+          message: "Event end date must be a valid date string",
+        });
+      }
+
+      const parsedEnd = new Date(rawEndDateValue);
+      if (Number.isNaN(parsedEnd.getTime())) {
+        return res.status(400).json({
+          error: "VALIDATION",
+          message: "Invalid event end date",
+        });
+      }
+      normalizedEventEndDate = parsedEnd;
+    }
+
     const updateFields: Record<string, unknown> = {
       eventName,
       eventDescription,
       ...(normalizedEventDate !== undefined && {
         eventDate: normalizedEventDate,
+      }),
+      ...(normalizedEventEndDate !== undefined && {
+        eventEndDate: normalizedEventEndDate,
       }),
       eventVenue,
       eventTheme,
