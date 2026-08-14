@@ -199,6 +199,14 @@ router.get(
   recruitmentController.getApplicationDetails
 );
 
+router.delete(
+  "/applicants/rejected",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2(recruitmentMutationRoles),
+  recruitmentController.clearRejectedApplications
+);
+
 router.patch(
   "/applications/:id/status",
   requireAccessTokenWithDBCheck,

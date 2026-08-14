@@ -31,7 +31,7 @@ function Logs() {
       sortable: true,
       cell: (row) => {
         // Convert timestamp to PHT (GMT+8)
-        const date = new Date(row.timestamp); // Ensure this is a valid ISO string or timestamp
+        const date = new Date(row.timestamp);
         const options = {
           year: "numeric",
           month: "long",
