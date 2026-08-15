@@ -7,6 +7,7 @@ import helmet from "helmet";
 import bodyParser from "body-parser";
 import express from "express";
 import path from "path";
+import "express-async-errors";
 
 import { checkPromos } from "./custom_function/check_promo";
 import { resendPendingEmails } from "./services/email.resend.service";

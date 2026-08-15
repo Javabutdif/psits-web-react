@@ -1,4 +1,11 @@
-import { BadgeCheck, CalendarClock, Download, FileText, X } from "lucide-react";
+import {
+  BadgeCheck,
+  CalendarClock,
+  Check,
+  Download,
+  FileText,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +21,10 @@ interface ApplicantInfoModalProps {
   onSetSchedule: () => void;
   onReschedule: () => void;
   canReschedule?: boolean;
+  onMarkInterviewCompleted?: () => void;
+  canMarkInterviewCompleted?: boolean;
+  isInterviewCompleted?: boolean;
+  isMutating?: boolean;
   onViewResume: (id: string) => void;
   onDownloadResume: (id: string) => void;
   isResumeLoading: boolean;
@@ -50,6 +61,10 @@ export const ApplicantInfoModal = ({
   onSetSchedule,
   onReschedule,
   canReschedule = true,
+  onMarkInterviewCompleted,
+  canMarkInterviewCompleted = false,
+  isInterviewCompleted = false,
+  isMutating = false,
   onViewResume,
   onDownloadResume,
   isResumeLoading,
@@ -246,16 +261,36 @@ export const ApplicantInfoModal = ({
           <div className="mt-auto flex shrink-0 justify-center gap-3 px-6 py-4">
             {hasInterview ? (
               <>
-                {canManageRecruitment && canReschedule && (
+                {canManageRecruitment && canMarkInterviewCompleted && (
                   <Button
                     type="button"
-                    className="h-11 rounded-full bg-[#1c9dde] px-9 text-sm font-semibold hover:bg-[#168bc7]"
-                    onClick={onReschedule}
+                    className="h-11 rounded-full bg-sky-600 px-9 text-sm font-semibold hover:bg-sky-700"
+                    disabled={isMutating}
+                    onClick={onMarkInterviewCompleted}
                   >
-                    <CalendarClock className="mr-2 h-4 w-4" />
-                    Reschedule Interview
+                    <Check className="mr-2 h-4 w-4" />
+                    Mark Interview Completed
                   </Button>
                 )}
+                {canManageRecruitment &&
+                  canReschedule &&
+                  !isInterviewCompleted && (
+                    <Button
+                      type="button"
+                      variant={
+                        canMarkInterviewCompleted ? "outline" : "default"
+                      }
+                      className={
+                        canMarkInterviewCompleted
+                          ? "h-11 rounded-full px-9 text-sm font-semibold"
+                          : "h-11 rounded-full bg-[#1c9dde] px-9 text-sm font-semibold hover:bg-[#168bc7]"
+                      }
+                      onClick={onReschedule}
+                    >
+                      <CalendarClock className="mr-2 h-4 w-4" />
+                      Reschedule Interview
+                    </Button>
+                  )}
                 <Button
                   type="button"
                   variant="outline"

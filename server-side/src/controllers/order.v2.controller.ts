@@ -117,79 +117,103 @@ class OrderController {
     const session = await mongoose.startSession();
     await session.startTransaction();
 
-    //Process Order
-    const processOrder: IOrderProcessingResult =
-      await orderService.orderProcessingService(items, session);
+    try {
+      //Process Order
+      const processOrder: IOrderProcessingResult =
+        await orderService.orderProcessingService(items, session);
 
-    //Promo Code Validation
-    const validation: IOrderPromoEligibility =
-      await promoService.verifyOrderPromoEligibility(
-        promo_id,
-        student,
-        processOrder.orderItems
-      );
-    //Promo Code Discount Calculation
-    const total =
-      validation.promoDiscount.discount === 0
-        ? processOrder.orderTotal
-        : orderService.processDiscountAmount(
-            processOrder.orderTotal,
-            validation.promoDiscount.discount
+      //Promo Code Validation
+      const validation: IOrderPromoEligibility =
+        await promoService.verifyOrderPromoEligibility(
+          promo_id,
+          student,
+          processOrder.orderItems
+        );
+      //Promo Code Discount Calculation
+      const total =
+        validation.promoDiscount.discount === 0
+          ? processOrder.orderTotal
+          : orderService.processDiscountAmount(
+              processOrder.orderTotal,
+              validation.promoDiscount.discount
+            );
+      //Process final Order
+      const finalOrder: IOrderFinalizationResult =
+        orderService.processFinalOrder(
+          student,
+          validation,
+          processOrder,
+          total
+        );
+      const newOrder = new Orders(finalOrder);
+      await newOrder.save({ session });
+
+      // Create PromoUsage records and decrement quantity if promo was used
+      if (promo_id && validation.promoDiscount.discount > 0) {
+        const orderId = newOrder._id as Types.ObjectId;
+        const eligibleItems = processOrder.orderItems.filter((item: any) => {
+          const matchesMerch = promoService.verifyMerchPromo(
+            validation.promo,
+            String(item.product_id)
           );
-    //Process final Order
-    const finalOrder: IOrderFinalizationResult = orderService.processFinalOrder(
-      student,
-      validation,
-      processOrder,
-      total
-    );
-    const newOrder = new Orders(finalOrder);
-    await newOrder.save({ session });
+          if (matchesMerch) return true;
+          if (
+            validation.promo.promo_scope !== "merchandise" &&
+            Array.isArray(validation.promo.selected_categories)
+          ) {
+            const itemCategory = (item as any).category;
+            if (itemCategory) {
+              return validation.promo.selected_categories.some(
+                (cat: string) =>
+                  cat.toLowerCase() === itemCategory.toLowerCase()
+              );
+            }
+          }
+          return false;
+        });
 
-    // Create PromoUsage records and decrement quantity if promo was used
-    if (promo_id && validation.promoDiscount.discount > 0) {
-      const orderId = newOrder._id as Types.ObjectId;
-      const eligibleItems = processOrder.orderItems.filter((item: any) => {
-        const matchesMerch = promoService.verifyMerchPromo(validation.promo, String(item.product_id));
-        if (matchesMerch) return true;
-        if (validation.promo.promo_scope !== "merchandise" && Array.isArray(validation.promo.selected_categories)) {
-          const itemCategory = (item as any).category;
-          if (itemCategory) {
-            return validation.promo.selected_categories.some(
-              (cat: string) => cat.toLowerCase() === itemCategory.toLowerCase()
+        if (eligibleItems.length > 0) {
+          const promoUsageRecords = eligibleItems.map((item: any) => ({
+            promo_id: new Types.ObjectId(promo_id),
+            order_id: orderId,
+            merch_id: new Types.ObjectId(String(item.product_id)),
+            id_number: student.id_number,
+            promo_used: new Date(),
+          }));
+          await PromoUsage.create(promoUsageRecords, { session });
+
+          if (validation.promo.limit_type === "Limited") {
+            await Promo.findByIdAndUpdate(
+              new Types.ObjectId(promo_id),
+              { $inc: { quantity: -1 } },
+              { session }
             );
           }
         }
-        return false;
-      });
-
-      if (eligibleItems.length > 0) {
-        const promoUsageRecords = eligibleItems.map((item: any) => ({
-          promo_id: new Types.ObjectId(promo_id),
-          order_id: orderId,
-          merch_id: new Types.ObjectId(String(item.product_id)),
-          id_number: student.id_number,
-          promo_used: new Date(),
-        }));
-        await PromoUsage.create(promoUsageRecords, { session });
-
-        if (validation.promo.limit_type === "Limited") {
-          await Promo.findByIdAndUpdate(
-            new Types.ObjectId(promo_id),
-            { $inc: { quantity: -1 } },
-            { session }
-          );
-        }
       }
+
+      //Commit Transaction
+      await session.commitTransaction();
+      session.endSession();
+
+      return res.status(200).json({
+        message: "Successfully created order",
+      });
+    } catch (err) {
+      // Only abort/end the session if the transaction is still active.
+      // If the failure happened after commitTransaction()/endSession()
+      // (e.g. during order processing), calling abort/end again
+      // would throw and crash the server.
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      if (session.transaction) {
+        session.endSession();
+      }
+      throw err instanceof AppError
+        ? err
+        : new AppError("Failed to create order", 500);
     }
-
-    //Commit Transaction
-    await session.commitTransaction();
-    session.endSession();
-
-    return res.status(200).json({
-      message: "Successfully created order",
-    });
   };
 
   /*
@@ -207,22 +231,34 @@ class OrderController {
       );
       await session.commitTransaction();
       session.endSession();
-      await logService.create({
-        admin: req.admin?.name ?? "Unknown Admin",
-        admin_id: req.admin?._id,
-        action: logs_action.CANCEL_ORDER,
-        target: typeof _id === "string" ? _id : undefined,
-        target_id: Types.ObjectId.isValid(String(_id))
-          ? new Types.ObjectId(String(_id))
-          : undefined,
-        target_model: "Order",
-      });
+      //Log outside of transaction - wrap in try-catch so a log failure
+      //does not trigger the catch block below (which would try to abort
+      //an already-committed session).
+      try {
+        await logService.create({
+          admin: req.admin?.name ?? "Unknown Admin",
+          admin_id: req.admin?._id,
+          action: logs_action.CANCEL_ORDER,
+          target: typeof _id === "string" ? _id : undefined,
+          target_id: Types.ObjectId.isValid(String(_id))
+            ? new Types.ObjectId(String(_id))
+            : undefined,
+          target_model: "Order",
+        });
+      } catch (logErr) {
+        console.error("Failed to create cancel order log:", logErr);
+      }
       return res.status(200).json({
         message: result.message,
       });
     } catch {
-      await session.abortTransaction();
-      session.endSession();
+      // Only abort/end the session if the transaction is still active.
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      if (session.transaction) {
+        session.endSession();
+      }
       throw new AppError("Failed to cancel order", 500);
     }
   };
@@ -250,78 +286,106 @@ class OrderController {
     const session = await mongoose.startSession();
     await session.startTransaction();
 
-    //Call for approve order service
-    const result: any = await orderService.approveOrderService(
-      order_id,
-      admin.name,
-      session
-    );
-    //Create a Stocks array for bulk update
-    const productArray = result.items.map((item: any) => ({
-      product_id: item.product_id,
-      quantity: item.quantity,
-    }));
-    //Update the stocks of the products
-    await merchandiseService.updateManyStocks(productArray, session);
-    //Create a report data array
-    const reportDataArray = result.items.map((item: any) => ({
-      order_id: order_id,
-      id_number: result.id_number,
-      merch_id: item.product_id,
-      item_count: item.quantity,
-      total: item.sub_total,
-      date: new Date(),
-    }));
+    try {
+      //Call for approve order service
+      const result: any = await orderService.approveOrderService(
+        order_id,
+        admin.name,
+        session
+      );
+      //Create a Stocks array for bulk update
+      const productArray = result.items.map((item: any) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+      }));
+      //Update the stocks of the products
+      await merchandiseService.updateManyStocks(productArray, session);
+      //Create a report data array
+      const reportDataArray = result.items.map((item: any) => ({
+        order_id: order_id,
+        id_number: result.id_number,
+        merch_id: item.product_id,
+        item_count: item.quantity,
+        total: item.sub_total,
+        date: new Date(),
+      }));
 
-    //Store the report data array to reports
-    const processReports = await reportService.createReports(
-      reportDataArray,
-      session
-    );
-    if (!processReports.success) {
-      session.abortTransaction();
+      //Store the report data array to reports
+      const processReports = await reportService.createReports(
+        reportDataArray,
+        session
+      );
+      if (!processReports.success) {
+        // Let the catch block below handle the abort/end so we never
+        // double-abort or leave the session dangling.
+        throw new AppError("Failed to create reports", 500);
+      }
+
+      //Create a receipt for the order
+      const receipt: any = await orderService.generateOrderReceipt(
+        result.order || result,
+        admin.name,
+        cash
+      );
+      //Fetch for email
+      const userEmail = await studentService.getIdSession(
+        result.id_number,
+        session
+      );
+
+      //End session and commit transaction
+      await session.commitTransaction();
       session.endSession();
-      throw new AppError("Failed to create reports", 500);
-    }
-    //Create a receipt for the order
-    const receipt: any = await orderService.generateOrderReceipt(
-      result.order || result,
-      admin.name,
-      cash
-    );
-    //Fetch for email
-    const userEmail = await studentService.getIdSession(
-      result.id_number,
-      session
-    );
-    //End session and commit transaction
-    await session.commitTransaction();
-    session.endSession();
-    if (!userEmail?.email) {
+
+      if (!userEmail?.email) {
+        return res.status(200).json({
+          message:
+            "Successfully approved order (email not sent - no email on file)",
+        });
+      }
+
+      //Send email outside of transaction
+      await orderReceipt(
+        receipt,
+        userEmail.email,
+        userEmail._id.toString(),
+        receipt.reference_code
+      );
+      //Log outside of transaction - wrap in try-catch so a log failure
+      //does not trigger the catch block below (which would try to abort
+      //an already-committed session).
+      try {
+        await logService.create({
+          admin: admin.name,
+          admin_id: admin._id,
+          action: logs_action.APPROVE_ORDER,
+          target: result.order?.reference_code ?? String(order_id),
+          target_id: Types.ObjectId.isValid(String(order_id))
+            ? new Types.ObjectId(String(order_id))
+            : undefined,
+          target_model: "Order",
+        });
+      } catch (logErr) {
+        console.error("Failed to create approve order log:", logErr);
+      }
       return res.status(200).json({
-        message: "Successfully approved order (email not sent - no email on file)",
+        message: "Successfully approved order",
       });
+    } catch (err) {
+      // Only abort/end the session if the transaction is still active.
+      // If the failure happened after commitTransaction()/endSession()
+      // (e.g. email sending or log creation), calling abort/end again
+      // would throw and crash the server.
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      if (session.transaction) {
+        session.endSession();
+      }
+      throw err instanceof AppError
+        ? err
+        : new AppError("Failed to approve order", 500);
     }
-    //Send email outside of transaction
-    await orderReceipt(
-      receipt,
-      userEmail.email,
-      userEmail._id.toString(),
-      receipt.reference_code
-    );
-    await logService.create({
-      admin: admin.name,
-      admin_id: admin._id,
-      action: logs_action.APPROVE_ORDER,
-      target: result.order?.reference_code ?? String(order_id),
-      target_id: Types.ObjectId.isValid(String(order_id))
-        ? new Types.ObjectId(String(order_id))
-        : undefined,
-      target_model: "Order",
-    });
-    return res.status(200).json({
-      message: "Successfully approved order",
-    });
   };
 
   //Refund a paid order (V2)
@@ -346,22 +410,34 @@ class OrderController {
       );
       await session.commitTransaction();
       session.endSession();
-      await logService.create({
-        admin: admin.name,
-        admin_id: admin._id,
-        action: logs_action.REFUND_ORDER,
-        target: String(order_id),
-        target_id: Types.ObjectId.isValid(String(order_id))
-          ? new Types.ObjectId(String(order_id))
-          : undefined,
-        target_model: "Order",
-      });
+      //Log outside of transaction - wrap in try-catch so a log failure
+      //does not trigger the catch block below (which would try to abort
+      //an already-committed session).
+      try {
+        await logService.create({
+          admin: admin.name,
+          admin_id: admin._id,
+          action: logs_action.REFUND_ORDER,
+          target: String(order_id),
+          target_id: Types.ObjectId.isValid(String(order_id))
+            ? new Types.ObjectId(String(order_id))
+            : undefined,
+          target_model: "Order",
+        });
+      } catch (logErr) {
+        console.error("Failed to create refund order log:", logErr);
+      }
       return res.status(200).json({
         message: result.message,
       });
     } catch (err) {
-      await session.abortTransaction();
-      session.endSession();
+      // Only abort/end the session if the transaction is still active.
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      if (session.transaction) {
+        session.endSession();
+      }
       throw err;
     }
   };
