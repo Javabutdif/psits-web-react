@@ -1446,12 +1446,22 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                   </FormField>
                   <FormField label="Product Description">
                     <Textarea
-                      className="min-h-28 rounded-xl border-[#e9e9e9] text-sm focus-visible:ring-[#1C9DDE]"
+                      className="h-[120px] w-full resize-none overflow-y-auto rounded-xl border-[#e9e9e9] text-sm focus-visible:ring-[#1C9DDE]"
                       value={formValues.description}
                       placeholder="Enter a detailed description of the product features..."
-                      onChange={(event) =>
-                        setValue("description", event.target.value)
-                      }
+                      onChange={(event) => {
+                        const value = event.target.value;
+
+                        if (value.length <= 500) {
+                          setValue("description", value);
+                        }
+                      }}
+                      maxLength={500}
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "anywhere",
+                        wordBreak: "break-all",
+                      }}
                     />
                   </FormField>
                 </div>

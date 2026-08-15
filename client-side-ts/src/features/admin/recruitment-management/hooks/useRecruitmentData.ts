@@ -136,7 +136,7 @@ interface RawApplicantRecord {
 const STATUS_LABELS: Record<string, RecruitmentApplicant["status"]> = {
   SUBMITTED: "Pending",
   INTERVIEW_SCHEDULED: "Scheduled",
-  INTERVIEWING: "Interview Completed",
+  INTERVIEWING: "Interviewed",
   APPROVED: "Approved",
   REJECTED: "Rejected",
   WITHDRAWN: "Rejected",

@@ -748,7 +748,7 @@ export class RecruitmentService {
     const statusMap: Record<string, string> = {
       Pending: applicationStatus.SUBMITTED,
       Scheduled: applicationStatus.INTERVIEW_SCHEDULED,
-      "Interview Completed": applicationStatus.INTERVIEWING,
+      "Interviewed": applicationStatus.INTERVIEWING,
       Approved: applicationStatus.APPROVED,
       Rejected: applicationStatus.REJECTED,
       "For Verification": applicationStatus.APPROVED,

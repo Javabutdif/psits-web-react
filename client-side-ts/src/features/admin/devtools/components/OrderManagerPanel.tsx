@@ -11,6 +11,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Search, ChevronLeft, ChevronRight, Eye, User, Calendar, MapPin, DollarSign } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const STATUS_OPTIONS = [
   { value: "Pending", label: "Pending" },
@@ -24,7 +31,9 @@ export const OrderManagerPanel = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [initialLoading, setInitialLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
@@ -36,7 +45,7 @@ export const OrderManagerPanel = () => {
         limit: pageSize,
         skip: (page - 1) * pageSize,
       };
-      if (searchQuery) params.query = searchQuery;
+      if (debouncedQuery) params.query = debouncedQuery;
       if (statusFilter) params.status = statusFilter;
 
       const data = await getOrders(params);
@@ -46,16 +55,24 @@ export const OrderManagerPanel = () => {
       showToast("error", "Failed to load orders");
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
     setPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [debouncedQuery, statusFilter]);
 
   useEffect(() => {
     fetchOrders();
-  }, [page, searchQuery, statusFilter]);
+  }, [page, debouncedQuery, statusFilter]);
 
   const handleViewDetails = async (orderId: string) => {
     try {
@@ -84,7 +101,7 @@ export const OrderManagerPanel = () => {
     return `${base} bg-gray-50 text-gray-600`;
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -94,9 +111,6 @@ export const OrderManagerPanel = () => {
     );
   }
 
-  if (orders.length === 0) {
-    return <p className="py-16 text-center text-sm text-[#777]">No orders found.</p>;
-  }
 
   return (
     <div>
@@ -108,21 +122,25 @@ export const OrderManagerPanel = () => {
             placeholder="Search by reference, name, ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 w-full rounded-lg border-[#ececec] bg-white pl-9 pr-3 text-sm"
+            className="h-9 w-full rounded-full border border-[#e8e8e8] bg-white pl-9 pr-3 text-sm"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 w-[160px] rounded-lg border-[#ececec] bg-white px-3 text-sm"
+        <Select
+          value={statusFilter || "all"}
+          onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}
         >
-          <option value="">All Status</option>
-          {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-9 w-[160px] rounded-full border border-[#e8e8e8] text-sm">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button
           type="button"
           variant="outline"
@@ -134,6 +152,9 @@ export const OrderManagerPanel = () => {
         </Button>
       </div>
 
+      {orders.length === 0 ? (
+        <p className="py-16 text-center text-sm text-[#777]">No orders found.</p>
+      ) : (
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] table-fixed border-collapse text-sm">
           <thead>
@@ -150,7 +171,7 @@ export const OrderManagerPanel = () => {
           </thead>
           <tbody>
             {orders.map((order) => (
-              <tr key={order._id} className="border-b border-[#ededed] text-[#303030] hover:bg-[#fafafa] cursor-pointer">
+              <tr key={order._id} className="border-b border-[#ededed] text-[#303030] hover:bg-[#fafafa]">
                 <td className="truncate px-2 py-3 font-mono">{order.reference_code}</td>
                 <td className="truncate px-2 py-3">{order.student_name}</td>
                 <td className="px-2 py-3">{order.id_number}</td>
@@ -179,6 +200,7 @@ export const OrderManagerPanel = () => {
           </tbody>
         </table>
       </div>
+      )}
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
