@@ -8,5 +8,6 @@ export interface IEmail {
   subtype?: string;
   referenceCode?: string;
   payload?: string;
+  htmlBody?: string;
   retryCount?: number;
 }

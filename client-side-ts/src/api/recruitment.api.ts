@@ -112,6 +112,9 @@ export const updateApplicationStatus = (
 export const deleteApplication = (id: string) =>
   api.delete(`${BASE_PATH}/applications/${id}`);
 
+export const clearRejectedApplications = () =>
+  api.delete(`${BASE_PATH}/applicants/rejected`);
+
 export const createInterview = (
   applicationId: string,
   data: InterviewPayload

@@ -34,7 +34,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   useRecruitmentData,
-  ROWS_PER_PAGE,
   POSITIONS_PER_PAGE,
   DEFAULT_FILTERS,
 } from "../hooks/useRecruitmentData";
@@ -97,6 +96,26 @@ function getAvatarColor(name: string) {
 
 function getInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "?";
+}
+
+function getPaginationItems(
+  currentPage: number,
+  totalPages: number
+): Array<number | "ellipsis"> {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const items: Array<number | "ellipsis"> = [1];
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  if (start > 2) items.push("ellipsis");
+  for (let page = start; page <= end; page += 1) items.push(page);
+  if (end < totalPages - 1) items.push("ellipsis");
+  items.push(totalPages);
+
+  return items;
 }
 
 // Convert an ISO timestamp to a local "YYYY-MM-DD" string for the date input.
@@ -181,7 +200,7 @@ const RecruitmentFilterPopover = ({
   const updateSingle = (field: "roles" | "courses" | "years", value: string) =>
     setDraft((current) => ({
       ...current,
-      [field]: value ? [value] : [],
+      [field]: value && value !== "all" ? [value] : [],
     }));
 
   const handleCancel = () => {
@@ -347,7 +366,6 @@ export const RecruitmentViews = () => {
     setActiveTab,
     applicants,
     pagedApplicants,
-    filteredApplicants,
     selectedIds,
     toggleApplicantSelection,
     clearSelection,
@@ -361,6 +379,8 @@ export const RecruitmentViews = () => {
     currentPage,
     totalPages,
     setPage,
+    applicantPagination,
+    applicantSummary,
     positionsPage,
     setPositionsPage,
     positionsTotalPages,
@@ -442,15 +462,16 @@ export const RecruitmentViews = () => {
     };
   }, [selectedApplicant]);
 
-  const counts = useMemo(() => {
-    return {
-      pending: applicants.filter((a) => a.status === "Pending").length,
-      approved: applicants.filter((a) => a.status === "Approved").length,
-      verifications: verificationApplicants.length,
-    };
-  }, [applicants, verificationApplicants]);
-
-  const total = filteredApplicants.length;
+  const counts = applicantSummary;
+  const total = applicantPagination.total;
+  const applicantStart =
+    total > 0 ? (currentPage - 1) * applicantPagination.limit + 1 : 0;
+  const applicantEnd =
+    total > 0 ? Math.min(applicantStart + applicants.length - 1, total) : 0;
+  const applicantPageItems = useMemo(
+    () => getPaginationItems(currentPage, totalPages),
+    [currentPage, totalPages]
+  );
 
   const allOnPageSelected =
     pagedApplicants.length > 0 &&
@@ -678,9 +699,9 @@ export const RecruitmentViews = () => {
                 }`}
               >
                 Rejected
-                {rejectedApplicants.length > 0 && (
+                {applicantSummary.rejected > 0 && (
                   <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">
-                    {rejectedApplicants.length}
+                    {applicantSummary.rejected}
                   </span>
                 )}
               </button>
@@ -1360,7 +1381,7 @@ export const RecruitmentViews = () => {
                 <h2 className="text-base font-medium text-slate-700">
                   Rejected Applicants
                 </h2>
-                {rejectedApplicants.length > 0 && canManageRecruitment && (
+                {applicantSummary.rejected > 0 && canManageRecruitment && (
                   <Button
                     type="button"
                     variant="outline"
@@ -1530,11 +1551,12 @@ export const RecruitmentViews = () => {
 
           {/* Pagination (applicants tab only — the positions and
               verification tabs aren't paginated with these controls) */}
-          {activeTab === "applicants" && (
+          {(activeTab === "applicants" ||
+            activeTab === "rejected" ||
+            activeTab === "verification") && (
             <div className="mt-7 flex flex-col items-center justify-between gap-3 text-xs text-[#8a8a8a] sm:flex-row">
               <span>
-                Showing {total > 0 ? (currentPage - 1) * ROWS_PER_PAGE + 1 : 0}{" "}
-                to {Math.min(currentPage * ROWS_PER_PAGE, total)} of {total}
+                Showing {applicantStart} to {applicantEnd} of {total}
               </span>
               <div className="flex items-center gap-1">
                 <button
@@ -1545,20 +1567,27 @@ export const RecruitmentViews = () => {
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (p) => (
+                {applicantPageItems.map((item, index) =>
+                  item === "ellipsis" ? (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-1 text-[#8a8a8a]"
+                    >
+                      ...
+                    </span>
+                  ) : (
                     <button
                       type="button"
-                      key={p}
-                      onClick={() => setPage(p)}
+                      key={item}
+                      onClick={() => setPage(item)}
                       className={cn(
                         "h-7 min-w-7 cursor-pointer rounded-full px-2",
-                        p === currentPage
+                        item === currentPage
                           ? "bg-[#1c9dde] text-white"
                           : "border border-[#eeeeee] bg-white text-[#696969]"
                       )}
                     >
-                      {p}
+                      {item}
                     </button>
                   )
                 )}
@@ -1793,10 +1822,10 @@ export const RecruitmentViews = () => {
             <p className="text-sm text-slate-500">
               This will permanently delete{" "}
               <span className="font-medium text-slate-700">
-                {rejectedApplicants.length}
+                {applicantSummary.rejected}
               </span>{" "}
               rejected application
-              {rejectedApplicants.length === 1 ? "" : "s"}. This action cannot
+              {applicantSummary.rejected === 1 ? "" : "s"}. This action cannot
               be undone.
             </p>
             <div className="mt-2 flex w-full justify-center gap-3">

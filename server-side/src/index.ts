@@ -38,6 +38,7 @@ import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 import contributionsV2Routes from "./routes/contributions.v2.route";
 import automationRoutes from "./routes/automation.v2.route";
+import noetixChatRoutes from "./routes/noetix-chat.v2.route";
 import { automationService } from "./services/automation.service";
 
 dotenv.config();
@@ -96,6 +97,7 @@ app.use("/api/v2/dev", devtoolsRoutes);
 app.use("/api/v2/certificates", certificateV2Routes);
 app.use("/api/v2/contributions", contributionsV2Routes);
 app.use("/api/v2/dev/automation", automationRoutes);
+app.use("/api/v2/chat", noetixChatRoutes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);

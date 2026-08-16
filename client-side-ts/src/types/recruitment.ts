@@ -81,7 +81,13 @@ export interface PaginatedResponse<T> {
 export interface ApplicantFilters {
   page?: number;
   limit?: number;
-  status?: Application["status"];
+  status?: Application["status"] | string;
   positionId?: string;
   search?: string;
+  role?: string;
+  course?: string;
+  year?: string;
+  sortField?: "name" | "id_number" | "courseYear" | "roleApplied" | "status";
+  sortDirection?: "asc" | "desc";
+  verificationOnly?: boolean;
 }

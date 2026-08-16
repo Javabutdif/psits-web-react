@@ -4,10 +4,13 @@ import { Menu } from "lucide-react";
 import { AdminSidebar } from "../features/admin/components";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { AgentChatToggle } from "@/features/admin/agent-chat/components/AgentChatToggle";
+import { ChatTourOverlay } from "@/features/admin/agent-chat/components/ChatTourOverlay";
 
 export const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -69,6 +72,11 @@ export const AdminLayout = () => {
         </div>
       </main>
       <Toaster position="bottom-right" />
+      <AgentChatToggle isOpen={isChatOpen} onOpenChange={setIsChatOpen} />
+      <ChatTourOverlay
+        isChatOpen={isChatOpen}
+        onOpenChat={() => setIsChatOpen(true)}
+      />
     </div>
   );
 };
