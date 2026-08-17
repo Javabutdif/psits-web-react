@@ -68,4 +68,7 @@ const orderSchema = new Schema<IOrdersDocument>({
   },
 });
 
+orderSchema.index({ order_status: 1, transaction_date: -1 });
+orderSchema.index({ order_status: 1, "items.product_id": 1 });
+
 export const Orders = mongoose.model<IOrdersDocument>("Orders", orderSchema);

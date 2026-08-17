@@ -9,7 +9,20 @@ dotenv.config();
 
 const router = Router();
 
-//Fetch reports
+router.get(
+  "/filter-options",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  reportController.fetchFilterOptions
+);
+
+router.get(
+  "/export",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  reportController.exportReport
+);
+
 router.get(
   "/",
   requireAccessTokenWithDBCheck,
