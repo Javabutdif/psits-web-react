@@ -6,6 +6,10 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/features/auth";
 import { addToCartApi, useMembershipGate } from "@/features/student";
+import {
+  getVariationLabel,
+  getVariationSwatch,
+} from "@/features/merchandise/constants/variations";
 import { getMerchandiseById, type MerchandiseItem } from "../api/orders";
 
 // Fallback image for products without images
@@ -39,12 +43,30 @@ const transformMerchandise = (item: MerchandiseItem): Product => {
   if (item.selectedSizes) {
     const obj = item.selectedSizes as Record<string, unknown>;
     if (typeof (obj as any).entries === "function") {
-      const mapEntries = Array.from((obj as any).entries() as IterableIterator<[string, unknown]>);
+      const mapEntries = Array.from(
+        (obj as any).entries() as IterableIterator<[string, unknown]>
+      );
       sizesFromSelectedSizes = mapEntries.map(([key]) => key);
     } else {
       sizesFromSelectedSizes = Object.keys(obj);
     }
   }
+
+  // The admin form saves the picked variations under `selectedVariations`.
+  // The older `variation` / `colors` fields are kept as fallbacks for records
+  // written before that rename. No hardcoded default: if the product genuinely
+  // has no variations, the colour picker is hidden entirely.
+  const rawVariations =
+    (item as any).selectedVariations ?? item.variation ?? item.colors;
+
+  const colors = Array.isArray(rawVariations)
+    ? rawVariations.filter(Boolean)
+    : typeof rawVariations === "string" && rawVariations.trim()
+      ? rawVariations
+          .split(",")
+          .map((entry) => entry.trim())
+          .filter(Boolean)
+      : [];
 
   return {
     id: item._id,
@@ -55,11 +77,12 @@ const transformMerchandise = (item: MerchandiseItem): Product => {
     category: item.category || "Merchandise",
     description: item.description,
     sizes: item.sizes || sizesFromSelectedSizes,
-    colors: item.colors || item.variation,
+    colors,
     stock: item.stocks ?? item.stock,
     start_date: item.start_date,
     end_date: item.end_date,
-    selectedSizes: item.selectedSizes as Record<string, { custom: boolean; price: string }> | undefined,
+    selectedSizes: item.selectedSizes as
+      Record<string, { custom: boolean; price: string }> | undefined,
   };
 };
 
@@ -100,6 +123,7 @@ const BuyNowButton: React.FC<AddToCartButtonProps> = ({
       name: product.name,
       price: product.price,
       image: product.image,
+      // Persist the raw variation value, never the display label.
       color: selectedColor,
       size: selectedSize,
       course: selectedCourse,
@@ -178,6 +202,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         const payload: any = {
           product_id: product.id,
           sizes: selectedSize,
+          // Raw value, so it matches what is stored on the merch document.
           variation: selectedColor,
           quantity,
           id_number: user.idNumber,
@@ -239,8 +264,8 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   const location = useLocation();
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState("L");
-  const [selectedColor, setSelectedColor] = useState("White");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("BSIT");
   const [fetchedProduct, setFetchedProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
@@ -283,12 +308,8 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   // Initialize size and color from product data
   useEffect(() => {
     if (currentProduct) {
-      if (currentProduct.sizes && currentProduct.sizes.length > 0) {
-        setSelectedSize(currentProduct.sizes[0]);
-      }
-      if (currentProduct.colors && currentProduct.colors.length > 0) {
-        setSelectedColor(currentProduct.colors[0]);
-      }
+      setSelectedSize(currentProduct.sizes?.[0] ?? "");
+      setSelectedColor(currentProduct.colors?.[0] ?? "");
     }
   }, [currentProduct]);
 
@@ -355,15 +376,11 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
     );
   }
 
-  // Get available sizes and colors from the product, or use defaults
-  const availableSizes =
-    currentProduct.sizes && currentProduct.sizes.length > 0
-      ? currentProduct.sizes
-      : ["S", "M", "L", "XL", "XXL"];
-  const availableColors =
-    currentProduct.colors && currentProduct.colors.length > 0
-      ? currentProduct.colors
-      : ["White", "Purple"];
+  // Only show what the admin actually configured on this product. No invented
+  // defaults - a hardcoded fallback is what made every item look like it had
+  // White and Purple options.
+  const availableSizes = currentProduct.sizes ?? [];
+  const availableColors = currentProduct.colors ?? [];
   const stockCount = currentProduct.stock ?? 0;
 
   const getDisplayPrice = (): number => {
@@ -380,12 +397,21 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   const selectedPriceProduct = { ...currentProduct, price: displayPrice };
 
   const now = new Date();
-  const startDate = currentProduct.start_date ? new Date(currentProduct.start_date) : null;
-  const endDate = currentProduct.end_date ? new Date(currentProduct.end_date) : null;
+  const startDate = currentProduct.start_date
+    ? new Date(currentProduct.start_date)
+    : null;
+  const endDate = currentProduct.end_date
+    ? new Date(currentProduct.end_date)
+    : null;
   const isNotStarted = startDate ? now < startDate : false;
   const isExpired = endDate ? now > endDate : false;
   const isOutOfActiveWindow = isNotStarted || isExpired;
-  const purchaseDisabled = currentProduct.isSoldOut || isOutOfActiveWindow;
+  // Don't let an order through with an unpicked variation or size.
+  const missingSelection =
+    (availableColors.length > 0 && !selectedColor) ||
+    (availableSizes.length > 0 && !selectedSize);
+  const purchaseDisabled =
+    currentProduct.isSoldOut || isOutOfActiveWindow || missingSelection;
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 mx-auto mt-16 min-h-screen max-w-6xl bg-transparent p-4 font-sans duration-500 sm:mt-20 sm:p-6 lg:p-12">
@@ -447,66 +473,82 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
           </div>
 
           <div className="space-y-6 sm:space-y-10">
-            {/* Color Selection */}
-            <div>
-              <h3 className="mb-4 text-sm font-bold tracking-wider text-gray-900 uppercase">
-                Color
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {availableColors.map((color) => (
-                  <Button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={cn(
-                      "rounded-full px-5 py-2 text-xs font-bold transition-all sm:px-6 sm:py-3 sm:text-sm",
-                      selectedColor === color
-                        ? "bg-[#1c9dde] text-white shadow-lg shadow-blue-200"
-                        : "border border-gray-200 bg-white text-gray-600 hover:bg-[#1c9dde]/90 hover:text-white"
-                    )}
-                    aria-label={`Select ${color}`}
-                  >
-                    {color}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Size Selection */}
-            <div>
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-bold tracking-wider text-gray-900 uppercase">
-                  Size
+            {/* Color Selection - hidden entirely when the product has none */}
+            {availableColors.length > 0 && (
+              <div>
+                <h3 className="mb-4 text-sm font-bold tracking-wider text-gray-900 uppercase">
+                  Color
                 </h3>
-                <button className="flex items-center gap-1 text-xs font-bold text-[#1c9dde]">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M11 5L6 9v4l5 4V5z" />
-                  </svg>
-                  SIZE GUIDE
-                </button>
+                <div className="flex flex-wrap gap-3">
+                  {availableColors.map((color) => {
+                    const isSelected = selectedColor === color;
+                    return (
+                      <Button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={cn(
+                          "inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2 text-xs font-bold transition-all sm:px-6 sm:py-3 sm:text-sm",
+                          isSelected
+                            ? "bg-[#1c9dde] text-white shadow-lg shadow-blue-200"
+                            : "border border-gray-200 bg-white text-gray-600 hover:bg-[#1c9dde]/90 hover:text-white"
+                        )}
+                        aria-pressed={isSelected}
+                        aria-label={`Select ${getVariationLabel(color)}`}
+                      >
+                        <span
+                          className={cn(
+                            "h-3.5 w-3.5 shrink-0 rounded-full border",
+                            isSelected ? "border-white/70" : "border-gray-300"
+                          )}
+                          style={{ backgroundColor: getVariationSwatch(color) }}
+                        />
+                        {getVariationLabel(color)}
+                      </Button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 sm:gap-3">
-                {availableSizes.map((size) => (
-                  <Button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={cn(
-                      "cursor-pointer rounded-full px-5 py-3 text-xs font-bold transition-all sm:px-8 sm:py-5 sm:text-sm",
-                      selectedSize === size
-                        ? "bg-[#1c9dde] text-white shadow-lg shadow-blue-200"
-                        : "border border-gray-200 bg-white text-gray-600 hover:bg-[#1c9dde]/90 hover:text-white"
-                    )}
-                  >
-                    {size}
-                  </Button>
-                ))}
+            )}
+
+            {/* Size Selection - hidden entirely when the product has none */}
+            {availableSizes.length > 0 && (
+              <div>
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-sm font-bold tracking-wider text-gray-900 uppercase">
+                    Size
+                  </h3>
+                  <button className="flex items-center gap-1 text-xs font-bold text-[#1c9dde]">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M11 5L6 9v4l5 4V5z" />
+                    </svg>
+                    SIZE GUIDE
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 sm:gap-3">
+                  {availableSizes.map((size) => (
+                    <Button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={cn(
+                        "cursor-pointer rounded-full px-5 py-3 text-xs font-bold transition-all sm:px-8 sm:py-5 sm:text-sm",
+                        selectedSize === size
+                          ? "bg-[#1c9dde] text-white shadow-lg shadow-blue-200"
+                          : "border border-gray-200 bg-white text-gray-600 hover:bg-[#1c9dde]/90 hover:text-white"
+                      )}
+                      aria-pressed={selectedSize === size}
+                    >
+                      {size}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Course Selection */}
             <div>
@@ -573,6 +615,20 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
             </div>
 
             {/* Final Action */}
+            {missingSelection && (
+              <p className="text-xs font-medium text-orange-600">
+                Choose a
+                {availableColors.length > 0 && !selectedColor ? " colour" : ""}
+                {availableColors.length > 0 &&
+                !selectedColor &&
+                availableSizes.length > 0 &&
+                !selectedSize
+                  ? " and"
+                  : ""}
+                {availableSizes.length > 0 && !selectedSize ? " size" : ""} to
+                continue.
+              </p>
+            )}
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:gap-4">
               <BuyNowButton
                 product={selectedPriceProduct}

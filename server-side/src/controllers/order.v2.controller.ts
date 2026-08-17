@@ -23,6 +23,7 @@ import { adminService } from "../services/admin.service";
 import { logService } from "../services/log.service";
 import { logs_action } from "../enums/logs.enums";
 import { AppError } from "../util/app.error.util";
+import { catchAsync } from "../util/catch.async.util";
 import { studentService } from "../services/student.service";
 import { promoService } from "../services/promo.service";
 import { reportService } from "../services/report.service";
@@ -38,7 +39,7 @@ import { IAdmin } from "../models/admin.interface";
 
 class OrderController {
   //Specific Order using id number
-  getSpecificOrder = async (req: Request, res: Response) => {
+  getSpecificOrder = catchAsync(async (req: Request, res: Response) => {
     const { id_number } = req.query;
     const result = await orderService.getSpecificOrderDynamic({ id_number });
 
@@ -46,15 +47,15 @@ class OrderController {
       message: "Successfully retrieved specific order",
       data: result,
     });
-  };
+  });
   //Get all orders
-  getAllOrders = async (req: Request, res: Response) => {
+  getAllOrders = catchAsync(async (req: Request, res: Response) => {
     const orders = await orderService.getAllOrders({});
     return res.status(200).json({
       message: "Successfully retrieved all orders",
       data: orders,
     });
-  };
+  });
   //Get all pending / paid orders with params
   /*
   Structure in frontend for sending this request:
@@ -67,7 +68,7 @@ class OrderController {
   }
 
   */
-  getAllPendingPaidOrders = async (req: Request, res: Response) => {
+  getAllPendingPaidOrders = catchAsync(async (req: Request, res: Response) => {
     const result = await orderService.getAllOrdersDynamicStatus({
       query: req.query,
       status: (req.query.status as string) || "Pending",
@@ -81,7 +82,7 @@ class OrderController {
       limit: result.limit,
       totalPages: result.totalPages,
     });
-  };
+  });
   //Create Order Controller
   //Create Order
   /*
@@ -103,7 +104,7 @@ class OrderController {
   this create order doesnt minus the stock of the items, it will just create the order and then the admin will approve it and then it will minus the stock of the items
 
   */
-  createOrder = async (req: Request, res: Response) => {
+  createOrder = catchAsync(async (req: Request, res: Response) => {
     const { promo_id, items } = req.body;
     const user = req.userV2;
     //Check user availability
@@ -214,13 +215,13 @@ class OrderController {
         ? err
         : new AppError("Failed to create order", 500);
     }
-  };
+  });
 
   /*
     To cancel an order, the admin will just need to provide the order id and then the system will check if the order is already approved or not, if it is already approved then the system will not allow to cancel the order, if it is still pending then the system will cancel the order and then return a message that the order is cancelled
   
   */
-  cancelOrder = async (req: Request, res: Response) => {
+  cancelOrder = catchAsync(async (req: Request, res: Response) => {
     const { _id } = req.body;
     const session = await mongoose.startSession();
     await session.startTransaction();
@@ -261,11 +262,11 @@ class OrderController {
       }
       throw new AppError("Failed to cancel order", 500);
     }
-  };
+  });
   /*
     To approve an order, the admin will just need to provide the order id and then the system will check if the order is already approved or not, if it is already approved then the system will not allow to approve the order, if it is still pending then the system will approve the order and then return a message that the order is approved
   */
-  approveOrder = async (req: Request, res: Response) => {
+  approveOrder = catchAsync(async (req: Request, res: Response) => {
     const { order_id, cash } = req.body;
     const user = req.userV2;
 
@@ -386,10 +387,10 @@ class OrderController {
         ? err
         : new AppError("Failed to approve order", 500);
     }
-  };
+  });
 
   //Refund a paid order (V2)
-  processRefund = async (req: Request, res: Response) => {
+  processRefund = catchAsync(async (req: Request, res: Response) => {
     const { order_id } = req.body;
     const user = req.userV2;
 
@@ -440,7 +441,7 @@ class OrderController {
       }
       throw err;
     }
-  };
+  });
 }
 
 export const orderController = new OrderController();

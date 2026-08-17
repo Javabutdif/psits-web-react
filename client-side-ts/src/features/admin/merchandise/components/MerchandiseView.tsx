@@ -58,11 +58,13 @@ import {
   PRODUCT_CATEGORIES,
   PRODUCT_SIZES,
   PRODUCT_TYPES,
-  PRODUCT_VARIATIONS,
   PURCHASE_CONTROLS,
   formatCurrency,
   formatPurchaseControl,
   getProductStatus,
+  getVariationLabel,
+  getVariationSwatch,
+  getVariationsForCategory,
   useMerchandiseData,
 } from "../hooks/useMerchandiseData";
 import type {
@@ -745,11 +747,7 @@ const ProductDetailsDialog = ({
           </div>
 
           {variations.length > 0 && (
-            <TagList
-              label="Color"
-              values={variations}
-              colorValue={variations[0]}
-            />
+            <TagList label="Color" values={variations} showSwatch />
           )}
           {sizeLabels.length > 0 && (
             <TagList label="Size" values={sizeLabels} />
@@ -785,14 +783,19 @@ const InfoBlock = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
+/**
+ * When `showSwatch` is set the values are treated as product variations, so
+ * each one renders its own colour dot and its student-facing label. Without it
+ * the values are printed as-is (used for sizes).
+ */
 const TagList = ({
   label,
   values,
-  colorValue,
+  showSwatch = false,
 }: {
   label: string;
   values: string[];
-  colorValue?: string;
+  showSwatch?: boolean;
 }) => (
   <div className="mt-5 border-t border-[#eeeeee] pt-5">
     <p className="mb-2 text-xs text-[#9a9a9a]">{label}</p>
@@ -800,12 +803,15 @@ const TagList = ({
       {values.map((value) => (
         <span
           key={value}
-          className="inline-flex items-center gap-1 rounded-md border border-[#e3e3e3] px-2 py-1 text-xs"
+          className="inline-flex items-center gap-1.5 rounded-md border border-[#e3e3e3] px-2 py-1 text-xs"
         >
-          {colorValue === value && (
-            <span className="h-3 w-3 rounded-full bg-purple-500" />
+          {showSwatch && (
+            <span
+              className="h-3 w-3 rounded-full border border-[#d4d4d4]"
+              style={{ backgroundColor: getVariationSwatch(value) }}
+            />
           )}
-          {value}
+          {showSwatch ? getVariationLabel(value) : value}
         </span>
       ))}
     </div>
@@ -1247,6 +1253,7 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
   };
 
   const typeOptions = PRODUCT_TYPES[formValues.category] || [];
+  const variationOptions = getVariationsForCategory(formValues.category);
   const selectedSizes = PRODUCT_SIZES.filter(
     (size) => formValues.selectedSizes[size]
   );
@@ -1505,6 +1512,9 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                       onChange={(value) => {
                         setValue("category", value);
                         setValue("type", "");
+                        // Variations are category-scoped, so a stale pick from
+                        // the previous category would no longer be selectable.
+                        setValue("selectedVariations", []);
                       }}
                     />
                   </FormField>
@@ -1535,41 +1545,40 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                 </div>
               </FieldGroup>
 
-              <FieldGroup
-                title="Variants"
-                action={
-                  <button
-                    type="button"
-                    className="cursor-pointer text-xs font-medium"
-                    onClick={() => toggleVariation("White")}
-                  >
-                    + Add variant
-                  </button>
-                }
-              >
+              <FieldGroup title="Variants">
                 <div className="rounded-2xl border border-[#eeeeee] p-4">
                   <p className="mb-3 text-sm font-medium">Variant 1</p>
                   <div className="space-y-4">
                     <div>
                       <p className="mb-2 text-xs text-[#555555]">Color</p>
                       <div className="flex flex-wrap gap-2">
-                        {PRODUCT_VARIATIONS.map((variation) => (
+                        {variationOptions.map((variation) => (
                           <button
-                            key={variation}
+                            key={variation.value}
                             type="button"
                             className={cn(
-                              "h-8 cursor-pointer rounded-full border border-[#e0e0e0] px-3 text-xs",
+                              "inline-flex h-8 cursor-pointer items-center gap-2 rounded-full border border-[#e0e0e0] px-3 text-xs",
                               formValues.selectedVariations.includes(
-                                variation
+                                variation.value
                               ) &&
                                 "border-[#1C9DDE] bg-[#e5f5fd] text-[#1C9DDE]"
                             )}
-                            onClick={() => toggleVariation(variation)}
+                            onClick={() => toggleVariation(variation.value)}
                           >
-                            {variation}
+                            <span
+                              className="h-3 w-3 rounded-full border border-[#d4d4d4]"
+                              style={{ backgroundColor: variation.swatch }}
+                            />
+                            {variation.label}
                           </button>
                         ))}
                       </div>
+                      {!formValues.category && (
+                        <p className="mt-2 text-[11px] text-[#9a9a9a]">
+                          Pick a product category first — Uniform products only
+                          offer Set A and Set B.
+                        </p>
+                      )}
                     </div>
                     <div>
                       <p className="mb-2 text-xs text-[#555555]">Size</p>
