@@ -6,18 +6,10 @@ import {
   Package,
   Search,
   ShoppingBag,
-  Trash2,
   Wallet,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -42,6 +34,7 @@ import {
 import { downloadCsv } from "../utils/exportCsv";
 import type {
   MerchandiseOrderDetail,
+  MerchandiseReportProductOption,
   ReportsFilters,
 } from "../types/reports.types";
 
@@ -65,24 +58,24 @@ const formatDate = (value: string | Date) => {
 interface ReportsFilterPopoverProps {
   activeTab: "membership" | "merchandise";
   filters: ReportsFilters;
-  uniqueProductNames: string[];
-  getBatchesForProduct: (productName: string) => string[];
+  productOptions: MerchandiseReportProductOption[];
   onApply: (filters: ReportsFilters) => void;
 }
 
 const ReportsFilterPopover = ({
   activeTab,
   filters,
-  uniqueProductNames,
-  getBatchesForProduct,
+  productOptions,
   onApply,
 }: ReportsFilterPopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(filters);
 
   const batchOptions = useMemo(
-    () => getBatchesForProduct(draft.productName),
-    [draft.productName, getBatchesForProduct]
+    () =>
+      productOptions.find((option) => option.productId === draft.productId)
+        ?.batches ?? [],
+    [draft.productId, productOptions]
   );
 
   const hasActiveFilters = Object.values(filters).some(Boolean);
@@ -195,10 +188,13 @@ const ReportsFilterPopover = ({
                     Product
                   </Label>
                   <Select
-                    value={draft.productName}
+                    value={draft.productId || "all"}
                     onValueChange={(v) => {
-                      update("productName", v);
-                      setDraft((current) => ({ ...current, batch: "" }));
+                      setDraft((current) => ({
+                        ...current,
+                        productId: v === "all" ? "" : v,
+                        batch: "",
+                      }));
                     }}
                   >
                     <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
@@ -206,9 +202,12 @@ const ReportsFilterPopover = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All products</SelectItem>
-                      {uniqueProductNames.map((name) => (
-                        <SelectItem key={name} value={name}>
-                          {name}
+                      {productOptions.map((option) => (
+                        <SelectItem
+                          key={option.productId}
+                          value={option.productId}
+                        >
+                          {option.productName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -234,19 +233,22 @@ const ReportsFilterPopover = ({
                     </SelectContent>
                   </Select>
                 </div>
-                {draft.productName && (
+                {draft.productId && (
                   <div>
                     <Label className="mb-1.5 block text-xs font-medium">
                       Batch
                     </Label>
                     <Select
-                      value={draft.batch}
-                      onValueChange={(v) => update("batch", v)}
+                      value={draft.batch || "all"}
+                      onValueChange={(v) =>
+                        update("batch", v === "all" ? "" : v)
+                      }
                     >
                       <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
                         <SelectValue placeholder="All batches" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="all">All batches</SelectItem>
                         {batchOptions.map((batch) => (
                           <SelectItem key={batch} value={batch}>
                             {batch}
@@ -467,31 +469,22 @@ export const ReportsView = () => {
     totalMerchandiseRows,
     membershipSummary,
     merchandiseSummary,
-    uniqueProductNames,
-    getBatchesForProduct,
-    canDeleteReports,
-    isMutating,
-    deleteMerchandiseReportItem,
+    merchandiseProductOptions,
+    isExporting,
     buildMembershipExportRows,
-    buildMerchandiseExportRows,
+    exportMerchandiseReport,
     refetchMembership,
     refetchMerchandise,
   } = useReportsData();
 
-  const [deleteTarget, setDeleteTarget] =
-    useState<MerchandiseOrderDetail | null>(null);
-
   const isMembership = activeTab === "membership";
   const status = isMembership ? membershipStatus : merchandiseStatus;
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (isMembership) {
       downloadCsv(buildMembershipExportRows(), "membership-report.csv");
     } else {
-      downloadCsv(
-        buildMerchandiseExportRows(),
-        `merchandise-report-${new Date().toISOString().slice(0, 10)}.csv`
-      );
+      await exportMerchandiseReport();
     }
   };
 
@@ -616,8 +609,7 @@ export const ReportsView = () => {
               <ReportsFilterPopover
                 activeTab={activeTab}
                 filters={filters}
-                uniqueProductNames={uniqueProductNames}
-                getBatchesForProduct={getBatchesForProduct}
+                productOptions={merchandiseProductOptions}
                 onApply={setFilters}
               />
               <Button
@@ -625,11 +617,13 @@ export const ReportsView = () => {
                 variant="outline"
                 className="h-9 shrink-0 rounded-full border-[#e8e8e8] px-3 sm:px-4"
                 onClick={handleExport}
-                disabled={status !== "success"}
+                disabled={status !== "success" || isExporting}
                 aria-label="Export CSV"
               >
                 <Download className="h-4 w-4" />
-                <span className="hidden sm:inline">Export CSV</span>
+                <span className="hidden sm:inline">
+                  {isExporting ? "Exporting..." : "Export CSV"}
+                </span>
               </Button>
             </div>
           </div>
@@ -645,8 +639,6 @@ export const ReportsView = () => {
               rows={pagedMerchandise}
               isLoading={status === "loading"}
               hasError={status === "error"}
-              canDelete={canDeleteReports}
-              onRequestDelete={setDeleteTarget}
             />
           )}
 
@@ -658,46 +650,6 @@ export const ReportsView = () => {
           />
         </section>
       </div>
-
-      <Dialog
-        open={Boolean(deleteTarget)}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <DialogContent className="max-w-sm rounded-[20px]">
-          <DialogHeader>
-            <DialogTitle>Delete this report entry?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-[#777]">
-            This removes{" "}
-            <span className="font-medium">{deleteTarget?.product_name}</span>{" "}
-            from{" "}
-            <span className="font-medium">{deleteTarget?.student_name}</span>'s
-            order record. This cannot be undone.
-          </p>
-          <DialogFooter className="mt-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full"
-              onClick={() => setDeleteTarget(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={isMutating}
-              className="rounded-full bg-red-500 hover:bg-red-600"
-              onClick={async () => {
-                if (!deleteTarget) return;
-                const success = await deleteMerchandiseReportItem(deleteTarget);
-                if (success) setDeleteTarget(null);
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
@@ -784,45 +736,41 @@ const MembershipTable = ({
 const MerchandiseTable = ({
   rows,
   isLoading,
-  canDelete,
-  onRequestDelete,
   hasError,
 }: {
   rows: MerchandiseOrderDetail[];
   isLoading: boolean;
-  canDelete: boolean;
   hasError: boolean;
-  onRequestDelete: (detail: MerchandiseOrderDetail) => void;
 }) => (
   <div className="overflow-x-auto">
-    <table className="w-full min-w-[980px] table-fixed border-collapse text-sm">
+    <table className="w-full min-w-[1080px] table-fixed border-collapse text-sm">
       <thead>
         <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-          <th className="w-[13%] rounded-l-md px-2 py-2 text-left font-medium">
+          <th className="w-[12%] rounded-l-md px-2 py-2 text-left font-medium">
             Reference Code
           </th>
-          <th className="w-[16%] px-2 py-2 text-left font-medium">Product</th>
-          <th className="w-[12%] px-2 py-2 text-left font-medium">
+          <th className="w-[15%] px-2 py-2 text-left font-medium">Product</th>
+          <th className="w-[7%] px-2 py-2 text-left font-medium">Batch</th>
+          <th className="w-[11%] px-2 py-2 text-left font-medium">
             Student ID
           </th>
-          <th className="w-[15%] px-2 py-2 text-left font-medium">Name</th>
+          <th className="w-[14%] px-2 py-2 text-left font-medium">Name</th>
           <th className="w-[10%] px-2 py-2 text-left font-medium">
             Course &amp; Year
           </th>
-          <th className="w-[8%] px-2 py-2 text-left font-medium">Size</th>
+          <th className="w-[7%] px-2 py-2 text-left font-medium">Size</th>
           <th className="w-[8%] px-2 py-2 text-left font-medium">Color</th>
           <th className="w-[6%] px-2 py-2 text-right font-medium">Qty</th>
-          <th className="w-[8%] px-2 py-2 text-right font-medium">Total</th>
-          <th
-            className={cn("px-2 py-2 text-right", canDelete ? "w-[8%]" : "w-4")}
-          />
+          <th className="w-[10%] rounded-r-md px-2 py-2 text-right font-medium">
+            Total
+          </th>
         </tr>
       </thead>
       <tbody>
         {isLoading ? (
           Array.from({ length: 8 }, (_, index) => (
             <tr key={index} className="border-b border-[#ededed]">
-              {Array.from({ length: canDelete ? 10 : 9 }, (_, cell) => (
+              {Array.from({ length: 10 }, (_, cell) => (
                 <td key={cell} className="px-2 py-3">
                   <Skeleton className="h-4 w-full rounded-full" />
                 </td>
@@ -837,6 +785,7 @@ const MerchandiseTable = ({
             >
               <td className="truncate px-2 py-3">{detail.reference_code}</td>
               <td className="truncate px-2 py-3">{detail.product_name}</td>
+              <td className="px-2 py-3">{detail.batch || "-"}</td>
               <td className="px-2 py-3">{detail.id_number}</td>
               <td className="truncate px-2 py-3">{detail.student_name}</td>
               <td className="px-2 py-3">
@@ -854,26 +803,12 @@ const MerchandiseTable = ({
               <td className="px-2 py-3 text-right font-medium">
                 {formatCurrency(detail.total || 0)}
               </td>
-              {canDelete && (
-                <td className="px-2 py-3 text-right">
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    className="h-7 w-7 rounded-full text-red-500 hover:bg-red-50"
-                    title="Delete this report entry"
-                    onClick={() => onRequestDelete(detail)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </td>
-              )}
             </tr>
           ))
         ) : (
           <tr>
             <td
-              colSpan={canDelete ? 10 : 9}
+              colSpan={10}
               className="px-3 py-16 text-center text-sm text-[#777]"
             >
               No merchandise records found.
