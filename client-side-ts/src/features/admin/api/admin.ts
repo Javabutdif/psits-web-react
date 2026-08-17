@@ -160,7 +160,17 @@ export interface MerchandiseReportsResult {
   totalPages: number;
   message?: string;
   summary: { unitsSold: number; totalRevenue: number };
-  productNames: string[];
+}
+
+export interface MerchandiseReportProductOption {
+  productId: string;
+  productName: string;
+  batches: string[];
+}
+
+export interface MerchandiseReportFilterOptionsResult {
+  message?: string;
+  products: MerchandiseReportProductOption[];
 }
 
 export interface MerchandiseReportsParams {
@@ -170,9 +180,12 @@ export interface MerchandiseReportsParams {
   referenceCode?: string;
   studentId?: string;
   name?: string;
+  rfid?: string;
   course?: string;
   year?: string;
+  productId?: string;
   productName?: string;
+  batch?: string;
   size?: string;
   color?: string;
   dateFrom?: string;
@@ -606,9 +619,12 @@ export const merchandiseReports = async ({
   referenceCode,
   studentId,
   name,
+  rfid,
   course,
   year,
+  productId,
   productName,
+  batch,
   size,
   color,
   dateFrom,
@@ -626,14 +642,48 @@ export const merchandiseReports = async ({
           referenceCode,
           studentId,
           name,
+          rfid,
           course,
           year,
+          productId,
           productName,
+          batch,
           size,
           color,
           dateFrom,
           dateTo,
         },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    handleApiError(error, false);
+  }
+};
+
+export const merchandiseReportFilterOptions =
+  async (): Promise<MerchandiseReportFilterOptionsResult | void> => {
+    try {
+      const response: AxiosResponse<MerchandiseReportFilterOptionsResult> =
+        await axios.get(`${backendConnection()}/api/reports/filter-options`, {
+          headers: createHeaders(),
+        });
+      return response.data;
+    } catch (error) {
+      handleApiError(error, false);
+    }
+  };
+
+export const exportMerchandiseReports = async (
+  params: Omit<MerchandiseReportsParams, "page" | "limit"> = {}
+): Promise<Blob | void> => {
+  try {
+    const response: AxiosResponse<Blob> = await axios.get(
+      `${backendConnection()}/api/reports/export`,
+      {
+        headers: createHeaders(),
+        params,
+        responseType: "blob",
       }
     );
     return response.data;
