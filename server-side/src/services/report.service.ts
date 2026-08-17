@@ -1,12 +1,22 @@
-import { isValidObjectId, type ClientSession } from "mongoose";
+import {
+  isValidObjectId,
+  Types,
+  type ClientSession,
+  type PipelineStage,
+} from "mongoose";
+import { Orders } from "../models/orders.model";
 import { Report } from "../models/report.model";
 import { IOrdersItems } from "../models/orders.interface";
 
 export interface MerchandiseReportRow {
   _id: string;
+  order_id: string;
+  product_id: string;
   reference_code: string;
   product_name: string;
+  batch: string;
   id_number: string;
+  rfid: string;
   student_name: string;
   course: string;
   year: string;
@@ -14,6 +24,7 @@ export interface MerchandiseReportRow {
   variation: unknown;
   quantity: number;
   total: number;
+  transaction_date: Date;
   date: Date;
 }
 
@@ -21,10 +32,13 @@ export interface MerchandiseReportFilters {
   search?: string;
   referenceCode?: string;
   studentId?: string;
+  rfid?: string;
   name?: string;
   course?: string;
   year?: string;
+  productId?: string;
   productName?: string;
+  batch?: string;
   size?: string;
   color?: string;
   dateFrom?: string;
@@ -39,6 +53,12 @@ export interface MerchandiseReportQuery extends MerchandiseReportFilters {
 export interface MerchandiseReportSummary {
   unitsSold: number;
   totalRevenue: number;
+}
+
+export interface MerchandiseReportProductOption {
+  productId: string;
+  productName: string;
+  batches: string[];
 }
 
 export interface CreateReportInput {
@@ -70,7 +90,6 @@ export interface MerchandiseReportResult {
   limit: number;
   totalPages: number;
   summary: MerchandiseReportSummary;
-  productNames: string[];
 }
 
 const normalizePage = (value?: number) => {
@@ -80,7 +99,7 @@ const normalizePage = (value?: number) => {
 
 const normalizeLimit = (value?: number) => {
   if (!value || Number.isNaN(value)) return 10;
-  return Math.max(1, Math.floor(value));
+  return Math.min(100, Math.max(1, Math.floor(value)));
 };
 
 const toLowerTrim = (value: unknown): string => {
@@ -88,238 +107,323 @@ const toLowerTrim = (value: unknown): string => {
   return String(value).trim().toLowerCase();
 };
 
-const buildBasePipeline = (filters: MerchandiseReportFilters) => {
-  const matchConditions: Record<string, any>[] = [];
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  if (filters.search) {
-    const q = filters.search.trim();
+const containsMatch = (value: string) => ({
+  $regex: escapeRegex(value.trim()),
+  $options: "i",
+});
+
+const exactMatch = (value: string) => ({
+  $regex: `^${escapeRegex(value.trim())}$`,
+  $options: "i",
+});
+
+const parseDateBoundary = (
+  value: string | undefined,
+  endExclusive: boolean
+) => {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  if (endExclusive) date.setUTCDate(date.getUTCDate() + 1);
+  return date;
+};
+
+const buildPaidOrderItemPipeline = (
+  filters: MerchandiseReportFilters = {}
+): PipelineStage[] => {
+  const matchConditions: Record<string, unknown>[] = [];
+  const orderMatch: Record<string, unknown> = { order_status: "Paid" };
+
+  if (filters.productId?.trim() && isValidObjectId(filters.productId)) {
+    orderMatch["items.product_id"] = new Types.ObjectId(filters.productId);
+  }
+
+  if (filters.search?.trim()) {
+    const query = containsMatch(filters.search);
     matchConditions.push({
       $or: [
-        { effective_id_number: { $regex: q, $options: "i" } },
-        { effective_reference_code: { $regex: q, $options: "i" } },
-        { effective_student_name: { $regex: q, $options: "i" } },
-        { "merch.name": { $regex: q, $options: "i" } },
+        { id_number: query },
+        { rfid: query },
+        { reference_code: query },
+        { student_name: query },
+        { "items.product_name": query },
       ],
     });
   }
 
-  if (filters.referenceCode) {
+  if (filters.referenceCode?.trim()) {
     matchConditions.push({
-      effective_reference_code: {
-        $regex: filters.referenceCode.trim(),
-        $options: "i",
-      },
+      reference_code: containsMatch(filters.referenceCode),
     });
   }
-
-  if (filters.studentId) {
+  if (filters.studentId?.trim()) {
+    matchConditions.push({ id_number: containsMatch(filters.studentId) });
+  }
+  if (filters.rfid?.trim()) {
+    matchConditions.push({ rfid: containsMatch(filters.rfid) });
+  }
+  if (filters.name?.trim()) {
+    matchConditions.push({ student_name: containsMatch(filters.name) });
+  }
+  if (filters.course?.trim()) {
+    matchConditions.push({ course: exactMatch(filters.course) });
+  }
+  if (filters.year?.trim()) {
+    const year = Number(filters.year);
+    if (Number.isFinite(year)) matchConditions.push({ year });
+  }
+  if (filters.productId?.trim()) {
+    matchConditions.push({ report_product_id: filters.productId.trim() });
+  }
+  if (filters.productName?.trim()) {
     matchConditions.push({
-      effective_id_number: { $regex: filters.studentId.trim(), $options: "i" },
+      "items.product_name": exactMatch(filters.productName),
     });
   }
-
-  if (filters.course) {
-    matchConditions.push({
-      effective_course: { $regex: filters.course.trim(), $options: "i" },
-    });
+  if (filters.batch?.trim()) {
+    matchConditions.push({ report_batch: filters.batch.trim() });
+  }
+  if (filters.size?.trim()) {
+    matchConditions.push({ "items.sizes": exactMatch(filters.size) });
+  }
+  if (filters.color?.trim()) {
+    matchConditions.push({ "items.variation": exactMatch(filters.color) });
   }
 
-  if (filters.year) {
-    matchConditions.push({ effective_year: Number(filters.year) });
+  const dateFrom = parseDateBoundary(filters.dateFrom, false);
+  const dateTo = parseDateBoundary(filters.dateTo, true);
+  if (dateFrom || dateTo) {
+    const dateMatch: Record<string, Date> = {};
+    if (dateFrom) dateMatch.$gte = dateFrom;
+    if (dateTo) dateMatch.$lt = dateTo;
+    matchConditions.push({ report_transaction_date: dateMatch });
   }
 
-  if (filters.dateFrom || filters.dateTo) {
-    const dateFilter: Record<string, any> = {};
-    if (filters.dateFrom) dateFilter.$gte = new Date(filters.dateFrom);
-    if (filters.dateTo) dateFilter.$lte = new Date(filters.dateTo);
-    matchConditions.push({ date: dateFilter });
-  }
-
-  const pipeline: any[] = [
-    {
-      $lookup: {
-        from: "orders",
-        localField: "order_id",
-        foreignField: "_id",
-        as: "order",
-      },
-    },
-    { $unwind: { path: "$order", preserveNullAndEmptyArrays: true } },
-    {
-      $lookup: {
-        from: "merches",
-        localField: "merch_id",
-        foreignField: "_id",
-        as: "merch",
-      },
-    },
-    { $unwind: { path: "$merch", preserveNullAndEmptyArrays: true } },
+  return [
+    { $match: orderMatch },
+    { $unwind: "$items" },
     {
       $addFields: {
-        effective_id_number: {
-          $cond: {
-            if: { $gt: [{ $ifNull: ["$order.id_number", ""] }, ""] },
-            then: "$order.id_number",
-            else: "$id_number",
+        report_product_id: {
+          $convert: {
+            input: "$items.product_id",
+            to: "string",
+            onError: "",
+            onNull: "",
           },
         },
-        orderItem: {
-          $first: {
-            $filter: {
-              input: "$order.items",
-              as: "item",
-              cond: { $eq: ["$$item.product_id", "$merch._id"] },
+        report_item_id: {
+          $convert: {
+            input: "$items._id",
+            to: "string",
+            onError: "",
+            onNull: "",
+          },
+        },
+        report_batch: {
+          $trim: {
+            input: {
+              $convert: {
+                input: "$items.batch",
+                to: "string",
+                onError: "",
+                onNull: "",
+              },
             },
           },
         },
-        effective_reference_code: { $ifNull: ["$order.reference_code", ""] },
-        effective_student_name: { $ifNull: ["$order.student_name", ""] },
-        effective_course: { $ifNull: ["$order.course", ""] },
-        effective_year: { $ifNull: ["$order.year", null] },
+        report_transaction_date: {
+          $ifNull: ["$transaction_date", "$order_date"],
+        },
       },
     },
     ...(matchConditions.length > 0
       ? [{ $match: { $and: matchConditions } }]
       : []),
-    {
-      $project: {
-        _id: 1,
-        reference_code: "$effective_reference_code",
-        product_name: "$merch.name",
-        id_number: "$effective_id_number",
-        student_name: "$effective_student_name",
-        course: "$effective_course",
-        year: { $toString: "$effective_year" },
-        size: "$orderItem.sizes",
-        variation: "$orderItem.variation",
-        quantity: "$item_count",
-        total: "$total",
-        date: "$date",
-      },
-    },
-    { $sort: { date: -1 } },
   ];
-
-  return pipeline;
 };
 
-const applyPostMatchFilters = (
-  docs: any[],
-  filters: MerchandiseReportFilters
-) => {
-  return docs.filter((doc) => {
-    if (filters.name) {
-      const merchName = toLowerTrim(doc.product_name);
-      if (!merchName.includes(toLowerTrim(filters.name))) return false;
-    }
-    if (filters.productName) {
-      const productName = toLowerTrim(doc.product_name);
-      if (!productName.includes(toLowerTrim(filters.productName))) return false;
-    }
-    if (filters.size) {
-      const sizeVal = doc.size;
-      const sizeStr = Array.isArray(sizeVal)
-        ? sizeVal.join(" ")
-        : typeof sizeVal === "object" && sizeVal !== null
-          ? JSON.stringify(sizeVal)
-          : String(sizeVal ?? "");
-      if (!toLowerTrim(sizeStr).includes(toLowerTrim(filters.size)))
-        return false;
-    }
-    if (filters.color) {
-      const variationVal = doc.variation;
-      const variationStr = Array.isArray(variationVal)
-        ? variationVal.join(" ")
-        : typeof variationVal === "object" && variationVal !== null
-          ? JSON.stringify(variationVal)
-          : String(variationVal ?? "");
-      if (!toLowerTrim(variationStr).includes(toLowerTrim(filters.color)))
-        return false;
-    }
-    if (filters.referenceCode) {
-      const ref = toLowerTrim(doc.reference_code);
-      if (!ref.includes(toLowerTrim(filters.referenceCode))) return false;
-    }
-    return true;
-  });
+const rowProjection: PipelineStage.Project = {
+  $project: {
+    _id: {
+      $concat: [
+        { $toString: "$_id" },
+        ":",
+        {
+          $cond: [
+            { $ne: ["$report_item_id", ""] },
+            "$report_item_id",
+            "$report_product_id",
+          ],
+        },
+      ],
+    },
+    order_id: { $toString: "$_id" },
+    product_id: "$report_product_id",
+    reference_code: { $ifNull: ["$reference_code", "-"] },
+    product_name: { $ifNull: ["$items.product_name", "-"] },
+    batch: "$report_batch",
+    id_number: { $ifNull: ["$id_number", "-"] },
+    rfid: { $ifNull: ["$rfid", ""] },
+    student_name: { $ifNull: ["$student_name", "-"] },
+    course: { $ifNull: ["$course", "-"] },
+    year: {
+      $convert: { input: "$year", to: "string", onError: "-", onNull: "-" },
+    },
+    size: { $ifNull: ["$items.sizes", []] },
+    variation: { $ifNull: ["$items.variation", []] },
+    quantity: { $ifNull: ["$items.quantity", 0] },
+    total: { $ifNull: ["$items.sub_total", 0] },
+    transaction_date: "$report_transaction_date",
+    date: "$report_transaction_date",
+  },
 };
 
-const mapToRow = (doc: Record<string, unknown>): MerchandiseReportRow => ({
-  _id: String(doc._id),
-  reference_code: toLowerTrim(doc.reference_code)
-    ? String(doc.reference_code)
-    : "-",
-  product_name: toLowerTrim(doc.product_name) ? String(doc.product_name) : "-",
-  id_number: toLowerTrim(doc.id_number) ? String(doc.id_number) : "-",
-  student_name: toLowerTrim(doc.student_name) ? String(doc.student_name) : "-",
-  course: toLowerTrim(doc.course) ? String(doc.course) : "-",
-  year: doc.year != null ? String(doc.year) : "-",
-  size: doc.size ?? "-",
-  variation: doc.variation ?? "-",
-  quantity: Number(doc.quantity ?? 0),
-  total: Number(doc.total ?? 0),
-  date:
-    doc.date instanceof Date
-      ? doc.date
-      : new Date(doc.date as string | number | Date),
-});
+const rowSort: PipelineStage.Sort = {
+  $sort: {
+    report_transaction_date: -1,
+    _id: -1,
+    "items._id": 1,
+  },
+};
+
+const mapToRow = (doc: Record<string, unknown>): MerchandiseReportRow => {
+  const transactionDate =
+    doc.transaction_date instanceof Date
+      ? doc.transaction_date
+      : new Date(doc.transaction_date as string | number | Date);
+
+  return {
+    _id: String(doc._id),
+    order_id: String(doc.order_id ?? ""),
+    product_id: String(doc.product_id ?? ""),
+    reference_code: toLowerTrim(doc.reference_code)
+      ? String(doc.reference_code)
+      : "-",
+    product_name: toLowerTrim(doc.product_name)
+      ? String(doc.product_name)
+      : "-",
+    batch: String(doc.batch ?? ""),
+    id_number: toLowerTrim(doc.id_number) ? String(doc.id_number) : "-",
+    rfid: String(doc.rfid ?? ""),
+    student_name: toLowerTrim(doc.student_name)
+      ? String(doc.student_name)
+      : "-",
+    course: toLowerTrim(doc.course) ? String(doc.course) : "-",
+    year: doc.year != null ? String(doc.year) : "-",
+    size: doc.size ?? [],
+    variation: doc.variation ?? [],
+    quantity: Number(doc.quantity ?? 0),
+    total: Number(doc.total ?? 0),
+    transaction_date: transactionDate,
+    date: transactionDate,
+  };
+};
 
 export const getMerchandiseReport = async (
   params: MerchandiseReportQuery = {}
 ): Promise<MerchandiseReportResult> => {
   const page = normalizePage(params.page);
   const limit = normalizeLimit(params.limit);
-
-  const pipeline = buildBasePipeline(params);
-  const dbMatched = await Report.aggregate(pipeline);
-
-  const filteredResults = applyPostMatchFilters(dbMatched, params);
-  const rows = filteredResults.map(mapToRow);
-
-  const totalCount = rows.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
   const skip = (page - 1) * limit;
-  const pagedRows = rows.slice(skip, skip + limit);
 
-  const summary = rows.reduce(
-    (acc, row) => {
-      acc.unitsSold += row.quantity;
-      acc.totalRevenue += row.total;
-      return acc;
+  const [result] = await Orders.aggregate([
+    ...buildPaidOrderItemPipeline(params),
+    {
+      $facet: {
+        data: [rowSort, { $skip: skip }, { $limit: limit }, rowProjection],
+        metadata: [{ $count: "total" }],
+        summary: [
+          {
+            $group: {
+              _id: null,
+              unitsSold: { $sum: { $ifNull: ["$items.quantity", 0] } },
+              totalRevenue: { $sum: { $ifNull: ["$items.sub_total", 0] } },
+            },
+          },
+        ],
+      },
     },
-    { unitsSold: 0, totalRevenue: 0 }
-  );
+  ]);
 
-  const productNames = await getMerchandiseProductNames();
+  const rows = ((result?.data ?? []) as Record<string, unknown>[]).map(
+    mapToRow
+  );
+  const total = Number(result?.metadata?.[0]?.total ?? 0);
+  const summary = result?.summary?.[0] ?? {
+    unitsSold: 0,
+    totalRevenue: 0,
+  };
 
   return {
-    rows: pagedRows,
-    data: pagedRows,
-    total: totalCount,
+    rows,
+    data: rows,
+    total,
     page,
     limit,
-    totalPages,
-    summary,
-    productNames,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+    summary: {
+      unitsSold: Number(summary.unitsSold ?? 0),
+      totalRevenue: Number(summary.totalRevenue ?? 0),
+    },
   };
 };
 
-export const getMerchandiseProductNames = async (): Promise<string[]> => {
-  const names = await Report.aggregate([
+export const getMerchandiseReportFilterOptions = async (): Promise<
+  MerchandiseReportProductOption[]
+> => {
+  const options = await Orders.aggregate([
+    ...buildPaidOrderItemPipeline(),
     {
-      $lookup: {
-        from: "merches",
-        localField: "merch_id",
-        foreignField: "_id",
-        as: "merch",
+      $match: {
+        report_product_id: { $ne: "" },
+        "items.product_name": { $nin: [null, ""] },
       },
     },
-    { $unwind: { path: "$merch", preserveNullAndEmptyArrays: true } },
-    { $match: { "merch.name": { $ne: null } } },
-    { $group: { _id: "$merch.name" } },
-    { $sort: { _id: 1 } },
+    {
+      $group: {
+        _id: "$report_product_id",
+        productName: { $max: "$items.product_name" },
+        batches: { $addToSet: "$report_batch" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        productId: "$_id",
+        productName: 1,
+        batches: { $setDifference: ["$batches", [""]] },
+      },
+    },
+    { $sort: { productName: 1, productId: 1 } },
   ]);
-  return names.map((n) => n._id).filter(Boolean);
+
+  return options.map((option) => ({
+    productId: String(option.productId),
+    productName: String(option.productName),
+    batches: (option.batches as unknown[])
+      .map(String)
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+  }));
+};
+
+export const getMerchandiseReportExportRows = async (
+  filters: MerchandiseReportFilters = {}
+): Promise<MerchandiseReportRow[]> => {
+  const rows = await Orders.aggregate([
+    ...buildPaidOrderItemPipeline(filters),
+    rowSort,
+    rowProjection,
+  ]);
+  return (rows as Record<string, unknown>[]).map(mapToRow);
+};
+
+export const getMerchandiseProductNames = async (): Promise<string[]> => {
+  const options = await getMerchandiseReportFilterOptions();
+  return Array.from(new Set(options.map((option) => option.productName)));
 };
 
 export const getMerchandiseReportById = async (reportId: string) => {
@@ -330,45 +434,63 @@ export const getMerchandiseReportById = async (reportId: string) => {
   const report = await Report.findById(reportId)
     .populate({
       path: "order_id",
-      select: "reference_code id_number student_name course year",
+      select:
+        "reference_code id_number rfid student_name course year transaction_date",
     })
     .populate({
       path: "merch_id",
-      select: "name selectedVariations",
+      select: "name batch selectedVariations",
     })
     .lean();
 
   if (!report) return null;
 
   const order = report.order_id as {
+    _id?: unknown;
     reference_code?: string;
     items?: IOrdersItems[];
     id_number?: string;
+    rfid?: string;
     student_name?: string;
     course?: string;
     year?: number;
+    transaction_date?: Date;
   } | null;
 
   const merch = report.merch_id as {
+    _id?: unknown;
     name?: string;
+    batch?: string;
     selectedSizes?: unknown;
     selectedVariations?: unknown;
   } | null;
+  const transactionDate = order?.transaction_date ?? report.date;
 
   return {
     _id: String(report._id),
+    order_id: String(order?._id ?? ""),
+    product_id: String(merch?._id ?? ""),
     reference_code: order?.reference_code || "-",
     product_name: merch?.name || "-",
+    batch: String(merch?.batch ?? ""),
     id_number: order?.id_number || report.id_number || "-",
+    rfid: order?.rfid || "",
     student_name: order?.student_name || "-",
     course: order?.course || "-",
     year: order?.year != null ? String(order.year) : "-",
-    size: order?.items ?? "-",
-    variation: merch?.selectedVariations ?? "-",
+    size: order?.items ?? [],
+    variation: merch?.selectedVariations ?? [],
     quantity: Number(report.item_count ?? 0),
     total: Number(report.total ?? 0),
-    date: report.date instanceof Date ? report.date : new Date(report.date),
-  } as MerchandiseReportRow;
+    transaction_date:
+      transactionDate instanceof Date
+        ? transactionDate
+        : new Date(transactionDate),
+    date:
+      transactionDate instanceof Date
+        ? transactionDate
+        : new Date(transactionDate),
+  } satisfies MerchandiseReportRow;
 };
 
 export const deleteMerchandiseReportById = async (reportId: string) => {
@@ -427,12 +549,8 @@ export const reportService = {
   getMerchandiseReportById,
   deleteMerchandiseReportById,
   getMerchandiseProductNames,
+  getMerchandiseReportFilterOptions,
+  getMerchandiseReportExportRows,
 };
 
-export default {
-  createReports,
-  getMerchandiseReport,
-  getMerchandiseReportById,
-  deleteMerchandiseReportById,
-  getMerchandiseProductNames,
-};
+export default reportService;
