@@ -306,8 +306,8 @@ export const EventInfoTab: React.FC<EventInfoTabProps> = ({
             >
               {formData.eventSchedule?.from
                 ? formData.eventSchedule?.to
-                  ? `${format(formData.eventSchedule.from, "d, MMM yyyy")} - ${format(formData.eventSchedule.to, "d, MMM yyyy")}`
-                  : format(formData.eventSchedule.from, "d, MMM yyyy")
+                  ? `${format(formData.eventSchedule.from, "d MMM yyyy")} - ${format(formData.eventSchedule.to, "d MMM yyyy")}`
+                  : format(formData.eventSchedule.from, "d MMM yyyy")
                 : "Choose date"}
             </span>
           </button>
