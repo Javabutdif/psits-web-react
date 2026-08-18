@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Printer,
   Search,
   X,
 } from "lucide-react";
@@ -21,7 +22,10 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { showToast } from "@/utils/alertHelper";
+import { getOrderReceiptV2 } from "../api/orders";
 import { useOrdersData, ROWS_PER_PAGE } from "../hooks/useOrdersData";
+import { PrintableOrderReceipt } from "./PrintableOrderReceipt";
+import type { PrintableOrderReceipt as PrintableOrderReceiptData } from "../types/orders.types";
 
 const formatDate = (value: string | Date) => {
   if (!value) return "-";
@@ -293,6 +297,11 @@ export const OrdersView = () => {
   const [cancelTarget, setCancelTarget] = useState<OrderRowData | null>(null);
   const [refundTarget, setRefundTarget] = useState<OrderRowData | null>(null);
   const [detailOrder, setDetailOrder] = useState<OrderRowData | null>(null);
+  const [receipt, setReceipt] = useState<PrintableOrderReceiptData | null>(
+    null
+  );
+  const [printTicket, setPrintTicket] = useState(0);
+  const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
 
   const data = activeTab === "pending" ? pendingData : paidData;
   const totalPages =
@@ -329,6 +338,42 @@ export const OrdersView = () => {
 
   const totalPagesNum = Math.max(1, totalPages);
   const currentPage = Math.min(page, totalPagesNum);
+
+  useEffect(() => {
+    if (!receipt || printTicket === 0) return;
+
+    const timer = window.setTimeout(() => {
+      window.print();
+    }, 150);
+
+    return () => window.clearTimeout(timer);
+  }, [receipt, printTicket]);
+
+  useEffect(() => {
+    const handleAfterPrint = () => setReceipt(null);
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => window.removeEventListener("afterprint", handleAfterPrint);
+  }, []);
+
+  const handlePrintReceipt = async (order: OrderRowData) => {
+    if (!canManageOrders) {
+      showToast("error", "Unauthorized.");
+      return;
+    }
+
+    setPrintingOrderId(order._id);
+    try {
+      const result = await getOrderReceiptV2(order._id);
+      if (!result) {
+        showToast("error", "Unable to load receipt.");
+        return;
+      }
+      setReceipt(result);
+      setPrintTicket((ticket) => ticket + 1);
+    } finally {
+      setPrintingOrderId(null);
+    }
+  };
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_[data-disabled]]:pointer-events-auto [&_[data-disabled]]:cursor-not-allowed [&_[role=menuitem]]:cursor-pointer [&_a]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
@@ -397,7 +442,7 @@ export const OrdersView = () => {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[920px] table-fixed border-collapse text-sm">
+            <table className="w-full min-w-[1020px] table-fixed border-collapse text-sm">
               <colgroup>
                 <col className="w-12" />
                 <col className="w-[22%]" />
@@ -406,7 +451,7 @@ export const OrdersView = () => {
                 <col className="w-[14%]" />
                 <col className="w-[18%]" />
                 <col className="w-[12%]" />
-                <col className="w-[190px]" />
+                <col style={{ width: activeTab === "paid" ? 280 : 190 }} />
               </colgroup>
               <thead>
                 <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
@@ -561,6 +606,21 @@ export const OrdersView = () => {
                               onClick={() => setDetailOrder(order)}
                             >
                               Details
+                            </Button>
+                          )}
+                          {activeTab === "paid" && canManageOrders && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-8 rounded-full border-[#d7eef9] text-[#1c9dde] hover:bg-[#f0fafd]"
+                              disabled={printingOrderId === order._id}
+                              onClick={() => void handlePrintReceipt(order)}
+                            >
+                              <Printer className="mr-1 h-3.5 w-3.5" />
+                              {printingOrderId === order._id
+                                ? "Preparing..."
+                                : "Print"}
                             </Button>
                           )}
                           {activeTab === "paid" && canManageOrders && (
@@ -828,6 +888,20 @@ export const OrdersView = () => {
             </table>
 
             <div className="mt-6 flex justify-end">
+              {detailOrder?.order_status === "Paid" && canManageOrders ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mr-3 h-10 min-w-24 rounded-full border-[#d7eef9] text-[#1c9dde] hover:bg-[#f0fafd]"
+                  disabled={printingOrderId === detailOrder._id}
+                  onClick={() => void handlePrintReceipt(detailOrder)}
+                >
+                  <Printer className="mr-1 h-4 w-4" />
+                  {printingOrderId === detailOrder._id
+                    ? "Preparing..."
+                    : "Print"}
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 className="h-10 min-w-24 rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
@@ -839,6 +913,7 @@ export const OrdersView = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <PrintableOrderReceipt receipt={receipt} />
     </div>
   );
 };

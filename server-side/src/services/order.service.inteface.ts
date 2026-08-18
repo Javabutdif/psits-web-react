@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 export interface IUserItems {
   product_id: mongoose.Types.ObjectId;
+  imageUrl1?: string;
   product_name: string;
   limited: boolean;
   price: number;

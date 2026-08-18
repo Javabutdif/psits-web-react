@@ -29,7 +29,7 @@ const STATUS_STYLES: Record<string, string> = {
   Pending: "bg-amber-100 text-amber-700",
   "For Verification": "bg-slate-100 text-slate-700",
   Scheduled: "bg-blue-100 text-blue-700",
-  "Interview Completed": "bg-purple-100 text-purple-700",
+  "Interviewed": "bg-purple-100 text-purple-700",
   Approved: "bg-emerald-100 text-emerald-700",
   Rejected: "bg-red-100 text-red-700",
 };
@@ -83,6 +83,10 @@ export const ApplicantMobileCard = ({
 }: ApplicantMobileCardProps) => {
   const isFinal =
     applicant.status === "Approved" || applicant.status === "Rejected";
+  const notYetInterviewed =
+    applicant.status !== "Interview Completed" && !isFinal;
+  const approveRejectDisabled =
+    isMutating || applicant.status !== "Interview Completed";
 
   return (
     <div className="space-y-3 rounded-xl border border-[#ececec] p-4">
@@ -154,7 +158,12 @@ export const ApplicantMobileCard = ({
               type="button"
               size="icon-sm"
               variant="outline"
-              disabled={isMutating || isFinal}
+              disabled={approveRejectDisabled}
+              title={
+                notYetInterviewed
+                  ? "Available after the interview is completed"
+                  : undefined
+              }
               onClick={() => onApprove?.(applicant.id)}
               aria-label="Approve"
               className="h-8 w-8 shrink-0 rounded-full border-emerald-200 text-emerald-600 hover:bg-emerald-50 disabled:opacity-40"
@@ -165,7 +174,12 @@ export const ApplicantMobileCard = ({
               type="button"
               size="icon-sm"
               variant="outline"
-              disabled={isMutating || isFinal}
+              disabled={approveRejectDisabled}
+              title={
+                notYetInterviewed
+                  ? "Available after the interview is completed"
+                  : undefined
+              }
               onClick={() => onReject?.(applicant.id)}
               aria-label="Reject"
               className="h-8 w-8 shrink-0 rounded-full border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40"

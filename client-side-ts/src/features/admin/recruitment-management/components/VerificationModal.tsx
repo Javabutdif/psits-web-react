@@ -43,14 +43,12 @@ export const VerificationModal = ({
           {getInitial(applicant.name)}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <p className="truncate font-medium text-slate-900">
-              {applicant.name || "—"}
-            </p>
-            <span className="shrink-0 text-xs text-slate-400">
-              {applicant.roleApplied || "—"}
-            </span>
-          </div>
+          <p className="truncate font-medium text-slate-900">
+            {applicant.name || "—"}
+          </p>
+          <p className="truncate text-xs text-slate-400">
+            {applicant.roleApplied || "—"}
+          </p>
           <p className="mt-2 text-xs text-slate-500">
             Student ID:{" "}
             <span className="text-slate-700">{applicant.id_number || "—"}</span>

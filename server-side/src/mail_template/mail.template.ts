@@ -228,14 +228,14 @@ export const orderReceipt = async (
     return;
   }
 
-  const emailTemplate = await ejs.renderFile(
-    path.join(__dirname, "../assets/appr-order-receipt.ejs"),
-    data
-  );
-  const logoPath = path.join(__dirname, "../assets/psits.jpg");
-  const logoBuffer = await fs.readFile(logoPath);
-
   try {
+    const emailTemplate = await ejs.renderFile(
+      path.join(__dirname, "../assets/appr-order-receipt.ejs"),
+      data
+    );
+    const logoPath = path.join(__dirname, "../assets/psits.jpg");
+    const logoBuffer = await fs.readFile(logoPath);
+
     const queueEntry = await emailService.createByEmail(
       "receipt",
       studentEmail,

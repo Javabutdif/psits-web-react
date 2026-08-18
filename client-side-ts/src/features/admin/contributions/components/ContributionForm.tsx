@@ -282,7 +282,12 @@ export const ContributionForm = ({
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 min-h-[100px] rounded-lg border-[#eeeeee]"
+                className="mt-1 h-[150px] w-full resize-none overflow-y-auto rounded-lg border-[#eeeeee]"
+                style={{
+                  whiteSpace: "pre-wrap",
+                  overflowWrap: "break-word",
+                  wordBreak: "break-word",
+                }}
                 placeholder="What did they contribute?"
                 required
               />

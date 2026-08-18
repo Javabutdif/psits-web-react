@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/features/auth";
 import { addToCartApi, useMembershipGate } from "@/features/student";
+import {
+  getVariationLabel,
+  getVariationSwatch,
+  isBundledVariationCategory,
+} from "@/features/merchandise/constants/variations";
 import { getMerchandiseById, type MerchandiseItem } from "../api/orders";
-
-// Fallback image for products without images
-import fallbackImage from "../../../assets/awarding/1.jpg";
 
 interface Product {
   id: string;
@@ -39,27 +41,46 @@ const transformMerchandise = (item: MerchandiseItem): Product => {
   if (item.selectedSizes) {
     const obj = item.selectedSizes as Record<string, unknown>;
     if (typeof (obj as any).entries === "function") {
-      const mapEntries = Array.from((obj as any).entries() as IterableIterator<[string, unknown]>);
+      const mapEntries = Array.from(
+        (obj as any).entries() as IterableIterator<[string, unknown]>
+      );
       sizesFromSelectedSizes = mapEntries.map(([key]) => key);
     } else {
       sizesFromSelectedSizes = Object.keys(obj);
     }
   }
 
+  // The admin form saves the picked variations under `selectedVariations`.
+  // The older `variation` / `colors` fields are kept as fallbacks for records
+  // written before that rename. No hardcoded default: if the product genuinely
+  // has no variations, the colour picker is hidden entirely.
+  const rawVariations =
+    (item as any).selectedVariations ?? item.variation ?? item.colors;
+
+  const colors = Array.isArray(rawVariations)
+    ? rawVariations.filter(Boolean)
+    : typeof rawVariations === "string" && rawVariations.trim()
+      ? rawVariations
+          .split(",")
+          .map((entry) => entry.trim())
+          .filter(Boolean)
+      : [];
+
   return {
     id: item._id,
     name: item.name || item.product_name || "Unknown Product",
     price: item.price,
-    image: item.imageUrl?.[0] || item.imageUrl1 || fallbackImage,
+    image: item.imageUrl?.[0] || item.imageUrl1 || "",
     isSoldOut: (item.stocks ?? item.stock ?? 0) <= 0,
     category: item.category || "Merchandise",
     description: item.description,
     sizes: item.sizes || sizesFromSelectedSizes,
-    colors: item.colors || item.variation,
+    colors,
     stock: item.stocks ?? item.stock,
     start_date: item.start_date,
     end_date: item.end_date,
-    selectedSizes: item.selectedSizes as Record<string, { custom: boolean; price: string }> | undefined,
+    selectedSizes: item.selectedSizes as
+      Record<string, { custom: boolean; price: string }> | undefined,
   };
 };
 
@@ -100,6 +121,7 @@ const BuyNowButton: React.FC<AddToCartButtonProps> = ({
       name: product.name,
       price: product.price,
       image: product.image,
+      // Persist the raw variation value(s), never the display label.
       color: selectedColor,
       size: selectedSize,
       course: selectedCourse,
@@ -178,6 +200,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         const payload: any = {
           product_id: product.id,
           sizes: selectedSize,
+          // Raw value(s), so they match what is stored on the merch document.
           variation: selectedColor,
           quantity,
           id_number: user.idNumber,
@@ -239,8 +262,11 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   const location = useLocation();
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState("L");
-  const [selectedColor, setSelectedColor] = useState("White");
+  // Holds the student's *explicit* choice only. The value actually in effect
+  // is derived below, so no effect writes state on mount and a valid option is
+  // active from the very first render.
+  const [pickedSize, setPickedSize] = useState("");
+  const [pickedColor, setPickedColor] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("BSIT");
   const [fetchedProduct, setFetchedProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
@@ -279,18 +305,6 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
 
   // Determine which product to display
   const currentProduct = product ?? stateProduct ?? fetchedProduct;
-
-  // Initialize size and color from product data
-  useEffect(() => {
-    if (currentProduct) {
-      if (currentProduct.sizes && currentProduct.sizes.length > 0) {
-        setSelectedSize(currentProduct.sizes[0]);
-      }
-      if (currentProduct.colors && currentProduct.colors.length > 0) {
-        setSelectedColor(currentProduct.colors[0]);
-      }
-    }
-  }, [currentProduct]);
 
   // Loading state
   if (loading) {
@@ -355,16 +369,24 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
     );
   }
 
-  // Get available sizes and colors from the product, or use defaults
-  const availableSizes =
-    currentProduct.sizes && currentProduct.sizes.length > 0
-      ? currentProduct.sizes
-      : ["S", "M", "L", "XL", "XXL"];
-  const availableColors =
-    currentProduct.colors && currentProduct.colors.length > 0
-      ? currentProduct.colors
-      : ["White", "Purple"];
+  // Only show what the admin actually configured on this product.
+  const availableSizes = currentProduct.sizes ?? [];
+  const availableColors = currentProduct.colors ?? [];
   const stockCount = currentProduct.stock ?? 0;
+
+  // A uniform is a set: the student receives every configured piece, so all
+  // chips show as selected and none of them are clickable. Other categories
+  // treat their variations as alternatives and let the student pick one.
+  const isBundle = isBundledVariationCategory(currentProduct.category);
+
+  const selectedColor = isBundle
+    ? availableColors.join(", ")
+    : pickedColor || availableColors[0] || "";
+
+  const isColorSelected = (color: string) =>
+    isBundle ? true : selectedColor === color;
+
+  const selectedSize = pickedSize || availableSizes[0] || "";
 
   const getDisplayPrice = (): number => {
     if (currentProduct.selectedSizes && selectedSize) {
@@ -380,8 +402,12 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   const selectedPriceProduct = { ...currentProduct, price: displayPrice };
 
   const now = new Date();
-  const startDate = currentProduct.start_date ? new Date(currentProduct.start_date) : null;
-  const endDate = currentProduct.end_date ? new Date(currentProduct.end_date) : null;
+  const startDate = currentProduct.start_date
+    ? new Date(currentProduct.start_date)
+    : null;
+  const endDate = currentProduct.end_date
+    ? new Date(currentProduct.end_date)
+    : null;
   const isNotStarted = startDate ? now < startDate : false;
   const isExpired = endDate ? now > endDate : false;
   const isOutOfActiveWindow = isNotStarted || isExpired;
@@ -447,66 +473,101 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
           </div>
 
           <div className="space-y-6 sm:space-y-10">
-            {/* Color Selection */}
-            <div>
-              <h3 className="mb-4 text-sm font-bold tracking-wider text-gray-900 uppercase">
-                Color
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {availableColors.map((color) => (
-                  <Button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={cn(
-                      "rounded-full px-5 py-2 text-xs font-bold transition-all sm:px-6 sm:py-3 sm:text-sm",
-                      selectedColor === color
-                        ? "bg-[#1c9dde] text-white shadow-lg shadow-blue-200"
-                        : "border border-gray-200 bg-white text-gray-600 hover:bg-[#1c9dde]/90 hover:text-white"
-                    )}
-                    aria-label={`Select ${color}`}
-                  >
-                    {color}
-                  </Button>
-                ))}
+            {/* Color - hidden entirely when the product has no variations */}
+            {availableColors.length > 0 && (
+              <div>
+                <div className="mb-4 flex flex-wrap items-baseline gap-x-3">
+                  <h3 className="text-sm font-bold tracking-wider text-gray-900 uppercase">
+                    Color
+                  </h3>
+                  {isBundle && (
+                    <span className="text-xs font-medium text-gray-500 normal-case">
+                      Both pieces are included in this set
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {availableColors.map((color) => {
+                    const isSelected = isColorSelected(color);
+                    return (
+                      <Button
+                        key={color}
+                        // A bundled set is informational, not a choice.
+                        disabled={isBundle}
+                        onClick={
+                          isBundle ? undefined : () => setPickedColor(color)
+                        }
+                        className={cn(
+                          "inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-bold transition-all sm:px-6 sm:py-3 sm:text-sm",
+                          isBundle ? "cursor-default" : "cursor-pointer",
+                          isSelected
+                            ? "bg-[#1c9dde] text-white shadow-lg shadow-blue-200"
+                            : "border border-gray-200 bg-white text-gray-600 hover:bg-[#1c9dde]/90 hover:text-white",
+                          // Keep a locked chip at full strength - the shadcn
+                          // Button dims disabled elements by default.
+                          isBundle && "opacity-100 disabled:opacity-100"
+                        )}
+                        aria-pressed={isSelected}
+                        aria-label={getVariationLabel(color)}
+                      >
+                        {/* The swatch is dropped once selected - a small pale
+                            circle inside a filled pill reads as an unchecked
+                            radio button. Space is kept so the chip doesn't
+                            change width. */}
+                        <span
+                          className={cn(
+                            "h-3.5 w-3.5 shrink-0 rounded-full border-2",
+                            isSelected ? "border-white/60" : "border-gray-400"
+                          )}
+                          style={{ backgroundColor: getVariationSwatch(color) }}
+                        />
+                        {getVariationLabel(color)}
+                      </Button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Size Selection */}
-            <div>
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-bold tracking-wider text-gray-900 uppercase">
-                  Size
-                </h3>
-                <button className="flex items-center gap-1 text-xs font-bold text-[#1c9dde]">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M11 5L6 9v4l5 4V5z" />
-                  </svg>
-                  SIZE GUIDE
-                </button>
+            {/* Size Selection - hidden entirely when the product has none */}
+            {availableSizes.length > 0 && (
+              <div>
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-sm font-bold tracking-wider text-gray-900 uppercase">
+                    Size
+                  </h3>
+                  <button className="flex items-center gap-1 text-xs font-bold text-[#1c9dde]">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M11 5L6 9v4l5 4V5z" />
+                    </svg>
+                    SIZE GUIDE
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 sm:gap-3">
+                  {availableSizes.map((size) => (
+                    <Button
+                      key={size}
+                      onClick={() => setPickedSize(size)}
+                      className={cn(
+                        "cursor-pointer rounded-full px-5 py-3 text-xs font-bold transition-all sm:px-8 sm:py-5 sm:text-sm",
+                        selectedSize === size
+                          ? "bg-[#1c9dde] text-white shadow-lg shadow-blue-200"
+                          : "border border-gray-200 bg-white text-gray-600 hover:bg-[#1c9dde]/90 hover:text-white"
+                      )}
+                      aria-pressed={selectedSize === size}
+                    >
+                      {size}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 sm:gap-3">
-                {availableSizes.map((size) => (
-                  <Button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={cn(
-                      "cursor-pointer rounded-full px-5 py-3 text-xs font-bold transition-all sm:px-8 sm:py-5 sm:text-sm",
-                      selectedSize === size
-                        ? "bg-[#1c9dde] text-white shadow-lg shadow-blue-200"
-                        : "border border-gray-200 bg-white text-gray-600 hover:bg-[#1c9dde]/90 hover:text-white"
-                    )}
-                  >
-                    {size}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Course Selection */}
             <div>

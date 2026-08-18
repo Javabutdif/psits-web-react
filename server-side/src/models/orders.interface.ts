@@ -31,6 +31,7 @@ export interface IOrders {
   year: number;
   items: IOrdersItems[];
   total: number;
+  cash?: number;
   order_date: Date;
   transaction_date: Date;
   order_status: string;

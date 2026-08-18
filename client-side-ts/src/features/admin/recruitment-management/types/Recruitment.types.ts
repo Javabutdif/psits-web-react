@@ -26,6 +26,7 @@ export type RecruitmentStatus =
   | "For Verification"
   | "Scheduled"
   | "Interview Completed"
+  | "Interviewed"
   | "Approved"
   | "Rejected";
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getEmailQueue, resendEmail, exportEmailQueueCsv, triggerCron, getFailedEmailDetails, bulkUpdateEmailStatus } from "../api/devtools.api";
+import { getEmailQueue, resendEmail, exportEmailQueueCsv, triggerCron, getFailedEmailDetails } from "../api/devtools.api";
 import type { EmailQueueEntry } from "../types/devtools.types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AlertTriangle } from "lucide-react";
 
 interface FailedEmail {
   _id: string;
@@ -27,6 +26,7 @@ interface FailedEmail {
 
 export const EmailQueuePanel = () => {
   const [entries, setEntries] = useState<EmailQueueEntry[]>([]);
+  const [counts, setCounts] = useState({ pending: 0, sent: 0 });
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -34,8 +34,6 @@ export const EmailQueuePanel = () => {
   const [pageSize] = useState(50);
   const [resendAllConfirm, setResendAllConfirm] = useState(false);
   const [failedEmails, setFailedEmails] = useState<FailedEmail[]>([]);
-  const [loadingFailed, setLoadingFailed] = useState(false);
-  const [selectedFailed, setSelectedFailed] = useState<Set<string>>(new Set());
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -61,14 +59,23 @@ export const EmailQueuePanel = () => {
   }, [page, filter]);
 
   const loadFailedEmails = async () => {
-    setLoadingFailed(true);
     try {
       const data = await getFailedEmailDetails(100);
       setFailedEmails(data);
     } catch {
       // silently fail
-    } finally {
-      setLoadingFailed(false);
+    }
+  };
+
+  const loadCounts = async () => {
+    try {
+      const [pendingData, sentData] = await Promise.all([
+        getEmailQueue({ status: "pending", limit: 1, skip: 0 }),
+        getEmailQueue({ status: "sent", limit: 1, skip: 0 }),
+      ]);
+      setCounts({ pending: pendingData.total, sent: sentData.total });
+    } catch {
+      // silently fail
     }
   };
 
@@ -76,11 +83,18 @@ export const EmailQueuePanel = () => {
     loadFailedEmails();
   }, []);
 
+  useEffect(() => {
+    loadFailedEmails();
+    loadCounts();
+  }, []);
+
   const handleResend = async (id: string) => {
     try {
       await resendEmail(id);
       showToast("success", "Email resent successfully");
       fetchEntries();
+      loadFailedEmails();
+      loadCounts();
     } catch {
       showToast("error", "Failed to resend email");
     }
@@ -106,6 +120,8 @@ export const EmailQueuePanel = () => {
       showToast("success", "Email resend job triggered");
       setResendAllConfirm(false);
       fetchEntries();
+      loadFailedEmails();
+      loadCounts();
     } catch {
       showToast("error", "Failed to trigger resend");
     }
@@ -123,40 +139,76 @@ export const EmailQueuePanel = () => {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="h-9 rounded-lg border-[#ececec] bg-white px-3 text-sm"
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="sent">Sent</option>
-          <option value="failed">Failed</option>
-        </select>
+      <div className="mb-5 flex flex-wrap items-center gap-2.5">
+        <div className="inline-flex items-center rounded-full bg-[#f1f1f1] p-1">
+      {[
+        { value: "", label: "All" },
+        { value: "pending", label: "Pending" },
+        { value: "sent", label: "Sent" },
+        { value: "failed", label: "Failed" },
+      ].map((option) => {
+        const active = filter === option.value;
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setFilter(option.value)}
+            className={`rounded-full px-4 py-2 text-sm transition-all ${
+              active
+                ? "bg-white text-[#303030] shadow-sm"
+                : "text-[#666] hover:text-[#303030]"
+            }`}
+          >
+            {option.label}
+
+            {option.value === "failed" && (
+              <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-600">
+                {failedEmails.length}
+              </span>
+            )}
+
+            {option.value === "pending" && (
+              <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-yellow-100 px-1.5 py-0.5 text-[11px] font-medium text-yellow-700">
+                {counts.pending}
+              </span>
+            )}
+
+            {option.value === "sent" && (
+              <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-green-100 px-1.5 py-0.5 text-[11px] font-medium text-green-600">
+                {counts.sent}
+              </span>
+            )}
+                      </button>
+                    );
+                  })}
+                </div>
+
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="rounded-full"
+          className="h-10 rounded-full border-[#e5e5e5] bg-white px-5 text-sm"
           onClick={fetchEntries}
         >
           Refresh
         </Button>
+
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="rounded-full"
+          className="h-10 rounded-full border-[#e5e5e5] bg-white px-5 text-sm"
           onClick={handleExport}
         >
           Export CSV
         </Button>
+
         {pendingEntries > 0 && (
           <Button
             type="button"
             size="sm"
-            className="rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
+            className="h-10 rounded-full bg-[#1c9dde] px-5 text-sm hover:bg-[#168bc7]"
             onClick={() => setResendAllConfirm(true)}
           >
             Resend All Pending ({pendingEntries})
@@ -176,29 +228,80 @@ export const EmailQueuePanel = () => {
         <div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] table-fixed border-collapse text-sm">
+              <colgroup>
+                <col className="w-[15%]" />
+                <col className="w-[20%]" />
+                <col className="w-[14%]" />
+                <col className="w-[9%]" />
+                <col className="w-[7%]" />
+                <col className="w-[18%]" />
+                <col className="w-[17%]" />
+              </colgroup>
+
               <thead>
-                <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-                  <th className="w-[15%] rounded-l-md px-2 py-2 text-left font-medium">Reference Code</th>
-                  <th className="w-[20%] px-2 py-2 text-left font-medium">Email</th>
-                  <th className="w-[10%] px-2 py-2 text-left font-medium">Type</th>
-                  <th className="w-[12%] px-2 py-2 text-left font-medium">Status</th>
-                  <th className="w-[8%] px-2 py-2 text-center font-medium">Retries</th>
-                  <th className="w-[15%] px-2 py-2 text-left font-medium">Timestamp</th>
-                  <th className="w-[20%] rounded-r-md px-2 py-2 text-right font-medium">Actions</th>
+                <tr className="bg-[#efefef] text-[#2f2f2f]">
+                  <th className="rounded-l-xl px-2.5 py-2.5 text-left font-medium">
+                    Reference Code
+                  </th>
+
+                  <th className="px-2.5 py-2.5 text-left font-medium">
+                    Email
+                  </th>
+
+                  <th className="px-2.5 py-2.5 text-left font-medium">
+                    Type
+                  </th>
+
+                  <th className="px-1.5 py-2.5 text-left font-medium">
+                    Status
+                  </th>
+
+                  <th className="px-1 py-2.5 text-center font-medium">
+                    Retries
+                  </th>
+
+                  <th className="px-2.5 py-2.5 text-left font-medium">
+                    Timestamp
+                  </th>
+
+                  <th className="rounded-r-xl px-2.5 py-2.5 text-right font-medium">
+                    Actions
+                  </th>
                 </tr>
               </thead>
+
               <tbody>
                 {entries.map((entry) => (
-                  <tr key={entry._id} className="border-b border-[#ededed] text-[#303030]">
-                    <td className="truncate px-2 py-3">{entry.referenceCode || "-"}</td>
-                    <td className="truncate px-2 py-3">{entry.email}</td>
-                    <td className="px-2 py-3">{entry.subtype || entry.type}</td>
-                    <td className="px-2 py-3">
+                  <tr
+                    key={entry._id}
+                    className="border-b border-[#ededed] text-[#303030] last:border-b-0"
+                  >
+                    <td className="truncate px-2.5 py-3.5">
+                      {entry.referenceCode || "-"}
+                    </td>
+
+                    <td className="truncate px-2.5 py-3.5">
+                      {entry.email}
+                    </td>
+
+                    <td className="overflow-hidden px-2.5 py-3.5">
+                      <div
+                        className="truncate whitespace-nowrap"
+                        title={entry.subtype || entry.type}
+                      >
+                        {entry.subtype || entry.type}
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-1.5 py-3.5">
                       <span className={getStatusBadge(entry.status)}>
                         {entry.status}
                       </span>
                     </td>
-                    <td className="px-2 py-3 text-center">
+
+                    {/* Retries - intentionally tight to Status */}
+                    <td className="px-1 py-3.5 text-center">
                       {entry.retryCount >= 3 ? (
                         <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
                           {entry.retryCount}
@@ -207,16 +310,18 @@ export const EmailQueuePanel = () => {
                         entry.retryCount
                       )}
                     </td>
-                    <td className="px-2 py-3">
+
+                    <td className="truncate px-2.5 py-3.5">
                       {new Date(entry.timestamp).toLocaleString()}
                     </td>
-                    <td className="px-2 py-3 text-right">
+
+                    <td className="px-2.5 py-3.5 text-right">
                       {entry.status === "pending" && (
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="h-7 rounded-full border-[#e8e8e8] text-xs"
+                          className="h-7 rounded-full border-[#e8e8e8] px-3 text-xs"
                           onClick={() => handleResend(entry._id)}
                         >
                           Resend
@@ -289,113 +394,6 @@ export const EmailQueuePanel = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Failed Emails Section */}
-      <div className="mt-6 border-t border-[#e5e5e5] pt-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-            <h3 className="text-sm font-semibold text-[#2b2b2b]">Failed Emails</h3>
-            {failedEmails.length > 0 && (
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                {failedEmails.length}
-              </span>
-            )}
-          </div>
-          {selectedFailed.size > 0 && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-8 rounded-full text-xs border-red-300 text-red-600 hover:bg-red-50"
-              onClick={() => {
-                bulkUpdateEmailStatus(Array.from(selectedFailed), "pending")
-                  .then(() => {
-                    showToast("success", `Requeued ${selectedFailed.size} email(s)`);
-                    setSelectedFailed(new Set());
-                    loadFailedEmails();
-                  })
-                  .catch(() => showToast("error", "Failed to update emails"));
-              }}
-            >
-              Requeue Selected ({selectedFailed.size})
-            </Button>
-          )}
-        </div>
-
-        {loadingFailed ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        ) : failedEmails.length === 0 ? (
-          <p className="py-8 text-center text-sm text-[#777]">No failed emails found.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] text-sm">
-              <thead>
-                <tr className="border-b bg-[#fef2f2] text-left text-sm text-[#2f2f2f]">
-                  <th className="w-10 px-3 py-2"></th>
-                  <th className="px-3 py-2 font-medium">Email</th>
-                  <th className="px-3 py-2 font-medium">Type</th>
-                  <th className="px-3 py-2 font-medium">Reference</th>
-                  <th className="px-3 py-2 font-medium">Retries</th>
-                  <th className="px-3 py-2 font-medium">Days Pending</th>
-                  <th className="px-3 py-2 font-medium">First Attempt</th>
-                  <th className="px-3 py-2 font-medium">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {failedEmails.map((email) => (
-                  <tr key={email._id} className="border-b border-[#fed7d7] hover:bg-red-50">
-                    <td className="px-3 py-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedFailed.has(email._id)}
-                        onChange={(e) => {
-                          const next = new Set(selectedFailed);
-                          if (e.target.checked) next.add(email._id);
-                          else next.delete(email._id);
-                          setSelectedFailed(next);
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                    </td>
-                    <td className="truncate px-3 py-2">{email.email}</td>
-                    <td className="px-3 py-2">{email.type}</td>
-                    <td className="truncate px-3 py-2 font-mono text-xs">{email.referenceCode || "-"}</td>
-                    <td className="px-3 py-2">
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                        email.retryCount >= 3 ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"
-                      }`}>
-                        {email.retryCount}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">{email.daysPending ?? "-"}</td>
-                    <td className="px-3 py-2 text-xs">{new Date(email.timestamp).toLocaleDateString()}</td>
-                    <td className="px-3 py-2">
-                      {email.canResend ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="h-7 rounded-full text-xs"
-                          onClick={() => resendEmail(email._id).then(() => loadFailedEmails()).catch(() => showToast("error", "Failed to resend"))}
-                        >
-                          Resend
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-gray-400">Max retries</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

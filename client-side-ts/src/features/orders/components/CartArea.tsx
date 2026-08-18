@@ -39,7 +39,9 @@ export const Cart: React.FC = () => {
         sessionStorage.removeItem("buyNowItemId");
         return new Set([preSelected]);
       }
-    } catch (e) {}
+    } catch {
+      return new Set();
+    }
     return new Set();
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -70,7 +72,10 @@ export const Cart: React.FC = () => {
   }, [items, selectedIds]);
 
   useEffect(() => {
-    fetchEligiblePromos();
+    const timer = window.setTimeout(() => {
+      void fetchEligiblePromos();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchEligiblePromos]);
 
   const handlePlaceOrder = async () => {
@@ -93,6 +98,7 @@ export const Cart: React.FC = () => {
       // Transform cart items to API format
       const orderItems = selected.map((s) => ({
         product_id: String(s.id),
+        imageUrl1: s.image,
         product_name: s.name,
         price: s.price,
         quantity: s.qty,
