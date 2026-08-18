@@ -62,6 +62,7 @@ import {
   formatCurrency,
   formatPurchaseControl,
   getProductStatus,
+  getAutoSelectedVariations,
   getVariationLabel,
   getVariationSwatch,
   getVariationsForCategory,
@@ -1522,9 +1523,10 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                       onChange={(value) => {
                         setValue("category", value);
                         setValue("type", "");
-                        // Variations are category-scoped, so a stale pick from
-                        // the previous category would no longer be selectable.
-                        setValue("selectedVariations", []);
+                        setValue(
+                          "selectedVariations",
+                          getAutoSelectedVariations(value)
+                        );
                       }}
                     />
                   </FormField>
@@ -1586,7 +1588,7 @@ const ProductFormPage = ({ productId }: ProductFormPageProps) => {
                       {!formValues.category && (
                         <p className="mt-2 text-[11px] text-[#9a9a9a]">
                           Pick a product category first — Uniform products only
-                          offer Set A and Set B.
+                          offer White and Purple.
                         </p>
                       )}
                     </div>

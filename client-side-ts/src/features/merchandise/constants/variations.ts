@@ -1,27 +1,26 @@
 export type ProductVariation = {
-  /** Persisted to the DB. Never change these - existing orders reference them. */
   value: string;
-  /** Shown to admins in the picker. */
   label: string;
-  /** Rendered as the colour dot on the student-facing detail view. */
   swatch: string;
-  /** When set, this variation is only offered for these product categories. */
   categories?: string[];
+  autoSelect?: boolean;
 };
 
 export const PRODUCT_VARIATION_OPTIONS: ProductVariation[] = [
   // uniform-only
   {
-    value: "Set A (BSIT)",
-    label: "Set A",
+    value: "White",
+    label: "White",
     swatch: "#ffffff",
     categories: ["uniform"],
+    autoSelect: true,
   },
   {
-    value: "Set B (BSCS)",
-    label: "Set B",
+    value: "Purple",
+    label: "Purple",
     swatch: "#a855f7",
     categories: ["uniform"],
+    autoSelect: true,
   },
   // general colours
   { value: "Black", label: "Black", swatch: "#000000" },
@@ -52,7 +51,7 @@ const VARIATION_BY_VALUE = new Map(
 );
 
 /**
- * Uniform products only offer Set A / Set B. Everything else falls back to the
+ * Uniform products only offer White / Purple. Everything else falls back to the
  * general colour list (any option without a `categories` restriction).
  */
 export const getVariationsForCategory = (category?: string) => {
@@ -69,3 +68,12 @@ export const getVariationSwatch = (value: string) =>
 
 export const getVariationLabel = (value: string) =>
   VARIATION_BY_VALUE.get(value)?.label ?? value;
+
+export const getAutoSelectedVariations = (category?: string) =>
+  getVariationsForCategory(category)
+    .filter((option) => option.autoSelect)
+    .map((option) => option.value);
+
+const BUNDLED_VARIATION_CATEGORIES = ["uniform"];
+export const isBundledVariationCategory = (category?: string) =>
+  BUNDLED_VARIATION_CATEGORIES.includes((category ?? "").toLowerCase());

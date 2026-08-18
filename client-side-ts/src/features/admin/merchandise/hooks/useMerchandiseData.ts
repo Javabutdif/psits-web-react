@@ -19,6 +19,7 @@ export {
   getVariationsForCategory,
   getVariationSwatch,
   getVariationLabel,
+  getAutoSelectedVariations,
 } from "@/features/merchandise/constants/variations";
 import type {
   MerchandiseSection,
