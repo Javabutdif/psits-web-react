@@ -18,6 +18,17 @@ import type { OrdersTab, RefundDetail } from "@/features/orders/types/orders.typ
 import OrderDetailModal from "@/features/orders/components/OrderDetailModal";
 
 const ROWS_PER_PAGE = 8;
+const ORDER_STATUS_BY_TAB: Record<OrdersTab, "Pending" | "Paid" | "Refunded"> = {
+  pending: "Pending",
+  paid: "Paid",
+  refunded: "Refunded",
+};
+
+const EMPTY_COUNTS: Record<OrdersTab, number> = {
+  pending: 0,
+  paid: 0,
+  refunded: 0,
+};
 
 interface OrderItem {
   id: string;
@@ -38,14 +49,52 @@ interface Order {
   course?: string;
   year?: number;
   reference_code?: string;
-  transaction_date?: string;
+  transaction_date?: string | Date;
   admin?: string;
   total: number;
 }
 
-const mapApiToUi = (apiOrder: any): Order => {
+interface ApiOrderItem {
+  product_id?: string;
+  _id?: string;
+  id?: string;
+  product_name?: string;
+  name?: string;
+  title?: string;
+  variation?: string[];
+  variant?: string;
+  color?: string;
+  price?: number;
+  unit_price?: number;
+  sub_total?: number;
+  quantity?: number;
+  qty?: number;
+  units?: number;
+  imageUrl1?: string;
+  image?: string;
+  img?: string;
+}
+
+interface ApiOrder {
+  _id?: string;
+  id?: string;
+  orderId?: string;
+  reference_code?: string;
+  items?: ApiOrderItem[];
+  order_date?: string | Date;
+  order_status?: string;
+  status?: string;
+  student_name?: string;
+  course?: string;
+  year?: number;
+  transaction_date?: string | Date;
+  admin?: string;
+  total?: number;
+}
+
+const mapApiToUi = (apiOrder: ApiOrder): Order => {
   const items = Array.isArray(apiOrder.items)
-    ? apiOrder.items.map((it: any) => ({
+    ? apiOrder.items.map((it) => ({
         id: String(it.product_id ?? it._id ?? it.id ?? Math.random()),
         title: it.product_name ?? it.name ?? it.title ?? "",
         variant: Array.isArray(it.variation)
@@ -80,6 +129,32 @@ const mapApiToUi = (apiOrder: any): Order => {
     admin: apiOrder.admin,
     total: Number(apiOrder.total ?? 0),
   };
+};
+
+const ProductThumb: React.FC<{ src?: string; title: string }> = ({
+  src,
+  title,
+}) => {
+  const [failed, setFailed] = useState(false);
+  const fallback = title.trim().charAt(0).toUpperCase() || "?";
+
+  if (!src || failed) {
+    return (
+      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-sky-50 text-sm font-semibold text-[#1C9DDE] ring-1 ring-sky-100">
+        {fallback}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={title}
+      className="h-16 w-16 shrink-0 rounded-xl object-cover ring-1 ring-gray-100"
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
 };
 
 const OrderCard: React.FC<{
@@ -141,15 +216,18 @@ const OrderCard: React.FC<{
         {order.items.map((item) => (
           <div
             key={item.id}
-            className="flex flex-col items-start gap-4 rounded-xl border border-gray-100 bg-white p-4 sm:flex-row sm:items-center"
+            className="flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-4"
           >
-            <div className="w-full flex-1">
-              <div className="flex w-full flex-col items-start justify-between sm:flex-row sm:items-center">
+            <ProductThumb src={item.image} title={item.title} />
+            <div className="min-w-0 flex-1">
+              <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
                 <div>
                   <div className="font-medium">{item.title}</div>
-                  <div className="text-sm text-gray-600">{item.variant}</div>
+                  {item.variant ? (
+                    <div className="text-sm text-gray-600">{item.variant}</div>
+                  ) : null}
                 </div>
-                <div className="mt-2 text-left sm:mt-0 sm:text-right">
+                <div className="text-left sm:text-right">
                   <div className="font-medium text-[#1C9DDE]">
                     ₱{item.price.toFixed(2)}
                   </div>
@@ -285,17 +363,34 @@ const MyOrders: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
   const [_totalPages, setTotalPages] = useState(0);
+  const [statusCounts, setStatusCounts] =
+    useState<Record<OrdersTab, number>>(EMPTY_COUNTS);
 
   // Detail modal state
   const [detailOrder, setDetailOrder] = useState<Order | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [refundData, setRefundData] = useState<RefundDetail[]>([]);
 
+  const fetchStatusCounts = useCallback(async () => {
+    const entries = await Promise.all(
+      (Object.keys(ORDER_STATUS_BY_TAB) as OrdersTab[]).map(async (tab) => {
+        const result = await getStudentOrders({
+          status: ORDER_STATUS_BY_TAB[tab],
+          page: 1,
+          limit: 1,
+        });
+        return [tab, result?.total ?? 0] as const;
+      })
+    );
+
+    setStatusCounts(Object.fromEntries(entries) as Record<OrdersTab, number>);
+  }, []);
+
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getStudentOrders({
-        status: activeTab === "pending" ? "Pending" : activeTab === "paid" ? "Paid" : "Refunded",
+        status: ORDER_STATUS_BY_TAB[activeTab],
         page,
         limit: ROWS_PER_PAGE,
       });
@@ -305,22 +400,37 @@ const MyOrders: React.FC = () => {
         setOrders(mapped);
         setTotalOrders(result.total);
         setTotalPages(result.totalPages);
+        setStatusCounts((prev) => ({ ...prev, [activeTab]: result.total }));
       } else {
         setOrders([]);
         setTotalOrders(0);
         setTotalPages(0);
+        setStatusCounts((prev) => ({ ...prev, [activeTab]: 0 }));
       }
     } catch (error) {
       console.error("Failed to fetch orders", error);
       setOrders([]);
+      setTotalOrders(0);
+      setTotalPages(0);
+      setStatusCounts((prev) => ({ ...prev, [activeTab]: 0 }));
     } finally {
       setLoading(false);
     }
   }, [activeTab, page]);
 
   useEffect(() => {
-    fetchOrders();
+    const timer = window.setTimeout(() => {
+      void fetchOrders();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchOrders]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetchStatusCounts();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchStatusCounts]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as OrdersTab);
@@ -331,7 +441,7 @@ const MyOrders: React.FC = () => {
     try {
       const ok = await cancelOrder(orderId);
       if (ok) {
-        fetchOrders();
+        await Promise.all([fetchOrders(), fetchStatusCounts()]);
       }
     } catch (err) {
       console.error("Cancel failed", err);
@@ -355,9 +465,9 @@ const MyOrders: React.FC = () => {
     }
   };
 
-  const pendingCount = orders.filter((o) => o.status === "Pending").length;
-  const paidCount = orders.filter((o) => o.status === "Paid").length;
-  const refundedCount = orders.filter((o) => o.status === "Refunded").length;
+  const pendingCount = statusCounts.pending;
+  const paidCount = statusCounts.paid;
+  const refundedCount = statusCounts.refunded;
 
   return (
     <div className="min-h-screen">
