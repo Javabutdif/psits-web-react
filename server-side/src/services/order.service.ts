@@ -234,8 +234,10 @@ class OrderService {
       orderTotal += itemSubTotal;
 
       //This will be the process
+      const firstImage = findMerch.data?.imageUrl?.[0];
       const processedItem: IUserItems = {
         product_id: item.product_id,
+        imageUrl1: firstImage ? String(firstImage) : item.imageUrl1,
         product_name: findMerch.data?.name,
         limited: findMerch.data?.control === "limited-purchase",
         price: actualPrice,
@@ -351,21 +353,29 @@ class OrderService {
   approveOrderService = async (
     _id: Types.ObjectId,
     admin: string,
+    cash: number | undefined,
     session: ClientSession
   ) => {
-    const result = await Orders.findByIdAndUpdate(
-      _id,
-      {
-        order_status: "Paid",
-        reference_code: this.generateReferenceCode(),
-        transaction_date: new Date(),
-        admin,
-      },
-      { new: true, session }
-    );
+    const result = await Orders.findById(_id).session(session);
     if (!result) {
       throw new AppError("Order not found!", 404);
     }
+
+    const cashAmount = Number(cash);
+    const resolvedCash =
+      Number.isFinite(cashAmount) && cashAmount >= 0 ? cashAmount : result.total;
+
+    if (resolvedCash < result.total) {
+      throw new AppError("Cash cannot be lower than order total", 400);
+    }
+
+    result.order_status = "Paid";
+    result.reference_code = this.generateReferenceCode();
+    result.transaction_date = new Date();
+    result.admin = admin;
+    result.cash = resolvedCash;
+    await result.save({ session });
+
     return {
       status: true,
       items: result.items,
@@ -388,6 +398,9 @@ class OrderService {
     admin: string,
     cash: number
   ) => {
+    const cashAmount = Number(cash);
+    const resolvedCash =
+      Number.isFinite(cashAmount) && cashAmount >= 0 ? cashAmount : order.total;
     const receipt = {
       reference_code: order.reference_code,
       order_date: order.order_date,
@@ -403,12 +416,36 @@ class OrderService {
         sizes: item.sizes,
         variation: item.variation,
         quantity: item.quantity,
+        price: item.price,
         sub_total: item.sub_total,
       })),
-      cash,
+      cash: resolvedCash,
+      change: resolvedCash - order.total,
       total: order.total,
+      membership_discount: order.membership_discount,
+      promo_name: order.promo?.promo_name,
     };
     return receipt;
+  };
+
+  getPrintableOrderReceipt = async (orderId: string) => {
+    if (!Types.ObjectId.isValid(orderId)) {
+      throw new AppError("Invalid order ID", 400);
+    }
+
+    const order = await Orders.findById(orderId).lean();
+    if (!order) {
+      throw new AppError("Order not found!", 404);
+    }
+    if (order.order_status !== "Paid") {
+      throw new AppError("Only paid orders can be printed", 400);
+    }
+
+    return this.generateOrderReceipt(
+      order as IOrders,
+      order.admin || "N/A",
+      order.cash ?? order.total
+    );
   };
   //Check if order is approved or not
   checkOrderApproveStatus = async (_id: Types.ObjectId) => {
