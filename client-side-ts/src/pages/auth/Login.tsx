@@ -7,7 +7,8 @@ import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
-const getStudentLandingPath = (membershipStatus?: string) => {
+const getStudentLandingPath = (membershipStatus?: string, year?: number | string) => {
+  if (year === 1 || year === "1") return "/student/event-attendance";
   const status = normalizeMembershipStatus(membershipStatus);
   if (status === "active") return "/student/event-attendance";
   if (status === "pending") return "/student/membership-pending";
@@ -24,7 +25,7 @@ export default function Login() {
       if (user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
       } else if (user.role === "student") {
-        navigate(getStudentLandingPath(user.membershipStatus), {
+        navigate(getStudentLandingPath(user.membershipStatus, user.year), {
           replace: true,
         });
       } else {
@@ -46,7 +47,7 @@ export default function Login() {
       if (loggedInUser.role === "admin") {
         navigate("/admin/dashboard");
       } else if (loggedInUser.role === "student") {
-        navigate(getStudentLandingPath(loggedInUser.membershipStatus));
+        navigate(getStudentLandingPath(loggedInUser.membershipStatus, loggedInUser.year));
       } else {
         navigate("/");
       }
