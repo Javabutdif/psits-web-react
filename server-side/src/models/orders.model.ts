@@ -46,6 +46,9 @@ const orderSchema = new Schema<IOrdersDocument>({
     type: Number,
     required: true,
   },
+  cash: {
+    type: Number,
+  },
   order_date: {
     type: Date,
     required: true,
