@@ -377,8 +377,14 @@ export const requireActiveStudentMembershipV2 = async (
 
   try {
     const student = await Student.findById(req.userV2.sub)
-      .select("membershipStatus")
+      .select("membershipStatus year")
       .lean();
+
+    if (student?.year === 1) {
+      req.userV2.membershipStatus = student?.membershipStatus;
+      return next();
+    }
+
     const rawStatus = student?.membershipStatus ?? req.userV2.membershipStatus;
     const status = normalizeMembershipStatus(rawStatus);
 
