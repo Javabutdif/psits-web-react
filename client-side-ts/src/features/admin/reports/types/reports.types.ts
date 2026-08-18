@@ -43,6 +43,12 @@ export interface MerchandiseSalesSummary {
   totalRevenue: number;
 }
 
+export interface MerchandiseReportProductOption {
+  productId: string;
+  productName: string;
+  batches: string[];
+}
+
 export interface ReportsFilters {
   id: string;
   name: string;
@@ -50,7 +56,7 @@ export interface ReportsFilters {
   course: string;
   year: string;
   type: string;
-  productName: string;
+  productId: string;
   batch: string;
   size: string;
   color: string;

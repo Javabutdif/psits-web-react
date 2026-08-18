@@ -36,6 +36,7 @@ interface EventDetails {
   title: string;
   status: "ongoing" | "ended" | "upcoming";
   startDate: string;
+  rawStartDate?: string;
   startTime: string;
   endTime: string;
   endDate: string;
@@ -179,6 +180,18 @@ const normalizeMerchMeta = (value: unknown): EventMerchMeta | null => {
   };
 };
 
+const formatFullMonthDate = (value?: string): string => {
+  if (!value) return "TBA";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "TBA";
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(date);
+};
+
 const formatTimeToAMPM = (timeStr?: string): string => {
   if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) return timeStr || "TBA";
   const [hourStr, minStr] = timeStr.split(":");
@@ -247,6 +260,7 @@ const mapApiEventToEventDetails = (
     title: String(event.eventName ?? "Untitled Event"),
     status: normalizeStatus(event.status, event.eventDate),
     startDate: formatEventDateLabel(event.eventDate),
+    rawStartDate: event.eventDate ? String(event.eventDate) : undefined,
     startTime,
     endDate: formatEventDateLabel(event.eventEndDate ?? event.eventDate),
     rawEndDate: event.eventEndDate
@@ -591,7 +605,7 @@ const EventManagement: React.FC = () => {
                         <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium">
-                            {eventDetails.startDate}
+                            {formatFullMonthDate(eventDetails.rawStartDate)}
                           </p>
                           <p className="text-muted-foreground text-xs">
                             {formatTimeToAMPM(
@@ -606,7 +620,7 @@ const EventManagement: React.FC = () => {
                         <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium">
-                            {eventDetails.endDate}
+                            {formatFullMonthDate(eventDetails.rawEndDate)}
                           </p>
                           <p className="text-muted-foreground text-xs">
                             {formatTimeToAMPM(
@@ -752,7 +766,7 @@ const EventManagement: React.FC = () => {
           title: eventDetails?.title ?? "",
           description: eventDetails?.description ?? "",
           eventVenue: eventDetails?.location ?? "",
-          startDate: eventDetails?.startDate ?? "",
+          startDate: eventDetails?.rawStartDate ?? "",
           eventEndDate: eventDetails?.rawEndDate ?? "",
           image: eventDetails?.image ?? "",
           eventTheme: eventDetails?.eventTheme ?? "",

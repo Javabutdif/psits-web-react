@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  deleteReports,
+  exportMerchandiseReports,
   membershipHistory,
+  merchandiseReportFilterOptions,
   merchandiseReports,
 } from "@/features/admin/api/admin";
-import { useAuth } from "@/features/auth";
-import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
-import { PSITS_ROLES } from "../../constants/adminAccess";
 import type {
   MembershipReportRow,
   MerchandiseOrderDetail,
+  MerchandiseReportProductOption,
   ReportsFilters,
   ReportsStatus,
   ReportsTab,
@@ -27,7 +26,7 @@ export const DEFAULT_FILTERS: ReportsFilters = {
   course: "",
   year: "",
   type: "",
-  productName: "",
+  productId: "",
   batch: "",
   size: "",
   color: "",
@@ -56,8 +55,8 @@ const flattenVariantField = (value: unknown): string[] => {
 };
 
 export const useReportsData = () => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<ReportsTab>("membership");
+  const [activeTab, setActiveTabState] = useState<ReportsTab>("membership");
+  const [page, setPage] = useState(1);
 
   const [membershipData, setMembershipData] = useState<MembershipReportRow[]>(
     []
@@ -70,8 +69,8 @@ export const useReportsData = () => {
   >([]);
   const [merchandiseTotal, setMerchandiseTotal] = useState(0);
   const [merchandiseTotalPages, setMerchandiseTotalPages] = useState(1);
-  const [merchandiseProductNames, setMerchandiseProductNames] = useState<
-    string[]
+  const [merchandiseProductOptions, setMerchandiseProductOptions] = useState<
+    MerchandiseReportProductOption[]
   >([]);
   const [merchandiseSummary, setMerchandiseSummary] = useState({
     unitsSold: 0,
@@ -80,8 +79,8 @@ export const useReportsData = () => {
   const [merchandiseStatus, setMerchandiseStatus] =
     useState<ReportsStatus>("idle");
 
-  const [filters, setFilters] = useState<ReportsFilters>(DEFAULT_FILTERS);
-  const [search, setSearch] = useState("");
+  const [filters, setFiltersState] = useState<ReportsFilters>(DEFAULT_FILTERS);
+  const [search, setSearchState] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
@@ -92,18 +91,27 @@ export const useReportsData = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const [page, setPage] = useState(1);
-  const [isMutating, setIsMutating] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const membershipRequestRef = useRef(0);
   const merchandiseRequestRef = useRef(0);
+  const merchandiseOverviewRequestRef = useRef(0);
+  const merchandiseOptionsRequestedRef = useRef(false);
+  const merchandiseViewRequestedRef = useRef(false);
 
-  const isUcMainAdmin =
-    user?.role === "admin" && normalizeCampus(user.campus) === "UC_MAIN";
+  const setActiveTab = useCallback((value: ReportsTab) => {
+    setActiveTabState(value);
+    setPage(1);
+  }, []);
 
-  const canDeleteReports =
-    isUcMainAdmin &&
-    (user?.access === PSITS_ROLES.ADMIN ||
-      user?.access === PSITS_ROLES.FINANCE);
+  const setFilters = useCallback((value: ReportsFilters) => {
+    setFiltersState(value);
+    setPage(1);
+  }, []);
+
+  const setSearch = useCallback((value: string) => {
+    setSearchState(value);
+    setPage(1);
+  }, []);
 
   const fetchMembership = useCallback(async () => {
     const requestId = ++membershipRequestRef.current;
@@ -121,27 +129,43 @@ export const useReportsData = () => {
     }
   }, []);
 
+  const merchandiseQuery = useMemo(
+    () => ({
+      search: debouncedSearch,
+      studentId: filters.id,
+      rfid: filters.rfid,
+      name: filters.name,
+      course: filters.course,
+      year: filters.year,
+      productId: filters.productId,
+      batch: filters.batch,
+      size: filters.size,
+      color: filters.color,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+    }),
+    [debouncedSearch, filters]
+  );
+
   const fetchMerchandise = useCallback(
     async (requestedPage: number) => {
+      merchandiseViewRequestedRef.current = true;
       const requestId = ++merchandiseRequestRef.current;
       setMerchandiseStatus("loading");
+
+      if (!merchandiseOptionsRequestedRef.current) {
+        merchandiseOptionsRequestedRef.current = true;
+        void merchandiseReportFilterOptions().then((result) => {
+          setMerchandiseProductOptions(result?.products ?? []);
+        });
+      }
+
       try {
         const result = await merchandiseReports({
           page: requestedPage,
           limit: ROWS_PER_PAGE,
-          search: debouncedSearch,
-          studentId: filters.id,
-          name: filters.name,
-          course: filters.course,
-          year: filters.year,
-          productName: filters.productName,
-          size: filters.size,
-          color: filters.color,
-          dateFrom: filters.dateFrom,
-          dateTo: filters.dateTo,
+          ...merchandiseQuery,
         });
-
-        
 
         if (requestId !== merchandiseRequestRef.current) return;
         if (!result) throw new Error("No merchandise reports returned");
@@ -155,7 +179,6 @@ export const useReportsData = () => {
         setMerchandiseDetails(details.filter(Boolean));
         setMerchandiseTotal(result.total);
         setMerchandiseTotalPages(result.totalPages);
-        setMerchandiseProductNames(result.productNames ?? []);
         setMerchandiseSummary(
           result.summary ?? { unitsSold: 0, totalRevenue: 0 }
         );
@@ -165,21 +188,46 @@ export const useReportsData = () => {
         setMerchandiseDetails([]);
         setMerchandiseTotal(0);
         setMerchandiseTotalPages(1);
-        setMerchandiseProductNames([]);
         setMerchandiseSummary({ unitsSold: 0, totalRevenue: 0 });
         setMerchandiseStatus("error");
       }
     },
-    [debouncedSearch, filters]
+    [merchandiseQuery]
   );
 
+  const preloadMerchandiseOverview = useCallback(async () => {
+    const requestId = ++merchandiseOverviewRequestRef.current;
+
+    try {
+      const result = await merchandiseReports({ page: 1, limit: 1 });
+      if (
+        requestId !== merchandiseOverviewRequestRef.current ||
+        merchandiseViewRequestedRef.current ||
+        !result
+      ) {
+        return;
+      }
+
+      setMerchandiseTotal(result.total);
+      setMerchandiseSummary(
+        result.summary ?? { unitsSold: 0, totalRevenue: 0 }
+      );
+    } catch {
+      // The merchandise tab retains its normal retry behavior if this preload fails.
+    }
+  }, []);
+
   useEffect(() => {
-    if (activeTab === "membership" && membershipStatus === "idle") {
-      fetchMembership();
-    }
-    if (activeTab === "merchandise") {
-      fetchMerchandise(page);
-    }
+    const timer = window.setTimeout(() => {
+      if (activeTab === "membership" && membershipStatus === "idle") {
+        void fetchMembership();
+      }
+      if (activeTab === "merchandise") {
+        void fetchMerchandise(page);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [
     activeTab,
     page,
@@ -191,25 +239,12 @@ export const useReportsData = () => {
   ]);
 
   useEffect(() => {
-    setPage(1);
-  }, [activeTab, filters, search]);
+    const timer = window.setTimeout(() => {
+      void preloadMerchandiseOverview();
+    }, 0);
 
-  const uniqueProductNames = merchandiseProductNames;
-
-  const getBatchesForProduct = useCallback(
-    (productName: string): string[] => {
-      if (!productName) return [];
-      return Array.from(
-        new Set(
-          merchandiseDetails
-            .filter((detail) => detail.product_name === productName)
-            .map((detail) => detail.batch)
-            .filter((batch): batch is string => Boolean(batch))
-        )
-      );
-    },
-    [merchandiseDetails]
-  );
+    return () => window.clearTimeout(timer);
+  }, [preloadMerchandiseOverview]);
 
   const filteredMembership = useMemo(() => {
     if (activeTab !== "membership") return EMPTY_MEMBERSHIP_ROWS;
@@ -280,28 +315,6 @@ export const useReportsData = () => {
     [membershipData.length, merchandiseTotal]
   );
 
-  const deleteMerchandiseReportItem = async (
-    detail: MerchandiseOrderDetail
-  ): Promise<boolean> => {
-    if (!canDeleteReports) {
-      showToast("error", "Unauthorized.");
-      return false;
-    }
-
-    setIsMutating(true);
-    try {
-      const success = await deleteReports(
-        detail.product_id,
-        detail._id,
-        detail.product_name
-      );
-      if (success) await fetchMerchandise(page);
-      return success;
-    } finally {
-      setIsMutating(false);
-    }
-  };
-
   const buildMembershipExportRows = () =>
     filteredMembership.map((row) => ({
       "Reference Code": row.reference_code,
@@ -314,21 +327,26 @@ export const useReportsData = () => {
       "Approved By": row.admin || "",
     }));
 
-  const buildMerchandiseExportRows = () =>
-    merchandiseDetails.map((detail) => ({
-      "Reference Code": detail.reference_code,
-      Merchandise: detail.product_name,
-      "Student ID": detail.id_number,
-      Name: detail.student_name,
-      Course: detail.course,
-      "Year Level": detail.year,
-      Batch: detail.batch || "",
-      Size: detail.size.join(", "),
-      Variation: detail.variation.join(", "),
-      Qty: detail.quantity,
-      Total: detail.total,
-      "Transaction Date": toDateKey(detail.transaction_date),
-    }));
+  const exportMerchandiseReport = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await exportMerchandiseReports(merchandiseQuery);
+      if (!blob) throw new Error("No merchandise report export returned");
+
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `merchandise-report-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      showToast("error", "Unable to export the merchandise report.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return {
     activeTab,
@@ -349,13 +367,10 @@ export const useReportsData = () => {
     totalMerchandiseRows: merchandiseTotal,
     membershipSummary,
     merchandiseSummary,
-    uniqueProductNames,
-    getBatchesForProduct,
-    canDeleteReports,
-    isMutating,
-    deleteMerchandiseReportItem,
+    merchandiseProductOptions,
+    isExporting,
     buildMembershipExportRows,
-    buildMerchandiseExportRows,
+    exportMerchandiseReport,
     refetchMembership: fetchMembership,
     refetchMerchandise: () => fetchMerchandise(page),
   };
