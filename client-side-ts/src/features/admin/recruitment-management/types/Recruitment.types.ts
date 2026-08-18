@@ -25,6 +25,7 @@ export type RecruitmentStatus =
   | "Pending"
   | "For Verification"
   | "Scheduled"
+  | "Interview Completed"
   | "Interviewed"
   | "Approved"
   | "Rejected";
