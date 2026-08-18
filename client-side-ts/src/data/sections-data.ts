@@ -289,7 +289,7 @@ export const upcomingEventsData: {
 export const pastEventsData = {
   header: {
     title: "Past Events",
-    year: "2025",
+    year: "2026",
   },
   events: [
     {

@@ -761,8 +761,8 @@ export const RecruitmentViews = () => {
                   For Verification
                 </SelectItem>
                 <SelectItem value="Scheduled">Scheduled</SelectItem>
-                <SelectItem value="Interview Completed">
-                  Interview Completed
+                <SelectItem value="Interviewed">
+                  Interviewed
                 </SelectItem>
                 <SelectItem value="Approved">Approved</SelectItem>
                 <SelectItem value="Rejected">Rejected</SelectItem>
