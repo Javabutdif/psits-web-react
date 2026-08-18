@@ -12,6 +12,14 @@ import { PSITS_ROLES } from "@/features/admin/constants/adminAccess";
 import { useAuth } from "@/features/auth";
 import { normalizeCampus } from "@/features/auth/utils/campus";
 import { showToast } from "@/utils/alertHelper";
+export {
+  type ProductVariation,
+  PRODUCT_VARIATION_OPTIONS,
+  PRODUCT_VARIATIONS,
+  getVariationsForCategory,
+  getVariationSwatch,
+  getVariationLabel,
+} from "@/features/merchandise/constants/variations";
 import type {
   MerchandiseSection,
   MerchandiseSort,
@@ -32,7 +40,10 @@ export const PRODUCT_CATEGORIES = [
   { value: "acquintance", label: "Acquaintance" },
 ] as const;
 
-export const PRODUCT_TYPES: Record<string, Array<{ value: string; label: string }>> = {
+export const PRODUCT_TYPES: Record<
+  string,
+  Array<{ value: string; label: string }>
+> = {
   uniform: [{ value: "Uniform", label: "Uniform" }],
   intramurals: [
     { value: "Tshirt", label: "T-shirt" },
@@ -49,27 +60,6 @@ export const PRODUCT_TYPES: Record<string, Array<{ value: string; label: string 
     { value: "Others", label: "Others" },
   ],
 };
-
-export const PRODUCT_VARIATIONS = [
-  "White",
-  "Purple",
-  "Black",
-  "Red",
-  "Yellow",
-  "Orange",
-  "Blue",
-  "Green",
-  "Pink",
-  "Gray",
-  "Brown",
-  "Cyan",
-  "Magenta",
-  "Teal",
-  "Maroon",
-  "Innovatio",
-  "Paradox",
-  "BSIT Wave",
-];
 
 export const PRODUCT_SIZES = [
   "18",
@@ -116,7 +106,6 @@ export const EMPTY_PRODUCT_FILTERS: ProductFilters = {
   confirmedOn: "",
 };
 
-
 export const EMPTY_PRODUCT_FORM: ProductFormValues = {
   name: "",
   price: "",
@@ -149,7 +138,6 @@ export const EMPTY_PRODUCT_IMAGES: ProductImageState = {
   previews: [],
   removedUrls: [],
 };
-
 
 const formatDateKey = (value?: string) => {
   if (!value) return "";
@@ -186,7 +174,6 @@ const productSearchText = (product: MerchandiseItem) =>
     .join(" ")
     .toLowerCase();
 
-
 const productSortValue = (
   product: MerchandiseItem,
   field: ProductSortField
@@ -195,7 +182,7 @@ const productSortValue = (
   return String(product[field] || "");
 };
 
-const sortByText = <TRecord,>(
+const sortByText = <TRecord>(
   records: TRecord[],
   getValue: (record: TRecord) => string,
   direction: "asc" | "desc"
@@ -208,7 +195,9 @@ const sortByText = <TRecord,>(
     return direction === "asc" ? result : -result;
   });
 
-const productFormFromRecord = (product?: MerchandiseItem | null): ProductFormValues => {
+const productFormFromRecord = (
+  product?: MerchandiseItem | null
+): ProductFormValues => {
   if (!product) return EMPTY_PRODUCT_FORM;
 
   const selectedSizes = Object.fromEntries(
@@ -290,9 +279,12 @@ export const useMerchandiseData = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<MerchandiseItem[]>([]);
   const [productSearch, setProductSearch] = useState("");
-  const [productFilters, setProductFilters] =
-    useState<ProductFilters>(EMPTY_PRODUCT_FILTERS);
-  const [productSort, setProductSort] = useState<MerchandiseSort<ProductSortField>>({
+  const [productFilters, setProductFilters] = useState<ProductFilters>(
+    EMPTY_PRODUCT_FILTERS
+  );
+  const [productSort, setProductSort] = useState<
+    MerchandiseSort<ProductSortField>
+  >({
     field: "name",
     direction: "asc",
   });
@@ -346,7 +338,9 @@ export const useMerchandiseData = () => {
         !productFilters.confirmedOn ||
         formatDateKey(product.start_date) === productFilters.confirmedOn;
 
-      return queryMatch && statusMatch && controlMatch && batchMatch && dateMatch;
+      return (
+        queryMatch && statusMatch && controlMatch && batchMatch && dateMatch
+      );
     });
 
     return sortByText(
@@ -368,7 +362,10 @@ export const useMerchandiseData = () => {
     productPage * ROWS_PER_PAGE
   );
 
-  const productTotalPages = Math.max(1, Math.ceil(filteredProducts.length / ROWS_PER_PAGE));
+  const productTotalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / ROWS_PER_PAGE)
+  );
 
   useEffect(() => {
     setProductPage(1);
@@ -463,7 +460,9 @@ export const useMerchandiseData = () => {
   const productBatches = useMemo(
     () =>
       Array.from(
-        new Set(products.map((product) => String(product.batch || "")).filter(Boolean))
+        new Set(
+          products.map((product) => String(product.batch || "")).filter(Boolean)
+        )
       ),
     [products]
   );

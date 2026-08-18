@@ -77,12 +77,12 @@ export const EventCard: React.FC<EventCardProps> = ({
 
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
   const [loadedSrc, setLoadedSrc] = useState<string>("");
-  const [isApplying, setIsApplying] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
 
   const handleApply = async () => {
-    setIsApplying(true);
+    setIsRegister(true);
     const result = await applyToEvent(event.id);
-    setIsApplying(false);
+    setIsRegister(false);
     if (result) {
       onApplied?.();
     }
@@ -340,11 +340,11 @@ export const EventCard: React.FC<EventCardProps> = ({
                         </div>
                         <Button
                           onClick={handleApply}
-                          disabled={isApplying}
+                          disabled={isRegister}
                           className="mt-1 bg-sky-600 hover:bg-sky-700"
                           size="sm"
                         >
-                          {isApplying ? "Applying..." : "Apply Event"}
+                          {isRegister ? "Registering..." : "Register Event"}
                         </Button>
                       </div>
                     )}

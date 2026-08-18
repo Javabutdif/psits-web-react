@@ -83,6 +83,10 @@ export const ApplicantMobileCard = ({
 }: ApplicantMobileCardProps) => {
   const isFinal =
     applicant.status === "Approved" || applicant.status === "Rejected";
+  const notYetInterviewed =
+    applicant.status !== "Interview Completed" && !isFinal;
+  const approveRejectDisabled =
+    isMutating || applicant.status !== "Interview Completed";
 
   return (
     <div className="space-y-3 rounded-xl border border-[#ececec] p-4">
@@ -154,7 +158,12 @@ export const ApplicantMobileCard = ({
               type="button"
               size="icon-sm"
               variant="outline"
-              disabled={isMutating || isFinal}
+              disabled={approveRejectDisabled}
+              title={
+                notYetInterviewed
+                  ? "Available after the interview is completed"
+                  : undefined
+              }
               onClick={() => onApprove?.(applicant.id)}
               aria-label="Approve"
               className="h-8 w-8 shrink-0 rounded-full border-emerald-200 text-emerald-600 hover:bg-emerald-50 disabled:opacity-40"
@@ -165,7 +174,12 @@ export const ApplicantMobileCard = ({
               type="button"
               size="icon-sm"
               variant="outline"
-              disabled={isMutating || isFinal}
+              disabled={approveRejectDisabled}
+              title={
+                notYetInterviewed
+                  ? "Available after the interview is completed"
+                  : undefined
+              }
               onClick={() => onReject?.(applicant.id)}
               aria-label="Reject"
               className="h-8 w-8 shrink-0 rounded-full border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40"

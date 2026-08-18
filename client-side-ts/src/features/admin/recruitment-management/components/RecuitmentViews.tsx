@@ -70,7 +70,7 @@ const STATUS_STYLES: Record<string, string> = {
   Pending: "bg-amber-100 text-amber-700",
   "For Verification": "bg-slate-100 text-slate-700",
   Scheduled: "bg-blue-100 text-blue-700",
-  "Interview Completed": "bg-purple-100 text-purple-700",
+  "Interview Completed": "bg-yellow-100 text-yellow-700",
   Approved: "bg-emerald-100 text-emerald-700",
   Rejected: "bg-red-100 text-red-700",
 };
@@ -393,6 +393,7 @@ export const RecruitmentViews = () => {
     clearMutationError,
     approveApplicant,
     rejectApplicant,
+    moveToInterviewing,
     refetch,
     selectedApplicant,
     isDetailsLoading,
@@ -1226,7 +1227,7 @@ export const RecruitmentViews = () => {
                           <td className="px-3 py-3">
                             <span
                               className={cn(
-                                "rounded-full px-2.5 py-1 text-xs font-medium",
+                                "rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap",
                                 STATUS_STYLES[applicant.status] ??
                                   "bg-slate-100 text-slate-600"
                               )}
@@ -1272,8 +1273,16 @@ export const RecruitmentViews = () => {
                                     <button
                                       type="button"
                                       disabled={
-                                        applicant.status === "Approved" ||
-                                        applicant.status === "Rejected"
+                                        applicant.status !==
+                                        "Interview Completed"
+                                      }
+                                      title={
+                                        applicant.status !==
+                                          "Interview Completed" &&
+                                        applicant.status !== "Approved" &&
+                                        applicant.status !== "Rejected"
+                                          ? "Available after the interview is completed"
+                                          : undefined
                                       }
                                       onClick={() => {
                                         approveApplicant(applicant.id);
@@ -1287,8 +1296,16 @@ export const RecruitmentViews = () => {
                                     <button
                                       type="button"
                                       disabled={
-                                        applicant.status === "Approved" ||
-                                        applicant.status === "Rejected"
+                                        applicant.status !==
+                                        "Interview Completed"
+                                      }
+                                      title={
+                                        applicant.status !==
+                                          "Interview Completed" &&
+                                        applicant.status !== "Approved" &&
+                                        applicant.status !== "Rejected"
+                                          ? "Available after the interview is completed"
+                                          : undefined
                                       }
                                       onClick={() => {
                                         rejectApplicant(applicant.id);
@@ -1600,6 +1617,16 @@ export const RecruitmentViews = () => {
           selectedApplicant?.status !== "Approved" &&
           selectedApplicant?.status !== "Rejected"
         }
+        onMarkInterviewCompleted={() =>
+          selectedApplicant && moveToInterviewing(selectedApplicant.id)
+        }
+        canMarkInterviewCompleted={selectedApplicant?.status === "Scheduled"}
+        isInterviewCompleted={
+          selectedApplicant?.status === "Interview Completed" ||
+          selectedApplicant?.status === "Approved" ||
+          selectedApplicant?.status === "Rejected"
+        }
+        isMutating={isMutating}
         onViewResume={viewResume}
         onDownloadResume={downloadResume}
         isResumeLoading={isResumeLoading}

@@ -164,9 +164,7 @@ class OrderService {
       ...this.buildOrderSearchQuery(trimmedSearch),
     })
       .sort(
-        statusLower === "paid"
-          ? { transaction_date: -1 }
-          : { order_date: -1 }
+        statusLower === "paid" ? { transaction_date: -1 } : { order_date: -1 }
       )
       .skip((page - 1) * limit)
       .limit(limit);
@@ -234,16 +232,6 @@ class OrderService {
       let itemSubTotal = actualPrice * item.quantity;
       //Process Order total
       orderTotal += itemSubTotal;
-
-      //Update stocks in Database
-      const update = await merchandiseService.updateStocks(
-        item.product_id,
-        item.quantity,
-        session
-      );
-      if (!update) {
-        throw new AppError("Could not update stocks in database", 404);
-      }
 
       //This will be the process
       const processedItem: IUserItems = {
