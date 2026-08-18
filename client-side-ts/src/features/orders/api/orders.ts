@@ -2,10 +2,12 @@ import backendConnection from "../../../api/backendApi";
 import axios from "axios";
 import type { AxiosError, AxiosResponse } from "axios";
 import { showToast } from "../../../utils/alertHelper";
+import type { PrintableOrderReceipt } from "../types/orders.types";
 
 interface CartItem {
   product_id?: string;
   imageUrl1?: string;
+  image?: string;
   product_name: string;
   limited?: boolean;
   start_date?: string | Date;
@@ -63,10 +65,13 @@ interface OrderFormData {
   items: CartItem[];
   total: number;
   reference_code?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface OrderResponse {
+  _id?: string;
+  id?: string;
+  orderId?: string;
   id_number: string;
   rfid?: string;
   membership_discount?: boolean;
@@ -76,13 +81,14 @@ interface OrderResponse {
   year?: number;
   items?: CartItem[];
   total?: number;
+  cash?: number;
   order_date?: string | Date;
   transaction_date?: string | Date;
   order_status?: string;
   admin?: string;
   reference_code?: string;
   role?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface ErrorResponse {
@@ -436,6 +442,22 @@ export const refundOrderV2 = async (order_id: string): Promise<boolean> => {
   }
 };
 
+export const getOrderReceiptV2 = async (
+  orderId: string
+): Promise<PrintableOrderReceipt | null> => {
+  try {
+    const response: AxiosResponse<{ data: PrintableOrderReceipt }> =
+      await axios.get(`${backendConnection()}/api/orders/v2/${orderId}/receipt`, {
+        headers: createHeaders(),
+      });
+
+    return response.status === 200 ? response.data.data : null;
+  } catch (error) {
+    handleApiError(error, false);
+    return null;
+  }
+};
+
 // ─── Student Order APIs (V2) ─────────────────────────────────────────
 
 export const getStudentOrders = async ({
@@ -447,7 +469,7 @@ export const getStudentOrders = async ({
   page?: number;
   limit?: number;
 } = {}): Promise<{
-  data: any[];
+  data: OrderResponse[];
   total: number;
   page: number;
   limit: number;

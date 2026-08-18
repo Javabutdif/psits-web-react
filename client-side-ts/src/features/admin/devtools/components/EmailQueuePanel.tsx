@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getEmailQueue, resendEmail, exportEmailQueueCsv, triggerCron, getFailedEmailDetails, bulkUpdateEmailStatus } from "../api/devtools.api";
+import { getEmailQueue, resendEmail, exportEmailQueueCsv, triggerCron, getFailedEmailDetails } from "../api/devtools.api";
 import type { EmailQueueEntry } from "../types/devtools.types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AlertTriangle } from "lucide-react";
 
 interface FailedEmail {
   _id: string;
@@ -35,8 +34,6 @@ export const EmailQueuePanel = () => {
   const [pageSize] = useState(50);
   const [resendAllConfirm, setResendAllConfirm] = useState(false);
   const [failedEmails, setFailedEmails] = useState<FailedEmail[]>([]);
-  const [loadingFailed, setLoadingFailed] = useState(false);
-  const [selectedFailed, setSelectedFailed] = useState<Set<string>>(new Set());
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -62,14 +59,11 @@ export const EmailQueuePanel = () => {
   }, [page, filter]);
 
   const loadFailedEmails = async () => {
-    setLoadingFailed(true);
     try {
       const data = await getFailedEmailDetails(100);
       setFailedEmails(data);
     } catch {
       // silently fail
-    } finally {
-      setLoadingFailed(false);
     }
   };
 

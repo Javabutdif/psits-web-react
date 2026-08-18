@@ -29,7 +29,6 @@ const STATUS_OPTIONS = [
 export const OrderManagerPanel = () => {
   const [orders, setOrders] = useState<OrderDetail[]>([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -39,7 +38,6 @@ export const OrderManagerPanel = () => {
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
 
   const fetchOrders = async () => {
-    setLoading(true);
     try {
       const params: Record<string, string | number> = {
         limit: pageSize,
@@ -54,7 +52,6 @@ export const OrderManagerPanel = () => {
     } catch {
       showToast("error", "Failed to load orders");
     } finally {
-      setLoading(false);
       setInitialLoading(false);
     }
   };

@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import { IStudent } from "../models/student.interface";
 import { Student } from "../models/student.model";
 import { user_model } from "../model_template/model_data";
-import { orderService } from "../services/order.service";
+import { Orders } from "../models/orders.model";
+import { Merch } from "../models/merch.model";
 import { Refund } from "../models/refund.model";
 import { Settings } from "../models/settings.model";
 import { membership_status } from "../enums/status.enums";
@@ -215,22 +216,60 @@ export const requestStudentMembershipV2 = async (
 export const getStudentOrders = async (req: Request, res: Response) => {
   try {
     const { idNumber } = req.userV2;
-    const result = await orderService.getAllOrdersDynamicStatus({
-      query: req.query,
-      status: (req.query.status as string) || "Pending",
-    });
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.max(Number(req.query.limit) || 8, 1);
+    const status = String(req.query.status || "Pending");
+    const query = {
+      id_number: idNumber,
+      order_status: status,
+    };
 
-    const studentOrders = (result.data as any[]).filter(
-      (o) => o.id_number === idNumber
+    const [rawOrders, total] = await Promise.all([
+      Orders.find(query)
+        .sort(status === "Paid" ? { transaction_date: -1 } : { order_date: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Orders.countDocuments(query),
+    ]);
+    const productIds = Array.from(
+      new Set(
+        rawOrders.flatMap((order: any) =>
+          Array.isArray(order.items)
+            ? order.items.map((item: any) => String(item.product_id || ""))
+            : []
+        )
+      )
+    ).filter(Boolean);
+    const products = productIds.length
+      ? await Merch.find({ _id: { $in: productIds } })
+          .select("_id imageUrl")
+          .lean()
+      : [];
+    const imageByProductId = new Map(
+      products.map((product: any) => [
+        String(product._id),
+        Array.isArray(product.imageUrl) ? product.imageUrl[0] : undefined,
+      ])
     );
+    const studentOrders = rawOrders.map((order: any) => ({
+      ...order,
+      items: Array.isArray(order.items)
+        ? order.items.map((item: any) => ({
+            ...item,
+            imageUrl1:
+              item.imageUrl1 || imageByProductId.get(String(item.product_id)),
+          }))
+        : [],
+    }));
 
     return res.status(200).json({
       message: "Successfully retrieved student orders",
       data: studentOrders,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-      totalPages: result.totalPages,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     console.error("Error fetching student orders:", error);
