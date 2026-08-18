@@ -101,6 +101,10 @@ export function StudentMembershipRouteGuard() {
     return <Outlet />;
   }
 
+  if (user?.year === 1 || user?.year === "1") {
+    return <Outlet />;
+  }
+
   const redirectTo =
     state.status === "pending"
       ? "/student/membership-pending"

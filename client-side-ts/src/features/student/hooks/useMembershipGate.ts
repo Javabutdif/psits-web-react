@@ -21,6 +21,10 @@ export const useMembershipGate = () => {
       return true;
     }
 
+    if (user.year === 1 || user.year === "1") {
+      return true;
+    }
+
     const result = await getMembershipStatusStudents(undefined, false);
     const status = normalizeMembershipStatus(
       result?.status || result?.rawStatus
