@@ -110,6 +110,19 @@ router.get(
   orderV2Controller.getAllPendingPaidOrders
 );
 
+// Printable receipt for paid orders (V2)
+router.get(
+  "/v2/:orderId/receipt",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([
+    psits_roles.ADMIN,
+    psits_roles.FINANCE,
+    psits_roles.HEAD_FINANCE,
+  ]),
+  orderV2Controller.getOrderReceipt
+);
+
 // Cancel order (body: { _id }) — restores stock (V2)
 router.put(
   "/v2/cancel",
