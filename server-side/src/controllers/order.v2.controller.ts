@@ -83,6 +83,16 @@ class OrderController {
       totalPages: result.totalPages,
     });
   });
+
+  getOrderReceipt = catchAsync(async (req: Request, res: Response) => {
+    const orderId = String(req.params.orderId || "");
+    const receipt = await orderService.getPrintableOrderReceipt(orderId);
+
+    return res.status(200).json({
+      message: "Successfully retrieved order receipt",
+      data: receipt,
+    });
+  });
   //Create Order Controller
   //Create Order
   /*
@@ -292,6 +302,7 @@ class OrderController {
       const result: any = await orderService.approveOrderService(
         order_id,
         admin.name,
+        cash,
         session
       );
       //Create a Stocks array for bulk update
