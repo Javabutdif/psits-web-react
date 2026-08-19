@@ -138,7 +138,8 @@ export const createEventV2 = async (
     formData.append("eventName", payload.eventName);
     formData.append("eventDescription", payload.eventDescription ?? "");
     formData.append("eventDate", payload.eventDate);
-    if (payload.eventEndDate) formData.append("eventEndDate", payload.eventEndDate);
+    if (payload.eventEndDate)
+      formData.append("eventEndDate", payload.eventEndDate);
     formData.append("attendanceType", payload.attendanceType);
     if (payload.status) formData.append("status", payload.status);
     formData.append("sessionConfig", JSON.stringify(payload.sessionConfig));
@@ -837,6 +838,17 @@ export const changeAttendeePasswordV2 = async (
   }
 };
 
+/**
+ * Fields the API expects as JSON rather than as plain scalars.
+ *
+ * Declaring these explicitly keeps the multipart and JSON request paths in
+ * agreement. Inferring the encoding from `typeof value` at runtime meant a
+ * nested object was stringified on the multipart path but sent as a real
+ * object on the JSON path — so the controller received two different shapes
+ * for `sessionConfig` depending on whether an image happened to be attached.
+ */
+const JSON_ENCODED_FIELDS = new Set(["sessionConfig", "limit"]);
+
 export const updateEventDetails = async (
   eventId: string,
   payload: {
@@ -849,6 +861,8 @@ export const updateEventDetails = async (
     eventVenueSpecific?: string;
     eventStartTime?: string;
     eventEndTime?: string;
+    attendanceType?: string;
+    status?: string;
     sessionConfig?: unknown;
     limit?: unknown;
     image?: File | null;
@@ -861,9 +875,12 @@ export const updateEventDetails = async (
 
     for (const [key, value] of Object.entries(rest)) {
       if (value === undefined || value === null) continue;
+
       formData.append(
         key,
-        typeof value === "string" ? value : JSON.stringify(value)
+        JSON_ENCODED_FIELDS.has(key) || typeof value !== "string"
+          ? JSON.stringify(value)
+          : value
       );
     }
 

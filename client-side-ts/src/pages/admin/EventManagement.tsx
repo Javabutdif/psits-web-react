@@ -23,6 +23,7 @@ import {
 } from "@/features/events/api/eventService";
 import type {
   CampusLimit,
+  CanonicalSessionConfig,
   Event as ApiEvent,
   EventMerchMeta,
 } from "@/features/events/types/event.types";
@@ -53,6 +54,7 @@ interface EventDetails {
   eventVenueSpecific?: string;
   eventStartTime?: string;
   eventEndTime?: string;
+  sessionConfig: CanonicalSessionConfig;
 }
 
 const CAMPUS_CODE_TO_NAME: Record<Campus, string> = {
@@ -135,6 +137,23 @@ const getSessionBounds = (
 
   return { startTime: firstStart, endTime: lastEnd };
 };
+
+const normalizeSessionConfig = (
+  sessionConfig: EventSessionConfig | undefined
+): CanonicalSessionConfig => ({
+  morning: {
+    enabled: Boolean(sessionConfig?.morning?.enabled),
+    timeRange: sessionConfig?.morning?.timeRange ?? "",
+  },
+  afternoon: {
+    enabled: Boolean(sessionConfig?.afternoon?.enabled),
+    timeRange: sessionConfig?.afternoon?.timeRange ?? "",
+  },
+  evening: {
+    enabled: Boolean(sessionConfig?.evening?.enabled),
+    timeRange: sessionConfig?.evening?.timeRange ?? "",
+  },
+});
 
 const normalizeMerchMeta = (value: unknown): EventMerchMeta | null => {
   if (!value || typeof value !== "object") {
@@ -288,6 +307,7 @@ const mapApiEventToEventDetails = (
     eventVenueSpecific: event.eventVenueSpecific as string | undefined,
     eventStartTime: event.eventStartTime as string | undefined,
     eventEndTime: event.eventEndTime as string | undefined,
+    sessionConfig: normalizeSessionConfig(sessionConfig),
   };
 };
 
@@ -773,6 +793,7 @@ const EventManagement: React.FC = () => {
           eventVenueSpecific: eventDetails?.eventVenueSpecific ?? "",
           eventStartTime: eventDetails?.eventStartTime ?? "",
           eventEndTime: eventDetails?.eventEndTime ?? "",
+          sessionConfig: eventDetails?.sessionConfig,
         }}
       />
     </div>
