@@ -239,10 +239,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
           id: attendee.id_number,
           name: attendee.name,
           email:
-            typeof attendee.email === "string" &&
-            attendee.email.trim().length > 0
-              ? attendee.email
-              : `${attendee.id_number}@uc.edu.ph`,
+            typeof attendee.email === "string" ? attendee.email.trim() : "",
           studentId: attendee.id_number,
           attendance: attendee.attendance,
           courseYear: `${attendee.course} - ${attendee.year}`,
@@ -325,10 +322,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
       const exportAttendees: Attendee[] = result.data.map((attendee) => ({
         id: attendee.id_number,
         name: attendee.name,
-        email:
-          typeof attendee.email === "string" && attendee.email.trim().length > 0
-            ? attendee.email
-            : `${attendee.id_number}@uc.edu.ph`,
+        email: typeof attendee.email === "string" ? attendee.email.trim() : "",
         studentId: attendee.id_number,
         attendance: attendee.attendance,
         courseYear: `${attendee.course} - ${attendee.year}`,
@@ -516,7 +510,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     const newAttendee: Attendee = {
       id: attendee.studentId,
       name: `${attendee.firstName} ${attendee.middleName} ${attendee.lastName}`.trim(),
-      email: attendee.email || `${attendee.studentId}@uc.edu.ph`,
+      email: attendee.email || "",
       studentId: attendee.studentId,
       attendance: {
         morning: { attended: false, timestamp: null },

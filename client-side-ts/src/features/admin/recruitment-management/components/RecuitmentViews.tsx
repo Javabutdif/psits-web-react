@@ -70,7 +70,7 @@ const STATUS_STYLES: Record<string, string> = {
   Pending: "bg-amber-100 text-amber-700",
   "For Verification": "bg-slate-100 text-slate-700",
   Scheduled: "bg-blue-100 text-blue-700",
-  "Interview Completed": "bg-yellow-100 text-yellow-700",
+  Interviewed: "bg-gray-100 text-gray-700",
   Approved: "bg-emerald-100 text-emerald-700",
   Rejected: "bg-red-100 text-red-700",
 };
@@ -761,9 +761,7 @@ export const RecruitmentViews = () => {
                   For Verification
                 </SelectItem>
                 <SelectItem value="Scheduled">Scheduled</SelectItem>
-                <SelectItem value="Interviewed">
-                  Interviewed
-                </SelectItem>
+                <SelectItem value="Interviewed">Interviewed</SelectItem>
                 <SelectItem value="Approved">Approved</SelectItem>
                 <SelectItem value="Rejected">Rejected</SelectItem>
               </SelectContent>
@@ -1273,12 +1271,10 @@ export const RecruitmentViews = () => {
                                     <button
                                       type="button"
                                       disabled={
-                                        applicant.status !==
-                                        "Interview Completed"
+                                        applicant.status !== "Interviewed"
                                       }
                                       title={
-                                        applicant.status !==
-                                          "Interview Completed" &&
+                                        applicant.status !== "Interviewed" &&
                                         applicant.status !== "Approved" &&
                                         applicant.status !== "Rejected"
                                           ? "Available after the interview is completed"
@@ -1296,12 +1292,10 @@ export const RecruitmentViews = () => {
                                     <button
                                       type="button"
                                       disabled={
-                                        applicant.status !==
-                                        "Interview Completed"
+                                        applicant.status !== "Interviewed"
                                       }
                                       title={
-                                        applicant.status !==
-                                          "Interview Completed" &&
+                                        applicant.status !== "Interviewed" &&
                                         applicant.status !== "Approved" &&
                                         applicant.status !== "Rejected"
                                           ? "Available after the interview is completed"
@@ -1622,7 +1616,7 @@ export const RecruitmentViews = () => {
         }
         canMarkInterviewCompleted={selectedApplicant?.status === "Scheduled"}
         isInterviewCompleted={
-          selectedApplicant?.status === "Interview Completed" ||
+          selectedApplicant?.status === "Interviewed" ||
           selectedApplicant?.status === "Approved" ||
           selectedApplicant?.status === "Rejected"
         }

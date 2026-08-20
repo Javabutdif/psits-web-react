@@ -244,8 +244,7 @@ const STATUS = {
 
 export const useRecruitmentData = () => {
   const { canManageRecruitment } = useAdminPermissions();
-  const [activeTab, setActiveTabState] =
-    useState<RecruitmentTab>("applicants");
+  const [activeTab, setActiveTabState] = useState<RecruitmentTab>("applicants");
   const [applicants, setApplicants] = useState<RecruitmentApplicant[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -260,8 +259,9 @@ export const useRecruitmentData = () => {
       total: 0,
       totalPages: 1,
     });
-  const [applicantSummary, setApplicantSummary] =
-    useState<ApplicantSummary>(EMPTY_APPLICANT_SUMMARY);
+  const [applicantSummary, setApplicantSummary] = useState<ApplicantSummary>(
+    EMPTY_APPLICANT_SUMMARY
+  );
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
   const applicantRequestId = useRef(0);
   const [isLoading, setIsLoading] = useState(true);
