@@ -87,7 +87,8 @@ import { formatEventDateLabel, formatEventDateKey } from "@/utils/date-manila";
 
 const normalizeStatus = (
   value: unknown,
-  eventDate?: string | Date | null
+  eventDate?: string | Date | null,
+  eventEndDate?: string | Date | null
 ): EventStatus => {
   const normalized = String(value ?? "")
     .trim()
@@ -96,13 +97,24 @@ const normalizeStatus = (
   if (normalized === "ended" || normalized === "cancelled") return "ended";
   if (normalized === "ongoing") return "ongoing";
   if (eventDate) {
-    const parsedEventDate =
+    const parsedStartDate =
       typeof eventDate === "string" ? new Date(eventDate) : eventDate;
+    const parsedEndDate = eventEndDate
+      ? typeof eventEndDate === "string"
+        ? new Date(eventEndDate)
+        : eventEndDate
+      : parsedStartDate;
 
-    if (parsedEventDate && !Number.isNaN(parsedEventDate.getTime())) {
+    if (
+      parsedStartDate &&
+      !Number.isNaN(parsedStartDate.getTime()) &&
+      parsedEndDate &&
+      !Number.isNaN(parsedEndDate.getTime())
+    ) {
       const todayKey = formatEventDateKey(new Date());
-      const eventKey = formatEventDateKey(parsedEventDate);
-      if (todayKey === eventKey) {
+      const startKey = formatEventDateKey(parsedStartDate);
+      const endKey = formatEventDateKey(parsedEndDate);
+      if (todayKey >= startKey && todayKey <= endKey) {
         return "ongoing";
       }
     }
@@ -277,7 +289,11 @@ const mapApiEventToEventDetails = (
   return {
     id: String(event.eventId ?? routeEventId),
     title: String(event.eventName ?? "Untitled Event"),
-    status: normalizeStatus(event.status, event.eventDate),
+    status: normalizeStatus(
+      event.status,
+      event.eventDate,
+      event.eventEndDate ?? event.eventDate
+    ),
     startDate: formatEventDateLabel(event.eventDate),
     rawStartDate: event.eventDate ? String(event.eventDate) : undefined,
     startTime,
