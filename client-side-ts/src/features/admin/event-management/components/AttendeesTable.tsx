@@ -880,16 +880,18 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                           <Badge
                             variant="outline"
                             className={
-                              isPresent
-                                ? "border-green-200 bg-green-50 text-green-700"
-                                : "border-red-200 bg-red-50 text-red-700"
+                              !isAttendanceAvailable
+                                ? "border-gray-200 bg-gray-300 text-gray-700"
+                                : isPresent
+                                  ? "border-green-200 bg-green-50 text-green-700"
+                                  : "border-red-200 bg-red-50 text-red-700"
                             }
                           >
                             {isAttendanceAvailable
                               ? isPresent
                                 ? "Present"
                                 : "Absent"
-                              : "N/A"}
+                              : "Attendee"}
                           </Badge>
                         </button>
                       </TableCell>
@@ -995,16 +997,18 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                     <Badge
                       variant="outline"
                       className={
-                        isPresent
-                          ? "border-green-200 bg-green-50 text-green-700"
-                          : "border-red-200 bg-red-50 text-red-700"
+                        !isAttendanceAvailable
+                          ? "border-gray-200 bg-gray-100 text-gray-600"
+                          : isPresent
+                            ? "border-green-200 bg-green-50 text-green-700"
+                            : "border-red-200 bg-red-50 text-red-700"
                       }
                     >
                       {isAttendanceAvailable
                         ? isPresent
                           ? "Present"
                           : "Absent"
-                        : "N/A"}
+                        : "Attendee"}
                     </Badge>
                   </button>
                 </div>
