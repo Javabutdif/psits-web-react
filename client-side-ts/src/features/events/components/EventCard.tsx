@@ -289,7 +289,7 @@ export const EventCard: React.FC<EventCardProps> = ({
                   Attendance QR
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto p-4 sm:max-w-4xl sm:p-6">
+              <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-3xl p-4 sm:max-w-4xl sm:p-6">
                 <div className="grid grid-cols-1 place-items-center gap-4 sm:gap-8 md:grid-cols-2">
                   {/* Left: Image */}
                   <div className="flex w-full items-center justify-center overflow-hidden rounded-xl pt-4">
