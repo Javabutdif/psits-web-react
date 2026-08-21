@@ -34,6 +34,9 @@ const SESSION_FIELDS: SessionField[] = [
   },
 ];
 
+const DEFAULT_START = "07:30";
+const DEFAULT_END = "12:00";
+
 const formatDateLabel = (date?: Date): string => {
   if (!date || Number.isNaN(date.getTime())) return "TBD";
   return date.toLocaleDateString("en-US", {
@@ -56,32 +59,41 @@ export const SessionSetupTab: React.FC<SessionSetupTabProps> = ({
     field: "startTime" | "endTime",
     value: string
   ) => {
-    const current = formData.sessionConfig[sessionKey];
-    const [, end] = current.timeRange.split(" - ");
-    const [start] = current.timeRange.split(" - ");
+    setFormData((prev) => {
+      const current = prev.sessionConfig[sessionKey];
+      const [start, end] = current.timeRange.split(" - ");
 
-    const range =
-      field === "startTime"
-        ? `${value} - ${end || "12:00"}`
-        : `${start || "07:30"} - ${value}`;
+      const range =
+        field === "startTime"
+          ? `${value} - ${end?.trim() || DEFAULT_END}`
+          : `${start?.trim() || DEFAULT_START} - ${value}`;
 
-    setFormData((prev) => ({
-      ...prev,
-      sessionConfig: {
-        ...prev.sessionConfig,
-        [sessionKey]: { ...current, timeRange: range },
-      },
-    }));
+      return {
+        ...prev,
+        sessionConfig: {
+          ...prev.sessionConfig,
+          [sessionKey]: { ...current, timeRange: range },
+        },
+      };
+    });
   };
 
   const toggleEnabled = (sessionKey: SessionField["key"], enabled: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      sessionConfig: {
-        ...prev.sessionConfig,
-        [sessionKey]: { ...prev.sessionConfig[sessionKey], enabled },
-      },
-    }));
+    setFormData((prev) => {
+      const current = prev.sessionConfig[sessionKey];
+      const timeRange =
+        enabled && !current.timeRange.trim()
+          ? `${DEFAULT_START} - ${DEFAULT_END}`
+          : current.timeRange;
+
+      return {
+        ...prev,
+        sessionConfig: {
+          ...prev.sessionConfig,
+          [sessionKey]: { ...current, enabled, timeRange },
+        },
+      };
+    });
   };
 
   return (

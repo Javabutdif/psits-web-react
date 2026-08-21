@@ -44,41 +44,18 @@ function formatDateDisplay(date?: Date) {
   });
 }
 
-
-function toLocalDateString(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-// Derive the form's initial state from prefill values. Used as the initial
-// value for each useState so the modal remounts (via `key` from the parent)
-// with fresh state whenever it opens for a (different) applicant.
-function getInitialState(initialValues?: ScheduleInterviewValues | null) {
-  const parsedDate = initialValues?.date
-    ? new Date(`${initialValues.date}T00:00:00`)
-    : undefined;
-
-  return {
-    date:
-      parsedDate && !Number.isNaN(parsedDate.getTime())
-        ? parsedDate
-        : undefined,
-    startTime: initialValues?.startTime || "",
-    endTime: initialValues?.endTime || "",
-    officers: initialValues?.officer
-      ? initialValues.officer.split(", ").filter(Boolean)
-      : [],
-    interviewType: initialValues?.interviewType || "",
-  };
-}
-
 // Convert "HH:mm" (24h) to minutes since midnight for reliable comparison.
 function timeToMinutes(time24: string) {
   const [h, m] = time24.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return -1;
   return h * 60 + m;
+}
+
+function parseLocalDateString(dateString?: string) {
+  if (!dateString) return undefined;
+  const [year, month, day] = dateString.split("-").map(Number);
+  if (!year || !month || !day) return undefined;
+  return new Date(year, month - 1, day);
 }
 
 interface OfficerMultiSelectPopoverProps {
@@ -149,24 +126,34 @@ function OfficerMultiSelectPopover({
 interface InterviewSchedulingModalProps {
   open: boolean;
   isSubmitting: boolean;
+  initialValues?: ScheduleInterviewValues | null;
   onClose: () => void;
   onConfirm: (values: ScheduleInterviewValues) => void;
-  initialValues?: ScheduleInterviewValues | null;
 }
 
 export const InterviewSchedulingModal = ({
   open,
   isSubmitting,
+  initialValues,
   onClose,
   onConfirm,
-  initialValues = null,
 }: InterviewSchedulingModalProps) => {
-  const initialState = getInitialState(initialValues);
-  const [date, setDate] = useState<Date | undefined>(initialState.date);
-  const [startTime, setStartTime] = useState(initialState.startTime);
-  const [endTime, setEndTime] = useState(initialState.endTime);
-  const [officers, setOfficers] = useState<string[]>(initialState.officers);
-  const [interviewType, setInterviewType] = useState(initialState.interviewType);
+  const [date, setDate] = useState<Date | undefined>(() =>
+    parseLocalDateString(initialValues?.date)
+  );
+  const [startTime, setStartTime] = useState(initialValues?.startTime ?? "");
+  const [endTime, setEndTime] = useState(initialValues?.endTime ?? "");
+  const [officers, setOfficers] = useState<string[]>(() =>
+    initialValues?.officer
+      ? initialValues.officer
+          .split(",")
+          .map((o) => o.trim())
+          .filter(Boolean)
+      : []
+  );
+  const [interviewType, setInterviewType] = useState(
+    initialValues?.interviewType ?? ""
+  );
   const [saveSelection, setSaveSelection] = useState(false);
 
   const isValid =
@@ -175,7 +162,7 @@ export const InterviewSchedulingModal = ({
   const handleConfirm = () => {
     if (!isValid || !date) return;
     onConfirm({
-      date: toLocalDateString(date),
+      date: date.toISOString().slice(0, 10),
       startTime,
       endTime,
       officer: officers.join(", "),

@@ -23,6 +23,7 @@ import {
 } from "@/features/events/api/eventService";
 import type {
   CampusLimit,
+  CanonicalSessionConfig,
   Event as ApiEvent,
   EventMerchMeta,
 } from "@/features/events/types/event.types";
@@ -53,6 +54,7 @@ interface EventDetails {
   eventVenueSpecific?: string;
   eventStartTime?: string;
   eventEndTime?: string;
+  sessionConfig: CanonicalSessionConfig;
 }
 
 const CAMPUS_CODE_TO_NAME: Record<Campus, string> = {
@@ -85,7 +87,8 @@ import { formatEventDateLabel, formatEventDateKey } from "@/utils/date-manila";
 
 const normalizeStatus = (
   value: unknown,
-  eventDate?: string | Date | null
+  eventDate?: string | Date | null,
+  eventEndDate?: string | Date | null
 ): EventStatus => {
   const normalized = String(value ?? "")
     .trim()
@@ -94,13 +97,24 @@ const normalizeStatus = (
   if (normalized === "ended" || normalized === "cancelled") return "ended";
   if (normalized === "ongoing") return "ongoing";
   if (eventDate) {
-    const parsedEventDate =
+    const parsedStartDate =
       typeof eventDate === "string" ? new Date(eventDate) : eventDate;
+    const parsedEndDate = eventEndDate
+      ? typeof eventEndDate === "string"
+        ? new Date(eventEndDate)
+        : eventEndDate
+      : parsedStartDate;
 
-    if (parsedEventDate && !Number.isNaN(parsedEventDate.getTime())) {
+    if (
+      parsedStartDate &&
+      !Number.isNaN(parsedStartDate.getTime()) &&
+      parsedEndDate &&
+      !Number.isNaN(parsedEndDate.getTime())
+    ) {
       const todayKey = formatEventDateKey(new Date());
-      const eventKey = formatEventDateKey(parsedEventDate);
-      if (todayKey === eventKey) {
+      const startKey = formatEventDateKey(parsedStartDate);
+      const endKey = formatEventDateKey(parsedEndDate);
+      if (todayKey >= startKey && todayKey <= endKey) {
         return "ongoing";
       }
     }
@@ -135,6 +149,23 @@ const getSessionBounds = (
 
   return { startTime: firstStart, endTime: lastEnd };
 };
+
+const normalizeSessionConfig = (
+  sessionConfig: EventSessionConfig | undefined
+): CanonicalSessionConfig => ({
+  morning: {
+    enabled: Boolean(sessionConfig?.morning?.enabled),
+    timeRange: sessionConfig?.morning?.timeRange ?? "",
+  },
+  afternoon: {
+    enabled: Boolean(sessionConfig?.afternoon?.enabled),
+    timeRange: sessionConfig?.afternoon?.timeRange ?? "",
+  },
+  evening: {
+    enabled: Boolean(sessionConfig?.evening?.enabled),
+    timeRange: sessionConfig?.evening?.timeRange ?? "",
+  },
+});
 
 const normalizeMerchMeta = (value: unknown): EventMerchMeta | null => {
   if (!value || typeof value !== "object") {
@@ -258,7 +289,11 @@ const mapApiEventToEventDetails = (
   return {
     id: String(event.eventId ?? routeEventId),
     title: String(event.eventName ?? "Untitled Event"),
-    status: normalizeStatus(event.status, event.eventDate),
+    status: normalizeStatus(
+      event.status,
+      event.eventDate,
+      event.eventEndDate ?? event.eventDate
+    ),
     startDate: formatEventDateLabel(event.eventDate),
     rawStartDate: event.eventDate ? String(event.eventDate) : undefined,
     startTime,
@@ -288,6 +323,7 @@ const mapApiEventToEventDetails = (
     eventVenueSpecific: event.eventVenueSpecific as string | undefined,
     eventStartTime: event.eventStartTime as string | undefined,
     eventEndTime: event.eventEndTime as string | undefined,
+    sessionConfig: normalizeSessionConfig(sessionConfig),
   };
 };
 
@@ -773,6 +809,7 @@ const EventManagement: React.FC = () => {
           eventVenueSpecific: eventDetails?.eventVenueSpecific ?? "",
           eventStartTime: eventDetails?.eventStartTime ?? "",
           eventEndTime: eventDetails?.eventEndTime ?? "",
+          sessionConfig: eventDetails?.sessionConfig,
         }}
       />
     </div>

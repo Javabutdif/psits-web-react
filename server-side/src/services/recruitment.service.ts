@@ -748,7 +748,7 @@ export class RecruitmentService {
     const statusMap: Record<string, string> = {
       Pending: applicationStatus.SUBMITTED,
       Scheduled: applicationStatus.INTERVIEW_SCHEDULED,
-      "Interviewed": applicationStatus.INTERVIEWING,
+      "Interview Completed": applicationStatus.INTERVIEWING,
       Approved: applicationStatus.APPROVED,
       Rejected: applicationStatus.REJECTED,
       "For Verification": applicationStatus.APPROVED,
@@ -760,7 +760,8 @@ export class RecruitmentService {
       .filter(Boolean);
 
     if (positionId) conditions.push({ position: positionId });
-    if (mappedStatuses.length) conditions.push({ status: { $in: mappedStatuses } });
+    if (mappedStatuses.length)
+      conditions.push({ status: { $in: mappedStatuses } });
     if (courses.length)
       conditions.push({ "applicantSnapshot.course": { $in: courses } });
     if (years.length) {
@@ -837,10 +838,7 @@ export class RecruitmentService {
             {
               $match: {
                 $expr: {
-                  $eq: [
-                    { $toString: "$_id" },
-                    "$$applicationPositionId",
-                  ],
+                  $eq: [{ $toString: "$_id" }, "$$applicationPositionId"],
                 },
               },
             },
@@ -892,20 +890,12 @@ export class RecruitmentService {
             },
             approved: {
               $sum: {
-                $cond: [
-                  { $eq: ["$status", applicationStatus.APPROVED] },
-                  1,
-                  0,
-                ],
+                $cond: [{ $eq: ["$status", applicationStatus.APPROVED] }, 1, 0],
               },
             },
             rejected: {
               $sum: {
-                $cond: [
-                  { $eq: ["$status", applicationStatus.REJECTED] },
-                  1,
-                  0,
-                ],
+                $cond: [{ $eq: ["$status", applicationStatus.REJECTED] }, 1, 0],
               },
             },
             verifications: {

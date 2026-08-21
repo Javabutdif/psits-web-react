@@ -710,8 +710,22 @@ export const getEventAttendeesV2Controller = async (
       startIndex + params.limit
     );
 
+    const pageIdNumbers = paginated.map((a) => a.id_number);
+    const pageStudents = await Student.find(
+      { id_number: { $in: pageIdNumbers } },
+      { id_number: 1, email: 1 }
+    ).lean();
+    const pageEmailMap = new Map(
+      pageStudents.map((s) => [s.id_number, s.email])
+    );
+
+    const dataWithEmail = mapPaginatedAttendees(paginated).map((attendee) => ({
+      ...attendee,
+      email: pageEmailMap.get(attendee.id_number) || undefined,
+    }));
+
     return res.status(200).json({
-      data: mapPaginatedAttendees(paginated),
+      data: dataWithEmail,
       pagination: {
         page,
         limit: params.limit,
