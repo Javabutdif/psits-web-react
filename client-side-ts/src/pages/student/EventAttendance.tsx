@@ -100,11 +100,11 @@ const EventAttendance: React.FC = () => {
         (a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)
       );
 
-      // Upcoming: today and any future dates, sorted soonest first
+      // Upcoming: today and any future dates, sorted newest first
       setUpcomingEvents(
         transformedEvents
           .filter((e) => e.date && isUpcoming(e.date))
-          .sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0))
+          .sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0))
       );
       setPastEvents(
         transformedEvents
