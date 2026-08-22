@@ -15,7 +15,12 @@ import type { QRCodePayloadV2 } from "@/features/events/types/event.types";
 interface ScanQRModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  eventId: string;
   onScanSuccess: (payload: QRCodePayloadV2) => Promise<boolean>;
+}
+
+function normalizeEventId(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 function parseQRPayload(raw: string): QRCodePayloadV2 | null {
@@ -41,6 +46,7 @@ function parseQRPayload(raw: string): QRCodePayloadV2 | null {
 export const ScanQRModal: React.FC<ScanQRModalProps> = ({
   open,
   onOpenChange,
+  eventId,
   onScanSuccess,
 }) => {
   const [error, setError] = useState("");
@@ -59,6 +65,11 @@ export const ScanQRModal: React.FC<ScanQRModalProps> = ({
     const payload = parseQRPayload(scannedValue);
 
     if (payload) {
+      if (normalizeEventId(payload.eventId) !== normalizeEventId(eventId)) {
+        setError("This QR code is for another event.");
+        return;
+      }
+
       setError("");
       setIsProcessingScan(true);
 

@@ -13,6 +13,7 @@ import type { EventFormData } from "./AddEventModal";
 import { showToast } from "@/utils/alertHelper";
 import { updateEventDetails } from "@/features/events/api/eventService";
 import axios from "axios";
+import { format } from "date-fns";
 
 type SessionKey = "morning" | "afternoon" | "evening";
 
@@ -46,6 +47,7 @@ interface EditEventModalProps {
 }
 
 const SESSION_KEYS: SessionKey[] = ["morning", "afternoon", "evening"];
+const formatDateKey = (date: Date): string => format(date, "yyyy-MM-dd");
 
 /**
  * Factory rather than a shared constant: each form instance gets its own
@@ -171,8 +173,12 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
       const payload: Parameters<typeof updateEventDetails>[1] = {
         eventName: formData.eventName,
         eventDescription: formData.eventDescription,
-        eventDate: formData.eventSchedule?.from?.toISOString(),
-        eventEndDate: formData.eventSchedule?.to?.toISOString(),
+        eventDate: formData.eventSchedule?.from
+          ? formatDateKey(formData.eventSchedule.from)
+          : undefined,
+        eventEndDate: formData.eventSchedule?.to
+          ? formatDateKey(formData.eventSchedule.to)
+          : undefined,
         eventVenue: formData.eventVenue,
         eventTheme: formData.eventTheme,
         eventVenueSpecific: formData.eventVenueSpecific,
