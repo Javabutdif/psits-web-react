@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo_forms_100x100.png";
 
 const TEST_WORD_PATTERN =
-  /(test|asdf|qwerty|sample|dummy|foobar|admin|demo|example|placeholder|lorem|ipsum|temp|fake|junk|noreply|nobody|whatever|asdasd|zzz|aaa|hello|hehe|haha|wala)/i;
+  /(^|\b)(test|asdf|qwerty|sample|dummy|foobar|admin|demo|example|placeholder|lorem|ipsum|temp|fake|junk|noreply|nobody|whatever|asdasd|zzz|aaa|hello|hehe|haha|wala)(\b|$)/i;
 
 function isSuspiciousName(value: string) {
   return TEST_WORD_PATTERN.test(value.trim());
@@ -36,7 +36,7 @@ function isSuspiciousName(value: string) {
 
 function isSuspiciousId(value: string) {
   const isRepeating = /^(\d)\1+$/.test(value);
-  const isSequential = /^(0123456789|1234567890|12345678)/.test(value);
+  const isSequential = /^(0123456789|1234567890|12345678)$/.test(value);
   return isRepeating || isSequential;
 }
 
@@ -45,9 +45,6 @@ function isSuspiciousEmail(email: string): boolean {
 
   // Too short (1-2 chars, covers single digits too)
   if (localPart.length <= 2) return true;
-
-  // Purely numeric (e.g. "123456789@gmail.com")
-  if (/^\d+$/.test(localPart)) return true;
 
   // Contains obvious test/junk words (e.g. "test@gmail.com")
   if (TEST_WORD_PATTERN.test(localPart)) return true;
