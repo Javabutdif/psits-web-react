@@ -180,11 +180,11 @@ export const EventCard: React.FC<EventCardProps> = ({
   ]);
 
   // ── QR visibility gate ──────────────────────────────────────────────────
-  // Applied students always see their QR. Otherwise, once the event is
-  // within 1 day (including the event day itself), the QR is open as a
-  // walk-in allowance — but only for "open" events, since scanning the QR
-  // auto-registers the attendee server-side (see resolveAttendanceAttendee).
-  // Ticketed events require an actual application, so they always keep the
+  // Applied students always see their QR. Otherwise, only on the event day
+  // itself is the QR open as a walk-in allowance — but only for "open"
+  // events, since scanning the QR auto-registers the attendee server-side
+  // (see resolveAttendanceAttendee). Before the event day, unregistered
+  // students see the Register button. Ticketed events always keep the
   // Register button until the student has applied.
   const canShowQR = useMemo(() => {
     if (studentAttendee) return true;
@@ -195,7 +195,7 @@ export const EventCard: React.FC<EventCardProps> = ({
     const daysUntil = Math.round(
       (eventDay.getTime() - today.getTime()) / 86_400_000
     );
-    return daysUntil <= 1;
+    return daysUntil <= 0;
   }, [studentAttendee, event.date, attendanceType]);
 
   return (
