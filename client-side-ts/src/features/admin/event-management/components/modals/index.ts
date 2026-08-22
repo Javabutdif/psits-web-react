@@ -18,3 +18,4 @@ export { EditEventModal } from "./EditEventModal";
 export { AttendanceStatusModal } from "./AttendanceStatusModal";
 export { EditAttendeeModal } from "./EditAttendeeModal";
 export { ChangePasswordModal } from "./ChangePasswordModal";
+export { RemoveAttendeeModal } from "./RemoveAttendeeModal";

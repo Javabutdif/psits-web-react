@@ -14,6 +14,7 @@ import { Student } from "../models/student.model";
 import {
   ATTENDANCE_ERROR_STATUS_MAP,
   AttendanceError,
+  deleteAttendanceForAttendee,
   hydrateAttendeesAttendance,
   hydrateEventsAttendance,
   markAttendance,
@@ -1377,7 +1378,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       transactBy: claims.idNumber,
       transactDate: new Date(),
       attendance,
-      confirmedBy: claims.idNumber,
+      confirmedBy: req.admin?.name ?? claims.idNumber,
       raffleIsRemoved: false,
       raffleIsWinner: false,
     } as IAttendee);
@@ -1690,7 +1691,7 @@ export const addWalkInAttendeeV2Controller = async (
       transactBy: claims.idNumber,
       transactDate: new Date(),
       attendance,
-      confirmedBy: claims.idNumber,
+      confirmedBy: req.admin?.name ?? claims.idNumber,
       raffleIsRemoved: false,
       raffleIsWinner: false,
     } as IAttendee);
@@ -2678,6 +2679,156 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
       });
     }
 
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Internal server error",
+    });
+  }
+};
+
+// ── Remove Attendee V2 ───────────────────────────────────────────────────────
+
+/**
+ * DELETE /api/v2/events/:eventId/attendees/:idNumber
+ *
+ * Permanently removes an attendee from an event. Restricted to admins with
+ * STANDARD, EXECUTIVE, ADMIN, or DEVELOPER access (see adminAccessAuthenticateV2
+ * on the route).
+ */
+export const removeAttendeeV2Controller = async (
+  req: Request,
+  res: Response
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    // ── Auth guard ──────────────────────────────────────────────────────
+    const claims = req.userV2;
+    if (!claims || claims.role !== "admin") {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "Admin access required",
+      });
+    }
+
+    const adminCampus = claims.campus;
+
+    // ── Find event and attendee ─────────────────────────────────────────
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
+    const query = buildEventLookupQuery(eventId);
+    if (!query) {
+      return res.status(400).json({
+        error: "INVALID_EVENT_ID",
+        message: "Invalid event ID format",
+      });
+    }
+
+    if (!idNumber?.trim()) {
+      return res.status(400).json({
+        error: "VALIDATION",
+        message: "Student ID is required",
+      });
+    }
+
+    const event = await Event.findOne(query);
+    if (!event) {
+      return res
+        .status(404)
+        .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
+    }
+
+    const attendeeList = Array.isArray(event.attendees)
+      ? (event.attendees as unknown as (IAttendee & { _id?: Types.ObjectId })[])
+      : [];
+
+    const attendeeIndex = attendeeList.findIndex(
+      (a) => a.id_number === idNumber.trim()
+    );
+
+    if (attendeeIndex === -1) {
+      return res.status(404).json({
+        error: "ATTENDEE_NOT_FOUND",
+        message: "Attendee not found in this event",
+      });
+    }
+
+    const attendee = attendeeList[attendeeIndex];
+
+    // UC_MAIN admins can remove any attendee; other campuses are scoped to
+    // their own campus's attendees only (mirrors editAttendeeV2Controller /
+    // getEventStatisticsV2Controller's campus scoping).
+    if (attendee.campus !== adminCampus && adminCampus !== campus_type.MAIN) {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "You can only remove attendees from your own campus",
+      });
+    }
+
+    const removedAttendeeSnapshot = {
+      id_number: attendee.id_number,
+      name: attendee.name,
+      campus: attendee.campus,
+      shirtPrice: attendee.shirtPrice ?? 0,
+    };
+    const attendeeObjectId = attendee._id;
+
+    // ── Start transaction ───────────────────────────────────────────────
+    session.startTransaction();
+
+    // Undo sales figures this attendee contributed, if any.
+    if (removedAttendeeSnapshot.shirtPrice > 0) {
+      const campusData = event.sales_data.find(
+        (s) => s.campus === removedAttendeeSnapshot.campus
+      );
+      if (campusData) {
+        campusData.totalRevenue = Math.max(
+          0,
+          campusData.totalRevenue - removedAttendeeSnapshot.shirtPrice
+        );
+        campusData.unitsSold = Math.max(0, campusData.unitsSold - 1);
+      }
+      event.totalRevenueAll = Math.max(
+        0,
+        (event.totalRevenueAll ?? 0) - removedAttendeeSnapshot.shirtPrice
+      );
+      event.totalUnitsSold = Math.max(0, (event.totalUnitsSold ?? 0) - 1);
+    }
+
+    event.attendees.splice(attendeeIndex, 1);
+
+    normalizeEventCampusFields(event);
+    await event.save({ session });
+
+    if (attendeeObjectId) {
+      await deleteAttendanceForAttendee(
+        event._id as Types.ObjectId,
+        attendeeObjectId,
+        session
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await logAdminAction(
+      req,
+      logs_action.REMOVE_ATTENDEE,
+      `${removedAttendeeSnapshot.name} (${removedAttendeeSnapshot.id_number})`,
+      eventId
+    );
+
+    return res.status(200).json({
+      message: "Attendee removed successfully",
+      data: removedAttendeeSnapshot,
+    });
+  } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
+
+    console.error("Error in removeAttendeeV2Controller:", error);
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Internal server error",

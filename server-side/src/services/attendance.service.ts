@@ -547,6 +547,22 @@ export async function syncAttendanceForAttendee(
   );
 }
 
+/**
+ * Deletes the `Attendance` collection record for an attendee that is being
+ * removed from an event, so hydration doesn't later resurrect a dangling
+ * attendance record for an attendee that no longer exists.
+ */
+export async function deleteAttendanceForAttendee(
+  eventId: Types.ObjectId,
+  attendeeRef: Types.ObjectId,
+  session: ClientSession
+) {
+  await Attendance.deleteOne(
+    { event: eventId, attendeeRef },
+    { session }
+  );
+}
+
 async function updateAttendanceRecord(
   eventId: Types.ObjectId,
   attendee: EventAttendee,
