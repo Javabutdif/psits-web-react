@@ -117,6 +117,9 @@ const normalizeStatus = (
       if (todayKey >= startKey && todayKey <= endKey) {
         return "ongoing";
       }
+      if (todayKey > endKey) {
+        return "ended";
+      }
     }
   }
 

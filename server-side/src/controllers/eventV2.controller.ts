@@ -14,6 +14,8 @@ import { Student } from "../models/student.model";
 import {
   ATTENDANCE_ERROR_STATUS_MAP,
   AttendanceError,
+  buildDefaultAttendance,
+  deleteAttendanceForAttendee,
   hydrateAttendeesAttendance,
   hydrateEventsAttendance,
   markAttendance,
@@ -28,7 +30,6 @@ import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
 } from "../dtos/events.dto";
-import { parseTimeRangeToMinutes } from "../utils/timeRange";
 
 const logAdminAction = (
   req: Request,
@@ -120,82 +121,6 @@ const normalizeEventCampusFields = (event: IEvent): void => {
       }
     }
   }
-};
-
-type SessionKey = "morning" | "afternoon" | "evening";
-
-interface SessionConfigEntry {
-  enabled?: boolean;
-  timeRange?: string; // e.g. "7:00 AM - 12:00 PM"
-}
-
-interface SessionConfig {
-  morning?: SessionConfigEntry;
-  afternoon?: SessionConfigEntry;
-  evening?: SessionConfigEntry;
-}
-
-/**
- * Returns which session (morning/afternoon/evening) is currently active
- * based on the event's sessionConfig and the current time in Asia/Manila.
- * Returns null if no enabled session's timeRange currently contains "now".
- */
-const getCurrentActiveSession = (
-  sessionConfig: SessionConfig | undefined
-): SessionKey | null => {
-  if (!sessionConfig) return null;
-
-  const nowInManila = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" })
-  );
-  const nowMinutes = nowInManila.getHours() * 60 + nowInManila.getMinutes();
-
-  const sessionOrder: SessionKey[] = ["morning", "afternoon", "evening"];
-
-  for (const key of sessionOrder) {
-    const session = sessionConfig[key];
-    if (!session?.enabled || !session.timeRange) continue;
-
-    const bounds = parseTimeRangeToMinutes(session.timeRange);
-    if (!bounds) continue;
-
-    if (nowMinutes >= bounds.startMinutes && nowMinutes <= bounds.endMinutes) {
-      return key;
-    }
-  }
-
-  return null;
-};
-
-/**
- * Builds an attendance object with only the active session marked attended.
- * If no session is currently active, falls back to marking the morning
- * session as attended — this covers the "add attendee" flow where an admin
- * is manually registering a physically-present attendee.
- */
-const buildAttendanceForActiveSession = (
-  sessionConfig: SessionConfig | undefined,
-  now: Date
-): IAttendee["attendance"] => {
-  const activeSession = getCurrentActiveSession(sessionConfig);
-  // Fallback: when no session time-range currently matches, default to
-  // morning so the attendee is not incorrectly shown as "Absent".
-  const effectiveSession = activeSession ?? "morning";
-
-  return {
-    morning: {
-      attended: effectiveSession === "morning",
-      timestamp: effectiveSession === "morning" ? now : null,
-    },
-    afternoon: {
-      attended: effectiveSession === "afternoon",
-      timestamp: effectiveSession === "afternoon" ? now : null,
-    },
-    evening: {
-      attended: effectiveSession === "evening",
-      timestamp: effectiveSession === "evening" ? now : null,
-    },
-  };
 };
 
 type AttendeeAttendanceFilter =
@@ -1359,13 +1284,8 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       );
     }
 
-    // Step 2: Push attendee into event, auto-marking the currently
-    // active session as present (based on the event's sessionConfig)
-    const now = new Date();
-    const attendance = buildAttendanceForActiveSession(
-      event.sessionConfig as SessionConfig | undefined,
-      now
-    );
+    // Step 2: Push attendee into event as registered-only — attendance is
+    // left unmarked until it's actually confirmed (QR scan / Mark Attendance).
     event.attendees.push({
       id_number: normalizedStudentId,
       name: attendeeName,
@@ -1376,8 +1296,8 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       shirtPrice: resolvedPrice,
       transactBy: claims.idNumber,
       transactDate: new Date(),
-      attendance,
-      confirmedBy: claims.idNumber,
+      attendance: buildDefaultAttendance(),
+      confirmedBy: "",
       raffleIsRemoved: false,
       raffleIsWinner: false,
     } as IAttendee);
@@ -1671,14 +1591,9 @@ export const addWalkInAttendeeV2Controller = async (
     // ── Transaction ─────────────────────────────────────────────────────
     session.startTransaction();
 
-    // Step 1: Push attendee into event (no student account creation),
-    // auto-marking the currently active session as present since a
-    // attendee is physically checking in right now
-    const now = new Date();
-    const attendance = buildAttendanceForActiveSession(
-      event.sessionConfig as SessionConfig | undefined,
-      now
-    );
+    // Step 1: Push attendee into event (no student account creation) as
+    // registered-only — attendance is left unmarked until it's actually
+    // confirmed (QR scan / Mark Attendance).
     event.attendees.push({
       id_number: normalizedStudentId,
       name: attendeeName,
@@ -1689,8 +1604,8 @@ export const addWalkInAttendeeV2Controller = async (
       shirtPrice: resolvedPrice,
       transactBy: claims.idNumber,
       transactDate: new Date(),
-      attendance,
-      confirmedBy: claims.idNumber,
+      attendance: buildDefaultAttendance(),
+      confirmedBy: "",
       raffleIsRemoved: false,
       raffleIsWinner: false,
     } as IAttendee);
@@ -2678,6 +2593,156 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
       });
     }
 
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Internal server error",
+    });
+  }
+};
+
+// ── Remove Attendee V2 ───────────────────────────────────────────────────────
+
+/**
+ * DELETE /api/v2/events/:eventId/attendees/:idNumber
+ *
+ * Permanently removes an attendee from an event. Restricted to admins with
+ * STANDARD, EXECUTIVE, ADMIN, or DEVELOPER access (see adminAccessAuthenticateV2
+ * on the route).
+ */
+export const removeAttendeeV2Controller = async (
+  req: Request,
+  res: Response
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    // ── Auth guard ──────────────────────────────────────────────────────
+    const claims = req.userV2;
+    if (!claims || claims.role !== "admin") {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "Admin access required",
+      });
+    }
+
+    const adminCampus = claims.campus;
+
+    // ── Find event and attendee ─────────────────────────────────────────
+    const eventId = req.params.eventId as string;
+    const idNumber = req.params.idNumber as string;
+    const query = buildEventLookupQuery(eventId);
+    if (!query) {
+      return res.status(400).json({
+        error: "INVALID_EVENT_ID",
+        message: "Invalid event ID format",
+      });
+    }
+
+    if (!idNumber?.trim()) {
+      return res.status(400).json({
+        error: "VALIDATION",
+        message: "Student ID is required",
+      });
+    }
+
+    const event = await Event.findOne(query);
+    if (!event) {
+      return res
+        .status(404)
+        .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
+    }
+
+    const attendeeList = Array.isArray(event.attendees)
+      ? (event.attendees as unknown as (IAttendee & { _id?: Types.ObjectId })[])
+      : [];
+
+    const attendeeIndex = attendeeList.findIndex(
+      (a) => a.id_number === idNumber.trim()
+    );
+
+    if (attendeeIndex === -1) {
+      return res.status(404).json({
+        error: "ATTENDEE_NOT_FOUND",
+        message: "Attendee not found in this event",
+      });
+    }
+
+    const attendee = attendeeList[attendeeIndex];
+
+    // UC_MAIN admins can remove any attendee; other campuses are scoped to
+    // their own campus's attendees only (mirrors editAttendeeV2Controller /
+    // getEventStatisticsV2Controller's campus scoping).
+    if (attendee.campus !== adminCampus && adminCampus !== campus_type.MAIN) {
+      return res.status(403).json({
+        error: "INSUFFICIENT_PERMISSIONS",
+        message: "You can only remove attendees from your own campus",
+      });
+    }
+
+    const removedAttendeeSnapshot = {
+      id_number: attendee.id_number,
+      name: attendee.name,
+      campus: attendee.campus,
+      shirtPrice: attendee.shirtPrice ?? 0,
+    };
+    const attendeeObjectId = attendee._id;
+
+    // ── Start transaction ───────────────────────────────────────────────
+    session.startTransaction();
+
+    // Undo sales figures this attendee contributed, if any.
+    if (removedAttendeeSnapshot.shirtPrice > 0) {
+      const campusData = event.sales_data.find(
+        (s) => s.campus === removedAttendeeSnapshot.campus
+      );
+      if (campusData) {
+        campusData.totalRevenue = Math.max(
+          0,
+          campusData.totalRevenue - removedAttendeeSnapshot.shirtPrice
+        );
+        campusData.unitsSold = Math.max(0, campusData.unitsSold - 1);
+      }
+      event.totalRevenueAll = Math.max(
+        0,
+        (event.totalRevenueAll ?? 0) - removedAttendeeSnapshot.shirtPrice
+      );
+      event.totalUnitsSold = Math.max(0, (event.totalUnitsSold ?? 0) - 1);
+    }
+
+    event.attendees.splice(attendeeIndex, 1);
+
+    normalizeEventCampusFields(event);
+    await event.save({ session });
+
+    if (attendeeObjectId) {
+      await deleteAttendanceForAttendee(
+        event._id as Types.ObjectId,
+        attendeeObjectId,
+        session
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await logAdminAction(
+      req,
+      logs_action.REMOVE_ATTENDEE,
+      `${removedAttendeeSnapshot.name} (${removedAttendeeSnapshot.id_number})`,
+      eventId
+    );
+
+    return res.status(200).json({
+      message: "Attendee removed successfully",
+      data: removedAttendeeSnapshot,
+    });
+  } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
+
+    console.error("Error in removeAttendeeV2Controller:", error);
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Internal server error",

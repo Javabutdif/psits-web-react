@@ -7,6 +7,7 @@ import {
   Loader2,
   X,
   ArrowUpDown,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { getAttendees } from "@/features/events/api/eventService";
@@ -43,6 +44,7 @@ import {
   ScanQRModal,
   EditAttendeeModal,
   ChangePasswordModal,
+  RemoveAttendeeModal,
 } from "./modals";
 import type {
   FilterOptions,
@@ -57,6 +59,7 @@ import type {
 } from "@/features/events/types/event.types";
 import { markAttendanceV2 } from "@/features/events/api/eventService";
 import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
+import { PSITS_ROLES } from "@/features/admin/constants/adminAccess";
 
 interface Attendee {
   id: string;
@@ -106,7 +109,12 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   eventStatus,
   attendanceType: _attendanceType,
 }) => {
-  const { canManageEvents } = useAdminPermissions();
+  const { canManageEvents, access } = useAdminPermissions();
+  const canRemoveAttendee =
+    access === PSITS_ROLES.STANDARD ||
+    access === PSITS_ROLES.EXECUTIVE ||
+    access === PSITS_ROLES.ADMIN ||
+    access === PSITS_ROLES.DEVELOPER;
 
   const toLocalYyyyMmDd = (date: Date): string => {
     const year = date.getFullYear();
@@ -160,6 +168,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const [isMarkAttendanceOpen, setIsMarkAttendanceOpen] = useState(false);
   const [isEditAttendeeOpen, setIsEditAttendeeOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isRemoveAttendeeOpen, setIsRemoveAttendeeOpen] = useState(false);
+  const [removeTargetIdNumber, setRemoveTargetIdNumber] = useState("");
+  const [removeTargetName, setRemoveTargetName] = useState("");
   const [editTargetIdNumber, setEditTargetIdNumber] = useState("");
   const [editTargetName, setEditTargetName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -540,6 +551,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   };
 
   const isAttendanceAvailable = eventStatus !== "upcoming";
+  const isEventEnded = eventStatus === "ended";
 
   // Campuses blocked from addAttendeeV2Controller (account creation) use the
   // walk-in flow which is available to ALL campuses.
@@ -607,6 +619,13 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     setEditTargetName(selectedStudent.name);
     setIsStudentDetailsOpen(false);
     setIsChangePasswordOpen(true);
+  };
+
+  const handleRemoveAttendee = (attendee: Attendee) => {
+    if (!canRemoveAttendee || isEventEnded) return;
+    setRemoveTargetIdNumber(attendee.studentId);
+    setRemoveTargetName(attendee.name);
+    setIsRemoveAttendeeOpen(true);
   };
 
   return (
@@ -922,13 +941,31 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                         {attendee.confirmedBy || "--"}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleViewDetails(attendee.id)}
-                          className="h-7 rounded-2xl border-gray-300 px-4 text-sm font-semibold"
-                        >
-                          View Details
-                        </Button>
+                        <div className="flex flex-col items-start gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => handleViewDetails(attendee.id)}
+                            className="h-7 w-[130px] justify-center rounded-2xl border-gray-300 px-4 text-sm font-semibold"
+                          >
+                            View Details
+                          </Button>
+                          {canRemoveAttendee && (
+                            <Button
+                              variant="outline"
+                              onClick={() => handleRemoveAttendee(attendee)}
+                              disabled={isEventEnded}
+                              title={
+                                isEventEnded
+                                  ? "This event has ended and can no longer be modified"
+                                  : undefined
+                              }
+                              className="text-destructive hover:text-destructive disabled:hover:bg-transparent h-7 w-[130px] justify-center rounded-2xl border-red-200 px-2 text-sm font-semibold hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <Trash2 className="mr-1 h-3.5 w-3.5 flex-shrink-0" />
+                              Remove
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -1047,6 +1084,23 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                 >
                   View Details
                 </Button>
+                {canRemoveAttendee && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isEventEnded}
+                    title={
+                      isEventEnded
+                        ? "This event has ended and can no longer be modified"
+                        : undefined
+                    }
+                    className="text-destructive hover:text-destructive disabled:hover:bg-transparent w-full border-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => handleRemoveAttendee(attendee)}
+                  >
+                    <Trash2 className="mr-1 h-3.5 w-3.5" />
+                    Remove Attendee
+                  </Button>
+                )}
               </div>
             );
           })
@@ -1217,6 +1271,14 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         eventId={eventId}
         attendeeIdNumber={editTargetIdNumber}
         attendeeName={editTargetName}
+      />
+      <RemoveAttendeeModal
+        open={isRemoveAttendeeOpen}
+        onOpenChange={setIsRemoveAttendeeOpen}
+        onAttendeeRemoved={() => setRefreshTick((t) => t + 1)}
+        eventId={eventId}
+        attendeeIdNumber={removeTargetIdNumber}
+        attendeeName={removeTargetName}
       />
     </div>
   );
