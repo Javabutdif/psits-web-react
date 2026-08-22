@@ -1763,9 +1763,19 @@ export const applyToEventV2Controller = async (req: Request, res: Response) => {
 
     // ── Students can only pre-register before the event starts. Late
     // attendees must be registered manually by an admin.
+    const normalizedEventStatus = String(event.status ?? "")
+      .trim()
+      .toLowerCase();
+    const isRegistrationManuallyClosed =
+      normalizedEventStatus === "ended" || normalizedEventStatus === "cancelled";
+
     if (
-      event.status !== "Upcoming" ||
-      hasEventStartedByDate(event.eventDate)
+      isRegistrationManuallyClosed ||
+      hasEventStartedBySchedule(
+        event.eventDate,
+        event.eventStartTime,
+        event.sessionConfig
+      )
     ) {
       return res.status(409).json({
         error: "APPLICATIONS_CLOSED",
@@ -2953,6 +2963,9 @@ interface CreateEventV2Body {
 
 const MANILA_TIME_ZONE = "Asia/Manila";
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const MANILA_UTC_OFFSET = "+08:00";
+const TIME_ONLY_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const SESSION_ORDER = ["morning", "afternoon", "evening"] as const;
 
 const formatManilaDateKey = (date: Date): string =>
   new Intl.DateTimeFormat("en-CA", {
@@ -2983,11 +2996,60 @@ const parseEventCalendarDate = (value: string): Date | null => {
   return parseManilaMidnightDate(formatManilaDateKey(parsed));
 };
 
-const hasEventStartedByDate = (eventDate: Date | null | undefined) => {
-  if (!eventDate) return true;
-  const eventDateKey = formatManilaDateKey(new Date(eventDate));
-  const todayKey = formatManilaDateKey(new Date());
-  return todayKey >= eventDateKey;
+const normalizeTimeValue = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return TIME_ONLY_PATTERN.test(trimmed) ? trimmed : null;
+};
+
+const getFirstSessionStartTime = (sessionConfig: unknown): string | null => {
+  if (!sessionConfig || typeof sessionConfig !== "object") return null;
+
+  const sessions = sessionConfig as Record<string, unknown>;
+  for (const sessionKey of SESSION_ORDER) {
+    const session = sessions[sessionKey];
+    if (!session || typeof session !== "object") continue;
+
+    const data = session as { enabled?: unknown; timeRange?: unknown };
+    if (data.enabled !== true || typeof data.timeRange !== "string") continue;
+
+    const [start] = data.timeRange.split(" - ");
+    const normalizedStart = normalizeTimeValue(start);
+    if (normalizedStart) return normalizedStart;
+  }
+
+  return null;
+};
+
+const buildManilaDateTime = (
+  dateValue: Date | null | undefined,
+  timeValue: string | null,
+  fallbackTime: string
+): Date | null => {
+  if (!dateValue) return null;
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const dateKey = formatManilaDateKey(date);
+  const time = timeValue ?? fallbackTime;
+  const parsedDateTime = new Date(
+    `${dateKey}T${time}:00${MANILA_UTC_OFFSET}`
+  );
+
+  return Number.isNaN(parsedDateTime.getTime()) ? null : parsedDateTime;
+};
+
+const hasEventStartedBySchedule = (
+  eventDate: Date | null | undefined,
+  eventStartTime: unknown,
+  sessionConfig: unknown
+) => {
+  const startTime =
+    normalizeTimeValue(eventStartTime) ??
+    getFirstSessionStartTime(sessionConfig);
+  const startsAt = buildManilaDateTime(eventDate, startTime, "00:00");
+
+  return !startsAt || new Date() >= startsAt;
 };
 
 export const getEventImageController = async (req: Request, res: Response) => {

@@ -20,7 +20,7 @@ import { applyToEvent } from "@/features/events";
 import { useAuth } from "@/features/auth";
 import type { EventData } from "@/features/events/types/event.types";
 import { createQRPayload } from "@/features/events/utils/qrPayload.utils";
-import { getManilaStartOfDay } from "@/utils/date-manila";
+import { formatEventDateKey } from "@/utils/date-manila";
 import { CalendarDays, CheckCircle2, MapPin, XCircle } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
@@ -59,6 +59,49 @@ const AttendancePill = React.memo<{ attended: boolean; label?: string }>(
   )
 );
 
+const MANILA_UTC_OFFSET = "+08:00";
+const TIME_ONLY_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const SESSION_ORDER = ["morning", "afternoon", "evening"] as const;
+
+const normalizeTimeValue = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return TIME_ONLY_PATTERN.test(trimmed) ? trimmed : null;
+};
+
+const getFirstSessionStartTime = (
+  sessionConfig: EventData["sessionConfig"]
+): string | null => {
+  if (!sessionConfig) return null;
+
+  for (const sessionKey of SESSION_ORDER) {
+    const session = sessionConfig[sessionKey];
+    if (!session?.enabled) continue;
+
+    const [start] = String(session.timeRange ?? "").split(" - ");
+    const normalizedStart = normalizeTimeValue(start);
+    if (normalizedStart) return normalizedStart;
+  }
+
+  return null;
+};
+
+const buildManilaDateTime = (
+  dateValue: Date | undefined,
+  timeValue: string | null,
+  fallbackTime: string
+): Date | null => {
+  if (!dateValue || Number.isNaN(dateValue.getTime())) return null;
+
+  const dateKey = formatEventDateKey(dateValue);
+  const time = timeValue ?? fallbackTime;
+  const parsedDateTime = new Date(
+    `${dateKey}T${time}:00${MANILA_UTC_OFFSET}`
+  );
+
+  return Number.isNaN(parsedDateTime.getTime()) ? null : parsedDateTime;
+};
+
 export const EventCard: React.FC<EventCardProps> = ({
   event,
   studentId,
@@ -74,11 +117,18 @@ export const EventCard: React.FC<EventCardProps> = ({
     isPast,
   } = event;
   const normalizedStatus = String(event.status ?? "").toLowerCase();
-  const hasEventStartedByDate = event.date
-    ? event.date <= getManilaStartOfDay()
-    : true;
+  const eventStartsAt = buildManilaDateTime(
+    event.date,
+    normalizeTimeValue(event.startTime) ??
+      getFirstSessionStartTime(sessionConfig),
+    "00:00"
+  );
+  const hasEventStartedBySchedule =
+    !eventStartsAt || new Date() >= eventStartsAt;
+  const isRegistrationManuallyClosed =
+    normalizedStatus === "ended" || normalizedStatus === "cancelled";
   const isStudentRegistrationOpen =
-    normalizedStatus === "upcoming" && !hasEventStartedByDate;
+    !isRegistrationManuallyClosed && !hasEventStartedBySchedule;
   const { user } = useAuth();
 
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);

@@ -72,6 +72,8 @@ export interface EventData {
   location?: string;
   date?: Date;
   status?: string;
+  startTime?: string;
+  endTime?: string;
   attendanceType: string;
   attendees: AttendeeData[];
   sessionConfig?: SessionConfig;
