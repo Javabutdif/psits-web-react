@@ -1761,11 +1761,16 @@ export const applyToEventV2Controller = async (req: Request, res: Response) => {
         .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
     }
 
-    // ── Only allow applying while event is Upcoming or Ongoing ──────────
-    if (event.status !== "Upcoming" && event.status !== "Ongoing") {
+    // ── Students can only pre-register before the event starts. Late
+    // attendees must be registered manually by an admin.
+    if (
+      event.status !== "Upcoming" ||
+      hasEventStartedByDate(event.eventDate)
+    ) {
       return res.status(409).json({
         error: "APPLICATIONS_CLOSED",
-        message: "This event is no longer accepting applications",
+        message:
+          "Student registration is closed. Please ask an admin to add you.",
       });
     }
 
@@ -2946,11 +2951,43 @@ interface CreateEventV2Body {
   eventEndTime?: string;
 }
 
+const MANILA_TIME_ZONE = "Asia/Manila";
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const formatManilaDateKey = (date: Date): string =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: MANILA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+
 const parseManilaMidnightDate = (value: string): Date | null => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const parsed = new Date(`${value}T16:00:00.000Z`);
+  if (!DATE_ONLY_PATTERN.test(value)) return null;
+  const parsed = new Date(`${value}T00:00:00+08:00`);
   if (Number.isNaN(parsed.getTime())) return null;
-  return parsed;
+  return formatManilaDateKey(parsed) === value ? parsed : null;
+};
+
+const parseEventCalendarDate = (value: string): Date | null => {
+  const normalized = value.trim();
+  if (!normalized) return null;
+
+  if (DATE_ONLY_PATTERN.test(normalized)) {
+    return parseManilaMidnightDate(normalized);
+  }
+
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return parseManilaMidnightDate(formatManilaDateKey(parsed));
+};
+
+const hasEventStartedByDate = (eventDate: Date | null | undefined) => {
+  if (!eventDate) return true;
+  const eventDateKey = formatManilaDateKey(new Date(eventDate));
+  const todayKey = formatManilaDateKey(new Date());
+  return todayKey >= eventDateKey;
 };
 
 export const getEventImageController = async (req: Request, res: Response) => {
@@ -3181,8 +3218,8 @@ export const updateEventV2Controller = async (
         });
       }
 
-      const parsed = new Date(rawDateValue);
-      if (Number.isNaN(parsed.getTime())) {
+      const parsed = parseEventCalendarDate(rawDateValue);
+      if (!parsed) {
         return res.status(400).json({
           error: "VALIDATION",
           message: "Invalid event date",
@@ -3207,8 +3244,8 @@ export const updateEventV2Controller = async (
         });
       }
 
-      const parsedEnd = new Date(rawEndDateValue);
-      if (Number.isNaN(parsedEnd.getTime())) {
+      const parsedEnd = parseEventCalendarDate(rawEndDateValue);
+      if (!parsedEnd) {
         return res.status(400).json({
           error: "VALIDATION",
           message: "Invalid event end date",
