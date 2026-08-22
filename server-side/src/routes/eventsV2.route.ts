@@ -8,7 +8,9 @@ import {
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2,
   requireActiveStudentMembershipV2,
+  adminAccessAuthenticateV2,
 } from "../middlewares/authV2.middleware";
+import { psits_roles } from "../enums/role.enums";
 
 import {
   addAttendeeV2Controller,
@@ -30,6 +32,7 @@ import {
   getAllEventsRawController,
   updateEventV2Controller,
   applyToEventV2Controller,
+  removeAttendeeV2Controller,
 } from "../controllers/eventV2.controller";
 
 const router = Router();
@@ -232,6 +235,21 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin"]),
   editAttendeeV2Controller
+);
+
+// DELETE remove attendee from an event. Restricted to Standard, Executive,
+// Admin, and Developer access levels.
+router.delete(
+  "/:eventId/attendees/:idNumber",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([
+    psits_roles.STANDARD,
+    psits_roles.EXECUTIVE,
+    psits_roles.ADMIN,
+    psits_roles.DEVELOPER,
+  ]),
+  removeAttendeeV2Controller
 );
 
 // PUT change attendee password

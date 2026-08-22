@@ -72,6 +72,7 @@ export const EventCard: React.FC<EventCardProps> = ({
     attendees,
     sessionConfig,
     isPast,
+    attendanceType,
   } = event;
   const { user } = useAuth();
 
@@ -180,10 +181,14 @@ export const EventCard: React.FC<EventCardProps> = ({
 
   // ── QR visibility gate ──────────────────────────────────────────────────
   // Applied students always see their QR. Otherwise, once the event is
-  // within 1 day (including the event day itself), the QR is open to
-  // everyone as a walk-in allowance.
+  // within 1 day (including the event day itself), the QR is open as a
+  // walk-in allowance — but only for "open" events, since scanning the QR
+  // auto-registers the attendee server-side (see resolveAttendanceAttendee).
+  // Ticketed events require an actual application, so they always keep the
+  // Register button until the student has applied.
   const canShowQR = useMemo(() => {
     if (studentAttendee) return true;
+    if (attendanceType !== "open") return false;
     if (!event.date) return false;
     const today = getManilaStartOfDay();
     const eventDay = getManilaStartOfDay(event.date);
@@ -191,7 +196,7 @@ export const EventCard: React.FC<EventCardProps> = ({
       (eventDay.getTime() - today.getTime()) / 86_400_000
     );
     return daysUntil <= 1;
-  }, [studentAttendee, event.date]);
+  }, [studentAttendee, event.date, attendanceType]);
 
   return (
     <Card className="h-full rounded-2xl transition-all hover:shadow-md">

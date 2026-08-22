@@ -474,6 +474,18 @@ export interface EditAttendeeV2Response {
   };
 }
 
+// ─── Remove Attendee V2 Types ───────────────────────────────────────────────
+
+export interface RemoveAttendeeV2Response {
+  message: string;
+  data: {
+    id_number: string;
+    name: string;
+    campus: string;
+    shirtPrice: number;
+  };
+}
+
 // ─── Change Attendee Password V2 Types ──────────────────────────────────────
 
 export interface ChangeAttendeePasswordV2Payload {

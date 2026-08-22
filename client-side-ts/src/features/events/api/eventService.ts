@@ -31,6 +31,7 @@ import type {
   RaffleResponse,
   RaffleWinnerResponse,
   RemoveAttendeeFormData,
+  RemoveAttendeeV2Response,
   RemoveRaffleResponse,
   StatisticsData,
   StudentSearchResult,
@@ -800,6 +801,36 @@ export const editAttendeeV2 = async (
       showToast("error", message);
     } else {
       console.error("Error editing attendee V2:", error);
+      showToast("error", "An unexpected error occurred");
+    }
+    return false;
+  }
+};
+
+export const removeAttendeeV2 = async (
+  eventId: string,
+  idNumber: string
+): Promise<RemoveAttendeeV2Response | false> => {
+  try {
+    if (!eventId?.trim() || !idNumber?.trim()) {
+      showToast("error", "Event ID and Student ID are required");
+      return false;
+    }
+
+    const response = await api.delete<RemoveAttendeeV2Response>(
+      `/api/v2/events/${eventId}/attendees/${idNumber}`
+    );
+
+    showToast("success", response.data.message);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      const message =
+        axiosError.response?.data?.message || "Failed to remove attendee";
+      showToast("error", message);
+    } else {
+      console.error("Error removing attendee V2:", error);
       showToast("error", "An unexpected error occurred");
     }
     return false;
