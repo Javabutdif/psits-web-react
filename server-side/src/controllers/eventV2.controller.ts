@@ -14,6 +14,7 @@ import { Student } from "../models/student.model";
 import {
   ATTENDANCE_ERROR_STATUS_MAP,
   AttendanceError,
+  buildDefaultAttendance,
   deleteAttendanceForAttendee,
   hydrateAttendeesAttendance,
   hydrateEventsAttendance,
@@ -29,7 +30,6 @@ import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
 } from "../dtos/events.dto";
-import { parseTimeRangeToMinutes } from "../utils/timeRange";
 
 const logAdminAction = (
   req: Request,
@@ -121,82 +121,6 @@ const normalizeEventCampusFields = (event: IEvent): void => {
       }
     }
   }
-};
-
-type SessionKey = "morning" | "afternoon" | "evening";
-
-interface SessionConfigEntry {
-  enabled?: boolean;
-  timeRange?: string; // e.g. "7:00 AM - 12:00 PM"
-}
-
-interface SessionConfig {
-  morning?: SessionConfigEntry;
-  afternoon?: SessionConfigEntry;
-  evening?: SessionConfigEntry;
-}
-
-/**
- * Returns which session (morning/afternoon/evening) is currently active
- * based on the event's sessionConfig and the current time in Asia/Manila.
- * Returns null if no enabled session's timeRange currently contains "now".
- */
-const getCurrentActiveSession = (
-  sessionConfig: SessionConfig | undefined
-): SessionKey | null => {
-  if (!sessionConfig) return null;
-
-  const nowInManila = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" })
-  );
-  const nowMinutes = nowInManila.getHours() * 60 + nowInManila.getMinutes();
-
-  const sessionOrder: SessionKey[] = ["morning", "afternoon", "evening"];
-
-  for (const key of sessionOrder) {
-    const session = sessionConfig[key];
-    if (!session?.enabled || !session.timeRange) continue;
-
-    const bounds = parseTimeRangeToMinutes(session.timeRange);
-    if (!bounds) continue;
-
-    if (nowMinutes >= bounds.startMinutes && nowMinutes <= bounds.endMinutes) {
-      return key;
-    }
-  }
-
-  return null;
-};
-
-/**
- * Builds an attendance object with only the active session marked attended.
- * If no session is currently active, falls back to marking the morning
- * session as attended — this covers the "add attendee" flow where an admin
- * is manually registering a physically-present attendee.
- */
-const buildAttendanceForActiveSession = (
-  sessionConfig: SessionConfig | undefined,
-  now: Date
-): IAttendee["attendance"] => {
-  const activeSession = getCurrentActiveSession(sessionConfig);
-  // Fallback: when no session time-range currently matches, default to
-  // morning so the attendee is not incorrectly shown as "Absent".
-  const effectiveSession = activeSession ?? "morning";
-
-  return {
-    morning: {
-      attended: effectiveSession === "morning",
-      timestamp: effectiveSession === "morning" ? now : null,
-    },
-    afternoon: {
-      attended: effectiveSession === "afternoon",
-      timestamp: effectiveSession === "afternoon" ? now : null,
-    },
-    evening: {
-      attended: effectiveSession === "evening",
-      timestamp: effectiveSession === "evening" ? now : null,
-    },
-  };
 };
 
 type AttendeeAttendanceFilter =
@@ -1360,13 +1284,8 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       );
     }
 
-    // Step 2: Push attendee into event, auto-marking the currently
-    // active session as present (based on the event's sessionConfig)
-    const now = new Date();
-    const attendance = buildAttendanceForActiveSession(
-      event.sessionConfig as SessionConfig | undefined,
-      now
-    );
+    // Step 2: Push attendee into event as registered-only — attendance is
+    // left unmarked until it's actually confirmed (QR scan / Mark Attendance).
     event.attendees.push({
       id_number: normalizedStudentId,
       name: attendeeName,
@@ -1377,8 +1296,8 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       shirtPrice: resolvedPrice,
       transactBy: claims.idNumber,
       transactDate: new Date(),
-      attendance,
-      confirmedBy: req.admin?.name ?? claims.idNumber,
+      attendance: buildDefaultAttendance(),
+      confirmedBy: "",
       raffleIsRemoved: false,
       raffleIsWinner: false,
     } as IAttendee);
@@ -1672,14 +1591,9 @@ export const addWalkInAttendeeV2Controller = async (
     // ── Transaction ─────────────────────────────────────────────────────
     session.startTransaction();
 
-    // Step 1: Push attendee into event (no student account creation),
-    // auto-marking the currently active session as present since a
-    // attendee is physically checking in right now
-    const now = new Date();
-    const attendance = buildAttendanceForActiveSession(
-      event.sessionConfig as SessionConfig | undefined,
-      now
-    );
+    // Step 1: Push attendee into event (no student account creation) as
+    // registered-only — attendance is left unmarked until it's actually
+    // confirmed (QR scan / Mark Attendance).
     event.attendees.push({
       id_number: normalizedStudentId,
       name: attendeeName,
@@ -1690,8 +1604,8 @@ export const addWalkInAttendeeV2Controller = async (
       shirtPrice: resolvedPrice,
       transactBy: claims.idNumber,
       transactDate: new Date(),
-      attendance,
-      confirmedBy: req.admin?.name ?? claims.idNumber,
+      attendance: buildDefaultAttendance(),
+      confirmedBy: "",
       raffleIsRemoved: false,
       raffleIsWinner: false,
     } as IAttendee);
