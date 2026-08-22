@@ -72,8 +72,13 @@ export const EventCard: React.FC<EventCardProps> = ({
     attendees,
     sessionConfig,
     isPast,
-    attendanceType,
   } = event;
+  const normalizedStatus = String(event.status ?? "").toLowerCase();
+  const hasEventStartedByDate = event.date
+    ? event.date <= getManilaStartOfDay()
+    : true;
+  const isStudentRegistrationOpen =
+    normalizedStatus === "upcoming" && !hasEventStartedByDate;
   const { user } = useAuth();
 
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
@@ -180,23 +185,11 @@ export const EventCard: React.FC<EventCardProps> = ({
   ]);
 
   // ── QR visibility gate ──────────────────────────────────────────────────
-  // Applied students always see their QR. Otherwise, only on the event day
-  // itself is the QR open as a walk-in allowance — but only for "open"
-  // events, since scanning the QR auto-registers the attendee server-side
-  // (see resolveAttendanceAttendee). Before the event day, unregistered
-  // students see the Register button. Ticketed events always keep the
-  // Register button until the student has applied.
+  // Students must register first; only attendees already attached to this
+  // event can show a QR that admin attendance can accept.
   const canShowQR = useMemo(() => {
-    if (studentAttendee) return true;
-    if (attendanceType !== "open") return false;
-    if (!event.date) return false;
-    const today = getManilaStartOfDay();
-    const eventDay = getManilaStartOfDay(event.date);
-    const daysUntil = Math.round(
-      (eventDay.getTime() - today.getTime()) / 86_400_000
-    );
-    return daysUntil <= 0;
-  }, [studentAttendee, event.date, attendanceType]);
+    return Boolean(studentAttendee);
+  }, [studentAttendee]);
 
   return (
     <Card className="h-full rounded-2xl transition-all hover:shadow-md">
@@ -333,7 +326,7 @@ export const EventCard: React.FC<EventCardProps> = ({
                           </div>
                         )}
                       </>
-                    ) : (
+                    ) : isStudentRegistrationOpen ? (
                       <div className="flex w-full flex-col items-center gap-3 px-4 py-6 text-center">
                         <h4 className="text-base font-semibold text-gray-800">
                           {title}
@@ -351,6 +344,17 @@ export const EventCard: React.FC<EventCardProps> = ({
                         >
                           {isRegister ? "Registering..." : "Register Event"}
                         </Button>
+                      </div>
+                    ) : (
+                      <div className="flex w-full flex-col items-center gap-3 px-4 py-6 text-center">
+                        <h4 className="text-base font-semibold text-gray-800">
+                          Registration closed
+                        </h4>
+                        <div className="max-h-32 w-full overflow-y-auto rounded-lg bg-gray-50 px-3 py-2">
+                          <p className="text-xs leading-relaxed text-gray-500">
+                            Please ask an admin to add you as a late attendee.
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
