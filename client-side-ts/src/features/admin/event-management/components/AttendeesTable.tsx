@@ -558,27 +558,58 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const WALK_IN_ONLY_CAMPUSES = ["UC_MAIN", "UC_CS"];
   const isWalkInOnlyCampus = WALK_IN_ONLY_CAMPUSES.includes(adminCampus ?? "");
 
-  const getAttendanceSummary = (attendance: Attendee["attendance"]) => {
-    if (!isAttendanceAvailable) {
-      return "Not Available Yet";
-    }
-
+  const getAttendedSessionCount = (attendance: Attendee["attendance"]) => {
     const sessions = [
       attendance?.morning?.attended,
       attendance?.afternoon?.attended,
       attendance?.evening?.attended,
     ];
-    const attendedCount = sessions.filter(Boolean).length;
-
-    return `${attendedCount}/3 Sessions`;
+    return sessions.filter(Boolean).length;
   };
 
   const computeIsPresent = (attendance: Attendee["attendance"]): boolean => {
-    return Boolean(
-      attendance?.morning?.attended ||
-      attendance?.afternoon?.attended ||
-      attendance?.evening?.attended
-    );
+    return getAttendedSessionCount(attendance) > 0;
+  };
+
+  const getAttendanceSummary = (attendance: Attendee["attendance"]) => {
+    if (!isAttendanceAvailable) {
+      return "Not Available Yet";
+    }
+
+    const attendedCount = getAttendedSessionCount(attendance);
+    if (attendedCount > 0) {
+      return `${attendedCount}/3 Sessions`;
+    }
+
+    return isEventEnded ? "0/3 Sessions" : "--";
+  };
+
+  const getAttendanceBadge = (attendance: Attendee["attendance"]) => {
+    if (!isAttendanceAvailable) {
+      return {
+        label: "Attendee",
+        className: "border-gray-200 bg-gray-300 text-gray-700",
+      };
+    }
+
+    if (computeIsPresent(attendance)) {
+      return {
+        label: "Present",
+        className: "border-green-200 bg-green-50 text-green-700",
+      };
+    }
+
+    if (isEventEnded) {
+      return {
+        label: "Absent",
+        className: "border-red-200 bg-red-50 text-red-700",
+      };
+    }
+
+    return {
+      label: "--",
+      className: "border-gray-200 bg-gray-50 text-gray-500",
+    };
   };
 
   const openAttendanceStatus = (attendee: Attendee) => {
@@ -589,11 +620,10 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const handleViewDetails = (attendeeId: string) => {
     const student = attendees.find((a) => a.id === attendeeId);
     if (student) {
+      const isPresent = computeIsPresent(student.attendance);
       setSelectedStudent({
         ...student,
-        isPresent: isAttendanceAvailable
-          ? computeIsPresent(student.attendance)
-          : undefined,
+        isPresent: isPresent ? true : isEventEnded ? false : undefined,
       });
       setIsStudentDetailsOpen(true);
     }
@@ -860,10 +890,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                 </TableRow>
               ) : (
                 paginatedAttendees.map((attendee) => {
-                  const isPresent =
-                    attendee.attendance?.morning?.attended ||
-                    attendee.attendance?.afternoon?.attended ||
-                    attendee.attendance?.evening?.attended;
+                  const attendanceBadge = getAttendanceBadge(
+                    attendee.attendance
+                  );
                   return (
                     <TableRow key={attendee.id}>
                       <TableCell>
@@ -892,19 +921,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                         >
                           <Badge
                             variant="outline"
-                            className={
-                              !isAttendanceAvailable
-                                ? "border-gray-200 bg-gray-300 text-gray-700"
-                                : isPresent
-                                  ? "border-green-200 bg-green-50 text-green-700"
-                                  : "border-red-200 bg-red-50 text-red-700"
-                            }
+                            className={attendanceBadge.className}
                           >
-                            {isAttendanceAvailable
-                              ? isPresent
-                                ? "Present"
-                                : "Absent"
-                              : "Attendee"}
+                            {attendanceBadge.label}
                           </Badge>
                         </button>
                       </TableCell>
@@ -992,10 +1011,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
           </div>
         ) : (
           paginatedAttendees.map((attendee) => {
-            const isPresent =
-              attendee.attendance?.morning?.attended ||
-              attendee.attendance?.afternoon?.attended ||
-              attendee.attendance?.evening?.attended;
+            const attendanceBadge = getAttendanceBadge(attendee.attendance);
             return (
               <div
                 key={attendee.id}
@@ -1027,19 +1043,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                   >
                     <Badge
                       variant="outline"
-                      className={
-                        !isAttendanceAvailable
-                          ? "border-gray-200 bg-gray-100 text-gray-600"
-                          : isPresent
-                            ? "border-green-200 bg-green-50 text-green-700"
-                            : "border-red-200 bg-red-50 text-red-700"
-                      }
+                      className={attendanceBadge.className}
                     >
-                      {isAttendanceAvailable
-                        ? isPresent
-                          ? "Present"
-                          : "Absent"
-                        : "Attendee"}
+                      {attendanceBadge.label}
                     </Badge>
                   </button>
                 </div>
@@ -1234,6 +1240,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
       <ScanQRModal
         open={isScanQROpen}
         onOpenChange={setIsScanQROpen}
+        eventId={eventId}
         onScanSuccess={async (payload: QRCodePayloadV2) => {
           const result = await markAttendanceV2(eventId, payload.studentId, {
             campus: payload.campus,
