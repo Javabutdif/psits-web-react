@@ -115,7 +115,7 @@ export const AttendanceStatusModal: React.FC<AttendanceStatusModalProps> = ({
                           : "border-slate-200 bg-slate-100 text-slate-700"
                       }
                     >
-                      {attended ? "Attended" : "Not Attended"}
+                      {attended ? "Attended" : "Not recorded"}
                     </Badge>
                   </div>
                 );
