@@ -59,6 +59,7 @@ const mapEventToEventData = (event: Event): EventData | null => {
     imageUrl,
     location: "University of Cebu Main Campus",
     date: getManilaStartOfDay(dateValue),
+    status: event.status,
     attendanceType: event.attendanceType || "open",
     attendees: parsedAttendees,
     sessionConfig: event.sessionConfig as SessionConfig | undefined,
