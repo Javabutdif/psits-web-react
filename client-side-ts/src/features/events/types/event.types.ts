@@ -71,6 +71,7 @@ export interface EventData {
   imageUrl?: string;
   location?: string;
   date?: Date;
+  status?: string;
   attendanceType: string;
   attendees: AttendeeData[];
   sessionConfig?: SessionConfig;
