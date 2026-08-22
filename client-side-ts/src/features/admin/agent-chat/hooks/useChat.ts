@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/features/auth";
 import {
-  sendAgentMessage,
+  sendAiAgentMessage,
   destroyChatSession,
 } from "../api/chat.api";
 import type { ChatMessage } from "../types/chat.types";
@@ -13,6 +14,7 @@ export const useChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,10 +39,11 @@ export const useChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await sendAgentMessage({
+      const response = await sendAiAgentMessage({
         message: text.trim(),
         persona: PERSONA_DATA_ANALYST,
         sessionId: sessionId || undefined,
+        userAccess: user?.access || "",
       });
 
       if (!response.success) {
@@ -48,7 +51,7 @@ export const useChat = () => {
       }
 
       const {
-        data: { result, sessionId: newSessionId },
+        data: { result, sessionId: newSessionId, history },
       } = response;
 
       setSessionId(newSessionId);
@@ -56,7 +59,7 @@ export const useChat = () => {
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: result,
+        content: result || history || "Response received.",
         timestamp: new Date(),
       };
 
@@ -85,6 +88,19 @@ export const useChat = () => {
         return;
       }
 
+      if (message.includes("Permission")) {
+        const errorMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: `Access denied: ${message}. Please contact an administrator.`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        toast.warning("Permission denied for this action.");
+        setIsLoading(false);
+        return;
+      }
+
       toast.error(
         message.includes("NOETIX_API_KEY")
           ? "AI service unavailable. Contact administrator."
@@ -103,7 +119,7 @@ export const useChat = () => {
       setIsLoading(false);
       setTimeout(scrollToBottom, 100);
     }
-  }, [isLoading, sessionId, scrollToBottom]);
+  }, [isLoading, sessionId, user, scrollToBottom]);
 
   const handleRefresh = useCallback(async () => {
     if (sessionId) {

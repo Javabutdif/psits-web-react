@@ -2,14 +2,14 @@ import api from "@/api/axios";
 import type {
   ChatRequestBody,
   DestroySessionResponse,
-  NoetixAgentResponse,
+  AiAgentResponse,
 } from "../types/chat.types";
 
-export const sendAgentMessage = async (
+export const sendAiAgentMessage = async (
   body: ChatRequestBody
-): Promise<NoetixAgentResponse> => {
-  const response = await api.post<never, { data: NoetixAgentResponse }>(
-    "/api/v2/chat/agent",
+): Promise<AiAgentResponse> => {
+  const response = await api.post<never, { data: AiAgentResponse }>(
+    "/api/v2/chat/ai-agent",
     body
   );
   return response.data;
