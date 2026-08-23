@@ -175,6 +175,20 @@ router.get(
   devtoolsController.getSystemSettings
 );
 
+// Chatbot toggle — read is open to any authenticated admin (drives whether
+// the floating chat button renders); writing it stays Admin/Developer only.
+router.get(
+  "/settings/chatbot",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  devtoolsController.getChatbotEnabled
+);
+router.patch(
+  "/settings/chatbot",
+  ...authChain,
+  devtoolsController.toggleChatbot
+);
+
 // Rate Limit Violations
 router.get(
   "/rate-limit-violations",

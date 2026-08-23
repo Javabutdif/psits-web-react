@@ -5,6 +5,7 @@ import {
   fetchFullSnapshot,
   queryNoetix,
 } from "../services/noetix-chat.service";
+import { isChatbotEnabled } from "../services/devtools.service";
 
 interface ChatRequestBody {
   message?: string;
@@ -15,6 +16,13 @@ interface ChatRequestBody {
 
 export const agentController = catchAsync(
   async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
+    if (!(await isChatbotEnabled())) {
+      return res.status(403).json({
+        error: "CHATBOT_DISABLED",
+        message: "The chatbot has been disabled by an administrator",
+      });
+    }
+
     const { message, persona = "DATA_ANALYST", sessionId, destroy } = req.body;
 
     if (destroy) {
