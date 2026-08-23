@@ -34,6 +34,7 @@ import Laroco from "../assets/Development Team 2025/21.png";
 import Albeos from "../assets/Development Team 2025/23.png";
 import PersonPlaceholder from "../assets/person_placeholder.png";
 
+import FreshmanOrientation26 from "../assets/freshmen-orientation26/Orientation26-Cover.jpg";
 import ICTCongress26 from "../assets/ict-congress-2026/ict26_1.jpg";
 import CSSGitTogether from "../assets/gittogether/ccsgittogether.jpg";
 import CCSDays26 from "../assets/ccsdays26/ccsdays26_1.jpg";
@@ -274,15 +275,14 @@ export const upcomingEventsData: {
     year: "2026",
   },
   events: [
-  // Example:
-  // {
-  //   id: 1,
-  //   title: "12th ICT Congress",
-  //   date: "August 15 - 8:00 AM",
-  //   location: "Cebu Coliseum",
-  //   image: ICT,
-  // },
-],
+    {
+      id: 1,
+      title: "CCS Freshmen Orientation 2026",
+      date: "August 24 - 8:00 AM - 5:00 PM",
+      location: "University of Cebu Jones 15th Floor",
+    image: FreshmanOrientation26,
+  }
+  ],
 };
 
 // --- Past Events Data ---

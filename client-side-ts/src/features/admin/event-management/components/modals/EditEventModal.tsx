@@ -12,6 +12,18 @@ import { SessionSetupTab } from "./SessionSetupTab";
 import type { EventFormData } from "./AddEventModal";
 import { showToast } from "@/utils/alertHelper";
 import { updateEventDetails } from "@/features/events/api/eventService";
+import axios from "axios";
+import { format } from "date-fns";
+
+type SessionKey = "morning" | "afternoon" | "evening";
+
+/** Shape the API may return for a single session. Tolerant of both variants. */
+interface IncomingSession {
+  enabled?: boolean;
+  timeRange?: string;
+  startTime?: string;
+  endTime?: string;
+}
 
 interface EditEventModalProps {
   open: boolean;
@@ -29,13 +41,57 @@ interface EditEventModalProps {
     eventStartTime?: string;
     eventEndTime?: string;
     eventEndDate?: string;
+    attendanceType?: EventFormData["attendanceType"];
+    sessionConfig?: Partial<Record<SessionKey, IncomingSession>>;
   } | null;
 }
 
-const defaultDisabledSessions: EventFormData["sessionConfig"] = {
+const SESSION_KEYS: SessionKey[] = ["morning", "afternoon", "evening"];
+const formatDateKey = (date: Date): string => format(date, "yyyy-MM-dd");
+
+/**
+ * Factory rather than a shared constant: each form instance gets its own
+ * nested objects, so an accidental in-place mutation can't leak across modals.
+ */
+const createDisabledSessions = (): EventFormData["sessionConfig"] => ({
   morning: { enabled: false, timeRange: "" },
   afternoon: { enabled: false, timeRange: "" },
   evening: { enabled: false, timeRange: "" },
+});
+
+/**
+ * Normalizes whatever the API gives us into the form's canonical
+ * { enabled, timeRange: "HH:mm - HH:mm" } shape.
+ */
+const normalizeSessionConfig = (
+  incoming?: Partial<Record<SessionKey, IncomingSession>>
+): EventFormData["sessionConfig"] => {
+  const base = createDisabledSessions();
+  if (!incoming) return base;
+
+  for (const key of SESSION_KEYS) {
+    const session = incoming[key];
+    if (!session) continue;
+
+    const timeRange =
+      session.timeRange ??
+      (session.startTime && session.endTime
+        ? `${session.startTime} - ${session.endTime}`
+        : "");
+
+    base[key] = {
+      enabled: Boolean(session.enabled),
+      timeRange,
+    };
+  }
+
+  return base;
+};
+
+/** A session is only persistable if it's on AND has a complete range. */
+const isSessionComplete = (timeRange: string): boolean => {
+  const [start, end] = timeRange.split(" - ");
+  return Boolean(start?.trim() && end?.trim());
 };
 
 export const EditEventModal: React.FC<EditEventModalProps> = ({
@@ -53,7 +109,7 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
     eventSchedule: undefined,
     attendanceType: "open",
     image: null,
-    sessionConfig: defaultDisabledSessions,
+    sessionConfig: createDisabledSessions(),
     eventVenue: "",
     eventTheme: "",
     eventVenueSpecific: "",
@@ -75,9 +131,9 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
                 : undefined,
             }
           : undefined,
-        attendanceType: "open",
+        attendanceType: eventData.attendanceType || "open",
         image: null,
-        sessionConfig: defaultDisabledSessions,
+        sessionConfig: normalizeSessionConfig(eventData.sessionConfig),
         eventVenue: eventData.eventVenue || "",
         eventTheme: eventData.eventTheme || "",
         eventVenueSpecific: eventData.eventVenueSpecific || "",
@@ -94,20 +150,50 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
 
   const handleSubmit = async () => {
     if (!eventData?.id) return;
+
+    // Guard: an enabled session with a half-filled range would persist garbage.
+    const incompleteSession = SESSION_KEYS.find(
+      (key) =>
+        formData.sessionConfig[key].enabled &&
+        !isSessionComplete(formData.sessionConfig[key].timeRange)
+    );
+
+    if (incompleteSession) {
+      setActiveTab("session-setup");
+      showToast(
+        "error",
+        `Please set both a start and end time for the ${incompleteSession} session.`
+      );
+      return;
+    }
+
     try {
       setIsSaving(true);
-      const res = await updateEventDetails(eventData.id, {
+
+      const payload: Parameters<typeof updateEventDetails>[1] = {
         eventName: formData.eventName,
         eventDescription: formData.eventDescription,
-        eventDate: formData.eventSchedule?.from?.toISOString(),
-        eventEndDate: formData.eventSchedule?.to?.toISOString(),
+        eventDate: formData.eventSchedule?.from
+          ? formatDateKey(formData.eventSchedule.from)
+          : undefined,
+        eventEndDate: formData.eventSchedule?.to
+          ? formatDateKey(formData.eventSchedule.to)
+          : undefined,
         eventVenue: formData.eventVenue,
         eventTheme: formData.eventTheme,
         eventVenueSpecific: formData.eventVenueSpecific,
         eventStartTime: formData.eventStartTime,
         eventEndTime: formData.eventEndTime,
-        image: formData.image,
-      });
+        attendanceType: formData.attendanceType,
+        sessionConfig: formData.sessionConfig,
+      };
+
+      if (formData.image) {
+        payload.image = formData.image;
+      }
+
+      const res = await updateEventDetails(eventData.id, payload);
+
       if (res) {
         showToast("success", "Event updated successfully");
         if (onSaveEvent) {
@@ -118,8 +204,12 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
         showToast("error", "Failed to update event");
       }
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to update event";
+      const message = axios.isAxiosError(error)
+        ? ((error.response?.data as { message?: string } | undefined)
+            ?.message ?? error.message)
+        : error instanceof Error
+          ? error.message
+          : "Failed to update event";
       showToast("error", message);
     } finally {
       setIsSaving(false);

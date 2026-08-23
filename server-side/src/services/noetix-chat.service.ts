@@ -216,7 +216,9 @@ const safeStudentsActiveWithMembership = async (): Promise<number> => {
   try {
     return await Student.countDocuments({
       status: account_status.ACTIVE,
-      membershipStatus: { $in: [membership_status.ACTIVE, membership_status.RENEWED] },
+      membershipStatus: {
+        $in: [membership_status.ACTIVE, membership_status.RENEWED],
+      },
     });
   } catch {
     return 0;
@@ -250,7 +252,10 @@ const safeOrdersTotalRevenueToday = async (): Promise<number> => {
       {
         $match: {
           order_status: "Paid",
-          transaction_date: { $gte: startOfDay(new Date()), $lte: endOfDay(new Date()) },
+          transaction_date: {
+            $gte: startOfDay(new Date()),
+            $lte: endOfDay(new Date()),
+          },
         },
       },
       { $group: { _id: null, total: { $sum: "$total" } } },
@@ -312,7 +317,10 @@ const safeOrdersTodayByCampus = async (): Promise<Record<string, number>> => {
       {
         $match: {
           order_status: "Paid",
-          transaction_date: { $gte: startOfDay(new Date()), $lte: endOfDay(new Date()) },
+          transaction_date: {
+            $gte: startOfDay(new Date()),
+            $lte: endOfDay(new Date()),
+          },
         },
       },
       { $group: { _id: "$course", count: { $sum: 1 } } },
@@ -327,7 +335,9 @@ const safeOrdersTodayByCampus = async (): Promise<Record<string, number>> => {
 };
 
 // Merch & products
-const safeMerchProductsByCategory = async (): Promise<Record<string, number>> => {
+const safeMerchProductsByCategory = async (): Promise<
+  Record<string, number>
+> => {
   try {
     const result = await Merch.countDocuments({ is_active: true });
     // Return total count as a simple scalar wrapped — key is metric name, value is number
@@ -357,7 +367,10 @@ const safeMerchUnitsSoldToday = async (): Promise<number> => {
       {
         $match: {
           order_status: "Paid",
-          transaction_date: { $gte: startOfDay(new Date()), $lte: endOfDay(new Date()) },
+          transaction_date: {
+            $gte: startOfDay(new Date()),
+            $lte: endOfDay(new Date()),
+          },
         },
       },
       { $unwind: "$items" },
@@ -393,7 +406,9 @@ const safeMerchOutOfStock = async (): Promise<number> => {
   }
 };
 
-const safeMerchTop5ByRevenue = async (): Promise<Array<{ product_name: string; totalRevenue: number }>> => {
+const safeMerchTop5ByRevenue = async (): Promise<
+  Array<{ product_name: string; totalRevenue: number }>
+> => {
   try {
     const result = await Orders.aggregate([
       { $match: { order_status: "Paid" } },
@@ -485,7 +500,9 @@ const safeRecruitmentOpenPositions = async (): Promise<number> => {
 
 const safeRecruitmentApprovedApplications = async (): Promise<number> => {
   try {
-    return await Application.countDocuments({ status: applicationStatus.APPROVED });
+    return await Application.countDocuments({
+      status: applicationStatus.APPROVED,
+    });
   } catch {
     return 0;
   }
@@ -493,13 +510,17 @@ const safeRecruitmentApprovedApplications = async (): Promise<number> => {
 
 const safeRecruitmentInterviewScheduled = async (): Promise<number> => {
   try {
-    return await Application.countDocuments({ status: applicationStatus.INTERVIEW_SCHEDULED });
+    return await Application.countDocuments({
+      status: applicationStatus.INTERVIEW_SCHEDULED,
+    });
   } catch {
     return 0;
   }
 };
 
-const safeRecruitmentPipelineByPosition = async (): Promise<Record<string, number>> => {
+const safeRecruitmentPipelineByPosition = async (): Promise<
+  Record<string, number>
+> => {
   try {
     const result = await Application.aggregate([
       { $group: { _id: "$position", count: { $sum: 1 } } },
@@ -574,12 +595,15 @@ const safeRevenueByYearGrouped = async (): Promise<Record<string, number>> => {
         },
       },
     ]);
-    return (result ?? []).reduce<Record<string, number>>((acc, row) => {
-      if (row._id !== null && row._id !== undefined) {
-        acc[String(row._id)] = row.totalRevenue;
-      }
-      return acc;
-    }, {} as Record<string, number>);
+    return (result ?? []).reduce<Record<string, number>>(
+      (acc, row) => {
+        if (row._id !== null && row._id !== undefined) {
+          acc[String(row._id)] = row.totalRevenue;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    );
   } catch {
     return {};
   }
@@ -710,51 +734,82 @@ const fetchAllCached = async (): Promise<Record<string, unknown>> => {
     top5StudentsBySpend,
   ] = await Promise.all([
     getCachedOrFetch("dashboardCount", t, safeDashboardCount),
-    getCachedOrFetch("students_total", t, () => safeCount(() => Student.countDocuments())),
-    getCachedOrFetch("students_active", t, () => safeCount(() => Student.countDocuments({ status: account_status.ACTIVE }))),
+    getCachedOrFetch("students_total", t, () =>
+      safeCount(() => Student.countDocuments())
+    ),
+    getCachedOrFetch("students_active", t, () =>
+      safeCount(() => Student.countDocuments({ status: account_status.ACTIVE }))
+    ),
     getCachedOrFetch("students_pending_membership", t, () =>
-      safeCount(() => Student.countDocuments({ membershipStatus: membership_status.PENDING }))
+      safeCount(() =>
+        Student.countDocuments({ membershipStatus: membership_status.PENDING })
+      )
     ),
     getCachedOrFetch("students_deleted", t, () =>
-      safeCount(() => Student.countDocuments({ status: account_status.DELETED }), 0)
+      safeCount(
+        () => Student.countDocuments({ status: account_status.DELETED }),
+        0
+      )
     ),
     getCachedOrFetch("merch_active_products", t, () =>
-      safeCount(() => Merch.countDocuments({
-        is_active: true,
-        start_date: { $lte: now },
-        end_date: { $gte: now },
-      }))
+      safeCount(() =>
+        Merch.countDocuments({
+          is_active: true,
+          start_date: { $lte: now },
+          end_date: { $gte: now },
+        })
+      )
     ),
-    getCachedOrFetch("orders_pending", t, () => Orders.countDocuments({ order_status: "Pending" })),
-    getCachedOrFetch("orders_paid", t, () => Orders.countDocuments({ order_status: "Paid" })),
-    getCachedOrFetch("orders_refunded", t, () => Orders.countDocuments({ order_status: "Refunded" })),
+    getCachedOrFetch("orders_pending", t, () =>
+      Orders.countDocuments({ order_status: "Pending" })
+    ),
+    getCachedOrFetch("orders_paid", t, () =>
+      Orders.countDocuments({ order_status: "Paid" })
+    ),
+    getCachedOrFetch("orders_refunded", t, () =>
+      Orders.countDocuments({ order_status: "Refunded" })
+    ),
     getCachedOrFetch("daily_sales", t, safeDailySales),
     getCachedOrFetch("memberships_active", t, () =>
       safeCount(() =>
         Student.countDocuments({
           status: account_status.ACTIVE,
-          membershipStatus: { $in: [membership_status.ACTIVE, membership_status.RENEWED] },
+          membershipStatus: {
+            $in: [membership_status.ACTIVE, membership_status.RENEWED],
+          },
         })
       )
     ),
     getCachedOrFetch("events_total", t, () => Event.countDocuments()),
     getCachedOrFetch("recruitment_pending_applications", t, () =>
-      safeCount(() => Application.countDocuments({ status: applicationStatus.SUBMITTED }))
+      safeCount(() =>
+        Application.countDocuments({ status: applicationStatus.SUBMITTED })
+      )
     ),
     getCachedOrFetch("recent_logs_today", t, () =>
-      safeCount(() => Log.countDocuments({ timestamp: { $gte: todayStart, $lte: todayEnd } }))
+      safeCount(() =>
+        Log.countDocuments({ timestamp: { $gte: todayStart, $lte: todayEnd } })
+      )
     ),
     getCachedOrFetch("students_suspended", t, () =>
-      safeCount(() => Student.countDocuments({ status: account_status.SUSPENDED }))
+      safeCount(() =>
+        Student.countDocuments({ status: account_status.SUSPENDED })
+      )
     ),
     getCachedOrFetch("students_new_today", t, () =>
-      safeCount(() => Student.countDocuments({ createdAt: { $gte: todayStart } }))
+      safeCount(() =>
+        Student.countDocuments({ createdAt: { $gte: todayStart } })
+      )
     ),
     getCachedOrFetch("students_with_membership", t, () =>
       safeCount(() =>
         Student.countDocuments({
           membershipStatus: {
-            $in: [membership_status.ACTIVE, membership_status.RENEWED, membership_status.PENDING],
+            $in: [
+              membership_status.ACTIVE,
+              membership_status.RENEWED,
+              membership_status.PENDING,
+            ],
           },
         })
       )
@@ -783,20 +838,36 @@ const fetchAllCached = async (): Promise<Record<string, unknown>> => {
         })
       )
     ),
-    getCachedOrFetch("events_upcoming", t, () => Event.countDocuments({ eventDate: { $gte: now } })),
+    getCachedOrFetch("events_upcoming", t, () =>
+      Event.countDocuments({ eventDate: { $gte: now } })
+    ),
     getCachedOrFetch("total_attendees", t, safeEventAttendees),
-    getCachedOrFetch("applications_total", t, () => Application.countDocuments()),
+    getCachedOrFetch("applications_total", t, () =>
+      Application.countDocuments()
+    ),
     getCachedOrFetch("applications_by_status", t, safeApplicationsByStatus),
-    getCachedOrFetch("students_active_with_membership", t, safeStudentsActiveWithMembership),
+    getCachedOrFetch(
+      "students_active_with_membership",
+      t,
+      safeStudentsActiveWithMembership
+    ),
     getCachedOrFetch("students_new_this_week", t, safeStudentsNewThisWeek),
     getCachedOrFetch("students_pending_account", t, safeStudentsPendingAccount),
-    getCachedOrFetch("orders_total_revenue_today", t, safeOrdersTotalRevenueToday),
+    getCachedOrFetch(
+      "orders_total_revenue_today",
+      t,
+      safeOrdersTotalRevenueToday
+    ),
     getCachedOrFetch("orders_avg_value_paid", t, safeOrdersAvgValuePaid),
     getCachedOrFetch("orders_by_status_count", t, safeOrdersByStatusCount),
     getCachedOrFetch("orders_refunded_count", t, safeOrdersRefundedCount),
     getCachedOrFetch("orders_refunded_total", t, safeOrdersRefundedTotal),
     getCachedOrFetch("orders_today_by_campus", t, safeOrdersTodayByCampus),
-    getCachedOrFetch("merch_products_by_category", t, safeMerchProductsByCategory),
+    getCachedOrFetch(
+      "merch_products_by_category",
+      t,
+      safeMerchProductsByCategory
+    ),
     getCachedOrFetch("merch_units_sold_today", t, safeMerchUnitsSoldToday),
     getCachedOrFetch("merch_low_stock_5", t, safeMerchLowStockThreshold5),
     getCachedOrFetch("merch_out_of_stock", t, safeMerchOutOfStock),
@@ -804,12 +875,36 @@ const fetchAllCached = async (): Promise<Record<string, unknown>> => {
     getCachedOrFetch("events_total_revenue", t, safeEventsTotalRevenue),
     getCachedOrFetch("events_total_units_sold", t, safeEventsTotalUnitsSold),
     getCachedOrFetch("events_by_campus_sales", t, safeEventsByCampusSales),
-    getCachedOrFetch("events_upcoming_tickets_sold", t, safeEventsUpcomingTicketsSold),
-    getCachedOrFetch("recruitment_open_positions", t, safeRecruitmentOpenPositions),
-    getCachedOrFetch("recruitment_approved_applications", t, safeRecruitmentApprovedApplications),
-    getCachedOrFetch("recruitment_interview_scheduled", t, safeRecruitmentInterviewScheduled),
-    getCachedOrFetch("recruitment_pipeline_by_position", t, safeRecruitmentPipelineByPosition),
-    getCachedOrFetch("contributions_total_records", t, safeContributionsTotalRecords),
+    getCachedOrFetch(
+      "events_upcoming_tickets_sold",
+      t,
+      safeEventsUpcomingTicketsSold
+    ),
+    getCachedOrFetch(
+      "recruitment_open_positions",
+      t,
+      safeRecruitmentOpenPositions
+    ),
+    getCachedOrFetch(
+      "recruitment_approved_applications",
+      t,
+      safeRecruitmentApprovedApplications
+    ),
+    getCachedOrFetch(
+      "recruitment_interview_scheduled",
+      t,
+      safeRecruitmentInterviewScheduled
+    ),
+    getCachedOrFetch(
+      "recruitment_pipeline_by_position",
+      t,
+      safeRecruitmentPipelineByPosition
+    ),
+    getCachedOrFetch(
+      "contributions_total_records",
+      t,
+      safeContributionsTotalRecords
+    ),
     getCachedOrFetch("contributions_by_type", t, safeContributionsByType),
     getCachedOrFetch("email_queue_pending", t, safeEmailQueuePending),
     getCachedOrFetch("email_queue_sent", t, safeEmailQueueSent),
@@ -952,4 +1047,70 @@ export const queryNoetix = async (
   }
 
   return response.json() as Promise<NoetixResponse>;
+};
+
+interface NoetixAiAgentResponse {
+  success: boolean;
+  data: {
+    sessionId: string;
+    persona: string;
+    isFinished: boolean;
+    final_result: string;
+    tools_used: string;
+    history: string;
+    sessionTTL: number;
+    tool_args?: Record<string, unknown>;
+  };
+}
+
+export const queryNoetixAiAgent = async (
+  persona: string,
+  goal: string,
+  tools: Array<{ name: string; description: string }>,
+  sessionId?: string,
+  history?: string,
+  destroy?: boolean
+): Promise<NoetixAiAgentResponse> => {
+  const noetixUrl = process.env.NOETIX_URL || "http://localhost:3000";
+  const apiKey = process.env.NOETIX_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("NOETIX_API_KEY is not configured");
+  }
+
+  // context.tools and goal are required on EVERY call (Noetix rejects
+  // requests missing them with INVALID_REQUEST); history carries prior results.
+  const body: Record<string, unknown> = {
+    persona,
+    goal,
+    context: { tools },
+  };
+
+  if (sessionId) body.sessionId = sessionId;
+  if (history) body.history = history;
+  if (destroy) body.destroy = true;
+
+  const response = await fetch(`${noetixUrl}/api/ai-agent`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const code = errorBody?.error?.code;
+    if (code) {
+      const err = new Error(code) as Error & { status: number };
+      err.status = response.status;
+      throw err;
+    }
+    throw new Error(`Noetix AI Agent API error: ${response.status}`);
+  }
+
+  const json = (await response.json()) as NoetixAiAgentResponse;
+
+  return json;
 };

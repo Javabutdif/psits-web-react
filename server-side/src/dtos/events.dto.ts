@@ -54,6 +54,10 @@ const parseSingleSessionEntry = (
     };
   }
 
+  if (!parsed.enabled) {
+    return { enabled: false, timeRange: "" };
+  }
+
   if (!TIME_RANGE_RE.test(parsed.timeRange)) {
     return {
       error: `${name} session timeRange must be 'HH:mm - HH:mm' in 24-hour format`,

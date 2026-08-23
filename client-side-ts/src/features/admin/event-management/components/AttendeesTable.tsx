@@ -7,6 +7,7 @@ import {
   Loader2,
   X,
   ArrowUpDown,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { getAttendees } from "@/features/events/api/eventService";
@@ -43,6 +44,7 @@ import {
   ScanQRModal,
   EditAttendeeModal,
   ChangePasswordModal,
+  RemoveAttendeeModal,
 } from "./modals";
 import type {
   FilterOptions,
@@ -57,6 +59,7 @@ import type {
 } from "@/features/events/types/event.types";
 import { markAttendanceV2 } from "@/features/events/api/eventService";
 import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
+import { PSITS_ROLES } from "@/features/admin/constants/adminAccess";
 
 interface Attendee {
   id: string;
@@ -106,7 +109,12 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   eventStatus,
   attendanceType: _attendanceType,
 }) => {
-  const { canManageEvents } = useAdminPermissions();
+  const { canManageEvents, access } = useAdminPermissions();
+  const canRemoveAttendee =
+    access === PSITS_ROLES.STANDARD ||
+    access === PSITS_ROLES.EXECUTIVE ||
+    access === PSITS_ROLES.ADMIN ||
+    access === PSITS_ROLES.DEVELOPER;
 
   const toLocalYyyyMmDd = (date: Date): string => {
     const year = date.getFullYear();
@@ -160,6 +168,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const [isMarkAttendanceOpen, setIsMarkAttendanceOpen] = useState(false);
   const [isEditAttendeeOpen, setIsEditAttendeeOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isRemoveAttendeeOpen, setIsRemoveAttendeeOpen] = useState(false);
+  const [removeTargetIdNumber, setRemoveTargetIdNumber] = useState("");
+  const [removeTargetName, setRemoveTargetName] = useState("");
   const [editTargetIdNumber, setEditTargetIdNumber] = useState("");
   const [editTargetName, setEditTargetName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -239,10 +250,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
           id: attendee.id_number,
           name: attendee.name,
           email:
-            typeof attendee.email === "string" &&
-            attendee.email.trim().length > 0
-              ? attendee.email
-              : `${attendee.id_number}@uc.edu.ph`,
+            typeof attendee.email === "string" ? attendee.email.trim() : "",
           studentId: attendee.id_number,
           attendance: attendee.attendance,
           courseYear: `${attendee.course} - ${attendee.year}`,
@@ -325,10 +333,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
       const exportAttendees: Attendee[] = result.data.map((attendee) => ({
         id: attendee.id_number,
         name: attendee.name,
-        email:
-          typeof attendee.email === "string" && attendee.email.trim().length > 0
-            ? attendee.email
-            : `${attendee.id_number}@uc.edu.ph`,
+        email: typeof attendee.email === "string" ? attendee.email.trim() : "",
         studentId: attendee.id_number,
         attendance: attendee.attendance,
         courseYear: `${attendee.course} - ${attendee.year}`,
@@ -359,6 +364,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         "Course",
         "Year",
         "Status",
+        "Morning Session",
+        "Afternoon Session",
+        "Evening Session",
         "Registered On",
         "Registered By",
         "Confirmed On",
@@ -375,6 +383,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         attendee.courseYear.split(" - ")[0] || "",
         attendee.courseYear.split(" - ")[1] || "",
         getAttendanceSummary(attendee.attendance),
+        getSessionExportStatus(attendee.attendance, "morning"),
+        getSessionExportStatus(attendee.attendance, "afternoon"),
+        getSessionExportStatus(attendee.attendance, "evening"),
         attendee.registeredOn.replace("\n", " "),
         attendee.registeredBy,
         getConfirmedOnLabel(attendee.attendance).replace("\n", " "),
@@ -516,7 +527,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     const newAttendee: Attendee = {
       id: attendee.studentId,
       name: `${attendee.firstName} ${attendee.middleName} ${attendee.lastName}`.trim(),
-      email: attendee.email || `${attendee.studentId}@uc.edu.ph`,
+      email: attendee.email || "",
       studentId: attendee.studentId,
       attendance: {
         morning: { attended: false, timestamp: null },
@@ -546,33 +557,80 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   };
 
   const isAttendanceAvailable = eventStatus !== "upcoming";
+  const isEventEnded = eventStatus === "ended";
 
   // Campuses blocked from addAttendeeV2Controller (account creation) use the
   // walk-in flow which is available to ALL campuses.
   const WALK_IN_ONLY_CAMPUSES = ["UC_MAIN", "UC_CS"];
   const isWalkInOnlyCampus = WALK_IN_ONLY_CAMPUSES.includes(adminCampus ?? "");
 
-  const getAttendanceSummary = (attendance: Attendee["attendance"]) => {
-    if (!isAttendanceAvailable) {
-      return "Not Available Yet";
-    }
-
+  const getAttendedSessionCount = (attendance: Attendee["attendance"]) => {
     const sessions = [
       attendance?.morning?.attended,
       attendance?.afternoon?.attended,
       attendance?.evening?.attended,
     ];
-    const attendedCount = sessions.filter(Boolean).length;
-
-    return `${attendedCount}/3 Sessions`;
+    return sessions.filter(Boolean).length;
   };
 
   const computeIsPresent = (attendance: Attendee["attendance"]): boolean => {
-    return Boolean(
-      attendance?.morning?.attended ||
-      attendance?.afternoon?.attended ||
-      attendance?.evening?.attended
-    );
+    return getAttendedSessionCount(attendance) > 0;
+  };
+
+  const getAttendanceSummary = (attendance: Attendee["attendance"]) => {
+    if (!isAttendanceAvailable) {
+      return "Not Available Yet";
+    }
+
+    const attendedCount = getAttendedSessionCount(attendance);
+    if (attendedCount > 0) {
+      return `${attendedCount}/3 Sessions`;
+    }
+
+    return isEventEnded ? "0/3 Sessions" : "--";
+  };
+
+  const getSessionExportStatus = (
+    attendance: Attendee["attendance"],
+    session: "morning" | "afternoon" | "evening"
+  ) => {
+    if (!isAttendanceAvailable) {
+      return "Not Available Yet";
+    }
+
+    if (attendance?.[session]?.attended) {
+      return "Present";
+    }
+
+    return isEventEnded ? "Absent" : "--";
+  };
+
+  const getAttendanceBadge = (attendance: Attendee["attendance"]) => {
+    if (!isAttendanceAvailable) {
+      return {
+        label: "Attendee",
+        className: "border-gray-200 bg-gray-300 text-gray-700",
+      };
+    }
+
+    if (computeIsPresent(attendance)) {
+      return {
+        label: "Present",
+        className: "border-green-200 bg-green-50 text-green-700",
+      };
+    }
+
+    if (isEventEnded) {
+      return {
+        label: "Absent",
+        className: "border-red-200 bg-red-50 text-red-700",
+      };
+    }
+
+    return {
+      label: "--",
+      className: "border-gray-200 bg-gray-50 text-gray-500",
+    };
   };
 
   const openAttendanceStatus = (attendee: Attendee) => {
@@ -583,11 +641,10 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
   const handleViewDetails = (attendeeId: string) => {
     const student = attendees.find((a) => a.id === attendeeId);
     if (student) {
+      const isPresent = computeIsPresent(student.attendance);
       setSelectedStudent({
         ...student,
-        isPresent: isAttendanceAvailable
-          ? computeIsPresent(student.attendance)
-          : undefined,
+        isPresent: isPresent ? true : isEventEnded ? false : undefined,
       });
       setIsStudentDetailsOpen(true);
     }
@@ -613,6 +670,13 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     setEditTargetName(selectedStudent.name);
     setIsStudentDetailsOpen(false);
     setIsChangePasswordOpen(true);
+  };
+
+  const handleRemoveAttendee = (attendee: Attendee) => {
+    if (!canRemoveAttendee || isEventEnded) return;
+    setRemoveTargetIdNumber(attendee.studentId);
+    setRemoveTargetName(attendee.name);
+    setIsRemoveAttendeeOpen(true);
   };
 
   return (
@@ -847,10 +911,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                 </TableRow>
               ) : (
                 paginatedAttendees.map((attendee) => {
-                  const isPresent =
-                    attendee.attendance?.morning?.attended ||
-                    attendee.attendance?.afternoon?.attended ||
-                    attendee.attendance?.evening?.attended;
+                  const attendanceBadge = getAttendanceBadge(
+                    attendee.attendance
+                  );
                   return (
                     <TableRow key={attendee.id}>
                       <TableCell>
@@ -879,17 +942,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                         >
                           <Badge
                             variant="outline"
-                            className={
-                              isPresent
-                                ? "border-green-200 bg-green-50 text-green-700"
-                                : "border-red-200 bg-red-50 text-red-700"
-                            }
+                            className={attendanceBadge.className}
                           >
-                            {isAttendanceAvailable
-                              ? isPresent
-                                ? "Present"
-                                : "Absent"
-                              : "N/A"}
+                            {attendanceBadge.label}
                           </Badge>
                         </button>
                       </TableCell>
@@ -926,13 +981,31 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                         {attendee.confirmedBy || "--"}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleViewDetails(attendee.id)}
-                          className="h-7 rounded-2xl border-gray-300 px-4 text-sm font-semibold"
-                        >
-                          View Details
-                        </Button>
+                        <div className="flex flex-col items-start gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => handleViewDetails(attendee.id)}
+                            className="h-7 w-[130px] justify-center rounded-2xl border-gray-300 px-4 text-sm font-semibold"
+                          >
+                            View Details
+                          </Button>
+                          {canRemoveAttendee && (
+                            <Button
+                              variant="outline"
+                              onClick={() => handleRemoveAttendee(attendee)}
+                              disabled={isEventEnded}
+                              title={
+                                isEventEnded
+                                  ? "This event has ended and can no longer be modified"
+                                  : undefined
+                              }
+                              className="text-destructive hover:text-destructive disabled:hover:bg-transparent h-7 w-[130px] justify-center rounded-2xl border-red-200 px-2 text-sm font-semibold hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <Trash2 className="mr-1 h-3.5 w-3.5 flex-shrink-0" />
+                              Remove
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -959,10 +1032,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
           </div>
         ) : (
           paginatedAttendees.map((attendee) => {
-            const isPresent =
-              attendee.attendance?.morning?.attended ||
-              attendee.attendance?.afternoon?.attended ||
-              attendee.attendance?.evening?.attended;
+            const attendanceBadge = getAttendanceBadge(attendee.attendance);
             return (
               <div
                 key={attendee.id}
@@ -994,17 +1064,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                   >
                     <Badge
                       variant="outline"
-                      className={
-                        isPresent
-                          ? "border-green-200 bg-green-50 text-green-700"
-                          : "border-red-200 bg-red-50 text-red-700"
-                      }
+                      className={attendanceBadge.className}
                     >
-                      {isAttendanceAvailable
-                        ? isPresent
-                          ? "Present"
-                          : "Absent"
-                        : "N/A"}
+                      {attendanceBadge.label}
                     </Badge>
                   </button>
                 </div>
@@ -1049,6 +1111,23 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                 >
                   View Details
                 </Button>
+                {canRemoveAttendee && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isEventEnded}
+                    title={
+                      isEventEnded
+                        ? "This event has ended and can no longer be modified"
+                        : undefined
+                    }
+                    className="text-destructive hover:text-destructive disabled:hover:bg-transparent w-full border-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => handleRemoveAttendee(attendee)}
+                  >
+                    <Trash2 className="mr-1 h-3.5 w-3.5" />
+                    Remove Attendee
+                  </Button>
+                )}
               </div>
             );
           })
@@ -1182,6 +1261,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
       <ScanQRModal
         open={isScanQROpen}
         onOpenChange={setIsScanQROpen}
+        eventId={eventId}
         onScanSuccess={async (payload: QRCodePayloadV2) => {
           const result = await markAttendanceV2(eventId, payload.studentId, {
             campus: payload.campus,
@@ -1219,6 +1299,14 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         eventId={eventId}
         attendeeIdNumber={editTargetIdNumber}
         attendeeName={editTargetName}
+      />
+      <RemoveAttendeeModal
+        open={isRemoveAttendeeOpen}
+        onOpenChange={setIsRemoveAttendeeOpen}
+        onAttendeeRemoved={() => setRefreshTick((t) => t + 1)}
+        eventId={eventId}
+        attendeeIdNumber={removeTargetIdNumber}
+        attendeeName={removeTargetName}
       />
     </div>
   );

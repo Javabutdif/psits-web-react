@@ -71,6 +71,9 @@ export interface EventData {
   imageUrl?: string;
   location?: string;
   date?: Date;
+  status?: string;
+  startTime?: string;
+  endTime?: string;
   attendanceType: string;
   attendees: AttendeeData[];
   sessionConfig?: SessionConfig;
@@ -471,6 +474,18 @@ export interface EditAttendeeV2Response {
       shirtSize: string;
       shirtPrice: number;
     };
+  };
+}
+
+// ─── Remove Attendee V2 Types ───────────────────────────────────────────────
+
+export interface RemoveAttendeeV2Response {
+  message: string;
+  data: {
+    id_number: string;
+    name: string;
+    campus: string;
+    shirtPrice: number;
   };
 }
 

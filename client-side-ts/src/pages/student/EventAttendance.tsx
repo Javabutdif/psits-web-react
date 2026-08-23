@@ -59,6 +59,9 @@ const mapEventToEventData = (event: Event): EventData | null => {
     imageUrl,
     location: "University of Cebu Main Campus",
     date: getManilaStartOfDay(dateValue),
+    status: event.status,
+    startTime: event.eventStartTime,
+    endTime: event.eventEndTime,
     attendanceType: event.attendanceType || "open",
     attendees: parsedAttendees,
     sessionConfig: event.sessionConfig as SessionConfig | undefined,
@@ -100,11 +103,11 @@ const EventAttendance: React.FC = () => {
         (a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)
       );
 
-      // Upcoming: today and any future dates, sorted soonest first
+      // Upcoming: today and any future dates, sorted newest first
       setUpcomingEvents(
         transformedEvents
           .filter((e) => e.date && isUpcoming(e.date))
-          .sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0))
+          .sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0))
       );
       setPastEvents(
         transformedEvents

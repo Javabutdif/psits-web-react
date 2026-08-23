@@ -9,14 +9,14 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export interface NoetixAgentResponse {
+export interface AiAgentResponse {
   success: boolean;
   data: {
     sessionId: string;
     persona: string;
     result: string;
-    matchedKeys: string[];
-    sessionTTL: number;
+    history: string;
+    iterations: number;
   };
 }
 
@@ -33,4 +33,5 @@ export interface ChatRequestBody {
   persona?: string;
   sessionId?: string;
   destroy?: boolean;
+  userAccess?: string;
 }

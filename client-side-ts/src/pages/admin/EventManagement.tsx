@@ -23,6 +23,7 @@ import {
 } from "@/features/events/api/eventService";
 import type {
   CampusLimit,
+  CanonicalSessionConfig,
   Event as ApiEvent,
   EventMerchMeta,
 } from "@/features/events/types/event.types";
@@ -53,6 +54,7 @@ interface EventDetails {
   eventVenueSpecific?: string;
   eventStartTime?: string;
   eventEndTime?: string;
+  sessionConfig: CanonicalSessionConfig;
 }
 
 const CAMPUS_CODE_TO_NAME: Record<Campus, string> = {
@@ -83,25 +85,90 @@ type EventStatus = EventDetails["status"];
 
 import { formatEventDateLabel, formatEventDateKey } from "@/utils/date-manila";
 
+const MANILA_UTC_OFFSET = "+08:00";
+const TIME_ONLY_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+const normalizeTimeValue = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return TIME_ONLY_PATTERN.test(trimmed) ? trimmed : null;
+};
+
+const buildManilaDateTime = (
+  dateValue: string | Date | null | undefined,
+  timeValue: string | null,
+  fallbackTime: string
+): Date | null => {
+  if (!dateValue) return null;
+
+  const parsedDate =
+    typeof dateValue === "string" ? new Date(dateValue) : dateValue;
+  if (!parsedDate || Number.isNaN(parsedDate.getTime())) return null;
+
+  const dateKey = formatEventDateKey(parsedDate);
+  const time = timeValue ?? fallbackTime;
+  const parsedDateTime = new Date(
+    `${dateKey}T${time}:00${MANILA_UTC_OFFSET}`
+  );
+
+  return Number.isNaN(parsedDateTime.getTime()) ? null : parsedDateTime;
+};
+
 const normalizeStatus = (
   value: unknown,
-  eventDate?: string | Date | null
+  eventDate?: string | Date | null,
+  eventEndDate?: string | Date | null,
+  eventStartTime?: string,
+  eventEndTime?: string
 ): EventStatus => {
   const normalized = String(value ?? "")
     .trim()
     .toLowerCase();
 
   if (normalized === "ended" || normalized === "cancelled") return "ended";
+
+  const startsAt = buildManilaDateTime(
+    eventDate,
+    normalizeTimeValue(eventStartTime),
+    "00:00"
+  );
+  const endsAt = buildManilaDateTime(
+    eventEndDate ?? eventDate,
+    normalizeTimeValue(eventEndTime),
+    "23:59"
+  );
+
+  if (startsAt && endsAt) {
+    const now = new Date();
+    if (now < startsAt) return "upcoming";
+    if (now > endsAt) return "ended";
+    return "ongoing";
+  }
+
   if (normalized === "ongoing") return "ongoing";
   if (eventDate) {
-    const parsedEventDate =
+    const parsedStartDate =
       typeof eventDate === "string" ? new Date(eventDate) : eventDate;
+    const parsedEndDate = eventEndDate
+      ? typeof eventEndDate === "string"
+        ? new Date(eventEndDate)
+        : eventEndDate
+      : parsedStartDate;
 
-    if (parsedEventDate && !Number.isNaN(parsedEventDate.getTime())) {
+    if (
+      parsedStartDate &&
+      !Number.isNaN(parsedStartDate.getTime()) &&
+      parsedEndDate &&
+      !Number.isNaN(parsedEndDate.getTime())
+    ) {
       const todayKey = formatEventDateKey(new Date());
-      const eventKey = formatEventDateKey(parsedEventDate);
-      if (todayKey === eventKey) {
+      const startKey = formatEventDateKey(parsedStartDate);
+      const endKey = formatEventDateKey(parsedEndDate);
+      if (todayKey >= startKey && todayKey <= endKey) {
         return "ongoing";
+      }
+      if (todayKey > endKey) {
+        return "ended";
       }
     }
   }
@@ -135,6 +202,23 @@ const getSessionBounds = (
 
   return { startTime: firstStart, endTime: lastEnd };
 };
+
+const normalizeSessionConfig = (
+  sessionConfig: EventSessionConfig | undefined
+): CanonicalSessionConfig => ({
+  morning: {
+    enabled: Boolean(sessionConfig?.morning?.enabled),
+    timeRange: sessionConfig?.morning?.timeRange ?? "",
+  },
+  afternoon: {
+    enabled: Boolean(sessionConfig?.afternoon?.enabled),
+    timeRange: sessionConfig?.afternoon?.timeRange ?? "",
+  },
+  evening: {
+    enabled: Boolean(sessionConfig?.evening?.enabled),
+    timeRange: sessionConfig?.evening?.timeRange ?? "",
+  },
+});
 
 const normalizeMerchMeta = (value: unknown): EventMerchMeta | null => {
   if (!value || typeof value !== "object") {
@@ -207,6 +291,9 @@ const mapApiEventToEventDetails = (
 ): EventDetails => {
   const sessionConfig = event.sessionConfig as EventSessionConfig | undefined;
   const { startTime, endTime } = getSessionBounds(sessionConfig);
+  const effectiveStartTime =
+    normalizeTimeValue(event.eventStartTime) ?? startTime;
+  const effectiveEndTime = normalizeTimeValue(event.eventEndTime) ?? endTime;
   const mappedCampusCodes = Array.isArray(event.limit)
     ? event.limit
         .map((item) => {
@@ -258,7 +345,13 @@ const mapApiEventToEventDetails = (
   return {
     id: String(event.eventId ?? routeEventId),
     title: String(event.eventName ?? "Untitled Event"),
-    status: normalizeStatus(event.status, event.eventDate),
+    status: normalizeStatus(
+      event.status,
+      event.eventDate,
+      event.eventEndDate ?? event.eventDate,
+      effectiveStartTime,
+      effectiveEndTime
+    ),
     startDate: formatEventDateLabel(event.eventDate),
     rawStartDate: event.eventDate ? String(event.eventDate) : undefined,
     startTime,
@@ -288,6 +381,7 @@ const mapApiEventToEventDetails = (
     eventVenueSpecific: event.eventVenueSpecific as string | undefined,
     eventStartTime: event.eventStartTime as string | undefined,
     eventEndTime: event.eventEndTime as string | undefined,
+    sessionConfig: normalizeSessionConfig(sessionConfig),
   };
 };
 
@@ -773,6 +867,7 @@ const EventManagement: React.FC = () => {
           eventVenueSpecific: eventDetails?.eventVenueSpecific ?? "",
           eventStartTime: eventDetails?.eventStartTime ?? "",
           eventEndTime: eventDetails?.eventEndTime ?? "",
+          sessionConfig: eventDetails?.sessionConfig,
         }}
       />
     </div>
