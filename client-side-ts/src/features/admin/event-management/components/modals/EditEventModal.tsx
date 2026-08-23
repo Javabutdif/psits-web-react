@@ -94,6 +94,23 @@ const isSessionComplete = (timeRange: string): boolean => {
   return Boolean(start?.trim() && end?.trim());
 };
 
+const getSessionBounds = (
+  sessionConfig: EventFormData["sessionConfig"]
+): { startTime: string; endTime: string } | null => {
+  const enabledRanges = SESSION_KEYS.map((key) => sessionConfig[key])
+    .filter((session) => session.enabled && isSessionComplete(session.timeRange))
+    .map((session) => session.timeRange);
+
+  if (enabledRanges.length === 0) {
+    return null;
+  }
+
+  const [startTime = ""] = enabledRanges[0].split(" - ");
+  const [, endTime = ""] = enabledRanges[enabledRanges.length - 1].split(" - ");
+
+  return { startTime, endTime };
+};
+
 export const EditEventModal: React.FC<EditEventModalProps> = ({
   open,
   onOpenChange,
@@ -167,6 +184,13 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
       return;
     }
 
+    const sessionBounds = getSessionBounds(formData.sessionConfig);
+    if (!sessionBounds) {
+      setActiveTab("session-setup");
+      showToast("error", "Please enable at least one attendance session.");
+      return;
+    }
+
     try {
       setIsSaving(true);
 
@@ -182,8 +206,8 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
         eventVenue: formData.eventVenue,
         eventTheme: formData.eventTheme,
         eventVenueSpecific: formData.eventVenueSpecific,
-        eventStartTime: formData.eventStartTime,
-        eventEndTime: formData.eventEndTime,
+        eventStartTime: sessionBounds.startTime,
+        eventEndTime: sessionBounds.endTime,
         attendanceType: formData.attendanceType,
         sessionConfig: formData.sessionConfig,
       };

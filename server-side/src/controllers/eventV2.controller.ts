@@ -3021,6 +3021,25 @@ const getFirstSessionStartTime = (sessionConfig: unknown): string | null => {
   return null;
 };
 
+const getLastSessionEndTime = (sessionConfig: unknown): string | null => {
+  if (!sessionConfig || typeof sessionConfig !== "object") return null;
+
+  const sessions = sessionConfig as Record<string, unknown>;
+  for (const sessionKey of [...SESSION_ORDER].reverse()) {
+    const session = sessions[sessionKey];
+    if (!session || typeof session !== "object") continue;
+
+    const data = session as { enabled?: unknown; timeRange?: unknown };
+    if (data.enabled !== true || typeof data.timeRange !== "string") continue;
+
+    const [, end] = data.timeRange.split(" - ");
+    const normalizedEnd = normalizeTimeValue(end);
+    if (normalizedEnd) return normalizedEnd;
+  }
+
+  return null;
+};
+
 const buildManilaDateTime = (
   dateValue: Date | null | undefined,
   timeValue: string | null,
@@ -3045,8 +3064,8 @@ const hasEventStartedBySchedule = (
   sessionConfig: unknown
 ) => {
   const startTime =
-    normalizeTimeValue(eventStartTime) ??
-    getFirstSessionStartTime(sessionConfig);
+    getFirstSessionStartTime(sessionConfig) ??
+    normalizeTimeValue(eventStartTime);
   const startsAt = buildManilaDateTime(eventDate, startTime, "00:00");
 
   return !startsAt || new Date() >= startsAt;
@@ -3158,6 +3177,14 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
     const parsedEndDate = body.eventEndDate
       ? parseManilaMidnightDate(body.eventEndDate)
       : null;
+    const derivedEventStartTime =
+      getFirstSessionStartTime(parsedSessionConfigResult) ??
+      normalizeTimeValue(body.eventStartTime) ??
+      "";
+    const derivedEventEndTime =
+      getLastSessionEndTime(parsedSessionConfigResult) ??
+      normalizeTimeValue(body.eventEndTime) ??
+      "";
 
     const eventFields: Record<string, unknown> = {
       eventId: new mongoose.Types.ObjectId(),
@@ -3179,10 +3206,8 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
         typeof body.eventVenueSpecific === "string"
           ? body.eventVenueSpecific.trim()
           : "",
-      eventStartTime:
-        typeof body.eventStartTime === "string" ? body.eventStartTime : "",
-      eventEndTime:
-        typeof body.eventEndTime === "string" ? body.eventEndTime : "",
+      eventStartTime: derivedEventStartTime,
+      eventEndTime: derivedEventEndTime,
     };
 
     if (parsedEndDate) {
@@ -3349,6 +3374,14 @@ export const updateEventV2Controller = async (
         });
       }
       updateFields.sessionConfig = parsedSessionConfigResult;
+      updateFields.eventStartTime =
+        getFirstSessionStartTime(parsedSessionConfigResult) ??
+        normalizeTimeValue(eventStartTime) ??
+        "";
+      updateFields.eventEndTime =
+        getLastSessionEndTime(parsedSessionConfigResult) ??
+        normalizeTimeValue(eventEndTime) ??
+        "";
     }
 
     if (limit !== undefined) {
