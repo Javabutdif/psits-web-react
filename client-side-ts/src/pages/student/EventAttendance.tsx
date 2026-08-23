@@ -25,6 +25,35 @@ import { EventCard, getMyEvents } from "@/features/events";
 import React, { useEffect, useState, useCallback } from "react";
 import { InfinitySpin } from "react-loader-spinner";
 
+const SESSION_ORDER = ["morning", "afternoon", "evening"] as const;
+const TIME_ONLY_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+const normalizeTimeValue = (value: unknown): string | undefined => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return TIME_ONLY_PATTERN.test(trimmed) ? trimmed : undefined;
+};
+
+const getSessionBounds = (
+  sessionConfig: SessionConfig | undefined
+): { startTime?: string; endTime?: string } => {
+  const enabledRanges = SESSION_ORDER.map((key) => sessionConfig?.[key])
+    .filter((session) => Boolean(session?.enabled && session?.timeRange))
+    .map((session) => String(session?.timeRange));
+
+  if (enabledRanges.length === 0) {
+    return {};
+  }
+
+  const [startTime] = enabledRanges[0].split(" - ");
+  const [, endTime] = enabledRanges[enabledRanges.length - 1].split(" - ");
+
+  return {
+    startTime: normalizeTimeValue(startTime),
+    endTime: normalizeTimeValue(endTime),
+  };
+};
+
 // ─── Mapper: Raw Event → Frontend EventData ───────────────────────────────────
 // The event already has `attendees` pre-filtered to the requesting student
 // (0 or 1 records) — handled server-side
@@ -52,6 +81,9 @@ const mapEventToEventData = (event: Event): EventData | null => {
       : event.eventDate;
   if (!dateValue || Number.isNaN(dateValue.getTime())) return null;
 
+  const sessionConfig = event.sessionConfig as SessionConfig | undefined;
+  const sessionBounds = getSessionBounds(sessionConfig);
+
   return {
     id: (event.eventId || event._id) as string,
     title: event.eventName,
@@ -60,11 +92,11 @@ const mapEventToEventData = (event: Event): EventData | null => {
     location: "University of Cebu Main Campus",
     date: getManilaStartOfDay(dateValue),
     status: event.status,
-    startTime: event.eventStartTime,
-    endTime: event.eventEndTime,
+    startTime: sessionBounds.startTime ?? event.eventStartTime,
+    endTime: sessionBounds.endTime ?? event.eventEndTime,
     attendanceType: event.attendanceType || "open",
     attendees: parsedAttendees,
-    sessionConfig: event.sessionConfig as SessionConfig | undefined,
+    sessionConfig,
   };
 };
 

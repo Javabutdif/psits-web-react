@@ -178,7 +178,7 @@ const normalizeStatus = (
 
 const getSessionBounds = (
   sessionConfig: EventSessionConfig | undefined
-): { startTime: string; endTime: string } => {
+): { startTime?: string; endTime?: string } => {
   const order: Array<keyof EventSessionConfig> = [
     "morning",
     "afternoon",
@@ -193,12 +193,12 @@ const getSessionBounds = (
     .map((session) => String(session.timeRange));
 
   if (enabledRanges.length === 0) {
-    return { startTime: "TBA", endTime: "TBA" };
+    return {};
   }
 
-  const [firstStart = "TBA"] = enabledRanges[0].split(" - ");
+  const [firstStart] = enabledRanges[0].split(" - ");
   const lastRange = enabledRanges[enabledRanges.length - 1];
-  const [, lastEnd = "TBA"] = lastRange.split(" - ");
+  const [, lastEnd] = lastRange.split(" - ");
 
   return { startTime: firstStart, endTime: lastEnd };
 };
@@ -292,8 +292,13 @@ const mapApiEventToEventDetails = (
   const sessionConfig = event.sessionConfig as EventSessionConfig | undefined;
   const { startTime, endTime } = getSessionBounds(sessionConfig);
   const effectiveStartTime =
-    normalizeTimeValue(event.eventStartTime) ?? startTime;
-  const effectiveEndTime = normalizeTimeValue(event.eventEndTime) ?? endTime;
+    normalizeTimeValue(startTime) ??
+    normalizeTimeValue(event.eventStartTime) ??
+    undefined;
+  const effectiveEndTime =
+    normalizeTimeValue(endTime) ??
+    normalizeTimeValue(event.eventEndTime) ??
+    undefined;
   const mappedCampusCodes = Array.isArray(event.limit)
     ? event.limit
         .map((item) => {
@@ -354,14 +359,14 @@ const mapApiEventToEventDetails = (
     ),
     startDate: formatEventDateLabel(event.eventDate),
     rawStartDate: event.eventDate ? String(event.eventDate) : undefined,
-    startTime,
+    startTime: effectiveStartTime ?? "TBA",
     endDate: formatEventDateLabel(event.eventEndDate ?? event.eventDate),
     rawEndDate: event.eventEndDate
       ? String(event.eventEndDate)
       : event.eventDate
         ? String(event.eventDate)
         : undefined,
-    endTime,
+    endTime: effectiveEndTime ?? "TBA",
     location:
       (typeof event.eventVenue === "string" && event.eventVenue) ||
       "Location not specified",
@@ -379,8 +384,8 @@ const mapApiEventToEventDetails = (
         : "ticketed",
     eventTheme: event.eventTheme as string | undefined,
     eventVenueSpecific: event.eventVenueSpecific as string | undefined,
-    eventStartTime: event.eventStartTime as string | undefined,
-    eventEndTime: event.eventEndTime as string | undefined,
+    eventStartTime: effectiveStartTime,
+    eventEndTime: effectiveEndTime,
     sessionConfig: normalizeSessionConfig(sessionConfig),
   };
 };
@@ -702,10 +707,7 @@ const EventManagement: React.FC = () => {
                             {formatFullMonthDate(eventDetails.rawStartDate)}
                           </p>
                           <p className="text-muted-foreground text-xs">
-                            {formatTimeToAMPM(
-                              eventDetails.eventStartTime ||
-                                eventDetails.startTime
-                            )}
+                            {formatTimeToAMPM(eventDetails.startTime)}
                           </p>
                         </div>
                       </div>
@@ -717,9 +719,7 @@ const EventManagement: React.FC = () => {
                             {formatFullMonthDate(eventDetails.rawEndDate)}
                           </p>
                           <p className="text-muted-foreground text-xs">
-                            {formatTimeToAMPM(
-                              eventDetails.eventEndTime || eventDetails.endTime
-                            )}
+                            {formatTimeToAMPM(eventDetails.endTime)}
                           </p>
                         </div>
                       </div>

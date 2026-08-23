@@ -88,6 +88,23 @@ const validateSessions = (config: CanonicalSessionConfig): string | null => {
   return null;
 };
 
+const getSessionBounds = (
+  config: CanonicalSessionConfig
+): { startTime: string; endTime: string } | null => {
+  const enabled = ["morning", "afternoon", "evening"] as const;
+  const ranges = enabled
+    .map((name) => config[name])
+    .filter((entry) => entry.enabled && entry.timeRange)
+    .map((entry) => entry.timeRange);
+
+  if (ranges.length === 0) return null;
+
+  const [startTime = ""] = ranges[0].split(" - ");
+  const [, endTime = ""] = ranges[ranges.length - 1].split(" - ");
+
+  return { startTime, endTime };
+};
+
 export const AddEventModal: React.FC<AddEventModalProps> = ({
   open,
   onOpenChange,
@@ -114,6 +131,12 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       return;
     }
 
+    const sessionBounds = getSessionBounds(formData.sessionConfig);
+    if (!sessionBounds) {
+      showToast("error", "Enable at least one session");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -131,8 +154,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         eventVenue: formData.eventVenue,
         eventTheme: formData.eventTheme,
         eventVenueSpecific: formData.eventVenueSpecific,
-        eventStartTime: formData.eventStartTime,
-        eventEndTime: formData.eventEndTime,
+        eventStartTime: sessionBounds.startTime,
+        eventEndTime: sessionBounds.endTime,
       });
 
       if (result) {
