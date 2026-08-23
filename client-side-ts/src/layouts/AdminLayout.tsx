@@ -26,11 +26,11 @@ export const AdminLayout = () => {
       <Button
         variant="ghost"
         size="icon-lg"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className="bg-background fixed top-4 left-4 z-50 transition-all shadow-sm duration-300 lg:hidden"
         onClick={toggleSidebar}
         aria-label="Open sidebar"
       >
-        <Menu className="h-7 w-7" />
+        <Menu className="h-6 w-6" />
       </Button>
 
       {/* Backdrop overlay for mobile — always in DOM, fades in/out */}
