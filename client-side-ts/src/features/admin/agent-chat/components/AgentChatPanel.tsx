@@ -20,12 +20,12 @@ const MessageBubble = ({ message }: { message: ChatMessage }) => {
   if (isSystem) {
     return (
       <div className="my-3 flex items-center gap-2">
-        <div className="h-px flex-1 bg-border" />
-        <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
+        <div className="bg-border h-px flex-1" />
+        <div className="border-border bg-muted/50 text-muted-foreground flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs">
           <RefreshCw className="h-3 w-3" />
           <span>{message.content}</span>
         </div>
-        <div className="h-px flex-1 bg-border" />
+        <div className="bg-border h-px flex-1" />
       </div>
     );
   }
@@ -40,8 +40,8 @@ const MessageBubble = ({ message }: { message: ChatMessage }) => {
       )}
     >
       {!isUser && (
-        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-          <Bot className="h-4 w-4 text-primary" />
+        <div className="bg-primary/10 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+          <Bot className="text-primary h-4 w-4" />
         </div>
       )}
       <div
@@ -49,7 +49,7 @@ const MessageBubble = ({ message }: { message: ChatMessage }) => {
           "max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
           isUser
             ? "bg-primary text-white"
-            : "bg-muted text-foreground border border-primary/20"
+            : "bg-muted text-foreground border-primary/20 border"
         )}
       >
         <p className="break-words whitespace-pre-wrap">{message.content}</p>
@@ -90,8 +90,7 @@ const AutoResizeTextarea = forwardRef(
       const lineHeight =
         parseFloat(computed.lineHeight) || parseFloat(computed.fontSize) * 1.5;
       const padding =
-        parseFloat(computed.paddingTop) +
-        parseFloat(computed.paddingBottom);
+        parseFloat(computed.paddingTop) + parseFloat(computed.paddingBottom);
       const computedRows = Math.max(
         2,
         Math.min(5, Math.ceil((el.scrollHeight - padding) / lineHeight))
@@ -100,7 +99,7 @@ const AutoResizeTextarea = forwardRef(
     };
 
     return (
-      <div className="relative flex-1 overflow-hidden rounded-xl border border-input bg-background">
+      <div className="border-input bg-background relative flex-1 overflow-hidden rounded-xl border">
         <textarea
           ref={ref}
           value={value}
@@ -167,18 +166,15 @@ export const AgentChatPanel = ({
           className="pointer-events-none fixed inset-0 z-50 flex items-end justify-end"
         >
           {/* Mobile: full-screen overlay */}
-          <div className="pointer-events-auto absolute inset-0 flex flex-col bg-background lg:hidden">
+          <div className="bg-background pointer-events-auto absolute inset-0 flex flex-col lg:hidden">
             {/* Header */}
             <div className="flex items-center justify-between border-b px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                  <Bot className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">PSITS Chatbot</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Powered by Noetix AI Engine
-                  </p>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                    <Bot className="text-primary h-4 w-4" />
+                  </div>
+                  <p className="text-sm font-semibold">Noetix AI</p>
                 </div>
               </div>
               <Button
@@ -199,13 +195,14 @@ export const AgentChatPanel = ({
                   transition={{ duration: 0.4 }}
                   className="flex h-full min-h-0 flex-col items-center justify-center gap-2 text-center"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Bot className="h-5 w-5 text-primary" />
+                  <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                    <Bot className="text-primary h-5 w-5" />
                   </div>
-                  <p className="text-sm font-medium">Ask about PSITS data</p>
+                  <p className="text-sm font-medium">
+                    Ask Noetix AI to act
+                  </p>
                   <p className="text-muted-foreground max-w-xs text-xs">
-                    Try &quot;How many active students are there?&quot; or
-                    &quot;Show me today&apos;s revenue&quot;
+                    AI Agent uses tools to gather and act on data.
                   </p>
                 </motion.div>
               )}
@@ -215,15 +212,15 @@ export const AgentChatPanel = ({
                 </div>
               ))}
               {isLoading && (
-                <div className="mb-3 flex items-center gap-2 text-muted-foreground">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Bot className="h-4 w-4 text-primary" />
+                <div className="text-muted-foreground mb-3 flex items-center gap-2">
+                  <div className="bg-primary/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                    <Bot className="text-primary h-4 w-4" />
                   </div>
                   <div className="flex gap-1">
                     {[0, 0.2, 0.4].map((delay, i) => (
                       <span
                         key={i}
-                        className="h-2 w-2 animate-bounce rounded-full bg-primary/40"
+                        className="bg-primary/40 h-2 w-2 animate-bounce rounded-full"
                         style={{ animationDelay: `${delay}s` }}
                       />
                     ))}
@@ -248,7 +245,7 @@ export const AgentChatPanel = ({
                   size="icon"
                   onClick={() => sendMessage(input)}
                   disabled={isLoading || !input.trim()}
-                  className="shrink-0 bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/90 shrink-0"
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -266,20 +263,25 @@ export const AgentChatPanel = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="pointer-events-auto mr-4 mb-4 hidden flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl lg:flex"
-            style={{ height: "min(600px, 85vh)", width: "min(480px, calc(100vw - 3rem))" }}
+            className="bg-background pointer-events-auto mr-4 mb-4 hidden flex-col overflow-hidden rounded-2xl border shadow-2xl lg:flex"
+            style={{
+              height: "min(600px, 85vh)",
+              width: "min(480px, calc(100vw - 3rem))",
+            }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b px-4 py-3 bg-gradient-to-r from-background to-primary/5">
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                  <Bot className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">PSITS Chatbot</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Powered by Noetix AI Engine
-                  </p>
+            <div className="from-background to-primary/5 flex items-center justify-between border-b bg-gradient-to-r px-4 py-3">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                    <Bot className="text-primary h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Noetix AI</p>
+                    <p className="text-muted-foreground text-[10px]">
+                      Tool-driven agent
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -313,13 +315,14 @@ export const AgentChatPanel = ({
                   transition={{ duration: 0.4 }}
                   className="flex h-full min-h-0 flex-col items-center justify-center gap-2 text-center"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Bot className="h-5 w-5 text-primary" />
+                  <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                    <Bot className="text-primary h-5 w-5" />
                   </div>
-                  <p className="text-sm font-medium">Ask about PSITS data</p>
+                  <p className="text-sm font-medium">
+                    Ask Noetix AI to act
+                  </p>
                   <p className="text-muted-foreground max-w-xs text-xs">
-                    Try &quot;How many active students are there?&quot; or
-                    &quot;Show me today&apos;s revenue&quot;
+                    AI Agent uses tools to gather and act on data.
                   </p>
                 </motion.div>
               )}
@@ -329,15 +332,15 @@ export const AgentChatPanel = ({
                 </div>
               ))}
               {isLoading && (
-                <div className="mb-3 flex items-center gap-2 text-muted-foreground">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Bot className="h-4 w-4 text-primary" />
+                <div className="text-muted-foreground mb-3 flex items-center gap-2">
+                  <div className="bg-primary/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                    <Bot className="text-primary h-4 w-4" />
                   </div>
                   <div className="flex gap-1">
                     {[0, 0.2, 0.4].map((delay, i) => (
                       <span
                         key={i}
-                        className="h-2 w-2 animate-bounce rounded-full bg-primary/40"
+                        className="bg-primary/40 h-2 w-2 animate-bounce rounded-full"
                         style={{ animationDelay: `${delay}s` }}
                       />
                     ))}
@@ -361,7 +364,7 @@ export const AgentChatPanel = ({
                 size="icon"
                 onClick={() => sendMessage(input)}
                 disabled={isLoading || !input.trim()}
-                className="shrink-0 bg-primary hover:bg-primary/90"
+                className="bg-primary hover:bg-primary/90 shrink-0"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

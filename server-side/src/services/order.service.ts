@@ -43,6 +43,48 @@ class OrderService {
     };
   };
 
+  getOrderByIdNumber = async (id_number: string, session?: ClientSession) => {
+    if (!id_number) throw new AppError("id_number is required", 400);
+    const query = session
+      ? Orders.find(
+          { id_number },
+          {
+            _id: 1,
+            order_status: 1,
+            order_date: 1,
+            "items.product_name": 1,
+            "items.price": 1,
+            "items.quantity": 1,
+          }
+        ).session(session)
+      : Orders.find(
+          { id_number },
+          {
+            _id: 1,
+            order_status: 1,
+            order_date: 1,
+            "items.product_name": 1,
+            "items.price": 1,
+            "items.quantity": 1,
+          }
+        );
+    const result = await query.sort({ order_date: -1 }).lean();
+    if (!result || result.length === 0) {
+      throw new AppError("No orders found!", 404);
+    }
+
+    return result.map((order) => ({
+      order_id: order._id,
+      order_status: order.order_status,
+      order_date: order.order_date,
+      items: order.items?.map(({ product_name, price, quantity }) => ({
+        product_name,
+        price,
+        quantity,
+      })),
+    }));
+  };
+
   //Pending Order Count
   getPendingCount = async () => {
     return Orders.countDocuments({
@@ -174,6 +216,52 @@ class OrderService {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+    };
+  };
+
+  getOrdersByStatus = async (params: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const status = params.status?.trim();
+    const page = Math.max(parseInt(String(params.page ?? 1), 10) || 1, 1);
+    const limit = Math.max(parseInt(String(params.limit ?? 10), 10) || 1, 1);
+
+    let query: Record<string, unknown> = {};
+    if (status) {
+      query.order_status = status;
+    }
+
+    let total: number;
+    if (!status) {
+      total = await Orders.countDocuments(query);
+    } else {
+      const sl = status.toLowerCase();
+      if (sl === "pending") total = await this.getPendingCount();
+      else if (sl === "paid") total = await this.getPaidCount();
+      else if (sl === "refunded") total = await this.getRefundedCount();
+      else total = await Orders.countDocuments(query);
+    }
+
+    const result = await Orders.find(query)
+      .sort(
+        status?.toLowerCase() === "paid"
+          ? { transaction_date: -1 }
+          : { order_date: -1 }
+      )
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    return {
+      data: result,
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      pendingCount: status !== "Pending" ? await this.getPendingCount() : total,
+      paidCount: status !== "Paid" ? await this.getPaidCount() : total,
     };
   };
 
@@ -363,7 +451,9 @@ class OrderService {
 
     const cashAmount = Number(cash);
     const resolvedCash =
-      Number.isFinite(cashAmount) && cashAmount >= 0 ? cashAmount : result.total;
+      Number.isFinite(cashAmount) && cashAmount >= 0
+        ? cashAmount
+        : result.total;
 
     if (resolvedCash < result.total) {
       throw new AppError("Cash cannot be lower than order total", 400);
