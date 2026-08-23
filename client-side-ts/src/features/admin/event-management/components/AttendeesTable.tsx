@@ -364,6 +364,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         "Course",
         "Year",
         "Status",
+        "Morning Session",
+        "Afternoon Session",
+        "Evening Session",
         "Registered On",
         "Registered By",
         "Confirmed On",
@@ -380,6 +383,9 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
         attendee.courseYear.split(" - ")[0] || "",
         attendee.courseYear.split(" - ")[1] || "",
         getAttendanceSummary(attendee.attendance),
+        getSessionExportStatus(attendee.attendance, "morning"),
+        getSessionExportStatus(attendee.attendance, "afternoon"),
+        getSessionExportStatus(attendee.attendance, "evening"),
         attendee.registeredOn.replace("\n", " "),
         attendee.registeredBy,
         getConfirmedOnLabel(attendee.attendance).replace("\n", " "),
@@ -582,6 +588,21 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
     }
 
     return isEventEnded ? "0/3 Sessions" : "--";
+  };
+
+  const getSessionExportStatus = (
+    attendance: Attendee["attendance"],
+    session: "morning" | "afternoon" | "evening"
+  ) => {
+    if (!isAttendanceAvailable) {
+      return "Not Available Yet";
+    }
+
+    if (attendance?.[session]?.attended) {
+      return "Present";
+    }
+
+    return isEventEnded ? "Absent" : "--";
   };
 
   const getAttendanceBadge = (attendance: Attendee["attendance"]) => {
