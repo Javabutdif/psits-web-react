@@ -20,7 +20,7 @@ import { applyToEvent } from "@/features/events";
 import { useAuth } from "@/features/auth";
 import type { EventData } from "@/features/events/types/event.types";
 import { createQRPayload } from "@/features/events/utils/qrPayload.utils";
-import { getManilaStartOfDay } from "@/utils/date-manila";
+import { formatEventDateKey } from "@/utils/date-manila";
 import { CalendarDays, CheckCircle2, MapPin, XCircle } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
@@ -59,6 +59,49 @@ const AttendancePill = React.memo<{ attended: boolean; label?: string }>(
   )
 );
 
+const MANILA_UTC_OFFSET = "+08:00";
+const TIME_ONLY_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const SESSION_ORDER = ["morning", "afternoon", "evening"] as const;
+
+const normalizeTimeValue = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return TIME_ONLY_PATTERN.test(trimmed) ? trimmed : null;
+};
+
+const getFirstSessionStartTime = (
+  sessionConfig: EventData["sessionConfig"]
+): string | null => {
+  if (!sessionConfig) return null;
+
+  for (const sessionKey of SESSION_ORDER) {
+    const session = sessionConfig[sessionKey];
+    if (!session?.enabled) continue;
+
+    const [start] = String(session.timeRange ?? "").split(" - ");
+    const normalizedStart = normalizeTimeValue(start);
+    if (normalizedStart) return normalizedStart;
+  }
+
+  return null;
+};
+
+const buildManilaDateTime = (
+  dateValue: Date | undefined,
+  timeValue: string | null,
+  fallbackTime: string
+): Date | null => {
+  if (!dateValue || Number.isNaN(dateValue.getTime())) return null;
+
+  const dateKey = formatEventDateKey(dateValue);
+  const time = timeValue ?? fallbackTime;
+  const parsedDateTime = new Date(
+    `${dateKey}T${time}:00${MANILA_UTC_OFFSET}`
+  );
+
+  return Number.isNaN(parsedDateTime.getTime()) ? null : parsedDateTime;
+};
+
 export const EventCard: React.FC<EventCardProps> = ({
   event,
   studentId,
@@ -72,8 +115,20 @@ export const EventCard: React.FC<EventCardProps> = ({
     attendees,
     sessionConfig,
     isPast,
-    attendanceType,
   } = event;
+  const normalizedStatus = String(event.status ?? "").toLowerCase();
+  const eventStartsAt = buildManilaDateTime(
+    event.date,
+    normalizeTimeValue(event.startTime) ??
+      getFirstSessionStartTime(sessionConfig),
+    "00:00"
+  );
+  const hasEventStartedBySchedule =
+    !eventStartsAt || new Date() >= eventStartsAt;
+  const isRegistrationManuallyClosed =
+    normalizedStatus === "ended" || normalizedStatus === "cancelled";
+  const isStudentRegistrationOpen =
+    !isRegistrationManuallyClosed && !hasEventStartedBySchedule;
   const { user } = useAuth();
 
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
@@ -180,23 +235,11 @@ export const EventCard: React.FC<EventCardProps> = ({
   ]);
 
   // ── QR visibility gate ──────────────────────────────────────────────────
-  // Applied students always see their QR. Otherwise, once the event is
-  // within 1 day (including the event day itself), the QR is open as a
-  // walk-in allowance — but only for "open" events, since scanning the QR
-  // auto-registers the attendee server-side (see resolveAttendanceAttendee).
-  // Ticketed events require an actual application, so they always keep the
-  // Register button until the student has applied.
+  // Students must register first; only attendees already attached to this
+  // event can show a QR that admin attendance can accept.
   const canShowQR = useMemo(() => {
-    if (studentAttendee) return true;
-    if (attendanceType !== "open") return false;
-    if (!event.date) return false;
-    const today = getManilaStartOfDay();
-    const eventDay = getManilaStartOfDay(event.date);
-    const daysUntil = Math.round(
-      (eventDay.getTime() - today.getTime()) / 86_400_000
-    );
-    return daysUntil <= 1;
-  }, [studentAttendee, event.date, attendanceType]);
+    return Boolean(studentAttendee);
+  }, [studentAttendee]);
 
   return (
     <Card className="h-full rounded-2xl transition-all hover:shadow-md">
@@ -333,7 +376,7 @@ export const EventCard: React.FC<EventCardProps> = ({
                           </div>
                         )}
                       </>
-                    ) : (
+                    ) : isStudentRegistrationOpen ? (
                       <div className="flex w-full flex-col items-center gap-3 px-4 py-6 text-center">
                         <h4 className="text-base font-semibold text-gray-800">
                           {title}
@@ -351,6 +394,17 @@ export const EventCard: React.FC<EventCardProps> = ({
                         >
                           {isRegister ? "Registering..." : "Register Event"}
                         </Button>
+                      </div>
+                    ) : (
+                      <div className="flex w-full flex-col items-center gap-3 px-4 py-6 text-center">
+                        <h4 className="text-base font-semibold text-gray-800">
+                          Registration closed
+                        </h4>
+                        <div className="max-h-32 w-full overflow-y-auto rounded-lg bg-gray-50 px-3 py-2">
+                          <p className="text-xs leading-relaxed text-gray-500">
+                            Please ask an admin to add you as a late attendee.
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>

@@ -85,16 +85,66 @@ type EventStatus = EventDetails["status"];
 
 import { formatEventDateLabel, formatEventDateKey } from "@/utils/date-manila";
 
+const MANILA_UTC_OFFSET = "+08:00";
+const TIME_ONLY_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+const normalizeTimeValue = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return TIME_ONLY_PATTERN.test(trimmed) ? trimmed : null;
+};
+
+const buildManilaDateTime = (
+  dateValue: string | Date | null | undefined,
+  timeValue: string | null,
+  fallbackTime: string
+): Date | null => {
+  if (!dateValue) return null;
+
+  const parsedDate =
+    typeof dateValue === "string" ? new Date(dateValue) : dateValue;
+  if (!parsedDate || Number.isNaN(parsedDate.getTime())) return null;
+
+  const dateKey = formatEventDateKey(parsedDate);
+  const time = timeValue ?? fallbackTime;
+  const parsedDateTime = new Date(
+    `${dateKey}T${time}:00${MANILA_UTC_OFFSET}`
+  );
+
+  return Number.isNaN(parsedDateTime.getTime()) ? null : parsedDateTime;
+};
+
 const normalizeStatus = (
   value: unknown,
   eventDate?: string | Date | null,
-  eventEndDate?: string | Date | null
+  eventEndDate?: string | Date | null,
+  eventStartTime?: string,
+  eventEndTime?: string
 ): EventStatus => {
   const normalized = String(value ?? "")
     .trim()
     .toLowerCase();
 
   if (normalized === "ended" || normalized === "cancelled") return "ended";
+
+  const startsAt = buildManilaDateTime(
+    eventDate,
+    normalizeTimeValue(eventStartTime),
+    "00:00"
+  );
+  const endsAt = buildManilaDateTime(
+    eventEndDate ?? eventDate,
+    normalizeTimeValue(eventEndTime),
+    "23:59"
+  );
+
+  if (startsAt && endsAt) {
+    const now = new Date();
+    if (now < startsAt) return "upcoming";
+    if (now > endsAt) return "ended";
+    return "ongoing";
+  }
+
   if (normalized === "ongoing") return "ongoing";
   if (eventDate) {
     const parsedStartDate =
@@ -128,7 +178,7 @@ const normalizeStatus = (
 
 const getSessionBounds = (
   sessionConfig: EventSessionConfig | undefined
-): { startTime: string; endTime: string } => {
+): { startTime?: string; endTime?: string } => {
   const order: Array<keyof EventSessionConfig> = [
     "morning",
     "afternoon",
@@ -143,12 +193,12 @@ const getSessionBounds = (
     .map((session) => String(session.timeRange));
 
   if (enabledRanges.length === 0) {
-    return { startTime: "TBA", endTime: "TBA" };
+    return {};
   }
 
-  const [firstStart = "TBA"] = enabledRanges[0].split(" - ");
+  const [firstStart] = enabledRanges[0].split(" - ");
   const lastRange = enabledRanges[enabledRanges.length - 1];
-  const [, lastEnd = "TBA"] = lastRange.split(" - ");
+  const [, lastEnd] = lastRange.split(" - ");
 
   return { startTime: firstStart, endTime: lastEnd };
 };
@@ -241,6 +291,14 @@ const mapApiEventToEventDetails = (
 ): EventDetails => {
   const sessionConfig = event.sessionConfig as EventSessionConfig | undefined;
   const { startTime, endTime } = getSessionBounds(sessionConfig);
+  const effectiveStartTime =
+    normalizeTimeValue(startTime) ??
+    normalizeTimeValue(event.eventStartTime) ??
+    undefined;
+  const effectiveEndTime =
+    normalizeTimeValue(endTime) ??
+    normalizeTimeValue(event.eventEndTime) ??
+    undefined;
   const mappedCampusCodes = Array.isArray(event.limit)
     ? event.limit
         .map((item) => {
@@ -295,18 +353,20 @@ const mapApiEventToEventDetails = (
     status: normalizeStatus(
       event.status,
       event.eventDate,
-      event.eventEndDate ?? event.eventDate
+      event.eventEndDate ?? event.eventDate,
+      effectiveStartTime,
+      effectiveEndTime
     ),
     startDate: formatEventDateLabel(event.eventDate),
     rawStartDate: event.eventDate ? String(event.eventDate) : undefined,
-    startTime,
+    startTime: effectiveStartTime ?? "TBA",
     endDate: formatEventDateLabel(event.eventEndDate ?? event.eventDate),
     rawEndDate: event.eventEndDate
       ? String(event.eventEndDate)
       : event.eventDate
         ? String(event.eventDate)
         : undefined,
-    endTime,
+    endTime: effectiveEndTime ?? "TBA",
     location:
       (typeof event.eventVenue === "string" && event.eventVenue) ||
       "Location not specified",
@@ -324,8 +384,8 @@ const mapApiEventToEventDetails = (
         : "ticketed",
     eventTheme: event.eventTheme as string | undefined,
     eventVenueSpecific: event.eventVenueSpecific as string | undefined,
-    eventStartTime: event.eventStartTime as string | undefined,
-    eventEndTime: event.eventEndTime as string | undefined,
+    eventStartTime: effectiveStartTime,
+    eventEndTime: effectiveEndTime,
     sessionConfig: normalizeSessionConfig(sessionConfig),
   };
 };
@@ -647,10 +707,7 @@ const EventManagement: React.FC = () => {
                             {formatFullMonthDate(eventDetails.rawStartDate)}
                           </p>
                           <p className="text-muted-foreground text-xs">
-                            {formatTimeToAMPM(
-                              eventDetails.eventStartTime ||
-                                eventDetails.startTime
-                            )}
+                            {formatTimeToAMPM(eventDetails.startTime)}
                           </p>
                         </div>
                       </div>
@@ -662,9 +719,7 @@ const EventManagement: React.FC = () => {
                             {formatFullMonthDate(eventDetails.rawEndDate)}
                           </p>
                           <p className="text-muted-foreground text-xs">
-                            {formatTimeToAMPM(
-                              eventDetails.eventEndTime || eventDetails.endTime
-                            )}
+                            {formatTimeToAMPM(eventDetails.endTime)}
                           </p>
                         </div>
                       </div>

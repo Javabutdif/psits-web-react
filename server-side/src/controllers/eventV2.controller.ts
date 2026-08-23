@@ -1761,11 +1761,26 @@ export const applyToEventV2Controller = async (req: Request, res: Response) => {
         .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
     }
 
-    // ── Only allow applying while event is Upcoming or Ongoing ──────────
-    if (event.status !== "Upcoming" && event.status !== "Ongoing") {
+    // ── Students can only pre-register before the event starts. Late
+    // attendees must be registered manually by an admin.
+    const normalizedEventStatus = String(event.status ?? "")
+      .trim()
+      .toLowerCase();
+    const isRegistrationManuallyClosed =
+      normalizedEventStatus === "ended" || normalizedEventStatus === "cancelled";
+
+    if (
+      isRegistrationManuallyClosed ||
+      hasEventStartedBySchedule(
+        event.eventDate,
+        event.eventStartTime,
+        event.sessionConfig
+      )
+    ) {
       return res.status(409).json({
         error: "APPLICATIONS_CLOSED",
-        message: "This event is no longer accepting applications",
+        message:
+          "Student registration is closed. Please ask an admin to add you.",
       });
     }
 
@@ -2946,11 +2961,114 @@ interface CreateEventV2Body {
   eventEndTime?: string;
 }
 
+const MANILA_TIME_ZONE = "Asia/Manila";
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const MANILA_UTC_OFFSET = "+08:00";
+const TIME_ONLY_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const SESSION_ORDER = ["morning", "afternoon", "evening"] as const;
+
+const formatManilaDateKey = (date: Date): string =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: MANILA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+
 const parseManilaMidnightDate = (value: string): Date | null => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const parsed = new Date(`${value}T16:00:00.000Z`);
+  if (!DATE_ONLY_PATTERN.test(value)) return null;
+  const parsed = new Date(`${value}T00:00:00+08:00`);
   if (Number.isNaN(parsed.getTime())) return null;
-  return parsed;
+  return formatManilaDateKey(parsed) === value ? parsed : null;
+};
+
+const parseEventCalendarDate = (value: string): Date | null => {
+  const normalized = value.trim();
+  if (!normalized) return null;
+
+  if (DATE_ONLY_PATTERN.test(normalized)) {
+    return parseManilaMidnightDate(normalized);
+  }
+
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return parseManilaMidnightDate(formatManilaDateKey(parsed));
+};
+
+const normalizeTimeValue = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return TIME_ONLY_PATTERN.test(trimmed) ? trimmed : null;
+};
+
+const getFirstSessionStartTime = (sessionConfig: unknown): string | null => {
+  if (!sessionConfig || typeof sessionConfig !== "object") return null;
+
+  const sessions = sessionConfig as Record<string, unknown>;
+  for (const sessionKey of SESSION_ORDER) {
+    const session = sessions[sessionKey];
+    if (!session || typeof session !== "object") continue;
+
+    const data = session as { enabled?: unknown; timeRange?: unknown };
+    if (data.enabled !== true || typeof data.timeRange !== "string") continue;
+
+    const [start] = data.timeRange.split(" - ");
+    const normalizedStart = normalizeTimeValue(start);
+    if (normalizedStart) return normalizedStart;
+  }
+
+  return null;
+};
+
+const getLastSessionEndTime = (sessionConfig: unknown): string | null => {
+  if (!sessionConfig || typeof sessionConfig !== "object") return null;
+
+  const sessions = sessionConfig as Record<string, unknown>;
+  for (const sessionKey of [...SESSION_ORDER].reverse()) {
+    const session = sessions[sessionKey];
+    if (!session || typeof session !== "object") continue;
+
+    const data = session as { enabled?: unknown; timeRange?: unknown };
+    if (data.enabled !== true || typeof data.timeRange !== "string") continue;
+
+    const [, end] = data.timeRange.split(" - ");
+    const normalizedEnd = normalizeTimeValue(end);
+    if (normalizedEnd) return normalizedEnd;
+  }
+
+  return null;
+};
+
+const buildManilaDateTime = (
+  dateValue: Date | null | undefined,
+  timeValue: string | null,
+  fallbackTime: string
+): Date | null => {
+  if (!dateValue) return null;
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const dateKey = formatManilaDateKey(date);
+  const time = timeValue ?? fallbackTime;
+  const parsedDateTime = new Date(
+    `${dateKey}T${time}:00${MANILA_UTC_OFFSET}`
+  );
+
+  return Number.isNaN(parsedDateTime.getTime()) ? null : parsedDateTime;
+};
+
+const hasEventStartedBySchedule = (
+  eventDate: Date | null | undefined,
+  eventStartTime: unknown,
+  sessionConfig: unknown
+) => {
+  const startTime =
+    getFirstSessionStartTime(sessionConfig) ??
+    normalizeTimeValue(eventStartTime);
+  const startsAt = buildManilaDateTime(eventDate, startTime, "00:00");
+
+  return !startsAt || new Date() >= startsAt;
 };
 
 export const getEventImageController = async (req: Request, res: Response) => {
@@ -3059,6 +3177,14 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
     const parsedEndDate = body.eventEndDate
       ? parseManilaMidnightDate(body.eventEndDate)
       : null;
+    const derivedEventStartTime =
+      getFirstSessionStartTime(parsedSessionConfigResult) ??
+      normalizeTimeValue(body.eventStartTime) ??
+      "";
+    const derivedEventEndTime =
+      getLastSessionEndTime(parsedSessionConfigResult) ??
+      normalizeTimeValue(body.eventEndTime) ??
+      "";
 
     const eventFields: Record<string, unknown> = {
       eventId: new mongoose.Types.ObjectId(),
@@ -3080,10 +3206,8 @@ export const createEventV2Controller = async (req: Request, res: Response) => {
         typeof body.eventVenueSpecific === "string"
           ? body.eventVenueSpecific.trim()
           : "",
-      eventStartTime:
-        typeof body.eventStartTime === "string" ? body.eventStartTime : "",
-      eventEndTime:
-        typeof body.eventEndTime === "string" ? body.eventEndTime : "",
+      eventStartTime: derivedEventStartTime,
+      eventEndTime: derivedEventEndTime,
     };
 
     if (parsedEndDate) {
@@ -3181,8 +3305,8 @@ export const updateEventV2Controller = async (
         });
       }
 
-      const parsed = new Date(rawDateValue);
-      if (Number.isNaN(parsed.getTime())) {
+      const parsed = parseEventCalendarDate(rawDateValue);
+      if (!parsed) {
         return res.status(400).json({
           error: "VALIDATION",
           message: "Invalid event date",
@@ -3207,8 +3331,8 @@ export const updateEventV2Controller = async (
         });
       }
 
-      const parsedEnd = new Date(rawEndDateValue);
-      if (Number.isNaN(parsedEnd.getTime())) {
+      const parsedEnd = parseEventCalendarDate(rawEndDateValue);
+      if (!parsedEnd) {
         return res.status(400).json({
           error: "VALIDATION",
           message: "Invalid event end date",
@@ -3250,6 +3374,14 @@ export const updateEventV2Controller = async (
         });
       }
       updateFields.sessionConfig = parsedSessionConfigResult;
+      updateFields.eventStartTime =
+        getFirstSessionStartTime(parsedSessionConfigResult) ??
+        normalizeTimeValue(eventStartTime) ??
+        "";
+      updateFields.eventEndTime =
+        getLastSessionEndTime(parsedSessionConfigResult) ??
+        normalizeTimeValue(eventEndTime) ??
+        "";
     }
 
     if (limit !== undefined) {

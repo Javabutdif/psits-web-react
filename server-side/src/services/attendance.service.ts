@@ -370,26 +370,6 @@ function getActiveSession(event: {
   return matchedSessions[0] as keyof IAttendanceSession;
 }
 
-function buildOpenEventAttendee(input: MarkAttendanceInput): EventAttendee {
-  return {
-    _id: new Types.ObjectId(),
-    id_number: input.attendeeIdNumber,
-    name: input.attendeeName,
-    course: input.course || "Unknown",
-    year: input.year || 1,
-    campus: input.campus,
-    attendance: buildDefaultAttendance(),
-    confirmedBy: "",
-    shirtPrice: 0,
-    shirtSize: "",
-    raffleIsRemoved: false,
-    raffleIsWinner: false,
-    transactBy: "",
-    transactDate: null,
-    editedBy: [],
-  };
-}
-
 async function findProjectedAttendee(
   eventId: Types.ObjectId,
   attendeeMatch: Record<string, unknown>,
@@ -411,57 +391,13 @@ async function findProjectedAttendee(
 }
 
 async function resolveAttendanceAttendee(
-  event: Pick<AttendanceEventMetadata, "_id" | "attendanceType">,
+  event: Pick<AttendanceEventMetadata, "_id">,
   input: MarkAttendanceInput,
   session: ClientSession
 ): Promise<{ attendee: EventAttendee; isNewAttendee: boolean }> {
   const eventObjectId = toObjectId(event._id);
   if (!eventObjectId) {
     throw new AttendanceError("EVENT_NOT_FOUND", "Event not found");
-  }
-
-  if (event.attendanceType === "open") {
-    const existing = await findProjectedAttendee(
-      eventObjectId,
-      { id_number: input.attendeeIdNumber },
-      session
-    );
-
-    if (existing) {
-      return { attendee: existing, isNewAttendee: false };
-    }
-
-    const newAttendee = buildOpenEventAttendee(input);
-    const insertResult = await Event.updateOne(
-      {
-        _id: eventObjectId,
-        "attendees.id_number": { $ne: input.attendeeIdNumber },
-      },
-      {
-        $push: {
-          attendees: newAttendee,
-        },
-      },
-      { session }
-    );
-
-    const inserted = await findProjectedAttendee(
-      eventObjectId,
-      { id_number: input.attendeeIdNumber },
-      session
-    );
-
-    if (!inserted) {
-      throw new AttendanceError(
-        "ATTENDEE_NOT_FOUND",
-        "Attendee not found in this event"
-      );
-    }
-
-    return {
-      attendee: inserted,
-      isNewAttendee: insertResult.modifiedCount > 0,
-    };
   }
 
   const attendee = await findProjectedAttendee(
@@ -475,7 +411,7 @@ async function resolveAttendanceAttendee(
   if (!attendee) {
     throw new AttendanceError(
       "ATTENDEE_NOT_FOUND",
-      "Attendee not found in this event"
+      "Student is not registered for this event"
     );
   }
 

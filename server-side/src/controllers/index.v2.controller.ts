@@ -23,6 +23,7 @@ const frontendBaseUrl =
 const url = `${frontendBaseUrl}/auth/reset-password?token=`;
 
 import { studentService } from "../services/student.service";
+import { normalizeYear } from "../util/signupValidation.util";
 import { adminService } from "../services/admin.service";
 import { indexService } from "../services/index.service";
 import { logService } from "../services/log.service";
@@ -106,6 +107,14 @@ export const loginController = catchAsync(
 
 export const registerController = catchAsync(
   async (req: Request, res: Response) => {
+    const year = normalizeYear(req.body.year);
+    if (year === null) {
+      return res
+        .status(400)
+        .json({ message: "Year level must be between 1 and 5." });
+    }
+    req.body.year = year;
+
     const result = await studentService.create(req);
     if (!result.status) {
       res.status(400).json({ message: result.message });

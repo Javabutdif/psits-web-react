@@ -13,6 +13,7 @@ import type { EventFormData } from "./AddEventModal";
 import { showToast } from "@/utils/alertHelper";
 import { updateEventDetails } from "@/features/events/api/eventService";
 import axios from "axios";
+import { format } from "date-fns";
 
 type SessionKey = "morning" | "afternoon" | "evening";
 
@@ -46,6 +47,7 @@ interface EditEventModalProps {
 }
 
 const SESSION_KEYS: SessionKey[] = ["morning", "afternoon", "evening"];
+const formatDateKey = (date: Date): string => format(date, "yyyy-MM-dd");
 
 /**
  * Factory rather than a shared constant: each form instance gets its own
@@ -90,6 +92,23 @@ const normalizeSessionConfig = (
 const isSessionComplete = (timeRange: string): boolean => {
   const [start, end] = timeRange.split(" - ");
   return Boolean(start?.trim() && end?.trim());
+};
+
+const getSessionBounds = (
+  sessionConfig: EventFormData["sessionConfig"]
+): { startTime: string; endTime: string } | null => {
+  const enabledRanges = SESSION_KEYS.map((key) => sessionConfig[key])
+    .filter((session) => session.enabled && isSessionComplete(session.timeRange))
+    .map((session) => session.timeRange);
+
+  if (enabledRanges.length === 0) {
+    return null;
+  }
+
+  const [startTime = ""] = enabledRanges[0].split(" - ");
+  const [, endTime = ""] = enabledRanges[enabledRanges.length - 1].split(" - ");
+
+  return { startTime, endTime };
 };
 
 export const EditEventModal: React.FC<EditEventModalProps> = ({
@@ -165,19 +184,30 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
       return;
     }
 
+    const sessionBounds = getSessionBounds(formData.sessionConfig);
+    if (!sessionBounds) {
+      setActiveTab("session-setup");
+      showToast("error", "Please enable at least one attendance session.");
+      return;
+    }
+
     try {
       setIsSaving(true);
 
       const payload: Parameters<typeof updateEventDetails>[1] = {
         eventName: formData.eventName,
         eventDescription: formData.eventDescription,
-        eventDate: formData.eventSchedule?.from?.toISOString(),
-        eventEndDate: formData.eventSchedule?.to?.toISOString(),
+        eventDate: formData.eventSchedule?.from
+          ? formatDateKey(formData.eventSchedule.from)
+          : undefined,
+        eventEndDate: formData.eventSchedule?.to
+          ? formatDateKey(formData.eventSchedule.to)
+          : undefined,
         eventVenue: formData.eventVenue,
         eventTheme: formData.eventTheme,
         eventVenueSpecific: formData.eventVenueSpecific,
-        eventStartTime: formData.eventStartTime,
-        eventEndTime: formData.eventEndTime,
+        eventStartTime: sessionBounds.startTime,
+        eventEndTime: sessionBounds.endTime,
         attendanceType: formData.attendanceType,
         sessionConfig: formData.sessionConfig,
       };
