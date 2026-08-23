@@ -49,7 +49,11 @@ export const AdminLayout = () => {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <AdminSidebar collapsed={false} onToggleCollapse={toggleCollapse} />
+        <AdminSidebar
+          collapsed={false}
+          onToggleCollapse={toggleCollapse}
+          onCloseMobile={() => setIsSidebarOpen(false)}
+        />
       </div>
 
       {/* Sidebar for desktop */}
