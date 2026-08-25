@@ -14,6 +14,10 @@ const settingsSchema = new Schema<ISettingsDocument>({
   studentYearLastUpdated: {
     type: Date,
   },
+  chatbotEnabled: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 export const Settings = mongoose.model<ISettingsDocument>(

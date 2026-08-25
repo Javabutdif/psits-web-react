@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
 import { Menu } from "lucide-react";
 import { AdminSidebar } from "../features/admin/components";
@@ -6,11 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { AgentChatToggle } from "@/features/admin/agent-chat/components/AgentChatToggle";
 import { ChatTourOverlay } from "@/features/admin/agent-chat/components/ChatTourOverlay";
+import { getChatbotEnabled } from "@/features/admin/devtools/api/devtools.api";
 
 export const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatbotEnabled, setIsChatbotEnabled] = useState(true);
+
+  useEffect(() => {
+    getChatbotEnabled()
+      .then(setIsChatbotEnabled)
+      .catch(() => {});
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -72,11 +80,15 @@ export const AdminLayout = () => {
         </div>
       </main>
       <Toaster position="bottom-right" />
-      <AgentChatToggle isOpen={isChatOpen} onOpenChange={setIsChatOpen} />
-      <ChatTourOverlay
-        isChatOpen={isChatOpen}
-        onOpenChat={() => setIsChatOpen(true)}
-      />
+      {isChatbotEnabled && (
+        <>
+          <AgentChatToggle isOpen={isChatOpen} onOpenChange={setIsChatOpen} />
+          <ChatTourOverlay
+            isChatOpen={isChatOpen}
+            onOpenChat={() => setIsChatOpen(true)}
+          />
+        </>
+      )}
     </div>
   );
 };

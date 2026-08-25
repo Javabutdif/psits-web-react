@@ -5,6 +5,9 @@ import {
   queryNoetix,
   queryNoetixAiAgent,
 } from "../services/noetix-chat.service";
+import { isChatbotEnabled } from "../services/devtools.service";
+import { logService } from "../services/log.service";
+import { logs_action } from "../enums/logs.enums";
 import {
   findToolByName,
   ToolPermissionError,
@@ -143,6 +146,13 @@ const MAX_AGENT_ITERATIONS = 5;
 
 export const aiAgentController = catchAsync(
   async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
+    if (!(await isChatbotEnabled())) {
+      return res.status(403).json({
+        error: "CHATBOT_DISABLED",
+        message: "The chatbot has been disabled by an administrator",
+      });
+    }
+
     const {
       message,
       persona = "DATA_ANALYST",
@@ -269,6 +279,18 @@ export const aiAgentController = catchAsync(
             ? `${resultSummary.slice(0, 6000)}... (truncated)`
             : resultSummary
         }.\n`;
+
+        // Audit trail for every privileged (non-read) action the bot takes.
+        // Identity comes from the authenticated session (req.admin), not the
+        // client-supplied userName, so the log can't be spoofed by the caller.
+        if (tool.permission !== "read") {
+          await logService.create({
+            admin: req.admin.name,
+            admin_id: req.admin._id,
+            action: `${logs_action.NOETIX_AI_ACTION}: ${tool.name}`,
+            target: `Args: ${JSON.stringify(resolvedArgs)} — Result: ${resultSummary.slice(0, 300)}`,
+          });
+        }
       } catch (err) {
         const errorMsg =
           err instanceof ToolPermissionError
@@ -277,6 +299,15 @@ export const aiAgentController = catchAsync(
               ? err.message
               : "unknown error";
         history = `${history} Called ${toolName}, error: ${errorMsg}.\n`;
+
+        if (tool.permission !== "read") {
+          await logService.create({
+            admin: req.admin.name,
+            admin_id: req.admin._id,
+            action: `${logs_action.NOETIX_AI_ACTION}: ${tool.name} (failed)`,
+            target: `Error: ${errorMsg}`,
+          });
+        }
       }
     }
 

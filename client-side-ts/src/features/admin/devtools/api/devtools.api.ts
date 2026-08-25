@@ -183,10 +183,26 @@ export const getStockAlerts = async (threshold?: number) => {
 };
 
 export const getSystemSettings = async () => {
-  const { data } = await api.get<{ data: { membership_price: number; studentCreatedAtBackfilled?: boolean; studentYearLastUpdated?: string } | null }>("/api/v2/dev/settings", {
+  const { data } = await api.get<{ data: { membership_price: number; studentCreatedAtBackfilled?: boolean; studentYearLastUpdated?: string; chatbotEnabled?: boolean } | null }>("/api/v2/dev/settings", {
     headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
   });
   return data.data;
+};
+
+export const getChatbotEnabled = async () => {
+  const { data } = await api.get<{ enabled: boolean }>("/api/v2/dev/settings/chatbot", {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.enabled;
+};
+
+export const toggleChatbot = async (enabled: boolean) => {
+  const { data } = await api.patch<{ enabled: boolean }>(
+    "/api/v2/dev/settings/chatbot",
+    { enabled },
+    { headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {} }
+  );
+  return data.enabled;
 };
 
 export const getRateLimitViolations = async (limit = 50) => {
