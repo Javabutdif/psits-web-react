@@ -695,12 +695,30 @@ export const getStockAlerts = async (threshold = 5): Promise<StockAlert[]> => {
 
 export interface SystemSettings {
   membership_price: number;
+  chatbotEnabled?: boolean;
 }
 
 export const getSystemSettings = async (): Promise<SystemSettings | null> => {
   const { Settings } = await import("../models/settings.model");
   const settings = await Settings.findOne().lean();
   return settings as SystemSettings | null;
+};
+
+export const isChatbotEnabled = async (): Promise<boolean> => {
+  const settings = await getSystemSettings();
+  return settings?.chatbotEnabled ?? true;
+};
+
+export const setChatbotEnabled = async (enabled: boolean): Promise<void> => {
+  const { Settings } = await import("../models/settings.model");
+  const existing = await Settings.find();
+
+  if (existing.length === 0) {
+    await new Settings({ chatbotEnabled: enabled }).save();
+    return;
+  }
+
+  await Settings.updateOne({}, { $set: { chatbotEnabled: enabled } });
 };
 
 export interface ExportCollectionParams {

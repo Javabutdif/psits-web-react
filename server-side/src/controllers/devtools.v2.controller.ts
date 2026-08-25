@@ -21,6 +21,8 @@ import {
   getMembershipRevenue,
   getStockAlerts,
   getSystemSettings,
+  isChatbotEnabled,
+  setChatbotEnabled,
   getEmailQueueStats,
   getFailedEmailDetails,
   bulkUpdateEmailStatus,
@@ -495,6 +497,36 @@ class DevToolsController {
     }
     const settings = await getSystemSettings();
     res.status(200).json({ data: settings });
+  });
+
+  // Readable by any authenticated admin (any campus/access level) so the
+  // floating chat button can decide whether to render. Toggling it is
+  // restricted (see toggleChatbot).
+  getChatbotEnabled = catchAsync(async (req: Request, res: Response) => {
+    const enabled = await isChatbotEnabled();
+    res.status(200).json({ enabled });
+  });
+
+  toggleChatbot = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { enabled } = req.body as { enabled?: boolean };
+    if (typeof enabled !== "boolean") {
+      return res.status(400).json({ message: "enabled must be a boolean" });
+    }
+
+    await setChatbotEnabled(enabled);
+
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.TOGGLE_CHATBOT,
+      target: `Chatbot ${enabled ? "enabled" : "disabled"}`,
+      target_model: "Settings",
+    });
+
+    res.status(200).json({ enabled });
   });
 
   getRateLimitViolations = catchAsync(async (req: Request, res: Response) => {

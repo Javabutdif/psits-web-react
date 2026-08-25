@@ -175,6 +175,19 @@ router.get(
   devtoolsController.getSystemSettings
 );
 
+// Chatbot toggle
+router.get(
+  "/settings/chatbot",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  devtoolsController.getChatbotEnabled
+);
+router.patch(
+  "/settings/chatbot",
+  ...adminOnlyAuthChain,
+  devtoolsController.toggleChatbot
+);
+
 // Rate Limit Violations
 router.get(
   "/rate-limit-violations",
