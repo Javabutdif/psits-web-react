@@ -4,7 +4,7 @@ export interface IEmail {
   type: "receipt" | "forgot" | "auth" | "recruitment" | "automation-report";
   studentId: Types.ObjectId;
   email: String;
-  status: "pending" | "sent" | "failed";
+  status: "pending" | "sent" | "failed" | "delivered";
   subtype?: string;
   referenceCode?: string;
   payload?: string;
