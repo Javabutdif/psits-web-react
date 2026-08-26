@@ -14,13 +14,13 @@ import {
   Settings,
   ShoppingBag,
   Users,
+  UserRoundPlus,
   Code,
   Award,
   BookOpenCheck,
   Bot,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -278,7 +278,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                           }
                         }}
                       >
-                        <Users className="h-5 w-5 shrink-0" />
+                        <UserRoundPlus className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Recruitment</span>}
                       </Link>
                     </Button>
@@ -286,7 +286,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   {collapsed && (
                     <TooltipContent side="right">
                       <p>Recruitment</p>
-                    </TooltipContent>
+                    </TooltipContent> 
                   )}
                 </Tooltip>
               </li>
@@ -665,10 +665,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           </div>
         </nav>
 
-        <Separator />
-
         {/* User Profile */}
-        <div className="p-3">
+        <div className="rounded-3xl p-3">
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -694,7 +692,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               </TooltipContent>
             </Tooltip>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 rounded-full border border-gray-200 px-3 py-2">
               <Avatar className="h-10 w-10">
                 <AvatarFallback className="bg-orange-400 font-semibold text-white">
                   {user?.name
