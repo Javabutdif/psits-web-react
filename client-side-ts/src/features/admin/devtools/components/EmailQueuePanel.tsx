@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { getEmailQueue, resendEmail, exportEmailQueueCsv, triggerCron, getFailedEmailDetails } from "../api/devtools.api";
+import {
+  getEmailQueue,
+  resendEmail,
+  exportEmailQueueCsv,
+  triggerCron,
+  getFailedEmailDetails,
+} from "../api/devtools.api";
 import type { EmailQueueEntry } from "../types/devtools.types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -38,14 +44,11 @@ export const EmailQueuePanel = () => {
   const [selectedFailed, setSelectedFailed] = useState<Set<string>>(new Set());
 
   const allFailedSelected =
-  failedEmails.length > 0 &&
-  selectedFailed.size === failedEmails.length;
+    failedEmails.length > 0 && selectedFailed.size === failedEmails.length;
 
   const toggleAllFailed = (checked: boolean) => {
     if (checked) {
-      setSelectedFailed(
-        new Set(failedEmails.map((email) => email._id))
-      );
+      setSelectedFailed(new Set(failedEmails.map((email) => email._id)));
     } else {
       setSelectedFailed(new Set());
     }
@@ -67,7 +70,9 @@ export const EmailQueuePanel = () => {
     setLoading(true);
     try {
       const data = await getEmailQueue(
-        filter ? { status: filter, limit: pageSize, skip: (page - 1) * pageSize } : { limit: pageSize, skip: (page - 1) * pageSize }
+        filter
+          ? { status: filter, limit: pageSize, skip: (page - 1) * pageSize }
+          : { limit: pageSize, skip: (page - 1) * pageSize }
       );
       setEntries(data.data);
       setTotal(data.total);
@@ -126,7 +131,9 @@ export const EmailQueuePanel = () => {
 
   const handleExport = async () => {
     try {
-      const blob = await exportEmailQueueCsv(filter ? { status: filter } : undefined);
+      const blob = await exportEmailQueueCsv(
+        filter ? { status: filter } : undefined
+      );
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -152,8 +159,10 @@ export const EmailQueuePanel = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const base = "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium";
-    if (status === "sent") return `${base} bg-green-50 text-green-600`;
+    const base =
+      "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium";
+    if (status === "sent" || status === "delivered")
+      return `${base} bg-green-50 text-green-600`;
     if (status === "failed") return `${base} bg-red-50 text-red-600`;
     return `${base} bg-orange-50 text-orange-600`;
   };
@@ -169,6 +178,7 @@ export const EmailQueuePanel = () => {
             { value: "", label: "All" },
             { value: "pending", label: "Pending" },
             { value: "sent", label: "Sent" },
+            { value: "delivered", label: "Delivered" },
             { value: "failed", label: "Failed" },
           ].map((option) => {
             const active = filter === option.value;
@@ -290,12 +300,8 @@ export const EmailQueuePanel = () => {
                       aria-label="Select all failed emails"
                     />
                   </th>
-                  <th className="px-2.5 py-2.5 text-left font-medium">
-                    Email
-                  </th>
-                  <th className="px-2.5 py-2.5 text-left font-medium">
-                    Type
-                  </th>
+                  <th className="px-2.5 py-2.5 text-left font-medium">Email</th>
+                  <th className="px-2.5 py-2.5 text-left font-medium">Type</th>
                   <th className="px-1.5 py-2.5 text-center font-medium">
                     Retries
                   </th>
@@ -323,9 +329,7 @@ export const EmailQueuePanel = () => {
                         aria-label={`Select ${email.email}`}
                       />
                     </td>
-                    <td className="truncate px-2.5 py-3.5">
-                      {email.email}
-                    </td>
+                    <td className="truncate px-2.5 py-3.5">{email.email}</td>
 
                     <td className="truncate px-2.5 py-3.5">
                       {email.subtype || email.type}
@@ -359,9 +363,7 @@ export const EmailQueuePanel = () => {
                           Resend
                         </Button>
                       ) : (
-                        <span className="text-xs text-[#999]">
-                          Max retries
-                        </span>
+                        <span className="text-xs text-[#999]">Max retries</span>
                       )}
                     </td>
                   </tr>
@@ -371,7 +373,9 @@ export const EmailQueuePanel = () => {
           </div>
         )
       ) : entries.length === 0 ? (
-        <p className="py-16 text-center text-sm text-[#777]">No email queue entries found.</p>
+        <p className="py-16 text-center text-sm text-[#777]">
+          No email queue entries found.
+        </p>
       ) : (
         /* NORMAL EMAIL QUEUE TABLE */
         <div>
@@ -393,13 +397,9 @@ export const EmailQueuePanel = () => {
                     Reference Code
                   </th>
 
-                  <th className="px-2.5 py-2.5 text-left font-medium">
-                    Email
-                  </th>
+                  <th className="px-2.5 py-2.5 text-left font-medium">Email</th>
 
-                  <th className="px-2.5 py-2.5 text-left font-medium">
-                    Type
-                  </th>
+                  <th className="px-2.5 py-2.5 text-left font-medium">Type</th>
 
                   <th className="px-1.5 py-2.5 text-left font-medium">
                     Status
@@ -429,9 +429,7 @@ export const EmailQueuePanel = () => {
                       {entry.referenceCode || "-"}
                     </td>
 
-                    <td className="truncate px-2.5 py-3.5">
-                      {entry.email}
-                    </td>
+                    <td className="truncate px-2.5 py-3.5">{entry.email}</td>
 
                     <td className="overflow-hidden px-2.5 py-3.5">
                       <div
@@ -484,7 +482,8 @@ export const EmailQueuePanel = () => {
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">
               <span className="text-sm text-[#8a8a8a]">
-                Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} of {total}
+                Showing {(page - 1) * pageSize + 1}-
+                {Math.min(page * pageSize, total)} of {total}
               </span>
               <div className="flex items-center gap-2">
                 <Button
@@ -493,18 +492,20 @@ export const EmailQueuePanel = () => {
                   size="sm"
                   className="rounded-full"
                   disabled={page === 1}
-                  onClick={() => setPage(p => p - 1)}
+                  onClick={() => setPage((p) => p - 1)}
                 >
                   Previous
                 </Button>
-                <span className="text-sm text-[#8a8a8a]">Page {page} of {totalPages}</span>
+                <span className="text-sm text-[#8a8a8a]">
+                  Page {page} of {totalPages}
+                </span>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="rounded-full"
                   disabled={page === totalPages}
-                  onClick={() => setPage(p => p + 1)}
+                  onClick={() => setPage((p) => p + 1)}
                 >
                   Next
                 </Button>
