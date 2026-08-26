@@ -266,4 +266,38 @@ router.post(
   devtoolsController.decrementStudentYears
 );
 
+// Noetix AI Usage - Admin only
+router.get(
+  "/noetix/usage",
+  ...adminOnlyAuthChain,
+  devtoolsController.getNoetixUsageLogs
+);
+router.get(
+  "/noetix/usage/stats",
+  ...adminOnlyAuthChain,
+  devtoolsController.getNoetixUsageStats
+);
+router.delete(
+  "/noetix/usage/old",
+  ...adminOnlyAuthChain,
+  devtoolsController.deleteOldNoetixUsageLogs
+);
+
+// Noetix Admin Disable - Admin only
+router.get(
+  "/noetix/settings",
+  ...adminOnlyAuthChain,
+  devtoolsController.getNoetixDisabledAdmins
+);
+router.post(
+  "/noetix/settings/disable-admin",
+  ...adminOnlyAuthChain,
+  devtoolsController.addNoetixDisabledAdmin
+);
+router.delete(
+  "/noetix/settings/disable-admin/:adminId",
+  ...adminOnlyAuthChain,
+  devtoolsController.removeNoetixDisabledAdmin
+);
+
 export default router;

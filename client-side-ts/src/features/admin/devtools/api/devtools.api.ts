@@ -1,6 +1,6 @@
 import axios from "axios";
 import backendConnection from "@/api/backendApi";
-import type { EmailQueueEntry, HealthStats, SessionInfo, CronExecutionLog, EnvStatusItem, RateLimitStats, CollectionStat, LogQueryParams, LogsResponse, OrderDetail, OrderSearchParams, OrdersResponse, ServerError, BruteForceLog, EndpointInfo, RefundEntry, BackfillResult, StudentYearUpdateResult, StudentYearDecrementResult } from "../types/devtools.types";
+import type { EmailQueueEntry, HealthStats, SessionInfo, CronExecutionLog, EnvStatusItem, RateLimitStats, CollectionStat, LogQueryParams, LogsResponse, OrderDetail, OrderSearchParams, OrdersResponse, ServerError, BruteForceLog, EndpointInfo, RefundEntry, BackfillResult, StudentYearUpdateResult, StudentYearDecrementResult, NoetixUsageLog, NoetixUsageStats, NoetixUsageQueryParams } from "../types/devtools.types";
 
 const getAuthToken = (): string | null => sessionStorage.getItem("Token");
 
@@ -292,4 +292,48 @@ export const decrementStudentYears = async () => {
     headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
   });
   return data;
+};
+
+export const getNoetixUsageLogs = async (params?: NoetixUsageQueryParams) => {
+  const { data } = await api.get<{ data: NoetixUsageLog[]; total: number }>("/api/v2/dev/noetix/usage", {
+    params,
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data;
+};
+
+export const getNoetixUsageStats = async () => {
+  const { data } = await api.get<{ data: NoetixUsageStats }>("/api/v2/dev/noetix/usage/stats", {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const deleteOldNoetixUsageLogs = async (days: number) => {
+  const { data } = await api.delete<{ message: string; deletedCount: number }>("/api/v2/dev/noetix/usage/old", {
+    params: { days },
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data;
+};
+
+export const getNoetixDisabledAdmins = async () => {
+  const { data } = await api.get<{ data: { noetixDisabledAdmins: string[] } }>("/api/v2/dev/noetix/settings", {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const addNoetixDisabledAdmin = async (adminId: string) => {
+  const { data } = await api.post<{ data: { noetixDisabledAdmins: string[] } }>("/api/v2/dev/noetix/settings/disable-admin", { adminId }, {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
+};
+
+export const removeNoetixDisabledAdmin = async (adminId: string) => {
+  const { data } = await api.delete<{ data: { noetixDisabledAdmins: string[] } }>(`/api/v2/dev/noetix/settings/disable-admin/${adminId}`, {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+  return data.data;
 };
