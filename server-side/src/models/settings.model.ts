@@ -18,6 +18,10 @@ const settingsSchema = new Schema<ISettingsDocument>({
     type: Boolean,
     default: true,
   },
+  noetixDisabledAdmins: {
+    type: [String],
+    default: [],
+  },
 });
 
 export const Settings = mongoose.model<ISettingsDocument>(

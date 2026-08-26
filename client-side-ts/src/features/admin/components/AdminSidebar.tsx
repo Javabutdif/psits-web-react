@@ -351,7 +351,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       className={getNavButtonClass("/admin/events")}
                       asChild
                     >
-                      <Link to="/admin/events" onClick={(e) => handleNavClick(e, false)}>
+                      <Link
+                        to="/admin/events"
+                        onClick={(e) => handleNavClick(e, false)}
+                      >
                         <Calendar className="h-5 w-5 shrink-0" />
                         {!collapsed && (
                           <span className="font-medium">Events</span>
@@ -374,7 +377,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       className={getNavButtonClass("/admin/certificates")}
                       asChild
                     >
-                      <Link to="/admin/certificates" onClick={(e) => handleNavClick(e, false)}>
+                      <Link
+                        to="/admin/certificates"
+                        onClick={(e) => handleNavClick(e, false)}
+                      >
                         <Award className="h-5 w-5 shrink-0" />
                         {!collapsed && (
                           <span className="font-medium">Certificates</span>
@@ -447,7 +453,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       )}
                       asChild
                     >
-                      <Link to="/admin/merchandise/products" onClick={(e) => handleNavClick(e, false)}>Products</Link>
+                      <Link
+                        to="/admin/merchandise/products"
+                        onClick={(e) => handleNavClick(e, false)}
+                      >
+                        Products
+                      </Link>
                     </Button>
                     <Button
                       variant="ghost"
@@ -458,7 +469,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       )}
                       asChild
                     >
-                      <Link to="/admin/merchandise/promo" onClick={(e) => handleNavClick(e, false)}>Promo</Link>
+                      <Link
+                        to="/admin/merchandise/promo"
+                        onClick={(e) => handleNavClick(e, false)}
+                      >
+                        Promo
+                      </Link>
                     </Button>
                   </div>
                 )}
@@ -471,7 +487,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       className={getNavButtonClass("/admin/orders")}
                       asChild
                     >
-                      <Link to="/admin/orders" onClick={(e) => handleNavClick(e, false)}>
+                      <Link
+                        to="/admin/orders"
+                        onClick={(e) => handleNavClick(e, false)}
+                      >
                         <ClipboardList className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Orders</span>}
                       </Link>
@@ -494,7 +513,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                         className={getNavButtonClass("/admin/devtools")}
                         asChild
                       >
-                        <Link to="/admin/devtools" onClick={(e) => handleNavClick(e, false)}>
+                        <Link
+                          to="/admin/devtools"
+                          onClick={(e) => handleNavClick(e, false)}
+                        >
                           <Code className="h-5 w-5 shrink-0" />
                           {!collapsed && <span>Developer Tools</span>}
                         </Link>
@@ -508,27 +530,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   </Tooltip>
                 </li>
               ) : null}
-              <li>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClass("/admin/agent-chat")}
-                      asChild
-                    >
-                      <Link to="/admin/agent-chat" onClick={(e) => handleNavClick(e, false)}>
-                        <Bot className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>AI Assistant</span>}
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  {collapsed && (
-                    <TooltipContent side="right">
-                      <p>AI Assistant</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </li>
+
               <li>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -574,7 +576,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       className={getNavButtonClass("/admin/settings")}
                       asChild
                     >
-                      <Link to="/admin/settings" onClick={(e) => handleNavClick(e, false)}>
+                      <Link
+                        to="/admin/settings"
+                        onClick={(e) => handleNavClick(e, false)}
+                      >
                         <Settings className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Settings</span>}
                       </Link>

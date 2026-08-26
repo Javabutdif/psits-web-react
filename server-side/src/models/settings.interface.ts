@@ -3,4 +3,5 @@ export interface ISettings {
   studentCreatedAtBackfilled?: boolean;
   studentYearLastUpdated?: Date;
   chatbotEnabled?: boolean;
+  noetixDisabledAdmins?: string[];
 }

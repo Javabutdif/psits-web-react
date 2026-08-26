@@ -1,11 +1,8 @@
 import { Request, Response } from "express";
 
 import { catchAsync } from "../util/catch.async.util";
-import {
-  queryNoetix,
-  queryNoetixAiAgent,
-} from "../services/noetix-chat.service";
-import { isChatbotEnabled } from "../services/devtools.service";
+import { queryNoetixAiAgent } from "../services/noetix-chat.service";
+import { isChatbotEnabled, isNoetixAdminDisabled } from "../services/devtools.service";
 import { logService } from "../services/log.service";
 import { logs_action } from "../enums/logs.enums";
 import {
@@ -15,6 +12,7 @@ import {
   summarizeToolResult,
   type ChatTool,
 } from "../types/chat-tool.types";
+import { createNoetixUsageLog } from "../services/noetix-usage.service";
 
 interface ChatRequestBody {
   message?: string;
@@ -133,7 +131,14 @@ export const destroySessionController = catchAsync(
       return res.status(400).json({ error: "sessionId is required" });
     }
 
-    const result = await queryNoetix("DATA_ANALYST", "", {}, sessionId, true);
+    const result = await queryNoetixAiAgent(
+      "DATA_ANALYST",
+      "",
+      [],
+      sessionId,
+      undefined,
+      true
+    );
 
     return res.status(200).json({
       success: true,
@@ -150,6 +155,14 @@ export const aiAgentController = catchAsync(
       return res.status(403).json({
         error: "CHATBOT_DISABLED",
         message: "The chatbot has been disabled by an administrator",
+      });
+    }
+
+    const isAdminDisabled = await isNoetixAdminDisabled(req.admin._id.toString());
+    if (isAdminDisabled) {
+      return res.status(403).json({
+        error: "NOETIX_ADMIN_DISABLED",
+        message: "You have been disabled from using Noetix AI. Contact an administrator.",
       });
     }
 
@@ -185,6 +198,27 @@ export const aiAgentController = catchAsync(
     let effectiveSessionId = sessionId || newSessionId;
     let history = "";
     let iteration = 0;
+    let sessionSuccess = false;
+    let finalToolName: string | undefined;
+    const allToolNames: string[] = [];
+
+    const logUsage = async () => {
+      try {
+        await createNoetixUsageLog({
+          session_id: effectiveSessionId,
+          admin: req.admin.name,
+          admin_id: req.admin._id.toString(),
+          goal: message,
+          tool_names: allToolNames,
+          success: sessionSuccess,
+          error: history.includes("error:") ? history.slice(-500) : undefined,
+          iterations: iteration,
+          mode: "agent",
+        });
+      } catch (err) {
+        console.error("[NoetixUsageLog] Failed to create usage log:", err);
+      }
+    };
 
     const tools = getToolRegistry().map((t) => ({
       name: t.name,
@@ -225,8 +259,12 @@ export const aiAgentController = catchAsync(
       }
 
       effectiveSessionId = agentResult.data.sessionId;
+      finalToolName = agentResult.data.tools_used;
+      if (finalToolName) allToolNames.push(finalToolName);
 
       if (agentResult.data.isFinished) {
+        sessionSuccess = true;
+        await logUsage();
         if (history)
           return res.status(200).json({
             success: true,
@@ -240,8 +278,9 @@ export const aiAgentController = catchAsync(
           });
       }
 
-      const toolName = agentResult.data.tools_used;
-      if (!toolName) {
+      if (!finalToolName) {
+        sessionSuccess = true;
+        await logUsage();
         if (history)
           return res.status(200).json({
             success: true,
@@ -255,9 +294,9 @@ export const aiAgentController = catchAsync(
           });
       }
 
-      const tool = findToolByName(toolName);
+      const tool = findToolByName(finalToolName);
       if (!tool) {
-        history = `${history} Called ${toolName} — error: tool not found.\n`;
+        history = `${history} Called ${finalToolName} — error: tool not found.\n`;
         continue;
       }
 
@@ -267,14 +306,14 @@ export const aiAgentController = catchAsync(
         const resolvedArgs =
           noetixArgs && Object.keys(noetixArgs).length > 0
             ? (noetixArgs as Record<string, string>)
-            : extractToolArgs(toolName, message, history, tool.args);
+            : extractToolArgs(finalToolName, message, history, tool.args);
 
         toolResult = await tool.execute(resolvedArgs, userAccess, userName);
         // Feed Noetix a clean summary instead of raw JSON so its final
         // answer (and the UI) stays readable. Large summaries are still
         // truncated — Noetix rejects payloads over 50KB.
         const resultSummary = summarizeToolResult(toolResult) || "null";
-        history = `${history} Called ${toolName}, result: ${
+        history = `${history} Called ${finalToolName}, result: ${
           resultSummary.length > 6000
             ? `${resultSummary.slice(0, 6000)}... (truncated)`
             : resultSummary
@@ -298,7 +337,7 @@ export const aiAgentController = catchAsync(
             : err instanceof Error
               ? err.message
               : "unknown error";
-        history = `${history} Called ${toolName}, error: ${errorMsg}.\n`;
+        history = `${history} Called ${finalToolName}, error: ${errorMsg}.\n`;
 
         if (tool.permission !== "read") {
           await logService.create({
@@ -310,6 +349,8 @@ export const aiAgentController = catchAsync(
         }
       }
     }
+
+    await logUsage();
 
     return res.status(200).json({
       success: true,
