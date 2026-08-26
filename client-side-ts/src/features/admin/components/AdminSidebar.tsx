@@ -17,7 +17,6 @@ import {
   Code,
   Award,
   BookOpenCheck,
-  Bot,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
