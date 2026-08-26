@@ -6,19 +6,29 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { AgentChatToggle } from "@/features/admin/agent-chat/components/AgentChatToggle";
 import { ChatTourOverlay } from "@/features/admin/agent-chat/components/ChatTourOverlay";
-import { getChatbotEnabled } from "@/features/admin/devtools/api/devtools.api";
+import { getChatbotEnabled, getNoetixDisabledAdmins } from "@/features/admin/devtools/api/devtools.api";
+import { useAuth } from "@/features/auth";
 
 export const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isChatbotEnabled, setIsChatbotEnabled] = useState(true);
+  const [isNoetixDisabled, setIsNoetixDisabled] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     getChatbotEnabled()
       .then(setIsChatbotEnabled)
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getNoetixDisabledAdmins()
+      .then((data) => setIsNoetixDisabled(data.noetixDisabledAdmins.includes(user.id)))
+      .catch(() => {});
+  }, [user?.id]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -34,11 +44,11 @@ export const AdminLayout = () => {
       <Button
         variant="ghost"
         size="icon-lg"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className="bg-background fixed top-4 left-4 z-50 transition-all shadow-sm duration-300 lg:hidden"
         onClick={toggleSidebar}
         aria-label="Open sidebar"
       >
-        <Menu className="h-7 w-7" />
+        <Menu className="h-6 w-6" />
       </Button>
 
       {/* Backdrop overlay for mobile — always in DOM, fades in/out */}
@@ -57,7 +67,11 @@ export const AdminLayout = () => {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <AdminSidebar collapsed={false} onToggleCollapse={toggleCollapse} />
+        <AdminSidebar
+          collapsed={false}
+          onToggleCollapse={toggleCollapse}
+          onCloseMobile={() => setIsSidebarOpen(false)}
+        />
       </div>
 
       {/* Sidebar for desktop */}
@@ -80,7 +94,7 @@ export const AdminLayout = () => {
         </div>
       </main>
       <Toaster position="bottom-right" />
-      {isChatbotEnabled && (
+      {isChatbotEnabled && !isNoetixDisabled && (
         <>
           <AgentChatToggle isOpen={isChatOpen} onOpenChange={setIsChatOpen} />
           <ChatTourOverlay

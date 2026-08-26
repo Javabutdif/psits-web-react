@@ -696,6 +696,7 @@ export const getStockAlerts = async (threshold = 5): Promise<StockAlert[]> => {
 export interface SystemSettings {
   membership_price: number;
   chatbotEnabled?: boolean;
+  noetixDisabledAdmins?: string[];
 }
 
 export const getSystemSettings = async (): Promise<SystemSettings | null> => {
@@ -719,6 +720,56 @@ export const setChatbotEnabled = async (enabled: boolean): Promise<void> => {
   }
 
   await Settings.updateOne({}, { $set: { chatbotEnabled: enabled } });
+};
+
+export const getNoetixDisabledAdmins = async (): Promise<string[]> => {
+  const { Settings } = await import("../models/settings.model");
+  const settings = await Settings.findOne().lean();
+  return (settings as { noetixDisabledAdmins?: string[] } | null)?.noetixDisabledAdmins ?? [];
+};
+
+export const addNoetixDisabledAdmin = async (
+  adminId: string
+): Promise<string[]> => {
+  const { Settings } = await import("../models/settings.model");
+  const existing = await Settings.find();
+
+  if (existing.length === 0) {
+    await new Settings({ noetixDisabledAdmins: [adminId] }).save();
+    return [adminId];
+  }
+
+  await Settings.updateOne(
+    { noetixDisabledAdmins: { $ne: adminId } },
+    { $addToSet: { noetixDisabledAdmins: adminId } }
+  );
+
+  const updated = await Settings.findOne().lean();
+  return (updated as { noetixDisabledAdmins?: string[] } | null)?.noetixDisabledAdmins ?? [];
+};
+
+export const removeNoetixDisabledAdmin = async (
+  adminId: string
+): Promise<string[]> => {
+  const { Settings } = await import("../models/settings.model");
+  const existing = await Settings.find();
+
+  if (existing.length === 0) return [];
+
+  await Settings.updateOne(
+    {},
+    { $pull: { noetixDisabledAdmins: adminId } }
+  );
+
+  const updated = await Settings.findOne().lean();
+  return (updated as { noetixDisabledAdmins?: string[] } | null)?.noetixDisabledAdmins ?? [];
+};
+
+export const isNoetixAdminDisabled = async (
+  adminId: string
+): Promise<boolean> => {
+  const disabled = await getNoetixDisabledAdmins();
+  return disabled.includes(adminId);
 };
 
 export interface ExportCollectionParams {

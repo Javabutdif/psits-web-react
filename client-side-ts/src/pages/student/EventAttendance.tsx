@@ -83,13 +83,19 @@ const mapEventToEventData = (event: Event): EventData | null => {
 
   const sessionConfig = event.sessionConfig as SessionConfig | undefined;
   const sessionBounds = getSessionBounds(sessionConfig);
+  const eventVenue =
+    typeof event.eventVenue === "string" ? event.eventVenue.trim() : "";
+  const eventVenueSpecific =
+    typeof event.eventVenueSpecific === "string"
+      ? event.eventVenueSpecific.trim()
+      : "";
 
   return {
     id: (event.eventId || event._id) as string,
     title: event.eventName,
     description: event.eventDescription || "No description available",
     imageUrl,
-    location: "University of Cebu Main Campus",
+    location: [eventVenue, eventVenueSpecific].filter(Boolean).join(" - "),
     date: getManilaStartOfDay(dateValue),
     status: event.status,
     startTime: sessionBounds.startTime ?? event.eventStartTime,
