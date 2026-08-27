@@ -16,7 +16,6 @@ interface EmailWebhookData {
 class EmailWebhook {
   //Email Delivered Webhook
   email = async (data: EmailWebhookData) => {
-    console.log("Email delivered:", data);
     // Update the email status in the database
     const result = await emailService.updateStatusByEmailId(
       data.data.email_id,

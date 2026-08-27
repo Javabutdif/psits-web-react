@@ -25,6 +25,8 @@ const ACTION_FILTER_OPTIONS = [
   { value: "Approve Order", label: "Approve Order" },
   { value: "Cancel Order", label: "Cancel Order" },
   { value: "Refund Order", label: "Refund Order" },
+  { value: "Noetix AI Action", label: "AI Chatbot Actions" },
+  { value: "Toggled Chatbot", label: "Toggled Chatbot" },
 ];
 
 export const ActivityLogPanel = () => {
@@ -97,10 +99,6 @@ export const ActivityLogPanel = () => {
         ))}
       </div>
     );
-  }
-
-  if (entries.length === 0) {
-    return <p className="py-16 text-center text-sm text-[#777]">No activity logs found.</p>;
   }
 
   return (
@@ -176,32 +174,36 @@ export const ActivityLogPanel = () => {
         </Button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1000px] table-fixed border-collapse text-sm">
-          <thead>
-            <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-              <th className="w-[15%] rounded-l-md px-2 py-2 text-left font-medium">Timestamp</th>
-              <th className="w-[15%] px-2 py-2 text-left font-medium">Admin</th>
-              <th className="w-[20%] px-2 py-2 text-left font-medium">Action</th>
-              <th className="w-[20%] px-2 py-2 text-left font-medium">Target</th>
-              <th className="w-[15%] px-2 py-2 text-left font-medium">Target Model</th>
-              <th className="w-[15%] rounded-r-md px-2 py-2 text-left font-medium">Target ID</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry) => (
-              <tr key={entry._id} className="border-b border-[#ededed] text-[#303030]">
-                <td className="px-2 py-3">{formatDate(entry.timestamp)}</td>
-                <td className="truncate px-2 py-3">{entry.admin}</td>
-                <td className="px-2 py-3">{entry.action}</td>
-                <td className="truncate px-2 py-3">{entry.target || "-"}</td>
-                <td className="px-2 py-3">{entry.target_model || "-"}</td>
-                <td className="truncate px-2 py-3">{entry.target_id || "-"}</td>
+      {entries.length === 0 ? (
+        <p className="py-16 text-center text-sm text-[#777]">No activity logs found.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1000px] table-fixed border-collapse text-sm">
+            <thead>
+              <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
+                <th className="w-[15%] rounded-l-md px-2 py-2 text-left font-medium">Timestamp</th>
+                <th className="w-[15%] px-2 py-2 text-left font-medium">Admin</th>
+                <th className="w-[20%] px-2 py-2 text-left font-medium">Action</th>
+                <th className="w-[20%] px-2 py-2 text-left font-medium">Target</th>
+                <th className="w-[15%] px-2 py-2 text-left font-medium">Target Model</th>
+                <th className="w-[15%] rounded-r-md px-2 py-2 text-left font-medium">Target ID</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {entries.map((entry) => (
+                <tr key={entry._id} className="border-b border-[#ededed] text-[#303030]">
+                  <td className="px-2 py-3">{formatDate(entry.timestamp)}</td>
+                  <td className="truncate px-2 py-3">{entry.admin}</td>
+                  <td className="px-2 py-3">{entry.action}</td>
+                  <td className="truncate px-2 py-3">{entry.target || "-"}</td>
+                  <td className="px-2 py-3">{entry.target_model || "-"}</td>
+                  <td className="truncate px-2 py-3">{entry.target_id || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
