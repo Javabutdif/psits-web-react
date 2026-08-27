@@ -10,6 +10,7 @@ export async function verifyResendWebhook(
 ) {
   try {
     const payload = req.body.toString();
+    console.log("Payload raw", req);
      console.log("Payload with text", req.body);
     console.log("Payload with toString", payload);
     const event = resend.webhooks.verify({
