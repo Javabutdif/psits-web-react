@@ -65,7 +65,7 @@ app.use(
     credentials: true,
   })
 );
-
+app.use("/api/webhooks",bodyParser.raw({ type: "application/json" }), webhookRoutes);
 app.set("trust proxy", 1);
 app.use(bodyParser.json());
 
@@ -98,7 +98,7 @@ app.use("/api/v2/certificates", certificateV2Routes);
 app.use("/api/v2/contributions", contributionsV2Routes);
 app.use("/api/v2/dev/automation", automationRoutes);
 app.use("/api/v2/chat", noetixChatRoutes);
-app.use("/api/webhooks", webhookRoutes);
+
 app.use(errorHandler);
 app.use(globalErrorHandler);
 
