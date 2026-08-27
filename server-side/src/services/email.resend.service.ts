@@ -85,22 +85,28 @@ const sendWithResend = async ({
   to: string;
   subject: string;
   html: string;
-  attachments?: Array<{ filename?: string; content?: Buffer; contentType?: string; contentId?: string }>;
+  attachments?: Array<{
+    filename?: string;
+    content?: Buffer;
+    contentType?: string;
+    contentId?: string;
+  }>;
 }) => {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const from = process.env.EMAIL;
 
   if (!from) throw new Error("EMAIL is not configured");
 
-  const { error } = await resend.emails.send({
+  console.log("Function is called");
+  const result = await resend.emails.send({
     from,
     to,
     subject,
     html,
     attachments,
   });
-
-  if (error) throw new Error(error.message);
+  console.log("Resend result:", result);
+  if (result.error) throw new Error(result.error.message);
 };
 
 const RESEND_BATCH_LIMIT = 50;
@@ -108,7 +114,9 @@ const RESEND_BATCH_LIMIT = 50;
 export const resendPendingEmails = async () => {
   const [receiptEntries, automationEntries] = await Promise.all([
     emailService.fetchByReceipt(),
-    EmailQueue.find({ type: "automation-report", status: "pending" }).sort({ timestamp: 1, retryCount: 1 }).lean(),
+    EmailQueue.find({ type: "automation-report", status: "pending" })
+      .sort({ timestamp: 1, retryCount: 1 })
+      .lean(),
   ]);
 
   const allEntries = [...receiptEntries, ...automationEntries];
@@ -152,7 +160,13 @@ const resendAutomationReport = async (entry: PendingEntry) => {
   let reportPayload: {
     jobName: string;
     executionTime: string;
-    results: Array<{ success: boolean; data?: unknown; recordCount: number; durationMs: number; error?: string }>;
+    results: Array<{
+      success: boolean;
+      data?: unknown;
+      recordCount: number;
+      durationMs: number;
+      error?: string;
+    }>;
     includeSummary: boolean;
     includeRawData: boolean;
     subject: string;
@@ -164,7 +178,10 @@ const resendAutomationReport = async (entry: PendingEntry) => {
     throw new Error("Invalid automation report payload");
   }
 
-  const templatePath = path.join(__dirname, "../templates/automation-report.ejs");
+  const templatePath = path.join(
+    __dirname,
+    "../templates/automation-report.ejs"
+  );
   let html: string;
 
   if (entry.htmlBody) {
@@ -172,15 +189,18 @@ const resendAutomationReport = async (entry: PendingEntry) => {
   } else {
     html = await ejs.renderFile(templatePath, {
       jobName: reportPayload.jobName,
-      executionTime: new Date(reportPayload.executionTime).toLocaleString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Manila",
-      }),
+      executionTime: new Date(reportPayload.executionTime).toLocaleString(
+        "en-US",
+        {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Asia/Manila",
+        }
+      ),
       results: reportPayload.results,
       includeSummary: reportPayload.includeSummary,
       includeRawData: reportPayload.includeRawData,
