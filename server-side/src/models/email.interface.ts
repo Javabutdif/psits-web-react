@@ -10,4 +10,5 @@ export interface IEmail {
   payload?: string;
   htmlBody?: string;
   retryCount?: number;
+  emailId?: string; // Add emailId field to store the email ID from Resend
 }
