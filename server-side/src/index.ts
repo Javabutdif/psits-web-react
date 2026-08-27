@@ -40,7 +40,7 @@ import contributionsV2Routes from "./routes/contributions.v2.route";
 import automationRoutes from "./routes/automation.v2.route";
 import noetixChatRoutes from "./routes/noetix-chat.v2.route";
 import { automationService } from "./services/automation.service";
-
+import webhookRoutes from "./routes/webhook.route";
 dotenv.config();
 
 const app = express();
@@ -98,7 +98,7 @@ app.use("/api/v2/certificates", certificateV2Routes);
 app.use("/api/v2/contributions", contributionsV2Routes);
 app.use("/api/v2/dev/automation", automationRoutes);
 app.use("/api/v2/chat", noetixChatRoutes);
-
+app.use("/api/webhooks", webhookRoutes);
 app.use(errorHandler);
 app.use(globalErrorHandler);
 
