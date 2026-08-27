@@ -14,6 +14,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { emailService } from "../services/email.service";
+import { AppError } from "../util/app.error.util";
 
 type EmailTemplateOptions = {
   category: string;
@@ -132,17 +133,14 @@ const sendEmail = async ({
 
   const resend = getResendClient();
 
-  const { error } = await resend.emails.send({
+  const result = await resend.emails.send({
     from,
     to,
     subject,
     html,
     attachments,
   });
-
-  if (error) {
-    throw new Error(`Error sending email: ${error.message}`);
-  }
+  return result.data;
 };
 
 const sendPsitsTemplatedEmail = async (opts: {
@@ -195,7 +193,7 @@ export const membershipRequestReceipt = async (
       referenceCode
     );
 
-    await sendEmail({
+    const id = await sendEmail({
       to: studenteEmail,
       subject: "Your Receipt from PSITS - UC Main",
       html: emailTemplate,
@@ -208,7 +206,10 @@ export const membershipRequestReceipt = async (
         },
       ],
     });
-
+    if (!id) {
+      throw new AppError("Didnt received id", 500);
+    }
+    await emailService.updateEmailIdById(String(queueEntry._id), id?.id);
     await emailService.updateStatusById(String(queueEntry._id), "sent");
   } catch (err: unknown) {
     console.error(
@@ -243,7 +244,7 @@ export const orderReceipt = async (
       referenceCode
     );
 
-    await sendEmail({
+    const id = await sendEmail({
       to: studentEmail,
       subject: "Your Order Receipt from PSITS - UC Main",
       html: emailTemplate,
@@ -257,6 +258,10 @@ export const orderReceipt = async (
       ],
     });
 
+    if (!id) {
+      throw new AppError("Didnt received id", 500);
+    }
+    await emailService.updateEmailIdById(String(queueEntry._id), id?.id);
     await emailService.updateStatusById(String(queueEntry._id), "sent");
   } catch (err: unknown) {
     console.error(

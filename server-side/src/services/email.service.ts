@@ -52,9 +52,9 @@ class EmailService {
     );
   };
   //Update email status in webhook using email address
-  updateStatusByEmail = async (email: string, status: string) => {
+  updateStatusByEmailId = async (emailId: string, status: string) => {
     const result = await EmailQueue.findOneAndUpdate(
-      { email },
+      { emailId },
       { $set: { status } },
       { new: true }
     );
@@ -91,6 +91,13 @@ class EmailService {
       type: "receipt",
       status: "pending",
     }).sort({ createdAt: 1, retryCount: 1 });
+  };
+  updateEmailIdById = async (id: string, emailId: string) => {
+    return await EmailQueue.findByIdAndUpdate(
+      id,
+      { $set: { emailId } },
+      { new: true }
+    );
   };
 
   countBySubtypeToday = async (email: string, subtype: string) => {
