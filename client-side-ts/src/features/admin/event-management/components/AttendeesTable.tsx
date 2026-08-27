@@ -1181,7 +1181,7 @@ export const AttendeesTable: React.FC<AttendeesTableProps> = ({
                     isActive={currentPage === pageNum}
                     className={
                       currentPage === pageNum
-                        ? "hover:text-white-600 bg-sky-400 text-white hover:bg-sky-500"
+                        ? "bg-sky-400 text-white hover:bg-sky-500"
                         : ""
                     }
                   >
