@@ -9,10 +9,8 @@ export async function verifyResendWebhook(
   next: NextFunction
 ) {
   try {
-    const payload = req.body;
-    console.log("Payload raw", req);
-     console.log("Payload with text", req.body);
-    console.log("Payload with toString", payload);
+    const payload = req.body.toString("utf8");
+    console.log("Payload New",payload);
     const event = resend.webhooks.verify({
       payload,
       headers: {
