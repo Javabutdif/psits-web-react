@@ -19,8 +19,6 @@ interface ChatRequestBody {
   persona?: string;
   sessionId?: string;
   destroy?: boolean;
-  userAccess?: any;
-  userName?: string;
 }
 
 // Extracts tool arguments from the goal message based on args definitions.
@@ -171,9 +169,9 @@ export const aiAgentController = catchAsync(
       persona = "DATA_ANALYST",
       sessionId,
       destroy,
-      userAccess = req.userV2.role,
-      userName = req.admin.name,
     } = req.body;
+    const userAccess = req.userV2.role;
+    const userName = req.admin.name;
 
     if (destroy) {
       const result = await queryNoetixAiAgent(
@@ -301,9 +299,10 @@ export const aiAgentController = catchAsync(
       }
 
       let toolResult: unknown;
+      let resolvedArgs: Record<string, string> | undefined;
       try {
         const noetixArgs = agentResult.data.tool_args;
-        const resolvedArgs =
+        resolvedArgs =
           noetixArgs && Object.keys(noetixArgs).length > 0
             ? (noetixArgs as Record<string, string>)
             : extractToolArgs(finalToolName, message, history, tool.args);
@@ -318,18 +317,6 @@ export const aiAgentController = catchAsync(
             ? `${resultSummary.slice(0, 6000)}... (truncated)`
             : resultSummary
         }.\n`;
-
-        // Audit trail for every privileged (non-read) action the bot takes.
-        // Identity comes from the authenticated session (req.admin), not the
-        // client-supplied userName, so the log can't be spoofed by the caller.
-        if (tool.permission !== "read") {
-          await logService.create({
-            admin: req.admin.name,
-            admin_id: req.admin._id,
-            action: `${logs_action.NOETIX_AI_ACTION}: ${tool.name}`,
-            target: `Args: ${JSON.stringify(resolvedArgs)} — Result: ${resultSummary.slice(0, 300)}`,
-          });
-        }
       } catch (err) {
         const errorMsg =
           err instanceof ToolPermissionError
@@ -347,6 +334,19 @@ export const aiAgentController = catchAsync(
             target: `Error: ${errorMsg}`,
           });
         }
+      }
+
+      // Audit trail for successful privileged (non-read) actions.
+      // Placed outside the try-catch so audit failures never reclassify
+      // committed mutations as tool errors (which would trigger Noetix retries).
+      if (tool.permission !== "read" && toolResult !== undefined) {
+        const resultSummary = summarizeToolResult(toolResult) || "null";
+        await logService.create({
+          admin: req.admin.name,
+          admin_id: req.admin._id,
+          action: `${logs_action.NOETIX_AI_ACTION}: ${tool.name}`,
+          target: `Args: ${JSON.stringify(resolvedArgs)} — Result: ${resultSummary.slice(0, 300)}`,
+        });
       }
     }
 
