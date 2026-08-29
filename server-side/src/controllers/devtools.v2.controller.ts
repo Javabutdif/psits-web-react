@@ -40,6 +40,10 @@ import {
   getNoetixDisabledAdmins,
   addNoetixDisabledAdmin,
   removeNoetixDisabledAdmin,
+  getNoetixDisabledTools,
+  addNoetixDisabledTool,
+  removeNoetixDisabledTool,
+  getNoetixToolRegistry,
 } from "../services/devtools.service";
 import {
   getNoetixUsageLogs,
@@ -811,6 +815,69 @@ class DevToolsController {
       target_model: "Admin",
     });
     res.status(200).json({ data: { noetixDisabledAdmins: admins } });
+  });
+
+  getNoetixDisabledTools = catchAsync(async (_req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(_req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const tools = await getNoetixDisabledTools();
+    res.status(200).json({ data: { noetixDisabledTools: tools } });
+  });
+
+  getNoetixToolRegistry = catchAsync(async (_req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(_req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const [disabledTools, registry] = await Promise.all([
+      getNoetixDisabledTools(),
+      getNoetixToolRegistry(),
+    ]);
+    const disabledSet = new Set(disabledTools);
+    res.status(200).json({
+      data: registry.map((t) => ({
+        ...t,
+        enabled: !disabledSet.has(t.name),
+      })),
+    });
+  });
+
+  addNoetixDisabledTool = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const { toolName } = req.body as { toolName?: string };
+    if (!toolName) {
+      return res.status(400).json({ message: "toolName is required" });
+    }
+    const tools = await addNoetixDisabledTool(toolName);
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: "Disabled Noetix Tool",
+      target: toolName,
+      target_model: "Settings",
+    });
+    res.status(200).json({ data: { noetixDisabledTools: tools } });
+  });
+
+  removeNoetixDisabledTool = catchAsync(async (req: Request, res: Response) => {
+    if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
+      return res.status(403).json({ message: "Campus not authorized" });
+    }
+    const toolName = typeof req.params.toolName === "string" ? req.params.toolName : undefined;
+    if (!toolName) {
+      return res.status(400).json({ message: "toolName is required" });
+    }
+    const tools = await removeNoetixDisabledTool(toolName);
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: "Enabled Noetix Tool",
+      target: toolName,
+      target_model: "Settings",
+    });
+    res.status(200).json({ data: { noetixDisabledTools: tools } });
   });
 }
 

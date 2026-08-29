@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import { catchAsync } from "../util/catch.async.util";
 import { queryNoetixAiAgent } from "../services/noetix-chat.service";
-import { isChatbotEnabled, isNoetixAdminDisabled } from "../services/devtools.service";
+import { isChatbotEnabled, isNoetixAdminDisabled, getNoetixDisabledTools } from "../services/devtools.service";
 import { logService } from "../services/log.service";
 import { logs_action } from "../enums/logs.enums";
 import {
@@ -218,11 +218,14 @@ export const aiAgentController = catchAsync(
       }
     };
 
-    const tools = getToolRegistry().map((t) => ({
-      name: t.name,
-      description: t.description,
-      ...(t.args ? { args: t.args } : {}),
-    }));
+    const disabledToolNames = new Set(await getNoetixDisabledTools());
+    const tools = getToolRegistry()
+      .filter((t) => !disabledToolNames.has(t.name))
+      .map((t) => ({
+        name: t.name,
+        description: t.description,
+        ...(t.args ? { args: t.args } : {}),
+      }));
 
     while (iteration < MAX_AGENT_ITERATIONS) {
       iteration++;

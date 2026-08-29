@@ -300,4 +300,26 @@ router.delete(
   devtoolsController.removeNoetixDisabledAdmin
 );
 
+// Noetix Tool Disable - Admin only
+router.get(
+  "/noetix/tools",
+  ...adminOnlyAuthChain,
+  devtoolsController.getNoetixDisabledTools
+);
+router.get(
+  "/noetix/tools/registry",
+  ...adminOnlyAuthChain,
+  devtoolsController.getNoetixToolRegistry
+);
+router.post(
+  "/noetix/tools/disable",
+  ...adminOnlyAuthChain,
+  devtoolsController.addNoetixDisabledTool
+);
+router.delete(
+  "/noetix/tools/disable/:toolName",
+  ...adminOnlyAuthChain,
+  devtoolsController.removeNoetixDisabledTool
+);
+
 export default router;
