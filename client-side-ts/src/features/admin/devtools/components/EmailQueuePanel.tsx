@@ -33,7 +33,7 @@ interface FailedEmail {
 
 export const EmailQueuePanel = () => {
   const [entries, setEntries] = useState<EmailQueueEntry[]>([]);
-  const [counts, setCounts] = useState({ pending: 0, sent: 0 });
+  const [counts, setCounts] = useState({ pending: 0, sent: 0, delivered: 0 });
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -94,11 +94,16 @@ export const EmailQueuePanel = () => {
 
   const loadCounts = async () => {
     try {
-      const [pendingData, sentData] = await Promise.all([
+      const [pendingData, sentData, deliveredData] = await Promise.all([
         getEmailQueue({ status: "pending", limit: 1, skip: 0 }),
         getEmailQueue({ status: "sent", limit: 1, skip: 0 }),
+        getEmailQueue({ status: "delivered", limit: 1, skip: 0 }),
       ]);
-      setCounts({ pending: pendingData.total, sent: sentData.total });
+      setCounts({
+        pending: pendingData.total,
+        sent: sentData.total,
+        delivered: deliveredData.total,
+      });
     } catch {
       // silently fail
     }
@@ -161,8 +166,8 @@ export const EmailQueuePanel = () => {
   const getStatusBadge = (status: string) => {
     const base =
       "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium";
-    if (status === "sent" || status === "delivered")
-      return `${base} bg-green-50 text-green-600`;
+    if (status === "sent") return `${base} bg-sky-50 text-sky-600`;
+    if (status === "delivered") return `${base} bg-green-50 text-green-600`;
     if (status === "failed") return `${base} bg-red-50 text-red-600`;
     return `${base} bg-orange-50 text-orange-600`;
   };
@@ -209,8 +214,14 @@ export const EmailQueuePanel = () => {
                 )}
 
                 {option.value === "sent" && (
-                  <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-green-100 px-1.5 py-0.5 text-[11px] font-medium text-green-600">
+                  <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-sky-100 px-1.5 py-0.5 text-[11px] font-medium text-sky-600">
                     {counts.sent}
+                  </span>
+                )}
+
+                {option.value === "delivered" && (
+                  <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-green-100 px-1.5 py-0.5 text-[11px] font-medium text-green-600">
+                    {counts.delivered}
                   </span>
                 )}
               </button>

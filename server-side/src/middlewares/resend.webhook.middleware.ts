@@ -9,8 +9,8 @@ export async function verifyResendWebhook(
   next: NextFunction
 ) {
   try {
-    const payload = req.body.toString();
-
+    const payload = req.body.toString("utf8");
+    console.log("Payload New",payload);
     const event = resend.webhooks.verify({
       payload,
       headers: {
