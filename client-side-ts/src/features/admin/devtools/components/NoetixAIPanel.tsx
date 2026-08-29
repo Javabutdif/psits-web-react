@@ -9,6 +9,8 @@ import {
   getNoetixToolRegistry,
   disableNoetixTool,
   enableNoetixTool,
+  getNoetixMaxIterations,
+  setNoetixMaxIterations,
 } from "../api/devtools.api";
 import type { NoetixUsageLog, NoetixUsageStats, NoetixToolItem } from "../types/devtools.types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -70,6 +72,9 @@ export const NoetixAIPanel = () => {
   const [newAdminId, setNewAdminId] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [selectedLog, setSelectedLog] = useState<NoetixUsageLog | null>(null);
+  const [maxIterations, setMaxIterations] = useState<number>(10);
+  const [maxIterationsLoading, setMaxIterationsLoading] = useState(false);
+  const [maxIterationsValue, setMaxIterationsValue] = useState("10");
 
   const fetchStats = useCallback(async () => {
     try {
@@ -126,6 +131,34 @@ export const NoetixAIPanel = () => {
     }
   }, []);
 
+  const fetchMaxIterations = useCallback(async () => {
+    try {
+      const value = await getNoetixMaxIterations();
+      setMaxIterations(value);
+      setMaxIterationsValue(String(value));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleSaveMaxIterations = async () => {
+    const parsed = parseInt(maxIterationsValue, 10);
+    if (isNaN(parsed) || parsed < 1 || parsed > 50) {
+      showToast("error", "Max iterations must be between 1 and 50");
+      return;
+    }
+    setMaxIterationsLoading(true);
+    try {
+      const updated = await setNoetixMaxIterations(parsed);
+      setMaxIterations(updated);
+      showToast("success", `Noetix max iterations set to ${updated}`);
+    } catch {
+      showToast("error", "Failed to save max iterations");
+    } finally {
+      setMaxIterationsLoading(false);
+    }
+  };
+
   const handleToggleTool = async (tool: NoetixToolItem) => {
     try {
       if (tool.enabled) {
@@ -157,7 +190,8 @@ export const NoetixAIPanel = () => {
     fetchLogs();
     fetchDisabledAdmins();
     fetchTools();
-  }, [fetchStats, fetchLogs, fetchDisabledAdmins, fetchTools]);
+    fetchMaxIterations();
+  }, [fetchStats, fetchLogs, fetchDisabledAdmins, fetchTools, fetchMaxIterations]);
 
   useEffect(() => {
     setPage(1);
@@ -260,6 +294,42 @@ export const NoetixAIPanel = () => {
           value={stats?.todayCalls ?? 0}
           color="text-[#1c9dde]"
         />
+      </div>
+
+      {/* Max Iterations Setting */}
+      <div className="rounded-xl border border-[#e5e5e5] bg-white p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Cpu className="h-4 w-4 text-[#1c9dde]" />
+          <p className="text-sm font-medium text-[#2b2b2b]">
+            Agent Max Iterations
+          </p>
+        </div>
+        <p className="mb-3 text-xs text-[#858585]">
+          Maximum number of tool-call iterations per AI agent session. Values
+          outside 1–50 are rejected. Default is 10.
+        </p>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-[#555]">
+            Current: <span className="font-mono font-semibold text-[#1c9dde]">{maxIterations}</span>
+          </span>
+          <input
+            type="number"
+            min="1"
+            max="50"
+            value={maxIterationsValue}
+            onChange={(e) => setMaxIterationsValue(e.target.value)}
+            className="h-9 w-20 rounded-lg border-[#ececec] bg-white px-3 text-sm font-mono"
+          />
+          <Button
+            type="button"
+            size="sm"
+            className="rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
+            onClick={handleSaveMaxIterations}
+            disabled={maxIterationsLoading || maxIterationsValue === String(maxIterations)}
+          >
+            {maxIterationsLoading ? "Saving..." : "Save"}
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

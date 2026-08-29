@@ -830,6 +830,32 @@ export const isNoetixAdminDisabled = async (
   return disabled.includes(adminId);
 };
 
+export const getNoetixMaxIterations = async (): Promise<number> => {
+  const { Settings } = await import("../models/settings.model");
+  const settings = await Settings.findOne().lean();
+  const value = (settings as { noetixMaxIterations?: number } | null)?.noetixMaxIterations;
+  if (value === undefined || value === null) return 10;
+  if (typeof value !== "number" || value < 1 || value > 50) return 10;
+  return value;
+};
+
+export const setNoetixMaxIterations = async (value: number): Promise<number> => {
+  const parsed = parseInt(String(value), 10);
+  if (isNaN(parsed) || parsed < 1 || parsed > 50) {
+    throw new Error("noetixMaxIterations must be between 1 and 50");
+  }
+  const { Settings } = await import("../models/settings.model");
+  const existing = await Settings.find();
+
+  if (existing.length === 0) {
+    await new Settings({ noetixMaxIterations: parsed }).save();
+    return parsed;
+  }
+
+  await Settings.updateOne({}, { $set: { noetixMaxIterations: parsed } });
+  return parsed;
+};
+
 export interface ExportCollectionParams {
   collection: string;
   fields?: string[];

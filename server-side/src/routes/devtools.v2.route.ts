@@ -322,4 +322,16 @@ router.delete(
   devtoolsController.removeNoetixDisabledTool
 );
 
+// Noetix Max Iterations - Admin only
+router.get(
+  "/noetix/settings/max-iterations",
+  ...adminOnlyAuthChain,
+  devtoolsController.getNoetixMaxIterations
+);
+router.patch(
+  "/noetix/settings/max-iterations",
+  ...adminOnlyAuthChain,
+  devtoolsController.setNoetixMaxIterations
+);
+
 export default router;

@@ -2,7 +2,12 @@ import { Request, Response } from "express";
 
 import { catchAsync } from "../util/catch.async.util";
 import { queryNoetixAiAgent } from "../services/noetix-chat.service";
-import { isChatbotEnabled, isNoetixAdminDisabled, getNoetixDisabledTools } from "../services/devtools.service";
+import {
+  isChatbotEnabled,
+  isNoetixAdminDisabled,
+  getNoetixDisabledTools,
+  getNoetixMaxIterations,
+} from "../services/devtools.service";
 import { logService } from "../services/log.service";
 import { logs_action } from "../enums/logs.enums";
 import {
@@ -20,6 +25,25 @@ interface ChatRequestBody {
   sessionId?: string;
   destroy?: boolean;
 }
+
+interface ToolCallEntry {
+  tool: string;
+  success: boolean;
+  summary: string;
+}
+
+// Strips raw tool-call logs from Noetix history and builds a clean
+// professional summary suitable for the UI.
+const buildCleanToolHistory = (toolLog: ToolCallEntry[]): string => {
+  if (!toolLog.length) return "";
+  return toolLog
+    .map((entry) =>
+      entry.success
+        ? `[${entry.tool}] completed.`
+        : `[${entry.tool}] failed: ${entry.summary}`
+    )
+    .join(" ");
+};
 
 // Extracts tool arguments from the goal message based on args definitions.
 // Noetix returns only the tool name — we parse the natural language goal to fill args.
@@ -145,8 +169,6 @@ export const destroySessionController = catchAsync(
   }
 );
 
-const MAX_AGENT_ITERATIONS = 5;
-
 export const aiAgentController = catchAsync(
   async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
     if (!(await isChatbotEnabled())) {
@@ -156,23 +178,21 @@ export const aiAgentController = catchAsync(
       });
     }
 
-    const isAdminDisabled = await isNoetixAdminDisabled(req.admin._id.toString());
+    const isAdminDisabled = await isNoetixAdminDisabled(
+      req.admin._id.toString()
+    );
     if (isAdminDisabled) {
       return res.status(403).json({
         error: "NOETIX_ADMIN_DISABLED",
-        message: "You have been disabled from using Noetix AI. Contact an administrator.",
+        message:
+          "You have been disabled from using Noetix AI. Contact an administrator.",
       });
     }
 
-    const {
-      message,
-      persona = "DATA_ANALYST",
-      sessionId,
-      destroy,
-    } = req.body;
-    const userAccess = req.userV2.role;
+    const { message, persona = "DATA_ANALYST", sessionId, destroy } = req.body;
+    const resolvedUserAccess = req.userV2.access!;
     const userName = req.admin.name;
-
+    
     if (destroy) {
       const result = await queryNoetixAiAgent(
         persona,
@@ -218,6 +238,7 @@ export const aiAgentController = catchAsync(
       }
     };
 
+    const maxIterations = await getNoetixMaxIterations();
     const disabledToolNames = new Set(await getNoetixDisabledTools());
     const tools = getToolRegistry()
       .filter((t) => !disabledToolNames.has(t.name))
@@ -227,7 +248,9 @@ export const aiAgentController = catchAsync(
         ...(t.args ? { args: t.args } : {}),
       }));
 
-    while (iteration < MAX_AGENT_ITERATIONS) {
+    const toolLog: ToolCallEntry[] = [];
+
+    while (iteration < maxIterations) {
       iteration++;
 
       let agentResult;
@@ -266,33 +289,33 @@ export const aiAgentController = catchAsync(
       if (agentResult.data.isFinished) {
         sessionSuccess = true;
         await logUsage();
-        if (history)
-          return res.status(200).json({
-            success: true,
-            data: {
-              sessionId: agentResult.data.sessionId,
-              persona: agentResult.data.persona,
-              result: agentResult.data.final_result,
-              history: agentResult.data.history,
-              iterations: iteration,
-            },
-          });
+        const cleanHistory = buildCleanToolHistory(toolLog);
+        return res.status(200).json({
+          success: true,
+          data: {
+            sessionId: agentResult.data.sessionId,
+            persona: agentResult.data.persona,
+            result: agentResult.data.final_result,
+            history: cleanHistory,
+            iterations: iteration,
+          },
+        });
       }
 
       if (!finalToolName) {
         sessionSuccess = true;
         await logUsage();
-        if (history)
-          return res.status(200).json({
-            success: true,
-            data: {
-              sessionId: agentResult.data.sessionId,
-              persona: agentResult.data.persona,
-              result: agentResult.data.final_result || "No tool selected.",
-              history: agentResult.data.history,
-              iterations: iteration,
-            },
-          });
+        const cleanHistory = buildCleanToolHistory(toolLog);
+        return res.status(200).json({
+          success: true,
+          data: {
+            sessionId: agentResult.data.sessionId,
+            persona: agentResult.data.persona,
+            result: agentResult.data.final_result || "No tool selected.",
+            history: cleanHistory,
+            iterations: iteration,
+          },
+        });
       }
 
       const tool = findToolByName(finalToolName);
@@ -310,11 +333,9 @@ export const aiAgentController = catchAsync(
             ? (noetixArgs as Record<string, string>)
             : extractToolArgs(finalToolName, message, history, tool.args);
 
-        toolResult = await tool.execute(resolvedArgs, userAccess, userName);
-        // Feed Noetix a clean summary instead of raw JSON so its final
-        // answer (and the UI) stays readable. Large summaries are still
-        // truncated — Noetix rejects payloads over 50KB.
+        toolResult = await tool.execute(resolvedArgs, resolvedUserAccess, userName);
         const resultSummary = summarizeToolResult(toolResult) || "null";
+        toolLog.push({ tool: finalToolName, success: true, summary: resultSummary });
         history = `${history} Called ${finalToolName}, result: ${
           resultSummary.length > 6000
             ? `${resultSummary.slice(0, 6000)}... (truncated)`
@@ -327,6 +348,7 @@ export const aiAgentController = catchAsync(
             : err instanceof Error
               ? err.message
               : "unknown error";
+        toolLog.push({ tool: finalToolName, success: false, summary: errorMsg });
         history = `${history} Called ${finalToolName}, error: ${errorMsg}.\n`;
 
         if (tool.permission !== "read") {
@@ -355,14 +377,24 @@ export const aiAgentController = catchAsync(
 
     await logUsage();
 
+    // Build a clean, professional summary from tool calls for the max-iterations case.
+    const toolSummaries = toolLog
+      .map((entry) =>
+        entry.success
+          ? `Executed ${entry.tool}.`
+          : `Action '${entry.tool}' could not be completed: ${entry.summary}.`
+      )
+      .join(" ");
+
     return res.status(200).json({
       success: true,
       data: {
         sessionId: effectiveSessionId,
         persona,
         result:
-          "The AI agent reached the maximum iteration limit. The goal may need simplification.",
-        history,
+          "The AI agent reached the maximum iteration limit. The goal may need simplification. " +
+          toolSummaries,
+        history: buildCleanToolHistory(toolLog),
         iterations: iteration,
       },
     });

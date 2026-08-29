@@ -239,3 +239,7 @@ export interface NoetixToolItem {
   category: string;
   enabled: boolean;
 }
+
+export interface NoetixMaxIterations {
+  noetixMaxIterations: number;
+}
