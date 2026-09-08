@@ -69,7 +69,13 @@ export const resendSingleEmail = async (id: string) => {
     let reportPayload: {
       jobName: string;
       executionTime: string;
-      results: Array<{ success: boolean; data?: unknown; recordCount: number; durationMs: number; error?: string }>;
+      results: Array<{
+        success: boolean;
+        data?: unknown;
+        recordCount: number;
+        durationMs: number;
+        error?: string;
+      }>;
       includeSummary: boolean;
       includeRawData: boolean;
       subject: string;
@@ -81,18 +87,24 @@ export const resendSingleEmail = async (id: string) => {
       throw new Error("Invalid automation report payload");
     }
 
-    const templatePath = path.join(__dirname, "../templates/automation-report.ejs");
+    const templatePath = path.join(
+      __dirname,
+      "../templates/automation-report.ejs"
+    );
     html = await ejs.renderFile(templatePath, {
       jobName: reportPayload.jobName,
-      executionTime: new Date(reportPayload.executionTime).toLocaleString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Manila",
-      }),
+      executionTime: new Date(reportPayload.executionTime).toLocaleString(
+        "en-US",
+        {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Asia/Manila",
+        }
+      ),
       results: reportPayload.results,
       includeSummary: reportPayload.includeSummary,
       includeRawData: reportPayload.includeRawData,
@@ -228,14 +240,8 @@ export const getEnvStatus = () => {
   const vars: Array<{ key: string; required: boolean }> = [
     { key: "EMAIL", required: true },
     { key: "RESEND_API_KEY", required: true },
-    // The app connects with MONGODB_URI (src/index.ts); MONGO_URI is never read,
-    // so checking it reported a permanent false failure.
-    { key: "MONGODB_URI", required: true },
-    // jwt.util.ts throws at import time without these.
-    { key: "ACCESS_TOKEN_SECRET", required: true },
-    { key: "REFRESH_TOKEN_SECRET", required: true },
-    // Falls back to http://localhost:3001 when unset.
     { key: "BASE_URL", required: false },
+    { key: "MONGODB_URI", required: true },
     { key: "R2_BUCKET_NAME", required: false },
     { key: "R2_ACCOUNT_ID", required: false },
     { key: "AWS_BUCKET_NAME", required: false },
@@ -254,7 +260,11 @@ const rateLimitBlockedCounters: { count: number; day: string } = {
   day: "",
 };
 
-const rateLimitViolations: Array<{ ip: string; path: string; timestamp: Date }> = [];
+const rateLimitViolations: Array<{
+  ip: string;
+  path: string;
+  timestamp: Date;
+}> = [];
 const MAX_VIOLATION_LOGS = 1000;
 
 export const getRateLimitStats = () => {
@@ -474,11 +484,7 @@ export const getLogEntries = async ({
   }
 
   const [entries, total] = await Promise.all([
-    Log.find(query)
-      .sort({ timestamp: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
+    Log.find(query).sort({ timestamp: -1 }).skip(skip).limit(limit).lean(),
     Log.countDocuments(query),
   ]);
 
@@ -559,7 +565,9 @@ export const searchOrders = async ({
   return { entries, total };
 };
 
-export const getOrderDetails = async (id: string): Promise<OrderDetail | null> => {
+export const getOrderDetails = async (
+  id: string
+): Promise<OrderDetail | null> => {
   const { Orders } = await import("../models/orders.model");
   const order = await Orders.findById(id).lean();
   return order as OrderDetail | null;
@@ -576,8 +584,11 @@ export interface CertificateTemplate {
   updatedAt?: string;
 }
 
-export const getCertificateTemplates = async (): Promise<CertificateTemplate[]> => {
-  const { CertificateTemplate: CertModel } = await import("../models/certificateTemplate.model");
+export const getCertificateTemplates = async (): Promise<
+  CertificateTemplate[]
+> => {
+  const { CertificateTemplate: CertModel } =
+    await import("../models/certificateTemplate.model");
   const templates = await CertModel.find().sort({ createdAt: -1 }).lean();
   return templates.map((t: any) => ({
     _id: t._id.toString(),
@@ -689,7 +700,10 @@ export const setChatbotEnabled = async (enabled: boolean): Promise<void> => {
 export const getNoetixDisabledAdmins = async (): Promise<string[]> => {
   const { Settings } = await import("../models/settings.model");
   const settings = await Settings.findOne().lean();
-  return (settings as { noetixDisabledAdmins?: string[] } | null)?.noetixDisabledAdmins ?? [];
+  return (
+    (settings as { noetixDisabledAdmins?: string[] } | null)
+      ?.noetixDisabledAdmins ?? []
+  );
 };
 
 export const addNoetixDisabledAdmin = async (
@@ -709,7 +723,10 @@ export const addNoetixDisabledAdmin = async (
   );
 
   const updated = await Settings.findOne().lean();
-  return (updated as { noetixDisabledAdmins?: string[] } | null)?.noetixDisabledAdmins ?? [];
+  return (
+    (updated as { noetixDisabledAdmins?: string[] } | null)
+      ?.noetixDisabledAdmins ?? []
+  );
 };
 
 export const removeNoetixDisabledAdmin = async (
@@ -720,27 +737,32 @@ export const removeNoetixDisabledAdmin = async (
 
   if (existing.length === 0) return [];
 
-  await Settings.updateOne(
-    {},
-    { $pull: { noetixDisabledAdmins: adminId } }
-  );
+  await Settings.updateOne({}, { $pull: { noetixDisabledAdmins: adminId } });
 
   const updated = await Settings.findOne().lean();
-  return (updated as { noetixDisabledAdmins?: string[] } | null)?.noetixDisabledAdmins ?? [];
+  return (
+    (updated as { noetixDisabledAdmins?: string[] } | null)
+      ?.noetixDisabledAdmins ?? []
+  );
 };
 
 export const getNoetixDisabledTools = async (): Promise<string[]> => {
   const { Settings } = await import("../models/settings.model");
   const settings = await Settings.findOne().lean();
-  return (settings as { noetixDisabledTools?: string[] } | null)?.noetixDisabledTools ?? [];
+  return (
+    (settings as { noetixDisabledTools?: string[] } | null)
+      ?.noetixDisabledTools ?? []
+  );
 };
 
-export const getNoetixToolRegistry = async (): Promise<Array<{
-  name: string;
-  description: string;
-  permission: string;
-  category: string;
-}>> => {
+export const getNoetixToolRegistry = async (): Promise<
+  Array<{
+    name: string;
+    description: string;
+    permission: string;
+    category: string;
+  }>
+> => {
   const { getToolRegistry } = await import("../types/chat-tool.types");
   return getToolRegistry().map((t) => ({
     name: t.name,
@@ -767,7 +789,10 @@ export const addNoetixDisabledTool = async (
   );
 
   const updated = await Settings.findOne().lean();
-  return (updated as { noetixDisabledTools?: string[] } | null)?.noetixDisabledTools ?? [];
+  return (
+    (updated as { noetixDisabledTools?: string[] } | null)
+      ?.noetixDisabledTools ?? []
+  );
 };
 
 export const removeNoetixDisabledTool = async (
@@ -778,13 +803,13 @@ export const removeNoetixDisabledTool = async (
 
   if (existing.length === 0) return [];
 
-  await Settings.updateOne(
-    {},
-    { $pull: { noetixDisabledTools: toolName } }
-  );
+  await Settings.updateOne({}, { $pull: { noetixDisabledTools: toolName } });
 
   const updated = await Settings.findOne().lean();
-  return (updated as { noetixDisabledTools?: string[] } | null)?.noetixDisabledTools ?? [];
+  return (
+    (updated as { noetixDisabledTools?: string[] } | null)
+      ?.noetixDisabledTools ?? []
+  );
 };
 
 export const isNoetixAdminDisabled = async (
@@ -797,13 +822,16 @@ export const isNoetixAdminDisabled = async (
 export const getNoetixMaxIterations = async (): Promise<number> => {
   const { Settings } = await import("../models/settings.model");
   const settings = await Settings.findOne().lean();
-  const value = (settings as { noetixMaxIterations?: number } | null)?.noetixMaxIterations;
+  const value = (settings as { noetixMaxIterations?: number } | null)
+    ?.noetixMaxIterations;
   if (value === undefined || value === null) return 10;
   if (typeof value !== "number" || value < 1 || value > 50) return 10;
   return value;
 };
 
-export const setNoetixMaxIterations = async (value: number): Promise<number> => {
+export const setNoetixMaxIterations = async (
+  value: number
+): Promise<number> => {
   const parsed = parseInt(String(value), 10);
   if (isNaN(parsed) || parsed < 1 || parsed > 50) {
     throw new Error("noetixMaxIterations must be between 1 and 50");
@@ -924,10 +952,17 @@ export interface BruteForceLog {
   attempts: Array<{ timestamp: string }>;
 }
 
-const failedAuthAttempts: Map<string, { count: number; lastAttempt: Date; attempts: Date[] }> = new Map();
+const failedAuthAttempts: Map<
+  string,
+  { count: number; lastAttempt: Date; attempts: Date[] }
+> = new Map();
 
 export const incrementFailedAuthAttempt = (ip: string) => {
-  const existing = failedAuthAttempts.get(ip) || { count: 0, lastAttempt: new Date(), attempts: [] };
+  const existing = failedAuthAttempts.get(ip) || {
+    count: 0,
+    lastAttempt: new Date(),
+    attempts: [],
+  };
   existing.count++;
   existing.lastAttempt = new Date();
   existing.attempts.push(new Date());
@@ -937,7 +972,10 @@ export const incrementFailedAuthAttempt = (ip: string) => {
   failedAuthAttempts.set(ip, existing);
 };
 
-export const getBruteForceLogs = (threshold = 5, limit = 50): BruteForceLog[] => {
+export const getBruteForceLogs = (
+  threshold = 5,
+  limit = 50
+): BruteForceLog[] => {
   const result: BruteForceLog[] = [];
   for (const [ip, data] of failedAuthAttempts.entries()) {
     if (data.count >= threshold) {
@@ -1063,7 +1101,9 @@ export interface FailedEmailDetail {
   canResend: boolean;
 }
 
-export const getFailedEmailDetails = async (limit = 100): Promise<FailedEmailDetail[]> => {
+export const getFailedEmailDetails = async (
+  limit = 100
+): Promise<FailedEmailDetail[]> => {
   const { EmailQueue } = await import("../models/email.model");
   const entries = await EmailQueue.find({ status: "failed" })
     .sort({ timestamp: -1 })
@@ -1072,7 +1112,9 @@ export const getFailedEmailDetails = async (limit = 100): Promise<FailedEmailDet
   const now = new Date();
   return entries.map((e: any) => {
     const timestamp = new Date(e.timestamp);
-    const daysPending = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60 * 60 * 24));
+    const daysPending = Math.floor(
+      (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60 * 24)
+    );
     return {
       _id: e._id.toString(),
       email: e.email,
@@ -1087,7 +1129,10 @@ export const getFailedEmailDetails = async (limit = 100): Promise<FailedEmailDet
   });
 };
 
-export const bulkUpdateEmailStatus = async (ids: string[], status: string): Promise<number> => {
+export const bulkUpdateEmailStatus = async (
+  ids: string[],
+  status: string
+): Promise<number> => {
   const { EmailQueue } = await import("../models/email.model");
   const result = await EmailQueue.updateMany(
     { _id: { $in: ids } },
@@ -1096,7 +1141,10 @@ export const bulkUpdateEmailStatus = async (ids: string[], status: string): Prom
   return result.modifiedCount || 0;
 };
 
-export const backfillCreatedAt = async (): Promise<{ migrated: number; skipped: number }> => {
+export const backfillCreatedAt = async (): Promise<{
+  migrated: number;
+  skipped: number;
+}> => {
   const students = await Student.find({ createdAt: { $exists: false } }).lean();
   if (students.length === 0) {
     return { migrated: 0, skipped: 0 };
@@ -1105,7 +1153,9 @@ export const backfillCreatedAt = async (): Promise<{ migrated: number; skipped: 
   const operations = students.map((s) => ({
     updateOne: {
       filter: { _id: s._id },
-      update: { $set: { createdAt: new mongoose.Types.ObjectId(s._id).getTimestamp() } },
+      update: {
+        $set: { createdAt: new mongoose.Types.ObjectId(s._id).getTimestamp() },
+      },
     },
   }));
 
@@ -1115,7 +1165,10 @@ export const backfillCreatedAt = async (): Promise<{ migrated: number; skipped: 
   if (existing.length === 0) {
     await new Settings({ studentCreatedAtBackfilled: true }).save();
   } else {
-    await Settings.updateOne({}, { $set: { studentCreatedAtBackfilled: true } });
+    await Settings.updateOne(
+      {},
+      { $set: { studentCreatedAtBackfilled: true } }
+    );
   }
 
   return { migrated: students.length, skipped: 0 };
@@ -1146,7 +1199,10 @@ export const updateStudentYears = async (): Promise<{
   if (existing.length === 0) {
     await new Settings({ studentYearLastUpdated: new Date() }).save();
   } else {
-    await Settings.updateOne({}, { $set: { studentYearLastUpdated: new Date() } });
+    await Settings.updateOne(
+      {},
+      { $set: { studentYearLastUpdated: new Date() } }
+    );
   }
 
   return {
