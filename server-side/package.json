@@ -8,7 +8,9 @@
     "copy-assets": "node -e \"const fs=require('fs'); fs.cpSync('src/assets','dist/assets',{recursive:true}); fs.cpSync('src/templates','dist/templates',{recursive:true}); \"",
     "start": "node dist/index.js",
     "migrate:old-enums": "ts-node src/scripts/migrate-old-enums.ts",
-    "migrate:merch-order-details": "ts-node src/scripts/migrate-merch-order-details-to-report.ts"
+    "migrate:merch-order-details": "ts-node src/scripts/migrate-merch-order-details-to-report.ts",
+    "seed:membership-counter": "ts-node src/scripts/seed-membership-counter.ts",
+    "restore:membership-references": "ts-node src/scripts/restore-membership-references.ts"
   },
   "keywords": [],
   "author": "",

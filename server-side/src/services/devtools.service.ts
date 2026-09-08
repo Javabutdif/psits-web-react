@@ -12,7 +12,10 @@ import fs from "fs/promises";
 import os from "os";
 import mongoose, { Types } from "mongoose";
 import { emailService } from "./email.service";
-import { formatReceiptDateTime } from "../mail_template/mail.template";
+import {
+  renderMembershipReceiptHtml,
+  renderOrderReceiptHtml,
+} from "./receipt.service";
 import { account_status } from "../enums/status.enums";
 
 export const getEmailQueueEntries = async ({
@@ -100,64 +103,10 @@ export const resendSingleEmail = async (id: string) => {
   } else if (!entry.subtype) {
     throw new Error("Entry has no subtype");
   } else if (entry.subtype === "membership") {
-    const history = await MembershipHistory.findOne({
-      reference_code: entry.referenceCode,
-    });
-    if (!history)
-      throw new Error(
-        `Membership history not found for ${entry.referenceCode}`
-      );
-
-    const templatePath = path.join(
-      __dirname,
-      "../../assets/appr-membership-receipt.ejs"
-    );
-    const cash = history.total;
-    html = await ejs.renderFile(templatePath, {
-      name: history.name,
-      reference_code: history.reference_code,
-      cash,
-      total: history.total,
-      course: history.course,
-      year: history.year,
-      admin: history.admin,
-      date: new Date(history.date).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      }),
-      change: 0,
-    });
+    html = await renderMembershipReceiptHtml(String(entry.referenceCode));
     subject = "Your Receipt from PSITS - UC Main";
   } else if (entry.subtype === "order") {
-    const order = await Orders.findOne({
-      reference_code: entry.referenceCode,
-    });
-    if (!order) throw new Error(`Order not found for ${entry.referenceCode}`);
-
-    const templatePath = path.join(
-      __dirname,
-      "../../assets/appr-order-receipt.ejs"
-    );
-    html = await ejs.renderFile(templatePath, {
-      reference_code: order.reference_code,
-      transaction_date: formatReceiptDateTime(order.transaction_date),
-      student_name: order.student_name,
-      id_number: order.id_number,
-      course: order.course,
-      year: order.year,
-      admin: order.admin || "N/A",
-      items: order.items.map((item: any) => ({
-        product_name: item.product_name,
-        batch: item.batch,
-        sizes: item.sizes || [],
-        variation: item.variation || [],
-        quantity: item.quantity,
-        sub_total: item.sub_total,
-      })),
-      cash: order.total,
-      total: order.total,
-    });
+    html = await renderOrderReceiptHtml(String(entry.referenceCode));
     subject = "Your Order Receipt from PSITS - UC Main";
   } else {
     throw new Error(`Unknown subtype: ${entry.subtype}`);
@@ -279,8 +228,14 @@ export const getEnvStatus = () => {
   const vars: Array<{ key: string; required: boolean }> = [
     { key: "EMAIL", required: true },
     { key: "RESEND_API_KEY", required: true },
-    { key: "BASE_URL", required: true },
-    { key: "MONGO_URI", required: true },
+    // The app connects with MONGODB_URI (src/index.ts); MONGO_URI is never read,
+    // so checking it reported a permanent false failure.
+    { key: "MONGODB_URI", required: true },
+    // jwt.util.ts throws at import time without these.
+    { key: "ACCESS_TOKEN_SECRET", required: true },
+    { key: "REFRESH_TOKEN_SECRET", required: true },
+    // Falls back to http://localhost:3001 when unset.
+    { key: "BASE_URL", required: false },
     { key: "R2_BUCKET_NAME", required: false },
     { key: "R2_ACCOUNT_ID", required: false },
     { key: "AWS_BUCKET_NAME", required: false },
@@ -381,8 +336,11 @@ export const getCollectionStats = async (): Promise<CollectionStat[]> => {
     if (name.startsWith("system.")) continue;
 
     try {
-      const model = mongoose.model(name);
-      const docCount = await model.countDocuments();
+      // Count through the driver, not mongoose.model(name): models are
+      // registered under model names ("Student"), not collection names
+      // ("students"), so every lookup here threw and was swallowed below —
+      // leaving this function permanently returning an empty list.
+      const docCount = await db.collection(name).countDocuments();
 
       let info: any;
       try {
@@ -396,7 +354,7 @@ export const getCollectionStats = async (): Promise<CollectionStat[]> => {
 
       if (expectedIndexes.length > 0) {
         try {
-          const indexes = await (model.collection as any).indexes();
+          const indexes = await (db as any).collection(name).indexes();
           const indexedFields = indexes.flatMap((idx: any) =>
             Object.keys(idx.key).filter((f: string) =>
               expectedIndexes.includes(f)
@@ -643,6 +601,9 @@ export interface RevenueEntry {
 export const getMembershipRevenue = async (): Promise<RevenueEntry[]> => {
   const { MembershipHistory } = await import("../models/history.model");
   const result = await MembershipHistory.aggregate([
+    // Some legacy history rows store `date` as a string, which makes $year/$month
+    // abort the whole aggregation. Skip anything that isn't a real date.
+    { $match: { date: { $type: "date" } } },
     {
       $group: {
         _id: {

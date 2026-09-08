@@ -23,6 +23,7 @@ export interface IUserModelData {
   position: string;
   campus: string;
   status: string;
+  membershipStatus?: string;
 }
 export interface IRoleModelData {
   id_number: string;

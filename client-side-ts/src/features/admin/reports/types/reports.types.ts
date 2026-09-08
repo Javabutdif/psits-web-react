@@ -3,6 +3,7 @@ export type ReportsTab = "membership" | "merchandise";
 export type ReportsStatus = "idle" | "loading" | "error" | "success";
 
 export interface MembershipReportRow {
+  _id: string;
   reference_code: string;
   id_number: string;
   name: string;

@@ -33,6 +33,7 @@ const DEFAULT_EMAIL_CONFIG: EmailConfig = {
   includeSummary: true,
   includeRawData: false,
   useNoetix: false,
+  skipIfEmpty: false,
 };
 
 export const JobFormDialog = ({ open, onClose, job, onSuccess }: JobFormDialogProps) => {
@@ -202,7 +203,19 @@ export const JobFormDialog = ({ open, onClose, job, onSuccess }: JobFormDialogPr
                     Include raw data
                   </label>
                 </div>
-                <div className="flex items-center gap-3 pt-1 border-t border-[#f0f0f0] pt-3">
+                <div className="flex items-center gap-3 border-t border-[#f0f0f0] pt-3">
+                  <Switch
+                    checked={emailConfig.skipIfEmpty ?? false}
+                    onCheckedChange={(v) => setEmailConfig({ ...emailConfig, skipIfEmpty: v })}
+                  />
+                  <div>
+                    <label className="text-sm text-[#555]">Only send when there's something to report</label>
+                    <p className="text-xs text-[#8a8a8a] mt-0.5">
+                      Skips the email when every selected function returns zero records. Failures are always sent.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 border-t border-[#f0f0f0] pt-3">
                   <Switch
                     checked={emailConfig.useNoetix}
                     onCheckedChange={(v) => setEmailConfig({ ...emailConfig, useNoetix: v })}

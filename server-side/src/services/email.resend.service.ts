@@ -37,13 +37,11 @@ const toPendingEntry = (entry: any): PendingEntry => ({
 const renderMembershipEmail = async (data: {
   name: string;
   reference_code: string;
-  cash: number;
   total: number;
   course: string;
   year: number;
   admin: string;
   date: string;
-  change: number;
 }) => {
   const templatePath = path.join(
     __dirname,
@@ -241,17 +239,14 @@ const resendMembership = async (entry: PendingEntry) => {
     throw new Error(`Membership history not found for ${entry.referenceCode}`);
   }
 
-  const cash = history.total;
   const data = {
     name: history.name,
     reference_code: history.reference_code,
-    cash,
     total: history.total,
     course: history.course,
     year: history.year,
     admin: history.admin,
     date: format(new Date(history.date), "MMMM d, yyyy"),
-    change: 0,
   };
 
   const html = await renderMembershipEmail(data);

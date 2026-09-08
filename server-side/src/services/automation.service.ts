@@ -20,6 +20,8 @@ import { queryNoetixAiAgent } from "./noetix-chat.service";
 
 const LOG_RETENTION_DAYS = 90;
 const LOCK_KEY = "automation_job_lock";
+/** Functions run serially under a process-wide lock, so one slow query stalls every job. */
+const FUNCTION_TIMEOUT_MS = 30000;
 let isExecuting = false;
 
 export interface JobListResult {
@@ -163,8 +165,20 @@ const executeFunction = async (
   }
 
   const start = Date.now();
+  let timer: NodeJS.Timeout | undefined;
   try {
-    const data = await def.fn(defaultParams);
+    const data = await Promise.race([
+      def.fn(defaultParams),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(`Timed out after ${FUNCTION_TIMEOUT_MS / 1000}s`)
+            ),
+          FUNCTION_TIMEOUT_MS
+        );
+      }),
+    ]);
     const count = Array.isArray(data) ? data.length : 1;
     return {
       success: true,
@@ -185,6 +199,8 @@ const executeFunction = async (
       category: def.category,
       description: def.description,
     };
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 };
 
@@ -417,9 +433,16 @@ export const executeJob = async (jobId: string): Promise<ExecuteResult> => {
   const allSuccess = results.every((r) => r.success);
   const someSuccess = results.some((r) => r.success);
 
-  // Queue email if enabled
+  // Queue email if enabled. Alert-style jobs opt out of "nothing to report"
+  // mail so a daily empty report doesn't train admins to ignore the inbox.
+  // A failed function also reports zero records, so require success here —
+  // failures must still reach someone's inbox.
+  const allEmpty =
+    results.length > 0 && results.every((r) => r.success && r.recordCount === 0);
+  const skippedAsEmpty = Boolean(job.emailConfig.skipIfEmpty) && allEmpty;
+
   let emailQueued = false;
-  if (job.emailConfig.enabled && targets.length > 0) {
+  if (job.emailConfig.enabled && targets.length > 0 && !skippedAsEmpty) {
     try {
       await queueReportEmail(job, results, targets);
       emailQueued = true;
@@ -447,6 +470,7 @@ export const executeJob = async (jobId: string): Promise<ExecuteResult> => {
       results,
       targetCount: targets.length,
       emailQueued,
+      skippedAsEmpty,
       totalDuration,
     },
     someSuccess
