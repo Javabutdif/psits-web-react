@@ -12,9 +12,12 @@ const historySchema = new Schema<IHistoryDocument>({
     type: String,
   },
   reference_code: {
+    // `require` (the typo used on the other fields below) is not a Mongoose
+    // option, so this was never enforced — that is how a null and an empty
+    // string reached a unique field.
     type: String,
     unique: true,
-    require: true,
+    required: true,
   },
   name: {
     type: String,

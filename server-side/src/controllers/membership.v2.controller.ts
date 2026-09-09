@@ -17,13 +17,19 @@ import { membershipService } from "../services/membership.service";
 import { logService } from "../services/log.service";
 import { logs_action } from "../enums/logs.enums";
 import { catchAsync } from "../util/catch.async.util";
+import { nextMembershipReference } from "../util/reference.util";
 
 class MembershipController {
   // Membership related controller methods can be added here if needed
 
   approveMembershipController = catchAsync(
     async (req: Request, res: Response) => {
-      const { reference_code, id_number, admin, rfid, cash } = req.body;
+      const { id_number, admin, rfid } = req.body;
+
+      // Generated server-side; any reference_code sent by a client is ignored.
+      // Claimed before the transaction opens so a rollback burns a number rather
+      // than holding the counter and conflicting with concurrent approvals.
+      const reference_code = await nextMembershipReference();
 
       const session = await mongoose.startSession();
       session.startTransaction();
@@ -81,18 +87,21 @@ class MembershipController {
       const data: IMembershipRequest = {
         name: studentService.fullNameFormat(student),
         reference_code,
-        cash: cash ?? 50,
         total: settings?.membership_price ?? 0,
         course: student.course,
         year: student.year,
         admin: admin ?? req.admin.name,
         date: format(new Date(), "MMMM d, yyyy"),
-        change: (cash ?? 50) - (cash ?? 50),
       };
 
       // Call the reusable receipt function
       if (student?.email) {
-        await membershipRequestReceipt(data, student.email, (student as any)._id, reference_code);
+        await membershipRequestReceipt(
+          data,
+          student.email,
+          (student as any)._id,
+          reference_code
+        );
       }
 
       await logService.create({
@@ -139,6 +148,49 @@ class MembershipController {
         res.status(401).json({ message: "No History" });
       }
       res.status(200).json(history);
+    }
+  );
+
+  /**
+   * Manual correction of a membership reference code — for records whose code is
+   * wrong, or is a LEGACY-* placeholder. Does not move the sequence counter.
+   */
+  updateMembershipReferenceController = catchAsync(
+    async (req: Request, res: Response) => {
+      const { reference_code, cascade } = req.body;
+
+      const { record, previousCode, emailsRelinked, renumbered } =
+        await historyService.updateReferenceCode(
+          String(req.params.id),
+          reference_code,
+          { cascade: cascade === true || cascade === "true" }
+        );
+
+      // A financial record's identifier changed — keep both values traceable,
+      // along with how many follow-on records the cascade rewrote.
+      await logService.create({
+        admin: req.admin?.name ?? "System",
+        admin_id: req.admin?._id,
+        action: logs_action.UPDATE_MEMBERSHIP_REFERENCE,
+        target:
+          `${previousCode || "(blank)"} → ${record.reference_code} for ${record.name}` +
+          (renumbered.length
+            ? ` (+${renumbered.length} renumbered: ${renumbered
+                .map((r) => `${r.from}→${r.to}`)
+                .join(", ")})`
+            : ""),
+        target_id: String(record._id),
+        target_model: "Membership",
+      });
+
+      return res.status(200).json({
+        message: "Reference code updated",
+        data: {
+          reference_code: record.reference_code,
+          emailsRelinked,
+          renumbered,
+        },
+      });
     }
   );
 

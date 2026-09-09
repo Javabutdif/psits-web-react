@@ -6,6 +6,10 @@ import {
   merchandiseReports,
 } from "@/features/admin/api/admin";
 import { showToast } from "@/utils/alertHelper";
+import {
+  formatMembershipType,
+  matchesMembershipType,
+} from "../utils/membershipType";
 import type {
   MembershipReportRow,
   MerchandiseOrderDetail,
@@ -271,7 +275,8 @@ export const useReportsData = () => {
       )
         return false;
       if (filters.year && String(row.year) !== filters.year) return false;
-      if (filters.type && row.type !== filters.type) return false;
+      if (filters.type && !matchesMembershipType(row.type, filters.type))
+        return false;
       if (filters.dateFrom && toDateKey(row.date) < filters.dateFrom)
         return false;
       if (filters.dateTo && toDateKey(row.date) > filters.dateTo) return false;
@@ -322,7 +327,7 @@ export const useReportsData = () => {
       Name: row.name,
       Course: row.course,
       "Year Level": row.year,
-      Type: row.type,
+      Type: formatMembershipType(row.type),
       Date: toDateKey(row.date),
       "Approved By": row.admin || "",
     }));
@@ -361,6 +366,8 @@ export const useReportsData = () => {
     setPage,
     totalPages,
     pagedMembership,
+    /** Every membership row, unfiltered — used to preview cascade renumbering. */
+    membershipRows: membershipData,
     pagedMerchandise,
     tabCounts,
     totalMembershipRows: filteredMembership.length,

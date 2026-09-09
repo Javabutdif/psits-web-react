@@ -127,13 +127,11 @@ export const approveMembershipController = async (
     const data: IMembershipRequest = {
       name: `${student.first_name} ${student.middle_name} ${student.last_name}`,
       reference_code,
-      cash: cash ?? 50,
       total: settings?.membership_price ?? 0,
       course: student.course,
       year: student.year,
       admin: admin ?? req.admin.name,
       date: format(new Date(), "MMMM d, yyyy"),
-      change: (cash ?? 50) - (cash ?? 50),
     };
 
     // Call the reusable receipt function

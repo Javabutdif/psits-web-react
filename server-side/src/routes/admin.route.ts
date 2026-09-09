@@ -42,6 +42,14 @@ router.get(
   roleAuthenticateV2(["admin"]),
   membershipController.getMembershipHistoryController
 );
+//Manual correction of a membership reference code
+router.patch(
+  "/history/:id/reference",
+  requireAccessTokenWithDBCheck,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([psits_roles.ADMIN, psits_roles.FINANCE]),
+  membershipController.updateMembershipReferenceController
+);
 //Membership Request
 router.get(
   "/membership-request",

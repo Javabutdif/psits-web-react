@@ -4,6 +4,8 @@ import {
   Download,
   Filter,
   Package,
+  Pencil,
+  Printer,
   Search,
   ShoppingBag,
   Wallet,
@@ -32,7 +34,15 @@ import {
   DEFAULT_FILTERS,
 } from "../hooks/useReportsData";
 import { downloadCsv } from "../utils/exportCsv";
+import { usePrintReceipt } from "@/components/print";
+import { PrintableMembershipReceipt } from "./PrintableMembershipReceipt";
+import { EditReferenceDialog } from "./EditReferenceDialog";
+import {
+  MEMBERSHIP_TYPE_OPTIONS,
+  formatMembershipType,
+} from "../utils/membershipType";
 import type {
+  MembershipReportRow,
   MerchandiseOrderDetail,
   MerchandiseReportProductOption,
   ReportsFilters,
@@ -174,8 +184,11 @@ const ReportsFilterPopover = ({
                     <SelectValue placeholder="All" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Membership">Membership</SelectItem>
-                    <SelectItem value="Renewal">Renewal</SelectItem>
+                    {MEMBERSHIP_TYPE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -463,6 +476,7 @@ export const ReportsView = () => {
     setPage,
     totalPages,
     pagedMembership,
+    membershipRows,
     pagedMerchandise,
     tabCounts,
     totalMembershipRows,
@@ -479,6 +493,15 @@ export const ReportsView = () => {
 
   const isMembership = activeTab === "membership";
   const status = isMembership ? membershipStatus : merchandiseStatus;
+
+  // Membership rows already carry every receipt field, so unlike orders there is
+  // no receipt endpoint to call here.
+  const { receipt: membershipReceipt, print: printMembershipReceipt } =
+    usePrintReceipt<MembershipReportRow>();
+
+  const [editingRow, setEditingRow] = useState<MembershipReportRow | null>(
+    null
+  );
 
   const handleExport = async () => {
     if (isMembership) {
@@ -633,6 +656,8 @@ export const ReportsView = () => {
               rows={pagedMembership}
               isLoading={status === "loading"}
               hasError={status === "error"}
+              onPrint={printMembershipReceipt}
+              onEditReference={setEditingRow}
             />
           ) : (
             <MerchandiseTable
@@ -650,6 +675,15 @@ export const ReportsView = () => {
           />
         </section>
       </div>
+
+      <PrintableMembershipReceipt receipt={membershipReceipt} />
+
+      <EditReferenceDialog
+        row={editingRow}
+        rows={membershipRows}
+        onClose={() => setEditingRow(null)}
+        onSaved={refetchMembership}
+      />
     </div>
   );
 };
@@ -658,32 +692,39 @@ const MembershipTable = ({
   rows,
   isLoading,
   hasError,
+  onPrint,
+  onEditReference,
 }: {
   rows: ReturnType<typeof useReportsData>["pagedMembership"];
   isLoading: boolean;
   hasError: boolean;
+  onPrint: (row: MembershipReportRow) => void;
+  onEditReference: (row: MembershipReportRow) => void;
 }) => (
   <div className="overflow-x-auto">
-    <table className="w-full min-w-[920px] table-fixed border-collapse text-sm">
+    {/* Column widths must total 100%: this is table-fixed, so any overflow
+        silently clips the last columns instead of shrinking them. */}
+    <table className="w-full min-w-[1120px] table-fixed border-collapse text-sm">
       <thead>
         <tr className="rounded-md bg-[#efefef] text-[#2f2f2f]">
-          <th className="w-[14%] rounded-l-md px-2 py-2 text-left font-medium">
+          <th className="w-[13%] rounded-l-md px-2 py-2 text-left font-medium">
             Reference Code
           </th>
-          <th className="w-[11%] px-2 py-2 text-left font-medium">
+          <th className="w-[10%] px-2 py-2 text-left font-medium">
             Student ID
           </th>
-          <th className="w-[16%] px-2 py-2 text-left font-medium">Name</th>
-          <th className="w-[11%] px-2 py-2 text-left font-medium">
+          <th className="w-[14%] px-2 py-2 text-left font-medium">Name</th>
+          <th className="w-[9%] px-2 py-2 text-left font-medium">
             Course &amp; Year
           </th>
-          <th className="w-[11%] px-2 py-2 text-left font-medium">Date</th>
-          <th className="w-[11%] px-2 py-2 text-left font-medium">Type</th>
-          <th className="w-[14%] px-2 py-2 text-left font-medium">
+          <th className="w-[10%] px-2 py-2 text-left font-medium">Date</th>
+          <th className="w-[10%] px-2 py-2 text-left font-medium">Type</th>
+          <th className="w-[12%] px-2 py-2 text-left font-medium">
             Managed By
           </th>
-          <th className="w-[12%] rounded-r-md px-2 py-2 text-right font-medium">
-            Total
+          <th className="w-[10%] px-2 py-2 text-right font-medium">Total</th>
+          <th className="w-[12%] rounded-r-md px-2 py-2 text-center font-medium">
+            Actions
           </th>
         </tr>
       </thead>
@@ -691,7 +732,7 @@ const MembershipTable = ({
         {isLoading ? (
           Array.from({ length: 8 }, (_, index) => (
             <tr key={index} className="border-b border-[#ededed]">
-              {Array.from({ length: 8 }, (_, cell) => (
+              {Array.from({ length: 9 }, (_, cell) => (
                 <td key={cell} className="px-2 py-3">
                   <Skeleton className="h-4 w-full rounded-full" />
                 </td>
@@ -711,17 +752,44 @@ const MembershipTable = ({
                 {row.course} {row.year ? `- ${row.year}` : ""}
               </td>
               <td className="px-2 py-3">{formatDate(row.date)}</td>
-              <td className="truncate px-2 py-3">{row.type}</td>
+              <td className="truncate px-2 py-3">
+                {formatMembershipType(row.type)}
+              </td>
               <td className="truncate px-2 py-3">{row.admin || "-"}</td>
               <td className="px-2 py-3 text-right font-medium whitespace-nowrap">
                 {formatCurrency(row.total || 0)}
+              </td>
+              <td className="px-2 py-3 whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 shrink-0 rounded-full px-2 text-sky-400"
+                    onClick={() => onPrint(row)}
+                  >
+                    <Printer className="mr-1 h-3.5 w-3.5" />
+                    Print
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 shrink-0 rounded-full p-0 text-[#8a8a8a] hover:text-[#2b2b2b]"
+                    title="Edit reference code"
+                    aria-label="Edit reference code"
+                    onClick={() => onEditReference(row)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </td>
             </tr>
           ))
         ) : (
           <tr>
             <td
-              colSpan={8}
+              colSpan={9}
               className="px-3 py-16 text-center text-sm text-[#777]"
             >
               No membership records found.
