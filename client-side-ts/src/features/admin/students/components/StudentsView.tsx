@@ -83,7 +83,7 @@ const tabs: Array<{
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
-const membershipStatuses = ["ACTIVE", "RENEWED", "PENDING", "NONE"];
+const membershipStatuses = ["ACTIVE", "PENDING", "NONE"];
 
 const initialFormValues: StudentFormValues = {
   id_number: "",
@@ -103,13 +103,12 @@ const emptyPasswordValues: StudentPasswordValues = {
 
 const formatMembership = (status: string) => {
   if (status === "ACTIVE") return "Active";
-  if (status === "RENEWED") return "Renewed";
   if (status === "PENDING") return "Pending";
   return "Not Applied";
 };
 
 const membershipTone = (status: string) => {
-  if (status === "ACTIVE" || status === "RENEWED") {
+  if (status === "ACTIVE") {
     return "bg-green-100 text-green-600";
   }
   if (status === "PENDING") return "bg-sky-100 text-sky-600";
@@ -333,10 +332,6 @@ const StudentsTable = ({
               ))
             ) : data.length > 0 ? (
               data.map((student) => {
-                const canRenew =
-                  student.membershipStatus === "ACTIVE" ||
-                  student.membershipStatus === "RENEWED";
-
                 return (
                   <tr
                     key={`${activeTab}-${student.id_number}`}
@@ -377,9 +372,7 @@ const StudentsTable = ({
                         <>
                           <span>{formatDate(student.applied)}</span>
                           <span className="block text-xs text-[#8a8a8a]">
-                            {student.isFirstApplication
-                              ? "Membership"
-                              : "Renewal"}
+                            Membership
                           </span>
                         </>
                       ) : (
@@ -456,13 +449,6 @@ const StudentsTable = ({
                             >
                               <KeyRound className="h-4 w-4" />
                               Change Password
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={!canRenew}
-                              onClick={() => onAction("renew", [student])}
-                            >
-                              <RefreshCcw className="h-4 w-4" />
-                              Renew Membership
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => onHistory(student)}
@@ -1184,7 +1170,7 @@ const ConfirmDialog = ({
   const isDelete = action === "delete";
   const isRestore = action === "restore";
   const isCancel = action === "cancelRequest";
-  const isMembership = action === "approve" || action === "renew";
+  const isMembership = action === "approve";
   const primaryLabel = isDelete
     ? "Delete"
     : isRestore
@@ -1409,7 +1395,7 @@ export const StudentsView = () => {
             totalPages={totalPages}
             onAction={(action, records) => {
               if (
-                (action === "approve" || action === "renew") &&
+                action === "approve" &&
                 !canManageMembership
               ) {
                 showToast("error", "Unauthorized.");

@@ -49,10 +49,7 @@ class AdminController {
       Orders.countDocuments({ order_status: "Pending" }),
       Student.countDocuments({
         status: account_status.ACTIVE,
-        $or: [
-          { membershipStatus: membership_status.ACTIVE },
-          { membershipStatus: membership_status.RENEWED },
-        ],
+        membershipStatus: membership_status.ACTIVE,
       }),
       orderService.getDailySales(),
     ]);

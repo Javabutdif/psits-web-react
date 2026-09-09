@@ -154,7 +154,7 @@ export const getStudentMembershipStatusV2 = async (
 ) => {
   try {
     const student = await Student.findById(req.userV2.sub).select(
-      "id_number membershipStatus isFirstApplication"
+      "id_number membershipStatus"
     );
 
     if (!student) {
@@ -167,7 +167,6 @@ export const getStudentMembershipStatusV2 = async (
     return res.status(200).json({
       status: normalizeMembershipStatus(rawStatus),
       rawStatus,
-      isFirstApplication: student.isFirstApplication,
       membershipPrice: settings?.membership_price ?? 0,
     });
   } catch (error) {
@@ -182,7 +181,7 @@ export const requestStudentMembershipV2 = async (
 ) => {
   try {
     const student = await Student.findById(req.userV2.sub).select(
-      "membershipStatus isFirstApplication"
+      "membershipStatus"
     );
 
     if (!student) {
@@ -210,7 +209,6 @@ export const requestStudentMembershipV2 = async (
       message: "Membership request submitted successfully.",
       status: "pending",
       rawStatus: membership_status.PENDING,
-      isFirstApplication: student.isFirstApplication,
     });
   } catch (error) {
     console.error("Error submitting membership request:", error);

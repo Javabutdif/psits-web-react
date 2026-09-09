@@ -8,6 +8,7 @@ import { Orders } from "../models/orders.model";
 import { Log } from "../models/log.model";
 import { Settings } from "../models/settings.model";
 import { MembershipHistory, IHistoryDocument } from "../models/history.model";
+import { Membership } from "../models/membership.model";
 import { EmailQueue } from "../models/email.model";
 import { Counter } from "../models/counter.model";
 import {
@@ -53,13 +54,39 @@ class HistoryService {
   };
   //Get all membership history
   getAll = async () => {
-    const history: IHistory[] = await MembershipHistory.find().sort({
+    const history: IHistoryDocument[] = await MembershipHistory.find().sort({
       date: -1,
     });
     if (!history) {
       throw new AppError("No history found!", 404);
     }
-    return history;
+
+    // Surface the parent term's name + term so reports can filter by them.
+    // Legacy rows without membership_id get empty values.
+    const terms = await Membership.find().select("term_name membership_name");
+    const termById = new Map(
+      terms.map((term) => [String(term._id), term])
+    );
+
+    return history.map((record) => ({
+      ...record.toObject(),
+      term_name: record.membership_id
+        ? termById.get(String(record.membership_id))?.term_name ?? ""
+        : "",
+      membership_name: record.membership_id
+        ? termById.get(String(record.membership_id))?.membership_name ?? ""
+        : "",
+    }));
+  };
+
+  //Get history records linked to a membership term (activation records)
+  getByMembership = async (
+    membershipId: string | string[]
+  ): Promise<IHistoryDocument[]> => {
+    const ids = Array.isArray(membershipId) ? membershipId : [membershipId];
+    return await MembershipHistory.find({
+      membership_id: { $in: ids },
+    }).sort({ date: -1 });
   };
 
   /**

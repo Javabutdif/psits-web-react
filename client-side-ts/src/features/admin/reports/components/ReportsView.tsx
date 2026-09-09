@@ -37,10 +37,6 @@ import { downloadCsv } from "../utils/exportCsv";
 import { usePrintReceipt } from "@/components/print";
 import { PrintableMembershipReceipt } from "./PrintableMembershipReceipt";
 import { EditReferenceDialog } from "./EditReferenceDialog";
-import {
-  MEMBERSHIP_TYPE_OPTIONS,
-  formatMembershipType,
-} from "../utils/membershipType";
 import type {
   MembershipReportRow,
   MerchandiseOrderDetail,
@@ -51,6 +47,10 @@ import type {
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
 const sizes = ["18", "2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL"];
+const TERM_OPTIONS = [
+  { value: "MEMBERSHIP_TERM_FIRST", label: "1st Term" },
+  { value: "MEMBERSHIP_TERM_SECOND", label: "2nd Term" },
+];
 
 const formatCurrency = (value: number) =>
   `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -69,6 +69,7 @@ interface ReportsFilterPopoverProps {
   activeTab: "membership" | "merchandise";
   filters: ReportsFilters;
   productOptions: MerchandiseReportProductOption[];
+  membershipNameOptions: string[];
   onApply: (filters: ReportsFilters) => void;
 }
 
@@ -76,6 +77,7 @@ const ReportsFilterPopover = ({
   activeTab,
   filters,
   productOptions,
+  membershipNameOptions,
   onApply,
 }: ReportsFilterPopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -174,24 +176,54 @@ const ReportsFilterPopover = ({
             </div>
 
             {activeTab === "membership" && (
-              <div>
-                <Label className="mb-1.5 block text-xs font-medium">Type</Label>
-                <Select
-                  value={draft.type}
-                  onValueChange={(v) => update("type", v)}
-                >
-                  <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MEMBERSHIP_TYPE_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div>
+                  <Label className="mb-1.5 block text-xs font-medium">
+                    Term
+                  </Label>
+                  <Select
+                    value={draft.term || "all"}
+                    onValueChange={(v) =>
+                      update("term", v === "all" ? "" : v)
+                    }
+                  >
+                    <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
+                      <SelectValue placeholder="All terms" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All terms</SelectItem>
+                      {TERM_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="mb-1.5 block text-xs font-medium">
+                    Membership Name
+                  </Label>
+                  <Select
+                    value={draft.membershipName || "all"}
+                    onValueChange={(v) =>
+                      update("membershipName", v === "all" ? "" : v)
+                    }
+                  >
+                    <SelectTrigger className="h-9 w-full rounded-lg border-[#ececec]">
+                      <SelectValue placeholder="All memberships" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All memberships</SelectItem>
+                      {membershipNameOptions.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             {activeTab === "merchandise" && (
@@ -484,6 +516,7 @@ export const ReportsView = () => {
     membershipSummary,
     merchandiseSummary,
     merchandiseProductOptions,
+    membershipNameOptions,
     isExporting,
     buildMembershipExportRows,
     exportMerchandiseReport,
@@ -633,6 +666,7 @@ export const ReportsView = () => {
                 activeTab={activeTab}
                 filters={filters}
                 productOptions={merchandiseProductOptions}
+                membershipNameOptions={membershipNameOptions}
                 onApply={setFilters}
               />
               <Button
@@ -718,7 +752,6 @@ const MembershipTable = ({
             Course &amp; Year
           </th>
           <th className="w-[10%] px-2 py-2 text-left font-medium">Date</th>
-          <th className="w-[10%] px-2 py-2 text-left font-medium">Type</th>
           <th className="w-[12%] px-2 py-2 text-left font-medium">
             Managed By
           </th>
@@ -732,7 +765,7 @@ const MembershipTable = ({
         {isLoading ? (
           Array.from({ length: 8 }, (_, index) => (
             <tr key={index} className="border-b border-[#ededed]">
-              {Array.from({ length: 9 }, (_, cell) => (
+              {Array.from({ length: 8 }, (_, cell) => (
                 <td key={cell} className="px-2 py-3">
                   <Skeleton className="h-4 w-full rounded-full" />
                 </td>
@@ -752,9 +785,6 @@ const MembershipTable = ({
                 {row.course} {row.year ? `- ${row.year}` : ""}
               </td>
               <td className="px-2 py-3">{formatDate(row.date)}</td>
-              <td className="truncate px-2 py-3">
-                {formatMembershipType(row.type)}
-              </td>
               <td className="truncate px-2 py-3">{row.admin || "-"}</td>
               <td className="px-2 py-3 text-right font-medium whitespace-nowrap">
                 {formatCurrency(row.total || 0)}

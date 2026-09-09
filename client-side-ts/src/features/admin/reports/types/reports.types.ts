@@ -10,10 +10,11 @@ export interface MembershipReportRow {
   course: string;
   year: string | number;
   date: string | Date;
-  type: string;
   admin?: string;
   rfid?: string;
   total?: number;
+  term_name?: string;
+  membership_name?: string;
 }
 
 export interface MerchandiseOrderDetail {
@@ -56,11 +57,12 @@ export interface ReportsFilters {
   rfid: string;
   course: string;
   year: string;
-  type: string;
   productId: string;
   batch: string;
   size: string;
   color: string;
   dateFrom: string;
   dateTo: string;
+  term: string;
+  membershipName: string;
 }

@@ -240,11 +240,11 @@ const resendMembership = async (entry: PendingEntry) => {
   }
 
   const data = {
-    name: history.name,
+    name: history.name ?? "",
     reference_code: history.reference_code,
     total: history.total,
-    course: history.course,
-    year: history.year,
+    course: history.course ?? "",
+    year: history.year ?? 0,
     admin: history.admin,
     date: format(new Date(history.date), "MMMM d, yyyy"),
   };

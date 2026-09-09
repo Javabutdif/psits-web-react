@@ -61,11 +61,6 @@ const studentSchema = new Schema<IStudentDocument>({
   deletedDate: {
     type: String,
   },
-  isFirstApplication: {
-    type: Boolean,
-    default: true,
-  },
-
   role: {
     type: String,
   },
