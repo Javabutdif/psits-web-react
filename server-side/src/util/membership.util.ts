@@ -6,14 +6,18 @@ export type MembershipGateStatus =
   | "rejected"
   | "cancelled";
 
-const ACTIVE_STATUSES = new Set([
+export const ACTIVE_STATUSES = new Set([
   "ACTIVE",
   "RENEWED",
   "MEMBERSHIP_ACTIVE",
   "MEMBERSHIP_RENEWED",
 ]);
 
-const PENDING_STATUSES = new Set(["PENDING", "MEMBERSHIP_PENDING", "REQUEST"]);
+export const PENDING_STATUSES = new Set([
+  "PENDING",
+  "MEMBERSHIP_PENDING",
+  "REQUEST",
+]);
 
 const EXPIRED_STATUSES = new Set(["EXPIRED", "MEMBERSHIP_EXPIRED"]);
 

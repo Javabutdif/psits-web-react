@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Check,
   ChevronLeft,
@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { showToast } from "@/utils/alertHelper";
 import { getOrderReceiptV2 } from "../api/orders";
 import { useOrdersData, ROWS_PER_PAGE } from "../hooks/useOrdersData";
+import { usePrintReceipt } from "@/components/print";
 import { PrintableOrderReceipt } from "./PrintableOrderReceipt";
 import type { PrintableOrderReceipt as PrintableOrderReceiptData } from "../types/orders.types";
 
@@ -297,10 +298,8 @@ export const OrdersView = () => {
   const [cancelTarget, setCancelTarget] = useState<OrderRowData | null>(null);
   const [refundTarget, setRefundTarget] = useState<OrderRowData | null>(null);
   const [detailOrder, setDetailOrder] = useState<OrderRowData | null>(null);
-  const [receipt, setReceipt] = useState<PrintableOrderReceiptData | null>(
-    null
-  );
-  const [printTicket, setPrintTicket] = useState(0);
+  const { receipt, print: printReceipt } =
+    usePrintReceipt<PrintableOrderReceiptData>();
   const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
 
   const data = activeTab === "pending" ? pendingData : paidData;
@@ -339,22 +338,6 @@ export const OrdersView = () => {
   const totalPagesNum = Math.max(1, totalPages);
   const currentPage = Math.min(page, totalPagesNum);
 
-  useEffect(() => {
-    if (!receipt || printTicket === 0) return;
-
-    const timer = window.setTimeout(() => {
-      window.print();
-    }, 150);
-
-    return () => window.clearTimeout(timer);
-  }, [receipt, printTicket]);
-
-  useEffect(() => {
-    const handleAfterPrint = () => setReceipt(null);
-    window.addEventListener("afterprint", handleAfterPrint);
-    return () => window.removeEventListener("afterprint", handleAfterPrint);
-  }, []);
-
   const handlePrintReceipt = async (order: OrderRowData) => {
     if (!canManageOrders) {
       showToast("error", "Unauthorized.");
@@ -368,8 +351,7 @@ export const OrdersView = () => {
         showToast("error", "Unable to load receipt.");
         return;
       }
-      setReceipt(result);
-      setPrintTicket((ticket) => ticket + 1);
+      printReceipt(result);
     } finally {
       setPrintingOrderId(null);
     }

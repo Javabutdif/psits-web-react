@@ -129,9 +129,6 @@ const formatDateKey = (value: string) => {
   return date.toISOString().slice(0, 10);
 };
 
-const createReferenceCode = () =>
-  Math.floor(Math.random() * (999999999 - 111111111 + 1)) + 111111111;
-
 export const useStudentsData = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<StudentsTab>("all");
@@ -343,12 +340,10 @@ export const useStudentsData = () => {
   const approveStudentMembership = useCallback(
     (student: AdminStudent) => {
       return approveMembership({
-        reference_code: String(createReferenceCode()),
         id_number: student.id_number,
         rfid: student.rfid || "N/A",
         type: student.isFirstApplication ? "Membership" : "Renewal",
         admin: user?.name || "Admin",
-        cash: membershipFee,
         date: new Date(),
         total: membershipFee,
       });
@@ -433,6 +428,10 @@ export const useStudentsData = () => {
     setSearch,
     sort,
     submitMembership,
+    /** Reload the list and tab counts — used after adding a membership. */
+    refresh: async () => {
+      await Promise.all([fetchStudents(), fetchStudentCounts()]);
+    },
     tabCounts,
     total: filteredStudents.length,
     totalPages,

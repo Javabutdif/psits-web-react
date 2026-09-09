@@ -74,6 +74,7 @@ export const logs_action = Object.freeze({
   APPROVE_MEMBERSHIP: "Approved Membership",
   REVOKE_MEMBERSHIP: "Revoked Memberships",
   CHANGE_MEMBER_PRICE: "Changed Membership Price",
+  UPDATE_MEMBERSHIP_REFERENCE: "Updated Membership Reference Code",
   // Reports
   EXPORT_REPORT: "Exported Report",
   // Contributions
