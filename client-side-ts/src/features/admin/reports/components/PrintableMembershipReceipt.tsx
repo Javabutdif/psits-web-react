@@ -5,7 +5,6 @@ import {
   formatReceiptCurrency,
   formatReceiptDateTime,
 } from "@/components/print";
-import { formatMembershipType } from "../utils/membershipType";
 import type { MembershipReportRow } from "../types/reports.types";
 
 interface PrintableMembershipReceiptProps {
@@ -51,9 +50,7 @@ export const PrintableMembershipReceipt = ({
         <div className="border-b border-dashed border-neutral-300 py-3">
           <p className="mb-2 font-semibold">Item</p>
           <div className="flex justify-between gap-2">
-            <p className="font-semibold">
-              {formatMembershipType(receipt.type)}
-            </p>
+            <p className="font-semibold">Membership</p>
             <p className="shrink-0 font-semibold">
               {formatReceiptCurrency(receipt.total)}
             </p>

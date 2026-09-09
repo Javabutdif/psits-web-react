@@ -1,4 +1,3 @@
-import { ICart } from "./cart.interface";
 import { ICartDocument } from "./cart.model";
 import { Document } from "mongoose";
 import mongoose from "mongoose";
@@ -20,7 +19,7 @@ export interface IStudent {
   campus: string;
   deletedBy: string;
   deletedDate: string;
-  isFirstApplication: boolean;
+  isFirstApplication?: boolean;
   role: string;
   isRequest: boolean;
   adminRequest: string;

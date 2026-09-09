@@ -19,6 +19,7 @@ import {
   roleAuthenticateV2,
   adminAccessAuthenticateV2,
 } from "../middlewares/authV2.middleware";
+import { membershipController } from "../controllers/membership.v2.controller";
 
 const router = Router();
 
@@ -107,6 +108,71 @@ router.put(
   requireAccessTokenWithDBCheck,
   roleAuthenticateV2(["admin", "student"]),
   editStudentYearLevel
+);
+
+// MEMBERSHIP CRUD ROUTES
+router.post(
+  "/membership",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.createMembershipController
+);
+
+router.get(
+  "/membership",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.getAllMembershipController
+);
+
+router.get(
+  "/membership/:id",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.getMembershipByIdController
+);
+
+router.get(
+  "/membership/:id/histories",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.getMembershipHistoriesController
+);
+
+// Admin requests membership on a student's behalf (sets student PENDING)
+router.post(
+  "/membership/request",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.requestMembershipForStudentController
+);
+
+router.put(
+  "/membership/:id",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.updateMembershipController
+);
+
+router.post(
+  "/membership/:id/activate",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.activateMembershipController
+);
+
+router.delete(
+  "/membership/:id",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.revokeMembershipController
+);
+
+router.post(
+  "/membership/expire-past-due",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  membershipController.expirePastDueMembershipsController
 );
 
 export default router;

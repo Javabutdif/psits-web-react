@@ -105,10 +105,6 @@ export const AddMembershipDialog = ({
       const ok = await approveMembership({
         id_number: selected.id_number,
         rfid: selected.rfid || "N/A",
-        // The server derives Membership vs Renewal from the student's own
-        // isFirstApplication flag and ignores this; sent only to match the
-        // existing payload shape.
-        type: "Membership",
         admin: user?.name || "Admin",
         date: new Date(),
         total: fee,

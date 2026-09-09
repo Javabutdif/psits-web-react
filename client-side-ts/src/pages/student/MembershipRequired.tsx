@@ -119,6 +119,11 @@ export default function MembershipRequired() {
           </div>
 
           <p className="mt-3 text-sm leading-6 text-slate-600">
+            {(info?.status === "none" || info?.status === "expired") && (
+              <span className="font-medium text-slate-800">
+                No membership is active for now.{" "}
+              </span>
+            )}
             An active PSITS membership is required before you can access student
             attendance, certificates, cart, checkout, and orders.
           </p>

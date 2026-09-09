@@ -12,6 +12,7 @@ import "express-async-errors";
 import { checkPromos } from "./custom_function/check_promo";
 import { resendPendingEmails } from "./services/email.resend.service";
 import { logCronExecution } from "./services/devtools.service";
+import { membershipService } from "./services/membership.service";
 import devtoolsRoutes from "./routes/devtools.v2.route";
 import { orderService } from "./services/order.service";
 import adminRoutes from "./routes/admin.route";
@@ -274,6 +275,45 @@ async function startServer() {
         } catch (err: any) {
           await logCronExecution({
             jobName: "contribution-sync",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: false,
+            errorMessage: err.message,
+          });
+        }
+      },
+      { timezone: "Asia/Manila" }
+    );
+
+    // Membership expiration: flip past-due active memberships to inactive and
+    // drop their students to NONE so access gating + student UI stay correct.
+    const membershipExpireJob = cron.schedule(
+      "0 0 * * *",
+      async () => {
+        console.log("[Midnight PH] Running membership expiration check...");
+        const startedAt = new Date();
+        try {
+          const expiredCount =
+            await membershipService.expirePastDueMemberships();
+          if (expiredCount > 0) {
+            console.log(
+              `[Midnight PH] Expired ${expiredCount} past-due membership(s)`
+            );
+          }
+          await logCronExecution({
+            jobName: "membership-expire",
+            scheduledAt: startedAt,
+            startedAt,
+            completedAt: new Date(),
+            durationMs: Date.now() - startedAt.getTime(),
+            success: true,
+            metadata: { expiredCount },
+          });
+        } catch (err: any) {
+          await logCronExecution({
+            jobName: "membership-expire",
             scheduledAt: startedAt,
             startedAt,
             completedAt: new Date(),

@@ -64,7 +64,6 @@ interface StudentApiRecord {
   applied?: string;
   deletedBy?: string;
   deletedDate?: string;
-  isFirstApplication?: boolean;
   campus?: string;
 }
 
@@ -96,7 +95,6 @@ const normalizeStudent = (record: StudentApiRecord): AdminStudent => {
     applied: String(record.applied || ""),
     deletedBy: String(record.deletedBy || ""),
     deletedDate: String(record.deletedDate || ""),
-    isFirstApplication: Boolean(record.isFirstApplication),
     campus: String(record.campus || ""),
   };
 };
@@ -342,7 +340,6 @@ export const useStudentsData = () => {
       return approveMembership({
         id_number: student.id_number,
         rfid: student.rfid || "N/A",
-        type: student.isFirstApplication ? "Membership" : "Renewal",
         admin: user?.name || "Admin",
         date: new Date(),
         total: membershipFee,

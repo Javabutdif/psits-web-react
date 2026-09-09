@@ -336,16 +336,14 @@ const readTools: ChatTool[] = [
   {
     name: "get_active_memberships",
     description:
-      "Returns the count of students with ACTIVE or RENEWED membership status.",
+      "Returns the count of students with ACTIVE membership status.",
     category: "Memberships",
     permission: "read",
     execute: () =>
       safeCount(() =>
         Student.countDocuments({
           status: account_status.ACTIVE,
-          membershipStatus: {
-            $in: [membership_status.ACTIVE, membership_status.RENEWED],
-          },
+          membershipStatus: membership_status.ACTIVE,
         })
       ),
   },
@@ -1596,16 +1594,14 @@ const readTools: ChatTool[] = [
   {
     name: "get_membership_expiry_risk_count",
     description:
-      "Returns count of members whose membership is ACTIVE or RENEWED but who applied more than 90 days ago with no recent renewal activity.",
+      "Returns count of members whose membership is ACTIVE but who applied more than 90 days ago with no recent renewal activity.",
     category: "Membership",
     permission: "read",
     execute: async () => {
       const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
       try {
         return await Student.countDocuments({
-          membershipStatus: {
-            $in: [membership_status.ACTIVE, membership_status.RENEWED],
-          },
+          membershipStatus: membership_status.ACTIVE,
           createdAt: { $lte: ninetyDaysAgo },
         });
       } catch {
@@ -1948,7 +1944,7 @@ const writeTools: ChatTool[] = [
   {
     name: "approve_membership",
     description:
-      "Approves a student membership request. Sets membership status to ACTIVE or RENEWED. Requires ADMIN or FINANCE access.",
+      "Approves a student membership request. Sets membership status to ACTIVE. Requires ADMIN or FINANCE access.",
     category: "Membership",
     permission: "admin_finance",
     args: [

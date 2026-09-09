@@ -123,6 +123,8 @@ interface MembershipHistoryItem {
   date: string | Date;
   admin?: string;
   total?: number;
+  term_name?: string;
+  membership_name?: string;
 }
 
 type MembershipHistoryResponse =
@@ -305,7 +307,6 @@ interface MembershipApprovalPayload {
   // longer sent by the client.
   id_number: string;
   rfid?: string;
-  type: "Membership" | "Renewal";
   admin?: string;
   date?: Date;
   total?: number;
@@ -549,6 +550,33 @@ export const membershipHistory = async (): Promise<
     return Array.isArray(response.data) ? response.data : response.data.data;
   } catch (error) {
     handleApiError(error, false);
+  }
+};
+
+export interface MembershipOption {
+  name: string;
+  term: string;
+}
+
+export const membershipOptions = async (): Promise<MembershipOption[]> => {
+  try {
+    const response: AxiosResponse<{ data?: unknown[] }> = await axios.get(
+      `${backendConnection()}/api/membership`,
+      { headers: createHeaders() }
+    );
+    const rows = Array.isArray(response.data?.data)
+      ? (response.data.data as Array<{
+          membership_name?: string;
+          term_name?: string;
+        }>)
+      : [];
+    return rows.map((row) => ({
+      name: row.membership_name ?? "",
+      term: row.term_name ?? "",
+    }));
+  } catch (error) {
+    handleApiError(error, false);
+    return [];
   }
 };
 

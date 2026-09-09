@@ -54,6 +54,7 @@ import ApplicationPage from "./pages/student/ApplicationPage";
 import Recruitment from "./features/admin/recruitment-management/components/RecuitmentViews";
 import Contributions from "./pages/admin/Contributions";
 import { AgentChatPage } from "./pages/admin/AgentChatPage";
+import Memberships from "./pages/admin/Memberships";
 
 const router = createBrowserRouter([
   {
@@ -151,6 +152,7 @@ const router = createBrowserRouter([
               { path: "recuitment-management", Component: Recruitment },
               { path: "contributions", Component: Contributions },
               { path: "students", Component: Students },
+              { path: "memberships", Component: Memberships },
               { path: "merchandise", Component: Merchandise },
               { path: "merchandise/products", Component: Merchandise },
               { path: "merchandise/products/new", Component: Merchandise },
