@@ -63,13 +63,11 @@ const loadPromoCodes = async (): Promise<PromoListRow[] | null> => {
   try {
     const data = await getAllPromoCodes();
     if (!data) {
-      showToast("error", "Failed to fetch promo codes.");
       return null;
     }
     return data;
   } catch (error) {
-    console.error(error);
-    showToast("error", "Failed to fetch promo codes.");
+    console.error("Error fetching promo codes:", error);
     return null;
   }
 };

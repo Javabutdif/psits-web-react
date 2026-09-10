@@ -4,6 +4,7 @@ import {
   ReceiptHeader,
   formatReceiptCurrency,
   formatReceiptDateTime,
+  formatReceiptReference,
 } from "@/components/print";
 import type { MembershipReportRow } from "../types/reports.types";
 
@@ -15,6 +16,11 @@ export const PrintableMembershipReceipt = ({
   receipt,
 }: PrintableMembershipReceiptProps) => {
   if (!receipt) return null;
+
+  const referenceDisplay = formatReceiptReference(
+    receipt.reference_code,
+    receipt.term_name
+  );
 
   return (
     <PrintShell>
@@ -35,7 +41,7 @@ export const PrintableMembershipReceipt = ({
           </p>
           <p>
             <span className="font-semibold">Reference:</span>{" "}
-            {receipt.reference_code || "-"}
+            {referenceDisplay}
           </p>
           <p>
             <span className="font-semibold">Date:</span>{" "}
@@ -57,7 +63,6 @@ export const PrintableMembershipReceipt = ({
           </div>
         </div>
 
-        {/* No Cash/Change rows: membership history stores neither. */}
         <div className="space-y-1 border-b border-dashed border-neutral-300 py-3">
           <div className="flex justify-between pt-1 text-sm font-bold">
             <span>Total</span>
@@ -66,7 +71,7 @@ export const PrintableMembershipReceipt = ({
         </div>
 
         <ReceiptFooter
-          referenceCode={receipt.reference_code}
+          referenceCode={referenceDisplay}
           note="Thank you for your membership!"
         />
       </div>

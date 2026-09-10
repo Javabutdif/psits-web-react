@@ -69,7 +69,7 @@ class PromoController {
     try {
       const promos = await promoService.fetchAll();
       if (!promos || promos.length === 0) {
-        return res.status(404).json({ message: "No Promo Codes" });
+        return res.status(404).json({});
       }
       res.status(200).json({ promo: promos });
     } catch (error: unknown) {
@@ -144,7 +144,7 @@ class PromoController {
     try {
       const log = await promoService.promoLog();
       if (!log || log.length === 0) {
-        return res.status(404).json({ message: "No Promo Log" });
+        return res.status(404).json({});
       }
       res.status(200).json({ log });
     } catch (error: unknown) {
@@ -174,7 +174,9 @@ class PromoController {
       // Fetch cart merchandise data to get categories
       const cartMerches = await Merch.find({
         _id: { $in: merchIdList.map((id) => new Types.ObjectId(id)) },
-      }).select("_id category").lean();
+      })
+        .select("_id category")
+        .lean();
 
       const merchIdSet = new Set(merchIdList);
       const merchCategoryMap = new Map<string, string>();

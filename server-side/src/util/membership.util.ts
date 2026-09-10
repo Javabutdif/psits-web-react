@@ -1,3 +1,5 @@
+import { membership_term } from "../enums/status.enums";
+
 export type MembershipGateStatus =
   | "active"
   | "pending"
@@ -53,3 +55,35 @@ export const normalizeMembershipStatus = (
 
 export const hasActiveMembership = (value?: string | null) =>
   normalizeMembershipStatus(value) === "active";
+
+/**
+ * Human-readable term name for receipts. Returns "" for an unknown or missing
+ * term so callers can decide whether to omit the segment entirely.
+ */
+export const membershipTermLabel = (term?: string | null): string => {
+  switch (String(term ?? "").trim()) {
+    case membership_term.FIRST:
+      return "1st Semester";
+    case membership_term.SECOND:
+      return "2nd Semester";
+    default:
+      return "";
+  }
+};
+
+/**
+ * Receipt-facing reference: "2026-000050-1st Semester".
+ *
+ * Display only — the stored `reference_code` keeps its "YYYY-NNNNNN" form, so
+ * lookups, the sequence counter and the reference-edit flow are unaffected.
+ * Falls back to the bare code when the term cannot be resolved (legacy history
+ * rows with no `membership_id`, or a term outside the enum) rather than
+ * rendering a dangling "-".
+ */
+export const formatReceiptReference = (
+  referenceCode: string,
+  term?: string | null
+): string => {
+  const label = membershipTermLabel(term);
+  return label ? `${referenceCode}-${label}` : referenceCode;
+};

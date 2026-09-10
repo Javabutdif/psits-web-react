@@ -1394,10 +1394,7 @@ export const StudentsView = () => {
             total={total}
             totalPages={totalPages}
             onAction={(action, records) => {
-              if (
-                action === "approve" &&
-                !canManageMembership
-              ) {
+              if (action === "approve" && !canManageMembership) {
                 showToast("error", "Unauthorized.");
                 return;
               }
