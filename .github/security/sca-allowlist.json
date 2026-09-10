@@ -1,0 +1,51 @@
+{
+  "$comment": [
+    "Reviewed SCA exceptions for .github/scripts/sca-check.mjs.",
+    "An entry here suppresses a blocking advisory ONLY until its expiry date.",
+    "Every entry needs: ghsa, package, reason, owner, expires (YYYY-MM-DD).",
+    "Adding an entry is a maintainer decision and requires PR review.",
+    "Do not add an entry when `npm audit fix` or an `overrides` pin can resolve it."
+  ],
+  "exceptions": [
+    {
+      "ghsa": "GHSA-4r6h-8v6p-xvw6",
+      "package": "xlsx",
+      "modules": ["server-side"],
+      "severity": "high",
+      "reason": "Prototype pollution in SheetJS. No patched release exists on the npm registry; SheetJS publishes 0.20.x only from cdn.sheetjs.com. Migration off the registry package is tracked for the maintainers.",
+      "compensating_control": "Excel parsing is admin-only and rate limited; see docs/security-sast for the required upload hardening.",
+      "owner": "psitsucmain2025@gmail.com",
+      "expires": "2026-12-31"
+    },
+    {
+      "ghsa": "GHSA-5pgg-2g8v-p4x9",
+      "package": "xlsx",
+      "modules": ["server-side"],
+      "severity": "high",
+      "reason": "ReDoS in SheetJS. Same registry limitation as GHSA-4r6h-8v6p-xvw6.",
+      "compensating_control": "Excel parsing is admin-only and rate limited; see docs/security-sast for the required upload hardening.",
+      "owner": "psitsucmain2025@gmail.com",
+      "expires": "2026-12-31"
+    },
+    {
+      "ghsa": "GHSA-wrjc-x8rr-h8h6",
+      "package": "react-router",
+      "modules": ["client-side"],
+      "severity": "moderate",
+      "reason": "Open redirect in react-router 6. The only fix is react-router-dom 7, a breaking major. This affects the legacy client-side app only, which no deployment workflow builds or ships.",
+      "compensating_control": "client-side is not built or deployed by any workflow; client-side-ts is the deployed frontend and is unaffected.",
+      "owner": "psitsucmain2025@gmail.com",
+      "expires": "2026-12-31"
+    },
+    {
+      "ghsa": "GHSA-337j-9hxr-rhxg",
+      "package": "react-router",
+      "modules": ["client-side"],
+      "severity": "moderate",
+      "reason": "Constructor injection via SSR hydration in react-router 6. Same breaking-major limitation as GHSA-wrjc-x8rr-h8h6, and this app does not use SSR.",
+      "compensating_control": "client-side is a client-rendered SPA with no SSR hydration path, and is not deployed by any workflow.",
+      "owner": "psitsucmain2025@gmail.com",
+      "expires": "2026-12-31"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+name: PSITS Security - SCA
+
+# Software Composition Analysis gate.
+#
+# This workflow is called by every build pipeline (see the `security-gate` job
+# in client-side-pipeline.yml, server-side-pipeline.yml and
+# client-side-deployment-pipeline.yml) so no build or deployment runs against a
+# dependency tree with un-reviewed vulnerabilities. It also runs on a weekly
+# schedule to catch advisories published after a merge.
+
+on:
+  workflow_call:
+    inputs:
+      threshold:
+        description: "Fail on this severity and above (info|low|moderate|high|critical)"
+        type: string
+        default: "high"
+      notify:
+        description: "Email the maintainers when the gate fails"
+        type: boolean
+        default: true
+  pull_request:
+    branches:
+      - master
+      - staging
+      - production
+  push:
+    branches:
+      - master
+      - staging
+      - production
+  schedule:
+    # Every Monday at 01:00 UTC (09:00 Philippine time).
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: "Fail on this severity and above"
+        type: choice
+        default: "high"
+        options: ["low", "moderate", "high", "critical"]
+
+permissions:
+  contents: read
+
+jobs:
+  sca:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run SCA gate
+        id: sca
+        # Keep going so the report can be published and emailed before the job
+        # is failed explicitly at the end.
+        continue-on-error: true
+        run: |
+          node .github/scripts/sca-check.mjs \
+            --threshold="${{ inputs.threshold || 'high' }}" \
+            --out=.sca
+
+      - name: Publish report to job summary
+        if: always()
+        run: cat .sca/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload SCA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sca-report-${{ github.run_number }}
+          path: .sca/
+          retention-days: 30
+
+      - name: Check for mail credentials
+        id: mail-config
+        if: steps.sca.outcome == 'failure'
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+        run: |
+          if [ -n "$MAIL_USERNAME" ] && [ -n "$MAIL_PASSWORD" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SCA gate failed but MAIL_USERNAME/MAIL_PASSWORD are not set, so no email was sent. Forked pull requests never receive secrets."
+          fi
+
+      - name: Email maintainers on failure
+        if: >-
+          steps.sca.outcome == 'failure' &&
+          steps.mail-config.outputs.configured == 'true' &&
+          (inputs.notify == null || inputs.notify)
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: PSITS Security Pipeline
+          to: psitsucmain2025@gmail.com
+          subject: "[SCA FAILED] ${{ github.repository }} on ${{ github.ref_name }}"
+          convert_markdown: true
+          html_body: file://.sca/report.md
+          priority: high
+
+      - name: Fail the pipeline when the gate did not pass
+        if: steps.sca.outcome == 'failure'
+        run: |
+          echo "::error::SCA gate failed. See the job summary and the sca-report artifact."
+          exit 1
