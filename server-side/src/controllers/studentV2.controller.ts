@@ -121,8 +121,11 @@ export const searchStudentsV2Controller = async (
 
     const students = await Student.find(query)
       .select(
-        "id_number first_name middle_name last_name email course year campus"
+        "id_number first_name middle_name last_name email course year campus rfid membershipStatus"
       )
+      .sort({ last_name: 1, first_name: 1 })
+      // A single-letter term matches thousands of students; cap the response.
+      .limit(25)
       .lean();
 
     const results: StudentSearchResult[] = students.map((s) => ({
@@ -134,6 +137,8 @@ export const searchStudentsV2Controller = async (
       course: s.course,
       year: s.year,
       campus: s.campus,
+      rfid: s.rfid,
+      membershipStatus: s.membershipStatus,
     }));
 
     return res.status(200).json({ data: results });
@@ -149,7 +154,7 @@ export const getStudentMembershipStatusV2 = async (
 ) => {
   try {
     const student = await Student.findById(req.userV2.sub).select(
-      "id_number membershipStatus isFirstApplication"
+      "id_number membershipStatus"
     );
 
     if (!student) {
@@ -162,7 +167,6 @@ export const getStudentMembershipStatusV2 = async (
     return res.status(200).json({
       status: normalizeMembershipStatus(rawStatus),
       rawStatus,
-      isFirstApplication: student.isFirstApplication,
       membershipPrice: settings?.membership_price ?? 0,
     });
   } catch (error) {
@@ -177,7 +181,7 @@ export const requestStudentMembershipV2 = async (
 ) => {
   try {
     const student = await Student.findById(req.userV2.sub).select(
-      "membershipStatus isFirstApplication"
+      "membershipStatus"
     );
 
     if (!student) {
@@ -205,7 +209,6 @@ export const requestStudentMembershipV2 = async (
       message: "Membership request submitted successfully.",
       status: "pending",
       rawStatus: membership_status.PENDING,
-      isFirstApplication: student.isFirstApplication,
     });
   } catch (error) {
     console.error("Error submitting membership request:", error);

@@ -18,6 +18,7 @@ import {
   KeyRound,
   Mail,
   MoreHorizontal,
+  Plus,
   Printer,
   RefreshCcw,
   RotateCcw,
@@ -27,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AddMembershipDialog } from "./AddMembershipDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -81,7 +83,7 @@ const tabs: Array<{
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
-const membershipStatuses = ["ACTIVE", "RENEWED", "PENDING", "NONE"];
+const membershipStatuses = ["ACTIVE", "PENDING", "NONE"];
 
 const initialFormValues: StudentFormValues = {
   id_number: "",
@@ -101,13 +103,12 @@ const emptyPasswordValues: StudentPasswordValues = {
 
 const formatMembership = (status: string) => {
   if (status === "ACTIVE") return "Active";
-  if (status === "RENEWED") return "Renewed";
   if (status === "PENDING") return "Pending";
   return "Not Applied";
 };
 
 const membershipTone = (status: string) => {
-  if (status === "ACTIVE" || status === "RENEWED") {
+  if (status === "ACTIVE") {
     return "bg-green-100 text-green-600";
   }
   if (status === "PENDING") return "bg-sky-100 text-sky-600";
@@ -331,10 +332,6 @@ const StudentsTable = ({
               ))
             ) : data.length > 0 ? (
               data.map((student) => {
-                const canRenew =
-                  student.membershipStatus === "ACTIVE" ||
-                  student.membershipStatus === "RENEWED";
-
                 return (
                   <tr
                     key={`${activeTab}-${student.id_number}`}
@@ -375,9 +372,7 @@ const StudentsTable = ({
                         <>
                           <span>{formatDate(student.applied)}</span>
                           <span className="block text-xs text-[#8a8a8a]">
-                            {student.isFirstApplication
-                              ? "Membership"
-                              : "Renewal"}
+                            Membership
                           </span>
                         </>
                       ) : (
@@ -454,13 +449,6 @@ const StudentsTable = ({
                             >
                               <KeyRound className="h-4 w-4" />
                               Change Password
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={!canRenew}
-                              onClick={() => onAction("renew", [student])}
-                            >
-                              <RefreshCcw className="h-4 w-4" />
-                              Renew Membership
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => onHistory(student)}
@@ -1182,7 +1170,7 @@ const ConfirmDialog = ({
   const isDelete = action === "delete";
   const isRestore = action === "restore";
   const isCancel = action === "cancelRequest";
-  const isMembership = action === "approve" || action === "renew";
+  const isMembership = action === "approve";
   const primaryLabel = isDelete
     ? "Delete"
     : isRestore
@@ -1284,6 +1272,7 @@ export const StudentsView = () => {
     membershipFee,
     page,
     pagedStudents,
+    refresh,
     runAction,
     saveStudent,
     search,
@@ -1301,6 +1290,7 @@ export const StudentsView = () => {
     toggleStudentSelection,
     updatePassword,
   } = useStudentsData();
+  const [isAddMembershipOpen, setIsAddMembershipOpen] = useState(false);
   const [formStudent, setFormStudent] = useState<AdminStudent | null>(null);
   const [passwordStudent, setPasswordStudent] = useState<AdminStudent | null>(
     null
@@ -1327,11 +1317,24 @@ export const StudentsView = () => {
 
   return (
     <div className="bg-background flex min-h-full flex-1 flex-col text-[#333] [&_[data-disabled]]:pointer-events-auto [&_[data-disabled]]:cursor-not-allowed [&_[role=menuitem]]:cursor-pointer [&_a]:cursor-pointer [&_button:disabled]:pointer-events-auto [&_button:disabled]:cursor-not-allowed [&_button:not(:disabled)]:cursor-pointer">
-      <header className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-        <h1 className="text-2xl font-bold sm:text-3xl">Students</h1>
-        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-          Manage registered student accounts
-        </p>
+      <header className="flex flex-col justify-between gap-4 px-4 py-4 sm:flex-row sm:items-start sm:px-6 sm:py-6 lg:px-8">
+        <div>
+          <h1 className="text-2xl font-bold sm:text-3xl">Students</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            Manage registered student accounts
+          </p>
+        </div>
+
+        {activeTab === "requests" && canManageMembership && (
+          <Button
+            type="button"
+            className="h-10 shrink-0 rounded-full bg-[#1c9dde] hover:bg-[#168bc7]"
+            onClick={() => setIsAddMembershipOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Add Membership
+          </Button>
+        )}
       </header>
 
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
@@ -1391,10 +1394,7 @@ export const StudentsView = () => {
             total={total}
             totalPages={totalPages}
             onAction={(action, records) => {
-              if (
-                (action === "approve" || action === "renew") &&
-                !canManageMembership
-              ) {
+              if (action === "approve" && !canManageMembership) {
                 showToast("error", "Unauthorized.");
                 return;
               }
@@ -1488,6 +1488,12 @@ export const StudentsView = () => {
         membershipFee={membershipFee}
         onClose={() => setConfirmState(null)}
         onConfirm={runAction}
+      />
+
+      <AddMembershipDialog
+        open={isAddMembershipOpen}
+        onClose={() => setIsAddMembershipOpen(false)}
+        onSaved={refresh}
       />
     </div>
   );

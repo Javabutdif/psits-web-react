@@ -13,7 +13,6 @@ export type StudentSortField =
 export type StudentAction =
   | "edit"
   | "password"
-  | "renew"
   | "approve"
   | "cancelRequest"
   | "history"
@@ -36,7 +35,6 @@ export interface AdminStudent {
   applied: string;
   deletedBy: string;
   deletedDate: string;
-  isFirstApplication: boolean;
   campus: string;
 }
 

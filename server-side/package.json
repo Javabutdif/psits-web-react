@@ -8,7 +8,11 @@
     "copy-assets": "node -e \"const fs=require('fs'); fs.cpSync('src/assets','dist/assets',{recursive:true}); fs.cpSync('src/templates','dist/templates',{recursive:true}); \"",
     "start": "node dist/index.js",
     "migrate:old-enums": "ts-node src/scripts/migrate-old-enums.ts",
-    "migrate:merch-order-details": "ts-node src/scripts/migrate-merch-order-details-to-report.ts"
+    "migrate:merch-order-details": "ts-node src/scripts/migrate-merch-order-details-to-report.ts",
+    "migrate:membership-schema": "ts-node src/scripts/migrate-membership-to-new-schema.ts",
+    "migrate:drop-renewed": "ts-node src/scripts/migrate-drop-renewed-to-active.ts",
+    "seed:membership-counter": "ts-node src/scripts/seed-membership-counter.ts",
+    "restore:membership-references": "ts-node src/scripts/restore-membership-references.ts"
   },
   "keywords": [],
   "author": "",
@@ -56,5 +60,8 @@
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.23.1",
     "typescript": "^5.9.2"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
   }
 }

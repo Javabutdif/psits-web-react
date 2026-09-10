@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   exportMerchandiseReports,
   membershipHistory,
+  membershipOptions,
   merchandiseReportFilterOptions,
   merchandiseReports,
 } from "@/features/admin/api/admin";
+import type { MembershipOption } from "@/features/admin/api/admin";
 import { showToast } from "@/utils/alertHelper";
 import type {
   MembershipReportRow,
@@ -25,13 +27,14 @@ export const DEFAULT_FILTERS: ReportsFilters = {
   rfid: "",
   course: "",
   year: "",
-  type: "",
   productId: "",
   batch: "",
   size: "",
   color: "",
   dateFrom: "",
   dateTo: "",
+  term: "",
+  membershipName: "",
 };
 
 const toDateKey = (value: string | Date | undefined): string => {
@@ -82,6 +85,10 @@ export const useReportsData = () => {
   const [filters, setFiltersState] = useState<ReportsFilters>(DEFAULT_FILTERS);
   const [search, setSearchState] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [membershipOptionsList, setMembershipOptionsList] = useState<
+    MembershipOption[]
+  >([]);
+  const membershipOptionsRequestedRef = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(
@@ -90,6 +97,14 @@ export const useReportsData = () => {
     );
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    if (membershipOptionsRequestedRef.current) return;
+    membershipOptionsRequestedRef.current = true;
+    void membershipOptions().then((result) => {
+      setMembershipOptionsList(result ?? []);
+    });
+  }, []);
 
   const [isExporting, setIsExporting] = useState(false);
   const membershipRequestRef = useRef(0);
@@ -271,7 +286,12 @@ export const useReportsData = () => {
       )
         return false;
       if (filters.year && String(row.year) !== filters.year) return false;
-      if (filters.type && row.type !== filters.type) return false;
+      if (filters.term && row.term_name !== filters.term) return false;
+      if (
+        filters.membershipName &&
+        row.membership_name !== filters.membershipName
+      )
+        return false;
       if (filters.dateFrom && toDateKey(row.date) < filters.dateFrom)
         return false;
       if (filters.dateTo && toDateKey(row.date) > filters.dateTo) return false;
@@ -287,6 +307,18 @@ export const useReportsData = () => {
     );
     return { totalMembers, totalRevenue };
   }, [filteredMembership]);
+
+  const membershipNameOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          membershipOptionsList
+            .map((option) => option.name)
+            .filter(Boolean)
+        )
+      ),
+    [membershipOptionsList]
+  );
 
   const activeRowCount =
     activeTab === "membership" ? filteredMembership.length : merchandiseTotal;
@@ -322,7 +354,6 @@ export const useReportsData = () => {
       Name: row.name,
       Course: row.course,
       "Year Level": row.year,
-      Type: row.type,
       Date: toDateKey(row.date),
       "Approved By": row.admin || "",
     }));
@@ -361,6 +392,8 @@ export const useReportsData = () => {
     setPage,
     totalPages,
     pagedMembership,
+    /** Every membership row, unfiltered — used to preview cascade renumbering. */
+    membershipRows: membershipData,
     pagedMerchandise,
     tabCounts,
     totalMembershipRows: filteredMembership.length,
@@ -368,6 +401,7 @@ export const useReportsData = () => {
     membershipSummary,
     merchandiseSummary,
     merchandiseProductOptions,
+    membershipNameOptions,
     isExporting,
     buildMembershipExportRows,
     exportMerchandiseReport,

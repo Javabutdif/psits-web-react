@@ -5,13 +5,13 @@ import { z } from "zod";
 export interface IMembershipRequest {
   name: string;
   reference_code: string;
-  cash: number;
+  /** Receipt-facing reference with the term appended, e.g. "2026-000050-1st Semester". */
+  reference_display?: string;
   total: number;
   course: string;
   year: number;
   admin: string;
   date: string;
-  change: number;
 }
 export interface IOrderReceipt {
   reference_code: string;

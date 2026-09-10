@@ -371,6 +371,8 @@ export interface StudentSearchResult {
   course: string;
   year: number;
   campus: string;
+  rfid?: string;
+  membershipStatus?: string;
 }
 
 export interface RemoveAttendeeFormData {

@@ -31,6 +31,7 @@ export const user_model = (user: IStudent): IUserModelData => {
     position: "Student",
     campus: user.campus,
     status: user.status,
+    membershipStatus: user.membershipStatus,
   };
 };
 export const role_model = (user: IStudent): IRoleModelData => {

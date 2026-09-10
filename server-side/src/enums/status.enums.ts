@@ -7,11 +7,10 @@ export const account_status = Object.freeze({
 
 export const membership_status = Object.freeze({
   ACTIVE: "MEMBERSHIP_ACTIVE",
-  RENEWED: "MEMBERSHIP_RENEWED",
   PENDING: "MEMBERSHIP_PENDING",
   NONE: "MEMBERSHIP_NONE",
 });
-export const membership_type = Object.freeze({
-  MEMBER: "MEMBERSHIP_TYPE_MEMBER",
-  RENEWAL: "MEMBERSHIP_TYPE_RENEWAL",
+export const membership_term = Object.freeze({
+  FIRST: "MEMBERSHIP_TERM_FIRST",
+  SECOND: "MEMBERSHIP_TERM_SECOND",
 });

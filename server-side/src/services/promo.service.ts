@@ -173,8 +173,7 @@ class PromoService {
       case "Membership":
         const membershipStatus = (requestor as any).membershipStatus;
         if (
-          membershipStatus === membership_status.ACTIVE ||
-          membershipStatus === membership_status.RENEWED
+          membershipStatus === membership_status.ACTIVE
         ) {
           return { discount: promo.discount, verfied: true };
         }

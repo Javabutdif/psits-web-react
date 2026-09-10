@@ -21,7 +21,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { showToast } from "@/utils/alertHelper";
 import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import { deletePromo } from "../api/promo.api";
 import { PromoAddModal } from "./PromoAddModal";
@@ -63,13 +62,11 @@ const loadPromoCodes = async (): Promise<PromoListRow[] | null> => {
   try {
     const data = await getAllPromoCodes();
     if (!data) {
-      showToast("error", "Failed to fetch promo codes.");
       return null;
     }
     return data;
   } catch (error) {
-    console.error(error);
-    showToast("error", "Failed to fetch promo codes.");
+    console.error("Error fetching promo codes:", error);
     return null;
   }
 };

@@ -535,10 +535,31 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={getNavButtonClass(
-                        "/admin/reports",
-                        !isUcMainAdmin
-                      )}
+                      className={getNavButtonClass("/admin/memberships")}
+                      asChild
+                    >
+                      <Link
+                        to="/admin/memberships"
+                        onClick={(e) => handleNavClick(e, false)}
+                      >
+                        <Users className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>Memberships</span>}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>Memberships</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </li>
+              <li>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={getNavButtonClass("/admin/reports")}
                       asChild
                     >
                       <Link

@@ -25,7 +25,12 @@ class StudentService {
   //Services
   //get search specific student with params
   getSpecific = async (params: any) => {
-    const student = await Student.findOne(params);
+    // Several callers pass a bare id_number string. Mongoose rejects a
+    // non-object filter outright (ObjectParameterError), so normalize it here
+    // rather than at each call site.
+    const filter =
+      typeof params === "string" ? { id_number: params } : params;
+    const student = await Student.findOne(filter);
     if (!student) {
       throw new AppError("Student not found!", 404);
     }

@@ -71,9 +71,13 @@ export const logs_action = Object.freeze({
   UPDATE_STUDENT_YEAR: "Updated Student Years",
   DECREMENT_STUDENT_YEAR: "Decrement Student Years",
   // Membership
+  CREATE_MEMBERSHIP: "Created Membership",
+  ACTIVATE_MEMBERSHIP: "Activated Membership",
   APPROVE_MEMBERSHIP: "Approved Membership",
+  REQUEST_MEMBERSHIP: "Requested Membership",
   REVOKE_MEMBERSHIP: "Revoked Memberships",
   CHANGE_MEMBER_PRICE: "Changed Membership Price",
+  UPDATE_MEMBERSHIP_REFERENCE: "Updated Membership Reference Code",
   // Reports
   EXPORT_REPORT: "Exported Report",
   // Contributions
