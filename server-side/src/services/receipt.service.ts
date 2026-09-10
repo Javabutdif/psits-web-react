@@ -1,8 +1,10 @@
 import path from "path";
 import ejs from "ejs";
 import { MembershipHistory } from "../models/history.model";
+import { Membership } from "../models/membership.model";
 import { Orders } from "../models/orders.model";
 import { formatReceiptDateTime } from "../mail_template/mail.template";
+import { formatReceiptReference } from "../util/membership.util";
 
 /**
  * Templates live in `dist/assets` after the `copy-assets` build step, and this
@@ -31,11 +33,22 @@ export const renderMembershipReceiptHtml = async (
     );
   }
 
+  // The term lives on the parent membership, not the history row. Legacy rows
+  // predate `membership_id`, so this stays optional and the reference falls back
+  // to the bare code.
+  const membership = history.membership_id
+    ? await Membership.findById(history.membership_id).lean()
+    : null;
+
   const html = await ejs.renderFile(
     assetPath("appr-membership-receipt.ejs"),
     {
       name: history.name,
       reference_code: history.reference_code,
+      reference_display: formatReceiptReference(
+        history.reference_code,
+        membership?.term_name
+      ),
       total: history.total,
       course: history.course,
       year: history.year,

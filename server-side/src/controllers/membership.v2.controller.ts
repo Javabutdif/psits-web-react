@@ -20,7 +20,10 @@ import { catchAsync } from "../util/catch.async.util";
 import { nextMembershipReference } from "../util/reference.util";
 import { Membership } from "../models/membership.model";
 import { AppError } from "../util/app.error.util";
-import { normalizeMembershipStatus } from "../util/membership.util";
+import {
+  formatReceiptReference,
+  normalizeMembershipStatus,
+} from "../util/membership.util";
 
 class MembershipController {
   // Membership related controller methods can be added here if needed
@@ -99,6 +102,10 @@ class MembershipController {
       const data: IMembershipRequest = {
         name: studentService.fullNameFormat(student),
         reference_code,
+        reference_display: formatReceiptReference(
+          reference_code,
+          activeParent.term_name
+        ),
         total: settings?.membership_price ?? 0,
         course: student.course,
         year: student.year,

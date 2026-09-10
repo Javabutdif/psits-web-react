@@ -5,4 +5,6 @@ export {
   formatReceiptCurrency,
   formatReceiptDateTime,
   formatReceiptList,
+  formatReceiptReference,
+  formatReceiptTerm,
 } from "./receiptFormat";
