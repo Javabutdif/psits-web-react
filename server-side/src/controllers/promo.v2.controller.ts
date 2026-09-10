@@ -68,6 +68,7 @@ class PromoController {
   fetchAll = async (req: Request, res: Response) => {
     try {
       const promos = await promoService.fetchAll();
+
       return res.status(200).json({ promo: promos ?? [] });
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -140,6 +141,7 @@ class PromoController {
   getLogs = async (req: Request, res: Response) => {
     try {
       const log = await promoService.promoLog();
+
       return res.status(200).json({ log: log ?? [] });
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -168,7 +170,9 @@ class PromoController {
       // Fetch cart merchandise data to get categories
       const cartMerches = await Merch.find({
         _id: { $in: merchIdList.map((id) => new Types.ObjectId(id)) },
-      }).select("_id category").lean();
+      })
+        .select("_id category")
+        .lean();
 
       const merchIdSet = new Set(merchIdList);
       const merchCategoryMap = new Map<string, string>();

@@ -15,7 +15,7 @@
             <td style="padding:32px 32px 24px;text-align:center;border-bottom:2px solid #1c9dde">
               <img src="cid:logo" alt="PSITS" width="48" height="48" style="display:block;border-radius:50%;width:48px;height:48px;object-fit:cover;margin:0 auto 12px" />
               <h1 style="margin:0;font-size:20px;font-weight:700;color:#121212;letter-spacing:-.3px">Official Receipt</h1>
-              <span style="display:inline-block;margin-top:8px;padding:4px 12px;background:#f0fafd;color:#1c9dde;border-radius:9999px;font-size:11px;font-weight:600;letter-spacing:.3px">#<%= reference_code %></span>
+              <span style="display:inline-block;margin-top:8px;padding:4px 12px;background:#f0fafd;color:#1c9dde;border-radius:9999px;font-size:11px;font-weight:600;letter-spacing:.3px">#<%= locals.reference_display || reference_code %></span>
             </td>
           </tr>
 
