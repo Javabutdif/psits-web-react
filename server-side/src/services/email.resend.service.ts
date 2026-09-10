@@ -4,7 +4,9 @@ import fs from "fs/promises";
 import { emailService } from "./email.service";
 import { Orders } from "../models/orders.model";
 import { MembershipHistory } from "../models/history.model";
+import { Membership } from "../models/membership.model";
 import { orderService } from "./order.service";
+import { formatReceiptReference } from "../util/membership.util";
 import { format } from "date-fns";
 import { formatReceiptDateTime } from "../mail_template/mail.template";
 import { Resend } from "resend";
@@ -37,6 +39,7 @@ const toPendingEntry = (entry: any): PendingEntry => ({
 const renderMembershipEmail = async (data: {
   name: string;
   reference_code: string;
+  reference_display?: string;
   total: number;
   course: string;
   year: number;
@@ -239,9 +242,19 @@ const resendMembership = async (entry: PendingEntry) => {
     throw new Error(`Membership history not found for ${entry.referenceCode}`);
   }
 
+  // The term lives on the parent membership; legacy rows without a
+  // `membership_id` fall back to the bare reference code.
+  const membership = history.membership_id
+    ? await Membership.findById(history.membership_id).lean()
+    : null;
+
   const data = {
     name: history.name ?? "",
     reference_code: history.reference_code,
+    reference_display: formatReceiptReference(
+      history.reference_code,
+      membership?.term_name
+    ),
     total: history.total,
     course: history.course ?? "",
     year: history.year ?? 0,

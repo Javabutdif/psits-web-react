@@ -5,6 +5,8 @@ import { z } from "zod";
 export interface IMembershipRequest {
   name: string;
   reference_code: string;
+  /** Receipt-facing reference with the term appended, e.g. "2026-000050-1st Semester". */
+  reference_display?: string;
   total: number;
   course: string;
   year: number;
