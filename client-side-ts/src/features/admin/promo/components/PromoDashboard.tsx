@@ -21,7 +21,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { showToast } from "@/utils/alertHelper";
 import { useAdminPermissions } from "@/features/admin/hooks/useAdminPermissions";
 import { deletePromo } from "../api/promo.api";
 import { PromoAddModal } from "./PromoAddModal";
