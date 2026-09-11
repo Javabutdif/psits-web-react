@@ -1,0 +1,60 @@
+{
+  "$comment": [
+    "Reviewed SCA exceptions for .github/scripts/sca-check.mjs.",
+    "An entry here suppresses a blocking advisory ONLY until its expiry date.",
+    "REQUIRED on every entry: ghsa, package, modules, severity, reason, owner, expires.",
+    "The schema is fail-closed. A malformed entry fails the scan instead of",
+    "silently suppressing nothing; see validateAllowlist() in sca-check.mjs and",
+    "the tests in sca-check.test.mjs.",
+    "An entry stops applying if it expires OR if the advisory's severity changes",
+    "from the value reviewed here, which forces a fresh review.",
+    "Adding an entry is a maintainer decision and requires PR review.",
+    "Do not add an entry when `npm audit fix` or an `overrides` pin can resolve it."
+  ],
+  "exceptions": [
+    {
+      "ghsa": "GHSA-4r6h-8v6p-xvw6",
+      "package": "xlsx",
+      "modules": ["server-side"],
+      "severity": "high",
+      "reason": "Prototype pollution in SheetJS. No patched release exists on the npm registry; SheetJS publishes 0.20.x only from cdn.sheetjs.com. Changing the install source away from the registry is a maintainer decision that is still open.",
+      "exposure": "Reachable from POST /api/v2/certificates/:eventId/eligibility/csv, which requires an authenticated admin token. The upload has no size limit and no rate limit, so this risk is NOT currently mitigated by a compensating control.",
+      "required_before_renewal": "Add multer limits and a fileFilter to the certificate upload route, or migrate off the registry build of xlsx. Tracked as SAST-06 in the maintainer security backlog.",
+      "owner": "psitsucmain2025@gmail.com",
+      "expires": "2026-12-31"
+    },
+    {
+      "ghsa": "GHSA-5pgg-2g8v-p4x9",
+      "package": "xlsx",
+      "modules": ["server-side"],
+      "severity": "high",
+      "reason": "ReDoS in SheetJS. Same npm registry limitation as GHSA-4r6h-8v6p-xvw6: no patched version is published to the registry, so npm audit fix cannot resolve it.",
+      "exposure": "Same admin-authenticated upload path as GHSA-4r6h-8v6p-xvw6, with no upload size limit and no rate limit in place today.",
+      "required_before_renewal": "Add multer limits and a fileFilter to the certificate upload route, or migrate off the registry build of xlsx. Tracked as SAST-06 in the maintainer security backlog.",
+      "owner": "psitsucmain2025@gmail.com",
+      "expires": "2026-12-31"
+    },
+    {
+      "ghsa": "GHSA-wrjc-x8rr-h8h6",
+      "package": "react-router",
+      "modules": ["client-side"],
+      "severity": "moderate",
+      "reason": "Open redirect in react-router 6. The only published fix is react-router-dom 7, a breaking major upgrade in the legacy JavaScript frontend.",
+      "exposure": "client-side is the legacy frontend. No workflow in .github/workflows builds or deploys it; client-side-ts is the deployed frontend and is not affected.",
+      "required_before_renewal": "Either migrate client-side to react-router-dom 7, or remove the legacy app from the repository if it is confirmed dead.",
+      "owner": "psitsucmain2025@gmail.com",
+      "expires": "2026-12-31"
+    },
+    {
+      "ghsa": "GHSA-337j-9hxr-rhxg",
+      "package": "react-router",
+      "modules": ["client-side"],
+      "severity": "moderate",
+      "reason": "Constructor injection via SSR hydration in react-router 6. Same breaking-major limitation as GHSA-wrjc-x8rr-h8h6, and this application does not use server-side rendering.",
+      "exposure": "client-side is a client-rendered SPA with no SSR hydration path, and no workflow builds or deploys it.",
+      "required_before_renewal": "Either migrate client-side to react-router-dom 7, or remove the legacy app from the repository if it is confirmed dead.",
+      "owner": "psitsucmain2025@gmail.com",
+      "expires": "2026-12-31"
+    }
+  ]
+}

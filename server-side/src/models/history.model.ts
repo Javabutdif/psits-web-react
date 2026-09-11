@@ -53,6 +53,6 @@ const historySchema = new Schema<IHistoryDocument>({
 });
 
 export const MembershipHistory = mongoose.model<IHistoryDocument>(
-  "membshipHistory",
+  "membershipHistory",
   historySchema
 );
