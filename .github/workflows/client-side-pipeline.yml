@@ -4,14 +4,23 @@ on:
   pull_request:
     branches:
       - master
+      - staging
       - production
     paths:
       - "client-side-ts/**"
       - ".github/workflows/client-side-pipeline.yml"
 
 jobs:
+  security-gate:
+    name: SCA Gate
+    uses: ./.github/workflows/sca.yml
+    secrets: inherit
+    with:
+      threshold: high
+
   build:
     name: Build Project
+    needs: security-gate
     runs-on: ubuntu-latest
 
     steps:
