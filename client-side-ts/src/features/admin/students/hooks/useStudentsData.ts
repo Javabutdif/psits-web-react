@@ -35,7 +35,6 @@ const DEFAULT_FILTERS: StudentFilters = {
   courses: [],
   years: [],
   membershipStatus: "all",
-  appliedOn: "",
 };
 
 const DEFAULT_SORT: StudentSort = {
@@ -148,13 +147,6 @@ const compareDates = (left: string, right: string, descending: boolean) => {
   return descending ? -result : result;
 };
 
-const formatDateKey = (value: string) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toISOString().slice(0, 10);
-};
-
 export const useStudentsData = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<StudentsTab>("all");
@@ -256,12 +248,6 @@ export const useStudentsData = () => {
         if (
           filters.membershipStatus !== "all" &&
           student.membershipStatus !== filters.membershipStatus
-        ) {
-          return false;
-        }
-        if (
-          filters.appliedOn &&
-          formatDateKey(student.applied) !== filters.appliedOn
         ) {
           return false;
         }
