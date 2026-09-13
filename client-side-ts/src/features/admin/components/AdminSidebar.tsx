@@ -126,7 +126,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     <TooltipProvider delayDuration={700}>
       <aside
         className={cn(
-          "group/sidebar bg-background fixed top-0 flex h-dvh flex-col border transition-all duration-300 lg:sticky",
+          "group/sidebar bg-background fixed top-0 flex h-full flex-col border transition-all duration-300 lg:sticky lg:h-dvh",
           collapsed ? "w-16" : "w-64"
         )}
       >
