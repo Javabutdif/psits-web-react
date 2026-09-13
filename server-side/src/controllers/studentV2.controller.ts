@@ -200,9 +200,17 @@ export const requestStudentMembershipV2 = async (
         .json({ message: "You already have a pending membership request." });
     }
 
+    // `applied` backs the "Applied on" column of the admin requests queue, so it
+    // is stamped here rather than left at the account's registration date.
+    // Stored as ISO because the schema field is a String.
     await Student.updateOne(
       { _id: student._id },
-      { $set: { membershipStatus: membership_status.PENDING } }
+      {
+        $set: {
+          membershipStatus: membership_status.PENDING,
+          applied: new Date().toISOString(),
+        },
+      }
     );
 
     return res.status(200).json({
