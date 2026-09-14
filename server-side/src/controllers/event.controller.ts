@@ -155,6 +155,7 @@ export const createManualEventController = async (
     console.error("Error creating event:", error);
     res.status(500).json({
       message: "Failed to create event",
+      error: error,
     });
   }
 };
@@ -163,7 +164,7 @@ export const getAllEventsController = async (req: Request, res: Response) => {
   try {
     const events: IEvent[] = await Event.find();
     if (!events) {
-      return res.status(400).json({ message: "No event found" });
+      res.status(400).json({ message: "No event found" });
     }
     return res.status(200).json({ data: events });
   } catch (error) {
