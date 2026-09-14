@@ -9,8 +9,17 @@ import { IMerch } from "../models/merch.interface";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { Request, Response } from "express";
 import path from "path";
-import { r2Client } from "../lib/r2Client";
+import { S3Client } from "@aws-sdk/client-s3";
 import { expiryStatus } from "../custom_function/conditional_dates";
+
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+  },
+});
 
 //How long an expired product keeps showing in the shop, greyed out, before it
 //is dropped from the listing entirely
