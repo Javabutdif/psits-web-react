@@ -70,6 +70,7 @@ import type {
   StudentSortField,
   StudentsTab,
 } from "../types/students.types";
+import { membership_status } from "@/utils/enums";
 
 const tabs: Array<{
   key: StudentsTab;
@@ -83,7 +84,11 @@ const tabs: Array<{
 
 const courses = ["BSIT", "BSCS", "ACT"];
 const years = ["1", "2", "3", "4"];
-const membershipStatuses = ["ACTIVE", "PENDING", "NONE"];
+const membershipStatuses = [
+  membership_status.ACTIVE,
+  membership_status.PENDING,
+  membership_status.NONE,
+];
 
 const initialFormValues: StudentFormValues = {
   id_number: "",
@@ -102,16 +107,16 @@ const emptyPasswordValues: StudentPasswordValues = {
 };
 
 const formatMembership = (status: string) => {
-  if (status === "ACTIVE") return "Active";
-  if (status === "PENDING") return "Pending";
+  if (status === membership_status.ACTIVE) return "Active";
+  if (status === membership_status.PENDING) return "Pending";
   return "Not Applied";
 };
 
 const membershipTone = (status: string) => {
-  if (status === "ACTIVE") {
+  if (status === membership_status.ACTIVE) {
     return "bg-green-100 text-green-600";
   }
-  if (status === "PENDING") return "bg-sky-100 text-sky-600";
+  if (status === membership_status.PENDING) return "bg-sky-100 text-sky-600";
   return "bg-[#f2f2f2] text-[#979797]";
 };
 
@@ -305,8 +310,8 @@ const StudentsTable = ({
               )}
               {isDeletedTab && (
                 <th className="px-2 py-2 text-left align-middle font-medium">
-                    <SortLabel field="deletedBy" onSort={onSort}>
-                      Suspended by
+                  <SortLabel field="deletedBy" onSort={onSort}>
+                    Suspended by
                   </SortLabel>
                 </th>
               )}
@@ -1308,7 +1313,7 @@ export const StudentsView = () => {
       </header>
 
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="mb-4 flex [scrollbar-width:none] gap-6 overflow-x-auto border-b border-[#eeeeee] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mb-4 flex gap-6 overflow-x-auto border-b border-[#eeeeee] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((tab) => (
             <button
               key={tab.key}
