@@ -70,7 +70,8 @@ import type {
   StudentSortField,
   StudentsTab,
 } from "../types/students.types";
-import { membership_status } from "@/utils/enums";
+import { membership_status, psits_roles } from "@/utils/enums";
+import { useAuth } from "@/features/auth";
 
 const tabs: Array<{
   key: StudentsTab;
@@ -91,6 +92,7 @@ const membershipStatuses = [
 ];
 
 const initialFormValues: StudentFormValues = {
+  id: "",
   id_number: "",
   rfid: "",
   first_name: "",
@@ -166,6 +168,7 @@ const formValuesFromStudent = (
 ): StudentFormValues =>
   student
     ? {
+        id: student.id,
         id_number: student.id_number,
         rfid: student.rfid,
         first_name: student.first_name,
@@ -731,6 +734,7 @@ const StudentFormDialog = ({
   onClose,
   onSubmit,
 }: StudentFormDialogProps) => {
+  const { user } = useAuth();
   const [values, setValues] = useState<StudentFormValues>(
     formValuesFromStudent(account)
   );
@@ -763,11 +767,22 @@ const StudentFormDialog = ({
                 <Label className="mb-1.5 block text-xs font-medium">
                   Student ID Number
                 </Label>
-                <Input
-                  value={values.id_number}
-                  readOnly
-                  className="h-10 rounded-lg border-0 bg-[#efefef]"
-                />
+                {user?.access === psits_roles.ADMIN ||
+                user?.access === psits_roles.DEVELOPER ? (
+                  <Input
+                    value={values.id_number}
+                    onChange={(event) =>
+                      updateValue("id_number", event.target.value)
+                    }
+                    className="h-10 rounded-lg border-0"
+                  />
+                ) : (
+                  <Input
+                    value={values.id_number}
+                    readOnly
+                    className="h-10 rounded-lg border-0 bg-[#efefef]"
+                  />
+                )}
               </div>
               <div>
                 <Label className="mb-1.5 block text-xs font-medium">RFID</Label>

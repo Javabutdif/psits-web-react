@@ -14,3 +14,12 @@ export const membership_term = Object.freeze({
   FIRST: "MEMBERSHIP_TERM_FIRST",
   SECOND: "MEMBERSHIP_TERM_SECOND",
 });
+export const psits_roles = Object.freeze({
+  ADMIN: "PSITS_ADMIN",
+  DEVELOPER: "PSITS_DEV",
+  HEAD_FINANCE: "PSITS_HEAD_FINANCE",
+  FINANCE: "PSITS_FINANCE",
+  EXECUTIVE: "PSITS_EXEC",
+  STANDARD: "PSITS_STANDARD",
+  NO_ACCESS: "PSITS_NO_ACCESS",
+});

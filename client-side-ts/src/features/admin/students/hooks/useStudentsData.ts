@@ -28,7 +28,6 @@ import type {
   StudentTabCounts,
   StudentsTab,
 } from "../types/students.types";
-import { membership_status } from "@/utils/enums";
 
 const ROWS_PER_PAGE = 8;
 
@@ -86,7 +85,7 @@ const normalizeName = (record: StudentApiRecord) =>
 
 const normalizeStudent = (record: StudentApiRecord): AdminStudent => {
   return {
-    id: String(record._id || record.id_number || crypto.randomUUID()),
+    id: String(record._id),
     id_number: String(record.id_number || ""),
     rfid: String(record.rfid || ""),
     first_name: String(record.first_name || ""),
@@ -327,6 +326,7 @@ export const useStudentsData = () => {
     setIsMutating(true);
     try {
       const result = await updateStudent(
+        values.id,
         values.id_number,
         values.rfid,
         values.first_name,

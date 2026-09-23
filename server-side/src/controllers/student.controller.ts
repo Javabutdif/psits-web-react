@@ -11,17 +11,39 @@ import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
 import { account_status } from "../enums/status.enums";
 
+export interface StudentSearchResult {
+  _id: mongoose.Types.ObjectId;
+  rfid?: string;
+  id_number: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  email?: string;
+  course: string;
+  status: string;
+  membershipStatus: string;
+  role: string;
+  isFirstApplication: boolean;
+  isYearUpdated: boolean;
+  createdAt: Date;
+  year: number;
+  campus: string;
+}
+
 export const getAllActiveStudentsController = async (
   req: Request,
   res: Response
 ) => {
   try {
-    const students: IStudent[] = await Student.find({
-      status: { $in: ["True", account_status.ACTIVE] },
-    });
+    const students: StudentSearchResult[] = await Student.find({
+      status: { $in: account_status.ACTIVE },
+    }).select(
+      "id_number first_name middle_name last_name email course year campus status membershipStatus role isFirstApplication isYearUpdated createdAt"
+    );
     if (!students) {
       res.status(400).json({ message: "No Students" });
     }
+
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -197,6 +219,7 @@ export const cancelMembershipRequestController = async (
 
 export const editStudentController = async (req: Request, res: Response) => {
   const {
+    id,
     id_number,
     rfid,
     first_name,
@@ -208,9 +231,10 @@ export const editStudentController = async (req: Request, res: Response) => {
   } = req.body;
 
   try {
+    const studentId = new mongoose.Types.ObjectId(id);
     // Fetch the student document by id_number to get the _id
     const student: IStudentDocument | null = await Student.findOne({
-      id_number: id_number,
+      _id: studentId,
     });
 
     if (!student) {
@@ -218,10 +242,11 @@ export const editStudentController = async (req: Request, res: Response) => {
     }
 
     // Update the student's information
-    const studentResult = await Student.updateOne(
-      { id_number: id_number },
+    await Student.updateOne(
+      { _id: studentId },
       {
         $set: {
+          id_number: id_number,
           rfid: rfid,
           first_name: first_name,
           middle_name: middle_name,
@@ -229,19 +254,6 @@ export const editStudentController = async (req: Request, res: Response) => {
           email: email,
           course: course,
           year: year,
-        },
-      }
-    );
-
-    // Update related orders with the new student details
-    await Orders.updateMany(
-      { id_number: id_number },
-      {
-        $set: {
-          student_name: `${first_name} ${middle_name} ${last_name}`,
-          course: course,
-          year: year,
-          rfid: rfid,
         },
       }
     );
