@@ -240,13 +240,13 @@ export const editStudentController = async (req: Request, res: Response) => {
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
-
+    const previousIdNumber = student.id_number;
     // Update the student's information
     await Student.updateOne(
       { _id: studentId },
       {
         $set: {
-          id_number: id_number,
+          id_number,
           rfid: rfid,
           first_name: first_name,
           middle_name: middle_name,
@@ -254,6 +254,20 @@ export const editStudentController = async (req: Request, res: Response) => {
           email: email,
           course: course,
           year: year,
+        },
+      }
+    );
+
+    // Update related orders with the new student details
+    await Orders.updateMany(
+      { id_number: previousIdNumber },
+      {
+        $set: {
+          id_number,
+          student_name: `${first_name} ${middle_name} ${last_name}`,
+          course: course,
+          year: year,
+          rfid: rfid,
         },
       }
     );
