@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   exportMerchandiseReports,
+  getAllMembers,
   membershipHistory,
   membershipOptions,
   merchandiseReportFilterOptions,
@@ -34,6 +35,7 @@ export const DEFAULT_FILTERS: ReportsFilters = {
   dateFrom: "",
   dateTo: "",
   term: "",
+  type: "",
   membershipName: "",
 };
 
@@ -64,6 +66,7 @@ export const useReportsData = () => {
   const [membershipData, setMembershipData] = useState<MembershipReportRow[]>(
     []
   );
+  const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
   const [membershipStatus, setMembershipStatus] =
     useState<ReportsStatus>("idle");
 
@@ -103,6 +106,17 @@ export const useReportsData = () => {
     membershipOptionsRequestedRef.current = true;
     void membershipOptions().then((result) => {
       setMembershipOptionsList(result ?? []);
+    });
+  }, []);
+
+  useEffect(() => {
+    void getAllMembers().then((result) => {
+      const nextMemberIds = new Set(
+        (result ?? [])
+          .map((member) => String(member.id_number ?? "").trim())
+          .filter(Boolean)
+      );
+      setMemberIds(nextMemberIds);
     });
   }, []);
 
@@ -287,6 +301,9 @@ export const useReportsData = () => {
         return false;
       if (filters.year && String(row.year) !== filters.year) return false;
       if (filters.term && row.term_name !== filters.term) return false;
+      const isMemberRow = memberIds.has(String(row.id_number ?? "").trim());
+      if (filters.type === "members" && !isMemberRow) return false;
+      if (filters.type === "non-members" && isMemberRow) return false;
       if (
         filters.membershipName &&
         row.membership_name !== filters.membershipName
@@ -297,7 +314,7 @@ export const useReportsData = () => {
       if (filters.dateTo && toDateKey(row.date) > filters.dateTo) return false;
       return true;
     });
-  }, [activeTab, membershipData, filters, debouncedSearch]);
+  }, [activeTab, membershipData, filters, debouncedSearch, memberIds]);
 
   const membershipSummary = useMemo(() => {
     const totalMembers = filteredMembership.length;
@@ -312,9 +329,7 @@ export const useReportsData = () => {
     () =>
       Array.from(
         new Set(
-          membershipOptionsList
-            .map((option) => option.name)
-            .filter(Boolean)
+          membershipOptionsList.map((option) => option.name).filter(Boolean)
         )
       ),
     [membershipOptionsList]

@@ -335,7 +335,8 @@ export const OrdersView = () => {
     selectedIds.includes(row._id)
   );
 
-  const totalPagesNum = Math.max(1, totalPages);
+  const hasRows = data.length > 0;
+  const totalPagesNum = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
   const currentPage = Math.min(page, totalPagesNum);
 
   const handlePrintReceipt = async (order: OrderRowData) => {
@@ -636,12 +637,14 @@ export const OrdersView = () => {
           </div>
 
           {/* Pagination */}
-          <PaginationFooter
-            page={currentPage}
-            totalPages={totalPagesNum}
-            total={total}
-            onPageChange={setPage}
-          />
+          {hasRows && total > 0 && (
+            <PaginationFooter
+              page={currentPage}
+              totalPages={totalPagesNum}
+              total={total}
+              onPageChange={setPage}
+            />
+          )}
         </section>
       </div>
 

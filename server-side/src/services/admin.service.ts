@@ -33,6 +33,24 @@ const normalizeAdminIdNumber = (id_number: unknown): string => {
   return `${base}${ADMIN_ID_SUFFIX}`;
 };
 
+const normalizeMemberRole = (role?: string): string => {
+  const normalized = String(role ?? "").trim().toLowerCase();
+
+  switch (normalized) {
+    case "officer":
+    case "officers":
+      return student_roles.OFFICER;
+    case "developer":
+      return student_roles.DEVELOPER;
+    case "media":
+      return student_roles.MEDIA;
+    case "volunteer":
+      return student_roles.VOLUNTEER;
+    default:
+      return student_roles.GENERAL;
+  }
+};
+
 class AdminService {
   //Update One Dynamic Admin
   updateOneDynamic = async (id_number: String, parameters: any) => {
@@ -121,6 +139,10 @@ class AdminService {
       student_roles.OFFICER,
       student_roles.MEDIA,
       student_roles.VOLUNTEER,
+      "developer",
+      "officers",
+      "media",
+      "volunteer",
     ];
     const members: IStudent[] = await Student.find({
       role: { $in: rolesToFind },
@@ -343,7 +365,7 @@ class AdminService {
     //
     //Parametirized updated
     const params = {
-      role: role,
+      role: normalizeMemberRole(role),
       isRequest: true,
       adminRequest: admin,
     };
@@ -406,7 +428,10 @@ class AdminService {
     if (!student) {
       throw new AppError("No student found", 404);
     }
+
+    const approvedRole = normalizeMemberRole(student.role || String(student.role));
     const updatedRole = await studentService.updateOneDynamic(id_number, {
+      role: approvedRole,
       isRequest: false,
     });
 

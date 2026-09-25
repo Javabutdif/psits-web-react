@@ -21,7 +21,7 @@ import {
   normalizeYear,
   getSignupErrorResponse,
 } from "../util/signupValidation.util";
-import { validateId } from "../util/studentId.util";
+import { buildCampusScopedStudentId, validateId } from "../util/studentId.util";
 
 /**
  * Shared user response type for frontend
@@ -393,8 +393,18 @@ export const signupV2Controller = async (
         .json({ message: "Year level must be between 1 and 5." });
     }
 
+    const requestedCampus =
+      typeof req.body.campus === "string" ? req.body.campus.trim() : "";
+    const campus = Object.values(campus_type).includes(requestedCampus)
+      ? requestedCampus
+      : campus_type.MAIN;
+
+    const scopedStudentId =
+      buildCampusScopedStudentId(String(req.body.id ?? ""), campus) ??
+      String(req.body.id ?? "");
+
     req.body = {
-      id_number: req.body.id,
+      id_number: scopedStudentId,
       password: req.body.password,
       first_name: req.body.fname,
       middle_name: req.body.mname,
@@ -402,6 +412,7 @@ export const signupV2Controller = async (
       email: req.body.email,
       course: req.body.course,
       year,
+      campus,
     };
 
     const result = await studentService.create(req);
