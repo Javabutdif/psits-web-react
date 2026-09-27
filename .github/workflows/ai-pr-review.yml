@@ -37,7 +37,12 @@ jobs:
             --json number,title,body,baseRefName,headRefName,headRepository \
             > pr.json
 
-          gh pr diff "$PR_NUMBER" > pr.diff
+          # Fetch the diff through the GitHub API. This does not require a local checkout.
+          gh api \
+            --method GET \
+            "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+            --header "Accept: application/vnd.github.v3.diff" \
+            > pr.diff
 
           echo "PR metadata:"
           cat pr.json
@@ -270,11 +275,9 @@ jobs:
           Overall: ALIGNED
 
           or:
-
           Overall: ALIGNED WITH CONCERNS
 
           or:
-
           Overall: NOT ALIGNED
 
           Then report only actionable findings.
@@ -414,9 +417,7 @@ jobs:
 
           try:
               with urllib.request.urlopen(request, timeout=60) as response:
-                  result = json.loads(
-                      response.read().decode("utf-8")
-                  )
+                  result = json.loads(response.read().decode("utf-8"))
 
                   print(
                       "Created AI review:",
@@ -424,10 +425,7 @@ jobs:
                   )
 
           except urllib.error.HTTPError as error:
-              error_body = error.read().decode(
-                  "utf-8",
-                  errors="replace"
-              )
+              error_body = error.read().decode("utf-8", errors="replace")
 
               print(f"GitHub API returned HTTP {error.code}")
               print(error_body[:4000])
