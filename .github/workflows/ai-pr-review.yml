@@ -26,6 +26,14 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: Checkout base repository
+        uses: actions/checkout@v4
+        with:
+          # Review the trusted base tree. Do not check out or execute PR code
+          # because this workflow runs with pull_request_target and secrets.
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
       - name: Get PR metadata and diff
         env:
           GH_TOKEN: ${{ github.token }}
