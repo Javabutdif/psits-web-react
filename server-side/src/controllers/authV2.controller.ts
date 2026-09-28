@@ -21,10 +21,7 @@ import {
   normalizeYear,
   getSignupErrorResponse,
 } from "../util/signupValidation.util";
-import {
-  buildCampusScopedStudentId,
-  validateId,
-} from "../util/studentId.util";
+import { buildCampusScopedStudentId, validateId } from "../util/studentId.util";
 
 /**
  * Shared user response type for frontend
