@@ -21,7 +21,11 @@ import {
   markAttendance,
   syncAttendanceForAttendee,
 } from "../services/attendance.service";
-import { validateId } from "../util/studentId.util";
+import {
+  validateId,
+  CAMPUS_ID_SUFFIX,
+  buildCampusScopedStudentId,
+} from "../util/studentId.util";
 import { EventV2Service } from "../services/eventV2.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
 import { logService } from "../services/log.service";
@@ -985,23 +989,6 @@ const V_VALID_COURSES = ["BSIT", "BSCS", "ACT"];
 const V_VALID_CAMPUSES = ["UC_BANILAD", "UC_LM", "UC_PT"];
 const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC_MAIN", "UC_CS"];
 
-const CAMPUS_ID_SUFFIX: Record<string, string> = {
-  UC_BANILAD: "ucb",
-  UC_LM: "uclm",
-  UC_PT: "ucpt",
-};
-
-const buildCampusScopedStudentId = (rawStudentId: string, campus: string) => {
-  const baseId = rawStudentId.trim().split("-")[0]?.trim() ?? "";
-  const suffix = CAMPUS_ID_SUFFIX[campus];
-
-  if (!baseId || !suffix) {
-    return null;
-  }
-
-  return `${baseId}-${suffix}`;
-};
-
 const validateNameField = (
   value: string | undefined,
   label: string,
@@ -1117,16 +1104,21 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       });
     }
 
-    const normalizedStudentId = buildCampusScopedStudentId(
-      studentId,
-      adminCampus
-    );
-    if (!normalizedStudentId) {
-      return res.status(400).json({
-        error: "VALIDATION",
-        message: "Unable to derive campus-based Student ID",
-      });
-    }
+    // Resolve the student's actual campus before building the scoped ID.
+    // Try the bare 8-digit ID and every known campus suffix so an existing
+    // student is found regardless of which campus the admin is operating from.
+    const bareId = studentId.trim();
+    const candidateIds = [
+      bareId,
+      ...Object.values(CAMPUS_ID_SUFFIX).map((s) => `${bareId}-${s}`),
+    ];
+    const existingStudent = await Student.findOne({
+      id_number: { $in: candidateIds },
+    });
+    const studentCampus = existingStudent?.campus ?? adminCampus;
+
+    const normalizedStudentId =
+      buildCampusScopedStudentId(bareId, studentCampus) ?? bareId;
 
     const firstNameErr = validateNameField(firstName, "First name", true);
     if (firstNameErr) {
@@ -1195,11 +1187,6 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
         .status(404)
         .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
     }
-
-    const existingStudent = await Student.findOne({
-      id_number: normalizedStudentId,
-    });
-    const studentCampus = existingStudent?.campus ?? adminCampus;
 
     const campusLimit = event.limit.find(
       (entry) => entry.campus === studentCampus
@@ -1326,7 +1313,9 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     // Step 3: Update sales data (campus-specific)
 
     if (resolvedPrice > 0) {
-      const campusData = event.sales_data.find((s) => s.campus === studentCampus);
+      const campusData = event.sales_data.find(
+        (s) => s.campus === studentCampus
+      );
       if (campusData) {
         campusData.unitsSold += 1;
         campusData.totalRevenue += resolvedPrice;

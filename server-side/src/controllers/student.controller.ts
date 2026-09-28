@@ -282,18 +282,9 @@ export const editStudentController = async (req: Request, res: Response) => {
           }
         ).session(session);
         //Update membership history records with the new id_number
-        await MembershipHistory.updateMany(
-          { id_number: previousIdNumber },
-          {
-            $set: {
-              id_number,
-              name: `${first_name} ${middle_name} ${last_name}`,
-              course: course,
-              year: year,
-              rfid: rfid,
-            },
-          }
-        ).session(session);
+        // NOTE: MembershipHistory now uses the student FK as the source of
+        // truth; denormalized fields were removed in the drop-redundant-fields
+        // migration. No updateMany needed here.
       } else {
         await session.abortTransaction();
         await session.endSession();
@@ -330,18 +321,8 @@ export const editStudentController = async (req: Request, res: Response) => {
           },
         }
       ).session(session);
-      await MembershipHistory.updateMany(
-        { id_number: previousIdNumber },
-        {
-          $set: {
-            id_number,
-            name: `${first_name} ${middle_name} ${last_name}`,
-            course: course,
-            year: year,
-            rfid: rfid,
-          },
-        }
-      ).session(session);
+      // MembershipHistory no longer stores denormalized student fields —
+      // the student FK is the source of truth; no updateMany needed here.
     }
 
     // Log the editing action.
@@ -442,18 +423,44 @@ export const fetchSpecificMembershipHistoryController = async (
   req: Request,
   res: Response
 ) => {
-  const { id_number } = req.params;
+  // The route param may carry a campus-scoped suffix (e.g. "71009042-UC_LM").
+  // Student `id_number` is stored as a bare 8-digit value — strip the suffix.
+  const rawId = req.params.id_number as string;
+  const bareId = rawId?.split("-")[0]?.trim() ?? "";
 
   try {
-    const membershipHistory: IHistory[] = await MembershipHistory.find({
-      id_number: id_number,
-    }).sort({ date: -1 });
-
-    if (!membershipHistory) {
-      res.status(400).json({ message: "No Membership History" });
+    if (!bareId) {
+      res.status(400).json({ message: "Invalid student ID" });
+      return;
     }
 
-    res.status(200).json({ data: membershipHistory });
+    // Resolve the student first so the FK can be used as the query filter.
+    const student: IStudentDocument | null = await Student.findOne({
+      id_number: bareId,
+    });
+    if (!student) {
+      res.status(404).json({ message: "Student not found" });
+      return;
+    }
+
+    const membershipHistory = await MembershipHistory.find({
+      student: student._id,
+    }).sort({ date: -1 });
+
+    // Project the same response shape the frontend expects — the denormalized
+    // fields no longer live on the schema; they are derived from the student.
+    const fullName =
+      `${student.first_name} ${student.middle_name ?? ""} ${student.last_name}`.trim();
+    const data = membershipHistory.map((record) => ({
+      ...record.toObject(),
+      id_number: student.id_number,
+      rfid: student.rfid ?? "",
+      name: fullName,
+      year: student.year,
+      course: student.course,
+    }));
+
+    res.status(200).json({ data });
   } catch (error) {
     console.error("Error fetching student membership history:", error);
     res.status(500).json({ message: "Internal Server Error" });
