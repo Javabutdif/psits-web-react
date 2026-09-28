@@ -152,7 +152,18 @@ export const loginV2Controller = async (
       await log.save();
     } else {
       // Student login
-      const student = await Student.findOne({ id_number });
+      let student = await Student.findOne({ id_number });
+
+      if (!student && id_number.includes("-") === false) {
+        const baseIdNumber = id_number.split("-")[0]?.trim();
+        if (baseIdNumber) {
+          const escapedBaseId = baseIdNumber.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          student = await Student.findOne({
+            id_number: new RegExp(`^${escapedBaseId}(?:-.*)?$`),
+          });
+        }
+      }
+
       if (!student) {
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }

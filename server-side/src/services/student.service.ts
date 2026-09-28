@@ -96,9 +96,11 @@ class StudentService {
       email,
       course,
       year,
-    }: IStudent = req.body;
+      campus,
+    }: IStudent & { campus?: string } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const studentCampus = campus || campus_type.MAIN;
 
     const newStudent = new Student({
       id_number,
@@ -115,7 +117,7 @@ class StudentService {
       membershipStatus: membership_status.NONE,
       applied: new Date(),
       role: student_roles.GENERAL,
-      campus: campus_type.MAIN,
+      campus: studentCampus,
       isRequest: false,
       createdAt: new Date(),
     });

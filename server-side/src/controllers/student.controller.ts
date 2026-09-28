@@ -37,7 +37,7 @@ export const getAllActiveStudentsController = async (
 ) => {
   try {
     const students: StudentSearchResult[] = await Student.find({
-      status: account_status.ACTIVE,
+      status: { $in: ["True", account_status.ACTIVE] },
     }).select(
       "id_number rfid first_name middle_name last_name email course year campus status membershipStatus role isFirstApplication isYearUpdated createdAt"
     );

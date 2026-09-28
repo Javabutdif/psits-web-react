@@ -477,7 +477,7 @@ export class RecruitmentService {
         new Date(position.applicationDeadline).getTime() < Date.now()
       ) {
         throw new AppError(
-          "Application deadline must be in futur  e for open positions.",
+          "Application deadline must be in the future for open positions.",
           400
         );
       }
