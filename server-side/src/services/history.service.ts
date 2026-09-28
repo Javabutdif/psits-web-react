@@ -47,14 +47,26 @@ const toDate = (value: unknown): Date | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+export type MembershipHistoryType = "members" | "non-members";
+
 class HistoryService {
   //record membership history
   record = async (query: IHistory) => {
     return await new MembershipHistory(query).save();
   };
   //Get all membership history
-  getAll = async () => {
-    const history: IHistoryDocument[] = await MembershipHistory.find().sort({
+  getAll = async (filters: { type?: MembershipHistoryType } = {}) => {
+    const query: Record<string, unknown> = {};
+
+    if (filters.type === "members") {
+      query.membership_id = { $ne: null };
+    } else if (filters.type === "non-members") {
+      query.membership_id = null;
+    }
+
+    const history: IHistoryDocument[] = await MembershipHistory.find(
+      query
+    ).sort({
       date: -1,
     });
     if (!history) {

@@ -7,6 +7,7 @@ import { IStudent } from "../models/student.interface";
 
 import { membership_status } from "../enums/status.enums";
 import { historyService } from "../services/history.service";
+import type { MembershipHistoryType } from "../services/history.service";
 import { ISettings } from "../models/settings.interface";
 
 import { format } from "date-fns";
@@ -180,7 +181,20 @@ class MembershipController {
 
   getMembershipHistoryController = catchAsync(
     async (req: Request, res: Response) => {
-      const history = await historyService.getAll();
+      const rawType =
+        typeof req.query.type === "string" ? req.query.type.trim() : "";
+
+      // Absent or empty means "every row"; any other value has to be one of the
+      // two known filters so a typo cannot silently widen the report.
+      const type: MembershipHistoryType | undefined =
+        rawType === "members" || rawType === "non-members"
+          ? rawType
+          : undefined;
+      if (rawType && !type) {
+        return res.status(400).json({ message: "Invalid type filter" });
+      }
+
+      const history = await historyService.getAll({ type });
       if (!history) {
         res.status(401).json({ message: "No History" });
       }

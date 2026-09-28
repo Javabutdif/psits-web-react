@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   exportMerchandiseReports,
-  getAllMembers,
   membershipHistory,
   membershipOptions,
   merchandiseReportFilterOptions,
@@ -66,7 +65,6 @@ export const useReportsData = () => {
   const [membershipData, setMembershipData] = useState<MembershipReportRow[]>(
     []
   );
-  const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
   const [membershipStatus, setMembershipStatus] =
     useState<ReportsStatus>("idle");
 
@@ -109,17 +107,6 @@ export const useReportsData = () => {
     });
   }, []);
 
-  useEffect(() => {
-    void getAllMembers().then((result) => {
-      const nextMemberIds = new Set(
-        (result ?? [])
-          .map((member) => String(member.id_number ?? "").trim())
-          .filter(Boolean)
-      );
-      setMemberIds(nextMemberIds);
-    });
-  }, []);
-
   const [isExporting, setIsExporting] = useState(false);
   const membershipRequestRef = useRef(0);
   const merchandiseRequestRef = useRef(0);
@@ -146,7 +133,7 @@ export const useReportsData = () => {
     const requestId = ++membershipRequestRef.current;
     setMembershipStatus("loading");
     try {
-      const result = await membershipHistory();
+      const result = await membershipHistory(filters.type || undefined);
       if (requestId !== membershipRequestRef.current) return;
       if (!result) throw new Error("No membership history returned");
       setMembershipData(result);
@@ -156,7 +143,7 @@ export const useReportsData = () => {
       setMembershipData([]);
       setMembershipStatus("error");
     }
-  }, []);
+  }, [filters.type]);
 
   const merchandiseQuery = useMemo(
     () => ({
@@ -246,26 +233,25 @@ export const useReportsData = () => {
     }
   }, []);
 
+  const membershipFetchKey = `${activeTab}|${filters.type}`;
+  const membershipFetchKeyRef = useRef("");
+
+  useEffect(() => {
+    if (activeTab !== "membership") return;
+    if (membershipFetchKeyRef.current === membershipFetchKey) return;
+    membershipFetchKeyRef.current = membershipFetchKey;
+    void fetchMembership();
+  }, [activeTab, membershipFetchKey, fetchMembership]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      if (activeTab === "membership" && membershipStatus === "idle") {
-        void fetchMembership();
-      }
       if (activeTab === "merchandise") {
         void fetchMerchandise(page);
       }
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [
-    activeTab,
-    page,
-    membershipStatus,
-    debouncedSearch,
-    filters,
-    fetchMembership,
-    fetchMerchandise,
-  ]);
+  }, [activeTab, page, debouncedSearch, filters, fetchMerchandise]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -301,9 +287,6 @@ export const useReportsData = () => {
         return false;
       if (filters.year && String(row.year) !== filters.year) return false;
       if (filters.term && row.term_name !== filters.term) return false;
-      const isMemberRow = memberIds.has(String(row.id_number ?? "").trim());
-      if (filters.type === "members" && !isMemberRow) return false;
-      if (filters.type === "non-members" && isMemberRow) return false;
       if (
         filters.membershipName &&
         row.membership_name !== filters.membershipName
@@ -314,7 +297,7 @@ export const useReportsData = () => {
       if (filters.dateTo && toDateKey(row.date) > filters.dateTo) return false;
       return true;
     });
-  }, [activeTab, membershipData, filters, debouncedSearch, memberIds]);
+  }, [activeTab, membershipData, filters, debouncedSearch]);
 
   const membershipSummary = useMemo(() => {
     const totalMembers = filteredMembership.length;

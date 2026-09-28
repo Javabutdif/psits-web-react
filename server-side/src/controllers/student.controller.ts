@@ -344,12 +344,14 @@ export const editStudentController = async (req: Request, res: Response) => {
       ).session(session);
     }
 
-    // Log the editing action
+    // Log the editing action.
+    const renamedFrom =
+      id_number !== previousIdNumber ? `${previousIdNumber} -> ` : "";
     const log = new Log({
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: "Edited Student",
-      target: `${id_number} - ${first_name} ${middle_name} ${last_name}`,
+      target: `${renamedFrom}${id_number} - ${first_name} ${middle_name} ${last_name}`,
       target_id: student._id,
       target_model: "Student",
     });

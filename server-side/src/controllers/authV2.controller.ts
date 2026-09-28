@@ -156,39 +156,32 @@ export const loginV2Controller = async (
       await log.save();
     } else {
       // Student login
-      let student = await Student.findOne({ id_number });
+      const exactMatch = await Student.findOne({ id_number });
 
       // Campus-scoped students (`<id>-ucb|-uclm|-ucpt`) may sign in with the
       // bare 8-digit ID. Enumerate the known suffixes instead of regex-matching
-      // `-.*` so the lookup is deterministic and index-friendly. When several
-      // rows share the same base ID, the password decides which account is
-      // being signed into.
-      if (!student && !id_number.includes("-")) {
-        const scopedIds = Object.values(CAMPUS_ID_SUFFIX).map(
-          (suffix) => `${id_number}-${suffix}`
-        );
-        const candidates = await Student.find({
-          id_number: { $in: scopedIds },
-        });
+      // `-.*` so the lookup is deterministic and index-friendly.
+      const candidates = exactMatch
+        ? [exactMatch]
+        : id_number.includes("-")
+          ? []
+          : await Student.find({
+              id_number: {
+                $in: Object.values(CAMPUS_ID_SUFFIX).map(
+                  (suffix) => `${id_number}-${suffix}`
+                ),
+              },
+            });
 
-        if (candidates.length === 1) {
-          student = candidates[0];
-        } else if (candidates.length > 1) {
-          for (const candidate of candidates) {
-            if (await bcrypt.compare(password, candidate.password)) {
-              student = candidate;
-              break;
-            }
-          }
+      let student: typeof exactMatch = null;
+      for (const candidate of candidates) {
+        if (await bcrypt.compare(password, candidate.password)) {
+          student = candidate;
+          break;
         }
       }
 
       if (!student) {
-        throw new AuthError(AuthErrorCodes.InvalidCredentials);
-      }
-
-      const passwordMatch = await bcrypt.compare(password, student.password);
-      if (!passwordMatch) {
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 

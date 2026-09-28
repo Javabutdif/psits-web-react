@@ -53,8 +53,7 @@ interface MembershipRequestData extends Student {
 }
 
 type MembershipRequestResponse =
-  | MembershipRequestData[]
-  | { data: MembershipRequestData[] };
+  MembershipRequestData[] | { data: MembershipRequestData[] };
 
 export interface MerchandiseSizeOption {
   custom?: boolean;
@@ -128,8 +127,7 @@ interface MembershipHistoryItem {
 }
 
 type MembershipHistoryResponse =
-  | MembershipHistoryItem[]
-  | { data: MembershipHistoryItem[] };
+  MembershipHistoryItem[] | { data: MembershipHistoryItem[] };
 
 interface DailySalesData {
   product_name: string;
@@ -536,14 +534,15 @@ export const renewStudent = async (): Promise<RenewResponse | void> => {
   }
 };
 
-export const membershipHistory = async (): Promise<
-  MembershipHistoryItem[] | void
-> => {
+export const membershipHistory = async (
+  type?: string
+): Promise<MembershipHistoryItem[] | void> => {
   try {
     const response: AxiosResponse<MembershipHistoryResponse> = await axios.get(
       `${backendConnection()}/api/admin/history`,
       {
         headers: createHeaders(),
+        params: type ? { type } : {},
       }
     );
     return Array.isArray(response.data) ? response.data : response.data.data;
