@@ -21,11 +21,7 @@ import {
   markAttendance,
   syncAttendanceForAttendee,
 } from "../services/attendance.service";
-import {
-  validateId,
-  CAMPUS_ID_SUFFIX,
-  buildCampusScopedStudentId,
-} from "../util/studentId.util";
+import { validateId } from "../util/studentId.util";
 import { EventV2Service } from "../services/eventV2.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
 import { logService } from "../services/log.service";
@@ -1027,6 +1023,12 @@ const parseYearLevel = (yearLevel: string): number | null => {
 
 interface AddAttendeeV2Body {
   studentId?: string;
+  /**
+   * Campus the attendee belongs to, as a campus enum value
+   * (e.g. "UC_BANILAD", "UC_LM"). Only used when no existing student
+   * record is found — existing students always keep their stored campus.
+   */
+  campus?: string;
   firstName?: string;
   middleName?: string;
   lastName?: string;
@@ -1079,6 +1081,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     // ── Body extraction & validation ────────────────────────────────────
     const {
       studentId,
+      campus,
       firstName,
       middleName,
       lastName,
@@ -1104,21 +1107,21 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       });
     }
 
-    // Resolve the student's actual campus before building the scoped ID.
-    // Try the bare 8-digit ID and every known campus suffix so an existing
-    // student is found regardless of which campus the admin is operating from.
+    // The student is identified by their bare 8-digit ID. Campus is chosen
+    // explicitly on the form (a campus enum value); it is never encoded in
+    // the ID. For an existing student the stored campus wins — the form
+    // value is a best-effort hint for walk-ins / not-yet-created students.
     const bareId = studentId.trim();
-    const candidateIds = [
-      bareId,
-      ...Object.values(CAMPUS_ID_SUFFIX).map((s) => `${bareId}-${s}`),
-    ];
     const existingStudent = await Student.findOne({
-      id_number: { $in: candidateIds },
+      id_number: bareId,
     });
-    const studentCampus = existingStudent?.campus ?? adminCampus;
+    const formCampus =
+      campus && V_VALID_CAMPUSES.includes(campus)
+        ? campus
+        : adminCampus;
+    const studentCampus = existingStudent?.campus ?? formCampus;
 
-    const normalizedStudentId =
-      buildCampusScopedStudentId(bareId, studentCampus) ?? bareId;
+    const normalizedStudentId = bareId;
 
     const firstNameErr = validateNameField(firstName, "First name", true);
     if (firstNameErr) {
@@ -1486,11 +1489,9 @@ export const addWalkInAttendeeV2Controller = async (
       });
     }
 
-    // Derive campus-scoped ID. For UC_BANILAD/UC_LM/UC_PT this appends the
-    // campus suffix (e.g. 21123456-uclm). For UC_MAIN/UC_CS there is no
-    // suffix, so we fall back to the raw 8-digit ID.
-    const normalizedStudentId =
-      buildCampusScopedStudentId(studentId, adminCampus) ?? studentId.trim();
+    // Attendees are stored under their bare 8-digit ID; the campus is the
+    // admin's own campus (the walk-in form has no campus selector).
+    const normalizedStudentId = studentId.trim();
 
     const firstNameErr = validateNameField(firstName, "First name", true);
     if (firstNameErr) {
@@ -2395,16 +2396,13 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
 
     // ── Handle id_number change ─────────────────────────────────────────
     if (changes.studentId !== undefined) {
-      const newScopedId = buildCampusScopedStudentId(
-        changes.studentId,
-        adminCampus
-      );
+      const newScopedId = changes.studentId.trim();
       if (!newScopedId) {
         await session.abortTransaction();
         session.endSession();
         return res.status(400).json({
           error: "VALIDATION",
-          message: "Unable to derive campus-based Student ID",
+          message: "Student ID cannot be empty",
         });
       }
 

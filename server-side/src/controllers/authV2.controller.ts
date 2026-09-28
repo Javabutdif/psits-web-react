@@ -152,11 +152,8 @@ export const loginV2Controller = async (
       await log.save();
     } else {
       // Student login — source of truth is the bare 8-digit id_number.
-      // Reject any suffix except "-admin" (handled above).
-      if (id_number.includes("-")) {
-        throw new AuthError(AuthErrorCodes.InvalidCredentials);
-      }
-
+      // Campus suffixes are not valid sign-in formats; '-admin' input
+      // never reaches here because the admin branch above handles it.
       const student = await Student.findOne({ id_number });
 
       if (!student) {
@@ -167,18 +164,12 @@ export const loginV2Controller = async (
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
-      const isDeleted =
-        student.status === account_status.DELETED ||
-        student.status === "Deleted" ||
-        student.status === "False";
+      const isDeleted = student.status === account_status.DELETED;
       if (isDeleted) {
         throw new AuthError(AuthErrorCodes.AccountDeleted);
       }
 
-      const isActive =
-        student.status === account_status.ACTIVE ||
-        student.status === "Active" ||
-        student.status === "True";
+      const isActive = student.status === account_status.ACTIVE;
       if (!isActive) {
         throw new AuthError(AuthErrorCodes.AccountNotActive);
       }
