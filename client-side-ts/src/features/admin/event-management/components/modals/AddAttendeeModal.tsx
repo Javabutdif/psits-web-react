@@ -178,8 +178,6 @@ export const AddAttendeeModal: React.FC<AddAttendeeModalProps> = ({
     return Object.keys(merch.selectedSizes);
   }, [merch]);
 
-  const [showPassword, setShowPassword] = useState(false);
-
   useEffect(() => {
     if (!adminCampus) return;
 
