@@ -156,11 +156,15 @@ jobs:
               ],
           }
 
+          api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+          if not api_key:
+              raise RuntimeError("OPENAI_API_KEY is missing or blank")
+
           request = urllib.request.Request(
               "https://api.openai.com/v1/chat/completions",
               data=json.dumps(payload).encode("utf-8"),
               headers={
-                  "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
+                  "Authorization": f"Bearer {api_key}",
                   "Content-Type": "application/json",
                   "Accept": "application/json"
               },
@@ -213,7 +217,7 @@ jobs:
               f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/pulls/{os.environ['PR_NUMBER']}/reviews",
               data=json.dumps(payload).encode("utf-8"),
               headers={
-                  "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+                  "Authorization": f"Bearer {os.environ['GH_TOKEN'].strip()}",
                   "Accept": "application/vnd.github+json",
                   "Content-Type": "application/json",
                   "X-GitHub-Api-Version": "2026-03-10",
