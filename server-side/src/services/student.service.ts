@@ -4,7 +4,7 @@ import { Student } from "../models/student.model";
 import { IStudent } from "../models/student.interface";
 import { account_status, membership_status } from "../enums/status.enums";
 import { student_roles } from "../enums/role.enums";
-import { campus_type } from "../enums/campus.enums";
+import { campus_type, signup_campus_values } from "../enums/campus.enums";
 import { AppError } from "../util/app.error.util";
 
 class StudentService {
@@ -100,7 +100,13 @@ class StudentService {
     }: IStudent & { campus?: string } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const studentCampus = campus || campus_type.MAIN;
+    // Callers may supply a campus (signup, walk-in registration), but the value
+    // is never trusted verbatim: anything outside the signup campus list -
+    // admin / event-only codes and junk strings included - falls back to MAIN.
+    const requestedCampus = typeof campus === "string" ? campus.trim() : "";
+    const studentCampus = signup_campus_values.includes(requestedCampus)
+      ? requestedCampus
+      : campus_type.MAIN;
 
     const newStudent = new Student({
       id_number,

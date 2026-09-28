@@ -27,6 +27,7 @@ import { computeEventStatistics } from "../services/eventStatistics.service";
 import { logService } from "../services/log.service";
 import { logs_action } from "../enums/logs.enums";
 import { campus_type } from "../enums/campus.enums";
+import { account_status } from "../enums/status.enums";
 import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
@@ -1292,7 +1293,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
             email: email.trim(),
             course: course!.trim(),
             year: yearNumber,
-            status: "True",
+            status: account_status.ACTIVE,
             membershipStatus: "NOT_APPLIED",
             campus: studentCampus,
             role: "all",

@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 import { Request, Response } from "express";
 import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
-import { account_status } from "../enums/status.enums";
+import { account_status, active_status_values } from "../enums/status.enums";
 import { psits_roles } from "../enums/role.enums";
 
 export interface StudentSearchResult {
@@ -37,7 +37,7 @@ export const getAllActiveStudentsController = async (
 ) => {
   try {
     const students: StudentSearchResult[] = await Student.find({
-      status: { $in: ["True", account_status.ACTIVE] },
+      status: { $in: active_status_values },
     }).select(
       "id_number rfid first_name middle_name last_name email course year campus status membershipStatus role isFirstApplication isYearUpdated createdAt"
     );

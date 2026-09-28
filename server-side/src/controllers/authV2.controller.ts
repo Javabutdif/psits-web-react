@@ -14,14 +14,18 @@ import { verifyRefreshToken } from "../util/jwt.util";
 import { Log } from "../models/log.model";
 import { AuthError, AuthErrorCodes } from "../util/errors.util";
 import { account_status } from "../enums/status.enums";
-import { campus_type } from "../enums/campus.enums";
+import { campus_type, signup_campus_values } from "../enums/campus.enums";
 import { studentService } from "../services/student.service";
 import {
   validateSignupData,
   normalizeYear,
   getSignupErrorResponse,
 } from "../util/signupValidation.util";
-import { buildCampusScopedStudentId, validateId } from "../util/studentId.util";
+import {
+  CAMPUS_ID_SUFFIX,
+  buildCampusScopedStudentId,
+  validateId,
+} from "../util/studentId.util";
 
 /**
  * Shared user response type for frontend
@@ -154,13 +158,28 @@ export const loginV2Controller = async (
       // Student login
       let student = await Student.findOne({ id_number });
 
-      if (!student && id_number.includes("-") === false) {
-        const baseIdNumber = id_number.split("-")[0]?.trim();
-        if (baseIdNumber) {
-          const escapedBaseId = baseIdNumber.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          student = await Student.findOne({
-            id_number: new RegExp(`^${escapedBaseId}(?:-.*)?$`),
-          });
+      // Campus-scoped students (`<id>-ucb|-uclm|-ucpt`) may sign in with the
+      // bare 8-digit ID. Enumerate the known suffixes instead of regex-matching
+      // `-.*` so the lookup is deterministic and index-friendly. When several
+      // rows share the same base ID, the password decides which account is
+      // being signed into.
+      if (!student && !id_number.includes("-")) {
+        const scopedIds = Object.values(CAMPUS_ID_SUFFIX).map(
+          (suffix) => `${id_number}-${suffix}`
+        );
+        const candidates = await Student.find({
+          id_number: { $in: scopedIds },
+        });
+
+        if (candidates.length === 1) {
+          student = candidates[0];
+        } else if (candidates.length > 1) {
+          for (const candidate of candidates) {
+            if (await bcrypt.compare(password, candidate.password)) {
+              student = candidate;
+              break;
+            }
+          }
         }
       }
 
@@ -406,7 +425,7 @@ export const signupV2Controller = async (
 
     const requestedCampus =
       typeof req.body.campus === "string" ? req.body.campus.trim() : "";
-    const campus = Object.values(campus_type).includes(requestedCampus)
+    const campus = signup_campus_values.includes(requestedCampus)
       ? requestedCampus
       : campus_type.MAIN;
 
