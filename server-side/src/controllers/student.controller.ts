@@ -10,18 +10,41 @@ import { Request, Response } from "express";
 import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
 import { account_status } from "../enums/status.enums";
+import { psits_roles } from "../enums/role.enums";
+
+export interface StudentSearchResult {
+  _id: mongoose.Types.ObjectId;
+  rfid?: string;
+  id_number: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  email?: string;
+  course: string;
+  status: string;
+  membershipStatus: string;
+  role: string;
+  isFirstApplication: boolean;
+  isYearUpdated: boolean;
+  createdAt: Date;
+  year: number;
+  campus: string;
+}
 
 export const getAllActiveStudentsController = async (
   req: Request,
   res: Response
 ) => {
   try {
-    const students: IStudent[] = await Student.find({
-      status: { $in: ["True", account_status.ACTIVE] },
-    });
+    const students: StudentSearchResult[] = await Student.find({
+      status: account_status.ACTIVE,
+    }).select(
+      "id_number rfid first_name middle_name last_name email course year campus status membershipStatus role isFirstApplication isYearUpdated createdAt"
+    );
     if (!students) {
       res.status(400).json({ message: "No Students" });
     }
+
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -197,6 +220,7 @@ export const cancelMembershipRequestController = async (
 
 export const editStudentController = async (req: Request, res: Response) => {
   const {
+    id,
     id_number,
     rfid,
     first_name,
@@ -206,45 +230,103 @@ export const editStudentController = async (req: Request, res: Response) => {
     course,
     year,
   } = req.body;
-
+  const user = req.userV2;
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
+    const studentId = new mongoose.Types.ObjectId(id);
     // Fetch the student document by id_number to get the _id
     const student: IStudentDocument | null = await Student.findOne({
-      id_number: id_number,
-    });
+      _id: studentId,
+    }).session(session);
 
     if (!student) {
+      await session.abortTransaction();
+      await session.endSession();
       return res.status(404).json({ message: "Student not found" });
     }
-
-    // Update the student's information
-    const studentResult = await Student.updateOne(
-      { id_number: id_number },
-      {
-        $set: {
-          rfid: rfid,
-          first_name: first_name,
-          middle_name: middle_name,
-          last_name: last_name,
-          email: email,
-          course: course,
-          year: year,
-        },
+    const previousIdNumber = student.id_number;
+    if (id_number !== previousIdNumber) {
+      //Check if the admin has permission to edit the id number
+      if (
+        user?.access === psits_roles.ADMIN ||
+        user?.access === psits_roles.DEVELOPER
+      ) {
+        //Update student records
+        await Student.updateOne(
+          { _id: studentId },
+          {
+            $set: {
+              id_number,
+              rfid: rfid,
+              first_name: first_name,
+              middle_name: middle_name,
+              last_name: last_name,
+              email: email,
+              course: course,
+              year: year,
+            },
+          }
+        ).session(session);
+        //Update order records with the new id_number
+        await Orders.updateMany(
+          { id_number: previousIdNumber },
+          {
+            $set: {
+              id_number,
+              student_name: `${first_name} ${middle_name} ${last_name}`,
+              course: course,
+              year: year,
+              rfid: rfid,
+            },
+          }
+        ).session(session);
+        //Update membership history records with the new id_number
+        await MembershipHistory.updateMany(
+          { id_number: previousIdNumber },
+          {
+            $set: {
+              id_number,
+            },
+          }
+        ).session(session);
+      } else {
+        await session.abortTransaction();
+        await session.endSession();
+        return res.status(403).json({
+          message: "You do not have permission to edit the ID number.",
+        });
       }
-    );
-
-    // Update related orders with the new student details
-    await Orders.updateMany(
-      { id_number: id_number },
-      {
-        $set: {
-          student_name: `${first_name} ${middle_name} ${last_name}`,
-          course: course,
-          year: year,
-          rfid: rfid,
-        },
-      }
-    );
+    } else {
+      //Update student records without changing the id_number
+      await Student.updateOne(
+        { _id: studentId },
+        {
+          $set: {
+            rfid: rfid,
+            first_name: first_name,
+            middle_name: middle_name,
+            last_name: last_name,
+            email: email,
+            course: course,
+            year: year,
+          },
+        }
+      ).session(session);
+      //Update order records with the new student details
+      await Orders.updateMany(
+        { id_number: previousIdNumber },
+        {
+          $set: {
+            id_number,
+            student_name: `${first_name} ${middle_name} ${last_name}`,
+            course: course,
+            year: year,
+            rfid: rfid,
+          },
+        }
+      ).session(session);
+    }
 
     // Log the editing action
     const log = new Log({
@@ -256,12 +338,17 @@ export const editStudentController = async (req: Request, res: Response) => {
       target_model: "Student",
     });
 
-    await log.save();
-
+    await log.save({ session });
+    await session.commitTransaction();
+    await session.endSession();
     res
       .status(200)
       .json({ message: "Student and related orders updated successfully" });
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    await session.endSession();
     console.error("Error updating student and orders:", error);
     res.status(500).json("Internal Server Error");
   }
