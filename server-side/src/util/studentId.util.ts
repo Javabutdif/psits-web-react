@@ -55,7 +55,8 @@ export function validateId(
 ): IdValidation {
   const { mode = "student", rejectSuspicious = false } = options;
   const pattern = mode === "login" ? LOGIN_ID_REGEX : STUDENT_ID_REGEX;
-  const formatMessage = mode === "login" ? LOGIN_ID_MESSAGE : STUDENT_ID_MESSAGE;
+  const formatMessage =
+    mode === "login" ? LOGIN_ID_MESSAGE : STUDENT_ID_MESSAGE;
   const fail = (message: string): IdValidation => ({
     valid: false,
     id: null,

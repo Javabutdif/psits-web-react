@@ -1116,9 +1116,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       id_number: bareId,
     });
     const formCampus =
-      campus && V_VALID_CAMPUSES.includes(campus)
-        ? campus
-        : adminCampus;
+      campus && V_VALID_CAMPUSES.includes(campus) ? campus : adminCampus;
     const studentCampus = existingStudent?.campus ?? formCampus;
 
     const normalizedStudentId = bareId;
