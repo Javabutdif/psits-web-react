@@ -216,7 +216,7 @@ jobs:
               return decoded
 
           def add_context(label, path, content):
-              nonlocal total_chars
+              global total_chars
 
               if not content:
                   return False
