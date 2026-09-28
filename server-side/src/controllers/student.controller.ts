@@ -287,6 +287,10 @@ export const editStudentController = async (req: Request, res: Response) => {
           {
             $set: {
               id_number,
+              name: `${first_name} ${middle_name} ${last_name}`,
+              course: course,
+              year: year,
+              rfid: rfid,
             },
           }
         ).session(session);
@@ -320,6 +324,18 @@ export const editStudentController = async (req: Request, res: Response) => {
           $set: {
             id_number,
             student_name: `${first_name} ${middle_name} ${last_name}`,
+            course: course,
+            year: year,
+            rfid: rfid,
+          },
+        }
+      ).session(session);
+      await MembershipHistory.updateMany(
+        { id_number: previousIdNumber },
+        {
+          $set: {
+            id_number,
+            name: `${first_name} ${middle_name} ${last_name}`,
             course: course,
             year: year,
             rfid: rfid,

@@ -425,7 +425,7 @@ export const useMerchandiseData = () => {
             ? "Product updated successfully"
             : "Product added successfully"
         );
-        await refreshProducts();
+        void refreshProducts();
       }
 
       return succeeded;
