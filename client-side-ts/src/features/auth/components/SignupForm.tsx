@@ -467,7 +467,9 @@ export default function SignupForm({
                             name={field.name}
                             value={field.state.value}
                             onValueChange={(value) =>
-                              field.handleChange(value as Campus)
+                              field.handleChange(
+                                value as (typeof CAMPUS_VALUES)[number]
+                              )
                             }
                           >
                             <SelectTrigger className="h-12 w-full rounded-xl border-gray-200">

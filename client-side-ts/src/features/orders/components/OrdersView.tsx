@@ -275,11 +275,9 @@ export const OrdersView = () => {
     setPage,
     pendingData,
     pendingTotal,
-    pendingTotalPages,
     pendingStatus,
     paidData,
     paidTotal,
-    paidTotalPages,
     paidStatus,
     isMutating,
     selectedIds,
@@ -303,8 +301,6 @@ export const OrdersView = () => {
   const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
 
   const data = activeTab === "pending" ? pendingData : paidData;
-  const totalPages =
-    activeTab === "pending" ? pendingTotalPages : paidTotalPages;
   const status = activeTab === "pending" ? pendingStatus : paidStatus;
   const rowCount =
     activeTab === "pending" ? pendingData.length : paidData.length;
