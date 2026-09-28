@@ -9,10 +9,7 @@ export const account_status = Object.freeze({
 // Read paths tolerate both so those students keep working; writers must always
 // use account_status.ACTIVE. Drop the legacy value once stored data has been
 // migrated.
-export const active_status_values: readonly string[] = [
-  account_status.ACTIVE,
-  "True",
-];
+export const active_status_values: readonly string[] = [account_status.ACTIVE];
 
 export const membership_status = Object.freeze({
   ACTIVE: "MEMBERSHIP_ACTIVE",
