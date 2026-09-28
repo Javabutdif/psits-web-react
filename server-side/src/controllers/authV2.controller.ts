@@ -14,14 +14,18 @@ import { verifyRefreshToken } from "../util/jwt.util";
 import { Log } from "../models/log.model";
 import { AuthError, AuthErrorCodes } from "../util/errors.util";
 import { account_status } from "../enums/status.enums";
-import { campus_type } from "../enums/campus.enums";
+import { campus_type, signup_campus_values } from "../enums/campus.enums";
 import { studentService } from "../services/student.service";
 import {
   validateSignupData,
   normalizeYear,
   getSignupErrorResponse,
 } from "../util/signupValidation.util";
-import { validateId } from "../util/studentId.util";
+import {
+  CAMPUS_ID_SUFFIX,
+  buildCampusScopedStudentId,
+  validateId,
+} from "../util/studentId.util";
 
 /**
  * Shared user response type for frontend
@@ -152,13 +156,32 @@ export const loginV2Controller = async (
       await log.save();
     } else {
       // Student login
-      const student = await Student.findOne({ id_number });
-      if (!student) {
-        throw new AuthError(AuthErrorCodes.InvalidCredentials);
+      const exactMatch = await Student.findOne({ id_number });
+
+      // Campus-scoped students (`<id>-ucb|-uclm|-ucpt`) may sign in with the
+      // bare 8-digit ID. Enumerate the known suffixes instead of regex-matching
+      // `-.*` so the lookup is deterministic and index-friendly.
+      const candidates = exactMatch
+        ? [exactMatch]
+        : id_number.includes("-")
+          ? []
+          : await Student.find({
+              id_number: {
+                $in: Object.values(CAMPUS_ID_SUFFIX).map(
+                  (suffix) => `${id_number}-${suffix}`
+                ),
+              },
+            });
+
+      let student: typeof exactMatch = null;
+      for (const candidate of candidates) {
+        if (await bcrypt.compare(password, candidate.password)) {
+          student = candidate;
+          break;
+        }
       }
 
-      const passwordMatch = await bcrypt.compare(password, student.password);
-      if (!passwordMatch) {
+      if (!student) {
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
@@ -393,8 +416,18 @@ export const signupV2Controller = async (
         .json({ message: "Year level must be between 1 and 5." });
     }
 
+    const requestedCampus =
+      typeof req.body.campus === "string" ? req.body.campus.trim() : "";
+    const campus = signup_campus_values.includes(requestedCampus)
+      ? requestedCampus
+      : campus_type.MAIN;
+
+    const scopedStudentId =
+      buildCampusScopedStudentId(String(req.body.id ?? ""), campus) ??
+      String(req.body.id ?? "");
+
     req.body = {
-      id_number: req.body.id,
+      id_number: scopedStudentId,
       password: req.body.password,
       first_name: req.body.fname,
       middle_name: req.body.mname,
@@ -402,6 +435,7 @@ export const signupV2Controller = async (
       email: req.body.email,
       course: req.body.course,
       year,
+      campus,
     };
 
     const result = await studentService.create(req);

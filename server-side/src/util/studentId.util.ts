@@ -1,5 +1,11 @@
 export const STUDENT_ID_REGEX = /^\d{8}$/;
 
+export const CAMPUS_ID_SUFFIX: Record<string, string> = {
+  UC_BANILAD: "ucb",
+  UC_LM: "uclm",
+  UC_PT: "ucpt",
+};
+
 // Sign-in accepts only the -admin, -ucb, -uclm, -ucpt
 export const LOGIN_ID_REGEX = /^\d{8}(-(admin|ucb|uclm|ucpt))?$/;
 
@@ -28,6 +34,20 @@ export type IdValidation =
  * operator rather than a value. Anything that is not a usable string fails here.
  * On success `id` is the trimmed value, safe to put in a query.
  */
+export const buildCampusScopedStudentId = (
+  rawStudentId: string,
+  campus: string
+): string | null => {
+  const baseId = rawStudentId.trim().split("-")[0]?.trim() ?? "";
+  const suffix = CAMPUS_ID_SUFFIX[campus];
+
+  if (!baseId || !suffix) {
+    return null;
+  }
+
+  return `${baseId}-${suffix}`;
+};
+
 export function validateId(
   value: unknown,
   options: { mode?: IdMode; rejectSuspicious?: boolean } = {}

@@ -27,6 +27,7 @@ import { computeEventStatistics } from "../services/eventStatistics.service";
 import { logService } from "../services/log.service";
 import { logs_action } from "../enums/logs.enums";
 import { campus_type } from "../enums/campus.enums";
+import { account_status } from "../enums/status.enums";
 import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
@@ -229,6 +230,8 @@ const parseRegisteredOn = (value: unknown): string | undefined => {
 
 const normalizeAttendeeQueryParams = (req: Request): AttendeeQueryParams => {
   const { page, limit } = normalizePagination(req.query.page, req.query.limit);
+  const campusParam =
+    typeof req.query.campus === "string" ? req.query.campus.trim() : undefined;
 
   return {
     page,
@@ -238,8 +241,8 @@ const normalizeAttendeeQueryParams = (req: Request): AttendeeQueryParams => {
         ? req.query.search.trim()
         : undefined,
     campus:
-      typeof req.query.campus === "string" && req.query.campus.trim().length > 0
-        ? req.query.campus.trim()
+      campusParam && campusParam !== "all" && campusParam.length > 0
+        ? campusParam
         : undefined,
     attendanceStatus: parseAttendanceStatusFilter(
       req.query.attendanceStatus ?? req.query.status
@@ -322,11 +325,25 @@ const isSameDay = (
   return attendeeDateInManila === yyyyMmDd;
 };
 
+const normalizeCampusForComparison = (value: unknown): string => {
+  const raw = String(value ?? "").trim();
+  const normalized = LEGACY_CAMPUS_MAP[raw] ?? raw;
+
+  if (normalized === "UC_CS") {
+    return campus_type.MAIN;
+  }
+
+  return normalized;
+};
+
 const matchesCampusFilter = (
   attendeeCampus: string,
   campusFilter: string
 ): boolean => {
-  return attendeeCampus === campusFilter;
+  return (
+    normalizeCampusForComparison(attendeeCampus) ===
+    normalizeCampusForComparison(campusFilter)
+  );
 };
 
 const filterAttendees = (
@@ -1179,11 +1196,16 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
         .json({ error: "EVENT_NOT_FOUND", message: "Event not found" });
     }
 
+    const existingStudent = await Student.findOne({
+      id_number: normalizedStudentId,
+    });
+    const studentCampus = existingStudent?.campus ?? adminCampus;
+
     const campusLimit = event.limit.find(
-      (entry) => entry.campus === adminCampus
+      (entry) => entry.campus === studentCampus
     );
     const campusAttendeeCount = Array.isArray(event.attendees)
-      ? event.attendees.filter((attendee) => attendee.campus === adminCampus)
+      ? event.attendees.filter((attendee) => attendee.campus === studentCampus)
           .length
       : 0;
 
@@ -1194,7 +1216,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     ) {
       return res.status(409).json({
         error: "CAMPUS_LIMIT_REACHED",
-        message: `Campus attendee limit reached for ${adminCampus}`,
+        message: `Campus attendee limit reached for ${studentCampus}`,
       });
     }
 
@@ -1204,7 +1226,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       : [];
 
     const alreadyRegistered = attendeeList.some(
-      (a) => a.id_number === normalizedStudentId && a.campus === adminCampus
+      (a) => a.id_number === normalizedStudentId && a.campus === studentCampus
     );
     if (alreadyRegistered) {
       return res.status(409).json({
@@ -1228,9 +1250,6 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     }
 
     // ── Check existing student ──────────────────────────────────────────
-    const existingStudent = await Student.findOne({
-      id_number: normalizedStudentId,
-    });
     const isNewStudent = !existingStudent;
 
     // For new students, verify email is not already taken
@@ -1274,9 +1293,9 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
             email: email.trim(),
             course: course!.trim(),
             year: yearNumber,
-            status: "True",
+            status: account_status.ACTIVE,
             membershipStatus: "NOT_APPLIED",
-            campus: adminCampus,
+            campus: studentCampus,
             role: "all",
             isRequest: false,
             createdAt: new Date(),
@@ -1293,7 +1312,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       name: attendeeName,
       course: course!.trim(),
       year: yearNumber,
-      campus: adminCampus,
+      campus: studentCampus,
       shirtSize: shirtSize?.trim() ?? "",
       shirtPrice: resolvedPrice,
       transactBy: claims.idNumber,
@@ -1307,7 +1326,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     // Step 3: Update sales data (campus-specific)
 
     if (resolvedPrice > 0) {
-      const campusData = event.sales_data.find((s) => s.campus === adminCampus);
+      const campusData = event.sales_data.find((s) => s.campus === studentCampus);
       if (campusData) {
         campusData.unitsSold += 1;
         campusData.totalRevenue += resolvedPrice;
@@ -1344,7 +1363,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
           studentName: attendeeName,
           studentEmail: email.trim(),
           eventName: event.eventName,
-          campus: adminCampus,
+          campus: studentCampus,
           studentId: normalizedStudentId,
           password: password,
         });
@@ -1366,7 +1385,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
         attendee: {
           id_number: normalizedStudentId,
           name: attendeeName,
-          campus: adminCampus,
+          campus: studentCampus,
           course: course!.trim(),
           year: yearNumber,
           shirtSize: shirtSize?.trim() ?? "",

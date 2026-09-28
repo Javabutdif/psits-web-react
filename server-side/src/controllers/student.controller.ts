@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 import { Request, Response } from "express";
 import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
-import { account_status } from "../enums/status.enums";
+import { account_status, active_status_values } from "../enums/status.enums";
 import { psits_roles } from "../enums/role.enums";
 
 export interface StudentSearchResult {
@@ -37,7 +37,7 @@ export const getAllActiveStudentsController = async (
 ) => {
   try {
     const students: StudentSearchResult[] = await Student.find({
-      status: account_status.ACTIVE,
+      status: { $in: active_status_values },
     }).select(
       "id_number rfid first_name middle_name last_name email course year campus status membershipStatus role isFirstApplication isYearUpdated createdAt"
     );
@@ -287,6 +287,10 @@ export const editStudentController = async (req: Request, res: Response) => {
           {
             $set: {
               id_number,
+              name: `${first_name} ${middle_name} ${last_name}`,
+              course: course,
+              year: year,
+              rfid: rfid,
             },
           }
         ).session(session);
@@ -326,14 +330,28 @@ export const editStudentController = async (req: Request, res: Response) => {
           },
         }
       ).session(session);
+      await MembershipHistory.updateMany(
+        { id_number: previousIdNumber },
+        {
+          $set: {
+            id_number,
+            name: `${first_name} ${middle_name} ${last_name}`,
+            course: course,
+            year: year,
+            rfid: rfid,
+          },
+        }
+      ).session(session);
     }
 
-    // Log the editing action
+    // Log the editing action.
+    const renamedFrom =
+      id_number !== previousIdNumber ? `${previousIdNumber} -> ` : "";
     const log = new Log({
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: "Edited Student",
-      target: `${id_number} - ${first_name} ${middle_name} ${last_name}`,
+      target: `${renamedFrom}${id_number} - ${first_name} ${middle_name} ${last_name}`,
       target_id: student._id,
       target_model: "Student",
     });
