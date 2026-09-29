@@ -9,10 +9,32 @@ import {
 import { Button } from "@/components/ui/button";
 import type { RefundDetail } from "../types/orders.types";
 
+interface OrderDetailItem {
+  title: string;
+  variant?: string;
+  price: number;
+  qty: number;
+}
+
+interface OrderDetail {
+  _id: string;
+  reference_code?: string;
+  student_name?: string;
+  id_number?: string;
+  course?: string;
+  year?: number;
+  order_date?: string | Date;
+  transaction_date?: string | Date;
+  status: string;
+  admin?: string;
+  items: OrderDetailItem[];
+  total?: number;
+}
+
 interface OrderDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  order: any | null;
+  order: OrderDetail | null;
   refunds?: RefundDetail[];
 }
 
@@ -88,9 +110,9 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           <div>
             <span className="text-gray-500">Status: </span>
             <span
-              className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${getStatusColor(order.order_status)}`}
+              className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`}
             >
-              {order.order_status}
+              {order.status}
             </span>
           </div>
           <div>
@@ -112,7 +134,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               </tr>
             </thead>
             <tbody>
-              {(order.items || []).map((item: any, idx: number) => (
+              {(order.items || []).map((item, idx: number) => (
                 <tr key={idx} className="border-t">
                   <td className="px-4 py-2">{item.title || "-"}</td>
                   <td className="px-4 py-2 text-center">

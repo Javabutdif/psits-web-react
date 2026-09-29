@@ -495,7 +495,7 @@ export const getStudentOrders = async ({
     return null;
   } catch (error) {
     handleApiError(error, false);
-    return { data: [], total: 0, page, limit, totalPages: 0 };
+    return null;
   }
 };
 

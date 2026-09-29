@@ -52,7 +52,6 @@ interface Order {
   id_number?: string;
   items: OrderItem[];
   status: string;
-  order_status?: string;
   orderDate: string;
   order_date?: string | Date;
   orderId: string;
@@ -133,7 +132,6 @@ const mapApiToUi = (apiOrder: ApiOrder): Order => {
     ),
     items,
     status: apiOrder.order_status ?? apiOrder.status ?? "Pending",
-    order_status: apiOrder.order_status ?? apiOrder.status ?? "Pending",
     orderDate,
     order_date: apiOrder.order_date,
     student_name: apiOrder.student_name,
@@ -373,6 +371,7 @@ const Pagination: React.FC<{
 const MyOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<OrdersTab>("pending");
   const [page, setPage] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -401,6 +400,7 @@ const MyOrders: React.FC = () => {
   }, []);
 
   const fetchOrders = useCallback(async () => {
+    setLoadError(null);
     setLoading(true);
     try {
       const result = await getStudentOrders({
@@ -408,6 +408,14 @@ const MyOrders: React.FC = () => {
         page,
         limit: ROWS_PER_PAGE,
       });
+
+      if (!result) {
+        setLoadError("Unable to load orders. Please try again.");
+        setOrders([]);
+        setTotalOrders(0);
+        setTotalPages(0);
+        return;
+      }
 
       if (result && result.data) {
         const mapped = result.data.map(mapApiToUi);
@@ -423,6 +431,7 @@ const MyOrders: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to fetch orders", error);
+      setLoadError("Unable to load orders. Please try again.");
       setOrders([]);
       setTotalOrders(0);
       setTotalPages(0);
@@ -558,6 +567,17 @@ const MyOrders: React.FC = () => {
                         onViewDetails={handleViewDetails}
                       />
                     ))
+                  ) : loadError ? (
+                    <div className="py-8 text-center">
+                      <p className="mb-2 text-red-600">{loadError}</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void fetchOrders()}
+                      >
+                        Retry
+                      </Button>
+                    </div>
                   ) : (
                     <EmptyState
                       title="No pending orders"
@@ -580,6 +600,17 @@ const MyOrders: React.FC = () => {
                         onViewDetails={handleViewDetails}
                       />
                     ))
+                  ) : loadError ? (
+                    <div className="py-8 text-center">
+                      <p className="mb-2 text-red-600">{loadError}</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void fetchOrders()}
+                      >
+                        Retry
+                      </Button>
+                    </div>
                   ) : (
                     <EmptyState
                       title="No paid orders"
@@ -602,6 +633,17 @@ const MyOrders: React.FC = () => {
                         onViewDetails={handleViewDetails}
                       />
                     ))
+                  ) : loadError ? (
+                    <div className="py-8 text-center">
+                      <p className="mb-2 text-red-600">{loadError}</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void fetchOrders()}
+                      >
+                        Retry
+                      </Button>
+                    </div>
                   ) : (
                     <EmptyState
                       title="No refunded orders"
