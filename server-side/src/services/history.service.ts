@@ -17,6 +17,7 @@ import {
   manilaYear,
   membershipCounterKey,
 } from "../util/reference.util";
+import { isOrganizationalMemberRecord } from "../util/role.util";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { admin_model, role_model } from "../model_template/model_data";
 import { membershipRequestReceipt } from "../mail_template/mail.template";
@@ -105,17 +106,7 @@ class HistoryService {
   };
   //Get all membership history
   getAll = async (filters: { type?: MembershipHistoryType } = {}) => {
-    const query: Record<string, unknown> = {};
-
-    if (filters.type === "members") {
-      query.membership_id = { $ne: null };
-    } else if (filters.type === "non-members") {
-      query.membership_id = null;
-    }
-
-    const history: IHistoryDocument[] = await MembershipHistory.find(
-      query
-    ).sort({
+    const history: IHistoryDocument[] = await MembershipHistory.find().sort({
       date: -1,
     });
     if (!history) {
@@ -129,7 +120,19 @@ class HistoryService {
 
     const studentMap = await buildStudentMap(history);
 
-    return history.map((record) => ({
+    // The Members / Non-members split is about the linked student's
+    // organizational membership, not the history row's own membership_id (which
+    // only links the row to a membership term). Classify from the batched
+    // studentMap so no per-row student lookup is needed.
+    const rows = filters.type
+      ? history.filter(
+          (record) =>
+            isOrganizationalMemberRecord(record, studentMap) ===
+            (filters.type === "members")
+        )
+      : history;
+
+    return rows.map((record) => ({
       ...projectStudentFields(record, studentMap),
       term_name: record.membership_id
         ? (termById.get(String(record.membership_id))?.term_name ?? "")
