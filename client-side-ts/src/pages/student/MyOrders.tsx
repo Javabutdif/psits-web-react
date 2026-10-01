@@ -668,12 +668,14 @@ const MyOrders: React.FC = () => {
       </div>
 
       {/* Detail Modal */}
-      <OrderDetailModal
-        isOpen={detailOpen}
-        onClose={() => setDetailOpen(false)}
-        order={detailOrder}
-        refunds={refundData}
-      />
+      {detailOrder && (
+        <OrderDetailModal
+          isOpen={detailOpen}
+          onClose={() => setDetailOpen(false)}
+          order={detailOrder}
+          refunds={refundData}
+        />
+      )}
     </div>
   );
 };
