@@ -34,7 +34,7 @@ interface OrderDetail {
 interface OrderDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  order: OrderDetail | null;
+  order: OrderDetail;
   refunds?: RefundDetail[];
 }
 
