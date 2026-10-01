@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -384,6 +384,10 @@ const MyOrders: React.FC = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [refundData, setRefundData] = useState<RefundDetail[]>([]);
 
+  // Guards against out-of-order responses overwriting newer state when the
+  // user switches tabs or pages faster than requests resolve.
+  const requestSeqRef = useRef(0);
+
   const fetchStatusCounts = useCallback(async () => {
     const entries = await Promise.all(
       (Object.keys(ORDER_STATUS_BY_TAB) as OrdersTab[]).map(async (tab) => {
@@ -400,6 +404,7 @@ const MyOrders: React.FC = () => {
   }, []);
 
   const fetchOrders = useCallback(async () => {
+    const requestId = ++requestSeqRef.current;
     setLoadError(null);
     setLoading(true);
     try {
@@ -408,6 +413,8 @@ const MyOrders: React.FC = () => {
         page,
         limit: ROWS_PER_PAGE,
       });
+
+      if (requestId !== requestSeqRef.current) return;
 
       if (!result) {
         setLoadError("Unable to load orders. Please try again.");
@@ -430,6 +437,7 @@ const MyOrders: React.FC = () => {
         setStatusCounts((prev) => ({ ...prev, [activeTab]: 0 }));
       }
     } catch (error) {
+      if (requestId !== requestSeqRef.current) return;
       console.error("Failed to fetch orders", error);
       setLoadError("Unable to load orders. Please try again.");
       setOrders([]);
@@ -437,7 +445,7 @@ const MyOrders: React.FC = () => {
       setTotalPages(0);
       setStatusCounts((prev) => ({ ...prev, [activeTab]: 0 }));
     } finally {
-      setLoading(false);
+      if (requestId === requestSeqRef.current) setLoading(false);
     }
   }, [activeTab, page]);
 
@@ -491,6 +499,31 @@ const MyOrders: React.FC = () => {
   const pendingCount = statusCounts.pending;
   const paidCount = statusCounts.paid;
   const refundedCount = statusCounts.refunded;
+
+  // Shared content for every status tab so loading/error/empty handling stays
+  // consistent across Pending, Paid, and Refunded.
+  const renderTabContent = (emptyTitle: string, emptyDescription: string) =>
+    loading ? (
+      <div className="py-8 text-center text-gray-500">Loading...</div>
+    ) : orders.length > 0 ? (
+      orders.map((order) => (
+        <OrderCard
+          key={order._id}
+          order={order}
+          onCancel={handleCancelOrder}
+          onViewDetails={handleViewDetails}
+        />
+      ))
+    ) : loadError ? (
+      <div className="py-8 text-center">
+        <p className="mb-2 text-red-600">{loadError}</p>
+        <Button variant="outline" size="sm" onClick={() => void fetchOrders()}>
+          Retry
+        </Button>
+      </div>
+    ) : (
+      <EmptyState title={emptyTitle} description={emptyDescription} />
+    );
 
   return (
     <div className="min-h-screen">
@@ -554,101 +587,23 @@ const MyOrders: React.FC = () => {
 
               <div className="mt-6">
                 <TabsContent value="pending">
-                  {loading ? (
-                    <div className="py-8 text-center text-gray-500">
-                      Loading...
-                    </div>
-                  ) : orders.length > 0 ? (
-                    orders.map((order) => (
-                      <OrderCard
-                        key={order._id}
-                        order={order}
-                        onCancel={handleCancelOrder}
-                        onViewDetails={handleViewDetails}
-                      />
-                    ))
-                  ) : loadError ? (
-                    <div className="py-8 text-center">
-                      <p className="mb-2 text-red-600">{loadError}</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void fetchOrders()}
-                      >
-                        Retry
-                      </Button>
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title="No pending orders"
-                      description="You don't have any pending orders right now. Start shopping to add items to your order."
-                    />
+                  {renderTabContent(
+                    "No pending orders",
+                    "You don't have any pending orders right now. Start shopping to add items to your order."
                   )}
                 </TabsContent>
 
                 <TabsContent value="paid">
-                  {loading ? (
-                    <div className="py-8 text-center text-gray-500">
-                      Loading...
-                    </div>
-                  ) : orders.length > 0 ? (
-                    orders.map((order) => (
-                      <OrderCard
-                        key={order._id}
-                        order={order}
-                        onCancel={handleCancelOrder}
-                        onViewDetails={handleViewDetails}
-                      />
-                    ))
-                  ) : loadError ? (
-                    <div className="py-8 text-center">
-                      <p className="mb-2 text-red-600">{loadError}</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void fetchOrders()}
-                      >
-                        Retry
-                      </Button>
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title="No paid orders"
-                      description="You have no paid orders yet. Browse products to place an order."
-                    />
+                  {renderTabContent(
+                    "No paid orders",
+                    "You have no paid orders yet. Browse products to place an order."
                   )}
                 </TabsContent>
 
                 <TabsContent value="refunded">
-                  {loading ? (
-                    <div className="py-8 text-center text-gray-500">
-                      Loading...
-                    </div>
-                  ) : orders.length > 0 ? (
-                    orders.map((order) => (
-                      <OrderCard
-                        key={order._id}
-                        order={order}
-                        onCancel={handleCancelOrder}
-                        onViewDetails={handleViewDetails}
-                      />
-                    ))
-                  ) : loadError ? (
-                    <div className="py-8 text-center">
-                      <p className="mb-2 text-red-600">{loadError}</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void fetchOrders()}
-                      >
-                        Retry
-                      </Button>
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title="No refunded orders"
-                      description="You have no refunded orders."
-                    />
+                  {renderTabContent(
+                    "No refunded orders",
+                    "You have no refunded orders."
                   )}
                 </TabsContent>
               </div>
