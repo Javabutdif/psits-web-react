@@ -383,6 +383,7 @@ const MyOrders: React.FC = () => {
   const [detailOrder, setDetailOrder] = useState<Order | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [refundData, setRefundData] = useState<RefundDetail[]>([]);
+  const [refundLoading, setRefundLoading] = useState(false);
 
   // Guards against out-of-order responses overwriting newer state when the
   // user switches tabs or pages faster than requests resolve.
@@ -480,11 +481,13 @@ const MyOrders: React.FC = () => {
   };
 
   const handleViewDetails = async (order: Order) => {
+    const isRefunded = order.status === "Refunded";
     setDetailOrder(order);
     setDetailOpen(true);
     setRefundData([]);
+    setRefundLoading(isRefunded);
 
-    if (order.status === "Refunded") {
+    if (isRefunded) {
       try {
         const refunds = await getRefundByOrderId(order._id);
         if (refunds) {
@@ -492,6 +495,8 @@ const MyOrders: React.FC = () => {
         }
       } catch (err) {
         console.error("Failed to fetch refund", err);
+      } finally {
+        setRefundLoading(false);
       }
     }
   };
@@ -629,6 +634,7 @@ const MyOrders: React.FC = () => {
           onClose={() => setDetailOpen(false)}
           order={detailOrder}
           refunds={refundData}
+          refundLoading={refundLoading}
         />
       )}
     </div>

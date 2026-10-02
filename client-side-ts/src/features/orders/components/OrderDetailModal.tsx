@@ -7,6 +7,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import type { RefundDetail } from "../types/orders.types";
 
 interface OrderDetailItem {
@@ -36,6 +37,7 @@ interface OrderDetailModalProps {
   onClose: () => void;
   order: OrderDetail;
   refunds?: RefundDetail[];
+  refundLoading?: boolean;
 }
 
 const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
@@ -43,6 +45,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   onClose,
   order,
   refunds = [],
+  refundLoading = false,
 }) => {
   if (!order) return null;
 
@@ -160,43 +163,50 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           </span>
         </div>
 
-        {refunds.length > 0 && (
+        {(refundLoading || refunds.length > 0) && (
           <>
             <h4 className="mt-6 mb-2 text-base font-semibold">
               Refund Details
             </h4>
-            <div className="overflow-x-auto rounded-lg border">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 text-left">
-                    <th className="px-4 py-2 font-medium">Refund ID</th>
-                    <th className="px-4 py-2 font-medium">Product</th>
-                    <th className="px-4 py-2 text-right font-medium">
-                      Refund Amount
-                    </th>
-                    <th className="px-4 py-2 font-medium">Refunded By</th>
-                    <th className="px-4 py-2 font-medium">Refund Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {refunds.map((r: RefundDetail) => (
-                    <tr key={r._id} className="border-t">
-                      <td className="px-4 py-2 font-mono text-xs">
-                        {r.refund_id}
-                      </td>
-                      <td className="px-4 py-2">{r.product_name}</td>
-                      <td className="px-4 py-2 text-right font-medium text-red-600">
-                        -₱{r.refund_price?.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-2">{r.refund_admin}</td>
-                      <td className="px-4 py-2">
-                        {new Date(r.refund_date).toLocaleString()}
-                      </td>
+            {refundLoading ? (
+              <div className="flex items-center gap-2 py-4 text-sm text-gray-500">
+                <Spinner className="size-4" />
+                Loading refund details...
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-left">
+                      <th className="px-4 py-2 font-medium">Refund ID</th>
+                      <th className="px-4 py-2 font-medium">Product</th>
+                      <th className="px-4 py-2 text-right font-medium">
+                        Refund Amount
+                      </th>
+                      <th className="px-4 py-2 font-medium">Refunded By</th>
+                      <th className="px-4 py-2 font-medium">Refund Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {refunds.map((r: RefundDetail) => (
+                      <tr key={r._id} className="border-t">
+                        <td className="px-4 py-2 font-mono text-xs">
+                          {r.refund_id}
+                        </td>
+                        <td className="px-4 py-2">{r.product_name}</td>
+                        <td className="px-4 py-2 text-right font-medium text-red-600">
+                          -₱{r.refund_price?.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-2">{r.refund_admin}</td>
+                        <td className="px-4 py-2">
+                          {new Date(r.refund_date).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </>
         )}
 
