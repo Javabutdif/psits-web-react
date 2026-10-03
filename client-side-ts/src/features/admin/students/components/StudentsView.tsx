@@ -759,8 +759,10 @@ const StudentFormDialog = ({
         <div className="p-6">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-medium">{account?.name}</h2>
-              <p className="text-sm text-[#8f8f8f]">{account?.email}</p>
+              <h2 className="text-lg font-medium break-all">{account?.name}</h2>
+              <p className="text-sm break-all text-[#8f8f8f]">
+                {account?.email}
+              </p>
             </div>
           </div>
           <div className="space-y-4">
@@ -1362,7 +1364,7 @@ export const StudentsView = () => {
       </header>
 
       <div className="px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="mb-4 flex gap-6 overflow-x-auto border-b border-[#eeeeee] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mb-4 flex [scrollbar-width:none] gap-6 overflow-x-auto border-b border-[#eeeeee] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((tab) => (
             <button
               key={tab.key}
