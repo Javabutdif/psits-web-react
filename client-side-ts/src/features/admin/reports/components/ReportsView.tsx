@@ -210,9 +210,9 @@ const ReportsFilterPopover = ({
                       <SelectValue placeholder="All Student" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Student</SelectItem>
-                      <SelectItem value="non-members">Non-members</SelectItem>
-                      <SelectItem value="members">Members</SelectItem>
+                      <SelectItem value="all">Default</SelectItem>
+                      <SelectItem value="non-members">Students</SelectItem>
+                      <SelectItem value="members">PSITS Personnel</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
