@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import {
   getAllActiveTemplates,
@@ -19,7 +19,10 @@ import {
   roleAuthenticateV2,
 } from "../middlewares/authV2.middleware";
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 const router: Router = Router();
 
 // =======================
@@ -96,6 +99,22 @@ router.post(
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
   upload.single("file"),
+  (err: unknown, req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({
+        error: "UPLOAD_ERROR",
+        message: err.message,
+      });
+    }
+    if (err) {
+      console.error("Certificate eligibility upload failed:", err);
+      return res.status(500).json({
+        error: "UPLOAD_ERROR",
+        message: "File upload failed",
+      });
+    }
+    next();
+  },
   processCsvOrXlsxEligibility
 );
 
