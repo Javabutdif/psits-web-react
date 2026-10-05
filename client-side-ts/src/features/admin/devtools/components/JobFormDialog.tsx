@@ -32,7 +32,6 @@ const DEFAULT_EMAIL_CONFIG: EmailConfig = {
   subjectTemplate: "{{jobName}} - {{date}}",
   includeSummary: true,
   includeRawData: false,
-  useNoetix: false,
   skipIfEmpty: false,
 };
 
@@ -213,16 +212,6 @@ export const JobFormDialog = ({ open, onClose, job, onSuccess }: JobFormDialogPr
                     <p className="text-xs text-[#8a8a8a] mt-0.5">
                       Skips the webhook payload when every selected function returns zero records. Failures are always sent.
                     </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 border-t border-[#f0f0f0] pt-3">
-                  <Switch
-                    checked={emailConfig.useNoetix}
-                    onCheckedChange={(v) => setEmailConfig({ ...emailConfig, useNoetix: v })}
-                  />
-                  <div>
-                      <label className="text-sm text-[#555]">Request Noetix analysis</label>
-                      <p className="text-xs text-[#8a8a8a] mt-0.5">Flag passed to Make.com so it can run Noetix on the job data before sending the report</p>
                   </div>
                 </div>
               </div>

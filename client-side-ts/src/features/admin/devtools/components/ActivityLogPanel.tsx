@@ -38,8 +38,6 @@ const ACTION_FILTER_OPTIONS = [
   { value: "Approve Order", label: "Approve Order" },
   { value: "Cancel Order", label: "Cancel Order" },
   { value: "Refund Order", label: "Refund Order" },
-  { value: "Noetix AI Action", label: "AI Chatbot Actions" },
-  { value: "Toggled Chatbot", label: "Toggled Chatbot" },
 ];
 
 export const ActivityLogPanel = () => {

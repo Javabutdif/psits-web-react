@@ -175,19 +175,6 @@ router.get(
   devtoolsController.getSystemSettings
 );
 
-// Chatbot toggle
-router.get(
-  "/settings/chatbot",
-  requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["admin"]),
-  devtoolsController.getChatbotEnabled
-);
-router.patch(
-  "/settings/chatbot",
-  ...adminOnlyAuthChain,
-  devtoolsController.toggleChatbot
-);
-
 // Student suspend cron toggle
 router.get(
   "/settings/student-suspend-cron",
@@ -277,74 +264,6 @@ router.post(
   "/actions/decrement-student-years",
   ...adminOnlyAuthChain,
   devtoolsController.decrementStudentYears
-);
-
-// Noetix AI Usage - Admin only
-router.get(
-  "/noetix/usage",
-  ...adminOnlyAuthChain,
-  devtoolsController.getNoetixUsageLogs
-);
-router.get(
-  "/noetix/usage/stats",
-  ...adminOnlyAuthChain,
-  devtoolsController.getNoetixUsageStats
-);
-router.delete(
-  "/noetix/usage/old",
-  ...adminOnlyAuthChain,
-  devtoolsController.deleteOldNoetixUsageLogs
-);
-
-// Noetix Admin Disable - Admin only
-router.get(
-  "/noetix/settings",
-  ...adminOnlyAuthChain,
-  devtoolsController.getNoetixDisabledAdmins
-);
-router.post(
-  "/noetix/settings/disable-admin",
-  ...adminOnlyAuthChain,
-  devtoolsController.addNoetixDisabledAdmin
-);
-router.delete(
-  "/noetix/settings/disable-admin/:adminId",
-  ...adminOnlyAuthChain,
-  devtoolsController.removeNoetixDisabledAdmin
-);
-
-// Noetix Tool Disable - Admin only
-router.get(
-  "/noetix/tools",
-  ...adminOnlyAuthChain,
-  devtoolsController.getNoetixDisabledTools
-);
-router.get(
-  "/noetix/tools/registry",
-  ...adminOnlyAuthChain,
-  devtoolsController.getNoetixToolRegistry
-);
-router.post(
-  "/noetix/tools/disable",
-  ...adminOnlyAuthChain,
-  devtoolsController.addNoetixDisabledTool
-);
-router.delete(
-  "/noetix/tools/disable/:toolName",
-  ...adminOnlyAuthChain,
-  devtoolsController.removeNoetixDisabledTool
-);
-
-// Noetix Max Iterations - Admin only
-router.get(
-  "/noetix/settings/max-iterations",
-  ...adminOnlyAuthChain,
-  devtoolsController.getNoetixMaxIterations
-);
-router.patch(
-  "/noetix/settings/max-iterations",
-  ...adminOnlyAuthChain,
-  devtoolsController.setNoetixMaxIterations
 );
 
 export default router;

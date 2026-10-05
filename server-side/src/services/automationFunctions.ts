@@ -13,7 +13,6 @@ import { PromoUsage } from "../models/promo.usage.model";
 import { hydrateEventsAttendance } from "./attendance.service";
 import { computeEventStatistics } from "./eventStatistics.service";
 import { getMerchandiseReport } from "./report.service";
-import { getNoetixUsageStats } from "./noetix-usage.service";
 import {
   getRateLimitViolations,
   getBruteForceLogs,
@@ -987,9 +986,6 @@ const getAdminActivitySummaryFn = async (
   };
 };
 
-const getNoetixUsageSummaryFn = async (): Promise<unknown> =>
-  getNoetixUsageStats();
-
 const getContributionSummaryFn = async (
   params?: AutomationParams
 ): Promise<unknown> => {
@@ -1029,8 +1025,6 @@ const getSystemSettingsSnapshotFn = async (): Promise<unknown> => {
   if (!settings) return { message: "No settings document found" };
   return {
     membership_price: settings.membership_price,
-    chatbotEnabled: settings.chatbotEnabled ?? false,
-    noetixDisabledAdminCount: settings.noetixDisabledAdmins?.length ?? 0,
   };
 };
 
@@ -1351,12 +1345,6 @@ export const AUTOMATION_FUNCTIONS: Record<string, AutomationFunctionDef> = {
     fn: getAdminActivitySummaryFn,
     defaultParams: { sinceDays: 7, limit: 20 },
     description: "Audit log activity grouped by action and admin",
-    category: "system",
-  },
-  getNoetixUsageSummary: {
-    fn: getNoetixUsageSummaryFn,
-    defaultParams: {},
-    description: "Noetix AI usage, success rate, and most-used tools",
     category: "system",
   },
   getContributionSummary: {

@@ -51,7 +51,6 @@ src/
 │   ├── student/       # Student portal, membership, certificates download
 │   ├── certificate/   # Certificate template management, eligibility
 │   └── admin/         # Admin dashboard modules
-│       ├── agent-chat/        # PSITS Chatbot (Noetix AI) + onboarding tour
 │       ├── contributions/     # GitHub contribution sync
 │       ├── dashboard/         # Admin dashboard with charts
 │       ├── devtools/          # Email queue, automation job scheduler
@@ -86,7 +85,6 @@ src/
 | **Merchandise** | Admin catalog management with image uploads; campus-specific pricing and limits |
 | **Admin Dashboard** | Charts (recharts), pending orders, membership counts |
 | **Devtools** | Email queue panel, automation job scheduler (20 preset functions), cron execution logs |
-| **PSITS Chatbot** | Noetix AI-powered chat for operational data queries; tool-loop agent with onboarding tour |
 
 ## Design System
 

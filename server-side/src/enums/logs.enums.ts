@@ -21,9 +21,7 @@ export const logs_action = Object.freeze({
   TRIGGER_CRON: "Triggered Cron Job",
   CANCEL_EXPIRED_ORDERS: "Cancelled Expired Orders",
   REBUILD_DB_INDEXES: "Rebuilt Database Indexes",
-  TOGGLE_CHATBOT: "Toggled Chatbot",
   TOGGLE_STUDENT_SUSPEND_CRON: "Toggled Student Suspend Cron",
-  NOETIX_AI_ACTION: "Noetix AI Action",
   // Orders
   APPROVE_ORDER: "Approved Order",
   CANCEL_ORDER: "Cancelled Order",
