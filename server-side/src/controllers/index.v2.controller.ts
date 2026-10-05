@@ -24,7 +24,7 @@ const url = `${frontendBaseUrl}/auth/reset-password?token=`;
 
 import { studentService } from "../services/student.service";
 import { normalizeYear } from "../util/signupValidation.util";
-import { validateId } from "../util/studentId.util";
+import { CAMPUS_ID_SUFFIX, validateId } from "../util/studentId.util";
 import { adminService } from "../services/admin.service";
 import { indexService } from "../services/index.service";
 import { logService } from "../services/log.service";
@@ -148,7 +148,19 @@ export const forgotPasswordController = catchAsync(
 
     // Find the user by email
     const userAdmin = await Admin.findOne({ email, id_number });
-    const getUser = await Student.findOne({ email, id_number });
+    // Campus-scoped students (`<id>-ucb|-uclm|-ucpt`) may use their bare ID.
+    const studentIdCandidates = id_number.includes("-")
+      ? [id_number]
+      : [
+          id_number,
+          ...Object.values(CAMPUS_ID_SUFFIX).map(
+            (suffix) => `${id_number}-${suffix}`
+          ),
+        ];
+    const getUser = await Student.findOne({
+      email,
+      id_number: { $in: studentIdCandidates },
+    });
 
     if (userAdmin) {
       user = userAdmin;

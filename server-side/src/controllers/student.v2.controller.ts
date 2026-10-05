@@ -6,6 +6,7 @@ import { user_model } from "../model_template/model_data";
 import { Orders } from "../models/orders.model";
 import { Merch } from "../models/merch.model";
 import { Refund } from "../models/refund.model";
+import { MembershipHistory } from "../models/history.model";
 import { Settings } from "../models/settings.model";
 import { membership_status } from "../enums/status.enums";
 import { campus_type } from "../enums/campus.enums";
@@ -111,6 +112,48 @@ export const getStudentLookupForAdmin = async (
   } catch (error) {
     console.error("Error fetching student lookup:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const fetchSpecificMembershipHistoryV2Controller = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const id_number = req.params.id_number as string;
+
+    if (!id_number?.trim()) {
+      return res.status(400).json({ message: "Invalid student ID" });
+    }
+
+    // Accepts both the bare 8-digit ID and the campus-scoped ID
+    // (e.g. "21123456-uclm"), which is how non-Main students are stored.
+    const student = await findStudentByLookupId(id_number);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const membershipHistory = await MembershipHistory.find({
+      student: student._id,
+    }).sort({ date: -1 });
+
+    // Project the same response shape the frontend expects — the denormalized
+    // fields no longer live on the schema; they are derived from the student.
+    const fullName =
+      `${student.first_name} ${student.middle_name ?? ""} ${student.last_name}`.trim();
+    const data = membershipHistory.map((record) => ({
+      ...record.toObject(),
+      id_number: student.id_number,
+      rfid: student.rfid ?? "",
+      name: fullName,
+      year: student.year,
+      course: student.course,
+    }));
+
+    return res.status(200).json({ data });
+  } catch (error) {
+    console.error("Error fetching student membership history:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

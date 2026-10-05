@@ -13,7 +13,7 @@ import {
   getEventAttendeesRaw,
   getAssetFileTree,
   getStudentCertificateEvents,
-} from "../controllers/certificateV2.controller";
+} from "../controllers/certificate.v2.controller";
 import {
   requireAccessTokenV2,
   roleAuthenticateV2,
