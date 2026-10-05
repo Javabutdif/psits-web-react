@@ -49,7 +49,6 @@ interface AutomationWebhookPayload {
     subject: string;
     includeSummary: boolean;
     includeRawData: boolean;
-    useNoetix: boolean;
     skipIfEmpty: boolean;
   };
   recipients: Array<{
@@ -273,7 +272,6 @@ const buildAutomationWebhookPayload = (
       subject,
       includeSummary: job.emailConfig.includeSummary,
       includeRawData: job.emailConfig.includeRawData,
-      useNoetix: job.emailConfig.useNoetix,
       skipIfEmpty: Boolean(job.emailConfig.skipIfEmpty),
     },
     recipients: targets.map((t) => ({

@@ -7,7 +7,6 @@ import {
   decrementStudentYears,
   suspendOldStudents,
   getSystemSettings,
-  toggleChatbot,
   getStudentSuspendCron,
   toggleStudentSuspendCron,
 } from "../api/devtools.api";
@@ -200,7 +199,7 @@ const actions: ActionButton[] = [
 
 export const QuickActionsPanel = () => {
   const { access } = useAdminPermissions();
-  const canToggleChatbot = access === PSITS_ROLES.ADMIN;
+  const canToggleSuspendCron = access === PSITS_ROLES.ADMIN;
   const [loading, setLoading] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [result, setResult] = useState<
@@ -213,10 +212,8 @@ export const QuickActionsPanel = () => {
   const [settings, setSettings] = useState<{
     studentCreatedAtBackfilled?: boolean;
     studentYearLastUpdated?: string;
-    chatbotEnabled?: boolean;
   } | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
-  const [isTogglingChatbot, setIsTogglingChatbot] = useState(false);
   const [suspendCronEnabled, setSuspendCronEnabled] = useState(true);
   const [isTogglingSuspendCron, setIsTogglingSuspendCron] = useState(false);
 
@@ -315,29 +312,8 @@ export const QuickActionsPanel = () => {
     }
   };
 
-  const handleToggleChatbot = async (next: boolean) => {
-    if (!canToggleChatbot) {
-      showToast("error", "Only Admins can toggle the chatbot");
-      return;
-    }
-    setIsTogglingChatbot(true);
-    try {
-      const enabled = await toggleChatbot(next);
-      setSettings((prev) => ({ ...prev, chatbotEnabled: enabled }));
-      showToast("success", `Chatbot ${enabled ? "enabled" : "disabled"}`);
-    } catch (err: any) {
-      const message =
-        err?.response?.status === 403
-          ? "Only Admins can toggle the chatbot"
-          : err?.response?.data?.message || "Failed to update chatbot setting";
-      showToast("error", message);
-    } finally {
-      setIsTogglingChatbot(false);
-    }
-  };
-
   const handleToggleSuspendCron = async (next: boolean) => {
-    if (!canToggleChatbot) {
+    if (!canToggleSuspendCron) {
       showToast("error", "Only Admins can toggle the cron");
       return;
     }
@@ -439,47 +415,6 @@ export const QuickActionsPanel = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-[#2b2b2b]">Chatbot</p>
-            <p className="text-xs text-[#8a8a8a]">
-              Enable or disable the admin chatbot assistant site-wide
-            </p>
-          </div>
-        </div>
-        <div className="mt-2 flex h-9 items-center justify-between rounded-full border border-[#e5e5e5] px-4">
-          <span className="text-sm text-[#2b2b2b]">
-            {(settings?.chatbotEnabled ?? true) ? "Enabled" : "Disabled"}
-          </span>
-          <Switch
-            checked={settings?.chatbotEnabled ?? true}
-            disabled={isTogglingChatbot || !canToggleChatbot}
-            onCheckedChange={handleToggleChatbot}
-          />
-        </div>
-        {!canToggleChatbot && (
-          <p className="text-xs text-[#c0392b]">
-            Only Admin can enable/disable this.
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-3 rounded-xl border bg-white p-5">
-        <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#e9f4fb] text-[#1c9dde]">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
@@ -499,11 +434,11 @@ export const QuickActionsPanel = () => {
           </span>
           <Switch
             checked={suspendCronEnabled}
-            disabled={isTogglingSuspendCron || !canToggleChatbot}
+            disabled={isTogglingSuspendCron || !canToggleSuspendCron}
             onCheckedChange={handleToggleSuspendCron}
           />
         </div>
-        {!canToggleChatbot && (
+        {!canToggleSuspendCron && (
           <p className="text-xs text-[#c0392b]">
             Only Admin can enable/disable this.
           </p>
