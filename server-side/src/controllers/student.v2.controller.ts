@@ -6,10 +6,12 @@ import { user_model } from "../model_template/model_data";
 import { Orders } from "../models/orders.model";
 import { Merch } from "../models/merch.model";
 import { Refund } from "../models/refund.model";
+import { MembershipHistory } from "../models/history.model";
 import { Settings } from "../models/settings.model";
 import { membership_status } from "../enums/status.enums";
 import { campus_type } from "../enums/campus.enums";
 import { normalizeMembershipStatus } from "../util/membership.util";
+import { CAMPUS_ID_SUFFIX } from "../util/studentId.util";
 import { r2Client, R2_BUCKET_NAME } from "../lib/r2Client";
 
 const escapeRegex = (value: string) =>
@@ -22,19 +24,24 @@ const isNoSuchKeyError = (error: unknown): boolean => {
   return candidate.name === "NoSuchKey" || candidate.Code === "NoSuchKey";
 };
 
+// The ID as typed is the source of truth: a suffixed ID only ever matches
+// itself. A bare ID may also match its campus-scoped forms
+// (`<id>-ucb|-uclm|-ucpt`), same as login and forgot password.
 const findStudentByLookupId = async (rawIdNumber: string) => {
-  const normalized = rawIdNumber.trim();
-  const baseIdNumber = normalized.split("-")[0]?.trim() ?? "";
+  const idNumber = rawIdNumber.trim();
 
-  let student = await Student.findOne({ id_number: normalized });
-
-  if (!student && baseIdNumber) {
-    student = await Student.findOne({
-      id_number: new RegExp(`^${escapeRegex(baseIdNumber)}(?:-.*)?$`),
-    });
+  const student = await Student.findOne({ id_number: idNumber });
+  if (student || idNumber.includes("-")) {
+    return student;
   }
 
-  return student;
+  return Student.findOne({
+    id_number: {
+      $in: Object.values(CAMPUS_ID_SUFFIX).map(
+        (suffix) => `${idNumber}-${suffix}`
+      ),
+    },
+  });
 };
 
 export const getStudentProfile = async(req: Request, res: Response)=>{
@@ -111,6 +118,48 @@ export const getStudentLookupForAdmin = async (
   } catch (error) {
     console.error("Error fetching student lookup:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const fetchSpecificMembershipHistoryV2Controller = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const id_number = req.params.id_number as string;
+
+    if (!id_number?.trim()) {
+      return res.status(400).json({ message: "Invalid student ID" });
+    }
+
+    // Looks up the ID as given; a bare ID also resolves to the campus-scoped
+    // ID (e.g. "21123456-uclm"), which is how non-Main students are stored.
+    const student = await findStudentByLookupId(id_number);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const membershipHistory = await MembershipHistory.find({
+      student: student._id,
+    }).sort({ date: -1 });
+
+    // Project the same response shape the frontend expects — the denormalized
+    // fields no longer live on the schema; they are derived from the student.
+    const fullName =
+      `${student.first_name} ${student.middle_name ?? ""} ${student.last_name}`.trim();
+    const data = membershipHistory.map((record) => ({
+      ...record.toObject(),
+      id_number: student.id_number,
+      rfid: student.rfid ?? "",
+      name: fullName,
+      year: student.year,
+      course: student.course,
+    }));
+
+    return res.status(200).json({ data });
+  } catch (error) {
+    console.error("Error fetching student membership history:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

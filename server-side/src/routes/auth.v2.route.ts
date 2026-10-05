@@ -4,7 +4,7 @@ import {
   refreshV2Controller,
   logoutV2Controller,
   signupV2Controller,
-} from "../controllers/authV2.controller";
+} from "../controllers/auth.v2.controller";
 import loginLimiter, { signupLimiter } from "../util/limiter.util";
 
 const router: Router = Router();

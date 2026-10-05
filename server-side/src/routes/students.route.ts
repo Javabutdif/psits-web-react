@@ -8,9 +8,9 @@ import {
   editStudentController,
   changeStudentPassword,
   fetchSpecificStudentController,
-  fetchSpecificMembershipHistoryController,
   editStudentYearLevel,
 } from "../controllers/student.controller";
+import { fetchSpecificMembershipHistoryV2Controller } from "../controllers/student.v2.controller";
 import {
   requireAccessTokenV2,
   requireAccessTokenWithDBCheck,
@@ -83,7 +83,7 @@ router.get(
   "/students/student-membership-history/:id_number",
   requireAccessTokenV2,
   roleAuthenticateV2(["admin"]),
-  fetchSpecificMembershipHistoryController
+  fetchSpecificMembershipHistoryV2Controller
 );
 
 router.put(

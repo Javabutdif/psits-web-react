@@ -1,8 +1,8 @@
 export const STUDENT_ID_REGEX = /^\d{8}$/;
 
-// Sign-in accepts only the -admin suffix. Students sign in with their bare
-// 8-digit ID; campus suffixes are not valid sign-in formats.
-export const LOGIN_ID_REGEX = /^\d{8}(-admin)?$/;
+// Sign-in accepts the -admin suffix and the campus suffixes (-ucb, -uclm,
+// -ucpt). Campus-scoped students may also sign in with their bare 8-digit ID.
+export const LOGIN_ID_REGEX = /^\d{8}(-(admin|ucb|uclm|ucpt))?$/;
 
 //limit length to 8 digit only
 export const STUDENT_ID_LENGTH = 8;
@@ -25,7 +25,7 @@ export type IdValidation =
   | { valid: false; id: null; message: string };
 
 //mode "student" = exactly 8 digits (signup, attendance).
-//mode "login"   = 8 digits + optional -admin (sign-in, reset).
+//mode "login"   = 8 digits + optional -admin/-ucb/-uclm/-ucpt (sign-in, reset).
 export function validateId(
   value: unknown,
   options: { mode?: IdMode; rejectSuspicious?: boolean } = {}

@@ -21,7 +21,11 @@ import {
   normalizeYear,
   getSignupErrorResponse,
 } from "../util/signupValidation.util";
-import { buildCampusScopedStudentId, validateId } from "../util/studentId.util";
+import {
+  CAMPUS_ID_SUFFIX,
+  buildCampusScopedStudentId,
+  validateId,
+} from "../util/studentId.util";
 
 /**
  * Shared user response type for frontend
@@ -151,16 +155,33 @@ export const loginV2Controller = async (
       });
       await log.save();
     } else {
-      // Student login — source of truth is the bare 8-digit id_number.
-      // Campus suffixes are not valid sign-in formats; '-admin' input
-      // never reaches here because the admin branch above handles it.
-      const student = await Student.findOne({ id_number });
+      // Student login
+      const exactMatch = await Student.findOne({ id_number });
 
-      if (!student) {
-        throw new AuthError(AuthErrorCodes.InvalidCredentials);
+      // Campus-scoped students (`<id>-ucb|-uclm|-ucpt`) may sign in with the
+      // bare 8-digit ID. Enumerate the known suffixes instead of regex-matching
+      // `-.*` so the lookup is deterministic and index-friendly.
+      const candidates = exactMatch
+        ? [exactMatch]
+        : id_number.includes("-")
+          ? []
+          : await Student.find({
+              id_number: {
+                $in: Object.values(CAMPUS_ID_SUFFIX).map(
+                  (suffix) => `${id_number}-${suffix}`
+                ),
+              },
+            });
+
+      let student: IStudentDocument | null = null;
+      for (const candidate of candidates) {
+        if (await bcrypt.compare(password, candidate.password)) {
+          student = candidate;
+          break;
+        }
       }
 
-      if (!(await bcrypt.compare(password, student.password))) {
+      if (!student) {
         throw new AuthError(AuthErrorCodes.InvalidCredentials);
       }
 
