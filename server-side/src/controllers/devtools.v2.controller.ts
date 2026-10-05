@@ -443,12 +443,19 @@ class DevToolsController {
     if (!days) {
       return res.status(400).json({ message: "days parameter required" });
     }
-    const deletedCount = await deleteOldLogs(parseInt(days as string));
+    // 0 or negative days moves the cutoff to now/future and wipes every log.
+    const parsedDays = Number(days);
+    if (!Number.isInteger(parsedDays) || parsedDays < 1) {
+      return res
+        .status(400)
+        .json({ message: "days must be a whole number of at least 1" });
+    }
+    const deletedCount = await deleteOldLogs(parsedDays);
     await logService.create({
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: "DELETE_OLD_LOGS",
-      target: `Deleted ${deletedCount} log entries older than ${days} days`,
+      target: `Deleted ${deletedCount} log entries older than ${parsedDays} days`,
       target_model: "Admin",
     });
     res
