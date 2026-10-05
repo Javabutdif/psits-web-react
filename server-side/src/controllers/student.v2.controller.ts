@@ -11,6 +11,7 @@ import { Settings } from "../models/settings.model";
 import { membership_status } from "../enums/status.enums";
 import { campus_type } from "../enums/campus.enums";
 import { normalizeMembershipStatus } from "../util/membership.util";
+import { CAMPUS_ID_SUFFIX } from "../util/studentId.util";
 import { r2Client, R2_BUCKET_NAME } from "../lib/r2Client";
 
 const escapeRegex = (value: string) =>
@@ -23,19 +24,24 @@ const isNoSuchKeyError = (error: unknown): boolean => {
   return candidate.name === "NoSuchKey" || candidate.Code === "NoSuchKey";
 };
 
+// The ID as typed is the source of truth: a suffixed ID only ever matches
+// itself. A bare ID may also match its campus-scoped forms
+// (`<id>-ucb|-uclm|-ucpt`), same as login and forgot password.
 const findStudentByLookupId = async (rawIdNumber: string) => {
-  const normalized = rawIdNumber.trim();
-  const baseIdNumber = normalized.split("-")[0]?.trim() ?? "";
+  const idNumber = rawIdNumber.trim();
 
-  let student = await Student.findOne({ id_number: normalized });
-
-  if (!student && baseIdNumber) {
-    student = await Student.findOne({
-      id_number: new RegExp(`^${escapeRegex(baseIdNumber)}(?:-.*)?$`),
-    });
+  const student = await Student.findOne({ id_number: idNumber });
+  if (student || idNumber.includes("-")) {
+    return student;
   }
 
-  return student;
+  return Student.findOne({
+    id_number: {
+      $in: Object.values(CAMPUS_ID_SUFFIX).map(
+        (suffix) => `${idNumber}-${suffix}`
+      ),
+    },
+  });
 };
 
 export const getStudentProfile = async(req: Request, res: Response)=>{
@@ -126,8 +132,8 @@ export const fetchSpecificMembershipHistoryV2Controller = async (
       return res.status(400).json({ message: "Invalid student ID" });
     }
 
-    // Accepts both the bare 8-digit ID and the campus-scoped ID
-    // (e.g. "21123456-uclm"), which is how non-Main students are stored.
+    // Looks up the ID as given; a bare ID also resolves to the campus-scoped
+    // ID (e.g. "21123456-uclm"), which is how non-Main students are stored.
     const student = await findStudentByLookupId(id_number);
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
