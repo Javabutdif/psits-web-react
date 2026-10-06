@@ -643,32 +643,12 @@ export const getStockAlerts = async (threshold = 5): Promise<StockAlert[]> => {
 
 export interface SystemSettings {
   membership_price: number;
-  studentSuspendCronEnabled?: boolean;
 }
 
 export const getSystemSettings = async (): Promise<SystemSettings | null> => {
   const { Settings } = await import("../models/settings.model");
   const settings = await Settings.findOne().lean();
   return settings as SystemSettings | null;
-};
-
-export const isStudentSuspendCronEnabled = async (): Promise<boolean> => {
-  const settings = await getSystemSettings();
-  return settings?.studentSuspendCronEnabled ?? true;
-};
-
-export const setStudentSuspendCronEnabled = async (
-  enabled: boolean
-): Promise<void> => {
-  const { Settings } = await import("../models/settings.model");
-  const existing = await Settings.find();
-
-  if (existing.length === 0) {
-    await new Settings({ studentSuspendCronEnabled: enabled }).save();
-    return;
-  }
-
-  await Settings.updateOne({}, { $set: { studentSuspendCronEnabled: enabled } });
 };
 
 export interface ExportCollectionParams {
