@@ -11,6 +11,7 @@ import { IStudent } from "../models/student.interface";
 import { IHistory } from "../models/history.interface";
 import { account_status, active_status_values } from "../enums/status.enums";
 import { psits_roles } from "../enums/role.enums";
+import { LOGIN_ID_MESSAGE, validateId } from "../util/studentId.util";
 
 export interface StudentSearchResult {
   _id: mongoose.Types.ObjectId;
@@ -246,18 +247,31 @@ export const editStudentController = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Student not found" });
     }
     const previousIdNumber = student.id_number;
-    if (id_number !== previousIdNumber) {
+    const submittedIdNumber: unknown =
+      typeof id_number === "string" ? id_number.trim() : id_number;
+    if (submittedIdNumber !== previousIdNumber) {
       //Check if the admin has permission to edit the id number
       if (
         user?.access === psits_roles.ADMIN ||
         user?.access === psits_roles.DEVELOPER
       ) {
+        // Login rejects any ID this does not accept, so saving one would lock
+        // the student out. Campus suffixes are kept; -admin is Admin-only.
+        const idCheck = validateId(submittedIdNumber, { mode: "login" });
+        if (!idCheck.valid || idCheck.id.endsWith("-admin")) {
+          await session.abortTransaction();
+          await session.endSession();
+          return res.status(400).json({
+            message: idCheck.valid ? LOGIN_ID_MESSAGE : idCheck.message,
+          });
+        }
+        const newIdNumber = idCheck.id;
         //Update student records
         await Student.updateOne(
           { _id: studentId },
           {
             $set: {
-              id_number,
+              id_number: newIdNumber,
               rfid: rfid,
               first_name: first_name,
               middle_name: middle_name,
@@ -273,7 +287,7 @@ export const editStudentController = async (req: Request, res: Response) => {
           { id_number: previousIdNumber },
           {
             $set: {
-              id_number,
+              id_number: newIdNumber,
               student_name: `${first_name} ${middle_name} ${last_name}`,
               course: course,
               year: year,

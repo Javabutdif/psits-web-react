@@ -175,19 +175,6 @@ router.get(
   devtoolsController.getSystemSettings
 );
 
-// Student suspend cron toggle
-router.get(
-  "/settings/student-suspend-cron",
-  requireAccessTokenWithDBCheck,
-  roleAuthenticateV2(["admin"]),
-  devtoolsController.getStudentSuspendCron
-);
-router.patch(
-  "/settings/student-suspend-cron",
-  ...adminOnlyAuthChain,
-  devtoolsController.toggleStudentSuspendCron
-);
-
 // Rate Limit Violations
 router.get(
   "/rate-limit-violations",

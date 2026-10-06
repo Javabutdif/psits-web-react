@@ -14,10 +14,6 @@ const settingsSchema = new Schema<ISettingsDocument>({
   studentYearLastUpdated: {
     type: Date,
   },
-  studentSuspendCronEnabled: {
-    type: Boolean,
-    default: true,
-  },
 });
 
 export const Settings = mongoose.model<ISettingsDocument>(

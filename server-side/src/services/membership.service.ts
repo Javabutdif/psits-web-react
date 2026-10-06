@@ -282,8 +282,6 @@ class MembershipService {
       .select("student")
       .lean();
 
-    // The denormalized `id_number` was removed from the schema; resolve it
-    // from the referenced students in a single batch query.
     const studentIds = Array.from(
       new Set(
         histories
@@ -291,18 +289,11 @@ class MembershipService {
           .filter((id): id is mongoose.Types.ObjectId => Boolean(id))
       )
     );
-    const idNumbers: string[] = studentIds.length
-      ? (
-          await Student.find({ _id: { $in: studentIds } })
-            .select("id_number")
-            .lean()
-        ).map((s) => s.id_number)
-      : [];
-    if (idNumbers.length === 0) return 0;
+    if (studentIds.length === 0) return 0;
 
     const result = await Student.updateMany(
       {
-        id_number: { $in: idNumbers },
+        _id: { $in: studentIds },
         membershipStatus: membership_status.ACTIVE,
       },
       { $set: { membershipStatus: membership_status.NONE } }
