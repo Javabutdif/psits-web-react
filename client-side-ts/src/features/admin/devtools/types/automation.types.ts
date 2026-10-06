@@ -22,7 +22,6 @@ export interface EmailConfig {
   subjectTemplate: string;
   includeSummary: boolean;
   includeRawData: boolean;
-  useNoetix: boolean;
   /** Suppress the email when every function returned zero records. */
   skipIfEmpty?: boolean;
 }

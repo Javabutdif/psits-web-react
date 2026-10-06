@@ -21,12 +21,17 @@ import {
   markAttendance,
   syncAttendanceForAttendee,
 } from "../services/attendance.service";
-import { validateId } from "../util/studentId.util";
+import {
+  validateId,
+  CAMPUS_ID_SUFFIX,
+  buildCampusScopedStudentId,
+} from "../util/studentId.util";
 import { EventV2Service } from "../services/eventV2.service";
 import { computeEventStatistics } from "../services/eventStatistics.service";
 import { logService } from "../services/log.service";
 import { logs_action } from "../enums/logs.enums";
 import { campus_type } from "../enums/campus.enums";
+import { account_status } from "../enums/status.enums";
 import {
   parseCampusLimitsPayload,
   parseSessionConfigPayload,
@@ -229,6 +234,8 @@ const parseRegisteredOn = (value: unknown): string | undefined => {
 
 const normalizeAttendeeQueryParams = (req: Request): AttendeeQueryParams => {
   const { page, limit } = normalizePagination(req.query.page, req.query.limit);
+  const campusParam =
+    typeof req.query.campus === "string" ? req.query.campus.trim() : undefined;
 
   return {
     page,
@@ -238,8 +245,8 @@ const normalizeAttendeeQueryParams = (req: Request): AttendeeQueryParams => {
         ? req.query.search.trim()
         : undefined,
     campus:
-      typeof req.query.campus === "string" && req.query.campus.trim().length > 0
-        ? req.query.campus.trim()
+      campusParam && campusParam !== "all" && campusParam.length > 0
+        ? campusParam
         : undefined,
     attendanceStatus: parseAttendanceStatusFilter(
       req.query.attendanceStatus ?? req.query.status
@@ -322,11 +329,25 @@ const isSameDay = (
   return attendeeDateInManila === yyyyMmDd;
 };
 
+const normalizeCampusForComparison = (value: unknown): string => {
+  const raw = String(value ?? "").trim();
+  const normalized = LEGACY_CAMPUS_MAP[raw] ?? raw;
+
+  if (normalized === "UC_CS") {
+    return campus_type.MAIN;
+  }
+
+  return normalized;
+};
+
 const matchesCampusFilter = (
   attendeeCampus: string,
   campusFilter: string
 ): boolean => {
-  return attendeeCampus === campusFilter;
+  return (
+    normalizeCampusForComparison(attendeeCampus) ===
+    normalizeCampusForComparison(campusFilter)
+  );
 };
 
 const filterAttendees = (
@@ -968,23 +989,6 @@ const V_VALID_COURSES = ["BSIT", "BSCS", "ACT"];
 const V_VALID_CAMPUSES = ["UC_BANILAD", "UC_LM", "UC_PT"];
 const V_DISABLED_ADD_ATTENDEE_CAMPUSES = ["UC_MAIN", "UC_CS"];
 
-const CAMPUS_ID_SUFFIX: Record<string, string> = {
-  UC_BANILAD: "ucb",
-  UC_LM: "uclm",
-  UC_PT: "ucpt",
-};
-
-const buildCampusScopedStudentId = (rawStudentId: string, campus: string) => {
-  const baseId = rawStudentId.trim().split("-")[0]?.trim() ?? "";
-  const suffix = CAMPUS_ID_SUFFIX[campus];
-
-  if (!baseId || !suffix) {
-    return null;
-  }
-
-  return `${baseId}-${suffix}`;
-};
-
 const validateNameField = (
   value: string | undefined,
   label: string,
@@ -1023,6 +1027,12 @@ const parseYearLevel = (yearLevel: string): number | null => {
 
 interface AddAttendeeV2Body {
   studentId?: string;
+  /**
+   * Campus the attendee belongs to, as a campus enum value
+   * (e.g. "UC_BANILAD", "UC_LM"). Only used when no existing student
+   * record is found — existing students always keep their stored campus.
+   */
+  campus?: string;
   firstName?: string;
   middleName?: string;
   lastName?: string;
@@ -1075,6 +1085,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     // ── Body extraction & validation ────────────────────────────────────
     const {
       studentId,
+      campus,
       firstName,
       middleName,
       lastName,
@@ -1100,16 +1111,25 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       });
     }
 
-    const normalizedStudentId = buildCampusScopedStudentId(
-      studentId,
-      adminCampus
-    );
-    if (!normalizedStudentId) {
-      return res.status(400).json({
-        error: "VALIDATION",
-        message: "Unable to derive campus-based Student ID",
-      });
-    }
+    // Resolve the student's actual campus before building the scoped ID.
+    // Try the bare 8-digit ID and every known campus suffix so an existing
+    // student is found regardless of which campus the admin is operating from.
+    // For an existing student the stored campus wins — the form value is a
+    // best-effort hint for not-yet-created students.
+    const bareId = studentId.trim();
+    const candidateIds = [
+      bareId,
+      ...Object.values(CAMPUS_ID_SUFFIX).map((s) => `${bareId}-${s}`),
+    ];
+    const existingStudent = await Student.findOne({
+      id_number: { $in: candidateIds },
+    });
+    const formCampus =
+      campus && V_VALID_CAMPUSES.includes(campus) ? campus : adminCampus;
+    const studentCampus = existingStudent?.campus ?? formCampus;
+
+    const normalizedStudentId =
+      buildCampusScopedStudentId(bareId, studentCampus) ?? bareId;
 
     const firstNameErr = validateNameField(firstName, "First name", true);
     if (firstNameErr) {
@@ -1180,10 +1200,10 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     }
 
     const campusLimit = event.limit.find(
-      (entry) => entry.campus === adminCampus
+      (entry) => entry.campus === studentCampus
     );
     const campusAttendeeCount = Array.isArray(event.attendees)
-      ? event.attendees.filter((attendee) => attendee.campus === adminCampus)
+      ? event.attendees.filter((attendee) => attendee.campus === studentCampus)
           .length
       : 0;
 
@@ -1194,7 +1214,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     ) {
       return res.status(409).json({
         error: "CAMPUS_LIMIT_REACHED",
-        message: `Campus attendee limit reached for ${adminCampus}`,
+        message: `Campus attendee limit reached for ${studentCampus}`,
       });
     }
 
@@ -1204,7 +1224,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       : [];
 
     const alreadyRegistered = attendeeList.some(
-      (a) => a.id_number === normalizedStudentId && a.campus === adminCampus
+      (a) => a.id_number === normalizedStudentId && a.campus === studentCampus
     );
     if (alreadyRegistered) {
       return res.status(409).json({
@@ -1228,9 +1248,6 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     }
 
     // ── Check existing student ──────────────────────────────────────────
-    const existingStudent = await Student.findOne({
-      id_number: normalizedStudentId,
-    });
     const isNewStudent = !existingStudent;
 
     // For new students, verify email is not already taken
@@ -1274,9 +1291,9 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
             email: email.trim(),
             course: course!.trim(),
             year: yearNumber,
-            status: "True",
+            status: account_status.ACTIVE,
             membershipStatus: "NOT_APPLIED",
-            campus: adminCampus,
+            campus: studentCampus,
             role: "all",
             isRequest: false,
             createdAt: new Date(),
@@ -1293,7 +1310,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
       name: attendeeName,
       course: course!.trim(),
       year: yearNumber,
-      campus: adminCampus,
+      campus: studentCampus,
       shirtSize: shirtSize?.trim() ?? "",
       shirtPrice: resolvedPrice,
       transactBy: claims.idNumber,
@@ -1307,7 +1324,9 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
     // Step 3: Update sales data (campus-specific)
 
     if (resolvedPrice > 0) {
-      const campusData = event.sales_data.find((s) => s.campus === adminCampus);
+      const campusData = event.sales_data.find(
+        (s) => s.campus === studentCampus
+      );
       if (campusData) {
         campusData.unitsSold += 1;
         campusData.totalRevenue += resolvedPrice;
@@ -1344,7 +1363,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
           studentName: attendeeName,
           studentEmail: email.trim(),
           eventName: event.eventName,
-          campus: adminCampus,
+          campus: studentCampus,
           studentId: normalizedStudentId,
           password: password,
         });
@@ -1366,7 +1385,7 @@ export const addAttendeeV2Controller = async (req: Request, res: Response) => {
         attendee: {
           id_number: normalizedStudentId,
           name: attendeeName,
-          campus: adminCampus,
+          campus: studentCampus,
           course: course!.trim(),
           year: yearNumber,
           shirtSize: shirtSize?.trim() ?? "",
@@ -2387,16 +2406,17 @@ export const editAttendeeV2Controller = async (req: Request, res: Response) => {
 
     // ── Handle id_number change ─────────────────────────────────────────
     if (changes.studentId !== undefined) {
-      const newScopedId = buildCampusScopedStudentId(
-        changes.studentId,
-        adminCampus
-      );
+      // Keep the campus suffix for UC_BANILAD/UC_LM/UC_PT; UC_MAIN/UC_CS
+      // have no suffix and keep the raw 8-digit ID.
+      const newScopedId =
+        buildCampusScopedStudentId(changes.studentId, adminCampus) ??
+        changes.studentId.trim();
       if (!newScopedId) {
         await session.abortTransaction();
         session.endSession();
         return res.status(400).json({
           error: "VALIDATION",
-          message: "Unable to derive campus-based Student ID",
+          message: "Student ID cannot be empty",
         });
       }
 

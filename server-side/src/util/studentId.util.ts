@@ -1,6 +1,13 @@
 export const STUDENT_ID_REGEX = /^\d{8}$/;
 
-// Sign-in accepts only the -admin, -ucb, -uclm, -ucpt
+export const CAMPUS_ID_SUFFIX: Record<string, string> = {
+  UC_BANILAD: "ucb",
+  UC_LM: "uclm",
+  UC_PT: "ucpt",
+};
+
+// Sign-in accepts the -admin suffix and the campus suffixes (-ucb, -uclm,
+// -ucpt). Campus-scoped students may also sign in with their bare 8-digit ID.
 export const LOGIN_ID_REGEX = /^\d{8}(-(admin|ucb|uclm|ucpt))?$/;
 
 export const STUDENT_ID_MESSAGE =
@@ -8,7 +15,7 @@ export const STUDENT_ID_MESSAGE =
 export const LOGIN_ID_MESSAGE = "Invalid ID number format.";
 export const SUSPICIOUS_ID_MESSAGE = "Please enter a valid student ID number";
 
-// Longest real value is 8 digits + "-uclm"; this is slack, not a format rule.
+// Longest real value is 8 digits + "-admin"; this is slack, not a format rule.
 const MAX_ID_LENGTH = 32;
 
 export type IdMode = "student" | "login";
@@ -28,13 +35,28 @@ export type IdValidation =
  * operator rather than a value. Anything that is not a usable string fails here.
  * On success `id` is the trimmed value, safe to put in a query.
  */
+export const buildCampusScopedStudentId = (
+  rawStudentId: string,
+  campus: string
+): string | null => {
+  const baseId = rawStudentId.trim().split("-")[0]?.trim() ?? "";
+  const suffix = CAMPUS_ID_SUFFIX[campus];
+
+  if (!baseId || !suffix) {
+    return null;
+  }
+
+  return `${baseId}-${suffix}`;
+};
+
 export function validateId(
   value: unknown,
   options: { mode?: IdMode; rejectSuspicious?: boolean } = {}
 ): IdValidation {
   const { mode = "student", rejectSuspicious = false } = options;
   const pattern = mode === "login" ? LOGIN_ID_REGEX : STUDENT_ID_REGEX;
-  const formatMessage = mode === "login" ? LOGIN_ID_MESSAGE : STUDENT_ID_MESSAGE;
+  const formatMessage =
+    mode === "login" ? LOGIN_ID_MESSAGE : STUDENT_ID_MESSAGE;
   const fail = (message: string): IdValidation => ({
     valid: false,
     id: null,

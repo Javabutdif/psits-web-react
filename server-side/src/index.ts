@@ -16,11 +16,11 @@ import { membershipService } from "./services/membership.service";
 import devtoolsRoutes from "./routes/devtools.v2.route";
 import { orderService } from "./services/order.service";
 import adminRoutes from "./routes/admin.route";
-import authV2Routes from "./routes/authV2.route";
+import authV2Routes from "./routes/auth.v2.route";
 import cartRoutes from "./routes/cart.route";
 import documentationRoutes from "./routes/documentation.route";
 import eventRoutes from "./routes/events.route";
-import eventsV2Routes from "./routes/eventsV2.route";
+import eventsV2Routes from "./routes/events.v2.route";
 import indexRoutes from "./routes/index.route";
 import logRoutes from "./routes/logs.route";
 import merchRoutes from "./routes/merchandise.route";
@@ -29,17 +29,16 @@ import orderRoutes from "./routes/orders.route";
 import privateRoutes from "./routes/private.route";
 import promoRoutes from "./routes/promo.route";
 import studentRoutes from "./routes/students.route";
-import studentV2Routes from "./routes/studentsV2.route";
+import studentV2Routes from "./routes/students.v2.route";
 import indexV2Routes from "./routes/index.v2.route";
 import reportV2Routes from "./routes/report.v2.route";
 import recruitmentRoutes from "./routes/recruitment.route";
 import { hardDeleteSoftDeletedMerch } from "./controllers/merchandise.v2.controller";
-import certificateV2Routes from "./routes/certificateV2.route";
+import certificateV2Routes from "./routes/certificate.v2.route";
 import { errorHandler } from "./util/errors.util";
 import { globalErrorHandler } from "./middlewares/global.error.middleware";
 import contributionsV2Routes from "./routes/contributions.v2.route";
 import automationRoutes from "./routes/automation.v2.route";
-import noetixChatRoutes from "./routes/noetix-chat.v2.route";
 import { automationService } from "./services/automation.service";
 import webhookRoutes from "./routes/webhook.route";
 dotenv.config();
@@ -102,7 +101,6 @@ app.use("/api/v2/dev", devtoolsRoutes);
 app.use("/api/v2/certificates", certificateV2Routes);
 app.use("/api/v2/contributions", contributionsV2Routes);
 app.use("/api/v2/dev/automation", automationRoutes);
-app.use("/api/v2/chat", noetixChatRoutes);
 
 app.use(errorHandler);
 app.use(globalErrorHandler);
@@ -330,63 +328,6 @@ async function startServer() {
       { timezone: "Asia/Manila" }
     );
 
-    // Daily: suspend active students who meet the account-age/year rule
-    const studentYear4SuspendJob = cron.schedule(
-      "0 0 1 * *",
-      async () => {
-        console.log(
-          "[Monthly Midnight PH] Running old-student suspend check..."
-        );
-        const startedAt = new Date();
-        try {
-          const { isStudentSuspendCronEnabled, suspendOldStudents } =
-            await import("./services/devtools.service");
-          if (!(await isStudentSuspendCronEnabled())) {
-            console.log(
-              "[Monthly Midnight PH] Student suspend cron disabled, skipping"
-            );
-            await logCronExecution({
-              jobName: "student-year4-suspend",
-              scheduledAt: startedAt,
-              startedAt,
-              completedAt: new Date(),
-              durationMs: Date.now() - startedAt.getTime(),
-              success: true,
-              metadata: { skipped: true, reason: "disabled" },
-            });
-            return;
-          }
-          const result = await suspendOldStudents();
-          if (result.suspended > 0) {
-            console.log(
-              `[Midnight PH] Suspended ${result.suspended} student(s) meeting the age/year rule`
-            );
-          }
-          await logCronExecution({
-            jobName: "student-year4-suspend",
-            scheduledAt: startedAt,
-            startedAt,
-            completedAt: new Date(),
-            durationMs: Date.now() - startedAt.getTime(),
-            success: true,
-            metadata: { suspendedCount: result.suspended },
-          });
-        } catch (err: any) {
-          await logCronExecution({
-            jobName: "student-year4-suspend",
-            scheduledAt: startedAt,
-            startedAt,
-            completedAt: new Date(),
-            durationMs: Date.now() - startedAt.getTime(),
-            success: false,
-            errorMessage: err.message,
-          });
-        }
-      },
-      { timezone: "Asia/Manila" }
-    );
-
-    // Schedule automation jobs from database
     try {
       await automationService.scheduleAllJobs();
     } catch (err) {

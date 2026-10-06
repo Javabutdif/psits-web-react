@@ -33,7 +33,7 @@ import {
   updateEventV2Controller,
   applyToEventV2Controller,
   removeAttendeeV2Controller,
-} from "../controllers/eventV2.controller";
+} from "../controllers/event.v2.controller";
 
 const router = Router();
 

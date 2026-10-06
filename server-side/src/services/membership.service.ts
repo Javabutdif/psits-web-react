@@ -272,26 +272,28 @@ class MembershipService {
 
   //Deactivate students whose activation history links to the given term(s)
   deactivateLinkedStudents = async (
-    membershipIds: Array<
-      mongoose.Types.ObjectId | string | number
-    >
+    membershipIds: Array<mongoose.Types.ObjectId | string | number>
   ): Promise<number> => {
     if (membershipIds.length === 0) return 0;
 
     const histories = await MembershipHistory.find({
       membership_id: { $in: membershipIds },
     })
-      .select("id_number")
+      .select("student")
       .lean();
 
-    const idNumbers = Array.from(
-      new Set(histories.map((h) => h.id_number).filter(Boolean))
+    const studentIds = Array.from(
+      new Set(
+        histories
+          .map((h) => h.student)
+          .filter((id): id is mongoose.Types.ObjectId => Boolean(id))
+      )
     );
-    if (idNumbers.length === 0) return 0;
+    if (studentIds.length === 0) return 0;
 
     const result = await Student.updateMany(
       {
-        id_number: { $in: idNumbers },
+        _id: { $in: studentIds },
         membershipStatus: membership_status.ACTIVE,
       },
       { $set: { membershipStatus: membership_status.NONE } }
@@ -303,7 +305,11 @@ class MembershipService {
   //(via history membership_id) flip to NONE.
   revokeMembershipById = async (
     id: string
-  ): Promise<{ success: boolean; message: string; deactivatedStudents: number }> => {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    deactivatedStudents: number;
+  }> => {
     const membership = await Membership.findById(id);
     if (!membership) {
       throw new AppError("Membership not found", 404);

@@ -9,7 +9,7 @@ import {
   requestStudentMembershipV2,
   searchStudentsV2Controller,
   getStudentImageController,
-} from "../controllers/studentV2.controller";
+} from "../controllers/student.v2.controller";
 import {
   requireAccessTokenV2,
   requireAccessTokenWithDBCheck,

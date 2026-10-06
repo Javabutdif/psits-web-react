@@ -53,7 +53,6 @@ import SignUp from "./pages/auth/SignUp";
 import ApplicationPage from "./pages/student/ApplicationPage";
 import Recruitment from "./features/admin/recruitment-management/components/RecuitmentViews";
 import Contributions from "./pages/admin/Contributions";
-import { AgentChatPage } from "./pages/admin/AgentChatPage";
 import Memberships from "./pages/admin/Memberships";
 
 const router = createBrowserRouter([
@@ -208,7 +207,6 @@ const router = createBrowserRouter([
                   { path: "documentation", Component: DocumentationPage },
                 ],
               },
-              { path: "agent-chat", Component: AgentChatPage },
               // TODO: Remove this sample
               { path: "general", Component: GeneralAdminPage },
             ],

@@ -38,8 +38,6 @@ const ACTION_FILTER_OPTIONS = [
   { value: "Approve Order", label: "Approve Order" },
   { value: "Cancel Order", label: "Cancel Order" },
   { value: "Refund Order", label: "Refund Order" },
-  { value: "Noetix AI Action", label: "AI Chatbot Actions" },
-  { value: "Toggled Chatbot", label: "Toggled Chatbot" },
 ];
 
 export const ActivityLogPanel = () => {
@@ -55,6 +53,11 @@ export const ActivityLogPanel = () => {
   const [pageSize] = useState(20);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteDays, setDeleteDays] = useState("30");
+  const parsedDeleteDays = Number(deleteDays);
+  const isDeleteDaysValid =
+    deleteDays.trim() !== "" &&
+    Number.isInteger(parsedDeleteDays) &&
+    parsedDeleteDays >= 1;
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -95,8 +98,12 @@ export const ActivityLogPanel = () => {
   }, [page, actionFilter, appliedSearchFilter, dateFrom, dateTo]);
 
   const handleDeleteOld = async () => {
+    if (!isDeleteDaysValid) {
+      showToast("error", "Enter a whole number of days, at least 1");
+      return;
+    }
     try {
-      const result = await deleteOldLogs(parseInt(deleteDays));
+      const result = await deleteOldLogs(parsedDeleteDays);
       showToast("success", `Deleted ${result.deletedCount} log entries`);
       setConfirmDelete(false);
       fetchEntries();
@@ -291,6 +298,11 @@ export const ActivityLogPanel = () => {
               onChange={(e) => setDeleteDays(e.target.value)}
               className="h-9 w-full rounded-lg border-[#ececec] bg-white px-3 text-sm"
             />
+            {!isDeleteDaysValid && (
+              <p className="mt-1 text-xs text-[#c0392b]">
+                Enter a whole number of days, at least 1.
+              </p>
+            )}
           </div>
           <DialogFooter className="mt-3">
             <Button
@@ -304,6 +316,7 @@ export const ActivityLogPanel = () => {
             <Button
               type="button"
               className="rounded-full bg-red-500 hover:bg-red-600"
+              disabled={!isDeleteDaysValid}
               onClick={handleDeleteOld}
             >
               Delete
