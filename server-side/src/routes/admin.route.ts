@@ -98,6 +98,17 @@ router.get(
   ]),
   adminController.getAllAdminController
 );
+router.get(
+  "/get-organization-tab-counts",
+  requireAccessTokenV2,
+  roleAuthenticateV2(["admin"]),
+  adminAccessAuthenticateV2([
+    psits_roles.ADMIN,
+    psits_roles.FINANCE,
+    psits_roles.EXECUTIVE,
+  ]),
+  adminController.getOrganizationTabCountsController
+);
 //Get All Members
 router.get(
   "/get-all-members",

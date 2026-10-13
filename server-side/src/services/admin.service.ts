@@ -100,6 +100,45 @@ class AdminService {
       },
     };
   };
+  getOrganizationTabCounts = async (access?: string) => {
+    const hiddenAdminAccess =
+      access === psits_roles.HEAD_FINANCE || access === psits_roles.FINANCE
+        ? [psits_roles.EXECUTIVE, psits_roles.ADMIN]
+        : access === psits_roles.EXECUTIVE
+          ? [psits_roles.ADMIN]
+          : undefined;
+    const activeAdminQuery = hiddenAdminAccess
+      ? {
+          status: account_status.ACTIVE,
+          access: { $nin: hiddenAdminAccess },
+        }
+      : { status: account_status.ACTIVE };
+
+    const [
+      admins,
+      members,
+      suspended,
+      memberRequests,
+      adminRequests,
+    ] = await Promise.all([
+      Admin.countDocuments(activeAdminQuery),
+      Student.countDocuments({
+        role: { $in: member_role_values },
+        isRequest: false,
+      }),
+      Admin.countDocuments({ status: account_status.SUSPENDED }),
+      Student.countDocuments({ isRequest: true }),
+      Admin.countDocuments({ status: account_status.PENDING }),
+    ]);
+
+    return {
+      admins,
+      members,
+      suspended,
+      memberRequests,
+      adminRequests,
+    };
+  };
   //Get all admin accounts , used in Settings and AllOfficers.jsx
   getAll = async (req: any) => {
     const access = req.admin.access;
@@ -352,16 +391,18 @@ class AdminService {
   requestRole = async (req: Request) => {
     const { id_number, role, admin } = req.body;
 
-    //
-    //Parametirized updated
-
-
+    const memberRole = normalizeMemberRole(role);
+    if (!member_role_values.includes(memberRole)) {
+      throw new AppError("Invalid member role.", 400);
+    }
     
-    const params = {
-      role: normalizeMemberRole(role),
+    //Parametirized updated
+     const params = {
+      role: memberRole,
       isRequest: true,
       adminRequest: admin,
     };
+
     //Run update
     const updatedRole: IResponseMessage = await studentService.updateOneDynamic(
       id_number,
