@@ -275,7 +275,7 @@ export const useOrganizationData = () => {
     return () => {
       cancelled = true;
     };
-  }, [countsRefreshVersion]);
+  }, [activeTab, countsRefreshVersion]);
 
   useEffect(() => {
     setSelectedIds([]);

@@ -11,6 +11,7 @@ import {
   member_role_values,
   psits_roles,
   student_roles,
+  officer_list_access,
 } from "../enums/role.enums";
 import { logService } from "./log.service";
 import { logs_action } from "../enums/logs.enums";
@@ -114,22 +115,19 @@ class AdminService {
         }
       : { status: account_status.ACTIVE };
 
-    const [
-      admins,
-      members,
-      suspended,
-      memberRequests,
-      adminRequests,
-    ] = await Promise.all([
-      Admin.countDocuments(activeAdminQuery),
-      Student.countDocuments({
-        role: { $in: member_role_values },
-        isRequest: false,
-      }),
-      Admin.countDocuments({ status: account_status.SUSPENDED }),
-      Student.countDocuments({ isRequest: true }),
-      Admin.countDocuments({ status: account_status.PENDING }),
-    ]);
+      const canViewOfficers = officer_list_access.includes(access ?? "");
+
+    const [admins, members, suspended, memberRequests, adminRequests] =
+      await Promise.all([
+        canViewOfficers ? Admin.countDocuments(activeAdminQuery) : 0,
+        Student.countDocuments({
+          role: { $in: member_role_values },
+          isRequest: false,
+        }),
+          Admin.countDocuments({ status: account_status.SUSPENDED }),
+          Student.countDocuments({ isRequest: true }),
+          Admin.countDocuments({ status: account_status.PENDING }),
+        ]);
 
     return {
       admins,
@@ -397,7 +395,7 @@ class AdminService {
     }
     
     //Parametirized updated
-     const params = {
+    const params = {
       role: memberRole,
       isRequest: true,
       adminRequest: admin,
@@ -463,7 +461,15 @@ class AdminService {
       throw new AppError("No student found", 404);
     }
 
-    const approvedRole = normalizeMemberRole(student.role);
+    let approvedRole: string;
+    try {
+      approvedRole = normalizeMemberRole(student.role);
+    } catch {
+      throw new AppError(
+        "This request has an unrecognized role. Decline it and have the member re-request.",
+        400
+      );
+    }
     const updatedRole = await studentService.updateOneDynamic(id_number, {
       role: approvedRole,
       isRequest: false,

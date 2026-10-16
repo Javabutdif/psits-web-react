@@ -9,7 +9,7 @@ export const psits_roles = Object.freeze({
 });
 export const student_roles = Object.freeze({
   GENERAL: "PSITS_GENERAL",
-  FINANCE: "PSITS_FINANCE",
+  FINANCE: "PSITS_FINANCE_MEMBER",
   MEDIA: "PSITS_MEDIA",
   DEVELOPER: "PSITS_DEVELOPER",
   VOLUNTEER: "PSITS_VOLUNTEER",
@@ -23,6 +23,7 @@ export const member_role_aliases: Record<string, string> = {
   developer: student_roles.DEVELOPER,
   developers: student_roles.DEVELOPER,
   finance: student_roles.FINANCE,
+  finance_member: student_roles.FINANCE,
   media: student_roles.MEDIA,
   volunteer: student_roles.VOLUNTEER,
   volunteers: student_roles.VOLUNTEER,
@@ -39,6 +40,12 @@ export const member_role_values: readonly string[] = [
   "finance",
   "media",
   "volunteer",
+];
+
+export const officer_list_access: readonly string[] = [
+  psits_roles.ADMIN,
+  psits_roles.FINANCE,
+  psits_roles.EXECUTIVE,
 ];
 
 export const general_roles = Object.freeze({
