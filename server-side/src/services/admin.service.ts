@@ -45,7 +45,7 @@ const normalizeMemberRole = (role?: string): string => {
     .replace(/^psits_/, "");
 
   const memberRole = member_role_aliases[normalized];
-  if (!memberRole) {
+  if (!memberRole || !member_role_values.includes(memberRole)) {
     throw new AppError("Invalid member role.", 400);
   }
 
@@ -115,7 +115,7 @@ class AdminService {
         }
       : { status: account_status.ACTIVE };
 
-      const canViewOfficers = officer_list_access.includes(access ?? "");
+    const canViewOfficers = officer_list_access.includes(access ?? "");
 
     const [admins, members, suspended, memberRequests, adminRequests] =
       await Promise.all([
@@ -124,10 +124,10 @@ class AdminService {
           role: { $in: member_role_values },
           isRequest: false,
         }),
-          Admin.countDocuments({ status: account_status.SUSPENDED }),
-          Student.countDocuments({ isRequest: true }),
-          Admin.countDocuments({ status: account_status.PENDING }),
-        ]);
+        Admin.countDocuments({ status: account_status.SUSPENDED }),
+        Student.countDocuments({ isRequest: true }),
+        Admin.countDocuments({ status: account_status.PENDING }),
+      ]);
 
     return {
       admins,
@@ -393,7 +393,7 @@ class AdminService {
     if (!member_role_values.includes(memberRole)) {
       throw new AppError("Invalid member role.", 400);
     }
-    
+
     //Parametirized updated
     const params = {
       role: memberRole,
