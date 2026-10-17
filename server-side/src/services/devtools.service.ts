@@ -658,6 +658,13 @@ export interface ExportCollectionParams {
   skip?: number;
 }
 
+// Password hashes, refresh tokens (stored as the raw JWT) and reset/OTP
+// values must never leave the database through an export.
+const SENSITIVE_EXPORT_KEY_PATTERN = /password|token|otp|reset/i;
+
+const isSensitiveExportKey = (key: string): boolean =>
+  SENSITIVE_EXPORT_KEY_PATTERN.test(key);
+
 export const exportCollection = async ({
   collection,
   fields,
@@ -689,10 +696,14 @@ export const exportCollection = async ({
     .limit(limit)
     .lean();
 
-  if (fields && fields.length > 0) {
+  // Requested fields are filtered through the same sensitive-key check as the
+  // default export, so `fields=password` cannot pull secrets out either.
+  const allowedFields = fields?.filter((field) => !isSensitiveExportKey(field));
+
+  if (allowedFields && allowedFields.length > 0) {
     return docs.map((doc: any) => {
       const filtered: Record<string, any> = {};
-      fields.forEach((field) => {
+      allowedFields.forEach((field) => {
         if (doc[field] !== undefined) {
           filtered[field] = doc[field];
         }
@@ -704,7 +715,7 @@ export const exportCollection = async ({
   return docs.map((doc: any) => {
     const filtered: Record<string, any> = {};
     Object.keys(doc).forEach((key) => {
-      if (key !== "__v" && key !== "_id") {
+      if (key !== "__v" && key !== "_id" && !isSensitiveExportKey(key)) {
         filtered[key] = doc[key];
       }
     });

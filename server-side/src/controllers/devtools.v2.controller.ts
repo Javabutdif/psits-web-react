@@ -47,22 +47,26 @@ import { logs_action } from "../enums/logs.enums";
 
 const ALLOWED_CAMPUS = [campus_type.MAIN] as string[];
 
+// Express parses `?status[$ne]=x` into an object, which Mongoose would read as
+// a query operator. Filters only ever accept plain strings.
+const queryString = (value: unknown): string | undefined =>
+  typeof value === "string" && value.length > 0 ? value : undefined;
+
 class DevToolsController {
   getEmailQueue = catchAsync(async (req: Request, res: Response) => {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const { status, subtype, limit, skip } = req.query;
+    const { limit, skip } = req.query;
+    const status = queryString(req.query.status);
+    const subtype = queryString(req.query.subtype);
     const entries = await getEmailQueueEntries({
-      status: status as string,
-      subtype: subtype as string,
+      status,
+      subtype,
       limit: limit ? parseInt(limit as string) : 100,
       skip: skip ? parseInt(skip as string) : 0,
     });
-    const total = await getEmailQueueCount({
-      status: status as string,
-      subtype: subtype as string,
-    });
+    const total = await getEmailQueueCount({ status, subtype });
     res.status(200).json({ data: entries, total });
   });
 
@@ -70,10 +74,9 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const { status, subtype } = req.query;
     const entries = await getEmailQueueEntries({
-      status: status as string,
-      subtype: subtype as string,
+      status: queryString(req.query.status),
+      subtype: queryString(req.query.subtype),
       limit: 10000,
       skip: 0,
     });
@@ -153,7 +156,8 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const { role, campus } = req.query;
+    const role = queryString(req.query.role);
+    const campus = queryString(req.query.campus);
 
     const admins = await require("../models/admin.model")
       .Admin.find({
@@ -362,9 +366,8 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const { jobName } = req.query;
     const logs = await getCronExecutionLogs(
-      jobName as string | undefined,
+      queryString(req.query.jobName),
       parseInt((req.query.limit as string) || "20")
     );
     res.status(200).json({ data: logs });
@@ -413,15 +416,16 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const { action, admin, target, search, dateFrom, dateTo, limit, skip } =
-      req.query;
+    const { limit, skip } = req.query;
+    const dateFrom = queryString(req.query.dateFrom);
+    const dateTo = queryString(req.query.dateTo);
     const { entries, total } = await getLogEntries({
-      action: action as string,
-      admin: admin as string,
-      target: target as string,
-      search: search as string,
-      dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
-      dateTo: dateTo ? new Date(dateTo as string) : undefined,
+      action: queryString(req.query.action),
+      admin: queryString(req.query.admin),
+      target: queryString(req.query.target),
+      search: queryString(req.query.search),
+      dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+      dateTo: dateTo ? new Date(dateTo) : undefined,
       limit: limit ? parseInt(limit as string) : 100,
       skip: skip ? parseInt(skip as string) : 0,
     });
@@ -460,10 +464,10 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const { query, status, limit, skip } = req.query;
+    const { limit, skip } = req.query;
     const { entries, total } = await searchOrders({
-      query: query as string,
-      status: status as string,
+      query: queryString(req.query.query),
+      status: queryString(req.query.status),
       limit: limit ? parseInt(limit as string) : 50,
       skip: skip ? parseInt(skip as string) : 0,
     });
@@ -521,6 +525,14 @@ class DevToolsController {
           .join(",")
       ),
     ];
+
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.EXPORT_COLLECTION,
+      target: `Exported ${docs.length} ${collection} record(s)`,
+      target_model: "Report",
+    });
 
     res.setHeader("Content-Type", "text/csv");
     res.setHeader(
