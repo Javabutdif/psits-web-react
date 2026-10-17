@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Types } from "mongoose";
 import { catchAsync } from "../util/catch.async.util";
 import {
   getEmailQueueEntries,
@@ -39,10 +40,10 @@ import {
   isRefreshTokenExpired,
   clearExpiredSessions,
   StudentYearCooldownError,
+  EMAIL_QUEUE_STATUSES,
 } from "../services/devtools.service";
 import { Admin } from "../models/admin.model";
 import { Student } from "../models/student.model";
-import { emailService } from "../services/email.service";
 import { resendPendingEmails } from "../services/email.resend.service";
 import { checkPromos } from "../custom_function/check_promo";
 import { orderService } from "../services/order.service";
@@ -57,6 +58,19 @@ const ALLOWED_CAMPUS = [campus_type.MAIN] as string[];
 const queryString = (value: unknown): string | undefined =>
   typeof value === "string" && value.length > 0 ? value : undefined;
 
+// limit/skip/threshold from the query: anything missing or not a number falls
+// back to the default, and values are capped so one request can't pull a whole
+// collection.
+const queryInt = (
+  value: unknown,
+  fallback: number,
+  { min = 0, max = 1000 }: { min?: number; max?: number } = {}
+): number => {
+  const parsed = typeof value === "string" ? parseInt(value, 10) : NaN;
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(Math.max(parsed, min), max);
+};
+
 class DevToolsController {
   getEmailQueue = catchAsync(async (req: Request, res: Response) => {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
@@ -68,8 +82,8 @@ class DevToolsController {
     const entries = await getEmailQueueEntries({
       status,
       subtype,
-      limit: limit ? parseInt(limit as string) : 100,
-      skip: skip ? parseInt(skip as string) : 0,
+      limit: queryInt(limit, 100, { min: 1 }),
+      skip: queryInt(skip, 0, { max: 100000 }),
     });
     const total = await getEmailQueueCount({ status, subtype });
     res.status(200).json({ data: entries, total });
@@ -131,14 +145,19 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const { id } = req.params;
-    await resendSingleEmail(id as string);
-    await emailService.updateStatusById(id as string, "sent");
+    // resendSingleEmail marks the entry sent itself.
+    const result = await resendSingleEmail(id as string);
     await logService.create({
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: logs_action.RESEND_EMAIL,
       target: String(id),
-      target_model: "Order",
+      target_model:
+        result.type === "automation-report"
+          ? "AutomationJob"
+          : result.subtype === "membership"
+            ? "Membership"
+            : "Order",
     });
     res.status(200).json({ message: "Email resent successfully" });
   });
@@ -237,18 +256,24 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const { userId } = req.body;
-    const { Admin } = await import("../models/admin.model");
-    const { Student } = await import("../models/student.model");
+    if (typeof userId !== "string" || !Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "A valid userId is required" });
+    }
 
-    await Admin.findByIdAndUpdate(userId, { currentRefreshToken: null });
-    await Student.findByIdAndUpdate(userId, { currentRefreshToken: null });
+    const [adminResult, studentResult] = await Promise.all([
+      Admin.updateOne({ _id: userId }, { currentRefreshToken: null }),
+      Student.updateOne({ _id: userId }, { currentRefreshToken: null }),
+    ]);
+    if (adminResult.matchedCount + studentResult.matchedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     await logService.create({
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: logs_action.INVALIDATE_SESSION,
       target: `Invalidated session for ${userId}`,
-      target_model: "Admin",
+      target_model: adminResult.matchedCount > 0 ? "Admin" : "Student",
     });
 
     res.status(200).json({ message: "Session invalidated" });
@@ -259,33 +284,41 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const { userIds } = req.body;
-    const { Admin } = await import("../models/admin.model");
-    const { Student } = await import("../models/student.model");
 
-    if (!Array.isArray(userIds) || userIds.length === 0) {
-      return res.status(400).json({ message: "userIds is required" });
+    if (
+      !Array.isArray(userIds) ||
+      userIds.length === 0 ||
+      !userIds.every(
+        (id: unknown) => typeof id === "string" && Types.ObjectId.isValid(id)
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ message: "userIds must be a non-empty list of valid IDs" });
     }
 
-    await Admin.updateMany(
-      { _id: { $in: userIds } },
-      { $set: { currentRefreshToken: null } }
-    );
-    await Student.updateMany(
-      { _id: { $in: userIds } },
-      { $set: { currentRefreshToken: null } }
-    );
+    const [adminResult, studentResult] = await Promise.all([
+      Admin.updateMany(
+        { _id: { $in: userIds } },
+        { $set: { currentRefreshToken: null } }
+      ),
+      Student.updateMany(
+        { _id: { $in: userIds } },
+        { $set: { currentRefreshToken: null } }
+      ),
+    ]);
+    const invalidated =
+      (adminResult.modifiedCount || 0) + (studentResult.modifiedCount || 0);
 
     await logService.create({
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: logs_action.INVALIDATE_SESSION_BULK,
-      target: `Bulk invalidated ${userIds.length} sessions`,
+      target: `Bulk invalidated ${invalidated} sessions`,
       target_model: "Admin",
     });
 
-    res
-      .status(200)
-      .json({ message: `${userIds.length} session(s) invalidated` });
+    res.status(200).json({ message: `${invalidated} session(s) invalidated` });
   });
 
   triggerCron = catchAsync(async (req: Request, res: Response) => {
@@ -364,7 +397,7 @@ class DevToolsController {
     }
     const logs = await getCronExecutionLogs(
       queryString(req.query.jobName),
-      parseInt((req.query.limit as string) || "20")
+      queryInt(req.query.limit, 20, { min: 1, max: 200 })
     );
     res.status(200).json({ data: logs });
   });
@@ -422,8 +455,8 @@ class DevToolsController {
       search: queryString(req.query.search),
       dateFrom: dateFrom ? new Date(dateFrom) : undefined,
       dateTo: dateTo ? new Date(dateTo) : undefined,
-      limit: limit ? parseInt(limit as string) : 100,
-      skip: skip ? parseInt(skip as string) : 0,
+      limit: queryInt(limit, 100, { min: 1 }),
+      skip: queryInt(skip, 0, { max: 100000 }),
     });
     res.status(200).json({ data: entries, total });
   });
@@ -447,7 +480,7 @@ class DevToolsController {
     await logService.create({
       admin: req.admin.name,
       admin_id: req.admin._id,
-      action: "DELETE_OLD_LOGS",
+      action: logs_action.DELETE_OLD_LOGS,
       target: `Deleted ${deletedCount} log entries older than ${parsedDays} days`,
       target_model: "Admin",
     });
@@ -464,8 +497,8 @@ class DevToolsController {
     const { entries, total } = await searchOrders({
       query: queryString(req.query.query),
       status: queryString(req.query.status),
-      limit: limit ? parseInt(limit as string) : 50,
-      skip: skip ? parseInt(skip as string) : 0,
+      limit: queryInt(limit, 50, { min: 1 }),
+      skip: queryInt(skip, 0, { max: 100000 }),
     });
     res.status(200).json({ data: entries, total });
   });
@@ -502,8 +535,8 @@ class DevToolsController {
     const docs = await exportCollection({
       collection,
       fields: fields ? String(fields).split(",") : undefined,
-      limit: limit ? parseInt(String(limit)) : 1000,
-      skip: skip ? parseInt(String(skip)) : 0,
+      limit: queryInt(limit, 1000, { min: 1 }),
+      skip: queryInt(skip, 0, { max: 100000 }),
     });
 
     const headers = docs.length > 0 ? Object.keys(docs[0]) : [];
@@ -552,7 +585,7 @@ class DevToolsController {
     }
     const { threshold } = req.query;
     const alerts = await getStockAlerts(
-      threshold ? parseInt(String(threshold)) : 5
+      queryInt(threshold, 5, { max: 100000 })
     );
     res.status(200).json({ data: alerts });
   });
@@ -571,7 +604,7 @@ class DevToolsController {
     }
     const { limit } = req.query;
     const violations = getRateLimitViolationsService(
-      limit ? parseInt(String(limit)) : 50
+      queryInt(limit, 50, { min: 1 })
     );
     res.status(200).json({ data: violations });
   });
@@ -590,7 +623,7 @@ class DevToolsController {
     }
     const { limit } = req.query;
     const details = await getFailedEmailDetails(
-      limit ? parseInt(String(limit)) : 100
+      queryInt(limit, 100, { min: 1 })
     );
     res.status(200).json({ data: details });
   });
@@ -600,12 +633,30 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const { ids, status } = req.body;
-    if (!Array.isArray(ids) || !status) {
+    if (
+      !Array.isArray(ids) ||
+      !ids.every(
+        (id: unknown) => typeof id === "string" && Types.ObjectId.isValid(id)
+      )
+    ) {
       return res
         .status(400)
-        .json({ message: "ids (array) and status are required" });
+        .json({ message: "ids must be a list of valid email queue IDs" });
     }
-    const updated = await bulkUpdateEmailStatus(ids, status);
+    const validStatus = EMAIL_QUEUE_STATUSES.find((s) => s === status);
+    if (!validStatus) {
+      return res.status(400).json({
+        message: `status must be one of: ${EMAIL_QUEUE_STATUSES.join(", ")}`,
+      });
+    }
+    const updated = await bulkUpdateEmailStatus(ids, validStatus);
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.BULK_UPDATE_EMAIL_STATUS,
+      target: `Set ${updated} email(s) to ${validStatus}`,
+      target_model: "Settings",
+    });
     res.status(200).json({ message: `Updated ${updated} email(s)`, updated });
   });
 
@@ -614,7 +665,7 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const { limit } = req.query;
-    const errors = getErrors(limit ? parseInt(String(limit)) : 50);
+    const errors = getErrors(queryInt(limit, 50, { min: 1 }));
     res.status(200).json({ data: errors });
   });
 
@@ -623,6 +674,13 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const count = clearErrors();
+    await logService.create({
+      admin: req.admin.name,
+      admin_id: req.admin._id,
+      action: logs_action.CLEAR_SERVER_ERRORS,
+      target: `Cleared ${count} server error(s)`,
+      target_model: "Settings",
+    });
     res
       .status(200)
       .json({ message: `Cleared ${count} error(s)`, cleared: count });
@@ -634,8 +692,8 @@ class DevToolsController {
     }
     const { threshold, limit } = req.query;
     const logs = getBruteForceLogs(
-      threshold ? parseInt(String(threshold)) : 5,
-      limit ? parseInt(String(limit)) : 50
+      queryInt(threshold, 5, { max: 100000 }),
+      queryInt(limit, 50, { min: 1 })
     );
     res.status(200).json({ data: logs });
   });
@@ -653,7 +711,7 @@ class DevToolsController {
       return res.status(403).json({ message: "Campus not authorized" });
     }
     const { limit } = req.query;
-    const refunds = await getRefundQueue(limit ? parseInt(String(limit)) : 50);
+    const refunds = await getRefundQueue(queryInt(limit, 50, { min: 1 }));
     res.status(200).json({ data: refunds });
   });
 

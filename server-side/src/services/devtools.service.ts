@@ -76,7 +76,7 @@ export const resendSingleEmail = async (id: string) => {
       payload as Parameters<typeof sendAutomationWebhookPayload>[0]
     );
     await emailService.updateStatusById(String(entry._id), "sent");
-    return { success: true };
+    return { success: true, type: entry.type, subtype: entry.subtype };
   }
 
   if (!entry.subtype) {
@@ -126,7 +126,7 @@ export const resendSingleEmail = async (id: string) => {
 
   await emailService.updateStatusById(String(entry._id), "sent");
 
-  return { success: true };
+  return { success: true, type: entry.type, subtype: entry.subtype };
 };
 
 export const getHealthStats = async () => {
@@ -156,7 +156,8 @@ export const getDatabaseCounts = async () => {
       Student.countDocuments(),
       Orders.countDocuments({ order_status: "Pending" }),
       Merch.countDocuments({ is_active: true }),
-      Event.countDocuments(),
+      // Event status casing varies between records.
+      Event.countDocuments({ status: { $not: /^(ended|cancelled)$/i } }),
       MembershipHistory.countDocuments(),
     ]);
 
@@ -465,6 +466,9 @@ export interface LogQueryParams {
   skip?: number;
 }
 
+const escapeRegex = (text: string): string =>
+  text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+
 export const getLogEntries = async ({
   action,
   admin,
@@ -477,15 +481,18 @@ export const getLogEntries = async ({
 }: LogQueryParams = {}) => {
   const { Log } = await import("../models/log.model");
   const query: Record<string, unknown> = {};
+  // Filters are matched as plain text: "(" or "a+" from the search box must not
+  // be read as a regex (it 500s or runs a slow pattern).
+  const contains = (text: string) => ({
+    $regex: escapeRegex(text),
+    $options: "i",
+  });
 
-  if (action) query.action = { $regex: action, $options: "i" };
-  if (admin) query.admin = { $regex: admin, $options: "i" };
-  if (target) query.target = { $regex: target, $options: "i" };
+  if (action) query.action = contains(action);
+  if (admin) query.admin = contains(admin);
+  if (target) query.target = contains(target);
   if (search) {
-    query.$or = [
-      { admin: { $regex: search, $options: "i" } },
-      { target: { $regex: search, $options: "i" } },
-    ];
+    query.$or = [{ admin: contains(search) }, { target: contains(search) }];
   }
   if (dateFrom || dateTo) {
     const timestampQuery: Record<string, Date> = {};
@@ -667,7 +674,10 @@ export interface StockAlert {
 
 export const getStockAlerts = async (threshold = 5): Promise<StockAlert[]> => {
   const { Merch } = await import("../models/merch.model");
-  const items = await Merch.find({ stocks: { $lte: threshold } }).lean();
+  const items = await Merch.find({
+    stocks: { $lte: threshold },
+    is_active: true,
+  }).lean();
   return items.map((item: any) => ({
     _id: item._id.toString(),
     name: item.name,
@@ -988,9 +998,16 @@ export const getFailedEmailDetails = async (
   });
 };
 
+export const EMAIL_QUEUE_STATUSES = [
+  "pending",
+  "sent",
+  "failed",
+  "delivered",
+] as const;
+
 export const bulkUpdateEmailStatus = async (
   ids: string[],
-  status: string
+  status: (typeof EMAIL_QUEUE_STATUSES)[number]
 ): Promise<number> => {
   const { EmailQueue } = await import("../models/email.model");
   const result = await EmailQueue.updateMany(
