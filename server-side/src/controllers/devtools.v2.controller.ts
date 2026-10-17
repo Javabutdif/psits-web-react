@@ -36,7 +36,12 @@ import {
   updateStudentYears,
   decrementStudentYears,
   suspendOldStudents,
+  isRefreshTokenExpired,
+  clearExpiredSessions,
+  StudentYearCooldownError,
 } from "../services/devtools.service";
+import { Admin } from "../models/admin.model";
+import { Student } from "../models/student.model";
 import { emailService } from "../services/email.service";
 import { resendPendingEmails } from "../services/email.resend.service";
 import { checkPromos } from "../custom_function/check_promo";
@@ -159,19 +164,30 @@ class DevToolsController {
     const role = queryString(req.query.role);
     const campus = queryString(req.query.campus);
 
-    const admins = await require("../models/admin.model")
-      .Admin.find({
-        currentRefreshToken: { $exists: true, $ne: null },
-      })
-      .lean();
+    const tokenFilter = { currentRefreshToken: { $exists: true, $ne: null } };
+    const [admins, students] = await Promise.all([
+      Admin.find(tokenFilter, {
+        name: 1,
+        id_number: 1,
+        campus: 1,
+        position: 1,
+        currentRefreshToken: 1,
+      }).lean(),
+      Student.find(tokenFilter, {
+        first_name: 1,
+        last_name: 1,
+        id_number: 1,
+        campus: 1,
+        currentRefreshToken: 1,
+      }).lean(),
+    ]);
 
-    const students = await require("../models/student.model")
-      .Student.find({
-        currentRefreshToken: { $exists: true, $ne: null },
-      })
-      .lean();
+    // A stored refresh token outlives its expiry until someone logs in again,
+    // so only tokens that are still valid count as active sessions.
+    const isActive = (doc: { currentRefreshToken?: string | null }) =>
+      !isRefreshTokenExpired(String(doc.currentRefreshToken));
 
-    let adminList = admins.map((a: any) => ({
+    const adminList = admins.filter(isActive).map((a) => ({
       id: a._id.toString(),
       name: a.name,
       idNumber: a.id_number,
@@ -180,7 +196,7 @@ class DevToolsController {
       position: a.position,
     }));
 
-    let studentList = students.map((s: any) => ({
+    const studentList = students.filter(isActive).map((s) => ({
       id: s._id.toString(),
       name: `${s.first_name} ${s.last_name}`,
       idNumber: s.id_number,
@@ -188,20 +204,10 @@ class DevToolsController {
       campus: s.campus,
     }));
 
-    if (role === "admin") {
-      adminList = adminList.filter((a: any) => !campus || a.campus === campus);
-    } else if (role === "student") {
-      studentList = studentList.filter(
-        (s: any) => !campus || s.campus === campus
-      );
-    } else {
-      if (campus) {
-        adminList = adminList.filter((a: any) => a.campus === campus);
-        studentList = studentList.filter((s: any) => s.campus === campus);
-      }
-    }
-
-    const sessions = [...adminList, ...studentList];
+    const sessions = [
+      ...(role === "student" ? [] : adminList),
+      ...(role === "admin" ? [] : studentList),
+    ].filter((s) => !campus || s.campus === campus);
 
     res.status(200).json({ data: sessions });
   });
@@ -210,30 +216,20 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const { Admin } = await import("../models/admin.model");
-    const { Student } = await import("../models/student.model");
-    const now = new Date();
-
-    const adminResult = await Admin.updateMany(
-      { currentRefreshToken: { $exists: true }, updatedAt: { $lt: now } },
-      { $set: { currentRefreshToken: null } }
-    );
-    const studentResult = await Student.updateMany(
-      { currentRefreshToken: { $exists: true }, updatedAt: { $lt: now } },
-      { $set: { currentRefreshToken: null } }
-    );
-    const invalidatedCount =
-      (adminResult.modifiedCount || 0) + (studentResult.modifiedCount || 0);
+    const clearedCount = await clearExpiredSessions();
 
     await logService.create({
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: logs_action.CLEAR_EXPIRED_SESSIONS,
-      target: `Cleared ${invalidatedCount} expired sessions`,
+      target: `Cleared ${clearedCount} expired sessions`,
       target_model: "Admin",
     });
 
-    res.status(200).json({ message: "Expired sessions cleared" });
+    res.status(200).json({
+      message: `${clearedCount} expired session(s) cleared`,
+      cleared: clearedCount,
+    });
   });
 
   invalidateSession = catchAsync(async (req: Request, res: Response) => {
@@ -671,11 +667,12 @@ class DevToolsController {
       return res.status(400).json({ message: "path and method are required" });
     }
 
+    // Keep in sync with ApiTesterPanel's list. Every path here must exist.
     const allowedEndpoints: Record<string, "GET" | "POST"> = {
       "/api/v2/auth/login": "POST",
-      "/api/v2/students": "GET",
-      "/api/v2/orders": "GET",
-      "/api/v2/events": "GET",
+      "/api/v2/merchandise": "GET",
+      "/api/v2/events/get-all-event": "GET",
+      "/api/v2/dev/health": "GET",
     };
 
     const normalizedMethod = method.toUpperCase() as "GET" | "POST";
@@ -689,7 +686,8 @@ class DevToolsController {
     }
 
     const axios = (await import("axios")).default;
-    const baseUrl = process.env.BASE_URL || "http://localhost:3001";
+    const baseUrl =
+      process.env.BASE_URL || `http://localhost:${Number(process.env.PORT) || 5000}`;
 
     try {
       const response = await axios({
@@ -735,12 +733,20 @@ class DevToolsController {
     if (!ALLOWED_CAMPUS.includes(req.userV2.campus)) {
       return res.status(403).json({ message: "Campus not authorized" });
     }
-    const result = await updateStudentYears();
+    let result: Awaited<ReturnType<typeof updateStudentYears>>;
+    try {
+      result = await updateStudentYears();
+    } catch (error: unknown) {
+      if (error instanceof StudentYearCooldownError) {
+        return res.status(409).json({ message: error.message });
+      }
+      throw error;
+    }
     await logService.create({
       admin: req.admin.name,
       admin_id: req.admin._id,
       action: logs_action.UPDATE_STUDENT_YEAR,
-      target: `Updated year for ${result.updated} student(s), skipped ${result.skippedYear4} (year 4 or deleted)`,
+      target: `Updated year for ${result.updated} student(s), skipped ${result.skippedYear4} (year 4+)`,
       target_model: "Student",
     });
     res.status(200).json({

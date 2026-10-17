@@ -10,6 +10,7 @@ import path from "path";
 import fs from "fs/promises";
 import os from "os";
 import mongoose, { Types } from "mongoose";
+import jwt from "jsonwebtoken";
 import { emailService } from "./email.service";
 import {
   renderMembershipReceiptHtml,
@@ -179,6 +180,45 @@ export const checkMongoConnection = async (): Promise<boolean> => {
 
 const cronExecutionLogCache: { data: any[]; timestamp: number } | null = null;
 
+// Refresh tokens are stored as the raw JWT, so expiry comes from its `exp`
+// claim. A token that can't be decoded is treated as expired.
+export const isRefreshTokenExpired = (token: string): boolean => {
+  const decoded = jwt.decode(token);
+  if (!decoded || typeof decoded === "string" || !decoded.exp) return true;
+  return decoded.exp * 1000 <= Date.now();
+};
+
+export const clearExpiredSessions = async (): Promise<number> => {
+  const [admins, students] = await Promise.all([
+    Admin.find(
+      { currentRefreshToken: { $exists: true, $ne: null } },
+      { currentRefreshToken: 1 }
+    ).lean(),
+    Student.find(
+      { currentRefreshToken: { $exists: true, $ne: null } },
+      { currentRefreshToken: 1 }
+    ).lean(),
+  ]);
+
+  const expiredIds = (docs: Array<{ _id: Types.ObjectId; currentRefreshToken?: string | null }>) =>
+    docs
+      .filter((d) => isRefreshTokenExpired(String(d.currentRefreshToken)))
+      .map((d) => d._id);
+
+  const [adminResult, studentResult] = await Promise.all([
+    Admin.updateMany(
+      { _id: { $in: expiredIds(admins) } },
+      { $set: { currentRefreshToken: null } }
+    ),
+    Student.updateMany(
+      { _id: { $in: expiredIds(students) } },
+      { $set: { currentRefreshToken: null } }
+    ),
+  ]);
+
+  return (adminResult.modifiedCount || 0) + (studentResult.modifiedCount || 0);
+};
+
 export const getCronExecutionLogs = async (jobName?: string, limit = 20) => {
   const { CronExecutionLog } = await import("../models/cronExecutionLog.model");
   const query: Record<string, unknown> = {};
@@ -295,12 +335,14 @@ let dbPerfCacheData: CollectionStat[] | null = null;
 let dbPerfCacheTime = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
+// Keyed by collection name ("orders"), which is what listCollections returns,
+// not by model name ("Orders").
 const collectionIndexMap: Record<string, string[]> = {
-  Orders: ["order_status", "order_date"],
-  EmailQueue: ["status", "type"],
-  Merch: ["is_active"],
-  Admin: ["currentRefreshToken"],
-  Student: ["currentRefreshToken"],
+  [Orders.collection.collectionName]: ["order_status", "order_date"],
+  [EmailQueue.collection.collectionName]: ["status", "type"],
+  [Merch.collection.collectionName]: ["is_active"],
+  [Admin.collection.collectionName]: ["currentRefreshToken"],
+  [Student.collection.collectionName]: ["currentRefreshToken"],
 };
 
 export const getCollectionStats = async (): Promise<CollectionStat[]> => {
@@ -334,24 +376,20 @@ export const getCollectionStats = async (): Promise<CollectionStat[]> => {
 
       const expectedIndexes = collectionIndexMap[name] || [];
       let warning: string | undefined;
+      let indexCount = 0;
 
-      if (expectedIndexes.length > 0) {
-        try {
-          const indexes = await (db as any).collection(name).indexes();
-          const indexedFields = indexes.flatMap((idx: any) =>
-            Object.keys(idx.key).filter((f: string) =>
-              expectedIndexes.includes(f)
-            )
-          );
-          const missing = expectedIndexes.filter(
-            (f: string) => !indexedFields.includes(f)
-          );
-          if (missing.length > 0) {
-            warning = `Missing indexes on: ${missing.join(", ")}`;
-          }
-        } catch {
-          // Skip index check if unavailable
+      try {
+        const indexes = await db.collection(name).indexes();
+        indexCount = indexes.length;
+        const indexedFields = indexes.flatMap((idx) => Object.keys(idx.key));
+        const missing = expectedIndexes.filter(
+          (f) => !indexedFields.includes(f)
+        );
+        if (missing.length > 0) {
+          warning = `Missing indexes on: ${missing.join(", ")}`;
         }
+      } catch {
+        // Skip index check if unavailable
       }
 
       stats.push({
@@ -359,7 +397,7 @@ export const getCollectionStats = async (): Promise<CollectionStat[]> => {
         docs: docCount,
         avgObjSize: Math.round(info.avgObjSize || 0),
         storageSize: Math.round((info.storageSize || 0) / 1024),
-        indexes: 0,
+        indexes: indexCount,
         warning,
       });
     } catch {
@@ -367,7 +405,7 @@ export const getCollectionStats = async (): Promise<CollectionStat[]> => {
     }
   }
 
-  dbPerfCacheData = stats.map((s) => ({ ...s, indexes: s.indexes || 0 }));
+  dbPerfCacheData = stats;
   dbPerfCacheTime = Date.now();
 
   return dbPerfCacheData;
@@ -377,30 +415,30 @@ export const rebuildIndexes = async (): Promise<{
   message: string;
   collections: string[];
 }> => {
-  const collectionsToRebuild = [
-    "Orders",
-    "EmailQueue",
-    "Merch",
-    "Admin",
-    "Student",
-  ];
+  // reIndex() is not supported on replica sets (Atlas) and was removed from the
+  // driver, so this builds any schema index that is missing instead. It never
+  // drops an index.
+  const models = [Orders, EmailQueue, Merch, Admin, Student];
   const rebuilt: string[] = [];
+  const failed: string[] = [];
 
-  for (const collName of collectionsToRebuild) {
+  for (const model of models) {
     try {
-      const model = mongoose.model(collName);
-      await (model.collection as any).reIndex();
-      rebuilt.push(collName);
-    } catch {
-      // Skip failed rebuilds
+      await model.createIndexes();
+      rebuilt.push(model.collection.collectionName);
+    } catch (error: unknown) {
+      console.error(`Failed to build indexes for ${model.modelName}:`, error);
+      failed.push(model.collection.collectionName);
     }
   }
 
   dbPerfCacheTime = 0;
   dbPerfCacheData = null;
 
+  const failedNote =
+    failed.length > 0 ? `; failed on ${failed.join(", ")}` : "";
   return {
-    message: `Rebuilt indexes on ${rebuilt.length} collection(s)`,
+    message: `Ensured indexes on ${rebuilt.length} collection(s)${failedNote}`,
     collections: rebuilt,
   };
 };
@@ -671,25 +709,27 @@ export const exportCollection = async ({
   limit = 1000,
   skip = 0,
 }: ExportCollectionParams) => {
-  const validCollections = [
-    "Admin",
-    "Student",
-    "Orders",
-    "EmailQueue",
-    "Merch",
-    "Event",
-    "MembershipHistory",
-    "CertificateTemplate",
-    "Log",
-    "Settings",
-  ];
+  // Export labels shown in Devtools mapped to the names the models are
+  // registered under ("merch", "event", "membershipHistory" are lowercase).
+  const exportModelNames: Record<string, string> = {
+    Admin: Admin.modelName,
+    Student: Student.modelName,
+    Orders: Orders.modelName,
+    EmailQueue: EmailQueue.modelName,
+    Merch: Merch.modelName,
+    Event: Event.modelName,
+    MembershipHistory: MembershipHistory.modelName,
+    CertificateTemplate: "CertificateTemplate",
+    Log: "Log",
+    Settings: Settings.modelName,
+  };
 
-  if (!validCollections.includes(collection)) {
+  const modelName = exportModelNames[collection];
+  if (!modelName) {
     throw new Error(`Invalid collection: ${collection}`);
   }
 
-  const { default: mongoose } = await import("mongoose");
-  const Model = mongoose.model(collection);
+  const Model = mongoose.model(modelName);
   const docs = await Model.find()
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -816,6 +856,7 @@ export const getEndpointInventory = (): EndpointInfo[] => {
   const addRoute = (method: string, path: string, auth: string) => {
     endpoints.push({ method: method.toUpperCase(), path, auth });
   };
+  // Mirrors routes/devtools.v2.route.ts — update both together.
   addRoute("get", "/api/v2/dev/email-queue", "admin+MAIN");
   addRoute("post", "/api/v2/dev/email-resend/:id", "admin+MAIN");
   addRoute("get", "/api/v2/dev/email-export", "admin+MAIN");
@@ -837,8 +878,6 @@ export const getEndpointInventory = (): EndpointInfo[] => {
   addRoute("delete", "/api/v2/dev/logs/old", "admin+MAIN");
   addRoute("get", "/api/v2/dev/orders", "admin+MAIN");
   addRoute("get", "/api/v2/dev/orders/:id", "admin+MAIN");
-  addRoute("get", "/api/v2/dev/admins/search", "admin+MAIN");
-  addRoute("get", "/api/v2/dev/students/search", "admin+MAIN");
   addRoute("get", "/api/v2/dev/certificates", "admin+MAIN");
   addRoute("get", "/api/v2/dev/export", "admin+MAIN");
   addRoute("get", "/api/v2/dev/membership-revenue", "admin+MAIN");
@@ -850,6 +889,12 @@ export const getEndpointInventory = (): EndpointInfo[] => {
   addRoute("patch", "/api/v2/dev/email-queue/bulk-status", "admin+MAIN");
   addRoute("get", "/api/v2/dev/errors", "admin+MAIN");
   addRoute("delete", "/api/v2/dev/errors", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/brute-force-logs", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/endpoint-inventory", "admin+MAIN");
+  addRoute("get", "/api/v2/dev/refunds", "admin+MAIN");
+  addRoute("post", "/api/v2/dev/migration/backfill-created-at", "admin-only+MAIN");
+  addRoute("post", "/api/v2/dev/actions/update-student-years", "admin-only+MAIN");
+  addRoute("post", "/api/v2/dev/actions/decrement-student-years", "admin-only+MAIN");
   return endpoints;
 };
 
@@ -988,12 +1033,32 @@ export const backfillCreatedAt = async (): Promise<{
   return { migrated: students.length, skipped: 0 };
 };
 
+export class StudentYearCooldownError extends Error {
+  constructor(public readonly availableAt: Date) {
+    super(
+      `Student years were already updated. Next update is available on ${availableAt.toDateString()}.`
+    );
+    this.name = "StudentYearCooldownError";
+  }
+}
+
 export const updateStudentYears = async (): Promise<{
   totalChecked: number;
   eligible: number;
   updated: number;
   skippedYear4: number;
 }> => {
+  // Same 5-month cooldown the Devtools button shows, enforced here so a second
+  // tab or a direct API call can't add another year to every student.
+  const settings = await Settings.findOne().lean();
+  if (settings?.studentYearLastUpdated) {
+    const cooldownEnds = new Date(settings.studentYearLastUpdated);
+    cooldownEnds.setMonth(cooldownEnds.getMonth() + 5);
+    if (cooldownEnds > new Date()) {
+      throw new StudentYearCooldownError(cooldownEnds);
+    }
+  }
+
   const cutoffDate = new Date();
   cutoffDate.setMonth(cutoffDate.getMonth() - 3);
 
@@ -1019,11 +1084,17 @@ export const updateStudentYears = async (): Promise<{
     );
   }
 
+  // The query above already excludes year 4+, so count those separately.
+  const skippedYear4 = await Student.countDocuments({
+    year: { $gte: 4 },
+    status: { $ne: account_status.DELETED },
+  });
+
   return {
-    totalChecked: students.length,
+    totalChecked: students.length + skippedYear4,
     eligible: eligibleIds.length,
     updated: result.modifiedCount,
-    skippedYear4: students.length - result.modifiedCount,
+    skippedYear4,
   };
 };
 
@@ -1048,11 +1119,17 @@ export const decrementStudentYears = async (): Promise<{
     { $inc: { year: -1 } }
   );
 
+  // The query above already excludes year 1, so count those separately.
+  const skippedYear1 = await Student.countDocuments({
+    year: { $lte: 1 },
+    status: { $ne: account_status.DELETED },
+  });
+
   return {
-    totalChecked: students.length,
+    totalChecked: students.length + skippedYear1,
     eligible: eligibleIds.length,
     updated: result.modifiedCount,
-    skippedYear1: students.length - result.modifiedCount,
+    skippedYear1,
   };
 };
 
